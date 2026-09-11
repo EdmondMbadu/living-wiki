@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { after, before, beforeEach, test } from 'node:test';
 import { readFile } from 'node:fs/promises';
+import ts from 'typescript';
 import {
   assertFails,
   assertSucceeds,
@@ -23,6 +24,10 @@ import {
 const projectId = 'demo-living-wiki';
 const ownerUid = 'board-owner';
 let testEnvironment;
+const videoPersistenceSource = await readFile(new URL('../../src/app/boards/board-video-persistence.ts', import.meta.url), 'utf8');
+const { boardVideoMetadataPatch } = await import(`data:text/javascript;base64,${Buffer.from(ts.transpileModule(
+  videoPersistenceSource, { compilerOptions: { module: ts.ModuleKind.ES2022 } },
+).outputText).toString('base64')}`);
 
 function personalWizardBoard(overrides = {}) {
   return {
@@ -1085,3 +1090,79 @@ test('collection writes require at least one selected board', async () => {
     publicBoardCollection({ board_ids: [] }),
   ));
 });
+
+for (const kind of ['full', 'trailer']) {
+  const prefix = kind === 'full' ? 'social' : 'trailer';
+  for (const visibility of ['private', 'public']) {
+    test(`owner attaches both ${kind} formats to a ${visibility} legacy board without rewriting it`, async () => {
+      const stored = personalWizardBoard({
+        visibility,
+        photoStudioDraft: visibility === 'private',
+        // Server metadata and older content must survive a video-only save.
+        trailerVideoScriptUpdatedAt: '2026-09-11T16:58:53.349Z',
+        description: 'An older description. '.repeat(30),
+        cards: Array.from({ length: 12 }, (_, i) => ({ id: `card-${i}`, notes: 'Existing content' })),
+      });
+      await testEnvironment.withSecurityRulesDisabled(async (context) => {
+        await setDoc(doc(context.firestore(), 'boards', stored.id), stored);
+      });
+      const generatedAt = '2026-09-11T17:00:00.000Z';
+      const patch = boardVideoMetadataPatch({
+        ...stored,
+        [`${prefix}VideoUrl`]: 'https://example.test/phone.mp4',
+        [`${prefix}VideoMimeType`]: 'video/mp4',
+        [`${prefix}VideoUpdatedAt`]: generatedAt,
+        [`${prefix}VideoRenderVersion`]: 'render-v1',
+        [`${prefix}VideoRatio`]: 'vertical',
+        [`${prefix}VideoAudioTrackId`]: 'none',
+        [`${prefix}VideoAudioVolume`]: 0.2,
+        [`${prefix}VideoNarrationEnabled`]: true,
+        [`${prefix}LandscapeVideoUrl`]: 'https://example.test/landscape.mp4',
+        [`${prefix}LandscapeVideoMimeType`]: 'video/mp4',
+        [`${prefix}LandscapeVideoUpdatedAt`]: generatedAt,
+        [`${prefix}LandscapeVideoRenderVersion`]: 'render-v1',
+        [`${prefix}LandscapeVideoDurationSeconds`]: 18.9,
+        trailerVideoScript: 'A short trailer hook.',
+        trailerVideoCardIds: ['card-0'],
+        trailerVideoSourceFingerprint: 'fingerprint',
+        trailerVideoDurationSeconds: 18.9,
+        stackNarratorVoiceId: 'personal-voice:voice1',
+      }, kind);
+      const update = { ...patch, server_updated_at: serverTimestamp() };
+      const ownerRef = doc(testEnvironment.authenticatedContext(ownerUid).firestore(), 'boards', stored.id);
+      await assertSucceeds(updateDoc(ownerRef, update));
+      const saved = (await getDoc(ownerRef)).data();
+      assert.equal(saved.visibility, visibility);
+      assert.equal(saved.photoStudioDraft, stored.photoStudioDraft);
+      assert.equal(saved.trailerVideoScriptUpdatedAt, stored.trailerVideoScriptUpdatedAt);
+      assert.deepEqual(saved.cards, stored.cards);
+      assert.equal(saved.description, stored.description);
+      assert.equal(saved.updated_at_iso, stored.updated_at_iso);
+      assert.equal(saved[`${prefix}VideoUrl`], patch[`${prefix}VideoUrl`]);
+      assert.equal(saved[`${prefix}LandscapeVideoUrl`], patch[`${prefix}LandscapeVideoUrl`]);
+
+      for (const context of [testEnvironment.unauthenticatedContext(), testEnvironment.authenticatedContext('outsider')]) {
+        await assertFails(updateDoc(doc(context.firestore(), 'boards', stored.id), {
+          ...update, [`${prefix}VideoUrl`]: 'https://example.test/unauthorized.mp4',
+        }));
+      }
+      await assertFails(updateDoc(ownerRef, { ...update, owner_user_id: 'outsider' }));
+      await assertFails(updateDoc(ownerRef, { ...update, [`${prefix}VideoUrl`]: 'https://example.test/changed.mp4', visibility: visibility === 'private' ? 'public' : 'private' }));
+      await assertFails(updateDoc(ownerRef, { ...update, [`${prefix}VideoUrl`]: 123 }));
+      await assertFails(updateDoc(ownerRef, { ...update, [`${prefix}VideoAudioVolume`]: 0.9 }));
+
+      // Deleting from My Videos must also work with callable-written fields present.
+      const clear = {
+        [`${prefix}VideoUrl`]: '', [`${prefix}VideoMimeType`]: '',
+        [`${prefix}VideoUpdatedAt`]: '', [`${prefix}VideoRenderVersion`]: '',
+        [`${prefix}LandscapeVideoUrl`]: '', [`${prefix}LandscapeVideoMimeType`]: '',
+        [`${prefix}LandscapeVideoUpdatedAt`]: '', [`${prefix}LandscapeVideoRenderVersion`]: '',
+        [`${prefix}LandscapeVideoDurationSeconds`]: 0,
+        updated_at_iso: generatedAt, server_updated_at: serverTimestamp(),
+      };
+      await assertFails(updateDoc(doc(testEnvironment.authenticatedContext('outsider').firestore(), 'boards', stored.id), clear));
+      await assertSucceeds(updateDoc(ownerRef, clear));
+      assert.equal((await getDoc(ownerRef)).data()[`${prefix}VideoUrl`], '');
+    });
+  }
+}

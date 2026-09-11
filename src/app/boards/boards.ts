@@ -51,6 +51,7 @@ import {
 } from './nearby-gems-board/nearby-gems-board';
 import { VideoLibraryService } from '../video-library/video-library.service';
 import type { VideoLibraryItem } from '../video-library/video-library.models';
+import { boardVideoMetadataPatch } from './board-video-persistence';
 import { BoardPromoImageDialogComponent } from './board-promo-image-dialog';
 import { BackdropDismissDirective } from '../backdrop-dismiss.directive';
 import { TalkingCardEditorComponent } from '../talking-card-editor/talking-card-editor';
@@ -17051,7 +17052,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         trailerLandscapeVideoDurationSeconds: landscape.durationSeconds,
         stackNarratorVoiceId: this.stackNarratorVoiceId(),
       };
-      const persisted = await this.persistBoard(nextBoard);
+      const persisted = await this.persistBoardVideo(nextBoard, 'trailer');
       this.boards.update((boards) => boards.map((item) => item.id === persisted.id ? persisted : item));
       const librarySave = board.visibility === 'public' ? await this.saveStackVideoToLibrary(persisted, vertical, {
         publicStoragePath: verticalUpload.path,
@@ -17250,7 +17251,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         socialLandscapeVideoDurationSeconds: landscape.durationSeconds,
         stackNarratorVoiceId: this.stackNarratorVoiceId(),
       };
-      const persisted = await this.persistBoard(nextBoard);
+      const persisted = await this.persistBoardVideo(nextBoard, 'full');
       this.boards.update((boards) => boards.map((item) => item.id === persisted.id ? persisted : item));
       const librarySave = board.visibility === 'public' ? await this.saveStackVideoToLibrary(persisted, vertical, {
         publicStoragePath: verticalUpload.path,
@@ -21673,6 +21674,22 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.boardsSyncError.set($localize`Board save failed. Please try again.`);
       return false;
     }
+  }
+
+  private async persistBoardVideo(board: Board, kind: 'full' | 'trailer'): Promise<Board> {
+    const uid = this.authService.uid();
+    if (!uid || board.ownerUserId !== uid) {
+      throw new Error('Only the board owner can save a video.');
+    }
+    if (!this.firestore) throw new Error('Board sync is not ready. Refresh and try again.');
+    const patch = boardVideoMetadataPatch(board, kind);
+    await updateDoc(doc(this.firestore, 'boards', board.id), {
+      ...patch,
+      server_updated_at: serverTimestamp(),
+    });
+    // The board may have changed while rendering. Keep those edits in local state too.
+    const current = this.boards().find((item) => item.id === board.id) ?? board;
+    return { ...current, ...patch };
   }
 
   private async persistBoard(board: Board): Promise<Board> {

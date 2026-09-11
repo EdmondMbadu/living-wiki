@@ -23,6 +23,7 @@
     "test:board-share-email": "npm run build && node scripts/test-board-share-email.cjs",
     "test:custom-public-routes": "npm run build && node scripts/test-custom-public-routes.cjs",
     "test:board-analytics": "npm run build && node scripts/test-board-analytics.cjs",
+    "test:board-likes": "npm run build && node scripts/test-board-likes.cjs",
     "test:city-place-search": "npm run build && node scripts/test-city-place-search.cjs",
     "test:nearby-gems": "npm run build && node scripts/test-nearby-gems.cjs",
     "test:bulk-board-generation": "npm run build && node scripts/test-bulk-board-generation.cjs",

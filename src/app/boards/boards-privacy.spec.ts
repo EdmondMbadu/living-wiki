@@ -17,7 +17,7 @@ function harness(): any {
     stackVideoBrandingUploading: () => false,
     stackVideoNarrationEnabled: () => false,
     stackTrailerNarrationEnabled: () => false,
-    stackNarratorVoiceId: () => 'default',
+    stackNarratorVoiceId: () => 'warm-storyteller',
     stackAudioTrackId: () => '',
     stackAudioVolume: () => 0.2,
     stackShareMode: () => 'video',
@@ -85,6 +85,8 @@ describe('board privacy and video creation', () => {
         const component = harness();
         const board = savedBoard(component, { photoStudioDraft });
         component.boards.set([board]);
+        component.persistBoard = jasmine.createSpy('full board write').and.rejectWith(new Error('Must not rewrite board'));
+        component.persistBoardVideo = jasmine.createSpy('video metadata write').and.callFake(async (next: unknown) => next);
         const result = { blob: new Blob(['video'], { type: 'video/mp4' }), extension: 'mp4', mimeType: 'video/mp4', durationSeconds: 4 };
         const pair = { vertical: result, landscape: result };
         component.createStackVideoPair = jasmine.createSpy('render').and.resolveTo(pair);
@@ -106,6 +108,8 @@ describe('board privacy and video creation', () => {
         expect(input.publicShareUrl).toBeUndefined();
         expect(input.publicStoragePath).toBeUndefined();
         expect(component.uploadPublishedStackVariant).not.toHaveBeenCalled();
+        expect(component.persistBoardVideo).toHaveBeenCalledWith(jasmine.any(Object), videoKind);
+        expect(component.persistBoard).not.toHaveBeenCalled();
         const updated = component.boards()[0];
         expect(updated.visibility).toBe('private');
         expect(updated.photoStudioDraft).toBe(photoStudioDraft);

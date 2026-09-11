@@ -1,3 +1,4 @@
+import { boardLikeTargetKey, boardLikeMetricDocumentId, boardLikeMarkerDocumentId, normalizeBoardLikeTarget, normalizeBoardLikeTargets } from './board-likes';
 import { onDocumentCreated, onDocumentDeleted, onDocumentUpdated, onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { HttpsError, onCall, onRequest, type CallableRequest } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
@@ -18776,45 +18777,6 @@ function answerCardLikeDocumentId(cardId: string, visitorId: string): string {
   return `${cardId}_${hash}`;
 }
 
-type BoardLikeTarget = {
-  boardId: string;
-  cardId: string | null;
-};
-
-function normalizeBoardLikeIdentifier(value: unknown, label: string): string {
-  const id = textValue(value, 128) ?? '';
-  if (!/^[a-zA-Z0-9_-]{1,128}$/.test(id)) {
-    throw new HttpsError('invalid-argument', `${label} is invalid.`);
-  }
-  return id;
-}
-
-function normalizeBoardLikeTarget(value: unknown): BoardLikeTarget {
-  const data = value && typeof value === 'object' ? value as Record<string, unknown> : {};
-  return {
-    boardId: normalizeBoardLikeIdentifier(data['boardId'], 'boardId'),
-    cardId: data['cardId'] == null || data['cardId'] === ''
-      ? null
-      : normalizeBoardLikeIdentifier(data['cardId'], 'cardId'),
-  };
-}
-
-function boardLikeTargetKey(target: BoardLikeTarget): string {
-  return target.cardId
-    ? `card:${target.boardId}:${target.cardId}`
-    : `board:${target.boardId}`;
-}
-
-function boardLikeMetricDocumentId(target: BoardLikeTarget): string {
-  return createHash('sha256').update(boardLikeTargetKey(target)).digest('hex');
-}
-
-function boardLikeMarkerDocumentId(target: BoardLikeTarget, visitorId: string): string {
-  return createHash('sha256')
-    .update(`${boardLikeTargetKey(target)}:${visitorId}`)
-    .digest('hex');
-}
-
 function getPublicChatVisitorContext(request: {
   auth?: { uid?: string; token?: unknown } | null;
   data?: Record<string, unknown>;
@@ -20280,13 +20242,7 @@ export const getBoardLikeMetrics = onCall(
     cors: true,
   },
   async (request) => {
-    const rawTargets = Array.isArray(request.data?.targets) ? request.data.targets.slice(0, 100) : [];
-    const targetsByKey = new Map<string, BoardLikeTarget>();
-    rawTargets.forEach((value: unknown) => {
-      const target = normalizeBoardLikeTarget(value);
-      targetsByKey.set(boardLikeTargetKey(target), target);
-    });
-    const targets = [...targetsByKey.values()];
+    const targets = normalizeBoardLikeTargets(request.data?.targets);
     if (!targets.length) return { metrics: [] };
 
     const visitorId = request.auth?.uid || normalizeAnonymousVisitorId(request.data?.visitorId);
