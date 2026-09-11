@@ -270,6 +270,26 @@ test('owner can stage a photo board privately in Studio and publish it later', a
   )));
 });
 
+test('publishing a historical photo draft clears its draft flag in the same small update', async () => {
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'boards', 'historical-photo-draft'), {
+      owner_user_id: ownerUid, title: 'Photo story', visibility: 'private',
+      photoStoryBoard: true, photoStudioDraft: true,
+      cards: [{ title: 'Historical card with no current schema' }],
+    });
+  });
+  const reference = doc(testEnvironment.authenticatedContext(ownerUid).firestore(), 'boards', 'historical-photo-draft');
+  const publication = { visibility: 'public', photoStudioDraft: false,
+    updated_at_iso: '2026-09-11T12:00:00.000Z', server_updated_at: serverTimestamp() };
+  await assertFails(updateDoc(doc(testEnvironment.authenticatedContext('outsider').firestore(), 'boards', 'historical-photo-draft'), publication));
+  await assertSucceeds(updateDoc(reference, publication));
+  const published = await assertSucceeds(getDoc(doc(testEnvironment.unauthenticatedContext().firestore(), 'boards', 'historical-photo-draft')));
+  assert.equal(published.data().visibility, 'public');
+  assert.equal(published.data().photoStudioDraft, false);
+  assert.deepEqual(published.data().cards, [{ title: 'Historical card with no current schema' }]);
+  await assertFails(updateDoc(reference, { ...publication, visibility: 'private', photoStudioDraft: true }));
+});
+
 test('photo Studio exception cannot be used for an ordinary private board', async () => {
   const database = testEnvironment.authenticatedContext(ownerUid).firestore();
 

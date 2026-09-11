@@ -46,6 +46,17 @@ export function isBoardPhotoStudioDraft(board: {
   return board.visibility === 'private' && board.photoStudioDraft === true;
 }
 
+/** The saved visibility is authoritative, including for older published photo drafts. */
+export function normalizeBoardPrivacy(board: {
+  visibility?: unknown;
+  photoStudioDraft?: unknown;
+}): { visibility: 'public' | 'private'; photoStudioDraft: boolean } {
+  const visibility = board.visibility === 'public' || board.visibility === 'private'
+    ? board.visibility
+    : board.photoStudioDraft === true ? 'private' : 'public';
+  return { visibility, photoStudioDraft: visibility === 'private' && board.photoStudioDraft === true };
+}
+
 export function isBoardPhotoStory(board: {
   photoStoryBoard?: boolean;
   backNote?: string;

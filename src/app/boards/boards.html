@@ -8336,6 +8336,12 @@
                     </div>
                   </div>
                   <div class="stack-export-grid">
+                    @if (board.visibility === 'private') {
+                      <button type="button" [disabled]="stackVideoExporting()" (click)="shareStackTo('download')">
+                        <span class="material-symbols-outlined">movie</span>
+                        Create or share video
+                      </button>
+                    } @else {
                     @for (target of stackExportTargets; track target.id) {
                       <button
                         type="button"
@@ -8346,6 +8352,7 @@
                         <span class="material-symbols-outlined">{{ stackVideoExporting() ? 'progress_activity' : target.icon }}</span>
                         {{ stackVideoExporting() ? stackVideoProgress() + '%' : target.label }}
                       </button>
+                    }
                     }
                   </div>
                   <div class="stack-video-note">
@@ -8542,6 +8549,9 @@
 
           <div class="stack-share-dialog">
             <section class="stack-share-sheet" [class.stack-share-sheet--stale]="(stackShareMode() === 'trailer' && board.trailerVideoUrl && !trailerVideoIsCurrent(board)) || (stackShareMode() === 'video' && board.socialVideoUrl && !socialVideoIsCurrent(board))">
+              @if (board.visibility === 'private') {
+                <p class="stack-share-sheet__note">Your board stays private. Videos are saved to My Videos, where you can download or share the files.</p>
+              }
               <div class="stack-share-sheet__modes" aria-label="Choose what to share" i18n-aria-label>
                 <button type="button" [class.stack-share-sheet__mode--active]="stackShareMode() === 'trailer'" (click)="setStackShareMode('trailer')">
                   <span class="material-symbols-outlined">movie_filter</span>
@@ -8989,12 +8999,14 @@
                   </div>
                 }
 
+                @if (board.visibility === 'public' || stackShareMode() !== 'live') {
                 <div class="stack-share-sheet__destination-head">
-                  <strong>{{ stackShareMode() === 'live' ? 'Share live-view link' : 'Open a social composer' }}</strong>
-                  <span>{{ stackShareMode() === 'live' ? 'Includes the board picture and opens the interactive board.' : 'Downloads the MP4 and opens the selected composer. Attach it for in-feed autoplay.' }}</span>
+                  <strong>{{ board.visibility === 'private' ? 'Share video files' : stackShareMode() === 'live' ? 'Share live-view link' : 'Open a social composer' }}</strong>
+                  <span>{{ board.visibility === 'private' ? 'Share the video from your device or download it to attach in another app.' : stackShareMode() === 'live' ? 'Includes the board picture and opens the interactive board.' : 'Downloads the MP4 and opens the selected composer. Attach it for in-feed autoplay.' }}</span>
                 </div>
                 <div class="stack-share-sheet__destinations" aria-label="Share destinations" i18n-aria-label>
                   @for (target of stackLinkShareTargets; track target.id) {
+                    @if (board.visibility === 'public' || target.id === 'more') {
                     <button
                       type="button"
                       (click)="shareSelectedStackLinkTo(target.id, board)"
@@ -9002,9 +9014,12 @@
                       <span class="stack-share-sheet__social-mark" [style.--share-color]="target.color">{{ target.mark }}</span>
                       <small>{{ target.label }}</small>
                     </button>
+                    }
                   }
                 </div>
+                }
 
+                @if (board.visibility === 'public') {
                 <div class="stack-share-sheet__link">
                   <span><small>{{ stackSelectedShareLabel() }}</small><strong>{{ stackSelectedShareUrl(board) }}</strong></span>
                   <button type="button" (click)="copySelectedStackShareUrl(board)" i18n>Copy</button>
@@ -9013,16 +9028,19 @@
                 @if (stackShareMode() !== 'live') {
                   <small class="stack-share-sheet__note" i18n><strong>For in-feed playback</strong>, attach the MP4 as native media. The permanent video-page link remains available above as an optional fallback.</small>
                 }
+                }
               }
 
               <details class="stack-video-single__more">
                 <summary i18n>More options</summary>
                 <div>
-                  <button type="button" (click)="copyBoardUrl(board)" i18n><span class="material-symbols-outlined">dashboard_customize</span> Copy board link</button>
-                  @if (board.socialVideoUrl) {
+                  @if (board.visibility === 'public') {
+                    <button type="button" (click)="copyBoardUrl(board)" i18n><span class="material-symbols-outlined">dashboard_customize</span> Copy board link</button>
+                  }
+                  @if (board.visibility === 'public' && board.socialVideoUrl) {
                     <button type="button" (click)="copySocialVideoFileUrl(board)" i18n><span class="material-symbols-outlined">movie</span> Copy direct MP4</button>
                   }
-                  @if (board.trailerVideoUrl) {
+                  @if (board.visibility === 'public' && board.trailerVideoUrl) {
                     <button type="button" (click)="copyTrailerVideoFileUrl(board)"><span class="material-symbols-outlined">movie_filter</span> Copy trailer MP4</button>
                   }
                   @if (canEditBoard(board) && stackShareMode() !== 'live' && (board.socialVideoUrl || board.trailerVideoUrl)) {

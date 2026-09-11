@@ -103,7 +103,7 @@ export class VideoLibraryService {
     const normalizedItems = items
       .map((item) => {
         const board = boardsById.get(item.sourceId);
-        const publicShareUrl = canonicalPublicVideoUrl(item.publicShareUrl);
+        const publicShareUrl = board?.visibility === 'private' ? '' : canonicalPublicVideoUrl(item.publicShareUrl);
         if (publicShareUrl !== item.publicShareUrl) {
           void this.repairPublicShareUrl(uid, item.id, publicShareUrl);
         }
@@ -212,10 +212,18 @@ export class VideoLibraryService {
         server_updated_at: serverTimestamp(),
       };
       await setDoc(itemRef, record);
-      if (previous?.storagePath && previous.storagePath !== storagePath) {
+      // A private board can still preview the previous library render until its
+      // new video metadata is saved. Do not break that preview on a failed save.
+      const sourceSnapshot = previous && !previous.publicShareUrl
+        ? await getDoc(doc(this.firestore, 'boards', input.boardId)).catch(() => null)
+        : null;
+      const source = sourceSnapshot?.data();
+      const previousStillReferenced = previous && !previous.publicShareUrl
+        && (!sourceSnapshot || [source?.['socialVideoUrl'], source?.['trailerVideoUrl']].includes(previous.videoUrl));
+      if (!previousStillReferenced && previous?.storagePath && previous.storagePath !== storagePath) {
         await this.deleteStoragePath(previous.storagePath).catch(() => undefined);
       }
-      if (previous?.landscapeVariant?.storagePath
+      if (!previousStillReferenced && previous?.landscapeVariant?.storagePath
         && previous.landscapeVariant.storagePath !== landscapeStoragePath) {
         await this.deleteStoragePath(previous.landscapeVariant.storagePath).catch(() => undefined);
       }
@@ -238,37 +246,43 @@ export class VideoLibraryService {
       throw new Error('Only the video owner can delete this video.');
     }
 
-    if (item.publicShareUrl || item.publicStoragePath || (!item.storagePath && item.videoUrl)) {
-      const boardRef = doc(this.firestore, 'boards', item.sourceId);
-      const boardSnapshot = await getDoc(boardRef);
-      if (boardSnapshot.exists() && boardSnapshot.data()['owner_user_id'] === uid) {
-        const now = new Date().toISOString();
-        await updateDoc(boardRef, item.videoKind === 'trailer' ? {
-          trailerVideoUrl: '',
-          trailerVideoMimeType: '',
-          trailerVideoUpdatedAt: '',
-          trailerVideoRenderVersion: '',
-          trailerLandscapeVideoUrl: '',
-          trailerLandscapeVideoMimeType: '',
-          trailerLandscapeVideoUpdatedAt: '',
-          trailerLandscapeVideoRenderVersion: '',
-          trailerLandscapeVideoDurationSeconds: 0,
-          updated_at_iso: now,
-          server_updated_at: serverTimestamp(),
-        } : {
-          socialVideoUrl: '',
-          socialVideoMimeType: '',
-          socialVideoUpdatedAt: '',
-          socialVideoRenderVersion: '',
-          socialLandscapeVideoUrl: '',
-          socialLandscapeVideoMimeType: '',
-          socialLandscapeVideoUpdatedAt: '',
-          socialLandscapeVideoRenderVersion: '',
-          socialLandscapeVideoDurationSeconds: 0,
-          updated_at_iso: now,
-          server_updated_at: serverTimestamp(),
-        });
-      }
+    const boardRef = doc(this.firestore, 'boards', item.sourceId);
+    const boardSnapshot = await getDoc(boardRef).catch((error) => {
+      // A deleted or no-longer-accessible source must not prevent deleting an
+      // owned library file. Its board metadata cannot be edited in that case.
+      if (error instanceof FirebaseError && error.code === 'permission-denied') return null;
+      throw error;
+    });
+    const board = boardSnapshot?.data();
+    const boardUsesLibraryVideo = board?.[item.videoKind === 'trailer' ? 'trailerVideoUrl' : 'socialVideoUrl'] === item.videoUrl;
+    if (board?.['owner_user_id'] === uid
+      && (boardUsesLibraryVideo || item.publicShareUrl || item.publicStoragePath || (!item.storagePath && item.videoUrl))) {
+      const now = new Date().toISOString();
+      await updateDoc(boardRef, item.videoKind === 'trailer' ? {
+        trailerVideoUrl: '',
+        trailerVideoMimeType: '',
+        trailerVideoUpdatedAt: '',
+        trailerVideoRenderVersion: '',
+        trailerLandscapeVideoUrl: '',
+        trailerLandscapeVideoMimeType: '',
+        trailerLandscapeVideoUpdatedAt: '',
+        trailerLandscapeVideoRenderVersion: '',
+        trailerLandscapeVideoDurationSeconds: 0,
+        updated_at_iso: now,
+        server_updated_at: serverTimestamp(),
+      } : {
+        socialVideoUrl: '',
+        socialVideoMimeType: '',
+        socialVideoUpdatedAt: '',
+        socialVideoRenderVersion: '',
+        socialLandscapeVideoUrl: '',
+        socialLandscapeVideoMimeType: '',
+        socialLandscapeVideoUpdatedAt: '',
+        socialLandscapeVideoRenderVersion: '',
+        socialLandscapeVideoDurationSeconds: 0,
+        updated_at_iso: now,
+        server_updated_at: serverTimestamp(),
+      });
     }
 
     const paths = new Set([

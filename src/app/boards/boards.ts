@@ -50,6 +50,7 @@ import {
   type NearbyGemsBoardCardView,
 } from './nearby-gems-board/nearby-gems-board';
 import { VideoLibraryService } from '../video-library/video-library.service';
+import type { VideoLibraryItem } from '../video-library/video-library.models';
 import { BoardPromoImageDialogComponent } from './board-promo-image-dialog';
 import { BackdropDismissDirective } from '../backdrop-dismiss.directive';
 import { TalkingCardEditorComponent } from '../talking-card-editor/talking-card-editor';
@@ -133,6 +134,7 @@ import {
   buildBoardPhotoStoryDrafts,
   isBoardPhotoStory,
   isBoardPhotoStudioDraft,
+  normalizeBoardPrivacy,
   shouldOpenBoardPhotoStoryStudio,
   type BoardPhotoStoryMode,
 } from './board-photo-story';
@@ -6613,6 +6615,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         ? await this.persistVisibilityAndReplaceBoard(nextBoard)
         : await this.persistAndReplaceBoard(nextBoard);
       if (!saved) {
+        this.boards.update((boards) => boards.map((board) => board.id === current.id ? current : board));
         this.boardSettingsError.set('These changes could not be saved. Please try again.');
         return;
       }
@@ -16683,6 +16686,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.setStackShareMessage('Make your own copy of this board before creating a new video.', false);
       return;
     }
+    if (board.visibility === 'private') {
+      this.openStackShareDialog(board);
+      this.stackShareMode.set('video');
+      return;
+    }
     if (this.stackVideoNarrationEnabled()
       && stackNarratorVoiceRequiresPaidPlan(this.stackNarratorVoiceId())
       && !this.personalVoiceEligible()) {
@@ -16692,9 +16700,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const savedBoard = await this.stackBoardWithSavedVideoSettings(board);
     if (!savedBoard) return;
     board = savedBoard;
-    const url = this.stackShareUrl(board);
+    const url = board.visibility === 'public' ? this.stackShareUrl(board) : '';
     const caption = this.stackCaption().trim() || `LivingWiki Stack: ${board.title}`;
-    const text = `${caption}\n${url}`;
+    const text = [caption, url].filter(Boolean).join('\n');
     this.setStackShareMessage(null);
     this.stackVideoExporting.set(true);
     this.stackVideoProgress.set(0);
@@ -16709,7 +16717,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         result: landscape,
         publicStoragePath: '',
       });
-      const libraryMessage = librarySave === true
+      const libraryMessage = librarySave
         ? ' Both formats were saved to My Videos.'
         : librarySave === false
           ? ' The videos were created, but could not be saved to My Videos.'
@@ -16761,46 +16769,37 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   socialVideoShareUrl(board: Board): string {
-    if (!board.socialVideoUrl) return '';
+    if (!board.socialVideoUrl || board.visibility !== 'public') return '';
     const version = encodeURIComponent(
       `${board.socialVideoUpdatedAt || board.updatedAt || board.id}-${playerCardVersion}`,
     );
     const path = `/share/board/${encodeURIComponent(board.id)}/video?v=${version}`;
-    if (board.visibility === 'public') {
-      return `${PUBLIC_APP_URL}${path}`;
-    }
-    return this.isBrowser ? `${window.location.origin}${path}` : path;
+    return `${PUBLIC_APP_URL}${path}`;
   }
 
   socialVideoFileUrl(board: Board): string {
-    if (!board.socialVideoUrl) return '';
+    if (!board.socialVideoUrl || board.visibility !== 'public') return '';
     const version = encodeURIComponent(board.socialVideoUpdatedAt || board.updatedAt || board.id);
     const path = `/share/board/${encodeURIComponent(board.id)}/video.mp4?v=${version}`;
-    if (board.visibility === 'public') {
-      return `${PUBLIC_APP_URL}${path}`;
-    }
-    return this.isBrowser ? `${window.location.origin}${path}` : path;
+    return `${PUBLIC_APP_URL}${path}`;
   }
 
   trailerVideoShareUrl(board: Board): string {
-    if (!board.trailerVideoUrl) return '';
+    if (!board.trailerVideoUrl || board.visibility !== 'public') return '';
     const version = encodeURIComponent(`${board.trailerVideoUpdatedAt || board.updatedAt || board.id}-${playerCardVersion}`);
     const path = `/share/board/${encodeURIComponent(board.id)}/trailer?v=${version}`;
-    return board.visibility === 'public'
-      ? `${PUBLIC_APP_URL}${path}`
-      : this.isBrowser ? `${window.location.origin}${path}` : path;
+    return `${PUBLIC_APP_URL}${path}`;
   }
 
   trailerVideoFileUrl(board: Board): string {
-    if (!board.trailerVideoUrl) return '';
+    if (!board.trailerVideoUrl || board.visibility !== 'public') return '';
     const version = encodeURIComponent(board.trailerVideoUpdatedAt || board.updatedAt || board.id);
     const path = `/share/board/${encodeURIComponent(board.id)}/trailer.mp4?v=${version}`;
-    return board.visibility === 'public'
-      ? `${PUBLIC_APP_URL}${path}`
-      : this.isBrowser ? `${window.location.origin}${path}` : path;
+    return `${PUBLIC_APP_URL}${path}`;
   }
 
   stackSelectedShareUrl(board: Board): string {
+    if (board.visibility !== 'public') return '';
     return this.stackShareMode() === 'trailer'
       ? this.trailerVideoShareUrl(board)
       : this.stackShareMode() === 'video'
@@ -16999,16 +16998,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     if (!this.canEditBoard(board)) {
-      this.setStackShareMessage('Only the board owner can publish a Board Trailer.', false);
-      return;
-    }
-    if (board.visibility !== 'public') {
-      this.setStackShareMessage('Make this board public before publishing its trailer.', false);
+      this.setStackShareMessage('Only the board owner can create a Board Trailer.', false);
       return;
     }
     const uid = this.authService.uid();
     if (!uid || !this.storage) {
-      this.setStackShareMessage('Sign in to publish a Board Trailer.', false);
+      this.setStackShareMessage('Sign in to create a Board Trailer.', false);
       return;
     }
     if (this.stackTrailerNarrationEnabled()
@@ -17031,10 +17026,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         throw new Error('The trailer is too large to publish. Select fewer cards and try again.');
       }
       const generatedAt = new Date().toISOString();
-      const [verticalUpload, landscapeUpload] = await Promise.all([
-        this.uploadPublishedStackVariant(uid, board, 'trailer', 'vertical', vertical, generatedAt),
-        this.uploadPublishedStackVariant(uid, board, 'trailer', 'landscape', landscape, generatedAt),
-      ]);
+      const { verticalUpload, landscapeUpload } = await this.storeStackVideoPair(board, created.results, 'trailer', generatedAt);
       this.publishedStackTrailerFiles.set(this.stackPublishedFileKey(board.id, 'vertical'), verticalUpload.file);
       this.publishedStackTrailerFiles.set(this.stackPublishedFileKey(board.id, 'landscape'), landscapeUpload.file);
       this.stackPublishedTrailerReady.set(true);
@@ -17061,14 +17053,16 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       };
       const persisted = await this.persistBoard(nextBoard);
       this.boards.update((boards) => boards.map((item) => item.id === persisted.id ? persisted : item));
-      const librarySave = await this.saveStackVideoToLibrary(persisted, vertical, {
+      const librarySave = board.visibility === 'public' ? await this.saveStackVideoToLibrary(persisted, vertical, {
         publicStoragePath: verticalUpload.path,
         publicShareUrl: this.trailerVideoShareUrl(persisted),
       }, 'trailer', {
         result: landscape,
         publicStoragePath: landscapeUpload.path,
-      });
-      this.setStackShareMessage(librarySave === false
+      }) : null;
+      this.setStackShareMessage(board.visibility === 'private'
+        ? 'Board Trailer created in both formats and saved to My Videos. Your board is still private.'
+        : librarySave === false
         ? 'Board Trailer published. My Videos could not be updated, but the trailer link is ready.'
         : 'Board Trailer published and saved to My Videos. It is ready to share.', false);
     } catch (error) {
@@ -17092,8 +17086,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const file = await this.preparePublishedStackFile(board, 'trailer', ratio);
     if (!file) return;
     const caption = this.stackCaption().trim() || `A quick look at ${board.title}.`;
-    const boardUrl = this.stackSocialShareUrl(board);
-    const shareText = `${caption}\n${boardUrl}`;
+    const boardUrl = board.visibility === 'public' ? this.stackSocialShareUrl(board) : '';
+    const shareText = [caption, boardUrl].filter(Boolean).join('\n');
     try {
       if (target === 'more' && this.canNativeShareFile(file)) {
         await navigator.share({ title: board.title, text: shareText, files: [file] });
@@ -17101,7 +17095,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         return;
       }
       this.downloadStackVideo(file);
-      if (target !== 'more') this.openStackLinkComposer(target, board, boardUrl, caption);
+      if (target !== 'more' && boardUrl) this.openStackLinkComposer(target, board, boardUrl, caption);
       await this.copyTextToClipboard(shareText);
       this.setStackShareMessage('Trailer downloaded and caption copied. Attach it as native media for autoplay.', false);
     } catch (error) {
@@ -17165,7 +17159,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       subtitle: this.stackCoverSubtitle().trim() || board.description,
       ownerName: this.ownerName(board),
       coverImageUrl: this.stackCoverImage(board),
-      liveUrl: this.stackShareUrl(board),
+      liveUrl: board.visibility === 'public' ? this.stackShareUrl(board) : '',
       qrImageUrl: '',
       showCardNumbers: this.boardShowsCardNumbers(board),
       branding: this.effectiveStackVideoBranding(board),
@@ -17207,16 +17201,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     if (!this.canEditBoard(board)) {
-      this.setStackShareMessage('Only the board owner can publish a permanent video link.', false);
-      return;
-    }
-    if (board.visibility !== 'public') {
-      this.setStackShareMessage('Make this board public before publishing its video link.', false);
+      this.setStackShareMessage('Only the board owner can create a video.', false);
       return;
     }
     const uid = this.authService.uid();
     if (!uid || !this.storage) {
-      this.setStackShareMessage('Sign in to publish a permanent video link.', false);
+      this.setStackShareMessage('Sign in to create a video.', false);
       return;
     }
     if (this.stackVideoNarrationEnabled()
@@ -17231,7 +17221,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
     this.stackVideoExporting.set(true);
     this.stackVideoProgress.set(0);
-    this.setStackShareMessage('Creating and publishing your video…', false);
+    this.setStackShareMessage('Creating and saving your video…', false);
     try {
       const results = await this.createStackVideoPair(board);
       const { vertical, landscape } = results;
@@ -17239,10 +17229,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         throw new Error('The video is too large to publish. Select fewer cards and try again.');
       }
       const generatedAt = new Date().toISOString();
-      const [verticalUpload, landscapeUpload] = await Promise.all([
-        this.uploadPublishedStackVariant(uid, board, 'full', 'vertical', vertical, generatedAt),
-        this.uploadPublishedStackVariant(uid, board, 'full', 'landscape', landscape, generatedAt),
-      ]);
+      const { verticalUpload, landscapeUpload } = await this.storeStackVideoPair(board, results, 'full', generatedAt);
       this.publishedStackVideoFiles.set(this.stackPublishedFileKey(board.id, 'vertical'), verticalUpload.file);
       this.publishedStackVideoFiles.set(this.stackPublishedFileKey(board.id, 'landscape'), landscapeUpload.file);
       this.stackPublishedVideoReady.set(true);
@@ -17265,14 +17252,16 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       };
       const persisted = await this.persistBoard(nextBoard);
       this.boards.update((boards) => boards.map((item) => item.id === persisted.id ? persisted : item));
-      const librarySave = await this.saveStackVideoToLibrary(persisted, vertical, {
+      const librarySave = board.visibility === 'public' ? await this.saveStackVideoToLibrary(persisted, vertical, {
         publicStoragePath: verticalUpload.path,
         publicShareUrl: this.socialVideoShareUrl(persisted),
       }, 'full', {
         result: landscape,
         publicStoragePath: landscapeUpload.path,
-      });
-      this.setStackShareMessage(librarySave === false
+      }) : null;
+      this.setStackShareMessage(board.visibility === 'private'
+        ? 'Video created in both formats and saved to My Videos. Your board is still private.'
+        : librarySave === false
         ? 'Permanent video link published, but My Videos could not be updated. You can still copy the link or share the MP4.'
         : 'Permanent video link published and saved to My Videos. You can copy it or share the MP4 natively.', false);
     } catch (error) {
@@ -17296,8 +17285,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const file = await this.preparePublishedStackFile(board, 'full', ratio);
     if (!file) return;
     const caption = this.stackCaption().trim() || `LivingWiki Stack: ${board.title}`;
-    const liveUrl = this.stackSocialShareUrl(board);
-    const shareText = `${caption}\n${liveUrl}`;
+    const liveUrl = board.visibility === 'public' ? this.stackSocialShareUrl(board) : '';
+    const shareText = [caption, liveUrl].filter(Boolean).join('\n');
     try {
       if (target === 'more' && this.canNativeShareFile(file)) {
         await navigator.share({ title: board.title, text: shareText, files: [file] });
@@ -17306,7 +17295,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       }
 
       this.downloadStackVideo(file);
-      if (target !== 'more') {
+      if (target !== 'more' && liveUrl) {
         this.openStackLinkComposer(target, board, liveUrl, caption);
       }
       await this.copyTextToClipboard(shareText);
@@ -17474,11 +17463,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       subtitle: this.stackScriptBoardDescription().trim() || board.description,
       ownerName: this.ownerName(board),
       coverImageUrl: this.stackCoverImage(board),
-      liveUrl: this.stackShareUrl(board),
-      qrImageUrl: this.stackQrImageUrl(board),
+      liveUrl: board.visibility === 'public' ? this.stackShareUrl(board) : '',
+      qrImageUrl: board.visibility === 'public' ? this.stackQrImageUrl(board) : '',
       showCardNumbers: this.boardShowsCardNumbers(board),
       branding: this.effectiveStackVideoBranding(board),
-      closingScreen: this.currentStackFinalScreen(board),
+      closingScreen: {
+        ...this.currentStackFinalScreen(board),
+        showQrCode: board.visibility === 'public' && this.stackFinalScreenShowQrCode(),
+      },
       cards: selectedCards.map((card) => ({
         title: this.stackScriptTitle(card),
         subtitle: this.cardDisplaySubtitle(board, card),
@@ -17724,18 +17716,56 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     return { path, url: await getDownloadURL(ref), file };
   }
 
+  private async storeStackVideoPair(
+    board: Board,
+    results: StackVideoPair,
+    videoKind: 'full' | 'trailer',
+    generatedAt: string,
+  ): Promise<{
+    verticalUpload: { path: string; url: string; file: File };
+    landscapeUpload: { path: string; url: string; file: File };
+  }> {
+    if (board.visibility === 'public') {
+      const [verticalUpload, landscapeUpload] = await Promise.all([
+        this.uploadPublishedStackVariant(this.authService.uid(), board, videoKind, 'vertical', results.vertical, generatedAt),
+        this.uploadPublishedStackVariant(this.authService.uid(), board, videoKind, 'landscape', results.landscape, generatedAt),
+      ]);
+      return { verticalUpload, landscapeUpload };
+    }
+
+    // Private renders use the owner-only library, never the public board asset path.
+    const item = await this.saveStackVideoToLibrary(board, results.vertical, null, videoKind, {
+      result: results.landscape,
+      publicStoragePath: '',
+    });
+    if (!item || !item.landscapeVariant) {
+      throw new Error('The video could not be saved to My Videos. Your board is still private. Please try again.');
+    }
+    const makeFile = (result: StackVideoResult, ratio: StackDeliveryRatio) => videoKind === 'trailer'
+      ? this.stackTrailerFile(board, result, ratio)
+      : this.stackVideoFile(board, result, ratio);
+    return {
+      verticalUpload: { path: item.storagePath, url: item.videoUrl, file: makeFile(results.vertical, 'vertical') },
+      landscapeUpload: {
+        path: item.landscapeVariant.storagePath,
+        url: item.landscapeVariant.videoUrl,
+        file: makeFile(results.landscape, 'landscape'),
+      },
+    };
+  }
+
   private async saveStackVideoToLibrary(
     board: Board,
     result: StackVideoResult,
     published: { publicStoragePath: string; publicShareUrl: string } | null = null,
     videoKind: 'full' | 'trailer' = 'full',
     landscape?: { result: StackVideoResult; publicStoragePath: string },
-  ): Promise<boolean | null> {
+  ): Promise<VideoLibraryItem | false | null> {
     if (!this.canEditBoard(board) || !this.authService.uid()) {
       return null;
     }
     try {
-      await this.videoLibrary.saveLatestBoardVideo({
+      return await this.videoLibrary.saveLatestBoardVideo({
         boardId: board.id,
         videoKind,
         boardTitle: board.title,
@@ -17761,7 +17791,6 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           publicStoragePath: landscape.publicStoragePath,
         } : undefined,
       });
-      return true;
     } catch (error) {
       console.error('Video library save failed', error, { boardId: board.id });
       return false;
@@ -21437,11 +21466,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           forkedFromTitle: typeof board.forkedFromTitle === 'string' ? board.forkedFromTitle : '',
           forkedFromOwnerUserId: typeof board.forkedFromOwnerUserId === 'string' ? board.forkedFromOwnerUserId : '',
           forkedFromOwnerName: typeof board.forkedFromOwnerName === 'string' ? board.forkedFromOwnerName : '',
-          visibility: (board as Partial<Board>).photoStudioDraft === true
-            ? 'private'
-            : this.isBoardVisibility((board as Partial<Board>).visibility) ? (board as Board).visibility : 'public',
+          ...normalizeBoardPrivacy(board),
           photoStoryBoard: (board as Partial<Board>).photoStoryBoard === true,
-          photoStudioDraft: (board as Partial<Board>).photoStudioDraft === true,
           imageUrl: board.imageUrl ?? '',
           logoUrl: typeof board.logoUrl === 'string' ? board.logoUrl : '',
           logoLinkUrl: typeof board.logoLinkUrl === 'string' ? board.logoLinkUrl : '',
@@ -21631,10 +21657,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return true;
     }
     const updatedAt = board.updatedAt || new Date().toISOString();
-    const nextBoard = { ...board, updatedAt };
+    const nextBoard = { ...board, ...normalizeBoardPrivacy(board), updatedAt };
     try {
       await updateDoc(doc(this.firestore, 'boards', board.id), {
         visibility: board.visibility,
+        ...(nextBoard.visibility === 'public' ? { photoStudioDraft: false } : {}),
         updated_at_iso: updatedAt,
         server_updated_at: serverTimestamp(),
       });
@@ -21649,9 +21676,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private async persistBoard(board: Board): Promise<Board> {
-    const visibilitySafeBoard: Board = board.photoStudioDraft
-      ? { ...board, visibility: 'private' }
-      : board;
+    const visibilitySafeBoard: Board = { ...board, ...normalizeBoardPrivacy(board) };
     const uid = this.authService.uid();
     if (!this.firestore || !uid) {
       return visibilitySafeBoard;
@@ -21695,6 +21720,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     const boardWithOwner = {
       ...board,
+      ...normalizeBoardPrivacy(board),
       description: boardDescriptionForFirestore(board.description),
       ...this.currentOwnerSnapshot(),
     };
@@ -21875,7 +21901,6 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       ownerUserId,
       this.authService.uid(),
     );
-    const photoStudioDraft = data['photoStudioDraft'] === true;
     return {
       id,
       likeCount: typeof data['like_count'] === 'number' ? Math.max(0, Math.trunc(data['like_count'])) : 0,
@@ -21896,11 +21921,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       forkedFromTitle: typeof data['forkedFromTitle'] === 'string' ? data['forkedFromTitle'] : '',
       forkedFromOwnerUserId: typeof data['forkedFromOwnerUserId'] === 'string' ? data['forkedFromOwnerUserId'] : '',
       forkedFromOwnerName: typeof data['forkedFromOwnerName'] === 'string' ? data['forkedFromOwnerName'] : '',
-      visibility: photoStudioDraft
-        ? 'private'
-        : this.isBoardVisibility(data['visibility']) ? data['visibility'] : 'public',
+      ...normalizeBoardPrivacy(data),
       photoStoryBoard: data['photoStoryBoard'] === true,
-      photoStudioDraft,
       title,
       description: typeof data['description'] === 'string' ? data['description'] : '',
       backNote: typeof data['backNote'] === 'string' ? data['backNote'] : '',

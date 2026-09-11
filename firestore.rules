@@ -886,9 +886,14 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'stackNarratorVoiceId',
           'visibility',
+          'photoStudioDraft',
           'updated_at_iso',
           'server_updated_at'
         ])
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['photoStudioDraft'])
+          || (request.resource.data.photoStudioDraft == false && request.resource.data.visibility == 'public')
+        )
         && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['stackNarratorVoiceId'])
           || isValidStackNarratorVoiceId(request.resource.data.stackNarratorVoiceId)

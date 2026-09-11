@@ -43,6 +43,22 @@ after(async () => {
   await testEnvironment?.cleanup();
 });
 
+test('private board videos and trailers in both formats are readable only by the owner', async () => {
+  const ownerStorage = testEnvironment.authenticatedContext(ownerUid).storage();
+  const outsiderStorage = testEnvironment.authenticatedContext(otherUid).storage();
+  const publicStorage = testEnvironment.unauthenticatedContext().storage();
+  for (const kind of ['full', 'trailer']) {
+    for (const ratio of ['vertical', 'landscape']) {
+      const path = `users/${ownerUid}/video-library/boards/private-board/${kind}/${ratio}/video.mp4`;
+      await assertSucceeds(uploadBytes(ref(ownerStorage, path), new Uint8Array([1, 2, 3]), { contentType: 'video/mp4' }));
+      await assertSucceeds(getBytes(ref(ownerStorage, path)));
+      await assertFails(getBytes(ref(outsiderStorage, path)));
+      await assertFails(getBytes(ref(publicStorage, path)));
+      await assertFails(uploadBytes(ref(outsiderStorage, path), new Uint8Array([4]), { contentType: 'video/mp4' }));
+    }
+  }
+});
+
 test('owner can upload and delete a public-readable image in their avatar namespace', async () => {
   const ownerStorage = testEnvironment.authenticatedContext(ownerUid).storage();
   const portrait = ref(ownerStorage, `users/${ownerUid}/avatars/new-avatar/chat-guide.png`);
