@@ -115,6 +115,31 @@ export interface TeamReport {
   voiceTrackingSince?: string | null;
   days: number;
 }
+
+/** Missing or invalid counters are unavailable, never an assumed zero. */
+export function validateTeamReport(report: TeamReport, days: number): TeamReport {
+  const validMetrics = (value: TeamMetrics) =>
+    value &&
+    ['views', 'participants', 'chats', 'messages', 'contacts'].every((key) => {
+      const count = value[key as keyof TeamMetrics];
+      return typeof count === 'number' && Number.isSafeInteger(count) && count >= 0;
+    }) &&
+    (value.voiceSeconds === null ||
+      (typeof value.voiceSeconds === 'number' &&
+        Number.isFinite(value.voiceSeconds) &&
+        value.voiceSeconds >= 0));
+  if (
+    !report ||
+    report.days !== days ||
+    !validMetrics(report.totals) ||
+    !report.listings ||
+    Array.isArray(report.listings) ||
+    typeof report.listings !== 'object' ||
+    !Object.values(report.listings).every(validMetrics)
+  )
+    throw new Error('Analytics returned incomplete or invalid counts. Please refresh.');
+  return report;
+}
 export interface TeamConversation {
   id: string;
   startedAt: string;

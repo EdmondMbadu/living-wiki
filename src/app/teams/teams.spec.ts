@@ -8,7 +8,35 @@ import { PersonalVoiceService } from '../personal-voice.service';
 import { TeamsComponent } from './teams';
 import { TeamsService } from './teams.service';
 import { teamsServiceStub } from './teams.testing';
-import type { TeamDashboard, TeamListing } from './team.models';
+import type { TeamDashboard, TeamListing, TeamReport } from './team.models';
+
+function reportFixture(days = 30): TeamReport {
+  return {
+    days,
+    trackingSince: '2026-09-01T00:00:00Z',
+    totals: { views: 8, participants: 3, chats: 2, messages: 5, contacts: 1, voiceSeconds: 90 },
+    listings: {
+      'listing-0': {
+        views: 8,
+        participants: 3,
+        chats: 2,
+        messages: 5,
+        contacts: 1,
+        voiceSeconds: 90,
+      },
+    },
+  };
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (error: Error) => void;
+  const promise = new Promise<T>((yes, no) => {
+    resolve = yes;
+    reject = no;
+  });
+  return { promise, resolve, reject };
+}
 
 function dashboardFixture(): TeamDashboard {
   const members = Array.from({ length: 30 }, (_, index) => ({
@@ -100,7 +128,11 @@ describe('TeamsComponent', () => {
   });
   let fixture: ComponentFixture<TeamsComponent>;
   let data: TeamDashboard;
-  let teams: ReturnType<typeof teamsServiceStub> & Record<string, any>;
+  let teams: ReturnType<typeof teamsServiceStub> &
+    Record<string, any> & {
+      report: jasmine.Spy;
+      command: jasmine.Spy;
+    };
   let route: any;
   const uid = signal('owner');
   const authenticated = signal(true);
@@ -228,10 +260,145 @@ describe('TeamsComponent', () => {
     expect(host.textContent).toContain('Invite members');
     expect(host.querySelector('[aria-label="Team settings"]')).not.toBeNull();
     expect(page.pageRows().length).toBe(10);
-    expect(host.textContent).toContain('Verified duration not yet available');
+    expect(host.textContent).toContain('Not tracked yet');
     page.setTab('members');
     fixture.detectChanges();
     expect(host.querySelectorAll('.member-card').length).toBe(30);
+  });
+  it('counts a new private draft as one total listing, not one published listing', async () => {
+    data.listings = [data.listings[0]];
+    // The loaded listing collection is authoritative, not a stale cached team counter.
+    data.team.listing_count = 99;
+    const page = await render();
+    const card = fixture.nativeElement.querySelector('.kpi-strip article');
+    expect(card.querySelector('strong').textContent).toBe('1');
+    expect(card.textContent).toContain('0 published · 1 draft');
+    expect(page.publishedCount()).toBe(0);
+    expect(fixture.nativeElement.textContent).toContain('No listings are public yet');
+    expect(teams.command).not.toHaveBeenCalled();
+  });
+  it('keeps team-wide status counts independent of filters, pagination, and analytics dates', async () => {
+    data.listings[2].status = 'unpublished';
+    data.listings[4].status = 'archived';
+    const page = await render();
+    page.search.set('Home 30');
+    page.page.set(3);
+    page.days.set(7);
+    fixture.detectChanges();
+    expect(page.listingStatusSummary()).toBe(
+      '15 published · 14 drafts · 1 unpublished · 1 archived',
+    );
+    expect(fixture.nativeElement.querySelector('.kpi-strip strong').textContent).toBe('31');
+  });
+  it('renders the actual report totals and per-listing counts, with verified seconds converted to minutes', async () => {
+    teams.report.and.resolveTo(reportFixture());
+    const page = await render();
+    page.metricsExpanded.set(true);
+    fixture.detectChanges();
+    expect(
+      Array.from(fixture.nativeElement.querySelectorAll('.kpi-strip strong')).map((node: any) =>
+        node.textContent.trim(),
+      ),
+    ).toEqual(['31', '8', '1.5', '1']);
+    expect(
+      Array.from(fixture.nativeElement.querySelectorAll('.extended-metrics strong')).map(
+        (node: any) => node.textContent.trim(),
+      ),
+    ).toEqual(['3', '2', '5']);
+    page.search.set('Home 0');
+    fixture.detectChanges();
+    expect(
+      Array.from(fixture.nativeElement.querySelectorAll('td.metric-cell')).map((node: any) =>
+        node.textContent.trim(),
+      ),
+    ).toEqual(['8', '1.5 min', '1']);
+    expect(fixture.nativeElement.textContent).toContain('Checked');
+  });
+  it('distinguishes pending, failed, and confirmed zero analytics and supports retry', async () => {
+    const page = await render();
+    const pending = deferred<TeamReport>();
+    teams.report.and.returnValue(pending.promise);
+    const request = page.loadMetrics();
+    fixture.detectChanges();
+    expect(page.reportLoading()).toBeTrue();
+    expect(fixture.nativeElement.querySelectorAll('.kpi-strip strong')[1].textContent).toBe('—');
+    expect(fixture.nativeElement.textContent).toContain('Loading activity');
+    pending.reject(new Error('Offline'));
+    await request;
+    fixture.detectChanges();
+    expect(page.report()).toBeNull();
+    expect(page.reportCheckedAt()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Retry analytics');
+    expect(fixture.nativeElement.textContent).toContain('Activity unavailable');
+    const empty = reportFixture();
+    empty.totals = {
+      views: 0,
+      participants: 0,
+      chats: 0,
+      messages: 0,
+      contacts: 0,
+      voiceSeconds: null,
+    };
+    empty.listings = {};
+    teams.report.and.resolveTo(empty);
+    await page.loadMetrics();
+    fixture.detectChanges();
+    expect(page.reportLoading()).toBeFalse();
+    expect(page.reportError()).toBe('');
+    expect(fixture.nativeElement.querySelectorAll('.kpi-strip strong')[1].textContent).toBe('0');
+    expect(fixture.nativeElement.querySelectorAll('.kpi-strip strong')[2].textContent).toBe('—');
+  });
+  it('rejects incomplete analytics rather than substituting invented zero counts', async () => {
+    const page = await render();
+    teams.report.and.resolveTo({ ...reportFixture(), totals: { views: 0 } });
+    await page.loadMetrics();
+    expect(page.report()).toBeNull();
+    expect(page.reportError()).toContain('unavailable');
+  });
+  it('ignores an older report or failure even when the same date range is requested again', async () => {
+    const page = await render();
+    const old = deferred<TeamReport>();
+    teams.report.and.returnValue(old.promise);
+    const first = page.loadMetrics();
+    teams.report.and.resolveTo(reportFixture());
+    await page.loadMetrics();
+    old.reject(new Error('Late failure'));
+    await first;
+    expect(page.report()?.totals.views).toBe(8);
+    expect(page.reportError()).toBe('');
+    const stale = deferred<TeamReport>();
+    teams.report.and.returnValue(stale.promise);
+    const second = page.loadMetrics();
+    teams.report.and.resolveTo(reportFixture());
+    await page.loadMetrics();
+    stale.resolve({ ...reportFixture(), totals: { ...reportFixture().totals, views: 999 } });
+    await second;
+    expect(page.report()?.totals.views).toBe(8);
+  });
+  it('reloads analytics alongside listing changes and when returning to the window', async () => {
+    const page = await render();
+    data.listings = [data.listings[0]];
+    data.listings[0].status = 'published';
+    teams.report.calls.reset();
+    teams.report.and.resolveTo(reportFixture());
+    await page.refresh();
+    expect(page.publishedCount()).toBe(1);
+    expect(page.report()?.totals.views).toBe(8);
+    expect(teams.report).toHaveBeenCalledOnceWith('team-a', 30);
+    spyOnProperty(document, 'hidden', 'get').and.returnValue(false);
+    page.refreshMetricsOnFocus();
+    await fixture.whenStable();
+    expect(teams.report.calls.count()).toBe(2);
+  });
+  it('does not apply a report after leaving the workspace or losing access', async () => {
+    const page = await render();
+    const pending = deferred<TeamReport>();
+    teams.report.and.returnValue(pending.promise);
+    const request = page.loadMetrics();
+    page.dashboard.set(null);
+    pending.resolve(reportFixture());
+    await request;
+    expect(page.report()).toBeNull();
   });
   it('searches and filters the entire collection before pagination', async () => {
     const page = await render();

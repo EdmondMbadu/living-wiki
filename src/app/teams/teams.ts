@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  HostListener,
   PLATFORM_ID,
   ViewChild,
   computed,
@@ -29,6 +30,7 @@ import {
   teamError,
   teamInitials,
   teamSlugInput,
+  validateTeamReport,
   type PublicTeamPage,
   type TeamDashboard,
   type TeamInvitation,
@@ -64,6 +66,8 @@ export class TeamsComponent {
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private stopWatching: (() => void) | null = null;
   private loadSequence = 0;
+  private reportSequence = 0;
+  private refreshSequence = 0;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
   private createRequestId = '';
   private previousFocus: HTMLElement | null = null;
@@ -83,6 +87,8 @@ export class TeamsComponent {
   readonly publicListings = signal<TeamListing[]>([]);
   readonly report = signal<TeamReport | null>(null);
   readonly reportError = signal('');
+  readonly reportLoading = signal(false);
+  readonly reportCheckedAt = signal<Date | null>(null);
   readonly busy = signal(false);
   readonly loading = signal(true);
   readonly error = signal('');
@@ -166,6 +172,35 @@ export class TeamsComponent {
   readonly publishedCount = computed(
     () => this.listings().filter((listing) => listing.status === 'published').length,
   );
+  readonly listingStatusSummary = computed(() => {
+    const counts = this.listings().reduce(
+      (result, listing) => {
+        result[listing.status]++;
+        return result;
+      },
+      { published: 0, draft: 0, unpublished: 0, archived: 0 },
+    );
+    return [
+      `${counts.published} published`,
+      ...(counts.draft ? [`${counts.draft} ${counts.draft === 1 ? 'draft' : 'drafts'}`] : []),
+      ...(counts.unpublished ? [`${counts.unpublished} unpublished`] : []),
+      ...(counts.archived ? [`${counts.archived} archived`] : []),
+    ].join(' · ');
+  });
+  readonly activityPeriodLabel = computed(() =>
+    this.reportLoading()
+      ? 'Loading activity…'
+      : this.reportError()
+        ? 'Activity unavailable'
+        : `Last ${this.days()} days · UTC`,
+  );
+  readonly voicePeriodLabel = computed(() =>
+    this.report()?.totals.voiceSeconds == null
+      ? this.reportLoading() || this.reportError()
+        ? this.activityPeriodLabel()
+        : 'Not tracked yet'
+      : this.activityPeriodLabel(),
+  );
   readonly pendingInvitations = computed(
     () =>
       this.dashboard()?.invitations.filter((invite) =>
@@ -247,6 +282,10 @@ export class TeamsComponent {
     this.dashboard.set(null);
     this.publicPage.set(null);
     this.report.set(null);
+    this.reportSequence++;
+    this.reportError.set('');
+    this.reportLoading.set(false);
+    this.reportCheckedAt.set(null);
     this.loading.set(true);
     const path = this.route.snapshot.routeConfig?.path || '';
     const teamId = this.route.snapshot.paramMap.get('teamId') || '';
@@ -289,6 +328,9 @@ export class TeamsComponent {
               this.teams.clearPrivateMedia();
               this.dashboard.set(null);
               this.report.set(null);
+              this.reportSequence++;
+              this.reportLoading.set(false);
+              this.reportCheckedAt.set(null);
               this.modal.set(null);
               this.selectedListing.set(null);
               this.selectedMember.set(null);
@@ -326,32 +368,61 @@ export class TeamsComponent {
   async refresh(): Promise<void> {
     const teamId = this.teamId();
     const sequence = this.loadSequence;
+    const refresh = ++this.refreshSequence;
     if (!teamId || !this.dashboard()) return;
     try {
       const result = await this.teams.dashboard(teamId);
-      if (sequence === this.loadSequence && this.dashboard()) this.dashboard.set(result);
+      if (sequence === this.loadSequence && refresh === this.refreshSequence && this.dashboard()) {
+        this.dashboard.set(result);
+        await this.loadMetrics();
+      }
     } catch (error) {
-      if (sequence === this.loadSequence) this.error.set(teamError(error));
+      if (sequence === this.loadSequence && refresh === this.refreshSequence)
+        this.error.set(teamError(error));
     }
   }
   async loadMetrics(): Promise<void> {
     const teamId = this.teamId();
     const days = this.days();
+    if (!teamId || !this.dashboard() || this.isPublic()) return;
+    const sequence = ++this.reportSequence;
+    const routeSequence = this.loadSequence;
+    const uid = this.auth.uid();
+    const isCurrent = () =>
+      sequence === this.reportSequence &&
+      routeSequence === this.loadSequence &&
+      this.teamId() === teamId &&
+      this.days() === days &&
+      this.auth.uid() === uid &&
+      !!this.dashboard();
     this.reportError.set('');
     this.report.set(null);
+    this.reportCheckedAt.set(null);
+    this.reportLoading.set(true);
     try {
-      const result = await this.teams.report(teamId, days);
-      if (this.teamId() === teamId && this.days() === days && this.dashboard())
+      const result = validateTeamReport(await this.teams.report(teamId, days), days);
+      if (isCurrent()) {
         this.report.set(result);
+        this.reportCheckedAt.set(new Date());
+      }
     } catch {
-      if (this.teamId() === teamId)
+      if (isCurrent())
         this.reportError.set(
           'Analytics are temporarily unavailable. No activity has been assumed.',
         );
+    } finally {
+      if (isCurrent()) this.reportLoading.set(false);
     }
   }
+  @HostListener('window:focus')
+  @HostListener('document:visibilitychange')
+  refreshMetricsOnFocus(): void {
+    if (this.browser && !document.hidden && !this.reportLoading()) void this.loadMetrics();
+  }
   setDays(value: string): void {
-    this.days.set(Number(value));
+    const days = Number(value);
+    if (![7, 30, 90].includes(days) || this.days() === days) return;
+    this.days.set(days);
     void this.loadMetrics();
   }
   setTab(value: 'listings' | 'members' | 'about'): void {

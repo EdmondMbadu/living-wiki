@@ -485,45 +485,76 @@
           } @else {
             <section class="kpi-strip panel" aria-label="Team performance">
               <article>
-                <span>Published listings</span><strong>{{ publishedCount() | number }}</strong
-                ><small>of {{ listings().length }} total · current</small>
+                <span>Total listings</span><strong>{{ listings().length | number }}</strong
+                ><small>{{ listingStatusSummary() }}</small>
               </article>
-              <article>
+              <article
+                title="One visit per listing, browser session, and UTC day. Signed-in team members are excluded."
+              >
                 <span>Views</span
                 ><strong>{{ report() ? (report()!.totals.views | number) : '—' }}</strong
-                ><small>Last {{ days() }} days</small>
+                ><small>{{ activityPeriodLabel() }}</small>
               </article>
-              <article>
+              <article
+                title="Verified voice conversation time only. Narration playback and estimated duration are not counted."
+              >
                 <span>VR chat minutes</span
                 ><strong>{{
                   report()?.totals?.voiceSeconds != null
                     ? (report()!.totals.voiceSeconds! / 60 | number: '1.0-1')
                     : '—'
                 }}</strong
-                ><small>{{
-                  report()?.totals?.voiceSeconds == null
-                    ? 'Verified duration not yet available'
-                    : 'Last ' + days() + ' days'
-                }}</small>
+                ><small>{{ voicePeriodLabel() }}</small>
               </article>
-              <article>
+              <article
+                title="Unique email addresses that submitted the listing contact form in this period, counted separately for each listing. Repeat submissions to the same listing count once."
+              >
                 <span>Contacts</span
                 ><strong>{{ report() ? (report()!.totals.contacts | number) : '—' }}</strong
-                ><small>Last {{ days() }} days</small>
+                ><small>{{ activityPeriodLabel() }}</small>
               </article>
             </section>
             <div class="metrics-footnote">
-              <span>{{
-                reportError() ||
-                  'Activity excludes team members. UTC · Tracking since ' +
-                    (currentTeam()?.tracking_since | date: 'MMM d, y' : 'UTC')
-              }}</span
-              ><button (click)="metricsExpanded.set(!metricsExpanded())">
-                {{ metricsExpanded() ? 'Less detail' : 'Participants & chats'
-                }}<span class="material-symbols-outlined">{{
-                  metricsExpanded() ? 'expand_less' : 'expand_more'
-                }}</span>
-              </button>
+              <div class="metrics-context" aria-live="polite">
+                @if (reportError()) {
+                  <span>{{ reportError() }}</span>
+                } @else {
+                  <span
+                    >Team-wide activity · Excludes signed-in team members · Tracking since
+                    {{
+                      report()?.trackingSince || currentTeam()?.tracking_since
+                        | date: 'MMM d, y' : 'UTC'
+                    }}</span
+                  >
+                  @if (reportCheckedAt()) {
+                    <span>Checked {{ reportCheckedAt() | date: 'HH:mm:ss' : 'UTC' }} UTC</span>
+                  }
+                }
+                @if (listings().length && !publishedCount()) {
+                  <span
+                    >No listings are public yet. Drafts count toward your total; publish a listing
+                    when you’re ready for visitor activity.</span
+                  >
+                }
+              </div>
+              <div class="metrics-actions">
+                <button type="button" (click)="loadMetrics()" [disabled]="reportLoading()">
+                  <span class="material-symbols-outlined">refresh</span>
+                  {{
+                    reportLoading()
+                      ? 'Refreshing…'
+                      : reportError()
+                        ? 'Retry analytics'
+                        : 'Refresh analytics'
+                  }}
+                </button>
+                <button type="button" (click)="metricsExpanded.set(!metricsExpanded())">
+                  {{ metricsExpanded() ? 'Less detail' : 'Participants & chats'
+                  }}<span class="material-symbols-outlined">{{
+                    metricsExpanded() ? 'expand_less' : 'expand_more'
+                  }}</span>
+                </button>
+              </div>
             </div>
             @if (metricsExpanded()) {
               <section class="extended-metrics panel">
@@ -539,6 +570,12 @@
                   <strong>{{ report() ? (report()!.totals.messages | number) : '—' }}</strong
                   ><span>Visitor messages</span><small>Assistant replies excluded</small>
                 </article>
+                <p class="metric-definitions">
+                  Views count one visit per listing, browser session, and UTC day. Contacts count
+                  unique email addresses per listing in the selected period. Voice minutes require
+                  verified conversation duration; “—” means unavailable, not zero. Listing filters
+                  below do not change these team-wide totals.
+                </p>
               </section>
             }
             <section class="listings-panel panel">
