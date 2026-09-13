@@ -1,6 +1,7 @@
-import { provideZonelessChangeDetection, signal } from '@angular/core';
-import { TestBed, type ComponentFixture } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { Component, input, output, provideZonelessChangeDetection, signal } from '@angular/core';
+import { DeferBlockState, TestBed, type ComponentFixture } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
+import { By } from '@angular/platform-browser';
 import { BehaviorSubject } from 'rxjs';
 import { AuthService } from '../auth.service';
 import { AtlasService } from '../atlas.service';
@@ -8,6 +9,7 @@ import { PersonalVoiceService } from '../personal-voice.service';
 import { TeamsComponent } from './teams';
 import { TeamsService } from './teams.service';
 import { teamsServiceStub } from './teams.testing';
+import { BoardsComponent } from '../boards/boards';
 import type { TeamDashboard, TeamListing, TeamReport } from './team.models';
 
 function reportFixture(days = 30): TeamReport {
@@ -36,6 +38,17 @@ function deferred<T>() {
     reject = no;
   });
   return { promise, resolve, reject };
+}
+
+@Component({
+  selector: 'app-boards',
+  template: '<input type="url" aria-label="Property listing URL" />',
+})
+class TeamWizardStub {
+  teamWizardOnly = input(false);
+  teamWizardReady = output<void>();
+  teamWizardDismissed = output<void>();
+  teamWizardLaunchError = output<string>();
 }
 
 function dashboardFixture(): TeamDashboard {
@@ -110,11 +123,11 @@ describe('TeamsComponent', () => {
   // Open /debug.html?team-preview=1 after running this spec in watch mode.
   let preview: HTMLElement | null = null;
   let previewStyles: HTMLElement[] = [];
-  afterAll(() => {
-    if (preview) {
-      document.body.replaceChildren(preview);
-      document.head.append(...previewStyles);
-      document.body.style.margin = '0';
+  afterAll(async () => {
+    if (
+      location.search.includes('team-settings-preview=1') ||
+      location.search.includes('team-preview=1')
+    ) {
       for (const href of [
         'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
         'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap',
@@ -125,6 +138,23 @@ describe('TeamsComponent', () => {
         document.head.append(link);
       }
     }
+    // An interactive, isolated fixture for checking the native OS file picker.
+    if (location.search.includes('team-settings-preview=1')) {
+      TestBed.resetTestingModule();
+      await configureFixture();
+      const page = await render();
+      page.showModal('settings');
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.nativeElement.setAttribute('data-team-settings-preview-ready', 'true');
+      return;
+    }
+    if (preview) {
+      preview.setAttribute('data-team-preview-ready', 'true');
+      document.body.replaceChildren(preview);
+      document.head.append(...previewStyles);
+      document.body.style.margin = '0';
+    }
   });
   let fixture: ComponentFixture<TeamsComponent>;
   let data: TeamDashboard;
@@ -132,12 +162,13 @@ describe('TeamsComponent', () => {
     Record<string, any> & {
       report: jasmine.Spy;
       command: jasmine.Spy;
+      uploadBranding: jasmine.Spy;
     };
   let route: any;
   const uid = signal('owner');
   const authenticated = signal(true);
 
-  beforeEach(async () => {
+  async function configureFixture() {
     uid.set('owner');
     authenticated.set(true);
     data = dashboardFixture();
@@ -156,6 +187,9 @@ describe('TeamsComponent', () => {
       ...teamsServiceStub(),
       dashboard: jasmine.createSpy('dashboard').and.callFake(async () => structuredClone(data)),
       command: jasmine.createSpy('command').and.resolveTo({ ok: true }),
+      uploadBranding: jasmine
+        .createSpy('uploadBranding')
+        .and.resolveTo('https://example.com/cover.jpg'),
       watchTeam: () => () => {},
       report: jasmine.createSpy('report').and.resolveTo({
         totals: {
@@ -201,6 +235,10 @@ describe('TeamsComponent', () => {
         ownerId: 'owner',
       },
     ]);
+    TestBed.overrideComponent(TeamsComponent, {
+      remove: { imports: [BoardsComponent] },
+      add: { imports: [TeamWizardStub] },
+    });
     await TestBed.configureTestingModule({
       imports: [TeamsComponent],
       providers: [
@@ -226,7 +264,8 @@ describe('TeamsComponent', () => {
         },
       ],
     }).compileComponents();
-  });
+  }
+  beforeEach(configureFixture);
   async function render() {
     fixture = TestBed.createComponent(TeamsComponent);
     fixture.detectChanges();
@@ -276,6 +315,57 @@ describe('TeamsComponent', () => {
     expect(page.publishedCount()).toBe(0);
     expect(fixture.nativeElement.textContent).toContain('No listings are public yet');
     expect(teams.command).not.toHaveBeenCalled();
+  });
+  it('opens and closes New TalkThru over the same team without navigating to personal boards', async () => {
+    const page = await render();
+    const router = TestBed.inject(Router);
+    const navigate = spyOn(router, 'navigate');
+    const navigateByUrl = spyOn(router, 'navigateByUrl');
+    const host = fixture.nativeElement as HTMLElement;
+    const button = Array.from(host.querySelectorAll('button')).find((node) =>
+      node.textContent?.includes('New TalkThru'),
+    )!;
+    expect(button).toBeDefined();
+    expect(host.querySelector('.setup-strip')).toBeNull();
+    button.click();
+    fixture.detectChanges();
+    expect(page.listingWizardOpen()).toBeTrue();
+    expect(host.querySelector('.team-workspace')!.hasAttribute('inert')).toBeTrue();
+    expect(host.querySelector('.listing-table')).not.toBeNull();
+    const [block] = await fixture.getDeferBlocks();
+    await block.render(DeferBlockState.Complete);
+    fixture.detectChanges();
+    const child = fixture.debugElement.query(By.directive(TeamWizardStub))
+      .componentInstance as TeamWizardStub;
+    // The deferred host receives an explicit modal-only mode, not a gallery route.
+    const builder = host.querySelector('app-boards');
+    expect(builder).not.toBeNull();
+    expect(child.teamWizardOnly()).toBeTrue();
+    child.teamWizardReady.emit();
+    fixture.detectChanges();
+    expect(host.querySelector('.team-wizard-loading')).toBeNull();
+    child.teamWizardDismissed.emit();
+    fixture.detectChanges();
+    expect(host.querySelector('app-boards')).toBeNull();
+    expect(host.querySelector('.team-workspace')!.hasAttribute('inert')).toBeFalse();
+    page.openListingWizard();
+    fixture.detectChanges();
+    expect(page.listingWizardReady()).toBeFalse();
+    expect(host.querySelector('app-boards')).not.toBeNull();
+    expect(page.teamId()).toBe('team-a');
+    expect(navigate).not.toHaveBeenCalled();
+    expect(navigateByUrl).not.toHaveBeenCalled();
+  });
+  it('supports the direct team creation link and does not open the wizard for an archived team', async () => {
+    route.snapshot.routeConfig.path = 'teams/:teamId/create-listing';
+    const page = await render();
+    expect(page.mode()).toBe('workspace');
+    expect(page.listingWizardOpen()).toBeTrue();
+    data.team.status = 'archived';
+    await page.reload();
+    expect(page.listingWizardOpen()).toBeFalse();
+    page.openListingWizard();
+    expect(page.listingWizardOpen()).toBeFalse();
   });
   it('keeps team-wide status counts independent of filters, pagination, and analytics dates', async () => {
     data.listings[2].status = 'unpublished';
@@ -516,5 +606,136 @@ describe('TeamsComponent', () => {
     page.closeModal();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('dialog')).toBeNull();
+  });
+  it('allows pointer and keyboard access to the cover settings controls', async () => {
+    const page = await render();
+    const trigger = fixture.nativeElement.querySelector('.hero-edit') as HTMLButtonElement;
+    trigger.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    expect(dialog.matches(':modal')).toBeTrue();
+    for (const selector of ['button[aria-label="Close dialog"]', '.image-upload--hero button']) {
+      const control = dialog.querySelector(selector) as HTMLElement;
+      control.scrollIntoView({ block: 'center' });
+      const rect = control.getBoundingClientRect();
+      expect(control.matches(':disabled')).toBeFalse();
+      expect(
+        control.contains(
+          document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2),
+        ),
+      )
+        .withContext(`${selector} must receive pointer events`)
+        .toBeTrue();
+    }
+    const name = dialog.querySelector('input[name="name"]') as HTMLInputElement;
+    name.focus();
+    expect(document.activeElement).toBe(name);
+    for (const kind of ['hero', 'logo']) {
+      const upload = dialog.querySelector(
+        kind === 'hero' ? '.image-upload--hero' : '.image-upload',
+      )!;
+      const fileInput = upload.querySelector('input')!;
+      const picker = spyOn(fileInput, 'showPicker');
+      upload.querySelector('button')!.click();
+      expect(picker).toHaveBeenCalledTimes(1);
+      expect(page.modal()).toBe('settings');
+      expect(teams.command).not.toHaveBeenCalled();
+    }
+    dialog.querySelector<HTMLButtonElement>('[aria-label="Close dialog"]')!.click();
+    fixture.detectChanges();
+    expect(page.modal()).toBeNull();
+  });
+  function chooseCover(dialog: HTMLDialogElement) {
+    const input = dialog.querySelector('.image-upload--hero input') as HTMLInputElement;
+    const selection = new DataTransfer();
+    selection.items.add(new File(['test-image'], 'cover.png', { type: 'image/png' }));
+    input.files = selection.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+    return input;
+  }
+  it('keeps cover editing available after a cover has been uploaded', async () => {
+    data.team.hero_url = '/existing-cover.jpg';
+    await render();
+    const hero = fixture.nativeElement.querySelector('.team-hero') as HTMLElement;
+    expect(parseFloat(getComputedStyle(hero).height)).toBeGreaterThanOrEqual(112);
+    expect(hero.querySelector('img')?.getAttribute('src')).toBe('/existing-cover.jpg');
+    expect(hero.querySelector('button')?.textContent).toContain('Change cover photo');
+  });
+  it('reports a blocked picker and falls back when the native picker API is unavailable', async () => {
+    const page = await render();
+    const input = document.createElement('input');
+    input.type = 'file';
+    const picker = spyOn(input, 'showPicker').and.callFake(() => {
+      throw new DOMException('No user activation', 'NotAllowedError');
+    });
+    page.chooseBrandingFile(input);
+    expect(page.modalError()).toContain('could not open the file picker');
+    expect(page.busy()).toBeFalse();
+    picker.and.stub();
+    page.chooseBrandingFile(input);
+    expect(page.modalError()).toBe('');
+    Object.defineProperty(input, 'showPicker', { value: undefined, configurable: true });
+    const legacyPicker = spyOn(input, 'click');
+    page.chooseBrandingFile(input);
+    expect(legacyPicker).toHaveBeenCalledTimes(1);
+  });
+  it('previews an uploaded cover, then persists it only when settings are saved', async () => {
+    const page = await render();
+    page.showModal('settings');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const pending = deferred<string>();
+    teams.uploadBranding.and.returnValue(pending.promise);
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    const input = chooseCover(dialog);
+    expect(page.brandingUpload()).toBe('hero');
+    expect(dialog.textContent).toContain('Uploading cover photo');
+    expect(teams.uploadBranding).toHaveBeenCalledWith('team-a', 'hero', jasmine.any(File));
+    pending.resolve('https://example.com/new-cover.jpg');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(input.value).toBe('');
+    expect(page.busy()).toBeFalse();
+    expect(page.brandingUpload()).toBeNull();
+    expect(dialog.querySelector('.image-upload--hero img')?.getAttribute('src')).toBe(
+      'https://example.com/new-cover.jpg',
+    );
+    expect(dialog.textContent).toContain('Replace cover photo');
+    expect(teams.command).not.toHaveBeenCalled();
+    page.saveSettings();
+    await fixture.whenStable();
+    expect(teams.command).toHaveBeenCalledWith(
+      'update',
+      jasmine.objectContaining({
+        teamId: 'team-a',
+        heroUrl: 'https://example.com/new-cover.jpg',
+        heroPosition: 50,
+      }),
+    );
+  });
+  it('recovers from an upload failure and permits selecting the same file again', async () => {
+    const page = await render();
+    page.showModal('settings');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    teams.uploadBranding.and.rejectWith(new Error('Choose a JPG, PNG, or WebP image under 8 MB.'));
+    const input = chooseCover(dialog);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(input.value).toBe('');
+    expect(page.modal()).toBe('settings');
+    expect(page.busy()).toBeFalse();
+    expect(page.brandingUpload()).toBeNull();
+    expect(dialog.querySelector('[role="alert"]')?.textContent).toContain('under 8 MB');
+    expect(dialog.querySelector('.image-upload--hero button')?.matches(':disabled')).toBeFalse();
+    teams.uploadBranding.and.resolveTo('https://example.com/retry.jpg');
+    chooseCover(dialog);
+    await fixture.whenStable();
+    expect(teams.uploadBranding).toHaveBeenCalledTimes(2);
+    expect(page.settingsForm.heroUrl).toBe('https://example.com/retry.jpg');
+    expect(page.modalError()).toBe('');
   });
 });

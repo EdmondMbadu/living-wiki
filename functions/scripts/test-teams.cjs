@@ -19,6 +19,8 @@ const {
   validInvitation,
   mergeTeamBoard,
   teamListingSummary,
+  currentTeamMemberIdentity,
+  teamMemberProjection,
 } = require('../lib/team-model');
 const { teamVoiceWebhook, verifyTeamVoiceWebhook } = require('../lib/team-voice');
 
@@ -80,6 +82,50 @@ test('team membership does not imply publication or private-contact authority', 
   assert.equal(canPublishTeamListing('member', 'a', { representative_id: 'b' }), false);
   assert.equal(canPublishTeamListing('member', 'b', { representative_id: 'b' }), true);
   assert.equal(canPublishTeamListing('admin', 'a', { representative_id: 'b' }), true);
+});
+test('team avatars resolve the current profile, including icon changes and photo removal', () => {
+  const member = {
+    name: 'Original',
+    photo_url: 'https://example.com/old.jpg',
+    role: 'member',
+    public_visible: false,
+  };
+  const current = currentTeamMemberIdentity(member, {
+    displayName: 'Updated',
+    profilePictureType: 'image',
+    photoURL: 'https://example.com/current.jpg',
+    email: 'private@example.com',
+    role: 'admin',
+  });
+  assert.equal(current.photo_url, 'https://example.com/current.jpg');
+  assert.equal(current.name, 'Updated');
+  assert.equal(current.role, 'member');
+  assert.equal(current.public_visible, false);
+  assert.equal(current.email, undefined);
+  assert.equal(teamMemberProjection('agent', current).photoUrl, 'https://example.com/current.jpg');
+  const icon = currentTeamMemberIdentity(member, {
+    profilePictureType: 'icon',
+    profileIcon: 'city-scribe',
+    photoURL: 'https://example.com/old.jpg',
+  });
+  assert.equal(icon.photo_url, '');
+  assert.equal(teamMemberProjection('agent', icon).profileIcon, 'city-scribe');
+  assert.equal(
+    currentTeamMemberIdentity(member, { profilePictureType: null, photoURL: null }).photo_url,
+    '',
+  );
+  assert.equal(currentTeamMemberIdentity(member, undefined), member);
+  assert.equal(
+    currentTeamMemberIdentity(member, { displayName: 'Legacy' }).photo_url,
+    member.photo_url,
+  );
+  assert.equal(
+    currentTeamMemberIdentity(member, {
+      profilePictureType: 'image',
+      photoURL: 'javascript:alert(1)',
+    }).photo_url,
+    '',
+  );
 });
 test('invitations require matching email, pending state, and an unexpired deadline', () => {
   const invitation = { email: 'person@example.com', status: 'pending', expires_at_ms: 2000 };

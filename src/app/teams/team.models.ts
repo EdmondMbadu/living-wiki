@@ -50,6 +50,8 @@ export interface TeamMember {
   uid: string;
   name: string;
   photoUrl: string;
+  profileIcon?: string;
+  profilePictureType?: 'image' | 'icon' | null;
   title: string;
   bio: string;
   contactEmail: string;
@@ -163,7 +165,15 @@ export interface PublicTeamPage {
   members: Array<
     Pick<
       TeamMember,
-      'uid' | 'name' | 'photoUrl' | 'title' | 'bio' | 'contactEmail' | 'contactPhone'
+      | 'uid'
+      | 'name'
+      | 'photoUrl'
+      | 'profileIcon'
+      | 'profilePictureType'
+      | 'title'
+      | 'bio'
+      | 'contactEmail'
+      | 'contactPhone'
     >
   >;
 }

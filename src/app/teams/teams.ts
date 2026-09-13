@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe, isPlatformBrowser } from '@angular/common';
+import { DatePipe, DecimalPipe, NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import {
   Component,
   DestroyRef,
@@ -23,6 +23,8 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 import { PersonalVoiceService, type PersonalVoice } from '../personal-voice.service';
 import { TeamsService } from './teams.service';
 import { TeamContactComponent } from './team-contact';
+import { TeamMemberAvatarComponent } from './team-member-avatar';
+import { BoardsComponent } from '../boards/boards';
 import { httpsCallable } from 'firebase/functions';
 import { getFirebaseFunctions } from '../firebase.client';
 import {
@@ -47,11 +49,14 @@ import {
     FormsModule,
     DatePipe,
     DecimalPipe,
+    NgTemplateOutlet,
     AccountMenuComponent,
     WorkspaceSidebarComponent,
     MobileMenuComponent,
     ThemeToggleComponent,
     TeamContactComponent,
+    TeamMemberAvatarComponent,
+    BoardsComponent,
   ],
   templateUrl: './teams.html',
   styleUrl: './teams.css',
@@ -71,6 +76,11 @@ export class TeamsComponent {
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
   private createRequestId = '';
   private previousFocus: HTMLElement | null = null;
+  private listingWizardTrigger: HTMLElement | null = null;
+  @ViewChild('listingWizardHost') listingWizardHost?: ElementRef<HTMLElement>;
+  readonly listingWizardOpen = signal(false);
+  readonly listingWizardReady = signal(false);
+  readonly listingWizardError = signal('');
   @ViewChild('modalDialog') set modalDialog(element: ElementRef<HTMLDialogElement> | undefined) {
     if (element && this.browser)
       queueMicrotask(() => {
@@ -90,6 +100,7 @@ export class TeamsComponent {
   readonly reportLoading = signal(false);
   readonly reportCheckedAt = signal<Date | null>(null);
   readonly busy = signal(false);
+  readonly brandingUpload = signal<'logo' | 'hero' | null>(null);
   readonly loading = signal(true);
   readonly error = signal('');
   readonly notice = signal('');
@@ -262,6 +273,12 @@ export class TeamsComponent {
       this.representative();
       this.page.set(1);
     });
+    effect((onCleanup) => {
+      if (!this.browser || !this.listingWizardOpen()) return;
+      const previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      onCleanup(() => (document.body.style.overflow = previousOverflow));
+    });
     this.destroy.onDestroy(() => {
       this.stopWatching?.();
       if (this.refreshTimer) clearTimeout(this.refreshTimer);
@@ -274,6 +291,7 @@ export class TeamsComponent {
     this.stopWatching?.();
     this.stopWatching = null;
     this.modal.set(null);
+    this.listingWizardOpen.set(false);
     this.selectedListing.set(null);
     this.contacts.set([]);
     this.conversations.set([]);
@@ -315,10 +333,12 @@ export class TeamsComponent {
         const result = await this.teams.dashboard(teamId);
         if (sequence !== this.loadSequence) return;
         this.dashboard.set(result);
+        if (path === 'teams/:teamId/create-listing' && result.team.status === 'active')
+          this.openListingWizard();
         void this.loadMetrics();
         const requestedListing = this.route.snapshot.queryParamMap.get('listing');
         const selected = result.listings.find((listing) => listing.id === requestedListing);
-        if (selected) this.showModal('listing', selected);
+        if (selected && !this.listingWizardOpen()) this.showModal('listing', selected);
         if (result.team.status === 'active')
           this.stopWatching = this.teams.watchTeam(
             teamId,
@@ -332,6 +352,7 @@ export class TeamsComponent {
               this.reportLoading.set(false);
               this.reportCheckedAt.set(null);
               this.modal.set(null);
+              this.listingWizardOpen.set(false);
               this.selectedListing.set(null);
               this.selectedMember.set(null);
               this.contacts.set([]);
@@ -417,7 +438,65 @@ export class TeamsComponent {
   @HostListener('window:focus')
   @HostListener('document:visibilitychange')
   refreshMetricsOnFocus(): void {
-    if (this.browser && !document.hidden && !this.reportLoading()) void this.loadMetrics();
+    if (this.browser && !document.hidden && !this.reportLoading() && !this.listingWizardOpen())
+      void this.refresh();
+  }
+  openListingWizard(): void {
+    if (this.isPublic() || this.currentTeam()?.status !== 'active' || this.listingWizardOpen())
+      return;
+    this.listingWizardTrigger = document.activeElement as HTMLElement;
+    this.listingWizardReady.set(false);
+    this.listingWizardError.set('');
+    this.listingWizardOpen.set(true);
+    if (this.browser)
+      requestAnimationFrame(() => {
+        if (this.listingWizardOpen() && !this.listingWizardReady())
+          this.listingWizardHost?.nativeElement.querySelector<HTMLElement>('button')?.focus();
+      });
+  }
+  listingWizardLoaded(): void {
+    this.listingWizardReady.set(true);
+    if (this.browser)
+      requestAnimationFrame(() => {
+        this.listingWizardHost?.nativeElement
+          .querySelector<HTMLElement>('input[type="url"]')
+          ?.focus();
+      });
+  }
+  closeListingWizard(): void {
+    this.listingWizardOpen.set(false);
+    if (this.route.snapshot.routeConfig?.path === 'teams/:teamId/create-listing') {
+      void this.router.navigate(['/teams', this.teamId()], { replaceUrl: true });
+    } else if (this.browser) {
+      requestAnimationFrame(
+        () => this.listingWizardTrigger?.isConnected && this.listingWizardTrigger.focus(),
+      );
+    }
+  }
+  @HostListener('document:keydown', ['$event'])
+  handleListingWizardKey(event: KeyboardEvent): void {
+    if (!this.listingWizardOpen()) return;
+    if (event.key === 'Escape' && !this.listingWizardReady()) {
+      event.preventDefault();
+      this.closeListingWizard();
+    }
+    if (event.key !== 'Tab') return;
+    const controls = Array.from(
+      this.listingWizardHost?.nativeElement.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], summary, [tabindex="0"]',
+      ) || [],
+    ).filter((element) => element.getClientRects().length > 0);
+    const first = controls[0];
+    const last = controls.at(-1);
+    if (
+      first &&
+      last &&
+      (!this.listingWizardHost?.nativeElement.contains(document.activeElement) ||
+        (event.shiftKey ? document.activeElement === first : document.activeElement === last))
+    ) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+    }
   }
   setDays(value: string): void {
     const days = Number(value);
@@ -457,6 +536,17 @@ export class TeamsComponent {
   }
   memberPhoto(uid: string): string {
     return this.members().find((member) => member.uid === uid)?.photoUrl || '';
+  }
+  memberAvatar(
+    uid: string,
+  ): Pick<TeamMember, 'uid' | 'name' | 'photoUrl' | 'profileIcon' | 'profilePictureType'> {
+    return (
+      this.members().find((member) => member.uid === uid) || {
+        uid,
+        name: 'Needs reassignment',
+        photoUrl: '',
+      }
+    );
   }
   mayPublish(listing: TeamListing): boolean {
     return this.isAdmin() || listing.representativeId === this.auth.uid();
@@ -662,10 +752,25 @@ export class TeamsComponent {
       'Team settings saved.',
     );
   }
+  chooseBrandingFile(input: HTMLInputElement): void {
+    if (this.busy()) return;
+    this.modalError.set('');
+    try {
+      // Open synchronously from the button gesture; never defer a native picker.
+      if (typeof input.showPicker === 'function') input.showPicker();
+      else input.click();
+    } catch {
+      this.modalError.set(
+        'Your browser could not open the file picker. Try the photo button again, or reload this page.',
+      );
+    }
+  }
   async uploadBranding(event: Event, kind: 'logo' | 'hero'): Promise<void> {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
     if (!file || this.busy()) return;
     this.busy.set(true);
+    this.brandingUpload.set(kind);
     this.modalError.set('');
     try {
       const url = await this.teams.uploadBranding(this.teamId(), kind, file);
@@ -674,6 +779,8 @@ export class TeamsComponent {
     } catch (error) {
       this.modalError.set(teamError(error));
     } finally {
+      input.value = '';
+      this.brandingUpload.set(null);
       this.busy.set(false);
     }
   }

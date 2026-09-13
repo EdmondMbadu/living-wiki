@@ -1,4 +1,5 @@
-<div class="boards-page min-h-screen bg-[var(--bg)] text-[var(--text)] selection:bg-[var(--accent)] selection:text-[var(--accent-contrast)]">
+<div class="boards-page min-h-screen bg-[var(--bg)] text-[var(--text)] selection:bg-[var(--accent)] selection:text-[var(--accent-contrast)]" [class.boards-page--team-wizard-only]="teamWizardOnly()">
+  @if (!teamWizardOnly()) {
   @if (teamContextId()) {
     <div class="team-edit-notice" role="status"><a [routerLink]="['/teams', teamContextId()]"><span class="material-symbols-outlined">arrow_back</span>{{ teamContextName() }}</a><span><strong>Team working copy</strong> · Edits are shared with members. Publish from the team page when ready.</span></div>
   }
@@ -4617,6 +4618,7 @@
     </div>
   }
 
+  }
   @if (cardVideoViewerCard(); as videoCard) {
     <div class="card-video-lightbox" appBackdropDismiss (backdropDismiss)="closeCardVideoViewer()">
       <section
@@ -4772,7 +4774,7 @@
       >
         <div class="boards-modal__head">
           <div>
-            <p>{{ wizardLockedTargetBoard() ? 'Add to this board' : 'New board' }}</p>
+            <p>{{ teamContextId() ? 'New listing · ' + teamContextName() : wizardLockedTargetBoard() ? 'Add to this board' : 'New board' }}</p>
             @if (wizardMode() === 'nearby-gems' && wizardStep() === 'configure') {
               <h3 id="nearby-gems-modal-title">Gems near me</h3>
               <span class="nearby-gems-modal__subtitle">Pick how far you feel like going. We’ll turn nearby places into editable cards.</span>

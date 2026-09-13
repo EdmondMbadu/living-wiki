@@ -1,6 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
-import { AfterViewInit, Component, computed, effect, ElementRef, HostListener, inject, LOCALE_ID, OnDestroy, PLATFORM_ID, signal, ViewChild, type WritableSignal } from '@angular/core';
+import { AfterViewInit, Component, computed, effect, ElementRef, HostListener, inject, input, output, LOCALE_ID, OnDestroy, PLATFORM_ID, signal, ViewChild, type WritableSignal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import { FirebaseError } from 'firebase/app';
 import { collection, deleteDoc, doc, getDoc, getDocs, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, startAfter, updateDoc, where, writeBatch, type DocumentData, type Firestore, type QueryConstraint, type QueryDocumentSnapshot, type QuerySnapshot, type Unsubscribe } from 'firebase/firestore';
@@ -1683,6 +1684,11 @@ type BoardLoadContext = {
   styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './real-estate-wizard-modal.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
 })
 export class BoardsComponent implements AfterViewInit, OnDestroy {
+  readonly teamWizardOnly = input(false);
+  readonly teamWizardReady = output<void>();
+  readonly teamWizardDismissed = output<void>();
+  readonly teamWizardLaunchError = output<string>();
+  private teamEditorAccessReady = false;
   private readonly localeId = inject(LOCALE_ID);
   private readonly atlasService = inject(AtlasService);
   private readonly authService = inject(AuthService);
@@ -3404,7 +3410,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         this.stopStackPlayback();
       }
     });
-    this.route.paramMap.subscribe((params) => {
+    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const nextTeamId = params.get('teamId') || '';
       if (nextTeamId !== this.teamContextId()) {
         this.teamWizardOpened = false; this.wizardOpen.set(false); this.resetBoardWizard();
@@ -3482,7 +3488,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           this.publicOwnerRouteEmptyReady.set(true);
         }
         this.boardRouteLoadState.update((state) => completeBoardRouteLoad(state, boardRouteLoadId));
-        if (!boardId && !this.friendsPage()) {
+        if (!boardId && !this.friendsPage() && !this.teamContextId()) {
           void this.loadBoardCollections(ownerKey || ownerSlug || this.currentPublicOwnerKey());
         }
         const resolvedBoard = boardId ? this.originalSelectedBoard() : null;
@@ -3499,9 +3505,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         void this.syncRequestedBoardTranslation();
         this.canonicalizeBoardsRootRoute(boardId, ownerKey);
         if (this.teamContextId() && !boardId && !this.teamWizardOpened) {
+          if (!this.teamEditorAccessReady) {
+            this.teamWizardLaunchError.emit(this.boardsSyncError() || 'This team is unavailable. Return to the team page and try again.');
+            return;
+          }
           this.teamWizardOpened = true;
           this.openBoardWizard();
           this.chooseWizardMode('url', 'real-estate');
+          this.teamWizardReady.emit();
         }
         if (boardId) {
           this.resetBoardRouteScroll();
@@ -3512,7 +3523,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       });
     });
 
-    this.route.queryParamMap.subscribe((params) => {
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const view = params.get('view') ?? params.get('stack');
       const wantsFriends = params.get('friends') === '1';
       const wantsStack = view === 'stack' || view === 'reel';
@@ -4744,6 +4755,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.wizardContributionBoardId.set(null);
     this.wizardError.set(null);
     this.wizardSaving.set(false);
+    if (this.teamWizardOnly()) {
+      this.teamWizardDismissed.emit();
+      return;
+    }
     if (this.route.snapshot.queryParamMap.get('create') === 'gems') {
       await this.router.navigate([], {
         relativeTo: this.route,
@@ -21154,12 +21169,16 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const loadSequence = ++this.boardLoadSequence;
     if (this.teamContextId()) {
       const teamId = this.teamContextId();
+      this.teamEditorAccessReady = false;
+      this.boardsSyncError.set(null);
       this.boardsLoading.set(true); this.boardsHasMore.set(false); this.boards.set([]);
       try {
         await this.authService.waitForReady();
         // Canonical membership is checked by the server; the sidebar index is not an authorization grant.
         const dashboard = await this.teams.dashboard(teamId);
         if (loadSequence !== this.boardLoadSequence) return;
+        if (dashboard.team.status !== 'active') throw new Error('Restore this team before creating or editing listings.');
+        this.teamEditorAccessReady = true;
         this.teamEditorMembers.set(dashboard.members);
         if (boardId) {
           const record = await this.teams.loadBoard(boardId);

@@ -1,4 +1,9 @@
-<div class="team-workspace" [class.team-workspace--public]="isPublic() && !auth.isAuthenticated()">
+<div
+  class="team-workspace"
+  [class.team-workspace--public]="isPublic() && !auth.isAuthenticated()"
+  [class.team-workspace--manage]="mode() === 'workspace'"
+  [inert]="listingWizardOpen()"
+>
   @if (auth.isAuthenticated()) {
     <app-workspace-sidebar active="teams" [rail]="true" />
   }
@@ -302,11 +307,10 @@
             } @else {
               <span class="hero-watermark">{{ identity.name }}</span>
             }
-            @if (
-              !isPublic() && isAdmin() && currentTeam()?.status === 'active' && !identity.heroUrl
-            ) {
+            @if (!isPublic() && isAdmin() && currentTeam()?.status === 'active') {
               <button class="hero-edit" (click)="showModal('settings')">
-                <span class="material-symbols-outlined">add_photo_alternate</span> Add a cover photo
+                <span class="material-symbols-outlined">add_photo_alternate</span>
+                {{ identity.heroUrl ? 'Change cover photo' : 'Add a cover photo' }}
               </button>
             }
           </div>
@@ -335,11 +339,7 @@
                 <div class="avatar-stack">
                   @for (member of members().slice(0, 4); track member.uid) {
                     <span class="avatar" [title]="member.name">
-                      @if (member.photoUrl) {
-                        <img [src]="member.photoUrl" alt="" />
-                      } @else {
-                        {{ initials(member.name) }}
-                      }
+                      <app-team-member-avatar [member]="member" />
                     </span>
                   }
                   @if (members().length > 4) {
@@ -366,11 +366,13 @@
                 }
                 <div class="actions">
                   @if (currentTeam()?.status === 'active') {
-                    <a
+                    <button
+                      type="button"
                       class="button button--primary"
-                      [routerLink]="['/teams', teamId(), 'create-listing']"
-                      ><span class="material-symbols-outlined">add</span> New TalkThru</a
+                      (click)="openListingWizard()"
                     >
+                      <span class="material-symbols-outlined">add</span> New TalkThru
+                    </button>
                   }
                   @if (isAdmin() && currentTeam()?.status === 'active') {
                     <button class="button" (click)="showModal('invite')">
@@ -417,12 +419,7 @@
           </nav>
         </section>
 
-        @if (
-          !isPublic() &&
-          isAdmin() &&
-          currentTeam()?.status === 'active' &&
-          (!currentTeam()?.logo_url || members().length === 1 || !listings().length)
-        ) {
+        @if (!isPublic() && isAdmin() && currentTeam()?.status === 'active' && !listings().length) {
           <section class="setup-strip">
             <strong>Make this space yours</strong
             ><button [class.done]="currentTeam()?.logo_url" (click)="showModal('settings')">
@@ -435,12 +432,12 @@
                 members().length > 1 ? 'check_circle' : 'group_add'
               }}</span>
               Invite your team</button
-            ><a [routerLink]="['/teams', teamId(), 'create-listing']"
-              ><span class="material-symbols-outlined">{{
+            ><button type="button" (click)="openListingWizard()">
+              <span class="material-symbols-outlined">{{
                 listings().length ? 'check_circle' : 'add_home'
               }}</span>
-              Create a TalkThru</a
-            >
+              Create a TalkThru
+            </button>
           </section>
         }
         @if (tab() === 'listings') {
@@ -698,11 +695,8 @@
                           </td>
                           <td class="rep-cell">
                             <span class="avatar">
-                              @if (memberPhoto(listing.representativeId)) {
-                                <img [src]="memberPhoto(listing.representativeId)" alt="" />
-                              } @else {
-                                {{ initials(memberName(listing.representativeId)) }}
-                              }</span
+                              <app-team-member-avatar
+                                [member]="memberAvatar(listing.representativeId)" /></span
                             ><span
                               ><strong>{{ memberName(listing.representativeId) }}</strong
                               ><small [class.warning-text]="!voiceAvailable(listing)">{{
@@ -883,11 +877,7 @@
             @for (member of pageMembers(); track member.uid) {
               <article class="panel member-card">
                 <span class="avatar avatar--large">
-                  @if (member.photoUrl) {
-                    <img [src]="member.photoUrl" alt="" loading="lazy" />
-                  } @else {
-                    {{ initials(member.name) }}
-                  }
+                  <app-team-member-avatar [member]="member" />
                 </span>
                 <h3>{{ member.name }}</h3>
                 <p>{{ member.title || 'Team member' }}</p>
@@ -1042,6 +1032,66 @@
   </div>
 </div>
 
+<ng-template #listingWizardLoading>
+  <div class="team-wizard-loading">
+    <section
+      class="panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="team-wizard-loading-title"
+    >
+      <h2 id="team-wizard-loading-title">New team TalkThru</h2>
+      @if (listingWizardError()) {
+        <p role="alert">{{ listingWizardError() }}</p>
+      } @else {
+        <p role="status">Opening the listing builder for {{ currentTeam()?.name }}…</p>
+      }
+      <button type="button" class="button" (click)="closeListingWizard()">Back to team</button>
+    </section>
+  </div>
+</ng-template>
+<div #listingWizardHost>
+  @defer (when listingWizardOpen()) {
+    @if (listingWizardOpen()) {
+      @if (!listingWizardReady()) {
+        <ng-container [ngTemplateOutlet]="listingWizardLoading" />
+      }
+      <app-boards
+        [teamWizardOnly]="true"
+        (teamWizardReady)="listingWizardLoaded()"
+        (teamWizardLaunchError)="listingWizardError.set($event)"
+        (teamWizardDismissed)="closeListingWizard()"
+      />
+    }
+  } @placeholder {
+    @if (listingWizardOpen()) {
+      <ng-container [ngTemplateOutlet]="listingWizardLoading" />
+    }
+  } @loading {
+    @if (listingWizardOpen()) {
+      <ng-container [ngTemplateOutlet]="listingWizardLoading" />
+    }
+  } @error {
+    @if (listingWizardOpen()) {
+      <div class="team-wizard-loading">
+        <section
+          class="panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="team-wizard-error-title"
+        >
+          <h2 id="team-wizard-error-title">The listing builder could not load</h2>
+          <p role="alert">
+            Your team and listings are unchanged. Check your connection, then reload this page to
+            try again.
+          </p>
+          <button type="button" class="button" (click)="closeListingWizard()">Back to team</button>
+        </section>
+      </div>
+    }
+  }
+</div>
+
 @if (modal()) {
   <dialog
     #modalDialog
@@ -1170,35 +1220,63 @@
         <form (ngSubmit)="saveSettings()">
           <fieldset [disabled]="busy()">
             <div class="brand-upload-grid">
-              <label class="image-upload">
-                @if (settingsForm.logoUrl) {
-                  <img [src]="settingsForm.logoUrl" alt="Current team logo" />
-                } @else {
-                  <span class="material-symbols-outlined">add_photo_alternate</span>
-                }
-                Team logo<input
+              <div class="image-upload">
+                <div class="brand-image-preview">
+                  @if (settingsForm.logoUrl) {
+                    <img [src]="settingsForm.logoUrl" alt="Current team logo" />
+                  } @else {
+                    <span class="material-symbols-outlined">add_photo_alternate</span>
+                  }
+                </div>
+                <strong>Team logo</strong>
+                <button type="button" class="button" (click)="chooseBrandingFile(logoFile)">
+                  {{ settingsForm.logoUrl ? 'Replace logo' : 'Choose logo' }}
+                </button>
+                <input
+                  #logoFile
+                  hidden
+                  aria-label="Team logo file"
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
-                  (change)="uploadBranding($event, 'logo')" /></label
-              ><label class="image-upload image-upload--hero">
-                @if (settingsForm.heroUrl) {
-                  <img
-                    [src]="settingsForm.heroUrl"
-                    alt="Current cover"
-                    [style.object-position]="'center ' + settingsForm.heroPosition + '%'"
-                  />
-                } @else {
-                  <span class="material-symbols-outlined">panorama</span>
-                }
-                Cover photo<input
+                  (change)="uploadBranding($event, 'logo')"
+                />
+              </div>
+              <div class="image-upload image-upload--hero">
+                <div class="brand-image-preview">
+                  @if (settingsForm.heroUrl) {
+                    <img
+                      [src]="settingsForm.heroUrl"
+                      alt="Current cover"
+                      [style.object-position]="'center ' + settingsForm.heroPosition + '%'"
+                    />
+                  } @else {
+                    <span class="material-symbols-outlined">panorama</span>
+                  }
+                </div>
+                <strong>Cover photo</strong>
+                <button type="button" class="button" (click)="chooseBrandingFile(heroFile)">
+                  {{ settingsForm.heroUrl ? 'Replace cover photo' : 'Choose cover photo' }}
+                </button>
+                <input
+                  #heroFile
+                  hidden
+                  aria-label="Team cover photo file"
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
                   (change)="uploadBranding($event, 'hero')"
-              /></label>
+                />
+              </div>
             </div>
+            @if (brandingUpload()) {
+              <p class="brand-upload-status" role="status">
+                <span class="material-symbols-outlined spin">progress_activity</span>
+                Uploading {{ brandingUpload() === 'hero' ? 'cover photo' : 'logo' }}…
+              </p>
+            }
             <p class="field-help">
               JPG, PNG, or WebP · Up to 8 MB. Branding images are public assets; do not upload
-              private documents here.
+              private documents here. Choose a wide landscape image for the cover, then save your
+              team settings.
             </p>
             @if (settingsForm.heroUrl) {
               <label
@@ -1275,7 +1353,9 @@
             <footer class="dialog-footer">
               <button type="button" class="button" (click)="closeModal()">Cancel</button
               ><button type="submit" class="button button--primary">
-                {{ busy() ? 'Saving…' : 'Save team settings' }}
+                {{
+                  brandingUpload() ? 'Uploading photo…' : busy() ? 'Saving…' : 'Save team settings'
+                }}
               </button>
             </footer>
           </fieldset>

@@ -46,11 +46,44 @@ export function canPublishTeamListing(role: TeamRole, uid: string, listing: Team
   return role === 'admin' || listing['representative_id'] === uid;
 }
 
+/** Resolve only display identity from the current account, never private profile fields. */
+export function currentTeamMemberIdentity(member: TeamRecord, account?: TeamRecord): TeamRecord {
+  if (!account) return member;
+  const hasPicturePreference =
+    Object.hasOwn(account, 'profilePictureType') || Object.hasOwn(account, 'photoURL');
+  return {
+    ...member,
+    name: teamText(account['displayName'], 100) || member['name'],
+    ...(hasPicturePreference
+      ? {
+          photo_url:
+            account['profilePictureType'] === 'icon' || account['profilePictureType'] === null
+              ? ''
+              : teamUrl(account['photoURL']),
+          profile_icon: teamText(account['profileIcon'], 80),
+          profile_picture_type:
+            account['profilePictureType'] === 'icon'
+              ? 'icon'
+              : account['profilePictureType'] === 'image'
+                ? 'image'
+                : null,
+        }
+      : {}),
+  };
+}
+
 export function teamMemberProjection(uid: string, member: TeamRecord): TeamRecord {
   return {
     uid,
     name: teamText(member['name'], 100),
     photoUrl: teamUrl(member['photo_url']),
+    profileIcon: teamText(member['profile_icon'], 80),
+    profilePictureType:
+      member['profile_picture_type'] === 'icon'
+        ? 'icon'
+        : member['profile_picture_type'] === 'image'
+          ? 'image'
+          : null,
     title: teamText(member['title'], 100),
     bio: teamText(member['bio'], 1000),
     contactEmail: teamEmail(member['public_email']),

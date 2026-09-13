@@ -7,6 +7,7 @@ import sgMail from '@sendgrid/mail';
 import { db, storage } from './firebase';
 import {
   canPublishTeamListing,
+  currentTeamMemberIdentity,
   mergeTeamBoard,
   publicTeamBoard,
   teamEmail,
@@ -107,13 +108,26 @@ function membershipIndex(teamId: string, team: TeamRecord, role: string) {
     ownerId: team['owner_id'],
   };
 }
-async function profile(uid: string) {
-  const user = await getAuth().getUser(uid);
+async function profile(uid: string): Promise<TeamRecord & { name: string }> {
+  const [user, account] = await Promise.all([
+    getAuth().getUser(uid),
+    db.collection('users').doc(uid).get(),
+  ]);
   return {
+    ...currentTeamMemberIdentity(
+      {
+        name: user.displayName || user.email?.split('@')[0] || 'Team member',
+        photo_url: teamUrl(user.photoURL),
+      },
+      account.data(),
+    ),
+    name:
+      teamText(account.data()?.['displayName'], 100) ||
+      user.displayName ||
+      user.email?.split('@')[0] ||
+      'Team member',
     uid,
-    name: user.displayName || user.email?.split('@')[0] || 'Team member',
     email: teamEmail(user.email),
-    photo_url: teamUrl(user.photoURL),
     title: '',
     bio: '',
     public_email: '',
@@ -199,6 +213,21 @@ async function createTeam(request: CallableRequest, uid: string) {
   });
 }
 
+async function currentMemberProfiles(
+  members: Array<{ uid: string } & TeamRecord>,
+): Promise<Map<string, TeamRecord>> {
+  if (!members.length) return new Map();
+  const accounts = await db.getAll(
+    ...members.map((member) => db.collection('users').doc(member.uid)),
+  );
+  return new Map(
+    members.map((member, index) => [
+      member.uid,
+      currentTeamMemberIdentity(member, accounts[index].data()),
+    ]),
+  );
+}
+
 async function dashboard(teamId: string, uid: string) {
   const { team, member } = await requireTeamMember(teamId, uid);
   const [members, listings, invitations, activity] = await Promise.all([
@@ -209,13 +238,16 @@ async function dashboard(teamId: string, uid: string) {
       : null,
     teamRef(teamId).collection('activity').orderBy('at', 'desc').limit(30).get(),
   ]);
+  const identities = await currentMemberProfiles(
+    members.docs.map((doc) => ({ ...doc.data(), uid: doc.id })),
+  );
   return {
     team: { id: teamId, ...team },
     role: member['role'],
     members: members.docs.map((doc) => {
       const value = doc.data();
       return {
-        ...teamMemberProjection(doc.id, value),
+        ...teamMemberProjection(doc.id, identities.get(doc.id) || value),
         role: value['role'],
         publicVisible: value['public_visible'] === true,
         joinedAt: value['joined_at'],
@@ -1428,7 +1460,22 @@ export const getPublicTeamPage = onCall(options, async (request) => {
     team.data()?.['public_enabled'] !== true
   )
     throw new HttpsError('not-found', 'This team page is not published.');
-  return { page: page.data(), listings: listings.docs.map((doc) => doc.data()) };
+  // Only opted-in public members are resolved; private accounts never enter this response.
+  const visible = await teamRef(teamId)
+    .collection('members')
+    .where('status', '==', 'active')
+    .where('public_visible', '==', true)
+    .get();
+  const identities = await currentMemberProfiles(
+    visible.docs.map((doc) => ({ ...doc.data(), uid: doc.id })),
+  );
+  return {
+    page: {
+      ...page.data(),
+      members: visible.docs.map((doc) => teamMemberProjection(doc.id, identities.get(doc.id)!)),
+    },
+    listings: listings.docs.map((doc) => doc.data()),
+  };
 });
 
 export const getTeamInvitationPreview = onCall(options, async (request) => {

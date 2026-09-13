@@ -20,3 +20,7 @@
   font-weight: 650;
   color: #fff;
 }
+.boards-page.boards-page--team-wizard-only {
+  min-height: 0;
+  background: transparent;
+}
