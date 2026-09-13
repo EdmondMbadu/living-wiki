@@ -88,6 +88,16 @@ export class TeamsComponent {
           element.nativeElement.showModal();
       });
   }
+  @ViewChild('settingsSaveError') set settingsSaveError(
+    element: ElementRef<HTMLElement> | undefined,
+  ) {
+    if (element && this.browser)
+      queueMicrotask(() => {
+        if (!element.nativeElement.isConnected) return;
+        element.nativeElement.scrollIntoView({ block: 'nearest' });
+        element.nativeElement.focus({ preventScroll: true });
+      });
+  }
   readonly mode = signal<'workspace' | 'directory' | 'create' | 'invitations' | 'public'>(
     'directory',
   );
@@ -754,7 +764,13 @@ export class TeamsComponent {
     if (event.target === event.currentTarget) this.closeModal();
   }
   async saveSettings(): Promise<void> {
-    if (this.busy() || !this.settingsBaseline) return;
+    if (this.busy()) return;
+    if (!this.settingsBaseline || this.settingsRevision === undefined) {
+      this.modalError.set(
+        'This settings form is out of date. Close and reopen Team settings before saving. Your existing saved team details have not changed.',
+      );
+      return;
+    }
     this.modalError.set('');
     const baseline = this.settingsBaseline;
     const values = {
@@ -803,6 +819,12 @@ export class TeamsComponent {
       { ...changes, revision: this.settingsRevision },
       'Team settings saved.',
     );
+  }
+  onSaveSettingsClick(event: MouseEvent): void {
+    // Invoke saving from the gesture itself. Ancestor handlers/extensions may cancel
+    // the browser's native submit action; do not depend on that action to save.
+    event.preventDefault();
+    void this.saveSettings();
   }
   removeBranding(kind: 'logo' | 'hero'): void {
     if (this.busy()) return;

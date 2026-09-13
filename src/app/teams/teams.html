@@ -1134,7 +1134,7 @@
           <span class="material-symbols-outlined">close</span>
         </button>
       </header>
-      @if (modalError()) {
+      @if (modalError() && modal() !== 'settings') {
         <div class="feedback feedback--error" role="alert">{{ modalError() }}</div>
       }
       @if (modal() === 'notifications') {
@@ -1382,9 +1382,18 @@
               ></label
             >
             <p class="field-help">livingwiki.com/team/{{ currentTeam()?.slug }}</p>
+            @if (modalError()) {
+              <div #settingsSaveError class="feedback feedback--error" role="alert" tabindex="-1">
+                {{ modalError() }}
+              </div>
+            }
             <footer class="dialog-footer">
               <button type="button" class="button" (click)="closeModal()">Cancel</button
-              ><button type="submit" class="button button--primary">
+              ><button
+                type="submit"
+                class="button button--primary"
+                (click)="onSaveSettingsClick($event)"
+              >
                 {{
                   brandingUpload() ? 'Uploading photo…' : busy() ? 'Saving…' : 'Save team settings'
                 }}

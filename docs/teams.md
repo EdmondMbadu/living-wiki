@@ -27,6 +27,12 @@ Remove logo and Remove cover photo update the preview immediately and take effec
 
 Deploy the updated `teamCommand` callable before serving the partial-update frontend: `firebase deploy --only functions:teamCommand --project living-atlas-7622a`. Existing full-form clients remain compatible with the updated backend.
 
+The Save button also invokes the handler directly and prevents the duplicate native submit action, so cancelling the browser's default action cannot silently swallow the save. Stale forms without an opening revision show an actionable error instead of returning silently. Settings errors appear next to Save and receive focus/scroll into view; drafts remain intact on failure. After a development hot reload, refresh the page and reopen settings to initialize a fresh editing session.
+
+Hosting revalidates the team-route HTML in English, French, and Japanese instead of caching it for an hour, so newly opened workspaces pick up the current hashed JavaScript after a release. Already open tabs still need a reload after deployment.
+
+The September 13 Save-click hotfix passes all 47 team browser tests, including cancelled native submits, stale forms, and visible validation errors. A separate in-app-browser preview confirmed an edited field followed by Save produces the success notice. The production app compiled; the existing boards gzip-size check still fails (434.6 KiB versus 322.3 KiB). Before the hosting hotfix, its `chunk-6EW3YASR.js` was verified byte-for-byte identical to the live asset. The hotfix does not change that bundle or raise/disable the size limit.
+
 ## Permissions
 
 | Capability                                                                  | Visitor | Active member           | Team admin  | Owner       |

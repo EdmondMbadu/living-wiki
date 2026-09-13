@@ -893,6 +893,61 @@ describe('TeamsComponent', () => {
     expect(page.notice()).toBe('No changes to save.');
     expect(teams.command).not.toHaveBeenCalled();
   });
+  it('saves exactly once even if an ancestor cancels the native submit action', async () => {
+    const page = await render();
+    page.showModal('settings');
+    page.settingsForm.description = 'Updated description';
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    dialog.addEventListener('click', (event) => event.preventDefault());
+    dialog.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    await fixture.whenStable();
+    expect(teams.command).toHaveBeenCalledOnceWith('update', {
+      teamId: 'team-a',
+      revision: 1,
+      description: 'Updated description',
+    });
+    expect(page.modal()).toBeNull();
+  });
+  it('shows an actionable error instead of silently ignoring a stale form after hot reload', async () => {
+    const page = await render();
+    // Existing open views can survive a dev-server template replacement without
+    // going through showModal, which normally captures the settings baseline.
+    page.modal.set('settings');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    dialog.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const alert = dialog.querySelector('[role="alert"]')!;
+    expect(alert.textContent).toContain('Close and reopen');
+    expect(document.activeElement).toBe(alert);
+    expect(teams.command).not.toHaveBeenCalled();
+    expect(page.modal()).toBe('settings');
+  });
+  it('shows validation errors at the save controls and brings them into view', async () => {
+    const page = await render();
+    page.showModal('settings');
+    page.settingsForm.website = 'javascript:alert(1)';
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    const button = dialog.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    button.scrollIntoView({ block: 'end' });
+    button.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const alert = dialog.querySelector<HTMLElement>('[role="alert"]')!;
+    expect(alert.textContent).toContain('HTTPS');
+    expect(document.activeElement).toBe(alert);
+    expect(alert.nextElementSibling?.classList.contains('dialog-footer')).toBeTrue();
+    const rect = alert.getBoundingClientRect();
+    expect(rect.top).toBeGreaterThanOrEqual(0);
+    expect(rect.bottom).toBeLessThanOrEqual(window.innerHeight);
+    expect(teams.command).not.toHaveBeenCalled();
+  });
   it('recovers from an upload failure and permits selecting the same file again', async () => {
     const page = await render();
     page.showModal('settings');
