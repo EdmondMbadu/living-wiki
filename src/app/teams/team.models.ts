@@ -1,5 +1,7 @@
 export type TeamRole = 'admin' | 'member';
 export interface TeamNotification {
+  type?: 'team_invitation' | 'team_update';
+  invitation?: TeamInvitation;
   id: string;
   teamId: string;
   message: string;
@@ -70,7 +72,19 @@ export interface TeamInvitation {
   role: TeamRole;
   status: 'pending' | 'accepted' | 'declined' | 'expired' | 'revoked';
   expiresAt: string;
-  delivery: 'sent' | 'failed' | 'pending';
+  delivery:
+    | 'sent'
+    | 'failed'
+    | 'pending'
+    | 'queued'
+    | 'processing'
+    | 'retry'
+    | 'submitted'
+    | 'delivered'
+    | 'unknown'
+    | 'cancelled';
+  inviterName?: string;
+  sentAt?: string;
 }
 export interface TeamListing {
   id: string;

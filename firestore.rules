@@ -38,7 +38,7 @@ service cloud.firestore {
     match /users/{uid}/team_memberships/{teamId} { allow read: if isOwner(uid); allow write: if false; }
     match /users/{uid}/team_notifications/{notificationId} {
       allow read: if isOwner(uid);
-      allow update: if isOwner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']) && request.resource.data.read is bool;
+      allow update: if isOwner(uid) && resource.data.get('type', '') != 'team_invitation' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']) && request.resource.data.read is bool;
       allow create, delete: if false;
     }
     match /public_team_pages/{teamId} { allow read: if true; allow write: if false; }
@@ -46,6 +46,7 @@ service cloud.firestore {
     match /team_slugs/{slug} { allow read, write: if false; }
     match /team_creation_quotas/{uid} { allow read, write: if false; }
     match /team_invitations/{inviteId} { allow read, write: if false; }
+    match /team_invitation_emails/{jobId} { allow read, write: if false; }
 
     function isPlatformAdmin() {
       return isSignedIn()

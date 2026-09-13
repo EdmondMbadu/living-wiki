@@ -81,6 +81,7 @@ test('public callers receive only public snapshots, never private collections', 
   await assertSucceeds(getDoc(doc(db, 'public_team_pages', 'team-a')));
   for (const path of [
     'team_invitations',
+    'team_invitation_emails',
     'team_contacts',
     'team_conversations',
     'team_participants',
@@ -104,6 +105,58 @@ test('server-owned team records cannot be forged even by platform admins', async
     );
   }
 });
+test('notification owners may read and mark updates read, but cannot forge invitations or access email jobs', async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', 'member', 'team_notifications', 'update'), {
+      message: 'Joined',
+      read: false,
+      type: 'team_update',
+    });
+    await setDoc(doc(context.firestore(), 'users', 'member', 'team_notifications', 'invite'), {
+      message: 'Invited',
+      read: false,
+      type: 'team_invitation',
+    });
+    await setDoc(doc(context.firestore(), 'team_invitation_emails', 'job'), {
+      token: 'private-secret',
+    });
+  });
+  const mine = env.authenticatedContext('member').firestore();
+  await assertSucceeds(getDocs(collection(mine, 'users', 'member', 'team_notifications')));
+  await assertSucceeds(
+    updateDoc(doc(mine, 'users', 'member', 'team_notifications', 'update'), { read: true }),
+  );
+  await assertFails(
+    updateDoc(doc(mine, 'users', 'member', 'team_notifications', 'update'), { message: 'Forged' }),
+  );
+  await assertFails(
+    updateDoc(doc(mine, 'users', 'member', 'team_notifications', 'invite'), { read: true }),
+  );
+  await assertFails(
+    setDoc(doc(mine, 'users', 'member', 'team_notifications', 'fake'), { read: false }),
+  );
+  await assertFails(
+    getDocs(
+      collection(
+        env.authenticatedContext('other').firestore(),
+        'users',
+        'member',
+        'team_notifications',
+      ),
+    ),
+  );
+  for (const uid of ['member', 'owner', 'platform']) {
+    await assertFails(
+      getDoc(doc(env.authenticatedContext(uid).firestore(), 'team_invitation_emails', 'job')),
+    );
+    await assertFails(
+      setDoc(doc(env.authenticatedContext(uid).firestore(), 'team_invitation_emails', 'job2'), {
+        email: 'forged@example.com',
+      }),
+    );
+  }
+});
+
 test('a forged team field cannot ride a legacy full-board owner update', async () => {
   await env.withSecurityRulesDisabled(async (context) =>
     setDoc(doc(context.firestore(), 'boards', 'legacy-team'), {

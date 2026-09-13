@@ -575,6 +575,70 @@ describe('TeamsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Checking your invitations');
     expect(fixture.nativeElement.textContent).not.toContain('You’re all caught up');
   });
+  it('preserves the invitation link through sign-in, account creation, and email verification', async () => {
+    route.snapshot.routeConfig.path = 'teams/invitations';
+    route.snapshot.paramMap = convertToParamMap({});
+    const destination = '/teams/invitations?invite=chosen&token=secret-token';
+    spyOnProperty(TestBed.inject(Router), 'url', 'get').and.returnValue(destination);
+    authenticated.set(false);
+    await render();
+    for (const path of ['/sign-in', '/create-account']) {
+      const link = fixture.nativeElement.querySelector(`a[href^="${path}?"]`) as HTMLAnchorElement;
+      expect(new URL(link.href).searchParams.get('redirectTo')).toBe(destination);
+    }
+    authenticated.set(true);
+    (TestBed.inject(AuthService).emailVerified as any).set(false);
+    fixture.detectChanges();
+    const verify = fixture.nativeElement.querySelector(
+      'a[href^="/verify-email?"]',
+    ) as HTMLAnchorElement;
+    expect(new URL(verify.href).searchParams.get('redirectTo')).toBe(destination);
+  });
+  it('highlights the requested invitation first without accepting from a link', async () => {
+    route.snapshot.routeConfig.path = 'teams/invitations';
+    route.snapshot.paramMap = convertToParamMap({});
+    route.snapshot.queryParamMap = convertToParamMap({ invite: 'chosen' });
+    (teams as any).invitationPreview = jasmine
+      .createSpy()
+      .and.resolveTo({
+        teamName: 'Selected team',
+        role: 'member',
+        expiresAt: '2099-01-01',
+        status: 'pending',
+        matchesAccount: true,
+      });
+    const invitation = {
+      id: 'other',
+      teamId: 'team-b',
+      teamName: 'Another team',
+      email: 'owner@example.com',
+      role: 'member' as const,
+      status: 'pending' as const,
+      expiresAt: '2099-01-01',
+      delivery: 'submitted' as const,
+    };
+    teams.invitations.set([invitation, { ...invitation, id: 'chosen', teamName: 'Selected team' }]);
+    await render();
+    const first = fixture.nativeElement.querySelector('.invitation-card');
+    expect(first.textContent).toContain('Selected team');
+    expect(first.classList.contains('invitation-card--focused')).toBeTrue();
+    expect(teams.command).not.toHaveBeenCalled();
+  });
+  it('switches the signed-in account without losing the exact invitation destination', async () => {
+    const page = await render();
+    const destination = '/teams/invitations?invite=chosen&token=token';
+    const router = TestBed.inject(Router);
+    spyOnProperty(router, 'url', 'get').and.returnValue(destination);
+    const navigate = spyOn(router, 'navigate').and.resolveTo(true);
+    const auth = TestBed.inject(AuthService);
+    auth.signOut = jasmine.createSpy('signOut').and.resolveTo();
+    await page.switchInvitationAccount();
+    expect(auth.signOut).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith(['/sign-in'], {
+      queryParams: { redirectTo: destination },
+    });
+    expect(page.busy()).toBeFalse();
+  });
   it('explains an unavailable creation check without claiming the user hit their limit', async () => {
     route.snapshot.routeConfig.path = 'teams/new';
     route.snapshot.paramMap = convertToParamMap({});

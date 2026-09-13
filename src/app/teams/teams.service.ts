@@ -7,6 +7,7 @@ import {
   effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import {
   collection,
@@ -16,6 +17,8 @@ import {
   query,
   orderBy,
   limit,
+  where,
+  writeBatch,
   updateDoc,
   type Firestore,
 } from 'firebase/firestore';
@@ -44,10 +47,17 @@ export class TeamsService {
   readonly memberships = signal<TeamMembership[]>([]);
   readonly invitations = signal<TeamInvitation[]>([]);
   readonly notifications = signal<TeamNotification[]>([]);
+  readonly notificationsState = signal<TeamAccountLoadState>('idle');
+  private readonly subscriptionRevision = signal(0);
+  readonly unreadUpdates = computed(() =>
+    this.notifications().filter((item) => !item.read && item.type !== 'team_invitation'),
+  );
+  readonly attentionCount = computed(() => this.invitations().length + this.unreadUpdates().length);
   readonly canCreate = signal<boolean | null>(null);
   readonly allowanceState = signal<TeamAccountLoadState>('idle');
   readonly invitationsState = signal<TeamAccountLoadState>('idle');
   private accountRequest = 0;
+  private invitationSnapshotVersion = 0;
   readonly loaded = signal(false);
   readonly connectionError = signal(false);
   private readonly mediaCache = new Map<string, string>();
@@ -65,9 +75,13 @@ export class TeamsService {
   constructor() {
     effect((onCleanup) => {
       const uid = this.auth.uid();
+      this.subscriptionRevision();
+      const verified = this.auth.emailVerified();
+      const email = this.auth.email().trim().toLowerCase();
       this.memberships.set([]);
       this.invitations.set([]);
       this.notifications.set([]);
+      this.notificationsState.set('idle');
       this.canCreate.set(null);
       this.accountRequest++;
       this.allowanceState.set('idle');
@@ -110,32 +124,83 @@ export class TeamsService {
           }
         },
       );
-      void this.refreshAccount(uid);
-      const stopNotifications = onSnapshot(
-        query(
-          collection(this.firestore, 'users', uid, 'team_notifications'),
-          orderBy('createdAt', 'desc'),
-          limit(50),
-        ),
-        (snapshot) => {
-          if (valid)
-            this.notifications.set(
-              snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as TeamNotification),
+      untracked(() => void this.refreshAccount(uid));
+      let recent: TeamNotification[] = [];
+      let unread: TeamNotification[] = [];
+      const ready = new Set<number>();
+      const errors = new Set<number>();
+      const merge = () => {
+        if (!valid) return;
+        this.notifications.set(
+          [...new Map([...recent, ...unread].map((item) => [item.id, item])).values()].sort(
+            (a, b) => b.createdAt.localeCompare(a.createdAt),
+          ),
+        );
+        if (ready.has(1) && verified) {
+          this.invitations.set(
+            unread.flatMap((item) => {
+              const invite = item.invitation;
+              return invite &&
+                invite.status === 'pending' &&
+                invite.email === email &&
+                Date.parse(invite.expiresAt) > Date.now()
+                ? [invite]
+                : [];
+            }),
+          );
+        }
+        this.notificationsState.set(errors.size ? 'error' : ready.size === 2 ? 'ready' : 'loading');
+      };
+      this.notificationsState.set('loading');
+      const notifications = collection(this.firestore, 'users', uid, 'team_notifications');
+      // Recent history is bounded, but unread items are not: the badge must never silently cap at 50.
+      const stops = [
+        query(notifications, orderBy('createdAt', 'desc'), limit(50)),
+        query(notifications, where('read', '==', false)),
+      ].map((source, index) =>
+        onSnapshot(
+          source,
+          (snapshot) => {
+            if (!valid) return;
+            const items = snapshot.docs.map(
+              (doc) => ({ id: doc.id, ...doc.data() }) as TeamNotification,
             );
-        },
-        () => {
-          if (valid) this.notifications.set([]);
-        },
+            if (index === 0) recent = items;
+            else {
+              unread = items;
+              this.invitationSnapshotVersion++;
+            }
+            ready.add(index);
+            errors.delete(index);
+            merge();
+          },
+          () => {
+            if (valid) {
+              errors.add(index);
+              merge();
+            }
+          },
+        ),
       );
+      const refresh = () => {
+        if (document.visibilityState === 'visible') void this.refreshAccount(uid);
+      };
+      window.addEventListener('focus', refresh);
+      const expiryTimer = window.setInterval(merge, 30_000);
       onCleanup(() => {
         valid = false;
         stop();
-        stopNotifications();
+        stops.forEach((stop) => stop());
+        window.removeEventListener('focus', refresh);
+        window.clearInterval(expiryTimer);
       });
     });
   }
   hasAccess(teamId: string): boolean {
     return this.memberships().some((team) => team.teamId === teamId && team.status === 'active');
+  }
+  retryNotificationConnection(): void {
+    this.subscriptionRevision.update((value) => value + 1);
   }
   isAdmin(teamId: string): boolean {
     return this.memberships().some((team) => team.teamId === teamId && team.role === 'admin');
@@ -143,6 +208,7 @@ export class TeamsService {
   async refreshAccount(expectedUid = this.auth.uid()): Promise<void> {
     if (!expectedUid || !this.browser || this.auth.uid() !== expectedUid) return;
     const request = ++this.accountRequest;
+    const snapshotVersion = this.invitationSnapshotVersion;
     const isCurrent = () => this.auth.uid() === expectedUid && request === this.accountRequest;
     this.allowanceState.set('loading');
     this.invitationsState.set('loading');
@@ -159,15 +225,18 @@ export class TeamsService {
           this.allowanceState.set('error');
         },
       ),
-      this.command<{ invitations: TeamInvitation[] }>('inbox').then(
+      (this.auth.emailVerified?.() === false
+        ? Promise.resolve({ invitations: [] as TeamInvitation[] })
+        : this.command<{ invitations: TeamInvitation[] }>('inbox')
+      ).then(
         (inbox) => {
           if (!isCurrent()) return;
-          this.invitations.set(inbox.invitations);
+          if (snapshotVersion === this.invitationSnapshotVersion)
+            this.invitations.set(inbox.invitations);
           this.invitationsState.set('ready');
         },
         () => {
           if (!isCurrent()) return;
-          this.invitations.set([]);
           this.invitationsState.set('error');
         },
       ),
@@ -216,9 +285,26 @@ export class TeamsService {
   async invitationPreview(
     inviteId: string,
     token: string,
-  ): Promise<{ teamName: string; role: string; expiresAt: string }> {
+  ): Promise<{
+    teamName: string;
+    role: string;
+    expiresAt: string;
+    status?: string;
+    matchesAccount?: boolean | null;
+    teamId?: string;
+  }> {
     return (
-      await httpsCallable<unknown, { teamName: string; role: string; expiresAt: string }>(
+      await httpsCallable<
+        unknown,
+        {
+          teamName: string;
+          role: string;
+          expiresAt: string;
+          status?: string;
+          matchesAccount?: boolean | null;
+          teamId?: string;
+        }
+      >(
         getFirebaseFunctions(),
         'getTeamInvitationPreview',
       )({ inviteId, token })
@@ -298,10 +384,25 @@ export class TeamsService {
     this.mediaSources.clear();
   }
   async markNotificationRead(id: string): Promise<void> {
+    if (this.notifications().find((item) => item.id === id)?.type === 'team_invitation') return;
     if (this.firestore && this.auth.uid())
       await updateDoc(doc(this.firestore, 'users', this.auth.uid(), 'team_notifications', id), {
         read: true,
       });
+  }
+  async markAllNotificationsRead(): Promise<void> {
+    const uid = this.auth.uid();
+    if (!this.firestore || !uid) return;
+    const items = this.unreadUpdates();
+    for (let start = 0; start < items.length; start += 400) {
+      if (this.auth.uid() !== uid) return;
+      const batch = writeBatch(this.firestore);
+      for (const item of items.slice(start, start + 400))
+        batch.update(doc(this.firestore, 'users', uid, 'team_notifications', item.id), {
+          read: true,
+        });
+      await batch.commit();
+    }
   }
   async uploadBranding(teamId: string, kind: 'logo' | 'hero', file: File): Promise<string> {
     if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 8 * 1024 * 1024)

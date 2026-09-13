@@ -88,6 +88,10 @@
     ],
     "headers": [
       {
+        "source": "/{,fr/,ja/}notifications{,/**}",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache,max-age=0,must-revalidate" }]
+      },
+      {
         "source": "/teams{,/**}",
         "headers": [
           {

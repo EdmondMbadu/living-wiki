@@ -1,5 +1,36 @@
 @if (isSignedIn()) {
-  <div class="avatar-menu-wrapper relative">
+  <div class="avatar-menu-wrapper relative flex items-center gap-3">
+    <a
+      routerLink="/notifications"
+      class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--soft-fill)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]"
+      [class.!border-orange-400]="teams.attentionCount() > 0"
+      [attr.aria-label]="
+        teams.attentionCount()
+          ? 'Notifications, ' + teams.attentionCount() + ' need your attention'
+          : teams.notificationsState() === 'error'
+            ? 'Notifications unavailable. Open to retry.'
+            : 'Notifications'
+      "
+      title="Notifications"
+      (click)="closeMenu()"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">{{
+        teams.attentionCount() ? 'notifications_active' : 'notifications'
+      }}</span>
+      @if (teams.attentionCount()) {
+        <span
+          class="absolute -right-1 -top-1 flex min-w-5 h-5 items-center justify-center rounded-full bg-orange-600 px-1 text-[10px] font-bold text-white ring-2 ring-[var(--surface)]"
+          aria-hidden="true"
+          >{{ teams.attentionCount() > 99 ? '99+' : teams.attentionCount() }}</span
+        >
+      } @else if (teams.notificationsState() === 'error' || teams.invitationsState() === 'error') {
+        <span
+          class="absolute right-0 top-0 rounded-full bg-amber-600 px-1 text-xs font-bold text-white"
+          aria-hidden="true"
+          >!</span
+        >
+      }
+    </a>
     <button
       type="button"
       class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[var(--line)] bg-[var(--soft-fill)] text-xs font-black text-[var(--accent)] shadow-[0_10px_24px_-20px_rgba(59,175,98,0.9)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--accent)]/35 hover:bg-[var(--soft-fill-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
@@ -7,15 +38,28 @@
       aria-haspopup="menu"
       aria-label="Account menu"
       (click)="toggleMenu()"
-     i18n-aria-label>
+      i18n-aria-label
+    >
       @if (userPhotoUrl()) {
-        <img [src]="userPhotoUrl()" [alt]="userName() + ' profile photo'" class="h-full w-full object-cover" />
+        <img
+          [src]="userPhotoUrl()"
+          [alt]="userName() + ' profile photo'"
+          class="h-full w-full object-cover"
+        />
       } @else {
         <span
           class="flex h-full w-full items-center justify-center"
-          [style.background]="'radial-gradient(circle at 28% 22%, rgba(255,255,255,0.84), transparent 30%), linear-gradient(135deg, ' + userIcon().from + ', ' + userIcon().to + ')'"
+          [style.background]="
+            'radial-gradient(circle at 28% 22%, rgba(255,255,255,0.84), transparent 30%), linear-gradient(135deg, ' +
+            userIcon().from +
+            ', ' +
+            userIcon().to +
+            ')'
+          "
         >
-          <span class="material-symbols-outlined text-[1.2rem]" [style.color]="userIcon().ink">{{ userIcon().icon }}</span>
+          <span class="material-symbols-outlined text-[1.2rem]" [style.color]="userIcon().ink">{{
+            userIcon().icon
+          }}</span>
         </span>
       }
     </button>
@@ -28,52 +72,97 @@
       >
         <div class="border-b border-[var(--line)] px-4 py-4">
           <div class="flex items-center gap-3">
-            <span class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--line)] bg-[var(--soft-fill)] text-sm font-black text-[var(--accent)]">
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--line)] bg-[var(--soft-fill)] text-sm font-black text-[var(--accent)]"
+            >
               @if (userPhotoUrl()) {
-                <img [src]="userPhotoUrl()" [alt]="userName() + ' profile photo'" class="h-full w-full object-cover" />
+                <img
+                  [src]="userPhotoUrl()"
+                  [alt]="userName() + ' profile photo'"
+                  class="h-full w-full object-cover"
+                />
               } @else {
                 <span
                   class="flex h-full w-full items-center justify-center"
-                  [style.background]="'radial-gradient(circle at 28% 22%, rgba(255,255,255,0.84), transparent 30%), linear-gradient(135deg, ' + userIcon().from + ', ' + userIcon().to + ')'"
+                  [style.background]="
+                    'radial-gradient(circle at 28% 22%, rgba(255,255,255,0.84), transparent 30%), linear-gradient(135deg, ' +
+                    userIcon().from +
+                    ', ' +
+                    userIcon().to +
+                    ')'
+                  "
                 >
-                  <span class="material-symbols-outlined text-[1.35rem]" [style.color]="userIcon().ink">{{ userIcon().icon }}</span>
+                  <span
+                    class="material-symbols-outlined text-[1.35rem]"
+                    [style.color]="userIcon().ink"
+                    >{{ userIcon().icon }}</span
+                  >
                 </span>
               }
             </span>
             <span class="min-w-0">
-              <span class="block truncate text-sm font-black text-[var(--text)]">{{ userName() }}</span>
-              <span class="mt-0.5 block truncate text-xs text-[var(--muted)]">{{ userEmail() }}</span>
+              <span class="block truncate text-sm font-black text-[var(--text)]">{{
+                userName()
+              }}</span>
+              <span class="mt-0.5 block truncate text-xs text-[var(--muted)]">{{
+                userEmail()
+              }}</span>
             </span>
           </div>
           @if (isAdmin()) {
-            <span class="mt-3 inline-flex rounded-full border border-[var(--accent)]/30 bg-[var(--soft-fill)] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--accent)]" i18n>
+            <span
+              class="mt-3 inline-flex rounded-full border border-[var(--accent)]/30 bg-[var(--soft-fill)] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--accent)]"
+              i18n
+            >
               Admin
             </span>
           }
         </div>
 
         <div class="py-1.5">
-          <a routerLink="/teams/new" role="menuitem" class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--accent)] hover:bg-[var(--soft-fill)]" (click)="closeMenu()">
+          <a
+            routerLink="/teams/new"
+            role="menuitem"
+            class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--accent)] hover:bg-[var(--soft-fill)]"
+            (click)="closeMenu()"
+          >
             <span class="material-symbols-outlined text-base">group_add</span> Create team
           </a>
           @if (teams.memberships().length) {
-            <a [routerLink]="teams.sidebarRoute()" role="menuitem" class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--soft-fill)]" (click)="closeMenu()">
+            <a
+              [routerLink]="teams.sidebarRoute()"
+              role="menuitem"
+              class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--soft-fill)]"
+              (click)="closeMenu()"
+            >
               <span class="material-symbols-outlined text-base">groups</span> My teams
             </a>
           }
-          <a routerLink="/teams/invitations" role="menuitem" class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--soft-fill)]" (click)="closeMenu()">
-            <span class="material-symbols-outlined text-base">mail</span> Team invitations
-            @if (teams.invitations().length) { <span class="ml-auto rounded-full bg-[var(--soft-fill)] px-2">{{ teams.invitations().length }}</span> }
+          <a
+            routerLink="/notifications"
+            role="menuitem"
+            class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--soft-fill)]"
+            (click)="closeMenu()"
+          >
+            <span class="material-symbols-outlined text-base">notifications</span> Notifications
+            @if (teams.attentionCount()) {
+              <span class="ml-auto rounded-full bg-orange-600 px-2 text-white">{{
+                teams.attentionCount()
+              }}</span>
+            }
           </a>
           @if (teams.canCreate() === false && teams.memberships().length && !isAdmin()) {
-            <p class="px-4 pb-2 text-xs text-[var(--muted)]">One created team per account. You can join other teams.</p>
+            <p class="px-4 pb-2 text-xs text-[var(--muted)]">
+              One created team per account. You can join other teams.
+            </p>
           }
           <a
             routerLink="/profile"
             role="menuitem"
             class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--soft-fill)] hover:text-[var(--text)]"
             (click)="closeMenu()"
-           i18n>
+            i18n
+          >
             <span class="material-symbols-outlined text-base">account_circle</span>
             Profile
           </a>
@@ -82,7 +171,8 @@
             role="menuitem"
             class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--soft-fill)] hover:text-[var(--text)]"
             (click)="closeMenu()"
-           i18n>
+            i18n
+          >
             <span class="material-symbols-outlined text-base">dashboard</span>
             My Wikis
           </a>
@@ -91,7 +181,8 @@
             role="menuitem"
             class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--soft-fill)] hover:text-[var(--text)]"
             (click)="closeMenu()"
-           i18n>
+            i18n
+          >
             <span class="material-symbols-outlined text-base">dashboard_customize</span>
             Boards
           </a>
@@ -100,7 +191,8 @@
             role="menuitem"
             class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--soft-fill)] hover:text-[var(--text)]"
             (click)="closeMenu()"
-           i18n>
+            i18n
+          >
             <span class="material-symbols-outlined text-base">group</span>
             Friends
           </a>
@@ -109,7 +201,8 @@
             role="menuitem"
             class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--soft-fill)] hover:text-[var(--text)]"
             (click)="closeMenu()"
-           i18n>
+            i18n
+          >
             <span class="material-symbols-outlined text-base">settings</span>
             Settings
           </a>
@@ -118,7 +211,8 @@
               routerLink="/admin/city-board-factory"
               role="menuitem"
               class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--soft-fill)] hover:text-[var(--text)]"
-              (click)="closeMenu()">
+              (click)="closeMenu()"
+            >
               <span class="material-symbols-outlined text-base">factory</span>
               City Board Factory
             </a>
@@ -126,7 +220,8 @@
               routerLink="/admin/university-board-factory"
               role="menuitem"
               class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--soft-fill)] hover:text-[var(--text)]"
-              (click)="closeMenu()">
+              (click)="closeMenu()"
+            >
               <span class="material-symbols-outlined text-base">school</span>
               University Board Factory
             </a>
@@ -135,7 +230,8 @@
               role="menuitem"
               class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--soft-fill)] hover:text-[var(--text)]"
               (click)="closeMenu()"
-             i18n>
+              i18n
+            >
               <span class="material-symbols-outlined text-base">group</span>
               Admin users
             </a>

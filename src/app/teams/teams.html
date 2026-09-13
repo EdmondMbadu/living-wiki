@@ -35,21 +35,7 @@
           }
         }
       </nav>
-      <div class="topbar-actions">
-        @if (auth.isAuthenticated() && !isPublic()) {
-          <button
-            class="icon-button"
-            aria-label="Team notifications"
-            (click)="showModal('notifications')"
-          >
-            <span class="material-symbols-outlined">notifications</span>
-            @if (unreadNotifications()) {
-              <span class="count">{{ unreadNotifications() }}</span>
-            }
-          </button>
-        }
-        <app-theme-toggle /><app-account-menu />
-      </div>
+      <div class="topbar-actions"><app-theme-toggle /><app-account-menu /></div>
     </header>
 
     <main class="team-main" [attr.aria-busy]="loading()">
@@ -206,6 +192,49 @@
             </p>
           </div>
         </div>
+        @if (invitationPreview(); as preview) {
+          @if (preview.status && preview.status !== 'pending') {
+            <section class="panel state-panel" role="status">
+              <h2>
+                {{
+                  preview.status === 'accepted'
+                    ? 'Invitation already accepted'
+                    : preview.status === 'expired'
+                      ? 'This invitation has expired'
+                      : preview.status === 'declined'
+                        ? 'Invitation declined'
+                        : 'This invitation is no longer available'
+                }}
+              </h2>
+              <p>
+                {{ preview.teamName }} · Ask a team admin for a new invitation if you still need
+                access.
+              </p>
+              @if (preview.teamId && teams.hasAccess(preview.teamId)) {
+                <a class="button button--primary" [routerLink]="['/teams', preview.teamId]"
+                  >Open team</a
+                >
+              }
+            </section>
+          } @else if (
+            auth.isAuthenticated() && auth.emailVerified() && preview.matchesAccount === false
+          ) {
+            <section class="panel state-panel" role="alert">
+              <h2>This invitation is for a different email address</h2>
+              <p>
+                You’re signed in as {{ auth.email() }}. Switch to the account this invitation was
+                sent to.
+              </p>
+              <button
+                class="button button--primary"
+                (click)="switchInvitationAccount()"
+                [disabled]="busy()"
+              >
+                Switch account
+              </button>
+            </section>
+          }
+        }
         @if (!auth.isAuthenticated()) {
           <section class="panel state-panel">
             <span class="material-symbols-outlined">mail</span>
@@ -225,7 +254,9 @@
           <section class="panel state-panel">
             <h2>Verify your email first</h2>
             <p>We need to confirm {{ auth.email() }} before granting access to a team.</p>
-            <a class="button" routerLink="/verify-email">Verify email</a>
+            <a class="button" routerLink="/verify-email" [queryParams]="signinReturn()"
+              >Verify email</a
+            >
           </section>
         } @else if (teams.invitationsState() === 'error') {
           <section class="panel state-panel" role="alert">
@@ -242,14 +273,28 @@
         } @else {
           <p class="field-help">
             Invitations for {{ auth.email() }}. If you were invited at another address, switch
-            accounts from your avatar menu.
+            accounts.
+            <button
+              type="button"
+              class="text-button"
+              (click)="switchInvitationAccount()"
+              [disabled]="busy()"
+            >
+              Switch account
+            </button>
           </p>
           <div class="invitation-list">
-            @for (invite of teams.invitations(); track invite.id) {
-              <article class="panel invitation-card">
+            @for (invite of orderedInvitations(); track invite.id) {
+              <article
+                class="panel invitation-card"
+                [class.invitation-card--focused]="invite.id === focusedInvitationId()"
+              >
                 <span class="team-logo team-logo--small">{{ initials(invite.teamName) }}</span>
                 <div>
                   <h2>{{ invite.teamName }}</h2>
+                  @if (invite.id === focusedInvitationId()) {
+                    <span class="eyebrow">The invitation you opened</span>
+                  }
                   <p>
                     Invited as a {{ invite.role }} · Expires
                     {{ invite.expiresAt | date: 'MMM d, y' }}
@@ -939,9 +984,18 @@
               <div class="section-title">
                 <h2>Invitations</h2>
                 <span>{{ pendingInvitations().length }}</span>
+                <button
+                  class="button button--quiet"
+                  [disabled]="busy() || loading()"
+                  (click)="reload()"
+                >
+                  Refresh email status
+                </button>
               </div>
               <p class="field-help">
                 Invitees become members only after accepting. Invitations expire after seven days.
+                Delivery confirmation can take several minutes. “Delivered” means the recipient’s
+                mail server accepted it; they may still need to check Spam or Promotions.
               </p>
               @for (invite of pendingInvitations(); track invite.id) {
                 <div class="pending-invite">
@@ -950,9 +1004,12 @@
                     ><small
                       >{{ invite.role }} · {{ invite.status }} · Expires
                       {{ invite.expiresAt | date: 'MMM d' }}
-                      @if (invite.delivery === 'failed') {
-                        <span class="warning-text">· Email delivery failed</span>
-                      }
+                      <span
+                        [class.warning-text]="
+                          invite.delivery === 'failed' || invite.delivery === 'unknown'
+                        "
+                        >· {{ invitationDeliveryLabel(invite.delivery) }}</span
+                      >
                     </small>
                   </div>
                   <div class="actions">
@@ -1108,19 +1165,17 @@
             {{
               modal() === 'import'
                 ? 'Add an existing listing'
-                : modal() === 'notifications'
-                  ? 'Team notifications'
-                  : modal() === 'settings'
-                    ? 'Team settings'
-                    : modal() === 'invite'
-                      ? 'Invite your team'
-                      : modal() === 'member'
-                        ? selectedMember()?.name
-                        : modal() === 'qr'
-                          ? 'Share this listing'
-                          : modal() === 'voice'
-                            ? 'Your voice, your choice'
-                            : selectedListing()?.title
+                : modal() === 'settings'
+                  ? 'Team settings'
+                  : modal() === 'invite'
+                    ? 'Invite your team'
+                    : modal() === 'member'
+                      ? selectedMember()?.name
+                      : modal() === 'qr'
+                        ? 'Share this listing'
+                        : modal() === 'voice'
+                          ? 'Your voice, your choice'
+                          : selectedListing()?.title
             }}
           </h2>
         </div>
@@ -1137,27 +1192,7 @@
       @if (modalError() && modal() !== 'settings') {
         <div class="feedback feedback--error" role="alert">{{ modalError() }}</div>
       }
-      @if (modal() === 'notifications') {
-        <p class="field-help">
-          Your latest team updates. Contact details stay inside their restricted listing view.
-        </p>
-        @for (item of teams.notifications(); track item.id) {
-          <button
-            class="notification-entry"
-            [class.unread]="!item.read"
-            (click)="openNotification(item)"
-          >
-            <span class="material-symbols-outlined">{{
-              item.read ? 'mark_email_read' : 'notifications_active'
-            }}</span
-            ><span
-              >{{ item.message }}<small>{{ item.createdAt | date: 'MMM d, h:mm a' }}</small></span
-            ><span class="material-symbols-outlined">chevron_right</span>
-          </button>
-        } @empty {
-          <p>You’re all caught up. Team updates will appear here.</p>
-        }
-      } @else if (modal() === 'import') {
+      @if (modal() === 'import') {
         <p>
           Add one of your real estate TalkThrus to this team. The imported listing starts as a
           private draft.

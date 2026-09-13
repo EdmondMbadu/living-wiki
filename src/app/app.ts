@@ -3,10 +3,11 @@ import { RouterOutlet } from '@angular/router';
 import { SpotifyPlayerComponent } from './spotify-player/spotify-player';
 import { ThemeService } from './theme.service';
 import { WorkspaceNavigationOverlayComponent } from './workspace-navigation/workspace-navigation-overlay';
+import { InvitationAlertComponent } from './notifications/invitation-alert';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SpotifyPlayerComponent, WorkspaceNavigationOverlayComponent],
+  imports: [RouterOutlet, SpotifyPlayerComponent, WorkspaceNavigationOverlayComponent, InvitationAlertComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

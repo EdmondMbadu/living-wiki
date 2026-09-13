@@ -6,7 +6,12 @@ process.env.GCLOUD_PROJECT = 'demo-living-wiki';
 const { db, storage } = require('./lib/firebase');
 const sgMail = require('@sendgrid/mail');
 const { getAuth } = require('firebase-admin/auth');
-const { teamCommand } = require('./lib/teams');
+const { teamCommand, getTeamInvitationPreview } = require('./lib/teams');
+const {
+  processInvitationEmail,
+  syncInvitationForUser,
+  checkInvitationDelivery,
+} = require('./lib/team-invitations');
 const {
   getTeamInsights,
   submitTeamContact,
@@ -67,6 +72,9 @@ beforeEach(async () => {
     { method: 'DELETE' },
   );
   users.clear();
+  sgMail.send = async () => [
+    { statusCode: 202, headers: { 'x-message-id': 'provider-test-message' } },
+  ];
 });
 async function addMember(teamId, uid, role = 'member') {
   await db
@@ -379,7 +387,7 @@ test('invitation batches are atomic, normalize emails, and reject premature rese
     role: 'member',
   });
   assert.equal(result.invitations.length, 1);
-  assert.equal(result.invitations[0].delivery, 'sent');
+  assert.equal(result.invitations[0].delivery, 'queued');
   assert.equal((await db.collection(`teams/${teamId}/members`).get()).size, 1);
   await assert.rejects(
     command('owner', 'invite', { teamId, emails: 'another@example.com,new@example.com' }),
@@ -391,6 +399,169 @@ test('invitation batches are atomic, normalize emails, and reject premature rese
     /invalid/,
   );
   assert.equal((await db.collection('team_invitations').get()).size, 1);
+});
+
+test('invitation outbox deduplicates concurrent workers and records submission without claiming delivery', async () => {
+  const { teamId } = await create('owner');
+  await command('owner', 'invite', { teamId, emails: 'invitee@example.com' });
+  const job = (await db.collection('team_invitation_emails').get()).docs[0];
+  let sends = 0;
+  let message;
+  sgMail.send = async (payload) => {
+    sends++;
+    message = payload;
+    return [{ statusCode: 202, headers: { 'x-message-id': 'test-id' } }];
+  };
+  await Promise.all([processInvitationEmail(job.id), processInvitationEmail(job.id)]);
+  assert.equal(sends, 1);
+  const stored = (await job.ref.get()).data();
+  assert.equal(stored.status, 'submitted');
+  assert.equal(stored.token, undefined);
+  assert.equal(stored.attempts, 1);
+  assert.equal(
+    (await db.doc(`team_invitations/${stored.invite_id}`).get()).data().delivery,
+    'submitted',
+  );
+  assert.match(message.text, /https:\/\/www.livingwiki.com\/teams\/invitations\?invite=.+&token=/);
+  assert.match(message.html, /Review invitation/);
+  assert.equal(message.trackingSettings.clickTracking.enable, false);
+  const url = new URL(message.text.match(/https:\/\/[^\s]+/)[0]);
+  const preview = await getTeamInvitationPreview.run({
+    data: { inviteId: stored.invite_id, token: url.searchParams.get('token') },
+  });
+  assert.equal(preview.teamName, 'Team owner');
+  assert.equal(preview.status, 'pending');
+  assert.equal(
+    (await db.collection(`teams/${teamId}/members`).get()).size,
+    1,
+    'Opening an email must not accept it',
+  );
+});
+
+test('known transient email errors retry; permanent and ambiguous errors do not leak details or resend blindly', async () => {
+  const { teamId } = await create('owner');
+  for (const [email, code, expected] of [
+    ['retry@example.com', 429, 'retry'],
+    ['failed@example.com', 403, 'failed'],
+    ['unknown@example.com', 0, 'unknown'],
+  ]) {
+    await command('owner', 'invite', { teamId, emails: email });
+    const job = (await db.collection('team_invitation_emails').where('email', '==', email).get())
+      .docs[0];
+    sgMail.send = async () => {
+      throw Object.assign(new Error('Secret recipient/provider diagnostic'), { code });
+    };
+    await processInvitationEmail(job.id);
+    const stored = (await job.ref.get()).data();
+    assert.equal(stored.status, expected);
+    assert.ok(!JSON.stringify(stored).includes('Secret recipient'));
+    if (expected === 'retry') {
+      assert.ok(stored.next_attempt_at > Date.now());
+      await job.ref.update({ next_attempt_at: 0 });
+      sgMail.send = async () => [{ statusCode: 202 }];
+      await processInvitationEmail(job.id);
+      assert.equal((await job.ref.get()).data().status, 'submitted');
+    } else {
+      assert.equal(stored.token, undefined);
+      assert.equal(stored.next_attempt_at, undefined);
+    }
+  }
+});
+
+test('revoked, expired, and superseded email jobs never send', async () => {
+  const { teamId } = await create('owner');
+  let sends = 0;
+  sgMail.send = async () => {
+    sends++;
+    return [{ statusCode: 202 }];
+  };
+  for (const [email, patch] of [
+    ['revoked@example.com', { status: 'revoked' }],
+    ['expired@example.com', { expires_at_ms: 0 }],
+    ['replaced@example.com', { token_hash: 'new-token-hash' }],
+  ]) {
+    await command('owner', 'invite', { teamId, emails: email });
+    const job = (await db.collection('team_invitation_emails').where('email', '==', email).get())
+      .docs[0];
+    await db.doc(`team_invitations/${job.data().invite_id}`).update(patch);
+    await processInvitationEmail(job.id);
+    assert.equal((await job.ref.get()).data().status, 'cancelled');
+    assert.equal((await job.ref.get()).data().token, undefined);
+  }
+  assert.equal(sends, 0);
+});
+
+test('verified inbox hydration is idempotent, private, and resolves immediately after acceptance', async () => {
+  const { teamId } = await create('owner');
+  await command('owner', 'invite', { teamId, emails: 'invitee@example.com' });
+  const invite = (await db.collection('team_invitations').get()).docs[0];
+  users.set('invitee', { uid: 'invitee', email: 'invitee@example.com', emailVerified: false });
+  assert.equal(await syncInvitationForUser('invitee', invite.id), null);
+  assert.equal((await db.collection('users/invitee/team_notifications').get()).size, 0);
+  await assert.rejects(command('invitee', 'inbox'), /Verify your email/);
+  users.delete('invitee');
+  const inbox = await command('invitee', 'inbox');
+  assert.equal(inbox.invitations.length, 1);
+  const notice = db.doc(`users/invitee/team_notifications/invite-${invite.id}`);
+  const before = await notice.get();
+  await command('invitee', 'inbox');
+  assert.equal(
+    (await notice.get()).updateTime.toMillis(),
+    before.updateTime.toMillis(),
+    'Checking inbox should not rewrite identical notification',
+  );
+  assert.equal(before.data().read, false);
+  assert.ok(!JSON.stringify(before.data()).includes('token'));
+  await syncInvitationForUser('wrong', invite.id);
+  assert.equal((await db.collection('users/wrong/team_notifications').get()).size, 0);
+  await command('invitee', 'respondInvitation', { inviteId: invite.id, accept: true });
+  assert.equal((await notice.get()).data().invitation.status, 'accepted');
+  assert.equal((await notice.get()).data().read, true);
+  assert.equal((await command('invitee', 'inbox')).invitations.length, 0);
+  assert.equal((await db.collection('users/owner/team_notifications').get()).size, 1);
+  await command('invitee', 'respondInvitation', { inviteId: invite.id, accept: true });
+  assert.equal((await db.collection('users/owner/team_notifications').get()).size, 1);
+});
+
+test('archived teams suppress pending invitations and email previews distinguish a wrong account', async () => {
+  const { teamId } = await create('owner');
+  await command('owner', 'invite', { teamId, emails: 'invitee@example.com' });
+  const job = (await db.collection('team_invitation_emails').get()).docs[0].data();
+  const preview = await getTeamInvitationPreview.run({
+    data: { inviteId: job.invite_id, token: job.token },
+    auth: { uid: 'wrong' },
+  });
+  assert.equal(preview.matchesAccount, false);
+  assert.equal(preview.teamId, '');
+  await db.doc(`teams/${teamId}`).update({ status: 'archived' });
+  assert.equal((await command('invitee', 'inbox')).invitations.length, 0);
+  assert.equal(
+    (await getTeamInvitationPreview.run({ data: { inviteId: job.invite_id, token: job.token } }))
+      .status,
+    'unavailable',
+  );
+});
+
+test('delivery confirmation updates only the matching invitation attempt', async () => {
+  const { teamId } = await create('owner');
+  await command('owner', 'invite', { teamId, emails: 'invitee@example.com' });
+  const job = (await db.collection('team_invitation_emails').get()).docs[0];
+  await processInvitationEmail(job.id);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: true,
+    json: async () => ({ messages: [{ status: 'delivered' }] }),
+  });
+  try {
+    await checkInvitationDelivery(job.id, (await job.ref.get()).data());
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  assert.equal((await job.ref.get()).data().status, 'delivered');
+  assert.equal(
+    (await db.doc(`team_invitations/${job.data().invite_id}`).get()).data().delivery,
+    'delivered',
+  );
 });
 
 test('shared wizard drafts support colleagues, reject stale writes, and complete without creator ownership', async () => {

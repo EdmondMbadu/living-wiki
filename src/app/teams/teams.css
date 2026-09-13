@@ -2110,3 +2110,4 @@ a[aria-disabled='true'] {
     display: none;
   }
 }
+.invitation-card--focused { border: 2px solid var(--accent, #216b4c) !important; box-shadow: 0 0 0 4px var(--soft-fill, #eaf3ed); }

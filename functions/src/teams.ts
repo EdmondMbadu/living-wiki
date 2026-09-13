@@ -2,9 +2,12 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, type Transaction } from 'firebase-admin/firestore';
 import { HttpsError, onCall, type CallableRequest } from 'firebase-functions/v2/https';
-import { defineSecret } from 'firebase-functions/params';
-import sgMail from '@sendgrid/mail';
 import { db, storage } from './firebase';
+import {
+  invitationNotificationRef,
+  invitationView,
+  syncInvitationForUser,
+} from './team-invitations';
 import {
   applyTeamSettingsPatch,
   canPublishTeamListing,
@@ -25,7 +28,6 @@ import {
   type TeamRecord,
 } from './team-model';
 
-const sendgridKey = defineSecret('SENDGRID_API_KEY');
 const options = { region: 'us-central1', cors: true };
 const hash = (value: string) => createHash('sha256').update(value).digest('hex');
 const teamRef = (id: string) => db.collection('teams').doc(id);
@@ -90,6 +92,7 @@ function audit(tx: Transaction, teamId: string, uid: string, action: string, tar
 }
 function notify(tx: Transaction, uid: string, teamId: string, message: string, target = '') {
   tx.create(db.collection('users').doc(uid).collection('team_notifications').doc(), {
+    type: 'team_update',
     teamId,
     message,
     target,
@@ -138,19 +141,7 @@ async function profile(uid: string): Promise<TeamRecord & { name: string }> {
   };
 }
 function readOnlyInvite(inviteId: string, data: TeamRecord) {
-  return {
-    id: inviteId,
-    teamId: data['team_id'],
-    teamName: data['team_name'],
-    email: data['email'],
-    role: data['role'],
-    status:
-      data['status'] === 'pending' && data['expires_at_ms'] <= Date.now()
-        ? 'expired'
-        : data['status'],
-    expiresAt: new Date(data['expires_at_ms']).toISOString(),
-    delivery: data['delivery'] || 'pending',
-  };
+  return invitationView(inviteId, data);
 }
 
 async function createTeam(request: CallableRequest, uid: string) {
@@ -316,11 +307,14 @@ async function inviteMembers(teamId: string, uid: string, data: TeamRecord) {
   const emails = [...new Set(rawEmails.map(teamEmail))];
   if (emails.includes('')) fail('One or more email addresses are invalid.');
   const role = data.role === 'admin' ? 'admin' : 'member';
+  await requireTeamMember(teamId, uid, true);
+  const inviter = await profile(uid);
   const now = Date.now();
   const entries = emails.map((email) => ({
     email,
     inviteId: hash(`${teamId}:${email}`),
     token: randomBytes(32).toString('hex'),
+    jobId: randomUUID(),
   }));
   // Commit the whole batch before sending email. A rate-limit or resend conflict never leaves a half-created batch.
   const deliveries = await db.runTransaction(async (tx) => {
@@ -359,9 +353,25 @@ async function inviteMembers(teamId: string, uid: string, data: TeamRecord) {
         token_hash: hash(entry.token),
         status: 'pending',
         invited_by: uid,
+        inviter_name: inviter.name,
         sent_at_ms: now,
         expires_at_ms: now + TEAM_INVITATION_LIFETIME_MS,
-        delivery: 'pending',
+        delivery: 'queued',
+      });
+      tx.create(db.collection('team_invitation_emails').doc(entry.jobId), {
+        invite_id: entry.inviteId,
+        team_id: teamId,
+        team_name: team['name'],
+        inviter_name: inviter.name,
+        email: entry.email,
+        role,
+        token: entry.token,
+        token_hash: hash(entry.token),
+        status: 'queued',
+        attempts: 0,
+        created_at: now,
+        next_attempt_at: now,
+        expires_at_ms: now + TEAM_INVITATION_LIFETIME_MS,
       });
       audit(tx, teamId, uid, 'member.invited', entry.inviteId);
     }
@@ -371,39 +381,7 @@ async function inviteMembers(teamId: string, uid: string, data: TeamRecord) {
     });
     return pending.map((entry) => ({ ...entry, teamName: String(team['name']) }));
   });
-  const results = await Promise.all(
-    deliveries.map(async (entry) => {
-      const url = `https://www.livingwiki.com/teams/invitations?invite=${entry.inviteId}&token=${entry.token}`;
-      let delivery = 'sent';
-      try {
-        if (!sendgridKey.value()) throw new Error('Email is not configured');
-        sgMail.setApiKey(sendgridKey.value());
-        const escape = (value: string) =>
-          value.replace(
-            /[&<>"']/g,
-            (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
-          );
-        await sgMail.send({
-          to: entry.email,
-          from: {
-            email: process.env['INVITE_SENDER_EMAIL'] || 'missioncontrol@rocketgoals.com',
-            name: 'LivingWiki',
-          },
-          subject: `Join ${entry.teamName} on LivingWiki`,
-          text: `You are invited to join ${entry.teamName} as a ${role}. Sign in with ${entry.email} and accept: ${url}\nThis invitation expires in 7 days. Accepting does not share your personal boards or voices.`,
-          html: `<div style="font-family:Arial,sans-serif;max-width:560px;padding:32px;color:#17372b"><p>LivingWiki · Team invitation</p><h1>Join ${escape(entry.teamName)}</h1><p>You are invited as a ${role}. Sign in with ${escape(entry.email)} to accept.</p><p><a href="${escape(url)}" style="display:inline-block;background:#216b4c;color:white;padding:14px 24px;border-radius:8px">Review invitation</a></p><p>Expires in 7 days. Your personal boards and voices stay private.</p></div>`,
-        });
-      } catch {
-        delivery = 'failed';
-      }
-      await db.runTransaction(async (tx) => {
-        const ref = db.collection('team_invitations').doc(entry.inviteId);
-        const current = await tx.get(ref);
-        if (current.data()?.['token_hash'] === hash(entry.token)) tx.update(ref, { delivery });
-      });
-      return { email: entry.email, delivery };
-    }),
-  );
+  const results = deliveries.map((entry) => ({ email: entry.email, delivery: 'queued' }));
   return { invitations: results, alreadyMembers: emails.length - deliveries.length };
 }
 
@@ -442,6 +420,15 @@ async function respondInvitation(request: CallableRequest, uid: string) {
       accepted_by: uid,
       responded_at: new Date().toISOString(),
     });
+    tx.set(invitationNotificationRef(uid, inviteId), {
+      type: 'team_invitation',
+      teamId,
+      target: '',
+      read: true,
+      createdAt: new Date(invite['sent_at_ms'] || 0).toISOString(),
+      message: `Invitation to ${invite['team_name']} ${accept ? 'accepted' : 'declined'}.`,
+      invitation: { ...invitationView(inviteId, invite), status: accept ? 'accepted' : 'declined' },
+    });
     if (accept && existing.data()?.['status'] !== 'active') {
       tx.set(memberRef(teamId, uid), {
         ...memberProfile,
@@ -451,6 +438,12 @@ async function respondInvitation(request: CallableRequest, uid: string) {
       tx.set(indexRef(uid, teamId), membershipIndex(teamId, team!, invite['role']));
       tx.update(teamRef(teamId), { member_count: FieldValue.increment(1) });
       notify(tx, team!['owner_id'], teamId, `${memberProfile.name} joined the team.`);
+      if (
+        invite['invited_by'] &&
+        invite['invited_by'] !== team!['owner_id'] &&
+        invite['invited_by'] !== uid
+      )
+        notify(tx, invite['invited_by'], teamId, `${memberProfile.name} joined the team.`);
     }
     audit(tx, teamId, uid, accept ? 'invitation.accepted' : 'invitation.declined');
     return { teamId, accepted: accept };
@@ -1351,85 +1344,85 @@ async function voiceAction(teamId: string, uid: string, data: TeamRecord) {
   });
 }
 
-export const teamCommand = onCall(
-  { ...options, timeoutSeconds: 120, secrets: [sendgridKey] },
-  async (request) => {
-    const uid = actor(request);
-    const data = request.data || {};
-    const action = data.action;
-    if (action === 'create') return createTeam(request, uid);
-    if (action === 'allowance') {
-      const [quota, user] = await db.getAll(
-        db.collection('team_creation_quotas').doc(uid),
-        db.collection('users').doc(uid),
+export const teamCommand = onCall({ ...options, timeoutSeconds: 120 }, async (request) => {
+  const uid = actor(request);
+  const data = request.data || {};
+  const action = data.action;
+  if (action === 'create') return createTeam(request, uid);
+  if (action === 'allowance') {
+    const [quota, user] = await db.getAll(
+      db.collection('team_creation_quotas').doc(uid),
+      db.collection('users').doc(uid),
+    );
+    return {
+      canCreate: user.data()?.['role'] === 'admin' || !(quota.data()?.['team_ids'] || []).length,
+    };
+  }
+  if (action === 'inbox') {
+    const user = await getAuth().getUser(uid);
+    if (!user.emailVerified) fail('Verify your email address to check team invitations.');
+    const docs = await db
+      .collection('team_invitations')
+      .where('email', '==', teamEmail(user.email))
+      .where('status', '==', 'pending')
+      .get();
+    const invitations = [];
+    for (let start = 0; start < docs.size; start += 20) {
+      const results = await Promise.all(
+        docs.docs.slice(start, start + 20).map((doc) => syncInvitationForUser(uid, doc.id)),
       );
-      return {
-        canCreate: user.data()?.['role'] === 'admin' || !(quota.data()?.['team_ids'] || []).length,
-      };
+      invitations.push(...results.filter(Boolean));
     }
-    if (action === 'inbox') {
-      const user = await getAuth().getUser(uid);
-      if (!user.emailVerified) return { invitations: [] };
-      const docs = await db
-        .collection('team_invitations')
-        .where('email', '==', teamEmail(user.email))
-        .where('status', '==', 'pending')
-        .get();
-      return {
-        invitations: docs.docs
-          .map((doc) => readOnlyInvite(doc.id, doc.data()))
-          .filter((i) => i.status === 'pending'),
-      };
-    }
-    if (action === 'respondInvitation') return respondInvitation(request, uid);
-    const teamId = id(data.teamId);
-    if (action === 'dashboard') return dashboard(teamId, uid);
-    if (action === 'update') return updateTeam(teamId, uid, data);
-    if (action === 'invite') return inviteMembers(teamId, uid, data);
-    if (action === 'member') return updateMember(teamId, uid, data);
-    if (action === 'saveListing') return saveListing(teamId, uid, data);
-    if (action === 'listing') return listingAction(teamId, uid, data);
-    if (action === 'voice') return voiceAction(teamId, uid, data);
-    if (action === 'wizard') return wizardAction(teamId, uid, data);
-    if (action === 'lifecycle') return lifecycle(teamId, uid, data);
-    if (action === 'transferListing') return transferListing(teamId, uid, data);
-    if (action === 'personalListings') {
-      const { team } = await requireTeamMember(teamId, uid);
-      active(team);
-      const boards = await db.collection('boards').where('owner_user_id', '==', uid).get();
-      return {
-        listings: boards.docs
-          .filter(
-            (doc) =>
-              !doc.data()['team_id'] &&
-              !doc.data()['parentBoardId'] &&
-              (doc.data()['cards'] || []).some((card: TeamRecord) =>
-                (card['tags'] || []).includes('real-estate'),
-              ),
-          )
-          .map((doc) => ({
-            id: doc.id,
-            title: doc.data()['title'],
-            updatedAt: doc.data()['updated_at_iso'],
-          })),
-      };
-    }
-    if (action === 'revokeInvitation') {
-      await db.runTransaction(async (tx) => {
-        await requireTeamMember(teamId, uid, true, tx);
-        const ref = db.collection('team_invitations').doc(id(data.inviteId));
-        const invite = (await tx.get(ref)).data();
-        if (invite?.['team_id'] !== teamId)
-          throw new HttpsError('permission-denied', 'Invitation not found.');
-        if (invite['status'] !== 'pending') fail('This invitation is no longer pending.');
-        tx.update(ref, { status: 'revoked', token_hash: '' });
-        audit(tx, teamId, uid, 'invitation.revoked', ref.id);
-      });
-      return { ok: true };
-    }
-    throw new HttpsError('invalid-argument', 'Unknown team action.');
-  },
-);
+    return { invitations };
+  }
+  if (action === 'respondInvitation') return respondInvitation(request, uid);
+  const teamId = id(data.teamId);
+  if (action === 'dashboard') return dashboard(teamId, uid);
+  if (action === 'update') return updateTeam(teamId, uid, data);
+  if (action === 'invite') return inviteMembers(teamId, uid, data);
+  if (action === 'member') return updateMember(teamId, uid, data);
+  if (action === 'saveListing') return saveListing(teamId, uid, data);
+  if (action === 'listing') return listingAction(teamId, uid, data);
+  if (action === 'voice') return voiceAction(teamId, uid, data);
+  if (action === 'wizard') return wizardAction(teamId, uid, data);
+  if (action === 'lifecycle') return lifecycle(teamId, uid, data);
+  if (action === 'transferListing') return transferListing(teamId, uid, data);
+  if (action === 'personalListings') {
+    const { team } = await requireTeamMember(teamId, uid);
+    active(team);
+    const boards = await db.collection('boards').where('owner_user_id', '==', uid).get();
+    return {
+      listings: boards.docs
+        .filter(
+          (doc) =>
+            !doc.data()['team_id'] &&
+            !doc.data()['parentBoardId'] &&
+            (doc.data()['cards'] || []).some((card: TeamRecord) =>
+              (card['tags'] || []).includes('real-estate'),
+            ),
+        )
+        .map((doc) => ({
+          id: doc.id,
+          title: doc.data()['title'],
+          updatedAt: doc.data()['updated_at_iso'],
+        })),
+    };
+  }
+  if (action === 'revokeInvitation') {
+    await db.runTransaction(async (tx) => {
+      await requireTeamMember(teamId, uid, true, tx);
+      const ref = db.collection('team_invitations').doc(id(data.inviteId));
+      const invite = (await tx.get(ref)).data();
+      if (invite?.['team_id'] !== teamId)
+        throw new HttpsError('permission-denied', 'Invitation not found.');
+      if (invite['status'] !== 'pending') fail('This invitation is no longer pending.');
+      tx.update(ref, { status: 'revoked', token_hash: '' });
+      audit(tx, teamId, uid, 'invitation.revoked', ref.id);
+    });
+    return { ok: true };
+  }
+  throw new HttpsError('invalid-argument', 'Unknown team action.');
+});
 
 export const getPublicTeamPage = onCall(options, async (request) => {
   const slug = teamSlug(request.data?.slug);
@@ -1469,16 +1462,21 @@ export const getPublicTeamPage = onCall(options, async (request) => {
 export const getTeamInvitationPreview = onCall(options, async (request) => {
   const ref = db.collection('team_invitations').doc(id(request.data?.inviteId));
   const invite = (await ref.get()).data();
-  if (
-    !invite ||
-    hash(teamText(request.data?.token, 100)) !== invite['token_hash'] ||
-    invite['expires_at_ms'] <= Date.now() ||
-    invite['status'] !== 'pending'
-  )
+  const user = request.auth ? await getAuth().getUser(request.auth.uid) : null;
+  const matches = !!user?.emailVerified && !!invite && invite['email'] === teamEmail(user.email);
+  const tokenMatches =
+    !!invite?.['token_hash'] && hash(teamText(request.data?.token, 100)) === invite['token_hash'];
+  if (!invite || (!matches && !tokenMatches))
     throw new HttpsError('not-found', 'This invitation is no longer available.');
+  const team = (await teamRef(invite['team_id']).get()).data();
+  const view = invitationView(ref.id, invite);
+  const status = team?.['status'] !== 'active' ? 'unavailable' : view.status;
   return {
     teamName: invite['team_name'],
     role: invite['role'],
     expiresAt: new Date(invite['expires_at_ms']).toISOString(),
+    status,
+    matchesAccount: user ? matches : null,
+    teamId: matches && status === 'accepted' ? invite['team_id'] : '',
   };
 });

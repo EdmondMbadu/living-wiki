@@ -122,32 +122,26 @@ export class TeamsComponent {
   readonly page = signal(1);
   readonly grid = signal(false);
   readonly modal = signal<
-    | 'settings'
-    | 'invite'
-    | 'member'
-    | 'listing'
-    | 'qr'
-    | 'voice'
-    | 'import'
-    | 'notifications'
-    | null
+    'settings' | 'invite' | 'member' | 'listing' | 'qr' | 'voice' | 'import' | null
   >(null);
   readonly importListings = signal<Array<{ id: string; title: string; updatedAt: string }>>([]);
   readonly importLoading = signal(false);
   importId = '';
   importOperation = 'copy';
   private importRequestId = '';
-  readonly unreadNotifications = computed(
-    () => this.teams.notifications().filter((item) => !item.read).length,
-  );
   readonly modalError = signal('');
   readonly selectedListing = signal<TeamListing | null>(null);
   readonly selectedMember = signal<TeamMember | null>(null);
   readonly personalVoices = signal<PersonalVoice[]>([]);
   readonly qrUrl = signal('');
-  readonly invitationPreview = signal<{ teamName: string; role: string; expiresAt: string } | null>(
-    null,
-  );
+  readonly invitationPreview = signal<{
+    teamName: string;
+    role: string;
+    expiresAt: string;
+    status?: string;
+    matchesAccount?: boolean | null;
+    teamId?: string;
+  } | null>(null);
   readonly metricsExpanded = signal(false);
   readonly contacts = signal<
     Array<{
@@ -309,6 +303,7 @@ export class TeamsComponent {
     this.conversations.set([]);
     this.error.set('');
     this.notice.set('');
+    this.invitationPreview.set(null);
     this.dashboard.set(null);
     this.publicPage.set(null);
     this.report.set(null);
@@ -379,8 +374,10 @@ export class TeamsComponent {
         if (this.mode() === 'invitations') {
           const inviteId = this.route.snapshot.queryParamMap.get('invite');
           const token = this.route.snapshot.queryParamMap.get('token');
-          if (inviteId && token)
-            this.invitationPreview.set(await this.teams.invitationPreview(inviteId, token));
+          if (inviteId && (token || this.auth.emailVerified())) {
+            const preview = await this.teams.invitationPreview(inviteId, token || '');
+            if (sequence === this.loadSequence) this.invitationPreview.set(preview);
+          }
         }
       }
     } catch (error) {
@@ -701,17 +698,6 @@ export class TeamsComponent {
       this.busy.set(false);
     }
   }
-  async openNotification(item: { id: string; teamId: string; target: string }): Promise<void> {
-    try {
-      await this.teams.markNotificationRead(item.id);
-      this.modal.set(null);
-      await this.router.navigate(['/teams', item.teamId], {
-        queryParams: item.target ? { listing: item.target } : {},
-      });
-    } catch (error) {
-      this.modalError.set(teamError(error));
-    }
-  }
   async leaveTeam(): Promise<void> {
     if (
       this.isOwner() ||
@@ -883,7 +869,7 @@ export class TeamsComponent {
       this.notice.set(
         failed
           ? `Invitations saved, but ${failed} email${failed === 1 ? '' : 's'} could not be delivered. Use Resend in Members. Invitees can also find them in their account menu.`
-          : `${result.invitations.length} invitation${result.invitations.length === 1 ? '' : 's'} sent.${result.alreadyMembers ? ` ${result.alreadyMembers} already on the team.` : ''}`,
+          : `${result.invitations.length} invitation${result.invitations.length === 1 ? '' : 's'} created. Emails are queued for delivery; check their status in Members.${result.alreadyMembers ? ` ${result.alreadyMembers} already on the team.` : ''}`,
       );
     } catch (error) {
       this.modalError.set(teamError(error));
@@ -1027,6 +1013,42 @@ export class TeamsComponent {
   }
   signinReturn(): Record<string, string> {
     return { redirectTo: this.router.url };
+  }
+  focusedInvitationId(): string {
+    return this.route.snapshot.queryParamMap.get('invite') || '';
+  }
+  orderedInvitations(): TeamInvitation[] {
+    const focused = this.focusedInvitationId();
+    return [...this.teams.invitations()].sort(
+      (a, b) => Number(b.id === focused) - Number(a.id === focused),
+    );
+  }
+  async switchInvitationAccount(): Promise<void> {
+    if (this.busy()) return;
+    const redirectTo = this.router.url;
+    this.busy.set(true);
+    try {
+      await this.auth.signOut();
+      await this.router.navigate(['/sign-in'], { queryParams: { redirectTo } });
+    } catch (error) {
+      this.error.set(teamError(error));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+  invitationDeliveryLabel(delivery: TeamInvitation['delivery']): string {
+    return {
+      pending: 'Email pending',
+      queued: 'Email queued',
+      processing: 'Sending email',
+      retry: 'Email retry scheduled',
+      sent: 'Submitted to email provider',
+      submitted: 'Submitted to email provider',
+      delivered: 'Delivered to mail server',
+      failed: 'Email failed · check the address and resend',
+      unknown: 'Email status unconfirmed · check with the recipient before resending',
+      cancelled: 'Email cancelled',
+    }[delivery];
   }
   async teamLifecycle(operation: 'archive' | 'restore' | 'delete'): Promise<void> {
     if (this.busy()) return;

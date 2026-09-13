@@ -8,6 +8,7 @@ import {
 
 export type WorkspaceSidebarActive =
   | WorkspaceNavigationKey
+  | 'notifications'
   | 'business-edit'
   | 'business-badge'
   | 'business-voice'

@@ -38,7 +38,7 @@ describe('AccountMenuComponent team creation', () => {
       expect(create?.textContent).toContain('Create team');
       expect(create?.getAttribute('role')).toBe('menuitem');
       expect(refresh).toHaveBeenCalledTimes(1);
-      expect(fixture.nativeElement.querySelector('a[href="/teams/invitations"]')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('a[href="/notifications"]')).not.toBeNull();
     });
   }
 });
