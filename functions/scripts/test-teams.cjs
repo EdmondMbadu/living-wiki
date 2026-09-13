@@ -1,6 +1,15 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { createHmac } = require('node:crypto');
+const { resolve } = require('node:path');
+// Discovery needs a bucket for existing Storage triggers, but never invokes handlers.
+// Keep the test process scoped to a demo project, without production credentials.
+process.env.GCLOUD_PROJECT = 'demo-living-wiki';
+process.env.FIREBASE_CONFIG = JSON.stringify({
+  projectId: 'demo-living-wiki',
+  storageBucket: 'demo-living-wiki.appspot.com',
+});
+const { loadStack } = require('../node_modules/firebase-functions/lib/runtime/loader');
 const {
   teamSlug,
   teamEmail,
@@ -12,6 +21,38 @@ const {
   teamListingSummary,
 } = require('../lib/team-model');
 const { teamVoiceWebhook, verifyTeamVoiceWebhook } = require('../lib/team-voice');
+
+test('full Firebase discovery excludes the deferred team webhook and its secret', async () => {
+  // Use the same SDK discovery routine as Firebase CLI, not just a source-text check.
+  const stack = await loadStack(resolve(__dirname, '..'));
+  assert.equal(stack.endpoints.teamVoiceWebhook, undefined);
+  for (const [name, endpoint] of Object.entries(stack.endpoints)) {
+    assert.equal(
+      (endpoint.secretEnvironmentVariables || []).some(
+        (secret) => secret.key === 'ELEVENLABS_TEAM_WEBHOOK_SECRET',
+      ),
+      false,
+      `${name} must not require the deferred webhook secret`,
+    );
+  }
+  assert.equal(
+    (stack.params || []).some((param) => param.name === 'ELEVENLABS_TEAM_WEBHOOK_SECRET'),
+    false,
+  );
+  for (const name of [
+    'teamCommand',
+    'getPublicTeamPage',
+    'getTeamInvitationPreview',
+    'getTeamInsights',
+    'submitTeamContact',
+    'manageTeamContacts',
+    'getTeamConversations',
+    'createElevenLabsVoiceSession',
+    'synthesizeChatAnswerSpeech',
+  ]) {
+    assert.ok(stack.endpoints[name], `${name} must remain available`);
+  }
+});
 
 test('the optional voice webhook retains its secret binding and rejects an unconfigured secret', () => {
   assert.deepEqual(teamVoiceWebhook.__endpoint.secretEnvironmentVariables, [

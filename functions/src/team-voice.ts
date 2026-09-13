@@ -192,6 +192,7 @@ export async function recordVerifiedTeamCall(event: TeamRecord): Promise<void> {
   });
 }
 
+// Prepared for a future provider integration, but intentionally not exported from index.ts.
 export const teamVoiceWebhook = onRequest(
   // Bind this optional integration's secret only to its endpoint. Declaring a global
   // secret parameter would also block deploying core team functions before provider setup.

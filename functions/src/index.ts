@@ -86,7 +86,8 @@ export {
 export { getBoardInsights, recordBoardAnalyticsEvent } from './board-analytics';
 export { teamCommand, getPublicTeamPage, getTeamInvitationPreview } from './teams';
 export { getTeamInsights, submitTeamContact, manageTeamContacts, getTeamConversations } from './team-analytics';
-export { teamVoiceWebhook } from './team-voice';
+// Team call verification is deferred. Do not export teamVoiceWebhook until its
+// provider and secret are configured; full deploys validate every exported endpoint.
 import { issueTeamVoiceSession, teamVoiceBinding, teamWorkingBoard } from './team-voice';
 import { requireVoiceGrant, saveGeneratedTeamBoard } from './teams';
 export { exportBoardToDocx } from './board-doc-export';
