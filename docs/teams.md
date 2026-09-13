@@ -19,6 +19,14 @@ The workspace includes:
 
 The public page is `/team/{slug}` and starts unpublished. The private workspace is `/teams/{teamId}`. Publishing a team page and publishing an individual listing are separate choices. Saving a listing never updates its public snapshot. Restoring an archived team does not republish anything automatically.
 
+### Team settings
+
+Team admins can save an individual setting without completing the rest of the profile. The form sends only changed fields, using the revision captured when it opened. Omitted fields stay unchanged; explicit empty optional values clear descriptions, contact details, website, logo, or cover. Leaving the team name blank keeps the existing name; a replacement name must have at least two characters. Reset accent restores the default green. Invalid newly entered website/email values show a useful error, while blank values are valid.
+
+Remove logo and Remove cover photo update the preview immediately and take effect on Save; Cancel restores the saved images. Removing a cover resets its focal point. Removal withdraws the image from the team page and membership indexes, not from existing public Storage URLs (branding objects remain immutable). Failed saves preserve the draft. The dialog backdrop handler must return void: returning false for clicks inside the dialog cancels native submit and checkbox behavior.
+
+Deploy the updated `teamCommand` callable before serving the partial-update frontend: `firebase deploy --only functions:teamCommand --project living-atlas-7622a`. Existing full-form clients remain compatible with the updated backend.
+
 ## Permissions
 
 | Capability                                                                  | Visitor | Active member           | Team admin  | Owner       |

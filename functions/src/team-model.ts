@@ -42,6 +42,38 @@ export function teamUrl(value: unknown): string {
   }
 }
 
+/** Missing settings are unchanged; explicit empty values clear optional details. */
+export function applyTeamSettingsPatch(team: TeamRecord, data: TeamRecord): TeamRecord {
+  const next = { ...team };
+  if (Object.hasOwn(data, 'name')) next.name = teamText(data.name, 100) || team.name;
+  for (const [input, field, limit] of [
+    ['description', 'description', 280],
+    ['about', 'about', 4000],
+    ['contactPhone', 'contact_phone', 40],
+  ] as const) {
+    if (Object.hasOwn(data, input)) next[field] = teamText(data[input], limit);
+  }
+  for (const [input, field] of [
+    ['logoUrl', 'logo_url'],
+    ['heroUrl', 'hero_url'],
+    ['website', 'website'],
+  ] as const) {
+    if (Object.hasOwn(data, input)) next[field] = teamUrl(data[input]);
+  }
+  if (Object.hasOwn(data, 'contactEmail')) next.contact_email = teamEmail(data.contactEmail);
+  if (Object.hasOwn(data, 'heroPosition')) {
+    next.hero_position = Math.max(
+      0,
+      Math.min(100, Number.isFinite(Number(data.heroPosition)) ? Number(data.heroPosition) : 50),
+    );
+  }
+  if (Object.hasOwn(data, 'heroUrl') && !next.hero_url) next.hero_position = 50;
+  if (Object.hasOwn(data, 'accent'))
+    next.accent = /^#[0-9a-f]{6}$/i.test(data.accent) ? data.accent : '#216b4c';
+  if (Object.hasOwn(data, 'publicEnabled')) next.public_enabled = data.publicEnabled === true;
+  return next;
+}
+
 export function canPublishTeamListing(role: TeamRole, uid: string, listing: TeamRecord): boolean {
   return role === 'admin' || listing['representative_id'] === uid;
 }

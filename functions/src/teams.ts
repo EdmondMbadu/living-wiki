@@ -6,6 +6,7 @@ import { defineSecret } from 'firebase-functions/params';
 import sgMail from '@sendgrid/mail';
 import { db, storage } from './firebase';
 import {
+  applyTeamSettingsPatch,
   canPublishTeamListing,
   currentTeamMemberIdentity,
   mergeTeamBoard,
@@ -270,24 +271,11 @@ async function updateTeam(teamId: string, uid: string, data: TeamRecord) {
     const members = await tx.get(
       teamRef(teamId).collection('members').where('status', '==', 'active'),
     );
-    const name = teamText(data.name, 100);
-    if (name.length < 2) fail('Enter a team name.');
+    const updated = applyTeamSettingsPatch(team, data);
+    if (teamText(updated.name, 100).length < 2)
+      fail('Enter a team name with at least two characters.');
     const next = {
-      ...team,
-      name,
-      description: teamText(data.description, 280),
-      about: teamText(data.about, 4000),
-      logo_url: teamUrl(data.logoUrl),
-      hero_url: teamUrl(data.heroUrl),
-      hero_position: Math.max(
-        0,
-        Math.min(100, Number.isFinite(Number(data.heroPosition)) ? Number(data.heroPosition) : 50),
-      ),
-      accent: /^#[0-9a-f]{6}$/i.test(data.accent) ? data.accent : '#216b4c',
-      website: teamUrl(data.website),
-      contact_email: teamEmail(data.contactEmail),
-      contact_phone: teamText(data.contactPhone, 40),
-      public_enabled: data.publicEnabled === true,
+      ...updated,
       revision: team['revision'] + 1,
       updated_at: new Date().toISOString(),
     };

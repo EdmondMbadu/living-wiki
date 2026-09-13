@@ -11,6 +11,7 @@ process.env.FIREBASE_CONFIG = JSON.stringify({
 });
 const { loadStack } = require('../node_modules/firebase-functions/lib/runtime/loader');
 const {
+  applyTeamSettingsPatch,
   teamSlug,
   teamEmail,
   canPublishTeamListing,
@@ -77,6 +78,55 @@ test('team slugs and public contact fields are normalized', () => {
   assert.equal(projected.website, '');
   assert.equal(projected.accent, '#216b4c');
   assert.equal(projected.owner_id, undefined);
+});
+test('team settings preserve omitted fields, clear optional values, and allowlist writes', () => {
+  const original = {
+    name: 'Team',
+    description: 'Description',
+    about: 'About',
+    logo_url: 'https://example.com/logo.png',
+    hero_url: 'https://example.com/cover.png',
+    hero_position: 75,
+    accent: '#123456',
+    website: 'https://example.com/',
+    contact_email: 'team@example.com',
+    contact_phone: '123',
+    public_enabled: true,
+    owner_id: 'owner',
+    slug: 'team',
+    revision: 4,
+  };
+  const logoOnly = applyTeamSettingsPatch(original, { logoUrl: 'https://example.com/new.png' });
+  assert.deepEqual(logoOnly, { ...original, logo_url: 'https://example.com/new.png' });
+  const cleared = applyTeamSettingsPatch(original, {
+    name: '  ',
+    description: '',
+    about: '',
+    logoUrl: '',
+    heroUrl: '',
+    website: '',
+    contactEmail: '',
+    contactPhone: '',
+    accent: '',
+    owner_id: 'attacker',
+    slug: 'changed',
+    revision: 99,
+  });
+  assert.deepEqual(cleared, {
+    ...original,
+    description: '',
+    about: '',
+    logo_url: '',
+    hero_url: '',
+    hero_position: 50,
+    website: '',
+    contact_email: '',
+    contact_phone: '',
+    accent: '#216b4c',
+  });
+  assert.equal(applyTeamSettingsPatch(original, { publicEnabled: false }).public_enabled, false);
+  assert.equal(applyTeamSettingsPatch(original, { heroUrl: null }).hero_url, '');
+  assert.equal(original.hero_position, 75);
 });
 test('team membership does not imply publication or private-contact authority', () => {
   assert.equal(canPublishTeamListing('member', 'a', { representative_id: 'b' }), false);

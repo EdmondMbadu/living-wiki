@@ -609,6 +609,99 @@ test('public profiles require self opt-in and removal withdraws the public membe
   assert.equal((await db.doc(`public_team_pages/${teamId}`).get()).data().members.length, 0);
 });
 
+test('team settings save independently and removals update the public page and membership indexes', async () => {
+  const { teamId } = await create('owner');
+  await addMember(teamId, 'member');
+  await command('owner', 'update', {
+    teamId,
+    revision: 1,
+    publicEnabled: true,
+    description: 'Keep this',
+    about: 'About the team',
+    website: 'https://example.com/',
+    contactEmail: 'team@example.com',
+    contactPhone: '1234',
+    accent: '#123456',
+    heroUrl: 'https://example.com/hero.png',
+    heroPosition: 75,
+  });
+  await command('owner', 'update', {
+    teamId,
+    revision: 2,
+    name: '',
+    logoUrl: 'https://example.com/logo.png',
+  });
+  const team = (await db.doc(`teams/${teamId}`).get()).data();
+  assert.equal(team.name, 'Team owner');
+  assert.equal(team.description, 'Keep this');
+  assert.equal(team.website, 'https://example.com/');
+  assert.equal(team.hero_position, 75);
+  assert.equal(team.public_enabled, true);
+  const readPage = async () => (await db.doc(`public_team_pages/${teamId}`).get()).data();
+  assert.equal((await readPage()).logoUrl, 'https://example.com/logo.png');
+  for (const uid of ['owner', 'member']) {
+    assert.equal(
+      (await db.doc(`users/${uid}/team_memberships/${teamId}`).get()).data().logoUrl,
+      'https://example.com/logo.png',
+    );
+  }
+  await command('owner', 'update', {
+    teamId,
+    revision: 3,
+    logoUrl: '',
+    heroUrl: '',
+    description: '',
+    about: '',
+    website: '',
+    contactEmail: '',
+    contactPhone: '',
+    accent: '',
+  });
+  const page = await readPage();
+  for (const key of [
+    'logoUrl',
+    'heroUrl',
+    'description',
+    'about',
+    'website',
+    'contactEmail',
+    'contactPhone',
+  ]) {
+    assert.equal(page[key], '', `${key} must be cleared from the public page`);
+  }
+  assert.equal(page.name, 'Team owner');
+  assert.equal(page.heroPosition, 50);
+  assert.equal(page.accent, '#216b4c');
+  for (const uid of ['owner', 'member']) {
+    assert.equal(
+      (await db.doc(`users/${uid}/team_memberships/${teamId}`).get()).data().logoUrl,
+      '',
+    );
+  }
+  await command('owner', 'update', { teamId, revision: 4, publicEnabled: false });
+  assert.equal((await db.doc(`public_team_pages/${teamId}`).get()).exists, false);
+});
+
+test('partial settings retain admin-only access, revision conflicts, and team name validation', async () => {
+  const { teamId } = await create('owner');
+  await addMember(teamId, 'member');
+  await assert.rejects(command('member', 'update', { teamId, revision: 1, logoUrl: '' }), /admins/);
+  await assert.rejects(command('other', 'update', { teamId, revision: 1, heroUrl: '' }), /access/);
+  await assert.rejects(
+    command('owner', 'update', { teamId, revision: 1, name: 'A' }),
+    /two characters/,
+  );
+  await command('owner', 'update', { teamId, revision: 1, description: 'New detail' });
+  await assert.rejects(
+    command('owner', 'update', { teamId, revision: 1, about: 'Stale' }),
+    /Reload/,
+  );
+  const team = (await db.doc(`teams/${teamId}`).get()).data();
+  assert.equal(team.description, 'New detail');
+  assert.equal(team.about, '');
+  assert.equal(team.revision, 2);
+});
+
 test('contacts and verified conversations paginate without cross-listing or member leakage', async () => {
   const { teamId } = await create('owner');
   await addMember(teamId, 'member');

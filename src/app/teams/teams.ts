@@ -256,6 +256,8 @@ export class TeamsComponent {
     contactPhone: '',
     publicEnabled: false,
   };
+  private settingsBaseline: typeof this.settingsForm | null = null;
+  private settingsRevision: number | undefined;
   inviteForm = { emails: '', role: 'member' };
   memberForm = { title: '', bio: '', publicVisible: false, contactEmail: '', contactPhone: '' };
   selectedVoiceId = '';
@@ -586,18 +588,20 @@ export class TeamsComponent {
     if (kind === 'settings' && this.currentTeam()) {
       const team = this.currentTeam()!;
       this.settingsForm = {
-        name: team.name,
-        description: team.description,
-        about: team.about,
-        logoUrl: team.logo_url,
-        heroUrl: team.hero_url,
-        heroPosition: team.hero_position,
-        accent: team.accent,
-        website: team.website,
-        contactEmail: team.contact_email,
-        contactPhone: team.contact_phone,
-        publicEnabled: team.public_enabled,
+        name: team.name ?? '',
+        description: team.description ?? '',
+        about: team.about ?? '',
+        logoUrl: team.logo_url ?? '',
+        heroUrl: team.hero_url ?? '',
+        heroPosition: team.hero_position ?? 50,
+        accent: team.accent || '#216b4c',
+        website: team.website ?? '',
+        contactEmail: team.contact_email ?? '',
+        contactPhone: team.contact_phone ?? '',
+        publicEnabled: team.public_enabled ?? false,
       };
+      this.settingsBaseline = { ...this.settingsForm };
+      this.settingsRevision = team.revision;
     }
     if (kind === 'member' && member) {
       this.memberForm = {
@@ -745,12 +749,69 @@ export class TeamsComponent {
       this.busy.set(false);
     }
   }
-  saveSettings(): void {
-    void this.run(
+  onModalBackdropClick(event: MouseEvent): void {
+    // A false return from an Angular event binding cancels native form/button actions.
+    if (event.target === event.currentTarget) this.closeModal();
+  }
+  async saveSettings(): Promise<void> {
+    if (this.busy() || !this.settingsBaseline) return;
+    this.modalError.set('');
+    const baseline = this.settingsBaseline;
+    const values = {
+      ...this.settingsForm,
+      // Branding-only updates should never require re-entering the team's name.
+      name: this.settingsForm.name.trim() || baseline.name,
+    };
+    const changes: Record<string, unknown> = {};
+    for (const key of Object.keys(values) as Array<keyof typeof values>) {
+      if (values[key] !== baseline[key])
+        changes[key] = typeof values[key] === 'string' ? values[key].trim() : values[key];
+    }
+    if (typeof changes['name'] === 'string' && changes['name'].length < 2) {
+      this.modalError.set(
+        'Use at least two characters for a new team name, or leave it blank to keep the current name.',
+      );
+      return;
+    }
+    if (changes['website']) {
+      try {
+        const value = changes['website'] as string;
+        const url = new URL(/^[a-z][a-z\d+.-]*:/i.test(value) ? value : `https://${value}`);
+        if (url.protocol !== 'https:' || !url.hostname) throw new Error('Invalid website');
+        changes['website'] = url.href;
+      } catch {
+        this.modalError.set(
+          'Enter a valid HTTPS website address, or leave Website blank to remove it.',
+        );
+        return;
+      }
+    }
+    if (
+      changes['contactEmail'] &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(changes['contactEmail'] as string)
+    ) {
+      this.modalError.set('Enter a valid business email address, or leave it blank to remove it.');
+      return;
+    }
+    if (!Object.keys(changes).length) {
+      this.closeModal();
+      this.notice.set('No changes to save.');
+      return;
+    }
+    await this.run(
       'update',
-      { ...this.settingsForm, revision: this.currentTeam()?.revision },
+      { ...changes, revision: this.settingsRevision },
       'Team settings saved.',
     );
+  }
+  removeBranding(kind: 'logo' | 'hero'): void {
+    if (this.busy()) return;
+    if (kind === 'logo') this.settingsForm.logoUrl = '';
+    else {
+      this.settingsForm.heroUrl = '';
+      this.settingsForm.heroPosition = 50;
+    }
+    this.modalError.set('');
   }
   chooseBrandingFile(input: HTMLInputElement): void {
     if (this.busy()) return;

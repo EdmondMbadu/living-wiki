@@ -287,9 +287,9 @@ describe('TeamsComponent', () => {
         HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
       >('input, select, textarea');
       preview
-        .querySelectorAll<
-          HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-        >('input, select, textarea')
+        .querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+          'input, select, textarea',
+        )
         .forEach((control, index) => (control.value = controls[index].value));
     }
     expect(host.querySelector('app-workspace-sidebar')).not.toBeNull();
@@ -711,9 +711,187 @@ describe('TeamsComponent', () => {
       jasmine.objectContaining({
         teamId: 'team-a',
         heroUrl: 'https://example.com/new-cover.jpg',
-        heroPosition: 50,
       }),
     );
+  });
+  it('saves only an uploaded cover through the submit button with every text field blank', async () => {
+    data.team.description = '';
+    data.team.about = '';
+    const page = await render();
+    page.showModal('settings');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    const name = dialog.querySelector<HTMLInputElement>('input[name="name"]')!;
+    name.value = '';
+    name.dispatchEvent(new Event('input', { bubbles: true }));
+    chooseCover(dialog);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(dialog.querySelector('[required]')).toBeNull();
+    dialog.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    await fixture.whenStable();
+    expect(teams.command).toHaveBeenCalledOnceWith('update', {
+      teamId: 'team-a',
+      revision: 1,
+      heroUrl: 'https://example.com/cover.jpg',
+    });
+    expect(page.modal()).toBeNull();
+    expect(page.notice()).toBe('Team settings saved.');
+  });
+  it('can clear every optional text field and reset the accent without changing other settings', async () => {
+    Object.assign(data.team, {
+      website: 'https://example.com/',
+      contact_email: 'team@example.com',
+      contact_phone: '1234',
+      accent: '#123456',
+      public_enabled: true,
+      logo_url: 'https://example.com/logo.png',
+    });
+    const page = await render();
+    page.showModal('settings');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    for (const key of ['description', 'about', 'website', 'contactEmail', 'contactPhone']) {
+      const control = dialog.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+        `[name="${key}"]`,
+      )!;
+      control.value = '';
+      control.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    dialog.querySelector<HTMLButtonElement>('.accent-setting button')!.click();
+    dialog.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    await fixture.whenStable();
+    expect(teams.command).toHaveBeenCalledOnceWith('update', {
+      teamId: 'team-a',
+      revision: 1,
+      description: '',
+      about: '',
+      website: '',
+      contactEmail: '',
+      contactPhone: '',
+      accent: '#216b4c',
+    });
+    expect(page.modal()).toBeNull();
+  });
+  it('removes images only on save and restores the originals on cancel', async () => {
+    Object.assign(data.team, {
+      logo_url: 'https://example.com/logo.png',
+      hero_url: 'https://example.com/hero.png',
+      hero_position: 75,
+    });
+    const page = await render();
+    for (const cancel of [true, false]) {
+      page.showModal('settings');
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+      expect(dialog.querySelectorAll('.brand-image-preview img').length).toBe(2);
+      dialog
+        .querySelectorAll<HTMLButtonElement>('.image-upload .button--danger')
+        .forEach((button) => button.click());
+      fixture.detectChanges();
+      expect(dialog.querySelector('.brand-image-preview img')).toBeNull();
+      expect(dialog.querySelector('[name="heroPosition"]')).toBeNull();
+      expect(dialog.querySelector('.image-upload .button--danger')).toBeNull();
+      expect(teams.command).not.toHaveBeenCalled();
+      expect(data.team.hero_url).toBe('https://example.com/hero.png');
+      if (cancel) {
+        page.closeModal();
+        fixture.detectChanges();
+      } else {
+        dialog.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+        await fixture.whenStable();
+      }
+    }
+    expect(teams.command).toHaveBeenCalledOnceWith('update', {
+      teamId: 'team-a',
+      revision: 1,
+      logoUrl: '',
+      heroUrl: '',
+      heroPosition: 50,
+    });
+  });
+  it('validates edited optional details without requiring them, and accepts a bare website domain', async () => {
+    const page = await render();
+    page.showModal('settings');
+    page.settingsForm.contactEmail = 'invalid';
+    await page.saveSettings();
+    expect(page.modalError()).toContain('business email');
+    expect(teams.command).not.toHaveBeenCalled();
+    page.settingsForm.contactEmail = '';
+    page.settingsForm.website = 'javascript:alert(1)';
+    await page.saveSettings();
+    expect(page.modalError()).toContain('HTTPS');
+    expect(teams.command).not.toHaveBeenCalled();
+    page.settingsForm.website = 'example.com';
+    await page.saveSettings();
+    expect(teams.command).toHaveBeenCalledOnceWith('update', {
+      teamId: 'team-a',
+      revision: 1,
+      website: 'https://example.com/',
+    });
+  });
+  it('uses the revision from when settings opened and preserves edits on a conflict', async () => {
+    const page = await render();
+    page.showModal('settings');
+    page.settingsForm.heroUrl = 'https://example.com/new.png';
+    data.team.revision = 2;
+    await page.refresh();
+    teams.command.and.rejectWith(new Error('Team settings changed. Reload before saving.'));
+    await page.saveSettings();
+    expect(teams.command).toHaveBeenCalledOnceWith('update', {
+      teamId: 'team-a',
+      revision: 1,
+      heroUrl: 'https://example.com/new.png',
+    });
+    expect(page.modal()).toBe('settings');
+    expect(page.settingsForm.heroUrl).toBe('https://example.com/new.png');
+    expect(page.modalError()).toContain('Reload');
+  });
+  it('does not submit or remove branding while an upload or save is in progress', async () => {
+    data.team.logo_url = 'https://example.com/logo.png';
+    const page = await render();
+    page.showModal('settings');
+    page.busy.set(true);
+    page.removeBranding('logo');
+    await page.saveSettings();
+    expect(page.settingsForm.logoUrl).toBe(data.team.logo_url);
+    expect(teams.command).not.toHaveBeenCalled();
+    page.busy.set(false);
+  });
+  it('lets native checkbox actions reach the settings form without closing the dialog', async () => {
+    const page = await render();
+    page.showModal('settings');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    const checkbox = dialog.querySelector<HTMLInputElement>('[name="publicEnabled"]')!;
+    checkbox.click();
+    expect(checkbox.checked).toBeTrue();
+    expect(page.settingsForm.publicEnabled).toBeTrue();
+    expect(page.modal()).toBe('settings');
+    dialog.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    await fixture.whenStable();
+    expect(teams.command).toHaveBeenCalledOnceWith('update', {
+      teamId: 'team-a',
+      revision: 1,
+      publicEnabled: true,
+    });
+  });
+  it('keeps the current name when blank and rejects only an invalid replacement name', async () => {
+    const page = await render();
+    page.showModal('settings');
+    page.settingsForm.name = 'A';
+    await page.saveSettings();
+    expect(page.modalError()).toContain('two characters');
+    expect(teams.command).not.toHaveBeenCalled();
+    page.settingsForm.name = '';
+    await page.saveSettings();
+    expect(page.modal()).toBeNull();
+    expect(page.notice()).toBe('No changes to save.');
+    expect(teams.command).not.toHaveBeenCalled();
   });
   it('recovers from an upload failure and permits selecting the same file again', async () => {
     const page = await render();

@@ -1193,6 +1193,19 @@ fieldset {
   grid-template-columns: 1fr 1fr;
   gap: 0 16px;
 }
+.accent-setting {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.accent-setting label {
+  flex: 1;
+  min-width: 0;
+}
+.accent-setting .button {
+  align-self: center;
+  font-size: 11px;
+}
 .check-field {
   flex-direction: row;
   align-items: flex-start;

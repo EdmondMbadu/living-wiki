@@ -1098,7 +1098,7 @@
     class="team-dialog"
     aria-labelledby="team-dialog-title"
     (cancel)="closeModal($event)"
-    (click)="$event.target === $event.currentTarget && closeModal()"
+    (click)="onModalBackdropClick($event)"
   >
     <div class="dialog-content">
       <header class="dialog-header">
@@ -1217,7 +1217,11 @@
           </form>
         }
       } @else if (modal() === 'settings') {
-        <form (ngSubmit)="saveSettings()">
+        <p class="field-help" id="team-settings-help">
+          Update only what you need. All details below are optional; leave the team name blank to
+          keep its current name. Changes and removals take effect when you save.
+        </p>
+        <form novalidate aria-describedby="team-settings-help" (ngSubmit)="saveSettings()">
           <fieldset [disabled]="busy()">
             <div class="brand-upload-grid">
               <div class="image-upload">
@@ -1232,6 +1236,15 @@
                 <button type="button" class="button" (click)="chooseBrandingFile(logoFile)">
                   {{ settingsForm.logoUrl ? 'Replace logo' : 'Choose logo' }}
                 </button>
+                @if (settingsForm.logoUrl) {
+                  <button
+                    type="button"
+                    class="button button--danger"
+                    (click)="removeBranding('logo')"
+                  >
+                    Remove logo
+                  </button>
+                }
                 <input
                   #logoFile
                   hidden
@@ -1257,6 +1270,15 @@
                 <button type="button" class="button" (click)="chooseBrandingFile(heroFile)">
                   {{ settingsForm.heroUrl ? 'Replace cover photo' : 'Choose cover photo' }}
                 </button>
+                @if (settingsForm.heroUrl) {
+                  <button
+                    type="button"
+                    class="button button--danger"
+                    (click)="removeBranding('hero')"
+                  >
+                    Remove cover photo
+                  </button>
+                }
                 <input
                   #heroFile
                   hidden
@@ -1291,10 +1313,10 @@
             }
             <label
               >Team name<input
-                required
                 minlength="2"
                 maxlength="100"
                 name="name"
+                [placeholder]="currentTeam()?.name || 'Team name'"
                 [(ngModel)]="settingsForm.name" /></label
             ><label
               >Short description<input
@@ -1314,16 +1336,26 @@
               <label
                 >Website<input
                   type="url"
-                  pattern="https://.*"
                   name="website"
                   [(ngModel)]="settingsForm.website"
-                  placeholder="https://" /></label
-              ><label
-                >Team accent<input
-                  type="color"
-                  name="accent"
-                  [(ngModel)]="settingsForm.accent" /></label
-              ><label
+                  placeholder="https://"
+              /></label>
+              <div class="accent-setting">
+                <label
+                  >Team accent<input
+                    type="color"
+                    name="accent"
+                    [(ngModel)]="settingsForm.accent" /></label
+                ><button
+                  type="button"
+                  class="button"
+                  [disabled]="settingsForm.accent === '#216b4c'"
+                  (click)="settingsForm.accent = '#216b4c'"
+                >
+                  Reset accent
+                </button>
+              </div>
+              <label
                 >Public business email<input
                   type="email"
                   name="contactEmail"
