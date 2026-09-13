@@ -3224,6 +3224,7 @@
                 }
                 <article
                   class="detail-card"
+                  [class.detail-card--talk-drop]="!!card.talkDrop"
                   [attr.data-analytics-card-id]="card.id"
                   [class.detail-card--favorite]="card.status === 'favorite'"
                   [class.detail-card--selected]="isCardSelected(card.id)"
@@ -3639,6 +3640,10 @@
                             <span>Flip</span>
                           </button>
                         </div>
+                      }
+
+                      @if (card.talkDrop) {
+                        <app-talk-drop [video]="card.talkDrop" [poster]="card.imageUrl" (playRequested)="openCardVideoViewer(card, $event, 'talk-drop')" />
                       }
 
                       @if (!isPhotoOnlyCard(card) && !isListingContactCard(card) && !isQrCodeCard(card) && !isListingTalkingCardPlaceholder(card) && !isListingIntroCardPlaceholder(card)) {
@@ -4619,7 +4624,7 @@
           <div>
             <small i18n>Playing on LivingWiki</small>
             <h2 [id]="'card-video-lightbox-title-' + videoCard.id">{{ videoCard.title }}</h2>
-            @if (videoCard.youtubeChannelTitle) {
+            @if (cardVideoViewerKind() === 'youtube' && videoCard.youtubeChannelTitle) {
               <p>{{ videoCard.youtubeChannelTitle }}</p>
             }
           </div>
@@ -4628,7 +4633,10 @@
           </button>
         </header>
         <div class="card-video-lightbox__stage">
-          @if (youtubeVideoEmbedUrl(videoCard); as embedUrl) {
+          @if (cardVideoViewerKind() === 'talk-drop' ? videoCard.talkDrop : null; as clip) {
+            <video [src]="clip.url" [poster]="videoCard.imageUrl" controls autoplay playsinline preload="metadata"
+              aria-label="Talk Drop video" (error)="cardVideoRepairNotice.set('This video could not play here. Try opening the original video.')"></video>
+          } @else if (youtubeVideoEmbedUrl(videoCard); as embedUrl) {
             <iframe
               [src]="embedUrl"
               [title]="videoCard.youtubeVideoTitle || videoCard.title"
@@ -4640,8 +4648,8 @@
         </div>
         <footer class="card-video-lightbox__footer">
           <div>
-            <strong>{{ videoCard.youtubeVideoTitle || videoCard.title }}</strong>
-            @if (youtubeDurationLabel(videoCard.youtubeDurationSeconds); as duration) {
+            <strong>{{ cardVideoViewerKind() === 'talk-drop' ? 'Talk Drop · ' + videoCard.title : videoCard.youtubeVideoTitle || videoCard.title }}</strong>
+            @if (cardVideoViewerKind() === 'youtube' ? youtubeDurationLabel(videoCard.youtubeDurationSeconds) : ''; as duration) {
               <span>{{ duration }}</span>
             }
             @if (cardVideoRepairNotice()) {
@@ -4649,16 +4657,20 @@
             }
           </div>
           <div class="card-video-lightbox__footer-actions">
-            @if (canRepairCardVideo(videoCard)) {
+            @if (cardVideoViewerKind() === 'youtube' && canRepairCardVideo(videoCard)) {
               <button type="button" [disabled]="cardVideoRepairing()" (click)="repairCardVideo(videoCard, $event)">
                 <span class="material-symbols-outlined">{{ cardVideoRepairing() ? 'progress_activity' : 'youtube_searched_for' }}</span>
                 {{ cardVideoRepairing() ? 'Checking…' : 'Find another playable video' }}
               </button>
             }
+            @if (cardVideoViewerKind() === 'talk-drop' ? videoCard.talkDrop : null; as clip) {
+              <a [href]="clip.url" target="_blank" rel="noopener noreferrer">Open original video</a>
+            } @else {
             <a [href]="youtubeVideoHref(videoCard)" target="_blank" rel="noopener noreferrer" i18n>
               Watch on YouTube
               <span class="material-symbols-outlined">open_in_new</span>
             </a>
+            }
           </div>
         </footer>
       </section>
@@ -5516,6 +5528,11 @@
                       </small>
                     }
                   </section>
+                }
+
+                @if (!wizardOffGridIsBulk()) {
+                  <app-talk-drop [editable]="true" [video]="wizardOffGridTalkDrop()" [poster]="wizardOffGridPhoto()"
+                    (videoChange)="wizardOffGridTalkDrop.set($event)" (uploadingChange)="wizardTalkDropUploading.set($event)" />
                 }
 
                 @if (wizardOffGridError()) {
@@ -6845,6 +6862,9 @@
                                 <span class="material-symbols-outlined">open_in_new</span>
                               </a>
                             </div>
+                          }
+                          @if (card.talkDrop) {
+                            <app-talk-drop [video]="card.talkDrop" [poster]="card.imageUrl" (playRequested)="openWizardCardVideoViewer(card, $event, 'talk-drop')" />
                           }
                           @if (what3wordsAddressFor(card); as what3wordsAddress) {
                             <a class="off-grid-preview-chip" [href]="what3wordsUrlFor(card)" target="_blank" rel="noopener noreferrer">
@@ -10380,6 +10400,10 @@
                 </div>
               }
             </section>
+            @if (selectedBoard()?.kind === 'off-grid' || cardDraft().talkDrop) {
+              <app-talk-drop [editable]="true" [video]="cardDraft().talkDrop ?? null" [poster]="cardDraft().imageUrl"
+                (videoChange)="setCardTalkDrop($event)" (uploadingChange)="cardTalkDropUploading.set($event)" />
+            }
             <div class="boards-card-image-actions boards-card-image-actions--creative" aria-label="More ways to add a photo" i18n-aria-label>
                 <button
                   type="button"
@@ -10605,7 +10629,7 @@
 
           <div class="boards-form__actions">
             <button type="button" class="boards-ghost-action" (click)="closeCardDialog()" i18n>Cancel</button>
-            <button type="submit" class="boards-primary-action">
+            <button type="submit" class="boards-primary-action" [disabled]="cardTalkDropUploading()">
               <span class="material-symbols-outlined">check</span>
               <span>{{ isSongCardForm() ? 'Save song' : editingListingContactCard() ? 'Save Contact Card' : 'Save card' }}</span>
             </button>

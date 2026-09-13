@@ -6,6 +6,8 @@ import { FirebaseError } from 'firebase/app';
 import { collection, deleteDoc, doc, getDoc, getDocs, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, startAfter, updateDoc, where, writeBatch, type DocumentData, type Firestore, type QueryConstraint, type QueryDocumentSnapshot, type QuerySnapshot, type Unsubscribe } from 'firebase/firestore';
 import { httpsCallable, type Functions } from 'firebase/functions';
 import { getDownloadURL, ref as storageRef, uploadBytes, type FirebaseStorage } from 'firebase/storage';
+import { TalkDropComponent } from './talk-drop/talk-drop.component';
+import { normalizeTalkDrop, type TalkDropVideo } from './talk-drop/talk-drop';
 import { AccountMenuComponent } from '../account-menu/account-menu';
 import { AtlasService } from '../atlas.service';
 import { AuthService } from '../auth.service';
@@ -502,6 +504,7 @@ type StickerDragState = {
 };
 
 type BoardCard = {
+  talkDrop?: TalkDropVideo | null;
   id: string;
   title: string;
   subtitle: string;
@@ -691,6 +694,7 @@ type BoardInsideContext = {
 };
 
 type CardDraft = {
+  talkDrop?: TalkDropVideo | null;
   title: string;
   subtitle: string;
   notes: string;
@@ -840,6 +844,7 @@ type BoardRecord = Omit<Board, 'createdAt' | 'updatedAt' | 'customSlug' | 'likeC
 };
 
 type BoardWizardGeneratedCard = {
+  talkDrop?: TalkDropVideo | null;
   title: string;
   subtitle: string;
   notes: string;
@@ -1656,10 +1661,10 @@ type BoardLoadContext = {
 
 @Component({
   selector: 'app-boards',
-  imports: [WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
+  imports: [TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
   providers: [DocxExportService],
   templateUrl: './boards.html',
-  styleUrls: ['./boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css'],
+  styleUrls: ['./boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
 })
 export class BoardsComponent implements AfterViewInit, OnDestroy {
   private readonly localeId = inject(LOCALE_ID);
@@ -2211,6 +2216,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     Object.keys(this.wizardOffGridVerifiedLocations()).length,
   );
   readonly wizardOffGridPhoto = signal('');
+  readonly wizardOffGridTalkDrop = signal<TalkDropVideo | null>(null);
+  readonly wizardTalkDropUploading = signal(false);
+  readonly cardTalkDropUploading = signal(false);
   readonly wizardOffGridResolvedLocation = signal<ResolvedWhat3WordsLocation | null>(null);
   readonly wizardOffGridLocation = computed(() => this.wizardOffGridResolvedLocation() ?? what3wordsLocation(this.wizardOffGridAddress()));
   readonly wizardOffGridLocating = signal(false);
@@ -2706,6 +2714,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       ?? board?.cards.flatMap((card) => this.relatedCardsFor(card)).find((card) => card.id === cardId)
       ?? null;
   });
+  readonly cardVideoViewerKind = signal<'youtube' | 'talk-drop'>('youtube');
   readonly cardVideoViewerCard = computed(() => {
     const cardId = this.cardVideoViewerCardId();
     const board = this.selectedBoard();
@@ -3290,6 +3299,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     return frames[index] ?? null;
   });
   readonly wizardCanGenerate = computed(() => {
+    if (this.wizardTalkDropUploading()) return false;
     const mode = this.wizardMode();
     if (mode === 'describe') {
       return this.wizardPrompt().trim().length >= 4;
@@ -4738,6 +4748,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.wizardOffGridName.set(draft.offGridName);
     this.wizardOffGridAddress.set(draft.offGridAddress);
     this.wizardOffGridTip.set(draft.offGridTip);
+    this.wizardOffGridTalkDrop.set(normalizeTalkDrop(draft.result.cards[0]?.talkDrop));
     this.wizardStackCtaLabel.set(draft.stackCtaLabel);
     this.wizardStackCtaUrl.set(draft.stackCtaUrl);
     this.wizardTourVoiceStyle.set(draft.tourVoiceStyle);
@@ -6248,6 +6259,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
     const now = new Date().toISOString();
     const cards = selectedCards.map((card): BoardCard => ({
+      talkDrop: normalizeTalkDrop(card.talkDrop),
       id: card.id,
       title: card.title.trim(),
       subtitle: card.subtitle.trim(),
@@ -6475,7 +6487,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     );
     const callable = httpsCallable<{
       boardId: string;
-      card: Pick<BoardCard, 'title' | 'notes' | 'imageUrl' | 'what3wordsAddress'>;
+      card: Pick<BoardCard, 'title' | 'notes' | 'imageUrl' | 'what3wordsAddress' | 'talkDrop'>;
     }, unknown>(this.functions, 'addOffGridBoardCard');
     await callable({
       boardId: board.id,
@@ -6484,6 +6496,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         notes: card.notes,
         imageUrl,
         what3wordsAddress: card.what3wordsAddress,
+        talkDrop: normalizeTalkDrop(card.talkDrop),
       },
     });
 
@@ -7763,6 +7776,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const tour = card.tour;
     const contact = this.isListingContactCard(card) ? contactDetailsForListingCard(card) : null;
     this.cardDraft.set({
+      talkDrop: normalizeTalkDrop(card.talkDrop),
       title: card.title,
       subtitle: card.subtitle,
       notes: contact ? listingContactScript(card) : card.notes,
@@ -9096,8 +9110,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.placeSearchError.set(null);
   }
 
+  setCardTalkDrop(video: TalkDropVideo | null): void {
+    this.cardDraft.update(draft => ({ ...draft, talkDrop: video }));
+  }
+
   async saveCard(event: Event): Promise<void> {
     event.preventDefault();
+    if (this.cardTalkDropUploading()) return;
     const editingBoardId = this.editingCardBoardId();
     const board = editingBoardId
       ? this.boards().find((candidate) => candidate.id === editingBoardId) ?? null
@@ -9179,6 +9198,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const persistedNotes = contactEdit?.notes ?? cardNotesForPersistence(draft.notes);
     const cardFromDraft = (existing: BoardCard | null = null): BoardCard => ({
       ...(existing ?? {}),
+      talkDrop: normalizeTalkDrop(draft.talkDrop),
       id: existing?.id ?? this.createId(),
       title,
       subtitle,
@@ -9275,7 +9295,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     );
 
     if (nextBoard) {
-      await this.persistAndReplaceBoard(nextBoard);
+      const saved = await this.persistAndReplaceBoard(nextBoard);
+      if (!saved) {
+        this.boards.update(items => items.map(item => item === nextBoard ? board : item));
+        this.imageUploadError.set('The card could not be saved. Your changes are still here; please try again.');
+        return;
+      }
       if (!relatedParentId && editingId) {
         const updatedParentCard = this.boards()
           .find((candidate) => candidate.id === board.id)
@@ -12653,20 +12678,23 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       : `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
   }
 
-  openCardVideoViewer(card: BoardCard, event?: Event): void {
+  openCardVideoViewer(card: BoardCard, event?: Event, kind: 'youtube' | 'talk-drop' = 'youtube'): void {
     event?.preventDefault();
     event?.stopPropagation();
-    if (!this.hasYoutubeVideo(card)) return;
+    if (kind === 'talk-drop' ? !card.talkDrop : !this.hasYoutubeVideo(card)) return;
+    this.cardVideoViewerKind.set(kind);
     this.boardAnalytics.trackCardOpen(card.id);
     this.closeCardPhotoViewer();
     this.cardVideoRepairNotice.set(null);
     this.cardVideoViewerCardId.set(card.id);
   }
 
-  openWizardCardVideoViewer(card: BoardWizardPreviewCard, event?: Event): void {
+  openWizardCardVideoViewer(card: BoardWizardPreviewCard, event?: Event, kind: 'youtube' | 'talk-drop' = 'youtube'): void {
     event?.preventDefault();
     event?.stopPropagation();
-    if (!this.hasYoutubeVideo(card)) return;
+    if (kind === 'talk-drop' ? !card.talkDrop : !this.hasYoutubeVideo(card)) return;
+    this.cardVideoViewerKind.set(kind);
+    this.cardVideoRepairNotice.set(null);
     this.cardVideoViewerCardId.set(card.id);
   }
 
@@ -19154,6 +19182,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.wizardOffGridTip.set('');
     this.wizardOffGridSource.set('spot');
     this.wizardOffGridPhoto.set('');
+    this.wizardOffGridTalkDrop.set(null);
+    this.wizardTalkDropUploading.set(false);
     this.wizardOffGridResolvedLocation.set(null);
     this.wizardOffGridVerifiedLocations.set({});
     this.wizardOffGridVerificationFailures.set({});
@@ -19649,6 +19679,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       short_summary: this.stringValue(data['short_summary'], subtitle, 160),
       rank: this.numberValue(data['rank'], 0, 0, 100),
       nearby: this.normalizeNearbyGemMetrics(data['nearby']),
+      talkDrop: normalizeTalkDrop(data['talkDrop']),
       video_intent: data['video_intent'] === true,
       video_search_query: this.stringValue(data['video_search_query'], '', 180),
       youtubeVideoId: youtubeVideoIdFromReference(data['youtubeVideoId']),
@@ -19696,6 +19727,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   private wizardCardToCurrentCard(card: BoardWizardPreviewCard): Record<string, unknown> {
     return {
+      talkDrop: normalizeTalkDrop(card.talkDrop),
       title: card.title,
       subtitle: card.subtitle,
       notes: card.notes,
@@ -20257,6 +20289,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           image_query: `${name}${locationContext ? ` ${locationContext}` : ''} landmark place photo`,
           place_query: [name, locationContext].filter(Boolean).join(', '),
           imageUrl: fromOffGridWizard && isSingle ? this.wizardOffGridPhoto() : '',
+          talkDrop: fromOffGridWizard && isSingle ? this.wizardOffGridTalkDrop() : null,
           entity_name: name,
           entity_type: 'place',
           image_intent: 'place',
@@ -21596,6 +21629,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
             nearby: this.normalizeNearbyGemMetrics((card as Partial<BoardCard>).nearby),
             stickers: this.normalizeStickers(card.stickers),
             tour: this.normalizeCardTour((card as BoardCard).tour),
+            talkDrop: normalizeTalkDrop((card as Partial<BoardCard>).talkDrop),
             conversation: normalizeBoardCardConversation((card as Partial<BoardCard>).conversation),
             childBoardId: typeof (card as BoardCard).childBoardId === 'string' ? (card as BoardCard).childBoardId : '',
             relatedCards: Array.isArray((card as BoardCard).relatedCards)
@@ -22080,6 +22114,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       videoNarrationRevision: typeof data['videoNarrationRevision'] === 'number'
         ? Math.max(0, Math.trunc(data['videoNarrationRevision']))
         : 0,
+      talkDrop: normalizeTalkDrop(data['talkDrop']),
       videoIntent: data['videoIntent'] === true,
       videoSearchQuery: typeof data['videoSearchQuery'] === 'string' ? data['videoSearchQuery'].slice(0, 180) : '',
       youtubeVideoId: youtubeVideoIdFromReference(data['youtubeVideoId']),

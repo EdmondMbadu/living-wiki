@@ -1,0 +1,46 @@
+<section class="talk-drop" [class.talk-drop--editor]="editable()" (click)="$event.stopPropagation()">
+  @if (editable()) {
+    <div class="talk-drop__heading">
+      <span class="material-symbols-outlined" aria-hidden="true">videocam</span>
+      <div><strong>Talk Drop</strong><p>Add a video to bring this place to life. Your photo stays on the card.</p></div>
+      <small>Optional</small>
+    </div>
+  }
+  @if (video(); as clip) {
+    @if (editable()) {
+      <video controls playsinline preload="metadata" [poster]="poster()" [src]="clip.url"
+        (error)="error.set('This video could not play here. Try opening the original video.')" aria-label="Talk Drop video"></video>
+      <div class="talk-drop__caption">
+        <span>{{ clip.fileName }}</span>
+        <button type="button" (click)="removeVideo()" [disabled]="progress() !== null">Remove video</button>
+      </div>
+    } @else {
+      <button type="button" class="talk-drop__play" (click)="playRequested.emit($event)">
+        <span class="material-symbols-outlined" aria-hidden="true">play_circle</span><strong>Play Talk Drop</strong><small>A video from this place</small>
+      </button>
+    }
+  }
+  @if (editable()) {
+    @if (progress() !== null) {
+      <div class="talk-drop__progress" role="status" aria-live="polite">
+        <progress max="100" [value]="progress()"></progress><span>Uploading video… {{ progress() }}%</span>
+        <button type="button" (click)="cancelUpload()">Cancel upload</button>
+      </div>
+    } @else {
+      <div class="talk-drop__actions">
+        <label><span class="material-symbols-outlined" aria-hidden="true">videocam</span>Record a video
+          <input type="file" accept="video/*" capture="environment" (change)="selectVideo($event)" aria-label="Record a Talk Drop" />
+        </label>
+        <label><span class="material-symbols-outlined" aria-hidden="true">video_file</span>{{ video() ? 'Replace video' : 'Upload a video' }}
+          <input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" (change)="selectVideo($event)" aria-label="Upload a Talk Drop" />
+        </label>
+      </div>
+      <small class="talk-drop__hint">MP4, MOV, or WebM · Under 100 MB. MP4 works on the widest range of devices.</small>
+    }
+  }
+  @if (error()) {
+    <p class="talk-drop__error" role="alert">{{ error() }}
+      @if (video(); as clip) { <a [href]="clip.url" target="_blank" rel="noopener noreferrer">Open original video</a> }
+    </p>
+  }
+</section>

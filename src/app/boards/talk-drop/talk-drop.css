@@ -1,0 +1,23 @@
+:host { display: block; min-width: 0; }
+.talk-drop { color: var(--text, #163c2c); }
+.talk-drop--editor { padding: 1rem; border: 1px solid var(--line, #cce0d3); border-radius: 1rem; background: var(--surface, #f7fbf8); }
+.talk-drop__heading { display: flex; align-items: flex-start; gap: .7rem; margin-bottom: .8rem; }
+.talk-drop__heading > .material-symbols-outlined { padding: .6rem; border-radius: .8rem; background: var(--soft-fill, #e0eee4); color: var(--accent, #267048); }
+.talk-drop__heading div { flex: 1; }
+.talk-drop__heading strong { font-size: 1rem; }
+.talk-drop__heading p { margin: .25rem 0 0; font-size: .85rem; line-height: 1.5; color: var(--muted, #556e60); }
+.talk-drop__heading small, .talk-drop__hint { color: var(--muted, #556e60); font-size: .75rem; }
+.talk-drop__actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.talk-drop__actions label, button { font: inherit; cursor: pointer; }
+.talk-drop__actions label { display: inline-flex; position: relative; gap: .45rem; align-items: center; padding: .7rem .9rem; border: 1px solid var(--line, #cce0d3); border-radius: .7rem; font-size: .85rem; font-weight: 700; background: var(--surface-strong, #fff); }
+.talk-drop__actions label:focus-within { outline: 2px solid var(--accent, #267048); outline-offset: 3px; }
+.talk-drop__actions input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+.talk-drop__hint { display: block; margin-top: .6rem; line-height: 1.5; }
+.talk-drop video { display: block; width: 100%; max-height: 24rem; object-fit: contain; background: #101a15; border-radius: .8rem; }
+.talk-drop__caption, .talk-drop__progress { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; padding: .65rem 0; font-size: .8rem; }
+.talk-drop__caption span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.talk-drop__caption button, .talk-drop__progress button { color: var(--accent, #267048); background: transparent; border: 0; text-decoration: underline; padding: .4rem; }
+.talk-drop__play { width: 100%; display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; padding: .85rem 1rem; border: 1px solid var(--line, #cce0d3); border-radius: .8rem; color: var(--accent, #267048); background: var(--soft-fill, #eaf4ed); text-align: left; }
+.talk-drop__play small { margin-left: auto; color: var(--muted, #556e60); }
+.talk-drop__progress progress { width: 100%; accent-color: var(--accent, #267048); }
+.talk-drop__error { color: #b42318; font-size: .85rem; }

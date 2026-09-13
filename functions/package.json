@@ -26,6 +26,7 @@
     "test:board-likes": "npm run build && node scripts/test-board-likes.cjs",
     "test:city-place-search": "npm run build && node scripts/test-city-place-search.cjs",
     "test:nearby-gems": "npm run build && node scripts/test-nearby-gems.cjs",
+    "test:off-grid-talk-drop": "npm run build && node scripts/test-off-grid-talk-drop.cjs",
     "test:bulk-board-generation": "npm run build && node scripts/test-bulk-board-generation.cjs",
     "test:university-board-generation": "npm run build && node scripts/test-university-board-generation.cjs",
     "test:city-board-listing": "npm run build && node scripts/test-city-board-listing.cjs",

@@ -1,3 +1,4 @@
+import { offGridTalkDrop } from './off-grid-talk-drop';
 import { boardLikeTargetKey, boardLikeMetricDocumentId, boardLikeMarkerDocumentId, normalizeBoardLikeTarget, normalizeBoardLikeTargets } from './board-likes';
 import { onDocumentCreated, onDocumentDeleted, onDocumentUpdated, onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { HttpsError, onCall, onRequest, type CallableRequest } from 'firebase-functions/v2/https';
@@ -3332,6 +3333,7 @@ function buildOffGridContributionCard(
   const words = normalizeOffGridWords(input.what3wordsAddress);
   const tip = offGridContributionText(input.notes, 3600);
   const imageUrl = offGridContributionText(input.imageUrl, 2000);
+  const talkDrop = offGridTalkDrop(input.talkDrop, contributorUserId, storage.bucket().name);
   if (title.length < 2) {
     throw new HttpsError('invalid-argument', 'Name this place before adding it.');
   }
@@ -3359,6 +3361,7 @@ function buildOffGridContributionCard(
     shortSummary: `Exact location: ///${words}`,
     rank: 0,
     imageUrl,
+    talkDrop,
     imageUrls: imageUrl ? [imageUrl] : [],
     audioPreviewUrl: '',
     spotifyTrackId: '',
