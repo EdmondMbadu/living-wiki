@@ -1,0 +1,117 @@
+<section class="property-source" aria-labelledby="property-source-title">
+  <div class="section-heading">
+    <span class="section-number" aria-hidden="true">01</span>
+    <div>
+      <h4 id="property-source-title">Start with the property</h4>
+      <p>One listing link. The details stay together.</p>
+    </div>
+  </div>
+  <label class="field-label" for="property-listing-url">Property listing URL</label>
+  <div class="url-field">
+    <span class="material-symbols-outlined" aria-hidden="true">link</span>
+    <input
+      id="property-listing-url"
+      name="propertyListingUrl"
+      type="url"
+      required
+      inputmode="url"
+      autocomplete="url"
+      autocapitalize="none"
+      spellcheck="false"
+      placeholder="https://example.com/property-for-sale"
+      aria-describedby="property-listing-help"
+      [value]="listingUrl()"
+      (input)="listingUrl.set($any($event.target).value)"
+    />
+  </div>
+  <p id="property-listing-help" class="field-help">
+    Paste a public listing. We’ll gather its details and available photos, keeping the original
+    source and attribution.
+  </p>
+</section>
+<section class="property-narration" aria-labelledby="property-narration-title">
+  <div class="section-heading">
+    <span class="section-number" aria-hidden="true">02</span>
+    <div>
+      <h4 id="property-narration-title">Give the home a voice</h4>
+      <p>Choose how the property story is told.</p>
+    </div>
+  </div>
+  <div class="style-setting">
+    <div>
+      <label class="field-label" for="property-narration-style">Narration style</label>
+      <select
+        id="property-narration-style"
+        name="propertyNarrationStyle"
+        [value]="narrationStyle()"
+        (change)="setStyle($any($event.target).value)"
+        aria-describedby="property-style-description"
+      >
+        @for (style of styles; track style.id) {
+          <option [value]="style.id">{{ style.label }} · {{ style.perspective }}</option>
+        }
+      </select>
+    </div>
+    <div class="voice-preview" aria-live="polite">
+      <span class="voice-icon material-symbols-outlined" aria-hidden="true">graphic_eq</span>
+      <div>
+        <small>Starting voice</small><strong>{{ voiceName() }}</strong
+        ><small>You can change it later.</small>
+      </div>
+    </div>
+  </div>
+  <p id="property-style-description" class="field-help">{{ selectedStyle().description }}</p>
+  <fieldset class="duration-setting">
+    <legend class="field-label">Narration length <span>per card</span></legend>
+    <div class="duration-presets">
+      @for (preset of presets; track preset.seconds) {
+        <label class="duration-option" [class.is-selected]="narrationSeconds() === preset.seconds">
+          <input
+            type="radio"
+            name="propertyNarrationDuration"
+            [value]="preset.seconds"
+            [checked]="narrationSeconds() === preset.seconds"
+            (change)="setSeconds(preset.seconds)"
+          />
+          <span
+            ><strong>{{ preset.label }}</strong
+            ><small>{{ durationLabel(preset.seconds) }} / card</small></span
+          >
+        </label>
+      }
+    </div>
+  </fieldset>
+  <details class="custom-duration" [open]="customDuration()">
+    <summary>
+      Custom duration <span>{{ durationLabel(narrationSeconds()) }} per card</span>
+    </summary>
+    <div class="custom-duration-controls">
+      <label for="property-narration-duration">Seconds per card</label>
+      <output for="property-narration-duration">{{ narrationSeconds() }} seconds</output>
+      <input
+        id="property-narration-duration"
+        name="propertyNarrationSeconds"
+        type="range"
+        min="5"
+        max="180"
+        step="5"
+        [value]="narrationSeconds()"
+        [attr.aria-valuetext]="durationLabel(narrationSeconds()) + ' per card'"
+        (input)="setSeconds($any($event.target).value)"
+      />
+    </div>
+  </details>
+  <div class="duration-estimate" role="status">
+    <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+    <div>
+      <strong>Estimated TalkThru: {{ totalDuration() }}</strong>
+      <span>{{ cardCount() }} cards · ~{{ wordsPerCard() }} words per card</span>
+    </div>
+  </div>
+  <p class="field-help estimate-note">
+    Card count may change after analysis. Actual voice timing may vary.
+    @if (totalSeconds() > 1200) {
+      <span>This longer narration may take more time to generate.</span>
+    }
+  </p>
+</section>

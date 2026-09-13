@@ -1,0 +1,101 @@
+/* Only the sale-listing source step uses this compact layout. */
+.boards-modal.boards-modal--real-estate-configure {
+  width: min(100%, 46rem);
+  max-height: 92dvh;
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: var(--surface-strong);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 0.2);
+  padding: 0 1.65rem;
+  overflow-x: hidden;
+  scroll-padding: 7rem 0 5rem;
+}
+.boards-modal--real-estate-configure .boards-modal__head {
+  top: 0;
+  margin: 0 -1.65rem;
+  padding: 1.35rem 1.65rem 1.1rem;
+  background: var(--surface-strong);
+  border-bottom: 1px solid var(--line);
+  gap: 1rem;
+}
+.boards-modal--real-estate-configure .boards-modal__head p {
+  color: var(--accent);
+  font-size: 0.63rem;
+  letter-spacing: 0.12em;
+}
+.boards-modal--real-estate-configure .boards-modal__head h3 {
+  font-family: inherit;
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+  margin: 0.3rem 0 0;
+}
+.boards-modal--real-estate-configure .boards-wizard-modal__subtitle {
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.boards-modal--real-estate-configure .boards-icon-button {
+  width: 2.6rem;
+  height: 2.6rem;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: none;
+}
+.boards-modal--real-estate-configure .boards-wizard--configure {
+  display: block;
+  margin: 0;
+  padding-top: 1.3rem;
+}
+.boards-modal--real-estate-configure .boards-form__actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 1.3rem -1.65rem 0;
+  padding: 1rem 1.65rem;
+  border-top: 1px solid var(--line);
+  background: var(--surface-strong);
+}
+.boards-modal--real-estate-configure .boards-form__actions .boards-primary-action {
+  min-height: 2.8rem;
+  margin-left: auto;
+  border-radius: 0.7rem;
+  box-shadow: none;
+  font-size: 0.82rem;
+}
+.boards-modal--real-estate-configure .boards-form__actions .boards-ghost-action {
+  min-height: 2.8rem;
+  border-radius: 0.7rem;
+  box-shadow: none;
+}
+.real-estate-next-step {
+  max-width: 15rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+@media (max-width: 520px) {
+  .boards-modal.boards-modal--real-estate-configure {
+    width: 100%;
+    max-height: 94dvh;
+    padding: 0 1rem;
+    border-radius: 1rem;
+  }
+  .boards-modal--real-estate-configure .boards-modal__head {
+    margin: 0 -1rem;
+    padding: 1rem;
+  }
+  .boards-modal--real-estate-configure .boards-form__actions {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding: 0.8rem 1rem;
+  }
+  .real-estate-next-step {
+    display: none;
+  }
+}

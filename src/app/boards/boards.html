@@ -4764,6 +4764,7 @@
         [class.boards-modal--wizard-choose]="wizardStep() === 'choose'"
         [class.boards-modal--wizard-configure]="wizardStep() === 'configure' && wizardMode() === 'describe'"
         [class.boards-modal--wizard-listing]="wizardStep() === 'listing-setup'"
+        [class.boards-modal--real-estate-configure]="wizardEntryIntent() === 'real-estate' && wizardStep() === 'configure'"
         role="dialog"
         aria-modal="true"
         [attr.aria-labelledby]="wizardMode() === 'nearby-gems' && wizardStep() === 'configure' ? 'nearby-gems-modal-title' : 'board-wizard-modal-title'"
@@ -4781,6 +4782,9 @@
             } @else if (wizardStep() === 'configure' && wizardMode() === 'describe' && !wizardLockedTargetBoard()) {
               <h3 id="board-wizard-modal-title">Describe your board</h3>
               <span class="boards-wizard-modal__subtitle">Tell us what you want. You can review every card before saving.</span>
+            } @else if (wizardStep() === 'configure' && wizardEntryIntent() === 'real-estate') {
+              <h3 id="board-wizard-modal-title">Real Estate VirtualTalkThru</h3>
+              <span class="boards-wizard-modal__subtitle">Turn a property listing into a story buyers can explore.</span>
             } @else if (wizardStep() === 'listing-setup') {
               <h3 id="board-wizard-modal-title">{{ wizardIsRentalTalkThru() ? 'Shape the listing story' : 'Personalize your VirtualTalkThru' }}</h3>
               @if (!wizardIsRentalTalkThru()) {
@@ -4967,6 +4971,14 @@
           </div>
         } @else if (wizardStep() === 'configure') {
           <form class="boards-form boards-wizard boards-wizard--configure" (submit)="submitWizardConfigure($event)">
+            @if (wizardEntryIntent() === 'real-estate') {
+              <app-real-estate-wizard-source
+                [listingUrl]="wizardUrl()" (listingUrlChange)="wizardUrl.set($event)"
+                [narrationStyle]="wizardNarrationStyle()" (narrationStyleChange)="wizardNarrationStyle.set($event)"
+                [narrationSeconds]="wizardNarrationSecondsPerCard()" (narrationSecondsChange)="setWizardNarrationSeconds($event)"
+                [cardCount]="wizardEffectiveCount()"
+              />
+            } @else {
             @if (wizardMode() === 'describe') {
               <ol class="boards-wizard-steps" aria-label="Board creation progress">
                 <li class="boards-wizard-steps__active"><span>1</span> Describe</li>
@@ -6018,6 +6030,7 @@
               </section>
             }
 
+            }
             @if (wizardError()) {
               <div class="boards-form__soft-error">
                 <span>{{ wizardError() }}</span>
@@ -6031,6 +6044,9 @@
 
             <div class="boards-form__actions">
               <button type="button" class="boards-ghost-action" (click)="backWizardStep()" i18n>Back</button>
+              @if (wizardEntryIntent() === 'real-estate') {
+                <small class="real-estate-next-step">Next: review the property details and personalize your TalkThru.</small>
+              }
               @if (wizardMode() === 'nearby-gems') {
                 @if (nearbyGemUseManualLocation()) {
                   <button type="submit" class="boards-primary-action" [disabled]="!wizardCanGenerate()">

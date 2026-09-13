@@ -7,6 +7,7 @@ import { collection, deleteDoc, doc, getDoc, getDocs, limit, onSnapshot, orderBy
 import { TeamsService } from '../teams/teams.service';
 import type { TeamMember } from '../teams/team.models';
 import { TeamContactComponent } from '../teams/team-contact';
+import { RealEstateWizardSourceComponent } from './real-estate-wizard-source';
 import { teamError } from '../teams/team.models';
 import { httpsCallable, type Functions } from 'firebase/functions';
 import { getDownloadURL, ref as storageRef, uploadBytes, type FirebaseStorage } from 'firebase/storage';
@@ -160,6 +161,7 @@ import {
 import {
   BOARD_NARRATION_LENGTH_PRESETS,
   DEFAULT_BOARD_NARRATION_SECONDS_PER_CARD,
+  DEFAULT_REAL_ESTATE_NARRATION_SECONDS_PER_CARD,
   MAX_BOARD_NARRATION_SECONDS_PER_CARD,
   MIN_BOARD_NARRATION_SECONDS_PER_CARD,
   boardNarrationDurationLabel,
@@ -1675,10 +1677,10 @@ type BoardLoadContext = {
 
 @Component({
   selector: 'app-boards',
-  imports: [TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
+  imports: [RealEstateWizardSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
   providers: [DocxExportService],
   templateUrl: './boards.html',
-  styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
+  styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './real-estate-wizard-modal.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
 })
 export class BoardsComponent implements AfterViewInit, OnDestroy {
   private readonly localeId = inject(LOCALE_ID);
@@ -3381,10 +3383,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     effect(() => {
       const count = this.wizardCountIntent().count ?? this.wizardCount();
       if (this.wizardNarrationLengthCustomized()) return;
-      const budgeted = boardNarrationBudgetedSecondsPerCard(
-        count,
-        DEFAULT_BOARD_NARRATION_SECONDS_PER_CARD,
-      );
+      const budgeted = this.wizardDefaultNarrationSeconds(count);
       if (this.wizardNarrationSecondsPerCard() !== budgeted) {
         this.wizardNarrationSecondsPerCard.set(budgeted);
       }
@@ -4504,8 +4503,16 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.wizardMode.set(mode);
+    if (!this.wizardNarrationLengthCustomized()) {
+      this.wizardNarrationSecondsPerCard.set(this.wizardDefaultNarrationSeconds(this.wizardCount()));
+    }
     if (entryIntent === 'real-estate') {
       this.wizardTargetBoardId.set('new');
+      // These controls are intentionally absent from the property-specific form.
+      // Never carry a prior generic board's hidden media/type choices into a listing.
+      this.wizardDefaultType.set('place');
+      this.wizardMediaMode.set('images');
+      this.wizardVibe.set('curator');
     }
     if (mode === 'nearby-gems') {
       this.wizardTargetBoardId.set('new');
@@ -4902,10 +4909,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const normalizedCount = Math.max(1, Math.min(100, Number.isFinite(count) ? count : 12));
     this.wizardCount.set(normalizedCount);
     if (!this.wizardNarrationLengthCustomized()) {
-      this.wizardNarrationSecondsPerCard.set(boardNarrationBudgetedSecondsPerCard(
-        normalizedCount,
-        DEFAULT_BOARD_NARRATION_SECONDS_PER_CARD,
-      ));
+      this.wizardNarrationSecondsPerCard.set(this.wizardDefaultNarrationSeconds(normalizedCount));
     }
     if (userInitiated) this.wizardCountMode.set('fixed');
   }
@@ -4934,6 +4938,15 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (intent.policy === 'prompt-exact') return `${intent.count} cards requested in your description.`;
     if (intent.policy === 'source-exact') return `${intent.count} source items will become cards.`;
     return 'Used when your description does not specify a count.';
+  }
+
+  private wizardDefaultNarrationSeconds(count: number): number {
+    return boardNarrationBudgetedSecondsPerCard(
+      count,
+      this.wizardEntryIntent() === 'real-estate'
+        ? DEFAULT_REAL_ESTATE_NARRATION_SECONDS_PER_CARD
+        : DEFAULT_BOARD_NARRATION_SECONDS_PER_CARD,
+    );
   }
 
   setWizardNarrationSeconds(value: string | number): void {
