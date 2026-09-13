@@ -1,9 +1,10 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { initializeFirestore, type Firestore } from 'firebase/firestore';
 import { getFunctions, type Functions } from 'firebase/functions';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { getFirebaseConfig } from './firebase.config';
+import { firestoreTransportSettings } from './firebase-firestore-settings';
 
 let analyticsPromise: Promise<Analytics | null> | null = null;
 let firestoreInstance: Firestore | null = null;
@@ -35,7 +36,10 @@ export function getFirebaseAnalytics(): Promise<Analytics | null> {
 }
 
 export function getFirebaseFirestore(): Firestore {
-  firestoreInstance ??= getFirestore(getFirebaseApp());
+  firestoreInstance ??= initializeFirestore(
+    getFirebaseApp(),
+    firestoreTransportSettings(typeof navigator === 'undefined' ? null : navigator),
+  );
   return firestoreInstance;
 }
 
