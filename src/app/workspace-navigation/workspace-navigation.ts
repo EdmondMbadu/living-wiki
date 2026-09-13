@@ -5,6 +5,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, of, startWith } from 'rxjs';
 import { AtlasService } from '../atlas.service';
 import { AuthService } from '../auth.service';
+import { TeamsService } from '../teams/teams.service';
 
 export type WorkspaceNavigationKey =
   | 'home'
@@ -12,6 +13,7 @@ export type WorkspaceNavigationKey =
   | 'city'
   | 'saved'
   | 'boards'
+  | 'teams'
   | 'songs'
   | 'videos'
   | 'friends'
@@ -67,6 +69,7 @@ const SIDEBAR_STORAGE_KEY = 'lw-sidebar-collapsed';
 export class WorkspaceNavigationService {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+  private readonly teams = inject(TeamsService);
   private readonly atlasService = inject(AtlasService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
@@ -121,6 +124,10 @@ export class WorkspaceNavigationService {
       { key: 'business', label: $localize`Business`, route: '/business', icon: 'storefront' },
     );
 
+    if (this.teams.activeMemberships().length) {
+      const position = items.findIndex(item => item.key === 'boards') + 1;
+      items.splice(position, 0, { key: 'teams', label: 'Teams', route: this.teams.sidebarRoute(), icon: 'groups' });
+    }
     return items;
   });
 
@@ -190,6 +197,8 @@ export class WorkspaceNavigationService {
         return path === '/home' && url.includes('#mobile-saved');
       case 'boards':
         return path === '/boards' || path.startsWith('/boards/u/') || /^\/boards\/[^/]+$/.test(path);
+      case 'teams':
+        return path === '/teams' || path.startsWith('/teams/');
       case 'songs':
         return path === '/songs' || path.startsWith('/songs/');
       case 'videos':

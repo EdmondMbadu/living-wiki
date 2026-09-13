@@ -33,6 +33,9 @@ if (javaMajor(javaExecutable, environment) < 21) {
   process.exit(1);
 }
 
+const build = spawnSync('npm', ['--prefix', 'functions', 'run', 'build'], { stdio: 'inherit' });
+if (build.status !== 0) process.exit(build.status ?? 1);
+
 const result = spawnSync(
   'firebase',
   [
@@ -41,7 +44,7 @@ const result = spawnSync(
     'demo-living-wiki',
     '--only',
     'firestore',
-    'node --test tests/firestore/board-save.rules.test.mjs',
+    'node --test --test-concurrency=1 tests/firestore/board-save.rules.test.mjs tests/firestore/teams.rules.test.mjs tests/firestore/teams.integration.test.mjs',
   ],
   {
     cwd: process.cwd(),

@@ -4,6 +4,8 @@ import { App } from './app';
 import { SpotifyPlaybackService } from './spotify-playback.service';
 import { provideRouter } from '@angular/router';
 import { AuthService } from './auth.service';
+import { TeamsService } from './teams/teams.service';
+import { teamsServiceStub } from './teams/teams.testing';
 import { AtlasService } from './atlas.service';
 
 describe('App', () => {
@@ -11,6 +13,7 @@ describe('App', () => {
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
+        { provide: TeamsService, useFactory: teamsServiceStub },
         provideZonelessChangeDetection(),
         provideRouter([]),
         {

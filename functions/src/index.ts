@@ -84,6 +84,11 @@ export {
   setCustomPublicUrl,
 } from './custom-public-routes';
 export { getBoardInsights, recordBoardAnalyticsEvent } from './board-analytics';
+export { teamCommand, getPublicTeamPage, getTeamInvitationPreview } from './teams';
+export { getTeamInsights, submitTeamContact, manageTeamContacts, getTeamConversations } from './team-analytics';
+export { teamVoiceWebhook } from './team-voice';
+import { issueTeamVoiceSession, teamVoiceBinding, teamWorkingBoard } from './team-voice';
+import { requireVoiceGrant, saveGeneratedTeamBoard } from './teams';
 export { exportBoardToDocx } from './board-doc-export';
 import { handleAnswerCardShare, handleBoardShare, handleTravelCardShare } from './answer-card-share';
 import { buildDirectBoardShareEmail, safeBoardShareImageUrl } from './board-share-email';
@@ -3972,7 +3977,7 @@ export const notifyBoardFriendsOnCreate = onDocumentCreated(
   },
   async (event) => {
     const data = event.data?.data() as Record<string, unknown> | undefined;
-    if (!data || data.visibility !== 'public') {
+    if (!data || data.visibility !== 'public' || data['team_id']) {
       return;
     }
     const ownerUserId = typeof data.owner_user_id === 'string' ? data.owner_user_id : '';
@@ -7624,14 +7629,13 @@ export const shortenStackScript = onCall(
       throw new HttpsError('invalid-argument', 'Choose a valid board and sentence length.');
     }
 
-    const boardSnapshot = await db.collection('boards').doc(boardId).get();
-    if (!boardSnapshot.exists) {
-      throw new HttpsError('not-found', 'This board could not be found.');
-    }
-    const board = boardSnapshot.data() as Record<string, unknown>;
+    const working = await teamWorkingBoard(boardId, userId);
+    const boardSnapshot = working ? null : await db.collection('boards').doc(boardId).get();
+    if (!working && !boardSnapshot?.exists) throw new HttpsError('not-found', 'This board could not be found.');
+    const board = working || boardSnapshot!.data() as Record<string, unknown>;
     const isOwner = stringOrEmpty(board['owner_user_id']) === userId;
     const isAdmin = request.auth?.token?.['admin'] === true;
-    if (!isOwner && !isAdmin) {
+    if (!working && !isOwner && !isAdmin) {
       throw new HttpsError('permission-denied', 'Only the board owner can adjust this script.');
     }
 
@@ -16640,6 +16644,13 @@ export const createElevenLabsVoiceSession = onCall(
     if (!uid && !anonymousVisitorId) {
       throw new HttpsError('unauthenticated', 'Authentication or anonymousVisitorId is required.');
     }
+    const requestedTeamBoardId = textValue(request.data?.boardId, 180) || '';
+    const listingVoice = requestedTeamBoardId ? await teamVoiceBinding(requestedTeamBoardId, uid) : null;
+    if (listingVoice) {
+      const hasAvatar = (cards: Array<Record<string, any>>): boolean => cards.some(card =>
+        card['authorOnly'] !== true && (card['conversation']?.['atlasId'] === atlasId || hasAvatar(card['relatedCards'] || [])));
+      if (!atlasId || !hasAvatar(listingVoice.board['cards'] || [])) throw new HttpsError('permission-denied', 'This avatar is not part of the selected team listing.');
+    }
 
     let atlasName = textValue(request.data?.atlasName, 120) || null;
     let atlasRecord: Record<string, unknown> | null = null;
@@ -16670,7 +16681,9 @@ export const createElevenLabsVoiceSession = onCall(
     const voicePreference = normalizeElevenLabsVoicePreference(request.data);
     const voiceOverrideEnabled = isTruthyParam(elevenLabsTtsVoiceOverridesEnabled.value());
     const firstMessageOverrideEnabled = elevenLabsFirstMessageOverridesEnabled.value().trim().toLowerCase() !== 'false';
-    const atlasVoice = atlasId ? await loadAtlasSpeechVoiceConfig(atlasId) : null;
+    const atlasVoice = listingVoice
+      ? { provider_voice_id: listingVoice.providerVoiceId || null, name: listingVoice.config['voice_name'] || 'Team listing voice', source: 'team' }
+      : atlasId ? await loadAtlasSpeechVoiceConfig(atlasId) : null;
     const configuredVoiceAvailable = voiceOverrideEnabled
       && !!atlasVoice?.provider_voice_id
       && await elevenLabsVoiceIsAvailable(apiKey, atlasVoice.provider_voice_id);
@@ -16699,7 +16712,7 @@ export const createElevenLabsVoiceSession = onCall(
         country: voicePreference.country,
       });
     }
-    const visitorId = uid ?? anonymousVisitorId ?? `visitor_${randomUUID()}`;
+    let visitorId = uid ?? anonymousVisitorId ?? `visitor_${randomUUID()}`;
     const requestedConnectionType = request.data?.connectionType === 'websocket' ? 'websocket' : 'webrtc';
     const params = new URLSearchParams({
       agent_id: agentId,
@@ -16742,6 +16755,7 @@ export const createElevenLabsVoiceSession = onCall(
     if (requestedConnectionType === 'websocket' ? !signedUrl : !conversationToken) {
       throw new HttpsError('internal', 'ElevenLabs did not return a conversation credential.');
     }
+    if (listingVoice) visitorId = await issueTeamVoiceSession(listingVoice, requestedTeamBoardId, agentId, visitorId);
 
     timings.totalMs = Date.now() - startedAt;
     logger.info('ElevenLabs voice session prepared.', {
@@ -21750,11 +21764,12 @@ export const prepareBoardTrailer = onCall(
     const boardId = String(request.data?.boardId ?? '').trim().slice(0, 160);
     if (!boardId) throw new HttpsError('invalid-argument', 'A board is required.');
 
+    const working = await teamWorkingBoard(boardId, userId);
     const boardRef = db.collection('boards').doc(boardId);
-    const snapshot = await boardRef.get();
-    if (!snapshot.exists) throw new HttpsError('not-found', 'The board could not be found.');
-    const board = snapshot.data() as Record<string, unknown>;
-    if (String(board['owner_user_id'] ?? '').trim() !== userId) {
+    const snapshot = working ? null : await boardRef.get();
+    if (!working && !snapshot?.exists) throw new HttpsError('not-found', 'The board could not be found.');
+    const board = working || snapshot!.data() as Record<string, unknown>;
+    if (!working && String(board['owner_user_id'] ?? '').trim() !== userId) {
       throw new HttpsError('permission-denied', 'Only the board owner can create its trailer.');
     }
     const sourceCards = Array.isArray(board['cards'])
@@ -21791,13 +21806,14 @@ export const prepareBoardTrailer = onCall(
     }
 
     const script = await generateBoardTrailerScript({ title, description, cards: cardInputs });
-    await boardRef.update({
+    const patch = {
       trailerVideoScript: script,
       trailerVideoSourceFingerprint: fingerprint,
       trailerVideoCardIds: cardInputs.map((card) => card.id),
       trailerVideoScriptUpdatedAt: new Date().toISOString(),
-      server_updated_at: FieldValue.serverTimestamp(),
-    });
+    };
+    if (working) await saveGeneratedTeamBoard(userId, working, patch);
+    else await boardRef.update({ ...patch, server_updated_at: FieldValue.serverTimestamp() });
     return { script, fingerprint, cached: false, cardIds: cardInputs.map((card) => card.id) };
   },
 );
@@ -21839,12 +21855,13 @@ export const synthesizeChatAnswerSpeech = onCall(
       if (!boardId) {
         throw new HttpsError('failed-precondition', 'A board is required to create narrated videos.');
       }
-      const boardSnapshot = await db.collection('boards').doc(boardId).get();
-      if (!boardSnapshot.exists) {
+      const working = await teamWorkingBoard(boardId, userId);
+      const boardSnapshot = working ? null : await db.collection('boards').doc(boardId).get();
+      if (!working && !boardSnapshot?.exists) {
         throw new HttpsError('not-found', 'The board for this video could not be found.');
       }
-      requestedBoard = boardSnapshot.data() as Record<string, unknown>;
-      if (String(requestedBoard['owner_user_id'] ?? '').trim() !== userId) {
+      requestedBoard = working || boardSnapshot!.data() as Record<string, unknown>;
+      if (!working && String(requestedBoard['owner_user_id'] ?? '').trim() !== userId) {
         throw new HttpsError('permission-denied', 'Only the board owner can create its narrated video.');
       }
       if (requestedMode === 'stack-video' && requestedCardId) {
@@ -21891,7 +21908,15 @@ export const synthesizeChatAnswerSpeech = onCall(
     let personalVoiceId = '';
     let personalVoiceRevision = 1;
     if (isPersonalNarrator) {
-      if (boardId) {
+      const teamBinding = boardId ? await teamVoiceBinding(boardId, request.auth?.uid || null) : null;
+      if (teamBinding) {
+        if (!teamBinding.providerVoiceId || teamBinding.board['stackNarratorVoiceId'] !== requestedNarratorId
+          || !(boardAllowsNarrationText(teamBinding.board, text)
+            || requestedMode === 'stack-trailer' && stackTrailerNarrationMatchesPreparedScript(teamBinding.board['trailerVideoScript'], text))) {
+          throw new HttpsError('permission-denied', 'This team voice is unavailable or the text is not part of the approved listing.');
+        }
+        personalVoiceOwnerId = teamBinding.config['voice_owner_id'];
+      } else if (boardId) {
         let board = requestedBoard;
         if (!board) {
           const snapshot = await db.collection('boards').doc(boardId).get();
@@ -21924,6 +21949,7 @@ export const synthesizeChatAnswerSpeech = onCall(
         ? voice.provider_voice_id
         : '';
       personalVoiceRevision = Math.max(1, Math.trunc(Number(voice?.voice_revision ?? 1)));
+      if (teamBinding) await requireVoiceGrant(teamBinding.board['team_id'], personalVoiceOwnerId, personalVoiceId, personalVoiceRevision);
       if (!requestedNarratorVoiceId) {
         throw new HttpsError('failed-precondition', 'This personal narrator is not ready.');
       }

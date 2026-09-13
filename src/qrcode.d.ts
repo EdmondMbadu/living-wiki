@@ -1,4 +1,5 @@
 declare module 'qrcode' {
+  export function toDataURL(content: string, options?: { width?: number; margin?: number; color?: { dark?: string; light?: string } }): Promise<string>;
   export type QrErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 
   export type QrCreateOptions = {

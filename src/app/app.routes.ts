@@ -10,6 +10,13 @@ const loadLibraryComponent = () => import('./library/library').then((m) => m.Lib
 const loadWikiComponent = () => import('./wiki/wiki').then((m) => m.WikiComponent);
 
 export const routes: Routes = [
+  { path: 'teams/new', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), canActivate: [authGuard], title: 'Create team | LivingWiki' },
+  { path: 'teams/invitations', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), title: 'Team invitations | LivingWiki' },
+  { path: 'teams/:teamId/create-listing', loadComponent: loadBoardsComponent, canActivate: [authGuard], title: 'New team TalkThru | LivingWiki' },
+  { path: 'teams/:teamId/listings/:boardId/edit', loadComponent: loadBoardsComponent, canActivate: [authGuard], title: 'Edit team listing | LivingWiki' },
+  { path: 'teams/:teamId', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), canActivate: [authGuard], title: 'Team workspace | LivingWiki' },
+  { path: 'teams', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), canActivate: [authGuard], title: 'My teams | LivingWiki' },
+  { path: 'team/:slug', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), title: 'Real estate team | LivingWiki' },
   { path: '', component: PublicWikisComponent, title: $localize`Public Wikis | LivingWiki` },
   { path: 'all-cities', component: PublicWikisComponent, title: $localize`All Cities | LivingWiki`, data: { directoryPage: true } },
   {

@@ -320,6 +320,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     try {
       const [session, client] = await Promise.all([
         this.chatService.createElevenLabsVoiceSession({
+          boardId: this.boardId(),
           atlasId: atlas.id,
           atlasName: atlas.name,
           anonymousVisitorId: this.anonymousVisitorId(),

@@ -4,6 +4,10 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import { FirebaseError } from 'firebase/app';
 import { collection, deleteDoc, doc, getDoc, getDocs, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, startAfter, updateDoc, where, writeBatch, type DocumentData, type Firestore, type QueryConstraint, type QueryDocumentSnapshot, type QuerySnapshot, type Unsubscribe } from 'firebase/firestore';
+import { TeamsService } from '../teams/teams.service';
+import type { TeamMember } from '../teams/team.models';
+import { TeamContactComponent } from '../teams/team-contact';
+import { teamError } from '../teams/team.models';
 import { httpsCallable, type Functions } from 'firebase/functions';
 import { getDownloadURL, ref as storageRef, uploadBytes, type FirebaseStorage } from 'firebase/storage';
 import { TalkDropComponent } from './talk-drop/talk-drop.component';
@@ -573,6 +577,16 @@ type BoardCard = {
 
 type Board = {
   id: string;
+  teamId?: string;
+  teamVoiceName?: string;
+  teamVideoBranding?: { mode: StackVideoBrandingMode; logoUrl: string; updatedAt: string };
+  teamRevision?: number;
+  teamStatus?: string;
+  teamDraft?: boolean;
+  representativeId?: string;
+  voiceOwnerId?: string;
+  voiceId?: string;
+  voiceRevision?: number;
   likeCount?: number;
   customSlug?: string;
   kind: BoardKind;
@@ -1661,10 +1675,10 @@ type BoardLoadContext = {
 
 @Component({
   selector: 'app-boards',
-  imports: [TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
+  imports: [TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
   providers: [DocxExportService],
   templateUrl: './boards.html',
-  styleUrls: ['./boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
+  styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
 })
 export class BoardsComponent implements AfterViewInit, OnDestroy {
   private readonly localeId = inject(LOCALE_ID);
@@ -1678,6 +1692,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   private readonly placeReviewsService = inject(PlaceReviewsService);
   private readonly personalVoiceService = inject(PersonalVoiceService);
   private readonly route = inject(ActivatedRoute);
+  readonly teams = inject(TeamsService);
+  readonly teamContextId = signal(this.route.snapshot.paramMap.get('teamId') || '');
+  readonly teamEditorMembers = signal<TeamMember[]>([]);
+  readonly teamContextName = computed(() => this.teams.memberships().find(team => team.teamId === this.teamContextId())?.name || 'Team workspace');
+  private teamWizardOpened = false;
+  private readonly teamWizardRevisions = new Map<string, number>();
   private readonly router = inject(Router);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly videoLibrary = inject(VideoLibraryService);
@@ -3192,16 +3212,17 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly stackSelectedNarratorName = computed(() =>
     !this.stackVideoNarrationEnabled()
       ? $localize`No narration`
+      : this.stackBoard()?.teamId ? this.stackBoard()?.teamVoiceName || 'Team voice'
       : isPersonalStackNarratorVoiceId(this.stackNarratorVoiceId())
       ? this.personalVoiceForNarratorId(this.stackNarratorVoiceId())?.name || $localize`Your voice`
       : this.stackSelectedNarratorVoice()?.name || $localize`Warm Storyteller`,
   );
   readonly personalVoiceEligible = computed(() =>
-    this.personalVoiceServerEligible()
+    this.teamContextId() ? true : this.personalVoiceServerEligible()
       ?? !!this.authService.uid(),
   );
   readonly videoBrandingEligible = computed(() =>
-    this.authService.isAdmin() || this.authService.hasActivePersonalWikiPlan(),
+    !!this.teamContextId() || this.authService.isAdmin() || this.authService.hasActivePersonalWikiPlan(),
   );
   readonly stackVideoBrandingSummary = computed(() => {
     const mode = this.stackVideoBrandingMode();
@@ -3385,6 +3406,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       }
     });
     this.route.paramMap.subscribe((params) => {
+      const nextTeamId = params.get('teamId') || '';
+      if (nextTeamId !== this.teamContextId()) {
+        this.teamWizardOpened = false; this.wizardOpen.set(false); this.resetBoardWizard();
+        this.cardDialogOpen.set(false); this.boardDialogOpen.set(false); this.teamEditorMembers.set([]);
+      }
+      this.teamContextId.set(nextTeamId);
       const routePath = this.route.snapshot.routeConfig?.path ?? '';
       this.friendsPage.set(routePath === 'friends');
       this.songsPage.set(routePath.startsWith('songs'));
@@ -3472,6 +3499,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         this.syncBoardLearnDirectView();
         void this.syncRequestedBoardTranslation();
         this.canonicalizeBoardsRootRoute(boardId, ownerKey);
+        if (this.teamContextId() && !boardId && !this.teamWizardOpened) {
+          this.teamWizardOpened = true;
+          this.openBoardWizard();
+          this.chooseWizardMode('url', 'real-estate');
+        }
         if (boardId) {
           this.resetBoardRouteScroll();
         }
@@ -3543,7 +3575,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
     effect(() => {
       const boards = this.boards();
-      if (!this.isBrowser || !this.hasLoaded || this.boardsLoading() || this.boardsHasMore()) {
+      if (!this.isBrowser || !this.hasLoaded || this.boardsLoading() || this.boardsHasMore() || this.teamContextId()) {
         return;
       }
       const publicOwnerKey = this.publicOwnerKey();
@@ -3629,15 +3661,17 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
     effect(() => {
       const uid = this.authService.uid();
+      const draftScope = `${uid}:${this.teamContextId()}`;
       if (!this.isBrowser || !this.firestore || !uid) {
         this.wizardDraftsLoadedForUid = '';
         this.wizardDrafts.set([]);
         return;
       }
-      if (this.wizardDraftsLoadedForUid === uid) {
+      if (this.wizardDraftsLoadedForUid === draftScope) {
         return;
       }
-      this.wizardDraftsLoadedForUid = uid;
+      this.wizardDraftsLoadedForUid = draftScope;
+      this.wizardDrafts.set([]); this.teamWizardRevisions.clear();
       void this.loadWizardDrafts(uid);
     });
 
@@ -4714,7 +4748,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   resumeWizardDraft(draft: BoardWizardDraft): void {
-    if (draft.ownerUserId !== this.authService.uid()) {
+    if (!this.teamContextId() && draft.ownerUserId !== this.authService.uid()) {
       return;
     }
     this.wizardDraftRestoreInProgress = true;
@@ -4804,7 +4838,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     this.wizardDraftDiscarding.set(true);
     try {
-      await deleteDoc(doc(this.firestore, 'users', uid, 'board_wizard_drafts', draftId));
+      if (this.teamContextId()) await this.teams.command('wizard', { teamId: this.teamContextId(), operation: 'delete', draftId });
+      else await deleteDoc(doc(this.firestore, 'users', uid, 'board_wizard_drafts', draftId));
       this.wizardDrafts.update((drafts) => drafts.filter((draft) => draft.id !== draftId));
       this.wizardDraftDiscardCandidateId.set(null);
       if (discardingActiveDraft) {
@@ -6450,11 +6485,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         const notice = this.wizardPhotoStudioNotice().trim();
         this.pendingPhotoStudioNotice = notice ? { boardId: persisted.id, message: notice } : null;
         this.wizardOpen.set(false);
-        void this.router.navigate(['/boards', persisted.id], {
+        void this.router.navigate(this.teamContextId() ? ['/teams', this.teamContextId(), 'listings', persisted.id, 'edit'] : ['/boards', persisted.id], {
           queryParams: { studio: 'video' },
         });
       } else {
-        void this.router.navigate(['/boards', persisted.id]);
+        void this.router.navigate(this.teamContextId() ? ['/teams', this.teamContextId(), 'listings', persisted.id, 'edit'] : ['/boards', persisted.id]);
       }
     } catch (error) {
       console.error('Wizard board save failed', error, {
@@ -6550,6 +6585,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   setBoardSettingsVisibility(visibility: BoardVisibility): void {
     const board = this.boardSettingsBoard();
+    if (board?.teamId) { this.boardSettingsError.set('Team working copies stay private. Publish from the team page.'); return; }
     if (!board || board.parentCardId) return;
     if (visibility === 'private' && !this.canUsePrivateBoards() && !this.isNearbyGemsBoard(board)) {
       this.redirectToPrivateBoardsPricing();
@@ -6576,6 +6612,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const visibility = current.parentCardId ? current.visibility : draft.visibility;
     if (visibility === 'private'
       && !this.canUsePrivateBoards()
+      && !current.teamId
       && !this.isNearbyGemsBoard(current)) {
       this.redirectToPrivateBoardsPricing();
       return;
@@ -6625,7 +6662,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       const visibilityOnlyEdit = !showCardNumbersChanged
         && !insideCardsDisplayChanged
         && this.isVisibilityOnlyBoardEdit(current, nextBoard);
-      const saved = visibilityOnlyEdit
+      const saved = visibilityOnlyEdit && !current.teamId
         ? await this.persistVisibilityAndReplaceBoard(nextBoard)
         : await this.persistAndReplaceBoard(nextBoard);
       if (!saved) {
@@ -6851,7 +6888,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (nextBoard && (editingId || !insideContext)) {
       const visibilityOnlyEdit = !!editingBoardForVisibility
         && this.isVisibilityOnlyBoardEdit(editingBoardForVisibility, nextBoard);
-      const saved = visibilityOnlyEdit
+      const saved = visibilityOnlyEdit && !nextBoard.teamId
         ? await this.persistVisibilityAndReplaceBoard(nextBoard)
         : await this.persistAndReplaceBoard(nextBoard);
       if (!saved) {
@@ -6882,6 +6919,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   deleteBoard(board: Board, event?: Event): void {
     event?.preventDefault();
     event?.stopPropagation();
+    if (board.teamId) { this.boardsSyncError.set('Archive or delete team listings from the team management page.'); return; }
     if (!this.canEditBoard(board)) {
       this.boardsSyncError.set($localize`Only the board owner can delete this board.`);
       return;
@@ -6892,6 +6930,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   openCustomUrlDialog(board: Board, event?: Event): void {
     event?.preventDefault();
     event?.stopPropagation();
+    if (board.teamId) { this.boardsSyncError.set('Team listings use a stable public link. Manage sharing from the team page.'); return; }
     if (!this.canEditBoard(board)) {
       this.boardsSyncError.set('Only the board owner can set its custom URL.');
       return;
@@ -7916,6 +7955,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   async openBoardInside(card: BoardCard, event?: Event, parentBoardOverride?: Board): Promise<void> {
     event?.preventDefault();
     event?.stopPropagation();
+    if (this.teamContextId()) { this.cardWizardError.set('Team listings use cards and related cards. Separate nested boards cannot be shared here yet.'); return; }
     this.boardAnalytics.trackCardOpen(card.id);
     const parentBoard = parentBoardOverride ?? this.originalSelectedBoard();
     if (!parentBoard) {
@@ -13899,12 +13939,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return false;
     }
     const uid = this.authService.uid();
+    if (board.teamId) return !!uid && board.teamDraft === true && board.teamStatus !== 'archived' && this.teamContextId() === board.teamId && this.teams.hasAccess(board.teamId);
     return !!uid && board.ownerUserId === uid;
   }
 
   canForkBoard(board: Board | null | undefined): boolean {
     const uid = this.authService.uid();
     return !!board
+      && !board.teamId
       && board.visibility === 'public'
       && !!uid
       && !!board.ownerUserId
@@ -14207,10 +14249,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return false;
     }
     const uid = this.authService.uid();
+    if (board.teamId) return this.canEditBoard(board);
     return !!uid && board.ownerUserId === uid;
   }
 
   canUsePrivateBoards(): boolean {
+    if (this.teamContextId?.() && this.teams.hasAccess(this.teamContextId())) return true;
     return this.authService.isAdmin() || this.authService.hasActivePersonalWikiPlan();
   }
 
@@ -14329,6 +14373,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return '/trips';
     }
     return '/boards';
+  }
+
+  private boardViewRoute(board: Board): string[] {
+    return board.teamDraft && board.teamId ? ['/teams', board.teamId, 'listings', board.id, 'edit'] : [this.boardRouteRoot(board), board.id];
   }
 
   boardShareUrl(board: Board): string {
@@ -14765,7 +14813,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stackTourNarrationConsent.set(true);
     this.stackDirectView.set(true);
     this.startStackPlayback();
-    void this.router.navigate([this.boardRouteRoot(board), board.id], { queryParams: { view: 'stack', autoplay: '1' } });
+    void this.router.navigate(this.boardViewRoute(board), { queryParams: { view: 'stack', autoplay: '1' } });
   }
 
   async openLiveCardVersion(board: Board, event?: Event): Promise<void> {
@@ -14779,7 +14827,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stackTourNarrationConsent.set(true);
     this.stackDirectView.set(true);
     this.startStackPlayback();
-    void this.router.navigate(['/boards', board.id], { queryParams: { view: 'stack', autoplay: '1' } });
+    void this.router.navigate(this.boardViewRoute(board), { queryParams: { view: 'stack', autoplay: '1' } });
   }
 
   closeStackView(board: Board): void {
@@ -14787,7 +14835,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stopStackPlayback();
     this.stackDirectView.set(false);
     this.stackShareDialogOpen.set(false);
-    void this.router.navigate([this.boardRouteRoot(board), board.id]);
+    void this.router.navigate(this.boardViewRoute(board));
   }
 
   closeStackStudio(): void {
@@ -15636,7 +15684,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         `users/${uid}/boards/${board.id}/social/branding/logo.png`,
       );
       const updatedAt = new Date().toISOString();
-      await setDoc(doc(this.firestore, 'boards', board.id, 'video_settings', 'branding'), {
+      if (board.teamId) {
+        const saved = await this.persistBoard({ ...board, teamVideoBranding: { mode: branding.mode, logoUrl: persistedLogoUrl, updatedAt } });
+        this.boards.update(boards => boards.map(item => item.id === saved.id ? saved : item));
+      } else await setDoc(doc(this.firestore, 'boards', board.id, 'video_settings', 'branding'), {
         owner_user_id: uid,
         mode: branding.mode,
         logo_url: persistedLogoUrl,
@@ -15668,6 +15719,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   selectStackNarratorVoice(board: Board, voiceId: string): void {
+    if (board.teamId) { this.stackVoiceError.set('Choose an approved voice using the Team listing voice selector.'); return; }
     const normalizedVoiceId = normalizeStackNarratorVoiceId(voiceId);
     if (stackNarratorVoiceRequiresPaidPlan(normalizedVoiceId) && !this.personalVoiceEligible()) {
       this.requestPersonalVoiceUpgrade();
@@ -15683,6 +15735,21 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stackNarratorVoiceId.set(normalizedVoiceId);
     this.stackVoiceError.set(null);
     this.saveStackNarratorPreference(board);
+  }
+
+  async selectTeamNarrator(board: Board, ownerId: string): Promise<void> {
+    if (!board.teamId || this.stackStudioDirty()) { this.stackVoiceError.set('Save your studio edits before changing the team voice.'); return; }
+    const member = this.teamEditorMembers().find(item => item.uid === ownerId);
+    this.stackVoiceError.set(null);
+    try {
+      await this.teams.command('voice', { teamId: board.teamId, operation: 'select', boardId: board.id, revision: board.teamRevision,
+        ownerId: member?.uid || '', voiceId: member?.voice?.id || '', voiceRevision: member?.voice?.revision || 0 });
+      const record = await this.teams.loadBoard(board.id); const saved = record ? this.boardFromRecord(board.id, record) : null;
+      if (!saved) throw new Error('Reopen the listing to load its voice.');
+      this.boards.update(boards => boards.map(item => item.id === saved.id ? saved : item));
+      this.stackNarratorVoiceId.set(saved.stackNarratorVoiceId); this.stopStackVoicePreview();
+      this.setStackShareMessage('Team voice saved. Regenerate existing videos to apply it.', false);
+    } catch (error) { this.stackVoiceError.set(teamError(error)); }
   }
 
   chooseStackNarratorVoice(board: Board, voiceId: string, closeLibrary = false): void {
@@ -17089,7 +17156,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         result: landscape,
         publicStoragePath: landscapeUpload.path,
       }) : null;
-      this.setStackShareMessage(board.visibility === 'private'
+      this.setStackShareMessage(board.teamId
+        ? 'Both trailer formats are saved to the team listing. Publish from the team page when ready.'
+        : board.visibility === 'private'
         ? 'Board Trailer created in both formats and saved to My Videos. Your board is still private.'
         : librarySave === false
         ? 'Board Trailer published. My Videos could not be updated, but the trailer link is ready.'
@@ -17288,7 +17357,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         result: landscape,
         publicStoragePath: landscapeUpload.path,
       }) : null;
-      this.setStackShareMessage(board.visibility === 'private'
+      this.setStackShareMessage(board.teamId
+        ? 'Both video formats are saved to the team listing. Publish from the team page when ready.'
+        : board.visibility === 'private'
         ? 'Video created in both formats and saved to My Videos. Your board is still private.'
         : librarySave === false
         ? 'Permanent video link published, but My Videos could not be updated. You can still copy the link or share the MP4.'
@@ -17728,6 +17799,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const file = videoKind === 'trailer'
       ? this.stackTrailerFile(board, result, ratio)
       : this.stackVideoFile(board, result, ratio);
+    if (board.teamId) {
+      const temporary = URL.createObjectURL(result.blob);
+      try {
+        const stored = await this.teams.storeMedia(board.teamId, board.id, temporary);
+        const url = await this.teams.hydrateMedia(stored);
+        return { path: stored.slice('team-media:'.length), url, file };
+      } finally { URL.revokeObjectURL(temporary); }
+    }
     const path = publishedStackVideoStoragePath(
       uid,
       board.id,
@@ -17754,7 +17833,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     verticalUpload: { path: string; url: string; file: File };
     landscapeUpload: { path: string; url: string; file: File };
   }> {
-    if (board.visibility === 'public') {
+    if (board.teamId || board.visibility === 'public') {
       const [verticalUpload, landscapeUpload] = await Promise.all([
         this.uploadPublishedStackVariant(this.authService.uid(), board, videoKind, 'vertical', results.vertical, generatedAt),
         this.uploadPublishedStackVariant(this.authService.uid(), board, videoKind, 'landscape', results.landscape, generatedAt),
@@ -17983,6 +18062,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   private async loadStackVideoBranding(board: Board, preserveError = false): Promise<void> {
     if (!this.firestore || !this.authService.uid() || !this.canEditBoard(board)) return;
+    if (board.teamId) {
+      const branding = normalizeStackVideoBranding(board.teamVideoBranding || { mode: board.logoUrl ? 'custom' : 'livingwiki', logoUrl: board.logoUrl });
+      this.stackVideoBrandingMode.set(branding.mode); this.stackVideoBrandingLogoUrl.set(branding.logoUrl || '');
+      this.stackVideoBrandingUpdatedAt.set(board.teamVideoBranding?.updatedAt || ''); return;
+    }
     this.stackVideoBrandingLoading.set(true);
     try {
       const snapshot = await getDoc(doc(this.firestore, 'boards', board.id, 'video_settings', 'branding'));
@@ -18111,6 +18195,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private canonicalizeBoardsRootRoute(boardId: string | null, ownerKey: string | null): void {
+    if (this.teamContextId()) return;
     if (!shouldCanonicalizeBoardsRootRoute({
       isBrowser: this.isBrowser,
       isFriendsPage: this.friendsPage(),
@@ -18877,6 +18962,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (!this.firestore || !uid || !result || !cards.length || !draftId) {
       return;
     }
+    const draftTeamId = this.teamContextId();
     const attemptedSnapshotKey = this.wizardDraftSnapshotKey();
 
     this.wizardDraftSaveInFlight = true;
@@ -18901,6 +18987,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         ),
         editing: false,
       })));
+      if (draftTeamId !== this.teamContextId() || uid !== this.authService.uid() || draftId !== this.wizardActiveDraftId()) return;
       const draft: BoardWizardDraft = {
         id: draftId,
         ownerUserId: uid,
@@ -18984,10 +19071,17 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           showContact: draft.listingShowContact,
         },
       });
-      await setDoc(
-        doc(this.firestore, 'users', uid, 'board_wizard_drafts', draftId),
-        omitUndefinedDeep(persistedDraftPayload),
-      );
+      if (draftTeamId) {
+        const { server_updated_at, ...teamPayload } = persistedDraftPayload;
+        const response = await this.teams.command<{ revision: number }>('wizard', {
+          teamId: draftTeamId, draftId, operation: 'save', revision: this.teamWizardRevisions.get(draftId) || 0,
+          draft: omitUndefinedDeep(teamPayload),
+        });
+        this.teamWizardRevisions.set(draftId, response.revision);
+      } else {
+        await setDoc(doc(this.firestore, 'users', uid, 'board_wizard_drafts', draftId), omitUndefinedDeep(persistedDraftPayload));
+      }
+      if (draftTeamId !== this.teamContextId() || uid !== this.authService.uid()) return;
       this.wizardDrafts.update((drafts) => [
         draft,
         ...drafts.filter((item) => item.id !== draft.id),
@@ -19021,16 +19115,23 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (!this.firestore) {
       return;
     }
+    const teamId = this.teamContextId();
     try {
-      const snapshot = await getDocs(collection(this.firestore, 'users', uid, 'board_wizard_drafts'));
-      if (this.authService.uid() !== uid) {
+      const snapshot = await getDocs(teamId
+        ? collection(this.firestore, 'teams', teamId, 'wizard_drafts')
+        : collection(this.firestore, 'users', uid, 'board_wizard_drafts'));
+      if (this.authService.uid() !== uid || teamId !== this.teamContextId()) {
         return;
       }
-      const drafts = snapshot.docs
-        .map((draftDoc) => this.wizardDraftFromRecord(draftDoc.id, draftDoc.data()))
+      const records = await Promise.all(snapshot.docs.map(async draftDoc => {
+        if (this.teamContextId()) this.teamWizardRevisions.set(draftDoc.id, Number(draftDoc.data()['revision']) || 0);
+        return { id: draftDoc.id, data: this.teamContextId() ? await this.teams.hydrateMedia(draftDoc.data()) : draftDoc.data() };
+      }));
+      const drafts = records
+        .map((record) => this.wizardDraftFromRecord(record.id, record.data))
         .filter((draft): draft is BoardWizardDraft => !!draft)
         .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
-      this.wizardDrafts.set(drafts);
+      if (this.authService.uid() === uid && teamId === this.teamContextId()) this.wizardDrafts.set(drafts);
     } catch (error) {
       console.error('Board wizard drafts load failed', error);
     }
@@ -19039,7 +19140,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   private wizardDraftFromRecord(id: string, value: Record<string, unknown>): BoardWizardDraft | null {
     const ownerUserId = this.stringValue(value['owner_user_id'], '', 180);
     const rawResult = value['result'];
-    if (!ownerUserId || ownerUserId !== this.authService.uid() || !rawResult || typeof rawResult !== 'object') {
+    if (!ownerUserId || (ownerUserId !== this.authService.uid() && value['team_id'] !== this.teamContextId()) || !rawResult || typeof rawResult !== 'object') {
       return null;
     }
     try {
@@ -21038,6 +21139,27 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
 
     const loadSequence = ++this.boardLoadSequence;
+    if (this.teamContextId()) {
+      const teamId = this.teamContextId();
+      this.boardsLoading.set(true); this.boardsHasMore.set(false); this.boards.set([]);
+      try {
+        await this.authService.waitForReady();
+        // Canonical membership is checked by the server; the sidebar index is not an authorization grant.
+        const dashboard = await this.teams.dashboard(teamId);
+        if (loadSequence !== this.boardLoadSequence) return;
+        this.teamEditorMembers.set(dashboard.members);
+        if (boardId) {
+          const record = await this.teams.loadBoard(boardId);
+          if (loadSequence !== this.boardLoadSequence) return;
+          if (record?.['team_id'] !== teamId) throw new Error('This listing belongs to a different team.');
+          const board = record ? this.boardFromRecord(boardId, record) : null;
+          this.boards.set(board ? [board] : []);
+        }
+      } catch (error) { if (loadSequence === this.boardLoadSequence) this.boardsSyncError.set(teamError(error)); }
+      finally { if (loadSequence === this.boardLoadSequence) this.boardsLoading.set(false); }
+      return;
+    }
+
     this.boardsLoading.set(true);
     this.boardsLoadingMore.set(false);
     this.boardsHasMore.set(false);
@@ -21301,12 +21423,20 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.selectedBoardUnsubscribe = onSnapshot(
-      doc(this.firestore, 'boards', boardId),
-      (snapshot) => {
+      doc(this.firestore, this.teamContextId() ? 'team_boards' : 'boards', boardId),
+      async (snapshot) => {
         if (!snapshot.exists() || this.selectedBoardId() !== boardId) {
           return;
         }
-        const board = this.boardFromRecord(snapshot.id, snapshot.data());
+        let record: Record<string, unknown>;
+        try { record = this.teamContextId() ? await this.teams.hydrateMedia(snapshot.data()) : snapshot.data(); }
+        catch { this.boardsSyncError.set('Listing media could not be loaded. Check your connection or team access.'); return; }
+        if (this.selectedBoardId() !== boardId) return;
+        // Keep the revision the editor opened with. The server can then merge
+        // different-card edits or report a same-card conflict without losing work.
+        if (this.teamContextId() && (this.cardDialogOpen() || this.boardDialogOpen() || this.boardSettingsBoardId()
+          || this.relatedCardEditorOpen() || this.wizardOpen() || this.stackStudioOpen())) return;
+        const board = this.boardFromRecord(snapshot.id, record);
         if (!board) {
           return;
         }
@@ -21327,7 +21457,16 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           void this.syncRequestedBoardTranslation();
         }
       },
-      () => undefined,
+      () => {
+        if (this.teamContextId()) {
+          this.boardLoadSequence++;
+          this.boards.set([]); this.teams.clearPrivateMedia(); this.wizardOpen.set(false);
+          this.cardDialogOpen.set(false); this.boardDialogOpen.set(false); this.boardSettingsBoardId.set(null);
+          this.relatedCardEditorOpen.set(false); this.specialCardEditorBoardId.set(null);
+          this.closeStackStudioImmediately(); this.resetBoardWizard(); this.wizardDrafts.set([]);
+          this.boardsSyncError.set('Your access to this team listing has ended.');
+        }
+      },
     );
   }
 
@@ -21419,6 +21558,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   private async loadBoardById(boardId: string): Promise<Board | null> {
     if (!this.firestore) {
       return null;
+    }
+    if (this.teamContextId()) {
+      const record = await this.teams.loadBoard(boardId);
+      return record && record['team_id'] === this.teamContextId() ? this.boardFromRecord(boardId, record) : null;
     }
     const slug = normalizeCustomPublicUrlSlug(boardId);
     if (slug && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(boardId)) {
@@ -21657,7 +21800,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return true;
     } catch (error) {
       console.error('Board Firebase sync failed', error, { boardId: board.id });
-      this.boardsSyncError.set($localize`Saved on this browser, but Firebase sync failed.`);
+      this.boardsSyncError.set(board.teamId ? teamError(error) : $localize`Saved on this browser, but Firebase sync failed.`);
       return false;
     }
   }
@@ -21683,6 +21826,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private async persistVisibilityAndReplaceBoard(board: Board): Promise<boolean> {
+    if (board.teamId) { this.boardsSyncError.set('Use Publish or Unpublish on the team page. Working listings remain private.'); return false; }
     if (!this.canEditBoard(board)) {
       this.boardsSyncError.set($localize`Only the board owner can save changes.`);
       return false;
@@ -21711,6 +21855,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private async persistBoardVideo(board: Board, kind: 'full' | 'trailer'): Promise<Board> {
+    if (board.teamId) return this.persistBoard(board);
     const uid = this.authService.uid();
     if (!uid || board.ownerUserId !== uid) {
       throw new Error('Only the board owner can save a video.');
@@ -21727,6 +21872,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private async persistBoard(board: Board): Promise<Board> {
+    if (board.teamId || this.teamContextId()) {
+      const teamId = board.teamId || this.teamContextId();
+      const record = await this.teams.saveBoard(teamId, board.id, omitUndefinedDeep({ ...board, visibility: 'private' }) as Record<string, unknown>, board.teamRevision || 0);
+      const saved = this.boardFromRecord(board.id, record);
+      if (!saved) throw new Error('The saved listing could not be loaded.');
+      return saved;
+    }
     const visibilitySafeBoard: Board = { ...board, ...normalizeBoardPrivacy(board) };
     const uid = this.authService.uid();
     if (!this.firestore || !uid) {
@@ -21738,6 +21890,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private async publishWizardBoard(board: Board, draftId: string): Promise<Board> {
+    if (this.teamContextId()) {
+      const saved = await this.persistBoard({ ...board, teamId: this.teamContextId(), teamDraft: true });
+      await this.teams.command('wizard', { teamId: this.teamContextId(), operation: 'delete', draftId, completedBoardId: saved.id });
+      return saved;
+    }
     const uid = this.authService.uid();
     if (!this.firestore || !uid) {
       throw new Error('Board sync is not ready.');
@@ -21756,7 +21913,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (!this.firestore || !uid || !draftId) {
       return;
     }
-    await deleteDoc(doc(this.firestore, 'users', uid, 'board_wizard_drafts', draftId));
+    if (this.teamContextId()) await this.teams.command('wizard', { teamId: this.teamContextId(), operation: 'delete', draftId });
+    else await deleteDoc(doc(this.firestore, 'users', uid, 'board_wizard_drafts', draftId));
     this.wizardDrafts.update((drafts) => drafts.filter((draft) => draft.id !== draftId));
     this.wizardActiveDraftId.set(null);
     this.wizardDraftSaveState.set('idle');
@@ -21848,6 +22006,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   private canStoreBoardLocally(board: Board): boolean {
     const uid = this.authService.uid();
+    if (board.teamId) return false;
     return !board.ownerUserId || (!!uid && board.ownerUserId === uid);
   }
 
@@ -21949,11 +22108,17 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const ownerUserId = typeof data['owner_user_id'] === 'string' ? data['owner_user_id'] : '';
     const rawCards = cardsVisibleToBoardViewer(
       Array.isArray(data['cards']) ? data['cards'] as Array<Record<string, unknown>> : [],
-      ownerUserId,
+      data['team_id'] && this.teamContextId() === data['team_id'] ? this.authService.uid() : ownerUserId,
       this.authService.uid(),
     );
     return {
       id,
+      ...(typeof data['team_id'] === 'string' ? { teamId: data['team_id'], teamRevision: Number(data['team_revision']) || 0,
+        teamStatus: String(data['team_status'] || 'published'), teamDraft: this.teamContextId() === data['team_id'],
+        representativeId: String(data['representative_id'] || ''), voiceOwnerId: String(data['voice_owner_id'] || ''),
+        voiceId: String(data['voice_id'] || ''), voiceRevision: Number(data['voice_revision']) || 0 } : {}),
+      ...(data['team_id'] ? { teamVoiceName: String(data['voice_name'] || 'System voice'),
+        ...(data['teamVideoBranding'] && typeof data['teamVideoBranding'] === 'object' ? { teamVideoBranding: data['teamVideoBranding'] as Board['teamVideoBranding'] } : {}) } : {}),
       likeCount: typeof data['like_count'] === 'number' ? Math.max(0, Math.trunc(data['like_count'])) : 0,
       customSlug: typeof data['custom_slug'] === 'string'
         ? normalizeCustomPublicUrlSlug(data['custom_slug'])
@@ -22497,6 +22662,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private async persistImageIfNeeded(imageUrl: string, path: string): Promise<string> {
+    if (this.teamContextId() && imageUrl.startsWith('data:')) {
+      return this.teams.storeMedia(this.teamContextId(), this.selectedBoardId() || this.wizardActiveDraftId() || 'draft', imageUrl);
+    }
     if (!imageUrl.startsWith('data:') || !this.storage) {
       return imageUrl;
     }

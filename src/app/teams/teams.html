@@ -1,0 +1,1716 @@
+<div class="team-workspace" [class.team-workspace--public]="isPublic() && !auth.isAuthenticated()">
+  @if (auth.isAuthenticated()) {
+    <app-workspace-sidebar active="teams" [rail]="true" />
+  }
+  <div class="team-shell">
+    <header class="team-topbar">
+      @if (auth.isAuthenticated()) {
+        <app-mobile-menu activePage="teams" />
+      }
+      <nav aria-label="Breadcrumb" class="team-breadcrumb">
+        @if (isPublic()) {
+          <a routerLink="/home" class="brand-wordmark">Living<span>Wiki</span></a>
+        } @else {
+          <a routerLink="/teams">Teams</a>
+          @if (currentTeam(); as team) {
+            <span class="divider">/</span>
+            @if (teams.memberships().length > 1) {
+              <select
+                aria-label="Switch team"
+                [ngModel]="team.id"
+                (ngModelChange)="switchTeam($event)"
+              >
+                @for (item of teams.memberships(); track item.teamId) {
+                  <option [value]="item.teamId">{{ item.name }}</option>
+                }
+              </select>
+            } @else {
+              <strong>{{ team.name }}</strong>
+            }
+          }
+        }
+      </nav>
+      <div class="topbar-actions">
+        @if (auth.isAuthenticated() && !isPublic()) {
+          <button
+            class="icon-button"
+            aria-label="Team notifications"
+            (click)="showModal('notifications')"
+          >
+            <span class="material-symbols-outlined">notifications</span>
+            @if (unreadNotifications()) {
+              <span class="count">{{ unreadNotifications() }}</span>
+            }
+          </button>
+        }
+        <app-theme-toggle /><app-account-menu />
+      </div>
+    </header>
+
+    <main class="team-main" [attr.aria-busy]="loading()">
+      @if (error()) {
+        <div class="feedback feedback--error" role="alert">
+          <span class="material-symbols-outlined">error</span>
+          <div>{{ error() }}</div>
+          <button type="button" (click)="reload()" [disabled]="busy()">Retry</button>
+        </div>
+      }
+      @if (notice()) {
+        <div class="feedback" role="status">
+          <span class="material-symbols-outlined">check_circle</span>
+          <div>{{ notice() }}</div>
+          <button type="button" aria-label="Dismiss notification" (click)="notice.set('')">
+            ×
+          </button>
+        </div>
+      }
+      @if (loading()) {
+        <section class="state-panel">
+          <span class="material-symbols-outlined spin">progress_activity</span>
+          <h1>Opening your team space…</h1>
+          <p>Bringing your people and listings together.</p>
+        </section>
+      } @else if (mode() === 'create') {
+        <section class="create-card panel">
+          <div class="eyebrow">
+            <span class="material-symbols-outlined">groups</span> A shared home for your team
+          </div>
+          <h1>Better listings.<br />Together.</h1>
+          <p class="intro">
+            Create a branded space where your team can build TalkThrus, share approved voices, and
+            manage every listing in one place.
+          </p>
+          @if (teams.allowanceState() === 'loading' || teams.allowanceState() === 'idle') {
+            <p role="status">Checking team creation availability…</p>
+          } @else if (teams.canCreate()) {
+            <form (ngSubmit)="create()">
+              <label
+                >Team name
+                <input
+                  required
+                  minlength="2"
+                  maxlength="100"
+                  name="name"
+                  autocomplete="organization"
+                  autofocus
+                  placeholder="e.g. Marchese Real Estate"
+                  [ngModel]="createForm.name"
+                  (ngModelChange)="updateName($event)"
+              /></label>
+              <label
+                >Team page address
+                <div class="url-field">
+                  <span>livingwiki.com/team/</span
+                  ><input
+                    required
+                    minlength="3"
+                    maxlength="64"
+                    pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                    name="slug"
+                    [(ngModel)]="createForm.slug"
+                  /></div
+              ></label>
+              <p class="field-help">
+                This address is reserved when you create the team. Your public page starts
+                unpublished.
+              </p>
+              <div class="creation-promise">
+                <span class="material-symbols-outlined">lock</span>
+                <div>
+                  You will be the team owner and admin. Your personal boards and voices stay
+                  personal until you choose to share them.
+                </div>
+              </div>
+              <button class="button button--primary button--wide" type="submit" [disabled]="busy()">
+                {{ busy() ? 'Creating your team…' : 'Create team'
+                }}<span class="material-symbols-outlined">arrow_forward</span>
+              </button>
+              <p class="field-help text-center">
+                {{
+                  auth.isAdmin()
+                    ? 'As a platform admin, you can create multiple teams.'
+                    : 'One created team per account. You can join other teams.'
+                }}
+              </p>
+            </form>
+          } @else if (teams.canCreate() === false) {
+            <div class="creation-promise">
+              Your account already has a created team. You can still join other teams by invitation.
+            </div>
+            <a class="button" routerLink="/teams">Go to my teams</a>
+          } @else {
+            <p role="alert">
+              We couldn’t check team creation availability. Please try again. No team has been
+              created.
+            </p>
+            <button class="button" (click)="reload()">Try again</button>
+          }
+        </section>
+      } @else if (mode() === 'directory') {
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">Your shared workspaces</div>
+            <h1>My teams</h1>
+            <p>Personal work stays in My Boards. Team work lives here.</p>
+          </div>
+          <a class="button" routerLink="/teams/invitations"
+            ><span class="material-symbols-outlined">mail</span> Invitations
+            @if (teams.invitations().length) {
+              <span class="count">{{ teams.invitations().length }}</span>
+            }
+          </a>
+        </div>
+        <div class="team-directory">
+          @for (team of teams.memberships(); track team.teamId) {
+            <a class="team-directory-card panel" [routerLink]="['/teams', team.teamId]">
+              <span class="team-logo team-logo--small">
+                @if (team.logoUrl) {
+                  <img [src]="team.logoUrl" alt="" />
+                } @else {
+                  {{ initials(team.name) }}
+                }
+              </span>
+              <h2>{{ team.name }}</h2>
+              <p>
+                {{ team.role === 'admin' ? 'Team admin' : 'Team member' }} ·
+                {{ team.status === 'archived' ? 'Archived' : 'Private workspace' }}
+              </p>
+              <span class="directory-open"
+                >Open team <span class="material-symbols-outlined">arrow_forward</span></span
+              >
+            </a>
+          } @empty {
+            <section class="state-panel panel">
+              <span class="material-symbols-outlined">groups</span>
+              <h2>Your team starts here</h2>
+              <p>
+                Use <strong>Create team</strong> in your avatar menu, or accept an invitation to
+                join a team.
+              </p>
+              <p>Your existing boards stay exactly where they are.</p>
+            </section>
+          }
+        </div>
+      } @else if (mode() === 'invitations') {
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">Work together</div>
+            <h1>Team invitations</h1>
+            <p>
+              Joining gives you access to the team’s listings. Your personal work stays private.
+            </p>
+          </div>
+        </div>
+        @if (!auth.isAuthenticated()) {
+          <section class="panel state-panel">
+            <span class="material-symbols-outlined">mail</span>
+            <h2>
+              {{
+                invitationPreview()
+                  ? 'You’re invited to ' + invitationPreview()!.teamName
+                  : 'Sign in to review your invitations'
+              }}
+            </h2>
+            <p>Sign in with the email address the invitation was sent to.</p>
+            <a class="button button--primary" routerLink="/sign-in" [queryParams]="signinReturn()"
+              >Sign in to continue</a
+            ><a routerLink="/create-account" [queryParams]="signinReturn()">Create an account</a>
+          </section>
+        } @else if (!auth.emailVerified()) {
+          <section class="panel state-panel">
+            <h2>Verify your email first</h2>
+            <p>We need to confirm {{ auth.email() }} before granting access to a team.</p>
+            <a class="button" routerLink="/verify-email">Verify email</a>
+          </section>
+        } @else if (teams.invitationsState() === 'error') {
+          <section class="panel state-panel" role="alert">
+            <span class="material-symbols-outlined" aria-hidden="true">cloud_off</span>
+            <h2>We couldn’t load your invitations</h2>
+            <p>Please try again. This doesn’t mean your inbox is empty.</p>
+            <button class="button button--primary" (click)="reload()">Try again</button>
+          </section>
+        } @else if (teams.invitationsState() !== 'ready') {
+          <section class="panel state-panel" role="status">
+            <span class="material-symbols-outlined spin" aria-hidden="true">progress_activity</span>
+            <h2>Checking your invitations…</h2>
+          </section>
+        } @else {
+          <p class="field-help">
+            Invitations for {{ auth.email() }}. If you were invited at another address, switch
+            accounts from your avatar menu.
+          </p>
+          <div class="invitation-list">
+            @for (invite of teams.invitations(); track invite.id) {
+              <article class="panel invitation-card">
+                <span class="team-logo team-logo--small">{{ initials(invite.teamName) }}</span>
+                <div>
+                  <h2>{{ invite.teamName }}</h2>
+                  <p>
+                    Invited as a {{ invite.role }} · Expires
+                    {{ invite.expiresAt | date: 'MMM d, y' }}
+                  </p>
+                </div>
+                <div class="actions">
+                  <button class="button" [disabled]="busy()" (click)="respond(invite, false)">
+                    Decline</button
+                  ><button
+                    class="button button--primary"
+                    [disabled]="busy()"
+                    (click)="respond(invite, true)"
+                  >
+                    Accept invitation
+                  </button>
+                </div>
+              </article>
+            } @empty {
+              <section class="panel state-panel">
+                <span class="material-symbols-outlined">mark_email_read</span>
+                <h2>You’re all caught up</h2>
+                <p>No pending invitations for this email address.</p>
+                @if (teams.canCreate() !== false) {
+                  <a class="button button--primary" routerLink="/teams/new">Create a team</a>
+                }
+                <a routerLink="/teams">Back to my teams</a>
+              </section>
+            }
+          </div>
+        }
+      } @else if (identity(); as identity) {
+        @if (!isPublic() && currentTeam()?.status === 'archived') {
+          <div class="feedback">
+            <span class="material-symbols-outlined">inventory_2</span>
+            <div>
+              <strong>This team is archived.</strong> Public pages are unavailable and listings are
+              read-only.
+            </div>
+            @if (isOwner()) {
+              <button [disabled]="busy()" (click)="teamLifecycle('restore')">Restore team</button
+              ><button [disabled]="busy()" (click)="teamLifecycle('delete')">
+                Permanently delete
+              </button>
+            }
+          </div>
+        }
+        <section class="team-identity panel" [style.--team-accent]="identity.accent">
+          <div class="team-hero" [class.team-hero--empty]="!identity.heroUrl">
+            @if (identity.heroUrl) {
+              <img
+                [src]="identity.heroUrl"
+                alt=""
+                [style.object-position]="'center ' + identity.heroPosition + '%'"
+              />
+            } @else {
+              <span class="hero-watermark">{{ identity.name }}</span>
+            }
+            @if (
+              !isPublic() && isAdmin() && currentTeam()?.status === 'active' && !identity.heroUrl
+            ) {
+              <button class="hero-edit" (click)="showModal('settings')">
+                <span class="material-symbols-outlined">add_photo_alternate</span> Add a cover photo
+              </button>
+            }
+          </div>
+          <div class="identity-body">
+            <span class="team-logo">
+              @if (identity.logoUrl) {
+                <img [src]="identity.logoUrl" alt="Team logo" />
+              } @else {
+                {{ initials(identity.name) }}
+              }
+            </span>
+            <div class="identity-copy">
+              <h1>{{ identity.name }}</h1>
+              <p>
+                {{
+                  identity.description ||
+                    'Real estate listings and virtual tours, brought together.'
+                }}
+              </p>
+              @if (!isPublic()) {
+                <small class="team-size">{{ members().length }} members · Private workspace</small>
+              }
+            </div>
+            @if (!isPublic()) {
+              <div class="identity-members">
+                <div class="avatar-stack">
+                  @for (member of members().slice(0, 4); track member.uid) {
+                    <span class="avatar" [title]="member.name">
+                      @if (member.photoUrl) {
+                        <img [src]="member.photoUrl" alt="" />
+                      } @else {
+                        {{ initials(member.name) }}
+                      }
+                    </span>
+                  }
+                  @if (members().length > 4) {
+                    <span class="avatar avatar--more">+{{ members().length - 4 }}</span>
+                  }
+                </div>
+                <small
+                  >{{ members().length }} {{ members().length === 1 ? 'member' : 'members' }}
+                  <span>·</span> <span class="material-symbols-outlined">lock</span> Private
+                  workspace</small
+                >
+              </div>
+              <div class="identity-actions">
+                @if (currentTeam()?.public_enabled) {
+                  <a
+                    [routerLink]="['/team', currentTeam()!.slug]"
+                    target="_blank"
+                    rel="noopener"
+                    class="public-page-link"
+                    >View public page <span class="material-symbols-outlined">north_east</span></a
+                  >
+                } @else {
+                  <span class="public-page-link muted">Public page unpublished</span>
+                }
+                <div class="actions">
+                  @if (currentTeam()?.status === 'active') {
+                    <a
+                      class="button button--primary"
+                      [routerLink]="['/teams', teamId(), 'create-listing']"
+                      ><span class="material-symbols-outlined">add</span> New TalkThru</a
+                    >
+                  }
+                  @if (isAdmin() && currentTeam()?.status === 'active') {
+                    <button class="button" (click)="showModal('invite')">
+                      <span class="material-symbols-outlined">group_add</span> Invite members</button
+                    ><button
+                      class="icon-button"
+                      aria-label="Team settings"
+                      title="Team settings"
+                      (click)="showModal('settings')"
+                    >
+                      <span class="material-symbols-outlined">settings</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+          <nav class="team-tabs" aria-label="Team sections">
+            <button
+              [class.active]="tab() === 'listings'"
+              [attr.aria-current]="tab() === 'listings' ? 'page' : null"
+              (click)="setTab('listings')"
+            >
+              Listings
+              <span class="count">{{
+                isPublic() ? publicListings().length : listings().length
+              }}</span>
+            </button>
+            <button
+              [class.active]="tab() === 'members'"
+              [attr.aria-current]="tab() === 'members' ? 'page' : null"
+              (click)="setTab('members')"
+            >
+              {{ isPublic() ? 'Meet the team' : 'Members' }}
+              <span class="count">{{ pageMembers().length }}</span>
+            </button>
+            <button
+              [class.active]="tab() === 'about'"
+              [attr.aria-current]="tab() === 'about' ? 'page' : null"
+              (click)="setTab('about')"
+            >
+              About
+            </button>
+          </nav>
+        </section>
+
+        @if (
+          !isPublic() &&
+          isAdmin() &&
+          currentTeam()?.status === 'active' &&
+          (!currentTeam()?.logo_url || members().length === 1 || !listings().length)
+        ) {
+          <section class="setup-strip">
+            <strong>Make this space yours</strong
+            ><button [class.done]="currentTeam()?.logo_url" (click)="showModal('settings')">
+              <span class="material-symbols-outlined">{{
+                currentTeam()?.logo_url ? 'check_circle' : 'add_photo_alternate'
+              }}</span>
+              Add your branding</button
+            ><button [class.done]="members().length > 1" (click)="showModal('invite')">
+              <span class="material-symbols-outlined">{{
+                members().length > 1 ? 'check_circle' : 'group_add'
+              }}</span>
+              Invite your team</button
+            ><a [routerLink]="['/teams', teamId(), 'create-listing']"
+              ><span class="material-symbols-outlined">{{
+                listings().length ? 'check_circle' : 'add_home'
+              }}</span>
+              Create a TalkThru</a
+            >
+          </section>
+        }
+        @if (tab() === 'listings') {
+          @if (isPublic()) {
+            <div class="page-heading">
+              <div>
+                <div class="eyebrow">Explore our properties</div>
+                <h2>Our listings</h2>
+              </div>
+            </div>
+            <div class="listing-grid public-listings">
+              @for (listing of publicListings(); track listing.id) {
+                <article class="panel listing-tile">
+                  <a [routerLink]="publicPath(listing)"
+                    ><div class="tile-image">
+                      @if (listing.imageUrl) {
+                        <img [src]="listing.imageUrl" [alt]="listing.title" loading="lazy" />
+                      } @else {
+                        <span class="material-symbols-outlined">home</span>
+                      }
+                    </div>
+                    <div class="tile-copy">
+                      <h3>{{ listing.title }}</h3>
+                      <p>{{ listing.description }}</p>
+                      <span class="directory-open"
+                        >Explore TalkThru
+                        <span class="material-symbols-outlined">arrow_forward</span></span
+                      >
+                    </div></a
+                  >
+                  <div class="tile-contact">
+                    <app-team-contact [teamId]="publicPage()!.id" [boardId]="listing.id" />
+                  </div>
+                </article>
+              } @empty {
+                <section class="panel state-panel">
+                  <h2>New listings are on the way</h2>
+                  <p>Check back soon, or contact the team below.</p>
+                </section>
+              }
+            </div>
+          } @else {
+            <section class="kpi-strip panel" aria-label="Team performance">
+              <article>
+                <span>Published listings</span><strong>{{ publishedCount() | number }}</strong
+                ><small>of {{ listings().length }} total · current</small>
+              </article>
+              <article>
+                <span>Views</span
+                ><strong>{{ report() ? (report()!.totals.views | number) : '—' }}</strong
+                ><small>Last {{ days() }} days</small>
+              </article>
+              <article>
+                <span>VR chat minutes</span
+                ><strong>{{
+                  report()?.totals?.voiceSeconds != null
+                    ? (report()!.totals.voiceSeconds! / 60 | number: '1.0-1')
+                    : '—'
+                }}</strong
+                ><small>{{
+                  report()?.totals?.voiceSeconds == null
+                    ? 'Verified duration not yet available'
+                    : 'Last ' + days() + ' days'
+                }}</small>
+              </article>
+              <article>
+                <span>Contacts</span
+                ><strong>{{ report() ? (report()!.totals.contacts | number) : '—' }}</strong
+                ><small>Last {{ days() }} days</small>
+              </article>
+            </section>
+            <div class="metrics-footnote">
+              <span>{{
+                reportError() ||
+                  'Activity excludes team members. UTC · Tracking since ' +
+                    (currentTeam()?.tracking_since | date: 'MMM d, y' : 'UTC')
+              }}</span
+              ><button (click)="metricsExpanded.set(!metricsExpanded())">
+                {{ metricsExpanded() ? 'Less detail' : 'Participants & chats'
+                }}<span class="material-symbols-outlined">{{
+                  metricsExpanded() ? 'expand_less' : 'expand_more'
+                }}</span>
+              </button>
+            </div>
+            @if (metricsExpanded()) {
+              <section class="extended-metrics panel">
+                <article>
+                  <strong>{{ report() ? (report()!.totals.participants | number) : '—' }}</strong
+                  ><span>Participants</span><small>Distinct engaged browsers in the period</small>
+                </article>
+                <article>
+                  <strong>{{ report() ? (report()!.totals.chats | number) : '—' }}</strong
+                  ><span>Chats</span><small>Sessions with a visitor message</small>
+                </article>
+                <article>
+                  <strong>{{ report() ? (report()!.totals.messages | number) : '—' }}</strong
+                  ><span>Visitor messages</span><small>Assistant replies excluded</small>
+                </article>
+              </section>
+            }
+            <section class="listings-panel panel">
+              <div class="listings-toolbar">
+                <div class="section-title">
+                  <h2>Team listings</h2>
+                  <span>{{ listings().length }} total</span>
+                  @if (currentTeam()?.status === 'active') {
+                    <button class="button button--quiet" (click)="showModal('import')">
+                      <span class="material-symbols-outlined">add_to_photos</span> Add existing
+                    </button>
+                  }
+                </div>
+                <div class="listing-filters">
+                  <label class="search-field"
+                    ><span class="material-symbols-outlined">search</span
+                    ><input
+                      aria-label="Search all listings or representatives"
+                      placeholder="Search listings or agents"
+                      [ngModel]="search()"
+                      (ngModelChange)="search.set($event)"
+                  /></label>
+                  <select
+                    aria-label="Filter listing status"
+                    [ngModel]="status()"
+                    (ngModelChange)="status.set($event)"
+                  >
+                    <option value="">All statuses</option>
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                    <option value="unpublished">Unpublished</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                  <select
+                    aria-label="Filter representative"
+                    [ngModel]="representative()"
+                    (ngModelChange)="representative.set($event)"
+                  >
+                    <option value="">All members</option>
+                    @for (member of members(); track member.uid) {
+                      <option [value]="member.uid">{{ member.name }}</option>
+                    }
+                  </select>
+                  <select
+                    aria-label="Activity date range"
+                    [ngModel]="days()"
+                    (ngModelChange)="setDays($event)"
+                  >
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                  </select>
+                  <div class="view-toggle">
+                    <button
+                      class="icon-button"
+                      [class.selected]="!grid()"
+                      [attr.aria-pressed]="!grid()"
+                      aria-label="List view"
+                      (click)="grid.set(false)"
+                    >
+                      <span class="material-symbols-outlined">format_list_bulleted</span></button
+                    ><button
+                      class="icon-button"
+                      [class.selected]="grid()"
+                      [attr.aria-pressed]="grid()"
+                      aria-label="Grid view"
+                      (click)="grid.set(true)"
+                    >
+                      <span class="material-symbols-outlined">grid_view</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              @if (filtered().length) {
+                <div class="listing-table-wrap" [class.is-grid]="grid()">
+                  <table class="listing-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Listing</th>
+                        <th scope="col">Rep / Voice</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="numeric">Views</th>
+                        <th scope="col" class="numeric">VR chat</th>
+                        <th scope="col" class="numeric">Contacts</th>
+                        <th scope="col">Updated</th>
+                        <th scope="col">Assets</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (listing of pageRows(); track listing.id) {
+                        <tr>
+                          <td class="listing-cell">
+                            <a
+                              [routerLink]="editPath(listing)"
+                              [attr.aria-disabled]="
+                                currentTeam()?.status !== 'active' || listing.status === 'archived'
+                                  ? 'true'
+                                  : null
+                              "
+                              [attr.tabindex]="
+                                currentTeam()?.status !== 'active' || listing.status === 'archived'
+                                  ? -1
+                                  : null
+                              "
+                              ><span class="listing-thumb">
+                                @if (listing.imageUrl) {
+                                  <img [src]="listing.imageUrl" alt="" loading="lazy" />
+                                } @else {
+                                  <span class="material-symbols-outlined">home</span>
+                                }</span
+                              ><span class="listing-info"
+                                ><strong>{{ listing.title }}</strong
+                                ><span>{{ listing.description }}</span
+                                ><small
+                                  >Created {{ listing.createdAt | date: 'MMM d, y' }} ·
+                                  {{ listing.cardCount }} cards</small
+                                ></span
+                              ></a
+                            >
+                          </td>
+                          <td class="rep-cell">
+                            <span class="avatar">
+                              @if (memberPhoto(listing.representativeId)) {
+                                <img [src]="memberPhoto(listing.representativeId)" alt="" />
+                              } @else {
+                                {{ initials(memberName(listing.representativeId)) }}
+                              }</span
+                            ><span
+                              ><strong>{{ memberName(listing.representativeId) }}</strong
+                              ><small [class.warning-text]="!voiceAvailable(listing)">{{
+                                voiceAvailable(listing)
+                                  ? listing.voiceName
+                                  : 'Voice unavailable · select another'
+                              }}</small></span
+                            >
+                          </td>
+                          <td class="status-cell">
+                            <span
+                              class="status-pill"
+                              [class.status-pill--published]="listing.status === 'published'"
+                              [class.status-pill--archived]="listing.status === 'archived'"
+                              ><i></i>{{ listing.status }}</span
+                            >
+                            @if (listing.hasUnpublishedChanges) {
+                              <small class="pending-changes">Unpublished changes</small>
+                            }
+                          </td>
+                          <td class="numeric metric-cell" data-label="Views">
+                            {{
+                              report()?.listings?.[listing.id]
+                                ? (report()!.listings[listing.id].views | number)
+                                : '—'
+                            }}
+                          </td>
+                          <td class="numeric metric-cell" data-label="VR chat">
+                            {{
+                              report()?.listings?.[listing.id]?.voiceSeconds != null
+                                ? (report()!.listings[listing.id].voiceSeconds! / 60
+                                    | number: '1.0-1') + ' min'
+                                : '—'
+                            }}
+                          </td>
+                          <td class="numeric metric-cell" data-label="Contacts">
+                            {{
+                              report()?.listings?.[listing.id]
+                                ? (report()!.listings[listing.id].contacts | number)
+                                : '—'
+                            }}
+                          </td>
+                          <td class="updated-cell">
+                            <span>{{ listing.updatedAt | date: 'MMM d' }}</span
+                            ><small>{{ memberName(listing.lastEditorId) }}</small>
+                          </td>
+                          <td class="asset-cell">
+                            <div class="actions">
+                              <a
+                                class="icon-button"
+                                [routerLink]="editPath(listing)"
+                                [attr.aria-disabled]="
+                                  currentTeam()?.status !== 'active' ||
+                                  listing.status === 'archived'
+                                    ? 'true'
+                                    : null
+                                "
+                                [attr.tabindex]="
+                                  currentTeam()?.status !== 'active' ||
+                                  listing.status === 'archived'
+                                    ? -1
+                                    : null
+                                "
+                                title="Preview working listing"
+                                aria-label="Preview working listing"
+                                ><span class="material-symbols-outlined">play_arrow</span></a
+                              ><button
+                                class="icon-button"
+                                [disabled]="listing.status !== 'published'"
+                                title="Public listing QR code"
+                                aria-label="Public listing QR code"
+                                (click)="showModal('qr', listing)"
+                              >
+                                <span class="material-symbols-outlined">qr_code_2</span></button
+                              ><button
+                                class="icon-button"
+                                [attr.aria-label]="'Manage ' + listing.title"
+                                title="Listing details and actions"
+                                (click)="showModal('listing', listing)"
+                              >
+                                <span class="material-symbols-outlined">more_vert</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                <footer class="pagination">
+                  <span
+                    >{{ filtered().length }} matching listings · Page
+                    {{ page() > pageCount() ? pageCount() : page() }} of {{ pageCount() }}</span
+                  >
+                  <div class="actions">
+                    <button
+                      class="icon-button"
+                      aria-label="Previous page"
+                      [disabled]="page() <= 1"
+                      (click)="page.set(page() - 1)"
+                    >
+                      <span class="material-symbols-outlined">chevron_left</span></button
+                    ><span class="current-page">{{
+                      page() > pageCount() ? pageCount() : page()
+                    }}</span
+                    ><button
+                      class="icon-button"
+                      aria-label="Next page"
+                      [disabled]="page() >= pageCount()"
+                      (click)="page.set(page() + 1)"
+                    >
+                      <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                  </div>
+                </footer>
+              } @else {
+                <div class="state-panel">
+                  <span class="material-symbols-outlined">{{
+                    listings().length ? 'search_off' : 'add_home'
+                  }}</span>
+                  <h3>
+                    {{
+                      listings().length
+                        ? 'No listings match these filters'
+                        : 'Your first team listing starts here'
+                    }}
+                  </h3>
+                  <p>
+                    {{
+                      listings().length
+                        ? 'Try another search, status, or team member.'
+                        : 'Create a real estate TalkThru. Everyone on the team can help refine its cards before it goes public.'
+                    }}
+                  </p>
+                  @if (!listings().length) {
+                    <a
+                      class="button button--primary"
+                      [routerLink]="['/teams', teamId(), 'create-listing']"
+                      >Create a TalkThru</a
+                    >
+                  } @else {
+                    <button
+                      class="button"
+                      (click)="search.set(''); status.set(''); representative.set('')"
+                    >
+                      Clear filters
+                    </button>
+                  }
+                </div>
+              }
+            </section>
+          }
+        } @else if (tab() === 'members') {
+          <div class="page-heading">
+            <div>
+              <div class="eyebrow">The people behind the listings</div>
+              <h2>{{ isPublic() ? 'Meet our team' : 'Team members' }}</h2>
+              <p>
+                {{
+                  isPublic()
+                    ? 'Local expertise. Personal attention.'
+                    : 'Everyone here can access and collaborate on the team’s listings.'
+                }}
+              </p>
+            </div>
+            @if (!isPublic() && currentTeam()?.status === 'active') {
+              @if (!isOwner()) {
+                <button class="button button--quiet" [disabled]="busy()" (click)="leaveTeam()">
+                  Leave team
+                </button>
+              }
+              <button class="button" (click)="showModal('voice')">
+                <span class="material-symbols-outlined">mic</span> My shared voice
+              </button>
+            }
+          </div>
+          <div class="member-grid">
+            @for (member of pageMembers(); track member.uid) {
+              <article class="panel member-card">
+                <span class="avatar avatar--large">
+                  @if (member.photoUrl) {
+                    <img [src]="member.photoUrl" alt="" loading="lazy" />
+                  } @else {
+                    {{ initials(member.name) }}
+                  }
+                </span>
+                <h3>{{ member.name }}</h3>
+                <p>{{ member.title || 'Team member' }}</p>
+                @if (!isPublic()) {
+                  @for (privateMember of members(); track privateMember.uid) {
+                    @if (privateMember.uid === member.uid) {
+                      <span class="member-role">{{
+                        currentTeam()?.owner_id === member.uid
+                          ? 'Owner · Admin'
+                          : privateMember.role === 'admin'
+                            ? 'Admin'
+                            : 'Member'
+                      }}</span>
+                      <p class="voice-state">
+                        <span class="material-symbols-outlined">{{
+                          privateMember.voice ? 'graphic_eq' : 'mic_off'
+                        }}</span
+                        >{{ privateMember.voice?.name || 'No voice shared' }}
+                      </p>
+                      <small>{{
+                        privateMember.publicVisible
+                          ? 'Visible on public page'
+                          : 'Private team profile'
+                      }}</small>
+                      @if (
+                        currentTeam()?.status === 'active' &&
+                        (member.uid === auth.uid() || isAdmin())
+                      ) {
+                        <button
+                          class="button button--wide"
+                          (click)="showModal('member', undefined, privateMember)"
+                        >
+                          {{ member.uid === auth.uid() ? 'Edit my team profile' : 'Manage member' }}
+                        </button>
+                      }
+                    }
+                  }
+                } @else {
+                  @if (member.bio) {
+                    <p class="member-bio">{{ member.bio }}</p>
+                  }
+                  @if (member.contactEmail) {
+                    <a [href]="'mailto:' + member.contactEmail">{{ member.contactEmail }}</a>
+                  }
+                  @if (member.contactPhone) {
+                    <a [href]="'tel:' + member.contactPhone">{{ member.contactPhone }}</a>
+                  }
+                }
+              </article>
+            } @empty {
+              <section class="panel state-panel">
+                <h3>The team is getting ready</h3>
+                <p>Public member profiles will appear here when they are available.</p>
+              </section>
+            }
+          </div>
+          @if (!isPublic() && isAdmin() && pendingInvitations().length) {
+            <section class="panel invitations-panel">
+              <div class="section-title">
+                <h2>Invitations</h2>
+                <span>{{ pendingInvitations().length }}</span>
+              </div>
+              <p class="field-help">
+                Invitees become members only after accepting. Invitations expire after seven days.
+              </p>
+              @for (invite of pendingInvitations(); track invite.id) {
+                <div class="pending-invite">
+                  <div>
+                    <strong>{{ invite.email }}</strong
+                    ><small
+                      >{{ invite.role }} · {{ invite.status }} · Expires
+                      {{ invite.expiresAt | date: 'MMM d' }}
+                      @if (invite.delivery === 'failed') {
+                        <span class="warning-text">· Email delivery failed</span>
+                      }
+                    </small>
+                  </div>
+                  <div class="actions">
+                    <button class="button" [disabled]="busy()" (click)="resend(invite)">
+                      Resend
+                    </button>
+                    @if (invite.status === 'pending') {
+                      <button
+                        class="button button--quiet"
+                        [disabled]="busy()"
+                        (click)="revoke(invite)"
+                      >
+                        Revoke
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            </section>
+          }
+        } @else {
+          <section class="about-grid">
+            <article class="panel about-copy">
+              <div class="eyebrow">A little about us</div>
+              <h2>{{ identity.name }}</h2>
+              <p class="preserve-lines">
+                {{
+                  identity.about ||
+                    identity.description ||
+                    'The team hasn’t added a description yet.'
+                }}
+              </p>
+              @if (!isPublic() && isAdmin() && currentTeam()?.status === 'active') {
+                <button class="button" (click)="showModal('settings')">Edit team details</button>
+              }
+            </article>
+            <aside class="panel contact-card">
+              <h3>Get in touch</h3>
+              @if (identity.website) {
+                <a [href]="identity.website" target="_blank" rel="noopener"
+                  ><span class="material-symbols-outlined">language</span> Visit our website</a
+                >
+              }
+              @if (identity.contactEmail) {
+                <a [href]="'mailto:' + identity.contactEmail"
+                  ><span class="material-symbols-outlined">mail</span>{{ identity.contactEmail }}</a
+                >
+              }
+              @if (identity.contactPhone) {
+                <a [href]="'tel:' + identity.contactPhone"
+                  ><span class="material-symbols-outlined">call</span>{{ identity.contactPhone }}</a
+                >
+              }
+              @if (!identity.website && !identity.contactEmail && !identity.contactPhone) {
+                <p>Public contact details have not been added yet.</p>
+              }
+            </aside>
+          </section>
+          @if (!isPublic() && dashboard()?.activity?.length) {
+            <section class="panel activity-panel">
+              <h3>Recent team activity</h3>
+              @for (item of dashboard()!.activity; track item.id) {
+                <div class="activity-row">
+                  <span class="activity-dot"></span>
+                  <div>
+                    <strong>{{ memberName(item.actor_id) }}</strong
+                    ><span>{{ item.action.split('.').join(' · ').split('_').join(' ') }}</span>
+                  </div>
+                  <time>{{ item.at | date: 'MMM d, h:mm a' }}</time>
+                </div>
+              }
+            </section>
+          }
+        }
+      }
+    </main>
+  </div>
+</div>
+
+@if (modal()) {
+  <dialog
+    #modalDialog
+    class="team-dialog"
+    aria-labelledby="team-dialog-title"
+    (cancel)="closeModal($event)"
+    (click)="$event.target === $event.currentTarget && closeModal()"
+  >
+    <div class="dialog-content">
+      <header class="dialog-header">
+        <div>
+          <div class="eyebrow">{{ currentTeam()?.name || publicPage()?.name }}</div>
+          <h2 id="team-dialog-title">
+            {{
+              modal() === 'import'
+                ? 'Add an existing listing'
+                : modal() === 'notifications'
+                  ? 'Team notifications'
+                  : modal() === 'settings'
+                    ? 'Team settings'
+                    : modal() === 'invite'
+                      ? 'Invite your team'
+                      : modal() === 'member'
+                        ? selectedMember()?.name
+                        : modal() === 'qr'
+                          ? 'Share this listing'
+                          : modal() === 'voice'
+                            ? 'Your voice, your choice'
+                            : selectedListing()?.title
+            }}
+          </h2>
+        </div>
+        <button
+          class="icon-button"
+          type="button"
+          aria-label="Close dialog"
+          [disabled]="busy()"
+          (click)="closeModal()"
+        >
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </header>
+      @if (modalError()) {
+        <div class="feedback feedback--error" role="alert">{{ modalError() }}</div>
+      }
+      @if (modal() === 'notifications') {
+        <p class="field-help">
+          Your latest team updates. Contact details stay inside their restricted listing view.
+        </p>
+        @for (item of teams.notifications(); track item.id) {
+          <button
+            class="notification-entry"
+            [class.unread]="!item.read"
+            (click)="openNotification(item)"
+          >
+            <span class="material-symbols-outlined">{{
+              item.read ? 'mark_email_read' : 'notifications_active'
+            }}</span
+            ><span
+              >{{ item.message }}<small>{{ item.createdAt | date: 'MMM d, h:mm a' }}</small></span
+            ><span class="material-symbols-outlined">chevron_right</span>
+          </button>
+        } @empty {
+          <p>You’re all caught up. Team updates will appear here.</p>
+        }
+      } @else if (modal() === 'import') {
+        <p>
+          Add one of your real estate TalkThrus to this team. The imported listing starts as a
+          private draft.
+        </p>
+        @if (importLoading()) {
+          <p role="status">Loading your personal listings…</p>
+        } @else if (!importListings().length) {
+          <p class="field-help">
+            No personal real estate TalkThrus were found. Create a new team TalkThru instead.
+          </p>
+        } @else {
+          <form (ngSubmit)="importListing()">
+            <fieldset [disabled]="busy()">
+              <label
+                >Personal listing<select name="listing" required [(ngModel)]="importId">
+                  <option value="">Choose a listing</option>
+                  @for (listing of importListings(); track listing.id) {
+                    <option [value]="listing.id">{{ listing.title }}</option>
+                  }
+                </select></label
+              >
+              <label
+                >How to add it<select name="operation" [(ngModel)]="importOperation">
+                  <option value="copy">Copy — keep my personal original</option>
+                  <option value="move">Move — give ownership to the team</option>
+                </select></label
+              >
+              <p class="field-help">
+                {{
+                  importOperation === 'move'
+                    ? 'The listing leaves My Boards. Its existing link becomes unavailable until the team publishes it again.'
+                    : 'A separate team-owned copy gets a new link. Your original stays unchanged.'
+                }}
+              </p>
+              <p class="field-help">
+                All accepted members can edit. Personal voice permissions and generated videos are
+                not copied. Linked child boards need to be flattened first; private avatar knowledge
+                is never published implicitly.
+              </p>
+              <footer class="dialog-footer">
+                <button type="button" class="button" (click)="closeModal()">Cancel</button
+                ><button
+                  type="submit"
+                  class="button button--primary"
+                  [disabled]="busy() || !importId"
+                >
+                  {{
+                    busy()
+                      ? 'Adding listing…'
+                      : importOperation === 'copy'
+                        ? 'Copy to team'
+                        : 'Move to team'
+                  }}
+                </button>
+              </footer>
+            </fieldset>
+          </form>
+        }
+      } @else if (modal() === 'settings') {
+        <form (ngSubmit)="saveSettings()">
+          <fieldset [disabled]="busy()">
+            <div class="brand-upload-grid">
+              <label class="image-upload">
+                @if (settingsForm.logoUrl) {
+                  <img [src]="settingsForm.logoUrl" alt="Current team logo" />
+                } @else {
+                  <span class="material-symbols-outlined">add_photo_alternate</span>
+                }
+                Team logo<input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  (change)="uploadBranding($event, 'logo')" /></label
+              ><label class="image-upload image-upload--hero">
+                @if (settingsForm.heroUrl) {
+                  <img
+                    [src]="settingsForm.heroUrl"
+                    alt="Current cover"
+                    [style.object-position]="'center ' + settingsForm.heroPosition + '%'"
+                  />
+                } @else {
+                  <span class="material-symbols-outlined">panorama</span>
+                }
+                Cover photo<input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  (change)="uploadBranding($event, 'hero')"
+              /></label>
+            </div>
+            <p class="field-help">
+              JPG, PNG, or WebP · Up to 8 MB. Branding images are public assets; do not upload
+              private documents here.
+            </p>
+            @if (settingsForm.heroUrl) {
+              <label
+                >Cover focal point
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  name="heroPosition"
+                  [(ngModel)]="settingsForm.heroPosition"
+              /></label>
+            }
+            <label
+              >Team name<input
+                required
+                minlength="2"
+                maxlength="100"
+                name="name"
+                [(ngModel)]="settingsForm.name" /></label
+            ><label
+              >Short description<input
+                maxlength="280"
+                name="description"
+                [(ngModel)]="settingsForm.description"
+                placeholder="What makes your team special?" /></label
+            ><label
+              >About your team<textarea
+                rows="4"
+                maxlength="4000"
+                name="about"
+                [(ngModel)]="settingsForm.about"
+              ></textarea>
+            </label>
+            <div class="form-grid">
+              <label
+                >Website<input
+                  type="url"
+                  pattern="https://.*"
+                  name="website"
+                  [(ngModel)]="settingsForm.website"
+                  placeholder="https://" /></label
+              ><label
+                >Team accent<input
+                  type="color"
+                  name="accent"
+                  [(ngModel)]="settingsForm.accent" /></label
+              ><label
+                >Public business email<input
+                  type="email"
+                  name="contactEmail"
+                  [(ngModel)]="settingsForm.contactEmail" /></label
+              ><label
+                >Public business phone<input
+                  type="tel"
+                  maxlength="40"
+                  name="contactPhone"
+                  [(ngModel)]="settingsForm.contactPhone"
+              /></label>
+            </div>
+            <label class="check-field"
+              ><input
+                type="checkbox"
+                name="publicEnabled"
+                [(ngModel)]="settingsForm.publicEnabled"
+              /><span
+                ><strong>Publish the team page</strong
+                ><small
+                  >Shows your branding, published listings, and opted-in member profiles. Workspace
+                  analytics, drafts, invitations, and private contacts are never shown.</small
+                ></span
+              ></label
+            >
+            <p class="field-help">livingwiki.com/team/{{ currentTeam()?.slug }}</p>
+            <footer class="dialog-footer">
+              <button type="button" class="button" (click)="closeModal()">Cancel</button
+              ><button type="submit" class="button button--primary">
+                {{ busy() ? 'Saving…' : 'Save team settings' }}
+              </button>
+            </footer>
+          </fieldset>
+        </form>
+        @if (isOwner() && currentTeam()?.status === 'active') {
+          <section class="management-actions management-actions--danger">
+            <button
+              class="button button--danger"
+              [disabled]="busy()"
+              (click)="teamLifecycle('archive')"
+            >
+              Archive team
+            </button>
+            <p class="field-help">
+              Keeps your work but unpublishes the team page and listings. Archived teams still use
+              your creation allowance.
+            </p>
+          </section>
+        }
+      } @else if (modal() === 'invite') {
+        <form (ngSubmit)="invite()">
+          <p>
+            Invite your colleagues to collaborate on every team listing. They will appear as members
+            after accepting.
+          </p>
+          <label
+            >Email addresses<textarea
+              autofocus
+              required
+              rows="4"
+              name="emails"
+              [(ngModel)]="inviteForm.emails"
+              placeholder="alex@example.com, sam@example.com"
+            ></textarea>
+          </label>
+          <p class="field-help">
+            Paste up to 30 addresses, separated by commas, spaces, or new lines. Duplicate addresses
+            are combined.
+          </p>
+          <label
+            >Team role<select name="role" [(ngModel)]="inviteForm.role">
+              <option value="member">Member — create and edit team listings</option>
+              <option value="admin">Admin — also manage members and team settings</option>
+            </select></label
+          >
+          <div class="creation-promise">
+            <span class="material-symbols-outlined">lock</span>
+            <div>
+              Accepting an invitation does not share personal boards or voices. Invitations expire
+              in seven days.
+            </div>
+          </div>
+          <footer class="dialog-footer">
+            <button class="button" type="button" [disabled]="busy()" (click)="closeModal()">
+              Cancel</button
+            ><button class="button button--primary" type="submit" [disabled]="busy()">
+              {{ busy() ? 'Sending invitations…' : 'Send invitations' }}
+            </button>
+          </footer>
+        </form>
+      } @else if (modal() === 'member' && selectedMember(); as member) {
+        <form (ngSubmit)="saveMember()">
+          <fieldset [disabled]="busy()">
+            <label
+              >Role / professional title<input
+                name="title"
+                maxlength="100"
+                [(ngModel)]="memberForm.title"
+                placeholder="e.g. Real estate advisor" /></label
+            ><label
+              >Bio<textarea
+                rows="3"
+                maxlength="1000"
+                name="bio"
+                [(ngModel)]="memberForm.bio"
+              ></textarea></label
+            ><label class="check-field"
+              ><input
+                type="checkbox"
+                name="publicVisible"
+                [(ngModel)]="memberForm.publicVisible"
+                [disabled]="member.uid !== auth.uid() && !member.publicVisible"
+              /><span
+                ><strong>Show my profile on the public team page</strong
+                ><small>Only the member can opt in. An admin may hide a profile.</small></span
+              ></label
+            >
+            <div class="form-grid">
+              <label
+                >Public contact email<input
+                  type="email"
+                  name="contactEmail"
+                  [(ngModel)]="memberForm.contactEmail"
+                  [readonly]="member.uid !== auth.uid()" /></label
+              ><label
+                >Public contact phone<input
+                  type="tel"
+                  name="contactPhone"
+                  [(ngModel)]="memberForm.contactPhone"
+                  [readonly]="member.uid !== auth.uid()"
+              /></label>
+            </div>
+            <footer class="dialog-footer">
+              <button class="button button--primary" type="submit">
+                {{ busy() ? 'Saving…' : 'Save profile' }}
+              </button>
+            </footer>
+          </fieldset>
+        </form>
+        @if (isAdmin() && member.uid !== currentTeam()?.owner_id) {
+          <section class="management-actions">
+            <h3>Membership</h3>
+            <button
+              class="button"
+              [disabled]="busy()"
+              (click)="memberAction('role', member, member.role === 'admin' ? 'member' : 'admin')"
+            >
+              {{ member.role === 'admin' ? 'Make member' : 'Make team admin' }}
+            </button>
+            @if (isOwner()) {
+              <button class="button" [disabled]="busy()" (click)="memberAction('transfer', member)">
+                Transfer ownership
+              </button>
+            }
+            <button
+              class="button button--danger"
+              [disabled]="busy()"
+              (click)="memberAction('remove', member)"
+            >
+              Remove from team
+            </button>
+          </section>
+        }
+        @if (member.uid === auth.uid() && !isOwner()) {
+          <section class="management-actions">
+            <button
+              class="button button--danger"
+              [disabled]="busy()"
+              (click)="memberAction('remove', member)"
+            >
+              Leave team
+            </button>
+            <p class="field-help">
+              Your team listings stay with the team. Your shared voice is revoked.
+            </p>
+          </section>
+        }
+      } @else if (modal() === 'listing' && selectedListing(); as listing) {
+        <p class="field-help">
+          {{ listing.cardCount }} cards · Created {{ listing.createdAt | date: 'MMM d, y' }}
+        </p>
+        <div class="listing-detail-summary">
+          <span
+            class="status-pill"
+            [class.status-pill--published]="listing.status === 'published'"
+            >{{ listing.status }}</span
+          >
+          @if (listing.hasUnpublishedChanges) {
+            <span class="warning-text">Unpublished changes</span>
+          }
+        </div>
+        <div class="management-actions">
+          <a
+            class="button button--primary"
+            [routerLink]="editPath(listing)"
+            [attr.aria-disabled]="
+              currentTeam()?.status !== 'active' || listing.status === 'archived' ? 'true' : null
+            "
+            [attr.tabindex]="
+              currentTeam()?.status !== 'active' || listing.status === 'archived' ? -1 : null
+            "
+            >Open working listing</a
+          >
+          @if (listing.status === 'published') {
+            <a class="button" [routerLink]="publicPath(listing)" target="_blank" rel="noopener"
+              >View public listing ↗</a
+            >
+          }
+          @if (
+            currentTeam()?.status === 'active' &&
+            mayPublish(listing) &&
+            listing.status !== 'archived'
+          ) {
+            <button
+              class="button"
+              [disabled]="busy() || !voiceAvailable(listing)"
+              (click)="listingAction('publish', listing)"
+            >
+              {{ listing.status === 'published' ? 'Update public listing' : 'Publish listing' }}
+            </button>
+            @if (listing.status === 'published') {
+              <button
+                class="button"
+                [disabled]="busy()"
+                (click)="listingAction('unpublish', listing)"
+              >
+                Unpublish
+              </button>
+            }
+          }
+        </div>
+        <p class="field-help">
+          Saving edits does not change the public version. Publish when the team is ready.
+        </p>
+        @if (currentTeam()?.status === 'active' && isAdmin()) {
+          <section class="detail-section">
+            <h3>Assigned representative</h3>
+            <div class="inline-form">
+              <select aria-label="Assigned representative" [(ngModel)]="selectedRepId">
+                @for (member of members(); track member.uid) {
+                  <option [value]="member.uid">{{ member.name }}</option>
+                }</select
+              ><button
+                class="button"
+                [disabled]="busy() || selectedRepId === listing.representativeId"
+                (click)="assign()"
+              >
+                Assign
+              </button>
+            </div>
+            <p class="field-help">
+              The representative can publish this listing and access its private contacts. Voice
+              choice is independent.
+            </p>
+          </section>
+        }
+        <section class="detail-section">
+          <h3>Listing voice</h3>
+          <select
+            aria-label="Listing voice"
+            [ngModel]="listing.voiceOwnerId"
+            (ngModelChange)="selectVoice($event)"
+            [disabled]="
+              busy() || currentTeam()?.status !== 'active' || listing.status === 'archived'
+            "
+          >
+            <option value="">System voice</option>
+            @for (member of members(); track member.uid) {
+              @if (member.voice) {
+                <option [value]="member.uid">{{ member.name }} · {{ member.voice.name }}</option>
+              }
+            }
+          </select>
+          @if (!voiceAvailable(listing)) {
+            <p class="warning-text">
+              The selected voice is no longer shared. Choose a voice before publishing.
+            </p>
+          }
+          <p class="field-help">
+            Only voices explicitly shared with this team appear here. Changing voice makes existing
+            generated media out of date.
+          </p>
+        </section>
+        <section class="detail-section">
+          <h3>Assets</h3>
+          <div class="management-actions">
+            @if (listing.status === 'published') {
+              <button class="button" (click)="showModal('qr', listing)">
+                <span class="material-symbols-outlined">qr_code_2</span> QR code & link
+              </button>
+            }
+            <a
+              class="button"
+              [routerLink]="editPath(listing)"
+              [attr.aria-disabled]="
+                currentTeam()?.status !== 'active' || listing.status === 'archived' ? 'true' : null
+              "
+              [attr.tabindex]="
+                currentTeam()?.status !== 'active' || listing.status === 'archived' ? -1 : null
+              "
+              [queryParams]="{ studio: 'video' }"
+              ><span class="material-symbols-outlined">movie</span> Video studio</a
+            >
+            @if (listing.videoUrl) {
+              <a class="button" [href]="listing.videoUrl" target="_blank" rel="noopener"
+                >Preview saved video</a
+              >
+            }
+          </div>
+          <p class="field-help">
+            Previewing a listing or QR code is free of generation. Create or regenerate video
+            explicitly in the studio.
+          </p>
+        </section>
+        @if (mayPublish(listing)) {
+          <section class="detail-section">
+            <h3>Private contacts</h3>
+            <p class="field-help">
+              Visible only to the assigned representative and team admins. Email and phone clicks
+              alone are not contacts.
+            </p>
+            @if (contactsLoading()) {
+              <p role="status">Loading contacts…</p>
+            }
+            @if (contactsError()) {
+              <p class="warning-text" role="status">{{ contactsError() }}</p>
+            }
+            @for (contact of contacts(); track contact.id) {
+              <article class="contact-entry">
+                <div class="section-title">
+                  <strong>{{ contact.name }}</strong
+                  ><span>{{ contact.last_at | date: 'MMM d' }}</span>
+                </div>
+                <a [href]="'mailto:' + contact.email">{{ contact.email }}</a>
+                @if (contact.phone) {
+                  <a [href]="'tel:' + contact.phone">{{ contact.phone }}</a>
+                }
+                <p>{{ contact.message }}</p>
+                <button
+                  class="button"
+                  [disabled]="contactsLoading()"
+                  (click)="
+                    loadContacts(
+                      listing,
+                      contact.id,
+                      contact.status === 'new' ? 'contacted' : 'new'
+                    )
+                  "
+                >
+                  {{ contact.status === 'new' ? 'Mark contacted' : 'Contacted · mark new' }}
+                </button>
+              </article>
+            } @empty {
+              @if (!contactsLoading() && !contactsError()) {
+                <p class="field-help">No contact requests yet.</p>
+              }
+            }
+            @if (contactsCursor()) {
+              <button
+                class="button"
+                [disabled]="contactsLoading()"
+                (click)="loadContacts(listing, undefined, undefined, true)"
+              >
+                Load more contacts
+              </button>
+            }
+          </section>
+          <section class="detail-section">
+            <h3>Private voice conversations</h3>
+            <p class="field-help">
+              Provider-verified calls, retained for 90 days. Transcripts show up to the first 100
+              turns. Team previews are labeled and excluded from analytics.
+            </p>
+            @if (!conversationsLoaded()) {
+              <button
+                class="button"
+                [disabled]="conversationsLoading()"
+                (click)="loadConversations(listing)"
+              >
+                {{ conversationsLoading() ? 'Loading conversations…' : 'View conversations' }}
+              </button>
+            }
+            @if (conversationsError()) {
+              <p class="warning-text" role="alert">{{ conversationsError() }}</p>
+            }
+            @for (conversation of conversations(); track conversation.id) {
+              <details class="contact-entry">
+                <summary>
+                  {{ conversation.startedAt | date: 'MMM d, y, h:mm a' }} ·
+                  {{ conversation.durationSeconds | number: '1.0-0' }} sec
+                  @if (conversation.internal) {
+                    · Team preview
+                  }
+                </summary>
+                @for (turn of conversation.transcript; track $index) {
+                  <p class="preserve-lines">
+                    <strong>{{ turn.role === 'user' ? 'Visitor' : 'Assistant' }}:</strong>
+                    {{ turn.message }}
+                  </p>
+                } @empty {
+                  <p>No transcript was supplied.</p>
+                }
+              </details>
+            } @empty {
+              @if (conversationsLoaded()) {
+                <p class="field-help">No verified conversations yet.</p>
+              }
+            }
+            @if (conversationsCursor()) {
+              <button
+                class="button"
+                [disabled]="conversationsLoading()"
+                (click)="loadConversations(listing, true)"
+              >
+                Load more conversations
+              </button>
+            }
+          </section>
+        }
+        @if (currentTeam()?.status === 'active' && isAdmin()) {
+          <section class="management-actions management-actions--danger">
+            @if (listing.status === 'archived') {
+              <button
+                class="button"
+                [disabled]="busy()"
+                (click)="listingAction('restore', listing)"
+              >
+                Restore as draft</button
+              ><button
+                class="button button--danger"
+                [disabled]="busy()"
+                (click)="listingAction('delete', listing)"
+              >
+                Permanently delete
+              </button>
+            } @else {
+              <button
+                class="button button--danger"
+                [disabled]="busy()"
+                (click)="listingAction('archive', listing)"
+              >
+                Archive listing
+              </button>
+            }
+          </section>
+        }
+      } @else if (modal() === 'qr' && selectedListing(); as listing) {
+        <p>
+          Print this QR code or share the link. The address stays the same when you update the
+          published listing.
+        </p>
+        @if (qrUrl()) {
+          <img class="qr-preview" [src]="qrUrl()" alt="QR code for the public listing" />
+          <div class="management-actions">
+            <a class="button button--primary" [href]="qrUrl()" [download]="listing.id + '-qr.png'"
+              >Download QR code</a
+            ><button class="button" (click)="copyLink(listing)">Copy link</button
+            ><a class="button" [routerLink]="publicPath(listing)" target="_blank" rel="noopener"
+              >View listing ↗</a
+            >
+          </div>
+        } @else {
+          <p role="status">Preparing QR code…</p>
+        }
+        <p class="field-help">Unpublishing or archiving makes this public link unavailable.</p>
+      } @else if (modal() === 'voice') {
+        <p>
+          Choose one of your personal voices to make available to this team. Your original samples
+          and the rest of your library stay private.
+        </p>
+        <label
+          >Voice to share<select [(ngModel)]="selectedVoiceId">
+            <option value="">Choose a ready voice</option>
+            @for (voice of personalVoices(); track voice.id) {
+              <option [value]="voice.id">{{ voice.name }}</option>
+            }
+          </select></label
+        >
+        @if (!personalVoices().length) {
+          <p class="field-help">
+            No ready personal voices were found. Create a voice in your profile, then return here.
+          </p>
+          <a class="button" routerLink="/profile">Open my profile</a>
+        }
+        <div class="creation-promise">
+          <span class="material-symbols-outlined">verified_user</span>
+          <div>
+            By sharing, you allow this team to generate listing narration using the selected voice.
+            You can stop sharing at any time. Downloaded media cannot be recalled.
+          </div>
+        </div>
+        <footer class="dialog-footer">
+          <button class="button" [disabled]="busy()" (click)="revokeVoice()">Stop sharing</button
+          ><button
+            class="button button--primary"
+            [disabled]="busy() || !selectedVoiceId"
+            (click)="shareVoice()"
+          >
+            Agree & share voice
+          </button>
+        </footer>
+      }
+    </div>
+  </dialog>
+}

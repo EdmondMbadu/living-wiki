@@ -1,4 +1,10 @@
 <div class="boards-page min-h-screen bg-[var(--bg)] text-[var(--text)] selection:bg-[var(--accent)] selection:text-[var(--accent-contrast)]">
+  @if (teamContextId()) {
+    <div class="team-edit-notice" role="status"><a [routerLink]="['/teams', teamContextId()]"><span class="material-symbols-outlined">arrow_back</span>{{ teamContextName() }}</a><span><strong>Team working copy</strong> · Edits are shared with members. Publish from the team page when ready.</span></div>
+  }
+  @if (selectedBoard()?.teamId && !teamContextId()) {
+    <div class="mx-auto max-w-xl px-4 py-3"><app-team-contact [teamId]="selectedBoard()!.teamId!" [boardId]="selectedBoard()!.id" /></div>
+  }
   @if (stackDirectView()) {
     @if (selectedBoard(); as board) {
       <section
@@ -394,7 +400,7 @@
   } @else {
   <div class="boards-frame">
     @if (isSignedIn()) {
-      <app-workspace-sidebar active="home" [rail]="true"></app-workspace-sidebar>
+      <app-workspace-sidebar [active]="teamContextId() ? 'teams' : 'home'" [rail]="true"></app-workspace-sidebar>
     }
 
     <div #boardsScrollViewport class="boards-main" (scroll)="onBoardsViewportScroll($event)">
@@ -1272,7 +1278,7 @@
                     }
                     <span class="mosaic-card__overlay">
                       <strong>{{ isListingIntroCardPlaceholder(item.card) ? 'Set up intro card' : item.card.title }}</strong>
-                      <small>{{ isListingIntroCardPlaceholder(item.card) ? 'Only you can see this setup card · ' + item.board.title : item.board.title }}</small>
+                      <small>{{ isListingIntroCardPlaceholder(item.card) ? (teamContextId() ? 'Team-only setup card · ' : 'Only you can see this setup card · ') + item.board.title : item.board.title }}</small>
                     </span>
                   </button>
                   <button
@@ -3212,7 +3218,7 @@
                       <i></i>
                     </div>
                     <div class="listing-talking-setup-card__content">
-                      <span><span class="material-symbols-outlined">visibility_lock</span>Only you can see this setup card</span>
+                      <span><span class="material-symbols-outlined">visibility_lock</span>{{ teamContextId() ? 'Only your team can see this setup card' : 'Only you can see this setup card' }}</span>
                       <strong>Make yourself available to buyers</strong>
                       <p>Let visitors ask you questions about this property.</p>
                       <button type="button" (click)="openListingTalkingCardSetup(board, undefined, $event)">
@@ -3547,7 +3553,7 @@
                         </div>
                       } @else if (isListingIntroCardPlaceholder(card)) {
                         <div class="listing-intro-setup-card__content">
-                          <span><span class="material-symbols-outlined">visibility_lock</span>Only you can see this setup card</span>
+                          <span><span class="material-symbols-outlined">visibility_lock</span>{{ teamContextId() ? 'Only your team can see this setup card' : 'Only you can see this setup card' }}</span>
                           <strong>Welcome buyers in your own words</strong>
                           <p>Add a short personal introduction. Once published, this becomes the opening card visitors see first.</p>
                           <button type="button" (click)="openListingIntroCardSetup(cardHostBoard(board, card), card, $event)">
@@ -3557,7 +3563,7 @@
                         </div>
                       } @else if (isListingTalkingCardPlaceholder(card)) {
                         <div class="listing-talking-setup-card__content listing-talking-setup-card__content--saved">
-                          <span><span class="material-symbols-outlined">visibility_lock</span>Only you can see this setup card</span>
+                          <span><span class="material-symbols-outlined">visibility_lock</span>{{ teamContextId() ? 'Only your team can see this setup card' : 'Only you can see this setup card' }}</span>
                           <strong>Make yourself available to buyers</strong>
                           <p>Let visitors ask you questions about this property.</p>
                           <button type="button" (click)="openListingTalkingCardSetup(cardHostBoard(board, card), card, $event)">
@@ -3830,7 +3836,7 @@
                     <i></i>
                   </div>
                   <div class="listing-talking-setup-card__content">
-                    <span><span class="material-symbols-outlined">visibility_lock</span>Only you can see this setup card</span>
+                    <span><span class="material-symbols-outlined">visibility_lock</span>{{ teamContextId() ? 'Only your team can see this setup card' : 'Only you can see this setup card' }}</span>
                     <strong>Make yourself available to buyers</strong>
                     <p>Let visitors ask you questions about this property.</p>
                     <button type="button" (click)="openListingTalkingCardSetup(board, undefined, $event)">
@@ -7597,7 +7603,20 @@
                         </button>
                       </div>
 
-                      @if (stackVideoNarrationEnabled()) {
+                      @if (stackVideoNarrationEnabled() && board.teamId) {
+                        <section class="stack-personal-voice-library">
+                          <label>Team listing voice
+                            <select [value]="board.voiceOwnerId || ''" [disabled]="stackStudioDirty()" (change)="selectTeamNarrator(board, $any($event.target).value)">
+                              <option value="">System voice</option>
+                              @for (member of teamEditorMembers(); track member.uid) {
+                                @if (member.voice) { <option [value]="member.uid">{{ member.name }} · {{ member.voice.name }}</option> }
+                              }
+                            </select>
+                          </label>
+                          <p>Only voices shared with this team are available. {{ stackStudioDirty() ? 'Save your studio edits before changing the voice.' : 'Members can share or revoke their voice from the team’s Members tab.' }}</p>
+                        </section>
+                      }
+                      @if (stackVideoNarrationEnabled() && !board.teamId) {
                       <section class="stack-personal-voice-library" aria-labelledby="personal-voice-library-title">
                         <div class="stack-personal-voice__identity">
                           <span class="stack-personal-voice__icon material-symbols-outlined">graphic_eq</span>
@@ -9363,9 +9382,11 @@
           <section class="board-inside-display board-settings-privacy" aria-labelledby="board-settings-privacy-title">
             <span class="board-settings-privacy__icon material-symbols-outlined" aria-hidden="true">{{ boardSettingsDraft().visibility === 'private' ? 'lock' : 'public' }}</span>
             <span class="board-settings-privacy__copy">
-              <strong id="board-settings-privacy-title">{{ boardSettingsDraft().visibility === 'private' ? 'Private board' : 'Public board' }}</strong>
+              <strong id="board-settings-privacy-title">{{ settingsBoard.teamId ? 'Private team working copy' : boardSettingsDraft().visibility === 'private' ? 'Private board' : 'Public board' }}</strong>
               <small>
-                @if (settingsBoard.parentCardId) {
+                @if (settingsBoard.teamId) {
+                  All accepted team members can collaborate here. Manage the public version with Publish on the team page.
+                } @else if (settingsBoard.parentCardId) {
                   This board uses its parent board’s visibility.
                 } @else if (boardSettingsDraft().visibility === 'private') {
                   Only you can view this board.
@@ -9381,7 +9402,7 @@
               [class.board-settings-toggle--active]="boardSettingsDraft().visibility === 'private'"
               [attr.aria-checked]="boardSettingsDraft().visibility === 'private'"
               [attr.aria-label]="boardSettingsDraft().visibility === 'private' ? 'Make board public' : 'Make board private'"
-              [disabled]="boardSettingsSaving() || !!settingsBoard.parentCardId"
+              [disabled]="boardSettingsSaving() || !!settingsBoard.parentCardId || !!settingsBoard.teamId"
               (click)="setBoardSettingsVisibility(boardSettingsDraft().visibility === 'private' ? 'public' : 'private')"
             >
               <span class="board-settings-toggle__thumb" aria-hidden="true"></span>
@@ -9950,6 +9971,7 @@
         </div>
 
         <form class="boards-form" (submit)="saveCard($event)">
+          @if (!teamContextId()) {
           @if (editingCardId(); as parentCardId) {
             @if (editingParentCard(); as parentCard) {
               <section class="related-card-shortcut" aria-label="Board inside this card">
@@ -9980,6 +10002,7 @@
             </section>
           }
 
+          }
           @if (isSongCardForm()) {
             <section class="boards-card-wizard">
               <div class="boards-card-wizard__head">

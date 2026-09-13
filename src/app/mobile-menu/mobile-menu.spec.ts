@@ -3,6 +3,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AtlasService } from '../atlas.service';
 import { AuthService } from '../auth.service';
+import { TeamsService } from '../teams/teams.service';
+import { teamsServiceStub } from '../teams/teams.testing';
 import { WorkspaceNavigationOverlayService } from '../workspace-navigation/workspace-navigation';
 import { MobileMenuComponent } from './mobile-menu';
 
@@ -16,6 +18,7 @@ describe('MobileMenuComponent', () => {
     await TestBed.configureTestingModule({
       imports: [MobileMenuComponent],
       providers: [
+        { provide: TeamsService, useFactory: teamsServiceStub },
         provideZonelessChangeDetection(),
         provideRouter([]),
         {

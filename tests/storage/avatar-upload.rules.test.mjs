@@ -43,6 +43,54 @@ after(async () => {
   await testEnvironment?.cleanup();
 });
 
+async function seedTeam() {
+  await testEnvironment.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), 'teams', 'team-a'), { status: 'active' });
+    await setDoc(doc(context.firestore(), 'teams', 'team-a', 'members', ownerUid), { status: 'active', role: 'admin' });
+    await setDoc(doc(context.firestore(), 'teams', 'team-a', 'members', 'team-member'), { status: 'active', role: 'member' });
+  });
+}
+
+test('team media is private, immutable, membership-scoped, and revoked immediately on removal', async () => {
+  await seedTeam();
+  const path = 'team-media/team-a/listing-a/image.png';
+  const owner = testEnvironment.authenticatedContext(ownerUid).storage();
+  const member = testEnvironment.authenticatedContext('team-member').storage();
+  await assertSucceeds(uploadBytes(ref(member, path), new Uint8Array([1, 2, 3]), { contentType: 'image/png' }));
+  await assertSucceeds(getBytes(ref(owner, path)));
+  await assertSucceeds(getBytes(ref(member, path)));
+  await assertFails(getBytes(ref(testEnvironment.unauthenticatedContext().storage(), path)));
+  await assertFails(getBytes(ref(testEnvironment.authenticatedContext(otherUid).storage(), path)));
+  await assertFails(uploadBytes(ref(owner, path), new Uint8Array([4]), { contentType: 'image/png' }));
+  await assertFails(deleteObject(ref(member, path)));
+  await assertFails(uploadBytes(ref(member, 'team-media/team-a/listing-a/script.svg'), new Uint8Array([1]), { contentType: 'image/svg+xml' }));
+  await testEnvironment.withSecurityRulesDisabled(context => setDoc(doc(context.firestore(), 'teams', 'team-a', 'members', 'team-member'), { status: 'removed', role: 'member' }));
+  await assertFails(getBytes(ref(member, path)));
+});
+
+test('team branding is public-readable but only team admins can upload it', async () => {
+  await seedTeam();
+  const path = 'team-branding/team-a/logo.png';
+  const admin = testEnvironment.authenticatedContext(ownerUid).storage();
+  await assertSucceeds(uploadBytes(ref(admin, path), new Uint8Array([1]), { contentType: 'image/png' }));
+  await assertSucceeds(getBytes(ref(testEnvironment.unauthenticatedContext().storage(), path)));
+  await assertFails(uploadBytes(ref(testEnvironment.authenticatedContext('team-member').storage(), 'team-branding/team-a/other.png'), new Uint8Array([1]), { contentType: 'image/png' }));
+  await assertFails(uploadBytes(ref(admin, 'team-branding/team-b/logo.png'), new Uint8Array([1]), { contentType: 'image/png' }));
+});
+
+test('published team media requires the matching public snapshot and becomes private when unpublished', async () => {
+  await seedTeam();
+  const path = 'public-team-media/team-a/listing-a/image.png';
+  await testEnvironment.withSecurityRulesDisabled(async context => {
+    await uploadBytes(ref(context.storage(), path), new Uint8Array([1]), { contentType: 'image/png' });
+    await setDoc(doc(context.firestore(), 'boards', 'listing-a'), { visibility: 'public', team_id: 'team-a' });
+  });
+  const visitor = testEnvironment.unauthenticatedContext().storage();
+  await assertSucceeds(getBytes(ref(visitor, path)));
+  await testEnvironment.withSecurityRulesDisabled(context => setDoc(doc(context.firestore(), 'boards', 'listing-a'), { visibility: 'private', team_id: 'team-a' }));
+  await assertFails(getBytes(ref(visitor, path)));
+});
+
 test('private board videos and trailers in both formats are readable only by the owner', async () => {
   const ownerStorage = testEnvironment.authenticatedContext(ownerUid).storage();
   const outsiderStorage = testEnvironment.authenticatedContext(otherUid).storage();

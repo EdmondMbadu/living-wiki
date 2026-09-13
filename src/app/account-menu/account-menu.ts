@@ -1,6 +1,7 @@
 import { Component, ElementRef, HostListener, computed, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
+import { TeamsService } from '../teams/teams.service';
 import { profileIconByCode, profileIconForSeed } from '../profile/profile-icons';
 
 @Component({
@@ -9,6 +10,7 @@ import { profileIconByCode, profileIconForSeed } from '../profile/profile-icons'
   templateUrl: './account-menu.html',
 })
 export class AccountMenuComponent {
+  readonly teams = inject(TeamsService);
   private readonly authService = inject(AuthService);
   private readonly elementRef = inject(ElementRef);
   private readonly router = inject(Router);
@@ -33,6 +35,7 @@ export class AccountMenuComponent {
   );
   toggleMenu(): void {
     this.menuOpen.update((open) => !open);
+    if (this.menuOpen()) void this.teams.refreshAccount();
   }
 
   closeMenu(): void {

@@ -1,0 +1,22 @@
+:host .team-edit-notice {
+  position: relative;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  background: #216b4c;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+:host .team-edit-notice a {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 650;
+  color: #fff;
+}

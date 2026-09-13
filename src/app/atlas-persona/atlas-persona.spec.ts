@@ -2,6 +2,8 @@ import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { AuthService } from '../auth.service';
+import { TeamsService } from '../teams/teams.service';
+import { teamsServiceStub } from '../teams/teams.testing';
 import type { AtlasItem, AtlasSpeechVoiceConfig } from '../atlas.models';
 import { AtlasService } from '../atlas.service';
 import { AtlasPersonaComponent } from './atlas-persona';
@@ -82,6 +84,7 @@ describe('AtlasPersonaComponent', () => {
     await TestBed.configureTestingModule({
       imports: [AtlasPersonaComponent],
       providers: [
+        { provide: TeamsService, useFactory: teamsServiceStub },
         provideZonelessChangeDetection(),
         provideRouter([]),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: new Map([['atlasId', 'atlas-1']]) } } },

@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AtlasService } from '../atlas.service';
 import { AuthService } from '../auth.service';
+import { TeamsService } from '../teams/teams.service';
 import {
   WorkspaceNavigationOverlayService,
   WorkspaceNavigationService,
@@ -13,17 +14,20 @@ class NavigationTestPageComponent {}
 
 describe('WorkspaceNavigationService', () => {
   const uid = signal('user-1');
+  const activeMemberships = signal<{ teamId: string }[]>([]);
   const profile = signal({ preferredCitySlug: 'my-living-wiki-las-vegas' });
 
   beforeEach(() => {
     window.localStorage.removeItem('lw-board-actions:user-1');
     window.localStorage.removeItem('livingwiki-board-actions-v1:user-1');
     uid.set('user-1');
+    activeMemberships.set([]);
     profile.set({ preferredCitySlug: 'my-living-wiki-las-vegas' });
 
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
+        { provide: TeamsService, useValue: { activeMemberships, sidebarRoute: () => '/teams/team-1' } },
         provideRouter([{ path: '**', component: NavigationTestPageComponent }]),
         {
           provide: AuthService,
@@ -78,6 +82,17 @@ describe('WorkspaceNavigationService', () => {
     service.refreshSavedBoards();
 
     expect(service.primaryItems().some((item) => item.key === 'saved')).toBeTrue();
+  });
+
+  it('shows Teams only after an active membership is available', () => {
+    const service = TestBed.inject(WorkspaceNavigationService);
+    expect(service.primaryItems().some(item => item.key === 'teams')).toBeFalse();
+    activeMemberships.set([{ teamId: 'team-1' }]);
+    const items = service.primaryItems();
+    expect(items.find(item => item.key === 'teams')?.route).toBe('/teams/team-1');
+    expect(items.findIndex(item => item.key === 'teams')).toBe(items.findIndex(item => item.key === 'boards') + 1);
+    activeMemberships.set([]);
+    expect(service.primaryItems().some(item => item.key === 'teams')).toBeFalse();
   });
 
   it('derives active state from the route instead of host inputs', async () => {

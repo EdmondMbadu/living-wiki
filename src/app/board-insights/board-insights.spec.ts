@@ -4,6 +4,8 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { AuthService } from '../auth.service';
+import { TeamsService } from '../teams/teams.service';
+import { teamsServiceStub } from '../teams/teams.testing';
 import { AtlasService } from '../atlas.service';
 import { BoardAnalyticsService, type BoardInsights } from '../board-analytics.service';
 import { BoardInsightsComponent } from './board-insights';
@@ -51,6 +53,7 @@ describe('BoardInsightsComponent', () => {
     await TestBed.configureTestingModule({
       imports: [BoardInsightsComponent],
       providers: [
+        { provide: TeamsService, useFactory: teamsServiceStub },
         provideZonelessChangeDetection(),
         provideRouter([]),
         { provide: ActivatedRoute, useValue: { paramMap } },

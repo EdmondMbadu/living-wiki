@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto';
 import { FieldValue, Timestamp, type DocumentReference } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { db } from './firebase';
+import { isActiveTeamMember } from './teams';
+import { recordTeamActivity } from './team-analytics';
 
 export const BOARD_ANALYTICS_SHARD_COUNT = 8;
 export const BOARD_ANALYTICS_EVENT_TYPES = [
@@ -179,6 +181,8 @@ export const recordBoardAnalyticsEvent = onCall(
     if (request.auth?.uid && request.auth.uid === board['owner_user_id']) {
       return { accepted: false, reason: 'owner' };
     }
+    const teamId = typeof board['team_id'] === 'string' ? board['team_id'] : '';
+    if (teamId && request.auth?.uid && await isActiveTeamMember(teamId, request.auth.uid)) return { accepted: false, reason: 'team_member' };
 
     const day = analyticsDay();
     const source = classifyBoardAnalyticsSource(
@@ -210,6 +214,8 @@ export const recordBoardAnalyticsEvent = onCall(
         type === 'board_view' ? transaction.get(uniqueReference) : Promise.resolve(null),
       ]);
       if (numeric(rateSnapshot.data()?.['count']) >= 500) return 'rate_limited';
+
+      if (teamId) await recordTeamActivity(transaction, { teamId, boardId, visitorId, sessionId, type, day });
 
       transaction.set(rateReference, {
         board_id: boardId,

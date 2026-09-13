@@ -1,6 +1,9 @@
 import { RenderMode, ServerRoute } from '@angular/ssr';
 
 export const serverRoutes: ServerRoute[] = [
+  { path: 'teams/**', renderMode: RenderMode.Client },
+  { path: 'teams', renderMode: RenderMode.Client },
+  { path: 'team/:slug', renderMode: RenderMode.Client },
   // Marketing / public pages can be prerendered
   { path: '', renderMode: RenderMode.Prerender },
   { path: 'business', renderMode: RenderMode.Prerender },

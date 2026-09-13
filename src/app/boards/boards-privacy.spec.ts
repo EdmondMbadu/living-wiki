@@ -6,6 +6,7 @@ function harness(): any {
   const component = Object.create(BoardsComponent.prototype);
   Object.assign(component, {
     authService: { uid: () => 'owner' },
+    teamContextId: () => '',
     isBrowser: true,
     storage: {},
     firestore: null,
@@ -48,6 +49,52 @@ function savedBoard(component: any, overrides: Record<string, unknown> = {}): an
 }
 
 describe('board privacy and video creation', () => {
+  it('grants studio access to active teammates without making them the personal owner', () => {
+    const component = harness();
+    component.teamContextId = () => 'team-a';
+    component.teams = { hasAccess: () => true };
+    const board = savedBoard(component, { team_id: 'team-a', owner_user_id: 'team:team-a', team_status: 'draft', team_revision: 2 });
+    expect(component.canEditBoard(board)).toBeTrue();
+    expect(component.canUseStackStudio(board)).toBeTrue();
+    expect(component.canStoreBoardLocally(board)).toBeFalse();
+    component.teams.hasAccess = () => false;
+    expect(component.canEditBoard(board)).toBeFalse();
+    expect(component.canUseStackStudio(board)).toBeFalse();
+  });
+
+  it('preserves team-only setup cards for collaborators but not public visitors', () => {
+    const component = harness();
+    const record = { team_id: 'team-a', owner_user_id: 'team:team-a', title: 'Home', cards: [
+      { id: 'private-intro', title: 'Setup', authorOnly: true }, { id: 'living-room', title: 'Living room' },
+    ] };
+    component.teamContextId = () => 'team-a';
+    expect(component.boardFromRecord('listing-a', record).cards.length).toBe(2);
+    component.teamContextId = () => '';
+    expect(component.boardFromRecord('listing-a', record).cards.map((card: any) => card.id)).toEqual(['living-room']);
+  });
+
+  it('routes team saves through revisioned team persistence and keeps working copies private', async () => {
+    const component = harness(); component.teamContextId = () => 'team-a';
+    const raw = { team_id: 'team-a', owner_user_id: 'team:team-a', team_status: 'draft', team_revision: 4, title: 'Shared home', cards: [], visibility: 'private' };
+    component.teams = { saveBoard: jasmine.createSpy('team save').and.resolveTo(raw) };
+    const board = component.boardFromRecord('listing-a', raw);
+    const saved = await component.persistBoard({ ...board, visibility: 'public' });
+    expect(component.teams.saveBoard).toHaveBeenCalledWith('team-a', 'listing-a', jasmine.objectContaining({ visibility: 'private' }), 4);
+    expect(saved.ownerUserId).toBe('team:team-a'); expect(saved.teamRevision).toBe(4);
+  });
+
+  it('stores both team video variants with the team, never in a member’s personal video library', async () => {
+    const component = harness(); component.teamContextId = () => 'team-a';
+    const board = savedBoard(component, { team_id: 'team-a', owner_user_id: 'team:team-a', team_status: 'draft' });
+    component.uploadPublishedStackVariant = jasmine.createSpy('team-scoped upload').and.callFake(async (_uid: string, _board: unknown, _kind: string, ratio: string) => ({ path: `team-media/team-a/${ratio}`, url: `blob:${ratio}`, file: new File(['video'], 'video.mp4') }));
+    component.saveStackVideoToLibrary = jasmine.createSpy('personal library').and.rejectWith(new Error('Team media must not use the personal library'));
+    const result = { blob: new Blob(['video'], { type: 'video/mp4' }), mimeType: 'video/mp4', extension: 'mp4', durationSeconds: 3 };
+    const pair = await component.storeStackVideoPair(board, { vertical: result, landscape: result }, 'full', new Date().toISOString());
+    expect(component.uploadPublishedStackVariant).toHaveBeenCalledTimes(2);
+    expect(component.saveStackVideoToLibrary).not.toHaveBeenCalled();
+    expect(pair.verticalUpload.path).toContain('team-media/team-a/');
+  });
+
   it('restores the saved privacy setting if the settings write fails', async () => {
     const component = harness();
     const board = savedBoard(component);

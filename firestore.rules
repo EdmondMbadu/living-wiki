@@ -10,6 +10,43 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isTeamMember(teamId) {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/teams/$(teamId)).data.status == 'active'
+        && get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.status == 'active';
+    }
+
+    match /teams/{teamId} {
+      allow read: if isTeamMember(teamId);
+      allow write: if false;
+      match /members/{uid} {
+        allow get: if isOwner(uid) || (isTeamMember(teamId) && get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.role == 'admin');
+        allow list, write: if false;
+      }
+      match /listings/{boardId} { allow read: if isTeamMember(teamId); allow write: if false; }
+      match /activity/{eventId} { allow read: if isTeamMember(teamId); allow write: if false; }
+      match /wizard_drafts/{draftId} {
+        allow read: if isTeamMember(teamId);
+        allow write: if false;
+      }
+    }
+    match /team_boards/{boardId} {
+      allow read: if isTeamMember(resource.data.team_id);
+      allow write: if false;
+      match /{nested=**} { allow read, write: if false; }
+    }
+    match /users/{uid}/team_memberships/{teamId} { allow read: if isOwner(uid); allow write: if false; }
+    match /users/{uid}/team_notifications/{notificationId} {
+      allow read: if isOwner(uid);
+      allow update: if isOwner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']) && request.resource.data.read is bool;
+      allow create, delete: if false;
+    }
+    match /public_team_pages/{teamId} { allow read: if true; allow write: if false; }
+    match /public_team_listings/{listingId} { allow read: if true; allow write: if false; }
+    match /team_slugs/{slug} { allow read, write: if false; }
+    match /team_creation_quotas/{uid} { allow read, write: if false; }
+    match /team_invitations/{inviteId} { allow read, write: if false; }
+
     function isPlatformAdmin() {
       return isSignedIn()
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
@@ -428,14 +465,8 @@ service cloud.firestore {
     }
 
     function hasNoCityPublishingMetadata(data) {
-      return (
-        !data.keys().hasAny(['atlas_id'])
-        || data.atlas_id == null
-      )
-      && (
-        !data.keys().hasAny(['generated_for_atlas_id'])
-        || data.generated_for_atlas_id == null
-      )
+      return data.get('atlas_id', null) == null
+      && data.get('generated_for_atlas_id', null) == null
       && !data.keys().hasAny([
         'origin', 'publisher_type',
         'generation_job_id', 'generation_item_id', 'generation_key',
@@ -870,6 +901,11 @@ service cloud.firestore {
     }
 
     match /boards/{boardId} {
+      function personalBoardMutation() {
+        // Create paths already enforce their strict field allowlists. Existing
+        // team snapshots must never enter a legacy owner or platform-admin write path.
+        return request.method == 'create' || resource.data.get('team_id', '') == '';
+      }
       allow get: if resource.data.visibility == 'public'
         || (isSignedIn() && resource.data.owner_user_id == request.auth.uid)
         || (resource.data.atlas_id is string && canAdminAtlasById(resource.data.atlas_id))
@@ -881,15 +917,16 @@ service cloud.firestore {
       // Voice and visibility are intentionally small updates. In particular,
       // changing privacy must not re-validate or rewrite every card on a
       // historical board.
-      allow update: if isSignedIn()
-        && resource.data.owner_user_id == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'stackNarratorVoiceId',
           'visibility',
           'photoStudioDraft',
           'updated_at_iso',
           'server_updated_at'
         ])
+        && isSignedIn()
+        && personalBoardMutation()
+        && resource.data.owner_user_id == request.auth.uid
         && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['photoStudioDraft'])
           || (request.resource.data.photoStudioDraft == false && request.resource.data.visibility == 'public')
@@ -935,6 +972,7 @@ service cloud.firestore {
         && request.resource.data.server_updated_at == request.time;
 
       allow update: if isSignedIn()
+        && personalBoardMutation()
         && resource.data.owner_user_id == request.auth.uid
         && request.resource.data.owner_user_id == resource.data.owner_user_id
         && request.resource.data.id == boardId
@@ -956,6 +994,7 @@ service cloud.firestore {
         && request.resource.data.server_updated_at == request.time;
 
       allow create, update: if isSignedIn()
+        && personalBoardMutation()
         && request.resource.data.owner_user_id == request.auth.uid
         && request.resource.data.id == boardId
         && (request.method == 'create' || resource.data.owner_user_id == request.auth.uid)
@@ -1010,16 +1049,9 @@ service cloud.firestore {
             && request.resource.data.custom_slug.matches('^[a-z0-9]+(-[a-z0-9]+)*$')
           )
         )
-        && (
-          request.method == 'create'
-            ? !request.resource.data.keys().hasAny(['custom_slug'])
-            : (
-              resource.data.keys().hasAny(['custom_slug'])
-                ? request.resource.data.keys().hasAny(['custom_slug'])
-                  && request.resource.data.custom_slug == resource.data.custom_slug
-                : !request.resource.data.keys().hasAny(['custom_slug'])
-            )
-        )
+        && (request.method == 'create'
+          ? !request.resource.data.keys().hasAny(['custom_slug'])
+          : request.resource.data.get('custom_slug', null) == resource.data.get('custom_slug', null))
         && request.resource.data.owner_display_name is string
         && request.resource.data.owner_display_name.size() <= 120
         && request.resource.data.owner_photo_url is string
@@ -1222,6 +1254,7 @@ service cloud.firestore {
       // block a newly rendered trailer because of an unrelated legacy field.
       // Use updateDoc so callable-written script metadata and cards are preserved.
       allow update: if isSignedIn()
+        && personalBoardMutation()
         && resource.data.owner_user_id == request.auth.uid
         && request.resource.data.owner_user_id == resource.data.owner_user_id
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
@@ -1280,6 +1313,7 @@ service cloud.firestore {
 
       // Completed videos only change video metadata, even on legacy/private boards.
       allow update: if isSignedIn()
+        && personalBoardMutation()
         && resource.data.owner_user_id == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'socialVideoUrl', 'socialVideoMimeType', 'socialVideoUpdatedAt', 'socialVideoRenderVersion',
@@ -1331,12 +1365,14 @@ service cloud.firestore {
       }
 
       allow update: if isSignedIn()
+        && personalBoardMutation()
         && resource.data.owner_user_id == request.auth.uid
         && (clearsBoardVideo('social') || clearsBoardVideo('trailer'))
         && request.resource.data.updated_at_iso is string
         && request.resource.data.server_updated_at == request.time;
 
       allow create, update: if isSignedIn()
+        && personalBoardMutation()
         && (
           (
             request.method == 'create'
@@ -1724,6 +1760,7 @@ service cloud.firestore {
         && request.resource.data.updated_at_iso is string
         && request.resource.data.server_updated_at == request.time;
       allow delete: if isSignedIn()
+        && personalBoardMutation()
         && (resource.data.owner_user_id == request.auth.uid || isPlatformAdmin());
 
       match /video_settings/{settingId} {

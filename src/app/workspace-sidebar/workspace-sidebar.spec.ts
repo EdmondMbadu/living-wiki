@@ -3,6 +3,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AtlasService } from '../atlas.service';
 import { AuthService } from '../auth.service';
+import { TeamsService } from '../teams/teams.service';
+import { teamsServiceStub } from '../teams/teams.testing';
 import { WorkspaceNavigationOverlayService } from '../workspace-navigation/workspace-navigation';
 import { WorkspaceSidebarComponent } from './workspace-sidebar';
 
@@ -17,6 +19,7 @@ describe('WorkspaceSidebarComponent', () => {
     await TestBed.configureTestingModule({
       imports: [WorkspaceSidebarComponent],
       providers: [
+        { provide: TeamsService, useFactory: teamsServiceStub },
         provideZonelessChangeDetection(),
         provideRouter([]),
         {

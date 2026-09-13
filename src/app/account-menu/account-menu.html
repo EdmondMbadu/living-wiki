@@ -53,6 +53,21 @@
         </div>
 
         <div class="py-1.5">
+          <a routerLink="/teams/new" role="menuitem" class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--accent)] hover:bg-[var(--soft-fill)]" (click)="closeMenu()">
+            <span class="material-symbols-outlined text-base">group_add</span> Create team
+          </a>
+          @if (teams.memberships().length) {
+            <a [routerLink]="teams.sidebarRoute()" role="menuitem" class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--soft-fill)]" (click)="closeMenu()">
+              <span class="material-symbols-outlined text-base">groups</span> My teams
+            </a>
+          }
+          <a routerLink="/teams/invitations" role="menuitem" class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--soft-fill)]" (click)="closeMenu()">
+            <span class="material-symbols-outlined text-base">mail</span> Team invitations
+            @if (teams.invitations().length) { <span class="ml-auto rounded-full bg-[var(--soft-fill)] px-2">{{ teams.invitations().length }}</span> }
+          </a>
+          @if (teams.canCreate() === false && teams.memberships().length && !isAdmin()) {
+            <p class="px-4 pb-2 text-xs text-[var(--muted)]">One created team per account. You can join other teams.</p>
+          }
           <a
             routerLink="/profile"
             role="menuitem"
