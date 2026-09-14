@@ -16484,7 +16484,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   boardQrUrl(board: Board): string {
-    return board.visibility === 'public'
+    // A team's editable working copy stays private even after its public board
+    // is published. Its QR must still point to that public board, never localhost.
+    return board.visibility === 'public' || !!board.teamId
       ? publicBoardQrUrl(board.id)
       : this.stackShareUrl(board);
   }

@@ -550,6 +550,9 @@ describe('TeamsComponent', () => {
     expect(image.src).toBe(BoardsComponent.prototype.stackQrImageUrl({
       ...listing, visibility: 'public',
     } as any));
+    expect(image.src).toBe(BoardsComponent.prototype.stackQrImageUrl({
+      ...listing, visibility: 'private', teamId: 'team-a', teamDraft: true,
+    } as any));
     expect(download.href).toBe(image.src);
     expect(download.download).toBe(`${listing.id}-qr.svg`);
     expect(dialog.querySelector('a[target="_blank"]')?.getAttribute('href')).toBe(publicBoardQrUrl(listing.id));
@@ -581,7 +584,7 @@ describe('TeamsComponent', () => {
     const clipboard = spyOn(navigator.clipboard, 'writeText').and.resolveTo();
     await page.copyLink(data.listings[1]);
     expect(clipboard).toHaveBeenCalledOnceWith(
-      'https://www.livingwiki.com/boards/listing-1?view=stack',
+      'https://www.livingwiki.com/boards/listing-1',
     );
   });
 
