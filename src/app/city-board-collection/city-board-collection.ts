@@ -1,4 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
+import { PlacePhotoDirective } from '../place-photo.directive';
 import { Component, HostListener, LOCALE_ID, OnDestroy, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
@@ -34,7 +35,7 @@ const SPOTLIGHT_ROTATION_MS = 5_000;
 
 @Component({
   selector: 'app-city-board-collection',
-  imports: [RouterLink, ThemeToggleComponent, MobileMenuComponent, WorkspaceSidebarComponent, CustomPublicUrlDialogComponent],
+  imports: [PlacePhotoDirective, RouterLink, ThemeToggleComponent, MobileMenuComponent, WorkspaceSidebarComponent, CustomPublicUrlDialogComponent],
   templateUrl: './city-board-collection.html',
   styleUrl: './city-board-collection.css',
 })

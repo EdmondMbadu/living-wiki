@@ -10,6 +10,7 @@ import { TeamsComponent } from './teams';
 import { TeamsService } from './teams.service';
 import { teamsServiceStub } from './teams.testing';
 import { BoardsComponent } from '../boards/boards';
+import { publicBoardQrUrl } from '../board-qr-code';
 import type { TeamDashboard, TeamListing, TeamReport } from './team.models';
 
 function reportFixture(days = 30): TeamReport {
@@ -119,6 +120,8 @@ function dashboardFixture(): TeamDashboard {
 }
 
 describe('TeamsComponent', () => {
+  // Router tests can replace the URL before afterAll runs.
+  const qrPreview = location.search.includes('team-qr-preview=1');
   // Optional read-only visual fixture, served only by Karma's local debug page.
   // Open /debug.html?team-preview=1 after running this spec in watch mode.
   let preview: HTMLElement | null = null;
@@ -126,7 +129,7 @@ describe('TeamsComponent', () => {
   afterAll(async () => {
     if (
       location.search.includes('team-settings-preview=1') ||
-      location.search.includes('team-preview=1')
+      location.search.includes('team-preview=1') || qrPreview
     ) {
       for (const href of [
         'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
@@ -154,6 +157,11 @@ describe('TeamsComponent', () => {
       document.body.replaceChildren(preview);
       document.head.append(...previewStyles);
       document.body.style.margin = '0';
+      if (qrPreview) {
+        const dialog = preview.querySelector('dialog');
+        dialog?.removeAttribute('open');
+        dialog?.showModal();
+      }
     }
   });
   let fixture: ComponentFixture<TeamsComponent>;
@@ -525,6 +533,86 @@ describe('TeamsComponent', () => {
     expect(host.textContent).toContain('Open working listing');
     expect(host.textContent).not.toContain('Private contacts');
   });
+  it('automatically renders the same QR as the public board without a canvas', async () => {
+    const page = await render();
+    const listing = data.listings[1];
+    const canvas = spyOn(HTMLCanvasElement.prototype, 'getContext').and.throwError('Canvas unavailable');
+    page.showModal('qr', listing);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    const image = dialog.querySelector('.qr-preview') as HTMLImageElement;
+    const download = dialog.querySelector('a[download]') as HTMLAnchorElement;
+    expect(page.modalError()).toBe('');
+    expect(image).not.toBeNull();
+    expect(image.src).toMatch(/^data:image\/svg\+xml/);
+    expect(image.src).toBe(BoardsComponent.prototype.stackQrImageUrl({
+      ...listing, visibility: 'public',
+    } as any));
+    expect(download.href).toBe(image.src);
+    expect(download.download).toBe(`${listing.id}-qr.svg`);
+    expect(dialog.querySelector('a[target="_blank"]')?.getAttribute('href')).toBe(publicBoardQrUrl(listing.id));
+    expect(dialog.textContent).not.toContain('Preparing QR code');
+    expect(canvas).not.toHaveBeenCalled();
+
+    await image.decode();
+    expect(image.naturalWidth).toBeGreaterThan(0);
+    expect(image.naturalHeight).toBeGreaterThan(0);
+
+    if (qrPreview) {
+      preview = fixture.nativeElement.cloneNode(true) as HTMLElement;
+      preview.removeAttribute('id');
+      previewStyles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]')).map(
+        (style) => style.cloneNode(true) as HTMLElement,
+      );
+    }
+
+    const original = image.src;
+    page.closeModal();
+    page.showModal('qr', { ...listing, updatedAt: '2026-09-14T12:00:00Z', revision: 2 });
+    expect(page.qrUrl()).toBe(original);
+    page.showModal('qr', data.listings[3]);
+    expect(page.qrUrl()).not.toBe(original);
+  });
+
+  it('copies the public QR destination instead of the local development address', async () => {
+    const page = await render();
+    const clipboard = spyOn(navigator.clipboard, 'writeText').and.resolveTo();
+    await page.copyLink(data.listings[1]);
+    expect(clipboard).toHaveBeenCalledOnceWith(
+      'https://www.livingwiki.com/boards/listing-1?view=stack',
+    );
+  });
+
+  it('keeps sharing links available after a QR failure and lets the user retry', async () => {
+    const page = await render();
+    const listing = { ...data.listings[1], id: 'x'.repeat(5000) };
+    page.showModal('qr', listing);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    expect(dialog.textContent).toContain('The QR code could not be created');
+    expect(dialog.textContent).not.toContain('Preparing QR code');
+    expect(dialog.textContent).toContain('Copy link');
+    expect(dialog.textContent).toContain('View listing');
+    expect(dialog.querySelector('.qr-preview')).toBeNull();
+    expect(dialog.querySelector('a[download]')).toBeNull();
+    const retry = Array.from(dialog.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Try again',
+    );
+    expect(retry).toBeDefined();
+
+    listing.id = data.listings[1].id;
+    retry!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(page.modalError()).toBe('');
+    expect(dialog.querySelector('.qr-preview')).not.toBeNull();
+    expect(dialog.textContent).not.toContain('Try again');
+  });
+
   it('public pages use only the public projection and do not load the workspace or analytics', async () => {
     authenticated.set(false);
     uid.set('');

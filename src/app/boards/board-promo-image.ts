@@ -11,6 +11,7 @@ export type BoardPromoImageSpec = {
   cardCount: number;
   coverImageUrl: string;
   boardUrl: string;
+  qrUrl?: string;
   boardTypeLabel?: string;
   icon?: string;
   showQrCode: boolean;
@@ -128,7 +129,7 @@ export async function renderBoardPromoImage(spec: BoardPromoImageSpec): Promise<
   if (!context) throw new Error('This browser could not prepare the promo image.');
 
   const qrUrl = spec.showQrCode
-    ? generateQrSvgDataUrl(boardUrl, { errorCorrectionLevel: 'H', margin: 4 })
+    ? generateQrSvgDataUrl(spec.qrUrl?.trim() || boardUrl, { errorCorrectionLevel: 'H', margin: 4 })
     : '';
   const [coverImage, qrImage] = await Promise.all([
     loadPromoImage(spec.coverImageUrl),

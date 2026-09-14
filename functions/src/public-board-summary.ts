@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import type { Bucket } from '@google-cloud/storage';
 import sharp from 'sharp';
+import { boardCoverPhotoUrl, placePhotoUrl } from './place-photo';
 
 export const PUBLIC_BOARD_SUMMARY_SCHEMA_VERSION = 1;
 
@@ -128,6 +129,7 @@ export async function optimizePublicBoardCover(
   boardId: string,
   sourceImageUrl: string,
 ): Promise<OptimizedBoardCover> {
+  if (placePhotoUrl(sourceImageUrl)) throw new Error('Google Places photos must not be permanently mirrored.');
   const source = await fetchImage(sourceImageUrl);
   const hash = createHash('sha256').update(source.buffer).digest('hex').slice(0, 24);
   const sharpOptions = { failOn: 'warning' as const, limitInputPixels: 40_000_000 };
@@ -186,7 +188,8 @@ export function publicBoardSummaryFromBoard(
     !card || typeof card !== 'object' || (card as BoardData)['authorOnly'] !== true);
   const favoriteCardCount = cards.filter((card) =>
     card && typeof card === 'object' && (card as BoardData)['status'] === 'favorite').length;
-  const sourceImageUrl = stringValue(board['imageUrl']);
+  const sourceImageUrl = boardCoverPhotoUrl(boardId, board);
+  if (placePhotoUrl(sourceImageUrl)) cover = null;
 
   return {
     schema_version: PUBLIC_BOARD_SUMMARY_SCHEMA_VERSION,

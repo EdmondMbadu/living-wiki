@@ -1,6 +1,7 @@
 import { AfterViewChecked, Component, ElementRef, HostListener, LOCALE_ID, OnDestroy, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { PlacePhotoDirective } from '../place-photo.directive';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import type { AtlasItem, ChatHistoryItem, ChatStoredMessage, ChatThreadItem, CitationPassage, MappableLocation, TravelGuideCard, TravelGuideStructuredResponse, WikiType } from '../atlas.models';
@@ -408,6 +409,7 @@ const VOICE_LANGUAGES: VoiceLanguageOption[] = [
 @Component({
   selector: 'app-chat',
   imports: [
+    PlacePhotoDirective,
     FormsModule,
     RouterLink,
     ThemeToggleComponent,

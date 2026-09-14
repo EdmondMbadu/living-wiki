@@ -1,4 +1,6 @@
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
+import { PlacePhotoDirective } from '../place-photo.directive';
+import { boardCoverPhotoUrl, stablePlacePhotoUrl } from '../place-photo';
 import { AfterViewChecked, Component, computed, ElementRef, HostListener, inject, Injector, LOCALE_ID, OnDestroy, OnInit, PLATFORM_ID, signal, ViewChild, type WritableSignal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -638,6 +640,7 @@ interface PublicWikiFeelingSticker {
 @Component({
   selector: 'app-public-wikis',
   imports: [
+    PlacePhotoDirective,
     DecimalPipe,
     RouterLink,
     ThemeToggleComponent,
@@ -2037,7 +2040,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
       description: this.stringField(data, 'description'),
       icon: this.stringField(data, 'icon') || 'dashboard_customize',
       tone: this.stringField(data, 'tone') || 'teal',
-      imageUrl: this.stringField(data, 'imageUrl'),
+      imageUrl: boardCoverPhotoUrl(id, data),
       logoUrl: this.stringField(data, 'logoUrl'),
       likeCount: this.numberField(data, 'like_count', 0),
       cards: rawCards
@@ -2100,7 +2103,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
       notes: this.stringField(data, 'notes'),
       type: this.stringField(data, 'type'),
       status: this.stringField(data, 'status'),
-      imageUrl: this.stringField(data, 'imageUrl'),
+      imageUrl: stablePlacePhotoUrl(this.stringField(data, 'imageUrl'), data['placeId']),
       audioPreviewUrl: this.stringField(data, 'audioPreviewUrl'),
       spotifyTrackId: this.stringField(data, 'spotifyTrackId'),
       spotifyTrackUrl: this.stringField(data, 'spotifyTrackUrl'),

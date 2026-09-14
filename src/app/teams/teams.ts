@@ -25,6 +25,7 @@ import { TeamsService } from './teams.service';
 import { TeamContactComponent } from './team-contact';
 import { TeamMemberAvatarComponent } from './team-member-avatar';
 import { BoardsComponent } from '../boards/boards';
+import { publicBoardQrImageUrl, publicBoardQrUrl } from '../board-qr-code';
 import { httpsCallable } from 'firebase/functions';
 import { getFirebaseFunctions } from '../firebase.client';
 import {
@@ -577,6 +578,9 @@ export class TeamsComponent {
   publicPath(listing: TeamListing): string {
     return `/boards/${encodeURIComponent(listing.id)}`;
   }
+  publicShareUrl(listing: TeamListing): string {
+    return publicBoardQrUrl(listing.id);
+  }
   async switchTeam(value: string): Promise<void> {
     if (value) await this.router.navigate(['/teams', value]);
   }
@@ -630,7 +634,7 @@ export class TeamsComponent {
       this.conversationsCursor.set(null);
       if (this.mayPublish(listing)) void this.loadContacts(listing);
     }
-    if (kind === 'qr' && listing) void this.makeQr(listing);
+    if (kind === 'qr' && listing) this.makeQr(listing);
     if (kind === 'voice') {
       this.selectedVoiceId = '';
       void this.loadVoices();
@@ -989,23 +993,18 @@ export class TeamsComponent {
       'Listing voice updated. Publish when you are ready.',
     );
   }
-  async makeQr(listing: TeamListing): Promise<void> {
+  makeQr(listing: TeamListing): void {
+    this.modalError.set('');
+    this.qrUrl.set('');
     try {
-      const qr = await import('qrcode');
-      const url = `${window.location.origin}${this.publicPath(listing)}?utm_source=qr-code&utm_medium=team`;
-      const dataUrl = await qr.toDataURL(url, {
-        width: 600,
-        margin: 2,
-        color: { dark: '#123b2b', light: '#ffffff' },
-      });
-      if (this.selectedListing()?.id === listing.id) this.qrUrl.set(dataUrl);
+      this.qrUrl.set(publicBoardQrImageUrl(listing.id));
     } catch {
       this.modalError.set('The QR code could not be created. Please try again.');
     }
   }
   async copyLink(listing: TeamListing): Promise<void> {
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}${this.publicPath(listing)}`);
+      await navigator.clipboard.writeText(this.publicShareUrl(listing));
       this.notice.set('Listing link copied.');
     } catch {
       this.modalError.set('Could not copy automatically. Use the View listing link.');

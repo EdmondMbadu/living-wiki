@@ -1855,17 +1855,22 @@
         </p>
         @if (qrUrl()) {
           <img class="qr-preview" [src]="qrUrl()" alt="QR code for the public listing" />
-          <div class="management-actions">
-            <a class="button button--primary" [href]="qrUrl()" [download]="listing.id + '-qr.png'"
-              >Download QR code</a
-            ><button class="button" (click)="copyLink(listing)">Copy link</button
-            ><a class="button" [routerLink]="publicPath(listing)" target="_blank" rel="noopener"
-              >View listing ↗</a
-            >
-          </div>
+        } @else if (modalError()) {
+          <button class="button" (click)="makeQr(listing)">Try again</button>
         } @else {
           <p role="status">Preparing QR code…</p>
         }
+        <div class="management-actions">
+          @if (qrUrl()) {
+            <a class="button button--primary" [href]="qrUrl()" [download]="listing.id + '-qr.svg'"
+              >Download QR code</a
+            >
+          }
+          <button class="button" (click)="copyLink(listing)">Copy link</button>
+          <a class="button" [href]="publicShareUrl(listing)" target="_blank" rel="noopener"
+            >View listing ↗</a
+          >
+        </div>
         <p class="field-help">Unpublishing or archiving makes this public link unavailable.</p>
       } @else if (modal() === 'voice') {
         <p>

@@ -4,9 +4,30 @@ import {
   boardPromoLinkPanelWidth,
   boardPromoTextLines,
   boardPromoTitleFontSize,
+  renderBoardPromoImage,
 } from './board-promo-image';
+import { publicBoardQrImageUrl, publicBoardQrUrl } from '../board-qr-code';
 
 describe('board promo image helpers', () => {
+  it('renders the shared board QR even when the displayed link uses a local custom slug', async () => {
+    const fetchImage = spyOn(window, 'fetch').and.callThrough();
+    const blob = await renderBoardPromoImage({
+      title: 'A published listing',
+      description: '',
+      ownerName: '',
+      updatedLabel: '',
+      cardCount: 3,
+      coverImageUrl: '',
+      boardUrl: 'http://localhost:63606/boards/custom-listing',
+      qrUrl: publicBoardQrUrl('listing-1'),
+      showQrCode: true,
+      showDescription: false,
+    });
+    expect(fetchImage.calls.allArgs().map(([url]) => url)).toContain(publicBoardQrImageUrl('listing-1'));
+    expect(blob.type).toBe('image/png');
+    expect(blob.size).toBeGreaterThan(0);
+  });
+
   it('uses the final board path segment for a stable download filename', () => {
     expect(boardPromoFileName(
       'https://livingwiki.com/boards/the-wealthiest-democrats-in-american-politics',

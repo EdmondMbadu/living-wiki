@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, ElementRef, ViewChild, computed, effect, inject, input, output, signal } from '@angular/core';
 import { GoogleMapsService } from '../../google-maps.service';
+import { PlacePhotoDirective } from '../../place-photo.directive';
 
 export type NearbyGemsSortMode = 'travel-time' | 'distance';
 type ViewerLocationState = 'idle' | 'locating' | 'available' | 'unavailable';
@@ -41,6 +42,7 @@ type MapsRuntime = {
 @Component({
   selector: 'app-nearby-gems-board',
   standalone: true,
+  imports: [PlacePhotoDirective],
   templateUrl: './nearby-gems-board.html',
   styleUrl: './nearby-gems-board.css',
 })

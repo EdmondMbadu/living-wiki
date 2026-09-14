@@ -1,4 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
+import { boardCoverPhotoUrl, stablePlacePhotoUrl } from '../place-photo';
+import { PlacePhotoDirective } from '../place-photo.directive';
 import { AfterViewInit, Component, computed, effect, ElementRef, HostListener, inject, input, output, LOCALE_ID, OnDestroy, PLATFORM_ID, signal, ViewChild, type WritableSignal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -51,6 +53,7 @@ import {
 } from '../personal-voice.service';
 import { profileIconByCode, profileIconForSeed } from '../profile/profile-icons';
 import { generateQrSvgDataUrl } from '../qr-code';
+import { publicBoardQrUrl } from '../board-qr-code';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 import { WorkspaceSidebarComponent } from '../workspace-sidebar/workspace-sidebar';
 import {
@@ -1678,7 +1681,7 @@ type BoardLoadContext = {
 
 @Component({
   selector: 'app-boards',
-  imports: [RealEstateWizardSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
+  imports: [PlacePhotoDirective, RealEstateWizardSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
   providers: [DocxExportService],
   templateUrl: './boards.html',
   styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './real-estate-wizard-modal.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
@@ -7756,7 +7759,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.specialCardDraft.set(emptySpecialCardDraft(kind, {
       name: kind === 'contact' ? this.userName() || board.ownerDisplayName : '',
       email: kind === 'contact' ? this.userEmail() : '',
-      qrValue: kind === 'qr-code' ? this.stackShareUrl(board) : '',
+      qrValue: kind === 'qr-code' ? this.boardQrUrl(board) : '',
       qrLabel: kind === 'qr-code' ? 'Scan this board' : '',
     }));
     this.specialCardError.set(null);
@@ -16480,8 +16483,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     return this.stackShareUrl(board).replace(/^https?:\/\//, '');
   }
 
+  boardQrUrl(board: Board): string {
+    return board.visibility === 'public'
+      ? publicBoardQrUrl(board.id)
+      : this.stackShareUrl(board);
+  }
+
   stackQrImageUrl(board: Board): string {
-    return generateQrSvgDataUrl(this.stackShareUrl(board), { margin: 3 });
+    return generateQrSvgDataUrl(this.boardQrUrl(board));
   }
 
   boardLogoHref(board: Board): string {
@@ -22180,7 +22189,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         kind: this.isBoardKind(data['kind']) ? data['kind'] : 'standard',
       }),
       tone: this.isBoardTone(data['tone']) ? data['tone'] : 'teal',
-      imageUrl: typeof data['imageUrl'] === 'string' ? data['imageUrl'] : '',
+      imageUrl: boardCoverPhotoUrl(id, { ...data, cards: rawCards }),
       logoUrl: typeof data['logoUrl'] === 'string' ? data['logoUrl'] : '',
       logoLinkUrl: typeof data['logoLinkUrl'] === 'string' ? data['logoLinkUrl'] : '',
       stackCtaLabel: typeof data['stackCtaLabel'] === 'string' ? data['stackCtaLabel'] : '',
@@ -22271,7 +22280,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (!value || typeof value !== 'object') {
       return null;
     }
-    const data = value as Record<string, unknown>;
+    const source = value as Record<string, unknown>;
+    const data: Record<string, unknown> = {
+      ...source,
+      imageUrl: stablePlacePhotoUrl(source['imageUrl'], source['placeId']),
+      imageUrls: Array.isArray(source['imageUrls'])
+        ? source['imageUrls'].map((url) => stablePlacePhotoUrl(url, source['placeId'])) : [],
+    };
     const title = typeof data['title'] === 'string' ? data['title'] : '';
     if (!title) {
       return null;

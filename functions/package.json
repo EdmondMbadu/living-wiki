@@ -6,6 +6,7 @@
   },
   "main": "lib/index.js",
   "scripts": {
+    "test:place-photo": "npm run build && node --test scripts/test-place-photo.cjs",
     "test:teams": "npm run build && node --test scripts/test-teams.cjs scripts/test-team-analytics.cjs scripts/test-team-profiles.cjs",
     "build": "tsc -p tsconfig.json",
     "test:board-wizard-quality": "npm run build && node scripts/test-board-wizard-quality.cjs",

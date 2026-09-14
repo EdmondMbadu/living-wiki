@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { boardCoverPhotoUrl } from './place-photo';
 
 export type CityBoardRecord = Record<string, unknown>;
 
@@ -62,7 +63,7 @@ export function cityBoardListingPayload(
     description: text(board.description, 280),
     icon: safeIcon(board.icon),
     tone: text(board.tone, 24) || 'teal',
-    image_url: text(board.imageUrl, 2_000),
+    image_url: boardCoverPhotoUrl(boardId, board),
     kind: text(board.kind, 40) || 'standard',
     card_count: cards.length,
     publisher_name: text(board.owner_display_name, 100) || 'LivingWiki',

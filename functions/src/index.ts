@@ -1,4 +1,6 @@
 import { offGridTalkDrop } from './off-grid-talk-drop';
+import { PLACE_PHOTO_ENDPOINT, placePhotoUrl } from './place-photo';
+import { resolvePlacePhoto } from './place-photo-response';
 import { boardLikeTargetKey, boardLikeMetricDocumentId, boardLikeMarkerDocumentId, normalizeBoardLikeTarget, normalizeBoardLikeTargets } from './board-likes';
 import { onDocumentCreated, onDocumentDeleted, onDocumentUpdated, onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { HttpsError, onCall, onRequest, type CallableRequest } from 'firebase-functions/v2/https';
@@ -7183,11 +7185,9 @@ function nearbyGemCard(candidate: NearbyGemCandidate, index: number): GeneratedB
     media_kind: 'none',
     short_summary: `${category} · ${duration}`,
     rank: index + 1,
-    imageUrl: candidate.photoName
-      ? `${publicFunctionsBaseUrl}/boardPlacePhoto?name=${encodeURIComponent(candidate.photoName)}`
-      : candidate.photoReference
-        ? `${publicFunctionsBaseUrl}/boardPlacePhoto?ref=${encodeURIComponent(candidate.photoReference)}`
-        : undefined,
+    imageUrl: candidate.photoName || candidate.photoReference
+      ? `${PLACE_PHOTO_ENDPOINT}?placeId=${encodeURIComponent(candidate.id)}`
+      : undefined,
     placeId: candidate.id,
     googleMapsUrl: candidate.googleMapsUrl,
     locationLat: candidate.lat,
@@ -7307,59 +7307,34 @@ export const discoverNearbyGems = onCall(
 
 export const boardPlacePhoto = onRequest(
   {
-    region: callableRegion,
-    cors: true,
-    timeoutSeconds: 30,
-    memory: '512MiB',
+    region: callableRegion, cors: true, timeoutSeconds: 30,
+    memory: '512MiB', maxInstances: 10, concurrency: 40,
     secrets: [googlePlacesApiKey],
   },
   async (request, response) => {
-    const photoReference = textFromUnknown(request.query['ref']).slice(0, 1200);
-    const photoName = textFromUnknown(request.query['name']).slice(0, 1200);
-    if (!photoReference && !photoName) {
-      response.status(400).send('Missing photo reference.');
+    response.setHeader('Cache-Control', 'no-store');
+    response.setHeader('X-Content-Type-Options', 'nosniff');
+    response.setHeader('Access-Control-Expose-Headers', 'X-Place-Attributions');
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      response.setHeader('Allow', 'GET, HEAD');
+      response.status(405).send('Method not allowed.');
       return;
     }
-
-    const apiKey = googlePlacesApiKey.value();
-    if (!apiKey) {
-      response.status(503).send('Google Places is not configured.');
-      return;
-    }
-
     try {
-      const safePhotoName = /^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(photoName) ? photoName : '';
-      if (photoName && !safePhotoName) {
-        response.status(400).send('Invalid photo name.');
+      const result = await resolvePlacePhoto(request.query, {
+        apiKey: googlePlacesApiKey.value(),
+        fetch,
+        getBoard: async (id) => (await db.collection('boards').doc(id).get()).data(),
+      });
+      if (result.status !== 200) {
+        response.status(result.status).send('Place photo unavailable.');
         return;
       }
-      const url = safePhotoName
-        ? new URL(`https://places.googleapis.com/v1/${safePhotoName}/media`)
-        : new URL('https://maps.googleapis.com/maps/api/place/photo');
-      if (safePhotoName) {
-        url.searchParams.set('maxWidthPx', '1000');
-      } else {
-        url.searchParams.set('maxwidth', '1000');
-        url.searchParams.set('photo_reference', photoReference);
-      }
-      url.searchParams.set('key', apiKey);
-      const upstream = await fetch(url.toString(), {
-        redirect: 'follow',
-        signal: AbortSignal.timeout(15000),
-      });
-      if (!upstream.ok) {
-        response.status(upstream.status).send('Place photo unavailable.');
-        return;
-      }
-      const contentType = upstream.headers.get('content-type') || 'image/jpeg';
-      const bytes = Buffer.from(await upstream.arrayBuffer());
-      response.setHeader('Content-Type', contentType);
-      response.setHeader('Cache-Control', 'public, max-age=604800, s-maxage=604800');
-      response.status(200).send(bytes);
-    } catch (error) {
-      logger.warn('Board place photo proxy failed.', {
-        errorMessage: error instanceof Error ? error.message : String(error),
-      });
+      response.setHeader('Content-Type', result.contentType!);
+      response.setHeader('X-Place-Attributions', encodeURIComponent(JSON.stringify(result.attributions || [])));
+      response.status(200).send(result.bytes);
+    } catch {
+      logger.warn('Board place photo lookup failed.');
       response.status(502).send('Place photo unavailable.');
     }
   },
@@ -12965,7 +12940,7 @@ async function enrichBoardWizardCardWithPlace(
       place_query: selectedQuery || card.place_query,
       placeId,
       googleMapsUrl: textFromUnknown(details?.url) || `https://www.google.com/maps/place/?q=place_id:${encodeURIComponent(placeId)}`,
-      imageUrl: photoReference ? `${publicFunctionsBaseUrl}/boardPlacePhoto?ref=${encodeURIComponent(photoReference)}` : card.imageUrl,
+      imageUrl: photoReference ? `${PLACE_PHOTO_ENDPOINT}?placeId=${encodeURIComponent(placeId)}` : card.imageUrl,
       tour: card.tour
         ? {
             ...card.tour,
@@ -25129,7 +25104,7 @@ export const syncPublicBoardSummary = onDocumentWritten(
     const existing = existingSnapshot.data() as Record<string, unknown> | undefined;
     let cover: OptimizedBoardCover | null = null;
     if (
-      sourceImageUrl
+      sourceImageUrl && !placePhotoUrl(sourceImageUrl)
       && existing?.source_image_url === sourceImageUrl
       && typeof existing.imageUrl === 'string'
       && existing.imageUrl
@@ -25147,7 +25122,7 @@ export const syncPublicBoardSummary = onDocumentWritten(
 
     const summaryWritten = await writeSummary(board, cover, boardUpdateMs);
 
-    if (!summaryWritten || !sourceImageUrl || cover) return;
+    if (!summaryWritten || !sourceImageUrl || cover || placePhotoUrl(sourceImageUrl)) return;
     try {
       const optimized = await optimizePublicBoardCover(storage.bucket(), boardId, sourceImageUrl);
       const latestBoardSnapshot = await boardRef.get();

@@ -3,6 +3,7 @@ import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { collection, getDocs, limit, query, where, type Firestore } from 'firebase/firestore';
 import { httpsCallable, type Functions } from 'firebase/functions';
 import { getFirebaseFirestore, getFirebaseFunctions } from './firebase.client';
+import { stablePlacePhotoUrl } from './place-photo';
 
 export type CityBoardListing = {
   id: string;
@@ -68,7 +69,7 @@ export function cityBoardListingFromData(id: string, value: unknown): CityBoardL
     description: stringValue(data['description'], 280),
     icon: stringValue(data['icon'], 64) || 'dashboard_customize',
     tone: stringValue(data['tone'], 24) || 'teal',
-    imageUrl: stringValue(data['image_url'], 2_000),
+    imageUrl: stablePlacePhotoUrl(stringValue(data['image_url'], 2_000), undefined, boardId),
     kind: stringValue(data['kind'], 40) || 'standard',
     cardCount: Math.max(0, Math.trunc(Number(data['card_count']) || 0)),
     publisherName: stringValue(data['publisher_name'], 100) || 'LivingWiki',

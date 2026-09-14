@@ -34,6 +34,7 @@ export class BoardPromoImageDialogComponent implements OnInit, AfterViewInit, On
   readonly cardCount = input(0);
   readonly coverImageUrl = input('');
   readonly boardUrl = input.required<string>();
+  readonly qrUrl = input('');
   readonly boardTypeLabel = input('Board');
   readonly icon = input('dashboard_customize');
 
@@ -157,6 +158,7 @@ export class BoardPromoImageDialogComponent implements OnInit, AfterViewInit, On
       cardCount: this.cardCount(),
       coverImageUrl: this.coverImageUrl(),
       boardUrl: this.boardUrl(),
+      qrUrl: this.qrUrl(),
       boardTypeLabel: this.boardTypeLabel(),
       icon: this.icon(),
       showQrCode: this.showQrCode(),

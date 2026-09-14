@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { PLACE_PHOTO_ENDPOINT } from './place-photo';
 import { FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { buildCityPlaceTextSearchRequest } from './city-place-search';
@@ -701,7 +702,7 @@ function cardPayload(
   cardTitleMode: BulkBoardTemplate['cardTitleMode'],
 ): Record<string, unknown> {
   const photoUrl = candidate.photoReference
-    ? `${publicFunctionsBaseUrl}/boardPlacePhoto?ref=${encodeURIComponent(candidate.photoReference)}`
+    ? `${PLACE_PHOTO_ENDPOINT}?placeId=${encodeURIComponent(candidate.placeId)}`
     : '';
   const types = candidate.types.map((type) => type.replaceAll('_', ' ')).slice(0, 5);
   return {
