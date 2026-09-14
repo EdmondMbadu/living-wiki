@@ -37,6 +37,11 @@ describe('AccountMenuComponent team creation', () => {
       const create = fixture.nativeElement.querySelector('a[href="/teams/new"]');
       expect(create?.textContent).toContain('Create team');
       expect(create?.getAttribute('role')).toBe('menuitem');
+      const menuRoutes = Array.from(
+        fixture.nativeElement.querySelectorAll('[role="menu"] a[role="menuitem"]'),
+        (link: Element) => link.getAttribute('href'),
+      );
+      expect(menuRoutes.slice(0, 4)).toEqual(['/profile', '/boards', '/wikis', '/teams/new']);
       expect(refresh).toHaveBeenCalledTimes(1);
       expect(fixture.nativeElement.querySelector('a[href="/notifications"]')).not.toBeNull();
     });
