@@ -27,6 +27,19 @@ import { getFirebaseFirestore, getFirebaseFunctions, getFirebaseStorage } from '
 
 const ACTIVE_ATLAS_STORAGE_KEY = 'living-atlas:activeAtlasId';
 const DEFAULT_CITY_LOGO_URL = '/assets/image/lucky-paper-crane.png';
+export const MAX_AUTOMATIC_ATLAS_REPAIRS_PER_SESSION = 10;
+
+export function shouldStartAutomaticAtlasRepair(
+  repairedUserId: string,
+  userId: string,
+  metadata: Pick<QuerySnapshot<DocumentData>['metadata'], 'fromCache' | 'hasPendingWrites'>,
+): boolean {
+  return !!userId
+    && repairedUserId !== userId
+    && !metadata.fromCache
+    && !metadata.hasPendingWrites;
+}
+
 const COUNTRY_LABEL_BY_CODE: Record<string, string> = {
   AE: 'United Arab Emirates',
   AO: 'Angola',
@@ -442,6 +455,7 @@ export class AtlasService {
   readonly activeAtlasId = signal<string | null>(this.loadActiveId());
   readonly isLoading = signal(true);
   private autoCreateAttempted = false;
+  private automaticAtlasRepairUserId = '';
   readonly activeAtlasHomeLink = computed(() => {
     const id = this.activeAtlasId();
     if (!id) return '/wikis';
@@ -483,6 +497,7 @@ export class AtlasService {
       if (!this.firestore || !uid) {
         this.atlases.set([]);
         this.isLoading.set(false);
+        this.automaticAtlasRepairUserId = '';
         return;
       }
 
@@ -526,7 +541,6 @@ export class AtlasService {
             }
           }
         } else {
-          void this.selfHealAtlases(items.filter((atlas) => atlas.user_id === uid));
           const current = this.activeAtlasId();
           if (!current || !items.some((a) => a.id === current)) {
             this.setActive(items[0].id);
@@ -547,6 +561,12 @@ export class AtlasService {
         ownedAtlasesQuery,
         (snapshot) => {
           ownedItems = hydrateSnapshot(snapshot);
+          // A local serverTimestamp is reported as null until it is acknowledged. Repairing that
+          // pending value creates another snapshot and can turn one Atlas creation into a write loop.
+          if (shouldStartAutomaticAtlasRepair(this.automaticAtlasRepairUserId, uid, snapshot.metadata)) {
+            this.automaticAtlasRepairUserId = uid;
+            void this.selfHealAtlases(ownedItems);
+          }
           void publish();
         },
         () => {
@@ -1528,6 +1548,7 @@ export class AtlasService {
 
   private async selfHealAtlases(items: AtlasItem[]): Promise<void> {
     if (!this.firestore) return;
+    let repairAttempts = 0;
     for (const atlas of items) {
       const patch: Record<string, unknown> = {};
       if (!atlas.name || !atlas.name.trim()) {
@@ -1542,6 +1563,8 @@ export class AtlasService {
         patch['created_at'] = serverTimestamp();
       }
       if (Object.keys(patch).length === 0) continue;
+      repairAttempts += 1;
+      if (repairAttempts > MAX_AUTOMATIC_ATLAS_REPAIRS_PER_SESSION) break;
       try {
         await updateDoc(doc(this.firestore, 'atlases', atlas.id), patch);
       } catch {

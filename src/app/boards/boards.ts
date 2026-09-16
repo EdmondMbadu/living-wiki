@@ -1836,6 +1836,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  @ViewChild('talkingCardEditor')
+  private talkingCardEditor?: TalkingCardEditorComponent;
+
   readonly tones = BOARD_TONES;
   readonly cardTypes = CARD_TYPES;
   readonly cardScopes = CARD_SCOPES;
@@ -7312,12 +7315,18 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   async addTalkingCard(result: TalkingCardEditorResult): Promise<void> {
     const board = this.talkingCardEditorBoard();
-    if (!board || !this.canEditBoard(board)) return;
+    if (!board || !this.canEditBoard(board)) {
+      await this.failTalkingCardSave('This board is no longer available for editing. Refresh and try again.');
+      return;
+    }
     const listingSetup = this.listingTalkingCardSetup();
     const now = new Date().toISOString();
     if (result.cardId) {
       const existing = board.cards.find((card) => card.id === result.cardId);
-      if (!existing?.conversation) return;
+      if (!existing?.conversation) {
+        await this.failTalkingCardSave('This Talking Card is no longer available. Refresh and try again.');
+        return;
+      }
       const updated: BoardCard = {
         ...existing,
         title: result.title,
@@ -7344,9 +7353,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         cards = result.placement === 'start' ? [updated, ...cards] : [...cards, updated];
       }
       const nextBoard = { ...board, cards, updatedAt: now };
-      this.boards.update((boards) => boards.map((item) => item.id === board.id ? nextBoard : item));
-      this.closeTalkingCardEditor();
-      await this.persistAndReplaceBoard(nextBoard);
+      await this.persistTalkingCardAndFinish(nextBoard);
       return;
     }
     if (listingSetup?.boardId === board.id) {
@@ -7383,12 +7390,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         createdAt: placeholder?.createdAt || now,
         updatedAt: now,
       });
-      if (!card) return;
+      if (!card) {
+        await this.failTalkingCardSave('The Talking Card could not be prepared. Review its details and try again.');
+        return;
+      }
       const cards = placeListingTalkingCard(board.cards, card, listingSetup.placeholderCardId);
       const nextBoard = { ...board, cards, updatedAt: now };
-      this.boards.update((boards) => boards.map((item) => item.id === board.id ? nextBoard : item));
-      this.closeTalkingCardEditor();
-      await this.persistAndReplaceBoard(nextBoard);
+      await this.persistTalkingCardAndFinish(nextBoard);
       return;
     }
     const card = this.cardFromRecord({
@@ -7415,12 +7423,31 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       createdAt: now,
       updatedAt: now,
     });
-    if (!card) return;
+    if (!card) {
+      await this.failTalkingCardSave('The Talking Card could not be prepared. Review its details and try again.');
+      return;
+    }
     const cards = result.placement === 'start' ? [card, ...board.cards] : [...board.cards, card];
     const nextBoard = { ...board, cards, updatedAt: now };
-    this.boards.update((boards) => boards.map((item) => item.id === board.id ? nextBoard : item));
+    await this.persistTalkingCardAndFinish(nextBoard);
+  }
+
+  private async persistTalkingCardAndFinish(nextBoard: Board): Promise<void> {
+    if (!await this.persistAndReplaceBoard(nextBoard)) {
+      await this.failTalkingCardSave(
+        nextBoard.teamId
+          ? this.boardsSyncError() || 'Your Talking Card could not be saved. Check your team access and try again.'
+          : 'Your Talking Card could not be saved to Firebase. Check your connection and try again.',
+      );
+      return;
+    }
+    await this.talkingCardEditor?.completeSave();
     this.closeTalkingCardEditor();
-    await this.persistAndReplaceBoard(nextBoard);
+  }
+
+  private async failTalkingCardSave(message: string): Promise<void> {
+    this.boardsSyncError.set(message);
+    await this.talkingCardEditor?.completeSave(message);
   }
 
   isTalkingCard(card: Pick<BoardCard, 'conversation'> | null | undefined): boolean {
@@ -19790,7 +19817,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       sourceUrl,
     });
     const tags = Array.isArray(data['tags'])
-      ? data['tags'].map((tag) => this.stringValue(tag, '', 24).toLowerCase()).filter(Boolean).slice(0, 6)
+      ? data['tags'].map((tag) => this.stringValue(tag, '', 40).toLowerCase()).filter(Boolean).slice(0, 6)
       : [this.wizardVibe(), type].slice(0, 6);
     const imageQuery = this.stringValue(data['image_query'], title, 120);
     const entityType: BoardEntityType = this.isBoardEntityType(data['entity_type'])

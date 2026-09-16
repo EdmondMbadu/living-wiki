@@ -15,8 +15,14 @@ function normalizedTags(card: ListingTalkingCardLike): Set<string> {
   return new Set((card.tags ?? []).map((tag) => tag.trim().toLowerCase()).filter(Boolean));
 }
 
+export const LISTING_TALKING_CARD_PLACEHOLDER_TAG = 'listing-talking-card-placeholder';
+const LEGACY_TRUNCATED_LISTING_TALKING_CARD_PLACEHOLDER_TAG = LISTING_TALKING_CARD_PLACEHOLDER_TAG.slice(0, 24);
+
 export function isListingTalkingCardPlaceholder(card: ListingTalkingCardLike | null | undefined): boolean {
-  return !!card && normalizedTags(card).has('listing-talking-card-placeholder');
+  if (!card) return false;
+  const tags = normalizedTags(card);
+  return tags.has(LISTING_TALKING_CARD_PLACEHOLDER_TAG)
+    || tags.has(LEGACY_TRUNCATED_LISTING_TALKING_CARD_PLACEHOLDER_TAG);
 }
 
 export function isRealEstateTalkThru(board: ListingTalkingBoardLike | null | undefined): boolean {

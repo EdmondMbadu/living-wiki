@@ -819,6 +819,13 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     void this.close();
   }
 
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (!this.saving()) return;
+    event.preventDefault();
+    event.returnValue = '';
+  }
+
   ngOnDestroy(): void {
     this.imageProcessingRun += 1;
     this.stopVoicePreview();
@@ -829,6 +836,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
 
   async save(): Promise<void> {
     if (!this.canSave()) return;
+    let handedOffForPersistence = false;
     this.saving.set(true);
     this.saveStage.set('Preparing avatar…');
     this.errorMessage.set(null);
@@ -856,12 +864,20 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       if (this.mode() === 'new') {
         const resumedAtlasId = this.createdAtlasId();
         const createdNow = !resumedAtlasId;
+        const preloadedImageUrl = this.uploadedImageUrl() || this.imagePreviewUrl();
+        const resumedAtlas = resumedAtlasId
+          ? this.availableAtlases().find((candidate) => candidate.id === resumedAtlasId) ?? null
+          : null;
+        const imageAlreadySaved = !this.imageFile() && !!preloadedImageUrl && (createdNow
+          || (resumedAtlas?.logo_url?.trim() === preloadedImageUrl
+            && resumedAtlas.chat_guide?.image_url?.trim() === preloadedImageUrl));
         if (createdNow) {
           this.saveStage.set('Creating avatar…');
           atlasId = await this.atlasService.createTalkingCardAtlas({
             name: this.name(),
             role: this.role(),
             personaPrompt: this.personaPrompt(),
+            imageUrl: imageAlreadySaved ? preloadedImageUrl : null,
             isPublic: false,
           }) ?? '';
         } else {
@@ -875,7 +891,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
 
         const imageFile = this.imageFile();
         imageUrl = this.uploadedImageUrl();
-        if (imageFile || imageUrl) {
+        if ((imageFile || imageUrl) && !imageAlreadySaved) {
           if (!imageUrl) {
             this.saveStage.set('Uploading optimized portrait…');
             if (!imageFile) throw new Error('Choose the avatar portrait again before continuing.');
@@ -908,7 +924,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
             throw new Error(this.documentsService.uploadError() || 'One or more knowledge files could not be uploaded.');
           }
         }
-        if (this.publicBoard()) {
+        if (this.publicBoard() && resumedAtlas?.is_public !== true) {
           this.saveStage.set('Publishing avatar…');
           await this.atlasService.updateAtlas(atlasId, { is_public: true });
         }
@@ -955,8 +971,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       }
 
       this.saveStage.set(this.isEditing() ? 'Saving Talking Card…' : 'Adding Talking Card…');
-      this.draftReady.set(false);
-      await this.draftStore.delete(this.draftStorageKey());
+      handedOffForPersistence = true;
       this.saved.emit({
         ...(this.editingCard()?.id ? { cardId: this.editingCard()!.id } : {}),
         atlasId,
@@ -972,9 +987,25 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     } catch (error) {
       this.errorMessage.set(this.saveErrorMessage(error));
     } finally {
-      this.saveStage.set('');
-      this.saving.set(false);
+      if (!handedOffForPersistence) {
+        this.saveStage.set('');
+        this.saving.set(false);
+      }
     }
+  }
+
+  async completeSave(errorMessage = ''): Promise<void> {
+    this.saveStage.set('');
+    if (errorMessage) {
+      this.errorMessage.set(errorMessage);
+      this.saving.set(false);
+      await this.persistDraftNow();
+      return;
+    }
+    this.draftReady.set(false);
+    await this.draftStore.delete(this.draftStorageKey());
+    this.draftStatus.set(null);
+    this.saving.set(false);
   }
 
   private async loadPublicAvatars(): Promise<void> {

@@ -273,11 +273,11 @@ describe('TalkingCardEditorComponent', () => {
       name: 'Jenny Morgan',
       role: 'North Star Realty · Listing agent',
       personaPrompt: 'Prepared real-estate prompt with property safeguards.',
+      imageUrl: 'https://example.com/jenny-profile.jpg',
       isPublic: false,
     });
-    expect(atlasService.updateAtlas).toHaveBeenCalledWith('new-avatar', {
-      logo_url: 'https://example.com/jenny-profile.jpg',
-    });
+    expect(atlasService.updateAtlas).not.toHaveBeenCalled();
+    expect(atlasService.updateChatGuideConfig).not.toHaveBeenCalled();
     expect(atlasService.selectAtlasPersonalVoice).toHaveBeenCalledWith('new-avatar', 'voice-1');
     expect(saved).toHaveBeenCalledWith(jasmine.objectContaining({
       atlasId: 'new-avatar',
@@ -287,6 +287,37 @@ describe('TalkingCardEditorComponent', () => {
       ctaLabel: 'Ask Jenny',
       placement: 'end',
     }));
+    expect(fixture.componentInstance.saving()).toBeTrue();
+    expect(draftStore.delete).not.toHaveBeenCalled();
+
+    await fixture.componentInstance.completeSave();
+
+    expect(fixture.componentInstance.saving()).toBeFalse();
+    expect(draftStore.delete).toHaveBeenCalledWith('board:listing-board-save:listing-agent-setup');
+  });
+
+  it('keeps the editor retryable and preserves its draft when board persistence fails', async () => {
+    const fixture = TestBed.createComponent(TalkingCardEditorComponent);
+    fixture.componentRef.setInput('boardId', 'listing-board-failed-save');
+    fixture.componentRef.setInput('prefill', {
+      experience: 'real-estate',
+      draftKey: 'listing-agent-setup',
+      name: 'Jenny Morgan',
+      personaPrompt: 'Prepared real-estate prompt.',
+      openingMessage: 'Ask me about this property.',
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    await fixture.componentInstance.save();
+    await fixture.componentInstance.completeSave('Your Talking Card could not be saved.');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.saving()).toBeFalse();
+    expect(fixture.componentInstance.errorMessage()).toContain('could not be saved');
+    expect(draftStore.save).toHaveBeenCalled();
+    expect(draftStore.delete).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('could not be saved');
   });
 
   it('cleans malformed generated agency copy from a restored real-estate draft', async () => {

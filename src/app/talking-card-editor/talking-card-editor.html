@@ -6,7 +6,7 @@
         <h2 id="talking-editor-title">{{ isEditing() ? 'Edit Talking Card & avatar' : isRealEstateSetup() ? 'Create your property guide' : 'Add a Talking Card' }}</h2>
         <p>{{ isEditing() ? 'Deep-edit the card, avatar prompt, documents, voice, and visitor actions.' : isRealEstateSetup() ? 'Visitors can ask about this home, hear from you, and contact you when they’re ready.' : 'Add a conversational guide anywhere in this board’s flow.' }}</p>
       </div>
-      <button type="button" class="talking-editor__icon" aria-label="Close Talking Card editor" (click)="close()">
+      <button type="button" class="talking-editor__icon" aria-label="Close Talking Card editor" [disabled]="saving()" (click)="close()">
         <span class="material-symbols-outlined">close</span>
       </button>
     </header>
@@ -505,7 +505,7 @@
         @if (draftStatus() === 'restored') { <span class="material-symbols-outlined" aria-hidden="true">history</span> Draft restored }
         @else if (draftStatus() === 'saved') { <span class="material-symbols-outlined" aria-hidden="true">cloud_done</span> Draft saved on this device }
       </span>
-      <button type="button" class="talking-editor__secondary" (click)="close()">Cancel</button>
+      <button type="button" class="talking-editor__secondary" [disabled]="saving()" (click)="close()">Cancel</button>
       <button type="button" class="talking-editor__primary" [disabled]="!canSave()" (click)="save()">
         @if (saving()) { <span class="material-symbols-outlined talking-editor__spin">progress_activity</span> {{ saveStage() || 'Saving…' }} }
         @else { <span class="material-symbols-outlined">{{ isEditing() ? 'save' : 'record_voice_over' }}</span> {{ isEditing() ? 'Save changes' : isRealEstateSetup() ? 'Create my Talking Card' : 'Add Talking Card' }} }
