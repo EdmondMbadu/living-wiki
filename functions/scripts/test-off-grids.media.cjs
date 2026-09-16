@@ -14,7 +14,7 @@ process.env.FIREBASE_CONFIG = JSON.stringify({
 });
 const { db, storage } = require('../lib/firebase');
 const { run, processUpload } = require('../lib/off-grids/media');
-const { offGridCommand, offGridMedia, offGridShare } = require('../lib/off-grids');
+const { offGridCommand, offGridDirectory, offGridMedia, offGridShare } = require('../lib/off-grids');
 const ffmpeg = require('ffmpeg-static'),
   ffprobe = require('ffprobe-static').path;
 let dir, server, base;
@@ -48,6 +48,7 @@ before(async () => {
   await call('owner', 'draft');
   const app = require('../../node_modules/express')();
   app.use('/share', offGridShare);
+  app.use('/directory', offGridDirectory);
   app.use('/', offGridMedia);
   server = createServer(app);
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
@@ -166,6 +167,12 @@ test('private media denies anonymous access; authorized range playback works; un
     location: { lat: 0, lng: 0, source: 'map', confirmedAt: 'now' },
     visibility: 'public',
   });
+  const publicCover = base + '/?spot=media-gem&asset=cover';
+  assert.equal((await fetch(publicCover)).status, 200);
+  assert.equal((await fetch(publicCover)).status, 200); // Warm server byte cache.
+  const directory = await fetch(base + '/directory?scope=mine&uid=owner');
+  assert.equal(directory.headers.get('cache-control'), 'private, no-store');
+  assert.ok((await directory.json()).items.some(s => s.id === 'media-gem'));
   assert.equal(
     (
       await fetch(base + '/?spot=media-gem&asset=video&clip=video', {
@@ -180,6 +187,18 @@ test('private media denies anonymous access; authorized range playback works; un
     visibility: 'private',
   });
   assert.equal((await fetch(base + '/?spot=media-gem&asset=video&clip=video')).status, 404);
+  assert.equal((await fetch(publicCover)).status, 404);
+  assert.ok(!(await (await fetch(base + '/directory?scope=mine&uid=owner')).json())
+    .items.some(s => s.id === 'media-gem'));
+});
+test('a cached source cover is blocked immediately when its source card becomes author-only', async () => {
+  await db.doc('boards/media-source').set({visibility: 'public', kind: 'off-grid', cards: [{id: 'source-card'}]});
+  await db.doc('off_grid_spots/media-gem').update({visibility: 'public', sourceRef: {boardId: 'media-source', cardId: 'source-card'}});
+  const url = base + '/?spot=media-gem&asset=cover';
+  assert.equal((await fetch(url)).status, 200);
+  await db.doc('boards/media-source').update({cards: [{id: 'source-card', authorOnly: true}]});
+  assert.equal((await fetch(url)).status, 404);
+  await db.doc('off_grid_spots/media-gem').update({visibility: 'private', sourceRef: null});
 });
 test('browser-style live WebM without container duration is accepted and normalized', async () => {
   const path = join(dir, 'browser-live.webm');

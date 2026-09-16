@@ -123,7 +123,7 @@
           </div>
         }
         <div class="gem-grid">
-          @for (spot of mode() === 'map' ? mapItems() || items() : items(); track spot.id) {
+          @for (spot of mode() === 'map' ? mapItems() || items() : items(); track spot.id; let index = $index) {
             <article class="gem-card">
               <a [routerLink]="['/off-grids', spot.id]" class="gem-card-link"
                 ><div class="gem-cover">
@@ -137,7 +137,8 @@
                       "
                       sizes="(max-width: 640px) 100vw, 400px"
                       [alt]="spot.title"
-                      loading="lazy"
+                      [attr.loading]="index < 3 ? 'eager' : 'lazy'"
+                      [attr.fetchpriority]="index === 0 ? 'high' : 'auto'"
                       decoding="async"
                     />
                   } @else {

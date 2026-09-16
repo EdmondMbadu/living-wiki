@@ -1,4 +1,4 @@
-export { offGridCommand, offGridMedia, offGridShare, syncOffGridSpots } from './off-grids';
+export { offGridCommand, offGridDirectory, offGridMedia, offGridShare, syncOffGridSpots } from './off-grids';
 import { resolveWords as resolveOffGridWords } from './off-grids/location';
 import { validCoordinates as validOffGridCoordinates } from './off-grids/model';
 import { offGridTalkDrop } from './off-grid-talk-drop';

@@ -15,8 +15,17 @@ import {
   validCoordinates,
 } from './model';
 import { resolveWords, wordsForPoint } from './location';
-import { processUpload } from './media';
+import { cachedImage } from './image-cache';
 const region = 'us-central1';
+const sourceReads = new Map<string, Promise<FirebaseFirestore.DocumentData | undefined>>();
+async function currentSource(boardId: string): Promise<FirebaseFirestore.DocumentData | undefined> {
+  const pending = sourceReads.get(boardId);
+  if (pending) return pending;
+  const request = db.doc(`boards/${boardId}`).get().then(snapshot => snapshot.data());
+  sourceReads.set(boardId, request);
+  try { return await request; }
+  finally { sourceReads.delete(boardId); }
+}
 const identifier = (v: unknown): string => {
   const id = text(v, 120);
   if (!/^[a-zA-Z0-9_-]+$/.test(id))
@@ -31,7 +40,7 @@ export async function effectivePublic(
   if (!spot.sourceRef) return true;
   const source =
     providedSource === undefined
-      ? (await db.doc(`boards/${spot.sourceRef.boardId}`).get()).data()
+      ? await currentSource(spot.sourceRef.boardId)
       : providedSource;
   return (
     source?.visibility === 'public' &&
@@ -253,7 +262,7 @@ export const offGridCommand = onCall(
       if (!owner && !(await canContribute(spot, uid)))
         throw new HttpsError('permission-denied', 'You can no longer contribute to this gem.');
       const ticketId = identifier(data.ticketId),
-        result = await processUpload(uid, id, ticketId),
+        result = await (await import('./media')).processUpload(uid, id, ticketId),
         job = (await db.doc(`off_grid_uploads/${ticketId}`).get()).data()!;
       await db.runTransaction(async (tx) => {
         const [currentSnap, currentJob] = await Promise.all([
@@ -446,7 +455,7 @@ export function mediaBase(): string {
   return `https://us-central1-${process.env.GCLOUD_PROJECT || 'living-atlas-7622a'}.cloudfunctions.net/offGridMedia`;
 }
 export const offGridMedia = onRequest(
-  { region, cors: true, timeoutSeconds: 120 },
+  { region, cors: true, timeoutSeconds: 120, memory: '512MiB' },
   async (req, res) => {
     res.set('Cache-Control', 'private, no-store');
     res.set('X-Content-Type-Options', 'nosniff');
@@ -496,8 +505,11 @@ export const offGridMedia = onRequest(
         return;
       }
       const file = storage.bucket().file(path);
-      const [meta] = await file.getMetadata(),
-        size = Number(meta.size);
+      // Cache only image bytes, after checking the current spot/source/grant.
+      // Revoking access must still block a previously cached photo immediately.
+      const image = req.query.asset === 'video' ? null : await cachedImage(file);
+      const meta = image?.metadata || (await file.getMetadata())[0];
+      const size = Number(meta.size);
       let range;
       try {
         range = rangeFrom(req.headers.range, size);
@@ -511,6 +523,10 @@ export const offGridMedia = onRequest(
       if (range) res.status(206).set('Content-Range', `bytes ${range.start}-${range.end}/${size}`);
       if (req.method === 'HEAD') {
         res.end();
+        return;
+      }
+      if (image?.bytes) {
+        res.end(range ? image.bytes.subarray(range.start, range.end + 1) : image.bytes);
         return;
       }
       const stream = file.createReadStream(range || {});
@@ -552,8 +568,9 @@ export const offGridShare = onRequest({ region }, async (req, res) => {
     res.sendStatus(404);
   }
 });
-export { syncOffGridBoard } from './source';
-import { syncOffGridBoard } from './source';
+export async function syncOffGridBoard(boardId: string): Promise<void> {
+  await (await import('./source')).syncOffGridBoard(boardId);
+}
 export const syncOffGridSpots = onDocumentWritten(
   { region, document: 'boards/{boardId}', timeoutSeconds: 300, memory: '1GiB', retry: true },
   async (event) => {
@@ -663,6 +680,25 @@ async function listSpots(data: Record<string, any>, uid: string): Promise<Record
     uid,
   );
 }
+// Public exploration does not depend on restoring a user's session or obtaining
+// an auth token. Private collections continue through the authenticated callable.
+export const offGridDirectory = onRequest(
+  { region, cors: true, timeoutSeconds: 30 },
+  async (req, res) => {
+    res.set('Cache-Control', 'private, no-store');
+    if (req.method !== 'GET') { res.sendStatus(405); return; }
+    try {
+      res.json(await listSpots({
+        scope: 'explore', search: req.query.search,
+        cursor: req.query.id && req.query.createdAt
+          ? { id: req.query.id, createdAt: req.query.createdAt } : null,
+      }, ''));
+    } catch (error) {
+      res.status(error instanceof HttpsError && error.code === 'invalid-argument' ? 400 : 500)
+        .json({ error: 'Unable to load gems. Please retry.' });
+    }
+  },
+);
 async function decoratePage(page: Record<string, any>, uid: string): Promise<Record<string, any>> {
   let grant = '';
   if (uid && page.items.some((s: any) => s.visibility === 'private')) {

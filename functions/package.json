@@ -4,7 +4,7 @@
   "engines": {
     "node": "20"
   },
-  "main": "lib/index.js",
+  "main": "lib/runtime.js",
   "scripts": {
     "test:place-photo": "npm run build && node --test scripts/test-place-photo.cjs",
     "test:teams": "npm run build && node --test scripts/test-teams.cjs scripts/test-team-analytics.cjs scripts/test-team-profiles.cjs",

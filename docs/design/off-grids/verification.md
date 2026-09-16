@@ -21,8 +21,8 @@ The initial inventory audited 3,411 boards, including explicitly tagged cards ou
 
 ## Verification completed
 
-- Frontend: 17 passing tests covering coordinate parsing, zero/cleared numeric input, supported links, directions, camera permission failure, recording/track cleanup, dialog focus/Tab/Escape, and upload cancellation/finalization races.
-- Backend: six model tests, seven Firestore integration tests, six real media/HTTP tests, and existing Talk Drop validation.
+- Frontend: 20 passing tests covering coordinate parsing, zero/cleared numeric input, supported links, directions, camera permission failure, recording/track cleanup, dialog focus/Tab/Escape, upload cancellation/finalization races, concurrent public requests, invalidation, and retry.
+- Backend: six model tests, four bounded image-cache tests, two runtime-loading tests, seven Firestore integration tests, seven real media/HTTP tests, and existing Talk Drop validation.
 - Security rules: five passing Firestore/Storage access tests.
 - Production build and French/Japanese catalog checks pass. Each catalog contains 3,312 complete registered translations.
 - Live signed-in browser flow: confirmed a synthetic point, uploaded a cover and a durationless WebM, saved privately, loaded the exact-location map, saved the gem to Saved, and played its normalized two-second PinTalk to completion with no media error.
@@ -38,6 +38,29 @@ The live camera/microphone on the user's device, physical iPhone/Android Safari/
 Public directory responses use compact projections and batch source-visibility reads, with 12-item pages. The measured first live response was approximately 15 KB. Grid pages do not load video streams. Maps, recording UI, HEIC conversion, and QR generation load on demand.
 
 Final English route bundles are approximately 13.8 KiB gzip for Off Grids and 13.1 KiB for the editor. Production size checks pass.
+
+### Loading speed fix, September 16
+
+The photo worker previously loaded the full backend, including generation, voice, and document pipelines. A live 15 KB cover request took 5.56 seconds; logs confirmed a new instance starting during that request.
+
+- The Functions entry point now selects the small Off Grids module for its five deployed workers. Full Firebase discovery and other workers retain the complete existing export set. Video processing and source-photo migration imports are deferred until needed.
+- Public browsing uses the anonymous GET `offGridDirectory` endpoint and starts while the user's sign-in/profile restoration is still pending. My pins and Saved retain the authenticated callable.
+- The client combines concurrent page requests, shares public responses across session restoration, and prevents invalidated requests from repopulating the cache.
+- The photo worker uses a bounded, five-minute, 16 MB cache of immutable image objects and combines concurrent source-board reads. Every response still checks the current spot, source card, and private grant before consulting image bytes. Browsers still receive `private, no-store`; cached source photos become inaccessible immediately when their source card becomes author-only.
+- The first three card photos load eagerly; the first cover has high fetch priority. Later photos remain lazy. No always-on instances were configured.
+
+Live response samples after deployment:
+
+| Check | Before | After |
+| --- | --- | --- |
+| First small-cover request | 5.56 s | 1.53 s |
+| Repeat small-cover request | 0.62 s | 0.225 s |
+| Repeat large-cover request | — | 0.229 s |
+| Public directory, warm server | 0.355 s (callable) | 0.348 s (GET, no session wait) |
+
+The first GET directory request after deployment took 1.23 seconds. A local browser reload with cached scripts and warm read workers rendered its first cards in 445 ms while the header still showed Sign In during session restoration. These are measured samples; first requests after inactivity and network conditions can vary.
+
+Live local and production browser checks confirmed prioritized covers, 12 initial gems, all 17 gems through pagination, and five Monterey search results. Production build/catalog checks and all 46 frontend/backend tests passed. The local development server was restarted to replace a stale browser build.
 
 The previous Boards size check matched any bundle containing the text `app-boards`, sometimes selecting its much smaller Teams consumer. It now matches the actual component selector. An isolated unchanged checkout measured 445,964 bytes gzip for Boards; its corrected budget is 450,000 bytes. The current Boards bundle is slightly below that baseline. The temporary baseline checkout was removed.
 
