@@ -52,7 +52,6 @@ describe('WorkspaceNavigationService', () => {
     expect(service.primaryItems().map((item) => item.label)).toEqual([
       'Home',
       'Discover',
-      'Properties',
       'My City Las Vegas',
       'My Boards',
       'My Songs',
@@ -104,16 +103,6 @@ describe('WorkspaceNavigationService', () => {
 
     expect(service.isActive('songs')).toBeTrue();
     expect(service.isActive('boards')).toBeFalse();
-  });
-
-  it('marks Properties active on its dedicated route', async () => {
-    const service = TestBed.inject(WorkspaceNavigationService);
-    const router = TestBed.inject(Router);
-
-    await router.navigateByUrl('/properties');
-
-    expect(service.isActive('properties')).toBeTrue();
-    expect(service.isActive('discover')).toBeFalse();
   });
 
   it('keeps Home active without competing with the Saved Boards anchor', async () => {
