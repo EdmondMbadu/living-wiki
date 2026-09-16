@@ -1869,16 +1869,27 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
 
     this.mobileDiscoverLoading.set(true);
     try {
-      const currentUid = this.authService.uid();
-      if (currentUid && this.restoreMobileDiscoverSessionCache(currentUid)) return;
-      await this.authService.waitForReady();
-      const uid = this.authService.uid();
-      if (this.restoreMobileDiscoverSessionCache(uid)) return;
-      this.mobileDiscoverCursor = null;
-      this.mobileDiscoverUsesNewestFirstQuery = true;
-      this.mobileDiscoverHasMore.set(true);
-      this.mobileDiscoverBoards.set([]);
-      await this.fetchNextMobileDiscoverPage(uid);
+      let uid = this.authService.uid();
+      if (!uid || !this.restoreMobileDiscoverSessionCache(uid)) {
+        await this.authService.waitForReady();
+        uid = this.authService.uid();
+        if (!this.restoreMobileDiscoverSessionCache(uid)) {
+          this.mobileDiscoverCursor = null;
+          this.mobileDiscoverUsesNewestFirstQuery = true;
+          this.mobileDiscoverHasMore.set(true);
+          this.mobileDiscoverBoards.set([]);
+        }
+      }
+      // A query page can contain mostly excluded boards or another category.
+      // Fill the visible category even when resuming a sparse session cache.
+      while (
+        !this.destroyed
+        && this.mobileBrowseBoards().length < HOME_SECTION_PAGE_SIZE
+        && this.mobileDiscoverHasMore()
+      ) {
+        const fetched = await this.fetchNextMobileDiscoverPage(uid);
+        if (!fetched) break;
+      }
     } catch {
       this.mobileDiscoverBoards.set([]);
       this.mobileDiscoverHasMore.set(false);

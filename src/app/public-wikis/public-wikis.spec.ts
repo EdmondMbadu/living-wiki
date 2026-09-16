@@ -119,6 +119,101 @@ describe('PublicWikisComponent home pagination', () => {
     expect(component.hasMoreMobileDiscoverBoards()).toBeFalse();
   });
 
+  function prepareInitialDiscoverLoad(component: PublicWikisComponent) {
+    // Exercise browser loading with page requests stubbed below.
+    (component as any).isBrowser = true;
+    (component as any).firestore = {};
+    return spyOn<any>(component, 'restoreMobileDiscoverSessionCache').and.returnValue(false);
+  }
+
+  it('fills the initial home Discover preview across sparse and property-only pages', async () => {
+    const component = createComponent();
+    prepareInitialDiscoverLoad(component);
+    const property = (index: number) => ({
+      ...board(index),
+      cards: [{ title: 'Kitchen', tags: ['listing', 'real-estate'] }],
+    });
+    const pages = [
+      [board(1), board(2), ...Array.from({ length: 9 }, (_, index) => property(index + 3))],
+      Array.from({ length: 11 }, (_, index) => property(index + 12)),
+      Array.from({ length: 11 }, (_, index) => board(index + 23)),
+    ];
+    const fetchPage = spyOn<any>(component, 'fetchNextMobileDiscoverPage').and.callFake(async () => {
+      const page = pages.shift();
+      if (!page) return false;
+      component.mobileDiscoverBoards.update((boards) => [...boards, ...page]);
+      return true;
+    });
+
+    await (component as any).loadMobileDiscoverBoards();
+
+    expect(component.mobileDiscoverPreviewBoards().map((item) => item.id)).toEqual([
+      'board-1', 'board-2', 'board-23', 'board-24', 'board-25',
+      'board-26', 'board-27', 'board-28', 'board-29', 'board-30',
+    ]);
+    expect(fetchPage).toHaveBeenCalledTimes(3);
+    expect(component.mobileDiscoverLimit()).toBe(10);
+    expect(component.mobileDiscoverLoading()).toBeFalse();
+  });
+
+  for (const cachedCount of [2, 10]) {
+    it(`fills only missing Discover slots when restoring ${cachedCount} cached boards`, async () => {
+      const component = createComponent();
+      prepareInitialDiscoverLoad(component).and.callFake(() => {
+        component.mobileDiscoverBoards.set(Array.from({ length: cachedCount }, (_, index) => board(index)));
+        component.mobileDiscoverHasMore.set(true);
+        return true;
+      });
+      const fetchPage = spyOn<any>(component, 'fetchNextMobileDiscoverPage').and.callFake(async () => {
+        component.mobileDiscoverBoards.update((boards) => [
+          ...boards,
+          ...Array.from({ length: 10 - cachedCount }, (_, index) => board(index + cachedCount)),
+        ]);
+        return true;
+      });
+
+      await (component as any).loadMobileDiscoverBoards();
+
+      expect(component.mobileDiscoverPreviewBoards().length).toBe(10);
+      expect(component.mobileDiscoverLimit()).toBe(10);
+      expect(fetchPage).toHaveBeenCalledTimes(cachedCount < 10 ? 1 : 0);
+      expect(component.mobileDiscoverLoading()).toBeFalse();
+    });
+  }
+
+  it('shows fewer than ten Discover boards when the initial results are exhausted', async () => {
+    const component = createComponent();
+    prepareInitialDiscoverLoad(component);
+    const fetchPage = spyOn<any>(component, 'fetchNextMobileDiscoverPage').and.callFake(async () => {
+      component.mobileDiscoverBoards.set([board(1), board(2)]);
+      component.mobileDiscoverHasMore.set(false);
+      return true;
+    });
+
+    await (component as any).loadMobileDiscoverBoards();
+
+    expect(component.mobileDiscoverPreviewBoards().length).toBe(2);
+    expect(component.hasMoreMobileDiscoverBoards()).toBeFalse();
+    expect(fetchPage).toHaveBeenCalledTimes(1);
+    expect(component.mobileDiscoverLoading()).toBeFalse();
+  });
+
+  it('keeps loaded Discover boards and stops filling when a page request fails', async () => {
+    const component = createComponent();
+    prepareInitialDiscoverLoad(component);
+    const fetchPage = spyOn<any>(component, 'fetchNextMobileDiscoverPage').and.callFake(async () => {
+      if (component.mobileDiscoverBoards().length) return false;
+      component.mobileDiscoverBoards.set([board(1), board(2)]);
+      return true;
+    });
+
+    await (component as any).loadMobileDiscoverBoards();
+
+    expect(component.mobileDiscoverPreviewBoards().length).toBe(2);
+    expect(fetchPage).toHaveBeenCalledTimes(2);
+    expect(component.mobileDiscoverLoading()).toBeFalse();
+  });
+
   it('fills a sparse category before advancing to another reveal batch', async () => {
     const component = createComponent();
     component.mobileDiscoverBoards.set(Array.from({ length: 4 }, (_, index) => board(index)));
