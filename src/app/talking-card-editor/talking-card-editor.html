@@ -30,6 +30,13 @@
     }
 
     <div class="talking-editor__body">
+      @if (needsPublication() && (mode() === 'new' || selectedAtlas())) {
+        <label class="talking-editor__check">
+          <input id="talking-avatar-publication" type="checkbox" [ngModel]="publishAvatar()" (ngModelChange)="publishAvatar.set($event)" />
+          <span>Make this avatar public. Visitors can chat with its persona and knowledge and find it in the public directory.</span>
+        </label>
+        <p class="talking-editor__notice">A public board requires a public avatar. Keep the board private if you do not want to publish this avatar.</p>
+      }
       @if (isRealEstateSetup()) {
         <section class="talking-editor__real-estate" aria-labelledby="real-estate-agent-profile-heading">
           <div class="talking-editor__real-estate-assurance">
@@ -103,7 +110,7 @@
 
           <div class="talking-editor__real-estate-ready">
             <span class="material-symbols-outlined">visibility</span>
-            <span><strong>Ready for visitors</strong><small>The unfinished setup card remains private. Creating this guide makes the completed Talking Card available wherever this board is visible.</small></span>
+            <span><strong>Guide visibility</strong><small>Your avatar stays private unless you explicitly choose to publish it for a public board.</small></span>
           </div>
         </section>
       } @else if (isEditing() && editorSection() === 'card') {
@@ -204,12 +211,6 @@
             </div>
             <div><strong>{{ name() }}</strong><span>{{ role() || 'Conversational guide' }}</span><small>Selected avatar</small></div>
           </div>
-          @if (needsPublication()) {
-            <label class="talking-editor__check">
-              <input type="checkbox" [ngModel]="publishAvatar()" (ngModelChange)="publishAvatar.set($event)" />
-              <span>Publish this avatar so visitors to this public board can talk to it.</span>
-            </label>
-          }
           @if (!selectedAtlasEditable()) {
             <p class="talking-editor__notice"><span class="material-symbols-outlined" aria-hidden="true">public</span> This public avatar keeps the persona and voice chosen by its creator.</p>
           }
@@ -229,9 +230,6 @@
         </label>
         <label><span>Knowledge documents (up to 10)</span><input type="file" multiple (change)="onDocumentsSelected($event)" /></label>
         @if (documentFiles().length) { <small>{{ documentFiles().length }} file(s) selected</small> }
-        @if (publicBoard()) {
-          <p class="talking-editor__notice">This avatar will be public because it is being added to a public board.</p>
-        }
       }
 
       @if (isEditing() && editorSection() === 'knowledge') {

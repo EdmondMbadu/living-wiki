@@ -500,8 +500,7 @@ service cloud.firestore {
 
     function isAtlasAdmin(data) {
       return isSignedIn()
-        && data.admin_user_ids is list
-        && request.auth.uid in data.admin_user_ids;
+        && request.auth.uid in data.get('admin_user_ids', []);
     }
 
     function canAdminAtlasById(atlasId) {
@@ -677,10 +676,10 @@ service cloud.firestore {
     }
 
     match /atlases/{atlasId} {
-      allow read: if resource.data.is_public == true
-        || (isSignedIn() && resource.data.user_id == request.auth.uid)
+      // Queries must prove public, owner, or assigned-admin access too.
+      allow read: if resource.data.get('is_public', false) == true
+        || (isSignedIn() && resource.data.get('user_id', '') == request.auth.uid)
         || isAtlasAdmin(resource.data);
-      allow list: if isSignedIn();
       allow create: if isSignedIn()
         && request.resource.data.user_id == request.auth.uid
         && canCreateWiki();

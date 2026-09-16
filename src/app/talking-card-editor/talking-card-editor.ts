@@ -181,7 +181,12 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       .slice(0, 12);
   });
   readonly publicBoard = computed(() => this.boardVisibility() === 'public');
-  readonly needsPublication = computed(() => this.publicBoard() && this.selectedAtlas()?.is_public !== true);
+  readonly needsPublication = computed(() => {
+    const atlas = this.mode() === 'new'
+      ? this.availableAtlases().find((candidate) => candidate.id === this.createdAtlasId())
+      : this.selectedAtlas();
+    return this.publicBoard() && atlas?.is_public !== true;
+  });
   readonly selectedAtlasEditable = computed(() => {
     const atlas = this.selectedAtlas();
     return !!atlas && this.atlasService.canAdminAtlas(atlas);
@@ -201,9 +206,10 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   readonly canSave = computed(() => {
     if (this.saving() || this.imageProcessing() || this.voiceConfigLoading() || this.personalVoiceCreating()) return false;
     if (!this.openingMessage().trim() || !!this.actionFormMessage()) return false;
+    if (this.needsPublication() && !this.publishAvatar()) return false;
     if (this.isEditing() && !this.name().trim()) return false;
     if (this.mode() === 'existing') {
-      return !!this.selectedAtlas() && (!this.needsPublication() || this.publishAvatar());
+      return !!this.selectedAtlas();
     }
     return !!this.name().trim() && !!this.personaPrompt().trim();
   });
@@ -271,7 +277,6 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       this.uploadedImageUrl.set(profileImageUrl);
     }
     this.personaPrompt.set(this.realEstatePromptBase);
-    if (this.publicBoard()) this.publishAvatar.set(true);
   }
 
   setMode(mode: EditorMode): void {
@@ -279,6 +284,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     if (this.mode() === mode) return;
     this.stopVoicePreview();
     this.mode.set(mode);
+    this.publishAvatar.set(false);
     this.errorMessage.set(null);
     this.voiceErrorMessage.set(null);
     this.voiceSearch.set('');
@@ -924,7 +930,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
             throw new Error(this.documentsService.uploadError() || 'One or more knowledge files could not be uploaded.');
           }
         }
-        if (this.publicBoard() && resumedAtlas?.is_public !== true) {
+        if (this.publicBoard() && this.publishAvatar() && resumedAtlas?.is_public !== true) {
           this.saveStage.set('Publishing avatar…');
           await this.atlasService.updateAtlas(atlasId, { is_public: true });
         }
@@ -1057,7 +1063,9 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       this.catalogVoiceId.set(record.catalogVoiceId);
       this.personalVoiceId.set(record.personalVoiceId ?? '');
       this.voiceChoice.set(record.voiceChoice);
-      this.publishAvatar.set(this.isRealEstateSetup() && this.publicBoard() ? true : record.publishAvatar);
+      // Older drafts could have publication enabled automatically. Require a
+      // fresh choice whenever the editor is reopened instead of replaying it.
+      this.publishAvatar.set(false);
       this.imageFile.set(record.imageFile);
       const restoredImageUrl = record.uploadedImageUrl
         || (this.isRealEstateSetup() ? this.prefill()?.imageUrl?.trim() || '' : '');
