@@ -10,6 +10,7 @@ import { TeamsService } from '../teams/teams.service';
 export type WorkspaceNavigationKey =
   | 'home'
   | 'discover'
+  | 'off-grids'
   | 'city'
   | 'saved'
   | 'boards'
@@ -96,6 +97,7 @@ export class WorkspaceNavigationService {
     const items: WorkspaceNavigationItem[] = [
       { key: 'home', label: $localize`Home`, route: '/home', icon: 'home' },
       { key: 'discover', label: $localize`Discover`, route: '/discover', icon: 'travel_explore' },
+      { key: 'off-grids', label: $localize`Off Grids`, route: '/off-grids', icon: 'location_on' },
       {
         key: 'city',
         label: `${$localize`My City`} ${this.preferredCityName()}`,
@@ -191,6 +193,8 @@ export class WorkspaceNavigationService {
         return path === '/home' && !url.includes('#mobile-saved');
       case 'discover':
         return path === '/discover';
+      case 'off-grids':
+        return path === '/off-grids' || path.startsWith('/off-grids/');
       case 'city':
         return path === `/chat/${encodeURIComponent(this.preferredCitySlug())}`;
       case 'saved':

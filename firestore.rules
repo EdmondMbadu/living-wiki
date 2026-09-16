@@ -886,6 +886,27 @@ service cloud.firestore {
       allow list, create, update, delete: if false;
     }
 
+    // Full gems and originals remain owner-only. Public detail is served by
+    // offGridCommand, which also checks the current source board/card visibility.
+    match /off_grid_spots/{spotId} {
+      allow read: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      allow write: if false;
+      match /pin_talks/{clipId} {
+        allow read: if request.auth != null
+          && (get(/databases/$(database)/documents/off_grid_spots/$(spotId)).data.ownerUid == request.auth.uid
+            || resource.data.contributorUid == request.auth.uid);
+        allow write: if false;
+      }
+    }
+    match /public_off_grid_spots/{spotId} {
+      allow read, write: if false; // Access-checked, paginated directory callable.
+    }
+    match /users/{uid}/saved_off_grid_spots/{spotId} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['createdAt'])
+        && request.resource.data.createdAt is string;
+    }
     match /public_board_summaries/{boardId} {
       allow get, list: if resource.data.visibility == 'public';
       allow create, update, delete: if false;

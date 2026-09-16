@@ -6556,7 +6556,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     );
     const callable = httpsCallable<{
       boardId: string;
-      card: Pick<BoardCard, 'title' | 'notes' | 'imageUrl' | 'what3wordsAddress' | 'talkDrop'>;
+      card: Pick<BoardCard, 'title' | 'notes' | 'imageUrl' | 'what3wordsAddress' | 'talkDrop' | 'locationLat' | 'locationLng'>;
     }, unknown>(this.functions, 'addOffGridBoardCard');
     await callable({
       boardId: board.id,
@@ -6565,6 +6565,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         notes: card.notes,
         imageUrl,
         what3wordsAddress: card.what3wordsAddress,
+          locationLat: card.locationLat,
+          locationLng: card.locationLng,
         talkDrop: normalizeTalkDrop(card.talkDrop),
       },
     });

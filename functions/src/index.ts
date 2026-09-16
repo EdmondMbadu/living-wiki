@@ -1,3 +1,6 @@
+export { offGridCommand, offGridMedia, offGridShare, syncOffGridSpots } from './off-grids';
+import { resolveWords as resolveOffGridWords } from './off-grids/location';
+import { validCoordinates as validOffGridCoordinates } from './off-grids/model';
 import { offGridTalkDrop } from './off-grid-talk-drop';
 import { PLACE_PHOTO_ENDPOINT, placePhotoUrl } from './place-photo';
 import { resolvePlacePhoto } from './place-photo-response';
@@ -3382,6 +3385,8 @@ function buildOffGridContributionCard(
     placeId: '',
     googleMapsUrl: '',
     what3wordsAddress: words,
+    locationLat: input.locationLat,
+    locationLng: input.locationLng,
     tags: ['off-grid', 'what3words'],
     stickers: [],
     tour: null,
@@ -3932,7 +3937,12 @@ export const addOffGridBoardCard = onCall({ region: callableRegion, cors: true }
     contributor,
     (request.auth?.token ?? {}) as Record<string, unknown>,
   );
-  const card = buildOffGridContributionCard(request.data?.card, contributorName, contributorUserId);
+  const cardInput = { ...(request.data?.card ?? {}) };
+  if (!validOffGridCoordinates(cardInput.locationLat, cardInput.locationLng)) {
+    const resolved = await resolveOffGridWords(cardInput.what3wordsAddress);
+    cardInput.locationLat = resolved.lat; cardInput.locationLng = resolved.lng;
+  }
+  const card = buildOffGridContributionCard(cardInput, contributorName, contributorUserId);
   const boardRef = db.collection('boards').doc(boardId);
 
   await db.runTransaction(async (transaction) => {

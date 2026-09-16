@@ -202,3 +202,5 @@
     transition: none;
   }
 }
+
+.workspace-sidebar__nav .workspace-sidebar__item.workspace-sidebar__item--off-grids .material-symbols-outlined { color: #d94438; }

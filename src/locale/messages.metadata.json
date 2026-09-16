@@ -23,6 +23,10 @@
     "source": "Could not save this plan. Please try again.",
     "file": "src/app/boards/boards.ts"
   },
+  "1013066556929827966": {
+    "source": "What should someone know about this place?",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
   "1014264119617240869": {
     "source": "Plan saved. Your confirmation and calendar invite are on the way.",
     "file": "src/app/boards/boards.ts"
@@ -103,6 +107,10 @@
     "source": "https://rocketgoals.beehiiv.com/",
     "file": "src/app/web-scraper/web-scraper.html"
   },
+  "1069097977191991551": {
+    "source": "Finding location…",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "1073276515596375933": {
     "source": "End voice call",
     "file": "src/app/chat/chat.ts"
@@ -122,6 +130,10 @@
   "109966970101812576": {
     "source": "Clear language search",
     "file": "src/app/business-detail/business-detail.html"
+  },
+  "110137404541837952": {
+    "source": "Where’s your gem?",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "1102717806459547726": {
     "source": "Refresh",
@@ -151,6 +163,10 @@
     "source": "Sending...",
     "file": "src/app/chat/chat.ts"
   },
+  "1118999875152579401": {
+    "source": "Recovered your unfinished gem.",
+    "file": "src/app/off-grids/off-grid-editor.ts"
+  },
   "1124483518753573659": {
     "source": "{count} of 5 anonymous questions remaining.",
     "file": "src/app/chat/chat.ts"
@@ -178,6 +194,10 @@
   "1137319519199859335": {
     "source": "Subtitle",
     "file": "src/app/boards/boards.html"
+  },
+  "1140745588496305750": {
+    "source": "This video is longer than 3 minutes. Choose a shorter video.",
+    "file": "src/app/off-grids/pin-talk-recorder.ts"
   },
   "1144407473317535723": {
     "source": "Subscribe",
@@ -258,6 +278,10 @@
   "1184475180656020255": {
     "source": "Private boards are available on paid plans.",
     "file": "src/app/boards/boards.ts"
+  },
+  "11865190854747119": {
+    "source": "{$START_TAG_SPAN}●{$CLOSE_TAG_SPAN} Keep a little wonder",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "1188204667937081159": {
     "source": "Quiz not found.",
@@ -451,6 +475,10 @@
     "source": " Finds a Wikimedia image for each location, validates the image response, uploads it to our storage, then saves it as the public cover. ",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "1300933195638252597": {
+    "source": "Upload a PinTalk video",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
   "1302951071814792138": {
     "source": "Ask questions",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -462,6 +490,10 @@
   "1312779946545312155": {
     "source": "Story flow",
     "file": "src/app/boards/boards.ts"
+  },
+  "1314562873676673298": {
+    "source": "Saving…",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "1315625787188038913": {
     "source": "Video library controls",
@@ -683,6 +715,10 @@
     "source": "Scraper",
     "file": "src/app/workspace-navigation/workspace-navigation.ts"
   },
+  "1445551070202338783": {
+    "source": "Off Grid",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "1446768985954212859": {
     "source": "Sign in to email this board",
     "file": "src/app/boards/boards.html"
@@ -707,6 +743,10 @@
     "source": "Could not load the people on this plan.",
     "file": "src/app/boards/boards.ts"
   },
+  "1452395375498024055": {
+    "source": "Mute mic",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "1453675822145067970": {
     "source": "Everyone with access to this board can see names and best scores.",
     "file": "src/app/boards/boards.html"
@@ -730,6 +770,10 @@
   "1465150981029153833": {
     "source": "Population",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "1465614906828488657": {
+    "source": "Search a place, a hidden corner…",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "1467792767428951197": {
     "source": " Query-time knowledge gaps will appear here once users start asking questions the current source files cannot answer. ",
@@ -770,6 +814,10 @@
   "1485829895525020351": {
     "source": " Dymaxion Navigation ",
     "file": "src/app/dymaxion/dymaxion.html"
+  },
+  "1486355439024128730": {
+    "source": "{$START_TAG_SPAN}arrow_back{$CLOSE_TAG_SPAN} All Off Grids ",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "1486625977314947145": {
     "source": "{$START_TAG_SPAN}deselect{$CLOSE_TAG_SPAN} Clear ",
@@ -843,6 +891,10 @@
     "source": "Loading people…",
     "file": "src/app/boards/boards.html"
   },
+  "1526732036695638270": {
+    "source": "Confirm this point",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "1528163516676561552": {
     "source": "Source Files",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -871,9 +923,17 @@
     "source": "VC firms, fund sizes, portfolio companies, investment theses, and the funding landscape — a living Crunchbase alternative compiled from public data.",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "1537182753428979970": {
+    "source": "Choose a JPG, PNG, WebP or HEIC photo under 10 MB.",
+    "file": "src/app/off-grids/off-grid-editor.ts"
+  },
   "1540202961622861809": {
     "source": "Could not load friends right now.",
     "file": "src/app/boards/boards.ts"
+  },
+  "1541165441090835080": {
+    "source": "Upload a cover photo",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "1543538730036692975": {
     "source": "Passwords do not match.",
@@ -971,6 +1031,10 @@
     "source": "Video library summary",
     "file": "src/app/video-library/video-library.html"
   },
+  "1590063644546874008": {
+    "source": "No gems found",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "159056361923511723": {
     "source": "Neighborhood or address",
     "file": "src/app/business-claim/business-claim.html"
@@ -990,6 +1054,10 @@
   "16005692485610512": {
     "source": "and see how well you know this board.",
     "file": "src/app/boards/boards.ts"
+  },
+  "1601141984880840937": {
+    "source": "Could not update this PinTalk. Please retry.",
+    "file": "src/app/off-grids/off-grids.ts"
   },
   "1606346231769336177": {
     "source": "Create an even mix, with images kept as reliable fallbacks.",
@@ -1071,6 +1139,10 @@
     "source": "Automatic default",
     "file": "src/app/atlas-persona/atlas-persona.html"
   },
+  "1688215489734786191": {
+    "source": " Flip camera ",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
   "1693937864227883367": {
     "source": " Open in Spotify {$START_TAG_SPAN}open_in_new{$CLOSE_TAG_SPAN}",
     "file": "src/app/spotify-player/spotify-player.html"
@@ -1151,6 +1223,10 @@
     "source": "City themes",
     "file": "src/app/dymaxion/dymaxion.html"
   },
+  "1739621083679593799": {
+    "source": "Refine your gem",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "1739699747793109589": {
     "source": "More sharing options could not be opened.",
     "file": "src/app/boards/boards.ts"
@@ -1171,6 +1247,10 @@
     "source": "Voice",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "1751217126295384319": {
+    "source": " Keep gem ",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "1755282281769141570": {
     "source": "Create a board video",
     "file": "src/app/video-library/video-library.html"
@@ -1178,6 +1258,10 @@
   "1757369727553818439": {
     "source": "Internet",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "1759775443197202312": {
+    "source": "PinTalk {$START_TAG_SPAN}optional{$CLOSE_TAG_SPAN}",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "1759973796567198026": {
     "source": " View all public wikis {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
@@ -1351,6 +1435,10 @@
     "source": "Share this board with an accepted LivingWiki friend. After signing in, they can add a photo and exact what3words square without editing your other cards.",
     "file": "src/app/boards/boards.html"
   },
+  "1882998815981889967": {
+    "source": " Delete gem ",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "18843475576340683": {
     "source": "Use a URL",
     "file": "src/app/boards/boards.ts"
@@ -1371,13 +1459,13 @@
     "source": "Internet mode is not limited to your documents. It uses public web sources and broader general knowledge.",
     "file": "src/app/chat/chat.ts"
   },
-  "188918051849205907": {
-    "source": "Edit anything before saving",
-    "file": "src/app/boards/boards.html"
-  },
   "1890174366404475460": {
     "source": "Sign in to create a board.",
     "file": "src/app/boards/boards.ts"
+  },
+  "1891673023593688998": {
+    "source": "Adding PinTalk…",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "1910853702226231310": {
     "source": "{$START_TAG_SPAN}more_horiz{$CLOSE_TAG_SPAN} More sharing options ",
@@ -1411,6 +1499,10 @@
     "source": "Density / km² {$START_TAG_SPAN}(optional){$CLOSE_TAG_SPAN}",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "1932739823208887515": {
+    "source": "Unsave ",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "1935465658996151395": {
     "source": "Mute microphone",
     "file": "src/app/chat/chat.ts"
@@ -1434,6 +1526,10 @@
   "1958941022278691804": {
     "source": "Open board logo link",
     "file": "src/app/boards/boards.html"
+  },
+  "1962293714909250945": {
+    "source": "Featured PinTalk",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "1964253584381467198": {
     "source": "Internet mode",
@@ -1559,6 +1655,10 @@
     "source": "Return to Stack Studio to create a narrated video with any included voice. A paid plan is only required when you create and use your own Personal Voice.",
     "file": "src/app/pricing/pricing.ts"
   },
+  "2027616025642565959": {
+    "source": "{$TAG_INPUT} Let accepted LivingWiki friends submit PinTalks for my approval.",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "2031158923353182856": {
     "source": "Landing preview",
     "file": "src/app/city-pulse-admin/city-pulse-admin.html"
@@ -1635,6 +1735,10 @@
     "source": " I can answer in your chosen language and connect the business context with the {$INTERPOLATION} wiki. ",
     "file": "src/app/business-detail/business-detail.html"
   },
+  "2076799214367641936": {
+    "source": "Use your phone camera{$TAG_INPUT}",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
   "208140083392458379": {
     "source": "Flowers",
     "file": "src/app/business-badge-icons.ts"
@@ -1699,6 +1803,10 @@
     "source": "No businesses yet",
     "file": "src/app/business/business.html"
   },
+  "2125724885362598526": {
+    "source": "Your gem’s cover photo",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "2128854158877504143": {
     "source": "External links and saved profile attachments will appear here.",
     "file": "src/app/profile/profile.html"
@@ -1743,9 +1851,17 @@
     "source": "Region / state",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "2156222852430773967": {
+    "source": "Unmute mic",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "2159130950882492111": {
     "source": "Cancel",
     "file": "src/app/atlas-landing/atlas-landing.html"
+  },
+  "2159635569374531395": {
+    "source": "Place the pin exactly where someone should go.",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "2160383143010957646": {
     "source": "A public knowledge home for a community, company, collection, archive, event, or specialized dataset.",
@@ -1755,9 +1871,17 @@
     "source": " Open Gemini billing ",
     "file": "src/app/boards/boards.html"
   },
+  "2163994960089674019": {
+    "source": "Uploading photo · ",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "2167591127908300399": {
     "source": "Anyone with this link can read this thread. They will not be able to reply from the shared page.",
     "file": "src/app/chat/chat.ts"
+  },
+  "2168704543971319850": {
+    "source": "{$START_TAG_SPAN}add_location_alt{$CLOSE_TAG_SPAN} Mark a gem",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "2170438266510307114": {
     "source": "Only the board owner can delete this board.",
@@ -1774,6 +1898,10 @@
   "2184619916211262318": {
     "source": "Copy URL",
     "file": "src/app/chat/chat.ts"
+  },
+  "2185406886234178302": {
+    "source": "The exact spot",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "2189507244978938064": {
     "source": "ERROR",
@@ -1899,6 +2027,10 @@
     "source": "ElevenLabs conversation voice",
     "file": "src/app/atlas-persona/atlas-persona.html"
   },
+  "2267675412108805180": {
+    "source": "−90 to 90",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "2267745389656750090": {
     "source": "Warm Storyteller",
     "file": "src/app/boards/boards.ts"
@@ -1963,6 +2095,10 @@
     "source": "LivingWiki home",
     "file": "src/app/auth-story-panel/auth-story-panel.html"
   },
+  "2307755913674920445": {
+    "source": " My pins",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "2312076048705890765": {
     "source": "DONE",
     "file": "src/app/web-scraper/web-scraper.ts"
@@ -1979,9 +2115,17 @@
     "source": "Newest first",
     "file": "src/app/video-library/video-library.html"
   },
+  "231860958035139417": {
+    "source": "Opening this gem…",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "2326055153434981693": {
     "source": "Best score per person",
     "file": "src/app/boards/boards.html"
+  },
+  "2326224424552615886": {
+    "source": "Publishing shares the exact coordinates, photo and approved PinTalks. You can make the gem private again.",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "2327133521228874688": {
     "source": "Storefront badge",
@@ -2026,6 +2170,14 @@
   "2340380252700550262": {
     "source": "{$START_TAG_SPAN}03{$CLOSE_TAG_SPAN} Did You Know?",
     "file": "src/app/answer-card/answer-card.html"
+  },
+  "2340884516270255685": {
+    "source": "Your gem, ready to go",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
+  "2340987468786481348": {
+    "source": " Remove / retry ",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
   },
   "2341938591438593427": {
     "source": " By continuing, you agree to the {$START_LINK}Terms and Conditions{$CLOSE_LINK} and {$START_LINK_1}Privacy Policy{$CLOSE_LINK}. ",
@@ -2211,6 +2363,10 @@
     "source": "Your leaderboard name",
     "file": "src/app/boards/boards.html"
   },
+  "2473528728074319344": {
+    "source": "PinTalk",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "2476720291978934849": {
     "source": "Back to {$INTERPOLATION}",
     "file": "src/app/business-detail/business-edit.html"
@@ -2243,6 +2399,14 @@
     "source": "No matching languages.",
     "file": "src/app/business-detail/business-detail.html"
   },
+  "2498587704022607656": {
+    "source": "Private gem",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
+  "2504945174338531940": {
+    "source": "Your PinTalk will be private until the owner approves it.",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "2507063513175362648": {
     "source": "business",
     "file": "src/app/business-detail/business-detail.ts"
@@ -2270,6 +2434,10 @@
   "2516631317232577327": {
     "source": "Auto-generated",
     "file": "src/app/atlas-landing/atlas-landing.html"
+  },
+  "2518395172305782086": {
+    "source": "PinTalk ready. It shares this gem’s visibility.",
+    "file": "src/app/off-grids/off-grid-editor.ts"
   },
   "2519176957024369433": {
     "source": "Interactive live view",
@@ -2303,6 +2471,10 @@
     "source": "LivingWiki mode stays grounded in your indexed documents and wiki pages.",
     "file": "src/app/chat/chat.ts"
   },
+  "2534455378948884294": {
+    "source": "Review your PinTalk",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
   "2539423828112784446": {
     "source": "Sources & Methods",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -2334,6 +2506,10 @@
   "2555853257286023739": {
     "source": " Claim your business {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
     "file": "src/app/business/business.html"
+  },
+  "2556779559750573635": {
+    "source": "Recording was interrupted. Please retry.",
+    "file": "src/app/off-grids/pin-talk-recorder.ts"
   },
   "2557623954339695776": {
     "source": "Connections",
@@ -2511,6 +2687,10 @@
     "source": "Loading the world…",
     "file": "src/app/dymaxion/dymaxion.html"
   },
+  "2640386876408970643": {
+    "source": "Exact point confirmed",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "2646320061781480959": {
     "source": "Card details were refreshed, but no matching song preview was found.",
     "file": "src/app/boards/boards.ts"
@@ -2562,6 +2742,10 @@
   "2674710062302522976": {
     "source": "Describe what this card should become, or start with a title/place first.",
     "file": "src/app/boards/boards.ts"
+  },
+  "2677403608256780695": {
+    "source": "Review gem",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "268207037286012614": {
     "source": "{$INTERPOLATION} like{$INTERPOLATION_1}",
@@ -2642,6 +2826,14 @@
   "276188119057253094": {
     "source": "Original links and locations stay unchanged.",
     "file": "src/app/boards/boards.html"
+  },
+  "2762072856111391525": {
+    "source": "e.g. North Cape May, NJ",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
+  "2763843319651872258": {
+    "source": "Choose an MP4, MOV or WebM video.",
+    "file": "src/app/off-grids/pin-talk-recorder.ts"
   },
   "276612756910514598": {
     "source": "Study cards",
@@ -2747,6 +2939,10 @@
     "source": "DISCOVERING",
     "file": "src/app/web-scraper/web-scraper.ts"
   },
+  "2844291781616832346": {
+    "source": "Choose a valid map point first.",
+    "file": "src/app/off-grids/off-grid-editor.ts"
+  },
   "2846368497805956185": {
     "source": " Upload documents ",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -2851,6 +3047,10 @@
     "source": "{$START_TAG_SPAN}lock{$CLOSE_TAG_SPAN} Private ",
     "file": "src/app/boards/boards.html"
   },
+  "2913328317961741034": {
+    "source": "Use my location",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "2917314929120683887": {
     "source": " Continue ",
     "file": "src/app/auth-action/auth-action.html"
@@ -2883,6 +3083,10 @@
     "source": "will be removed from My Videos. Its source board will not be deleted.",
     "file": "src/app/video-library/video-library.html"
   },
+  "2939458409043682964": {
+    "source": "Confirm a map point",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "2940010916792941547": {
     "source": "My City",
     "file": "src/app/workspace-navigation/workspace-navigation.ts"
@@ -2890,6 +3094,10 @@
   "2940597258261263177": {
     "source": "Creating a useful title and description. You can edit everything afterward.",
     "file": "src/app/boards/boards.html"
+  },
+  "2940667374530496223": {
+    "source": "Off Grid gem",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "2940756236215867987": {
     "source": "Card details",
@@ -3007,6 +3215,10 @@
     "source": "Business Chat History | LivingWiki",
     "file": "src/app/app.routes.ts"
   },
+  "3000107368976686051": {
+    "source": "Selected gem",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "3000436585277219288": {
     "source": "Save the parent card before adding related cards.",
     "file": "src/app/boards/boards.ts"
@@ -3046,6 +3258,10 @@
   "3023338532329792149": {
     "source": "Paste and verify",
     "file": "src/app/boards/boards.html"
+  },
+  "3027024602363440141": {
+    "source": "Awaiting approval",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "3033903988434708190": {
     "source": "Back note",
@@ -3111,6 +3327,10 @@
     "source": "Instagram",
     "file": "src/app/answer-card/answer-card.html"
   },
+  "3082304621919543349": {
+    "source": "Try another search, or mark a place you love.",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "3083436517363670542": {
     "source": "Hotel",
     "file": "src/app/business-badge-icons.ts"
@@ -3174,6 +3394,10 @@
   "3121015301348159714": {
     "source": " Every claimed business gets an always-on customer-service agent that can answer calls, explain the business, and guide customers in 60+ languages. Customers choose the language when they scan or call, so there is nothing for the business to configure here. ",
     "file": "src/app/business-claim/business-claim.html"
+  },
+  "3122017215826850357": {
+    "source": "Save a place you want to come back to.",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "3128911811072399567": {
     "source": " {$INTERPOLATION} ready/retry · {$INTERPOLATION_1} skipped/created ",
@@ -3262,10 +3486,6 @@
   "316787816491296973": {
     "source": "Open destination",
     "file": "src/app/business-detail/business-detail.html"
-  },
-  "3169859140558738562": {
-    "source": "Explore more boards",
-    "file": "src/app/public-wikis/public-wikis.html"
   },
   "3171683206914962995": {
     "source": "Admin email",
@@ -3439,6 +3659,10 @@
     "source": "Failed to delete this business.",
     "file": "src/app/business/business.ts"
   },
+  "32626507470717433": {
+    "source": "Continue to story",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "3265258875362223842": {
     "source": "Voice name",
     "file": "src/app/boards/boards.html"
@@ -3597,7 +3821,7 @@
   },
   "3351209217299739942": {
     "source": "Dismiss message",
-    "file": "src/app/video-library/video-library.html"
+    "file": "src/app/off-grids/off-grids.html"
   },
   "335464837566395534": {
     "source": "Translating this board…",
@@ -3883,17 +4107,33 @@
     "source": "Find automatically",
     "file": "src/app/boards/boards.html"
   },
+  "3509362658974456343": {
+    "source": "End (seconds){$TAG_INPUT}",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
   "3515141984520207626": {
     "source": "Markdown is supported. Describe identity, tone, boundaries, and priorities.",
     "file": "src/app/atlas-persona/atlas-persona.html"
+  },
+  "3516442037525819881": {
+    "source": "Add this PinTalk",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "3517550046701184661": {
     "source": "Show less",
     "file": "src/app/chat/chat.ts"
   },
+  "3519978665353285906": {
+    "source": "No PinTalk yet. The place already has a story.",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "352109584849203881": {
     "source": "Market Signal",
     "file": "src/app/profile/profile-icons.ts"
+  },
+  "3523330752741150313": {
+    "source": "QR code for this gem",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "3524352048804983227": {
     "source": "{$INTERPOLATION} of {$INTERPOLATION_1} processed · {$INTERPOLATION_2} added · {$INTERPOLATION_3} failed",
@@ -3938,6 +4178,10 @@
   "3535644945061753568": {
     "source": "Retake photo",
     "file": "src/app/boards/boards.html"
+  },
+  "3536189250760140573": {
+    "source": "The little tip{$START_TAG_TEXTAREA}{$CLOSE_TAG_TEXTAREA}",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "3538310262732979798": {
     "source": "日本語",
@@ -4059,6 +4303,10 @@
     "source": " I agree to the {$START_LINK}Terms and Conditions{$CLOSE_LINK} and {$START_LINK_1}Privacy Policy{$CLOSE_LINK}. ",
     "file": "src/app/create-account/create-account.html"
   },
+  "3615372081756955189": {
+    "source": "This gem needs a confirmed location before it can be shared.",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "3621411074611200765": {
     "source": "Create public city Wikis in bulk.",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -4098,6 +4346,10 @@
   "3643866539136239218": {
     "source": "Clear search",
     "file": "src/app/fence-line/fence-line.html"
+  },
+  "3647052596401391686": {
+    "source": "{$START_TAG_SPAN}near_me{$CLOSE_TAG_SPAN} Let’s go",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "3647578343321290452": {
     "source": "Send a message to start a chat",
@@ -4163,6 +4415,10 @@
     "source": "Call the {city} guide",
     "file": "src/app/chat/chat.ts"
   },
+  "3686284950598311784": {
+    "source": "Private",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "3687700726433545247": {
     "source": "Expand knowledge",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -4227,6 +4483,10 @@
     "source": "Board title",
     "file": "src/app/boards/boards.html"
   },
+  "3731072414694094350": {
+    "source": "Choose who gets to discover it.",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "3732245029674921034": {
     "source": "Back to Wiki settings",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -4238,6 +4498,10 @@
   "3735718779120438613": {
     "source": "Questions begin with your card details. Edit anything before learners see it.",
     "file": "src/app/boards/boards.html"
+  },
+  "3742867855774244619": {
+    "source": "A gem waiting for its story.",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "3747563688323690440": {
     "source": "Lines {$INTERPOLATION}-{$INTERPOLATION_1}",
@@ -4271,6 +4535,10 @@
     "source": "Account and linked spaces",
     "file": "src/app/profile/profile.html"
   },
+  "378036953025015729": {
+    "source": "Copy is unavailable. Select and copy the link shown below.",
+    "file": "src/app/off-grids/off-grids.ts"
+  },
   "3781832327366529005": {
     "source": "A strong first pass. The cards are here when you’re ready.",
     "file": "src/app/boards/boards.html"
@@ -4282,6 +4550,10 @@
   "3783064148266803578": {
     "source": "Stop placement",
     "file": "src/app/boards/boards.html"
+  },
+  "3783913300558991064": {
+    "source": "Start (seconds){$TAG_INPUT}",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
   },
   "3786725788701679426": {
     "source": " LivingWiki gives local businesses a place inside the living map of a city: a profile, a pin, guide placement, and signals that help people find the real local places search engines flatten. ",
@@ -4591,6 +4863,10 @@
     "source": "Send email invitation",
     "file": "src/app/boards/boards.html"
   },
+  "3978921383846633878": {
+    "source": "Download QR code",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "3983481141170710649": {
     "source": "This browser cannot access your location.",
     "file": "src/app/boards/boards.ts"
@@ -4614,6 +4890,10 @@
   "3996140025732361969": {
     "source": "Sign in to save score",
     "file": "src/app/answer-quiz/answer-quiz.html"
+  },
+  "399733610653691837": {
+    "source": "Search gems by place or name",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "3998597663055219440": {
     "source": "Sources",
@@ -4927,6 +5207,10 @@
     "source": "Burger",
     "file": "src/app/business-badge-icons.ts"
   },
+  "4213702599400541027": {
+    "source": "Off Grids | LivingWiki",
+    "file": "src/app/off-grids/off-grids.ts"
+  },
   "4215991549357490776": {
     "source": "My Videos | LivingWiki",
     "file": "src/app/app.routes.ts"
@@ -4970,6 +5254,10 @@
   "4239718168507881716": {
     "source": "Guide voice",
     "file": "src/app/boards/boards.html"
+  },
+  "424003285334757513": {
+    "source": "Only you. A little gem for later.",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "4249068999260934909": {
     "source": "A verified signal for people comparing places in the same neighborhood.",
@@ -5095,6 +5383,10 @@
     "source": " Upload once.{$LINE_BREAK}Know forever. ",
     "file": "src/app/marketing/marketing.html"
   },
+  "4322110766959005087": {
+    "source": "Gem unavailable",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "4323470180912194028": {
     "source": "Copy",
     "file": "src/app/boards/boards.html"
@@ -5211,6 +5503,10 @@
     "source": "Failed to create Wiki.",
     "file": "src/app/wiki-home/wiki-home.ts"
   },
+  "4407748766158651565": {
+    "source": "MP4, MOV or WebM · 3 min · 100 MB",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
   "4411804916643972918": {
     "source": " Refreshing Philly green jobs… ",
     "file": "src/app/green-jobs/green-jobs.html"
@@ -5234,6 +5530,10 @@
   "4433045146481083713": {
     "source": "Failed to load your businesses.",
     "file": "src/app/business/business.ts"
+  },
+  "4434103319779741144": {
+    "source": " Delete gem",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "4440081753597585133": {
     "source": "LinkedIn",
@@ -5287,6 +5587,10 @@
     "source": "Read {name}’s complete take",
     "file": "src/app/chat/chat.ts"
   },
+  "4477694780395699849": {
+    "source": "Record or upload",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "4484676174227819130": {
     "source": "Loading business page...",
     "file": "src/app/business-detail/business-detail.html"
@@ -5310,6 +5614,10 @@
   "4501634172827452215": {
     "source": "Songs | LivingWiki",
     "file": "src/app/app.routes.ts"
+  },
+  "4504436617493685500": {
+    "source": "Paste a location {$START_TAG_DIV}{$TAG_INPUT}{$START_TAG_BUTTON} Find {$CLOSE_TAG_BUTTON}{$CLOSE_TAG_DIV}",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "4506803456670769268": {
     "source": "Admins",
@@ -5347,6 +5655,10 @@
     "source": "Realtime voice mode",
     "file": "src/app/chat/chat.ts"
   },
+  "451652522473079254": {
+    "source": "−180 to 180",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "4520653876045408569": {
     "source": "Add icons across this collection · {$INTERPOLATION} selected",
     "file": "src/app/boards/boards.html"
@@ -5367,6 +5679,10 @@
     "source": "Trending Figures",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "4526591760407029960": {
+    "source": "View the original board {$START_TAG_SPAN}↗{$CLOSE_TAG_SPAN}",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "452663918652422541": {
     "source": "Describe the picture",
     "file": "src/app/boards/boards.html"
@@ -5382,6 +5698,10 @@
   "4536580068218685874": {
     "source": "Choose the balance once. You can still edit any card before saving.",
     "file": "src/app/boards/boards.html"
+  },
+  "4538300872340685410": {
+    "source": "A photo. An exact pin. A story worth sharing.",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "4539910588356049438": {
     "source": "Family",
@@ -5503,6 +5823,10 @@
     "source": "Saved Boards",
     "file": "src/app/public-wikis/public-wikis.ts"
   },
+  "4602557700695425523": {
+    "source": "Your PinTalk stays private until you publish this gem.",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "4603224590655768458": {
     "source": "Preview script",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -5530,6 +5854,10 @@
   "4625955273392144028": {
     "source": "How does {topic} connect to {city}?",
     "file": "src/app/chat/chat.ts"
+  },
+  "4627235916563080021": {
+    "source": "Share its photo, exact location and PinTalks with everyone.",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "4633505197540468968": {
     "source": "Current wiki",
@@ -5751,9 +6079,17 @@
     "source": "Manage each Wiki from one place.",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "4753460052653112408": {
+    "source": "Show what makes this place special.",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "4756987174168584356": {
     "source": "Search businesses by name, owner, admin, city, status, or category...",
     "file": "src/app/admin-users/admin-users.html"
+  },
+  "4758545401091332661": {
+    "source": "PinTalk by ",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "476014195758025586": {
     "source": "Close voice library",
@@ -5858,6 +6194,10 @@
   "4805068354673369728": {
     "source": " {$INTERPOLATION} already ingested in this atlas · {$INTERPOLATION_1} new ",
     "file": "src/app/web-scraper/web-scraper.html"
+  },
+  "4808589666930368915": {
+    "source": "Draft",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "4810055642879015825": {
     "source": "Request a new password reset email and try again.",
@@ -6051,6 +6391,10 @@
     "source": "Failed to remove subscriber.",
     "file": "src/app/atlas-manage/atlas-manage.ts"
   },
+  "4947937113413194719": {
+    "source": "{$START_TAG_SPAN}arrow_back{$CLOSE_TAG_SPAN} Off Grids",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "4948916864958025826": {
     "source": "This link will open a read-only public thread page at the exact conversation.",
     "file": "src/app/chat/chat.ts"
@@ -6219,6 +6563,10 @@
     "source": "Ask This Topic",
     "file": "src/app/wiki/wiki.html"
   },
+  "5038772050275485800": {
+    "source": "Preparing your video and cover…",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "5041354590769758251": {
     "source": "Admin",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -6259,6 +6607,10 @@
     "source": "Total users",
     "file": "src/app/admin-users/admin-users.html"
   },
+  "5069989880461196072": {
+    "source": "Getting there & access {$START_TAG_SPAN}optional{$CLOSE_TAG_SPAN}{$START_TAG_TEXTAREA}{$CLOSE_TAG_TEXTAREA}",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "5072800929048912019": {
     "source": "Join the leaderboard",
     "file": "src/app/boards/boards.html"
@@ -6270,6 +6622,10 @@
   "5080775557941296581": {
     "source": "Pricing",
     "file": "src/app/marketing/marketing.ts"
+  },
+  "5085647728661887864": {
+    "source": "Creation progress",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "5086540339836800031": {
     "source": "Failed to delete atlas.",
@@ -6303,6 +6659,10 @@
     "source": "Discover. Share. Belong.",
     "file": "src/app/public-wikis/public-wikis.html"
   },
+  "5100890377770507807": {
+    "source": "{$START_TAG_SPAN}videocam{$CLOSE_TAG_SPAN}Add a PinTalk ",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "5103910017747954236": {
     "source": "The Mental Health Knowledge Base",
     "file": "src/app/public-wiki-catalog.ts"
@@ -6330,6 +6690,10 @@
   "514357901970099603": {
     "source": "Business page sections",
     "file": "src/app/business-detail/business-detail.html"
+  },
+  "5146666426693766743": {
+    "source": "Sharing is unavailable. Use Copy link.",
+    "file": "src/app/off-grids/off-grids.ts"
   },
   "5148838957084536853": {
     "source": "Make quiz challenge",
@@ -6359,6 +6723,10 @@
     "source": "Country",
     "file": "src/app/boards/boards.ts"
   },
+  "5161784506993942724": {
+    "source": "Area or nearest town {$START_TAG_SPAN}optional{$CLOSE_TAG_SPAN}{$TAG_INPUT}",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "5164821362134878891": {
     "source": "Show the board as written",
     "file": "src/app/boards/boards.html"
@@ -6382,6 +6750,10 @@
   "5178138591256693636": {
     "source": "videos",
     "file": "src/app/video-library/video-library.html"
+  },
+  "5178262306084720005": {
+    "source": " Feature ",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "5178279567184039683": {
     "source": "Americas",
@@ -6419,6 +6791,10 @@
     "source": "Queueing stopped after the current article.",
     "file": "src/app/web-scraper/web-scraper.ts"
   },
+  "519834541142405983": {
+    "source": "Adding this PinTalk makes it visible on your public gem.",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "5207635742003539443": {
     "source": "Sign in",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -6450,6 +6826,10 @@
   "5224604665222373201": {
     "source": "Books",
     "file": "src/app/business-badge-icons.ts"
+  },
+  "5226487613079461597": {
+    "source": "Opening your gem…",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "5232192856903168350": {
     "source": "Picture search results",
@@ -6591,6 +6971,10 @@
     "source": "Saving updates every stop number, path, distance, and time.",
     "file": "src/app/boards/boards.html"
   },
+  "5310540875717723811": {
+    "source": "Recording is unavailable in this browser. Upload a video instead.",
+    "file": "src/app/off-grids/pin-talk-recorder.ts"
+  },
   "5315420754614758463": {
     "source": "Choose a flag to switch {city} into your language.",
     "file": "src/app/chat/chat.ts"
@@ -6598,6 +6982,10 @@
   "531610656871821471": {
     "source": "The Card Wizard could not prepare this tour stop.",
     "file": "src/app/boards/boards.ts"
+  },
+  "5317744780814127508": {
+    "source": "Who can see this gem?",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "5319270740283486499": {
     "source": "Link ready · coordinates not verified",
@@ -6750,6 +7138,10 @@
   "5420117234346762042": {
     "source": "Page Not Found | LivingWiki",
     "file": "src/app/app.routes.ts"
+  },
+  "5420182910721390368": {
+    "source": "Adding a PinTalk places it on your currently public gem.",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "5422180542602790852": {
     "source": "You must keep at least one Wiki.",
@@ -6935,6 +7327,10 @@
     "source": "Sign in to continue",
     "file": "src/app/chat/chat.ts"
   },
+  "5549436082738528398": {
+    "source": "Camera preview",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
   "5551593943246562972": {
     "source": "City-first",
     "file": "src/app/public-wikis/public-wikis.html"
@@ -6951,6 +7347,10 @@
     "source": "No voices match that search",
     "file": "src/app/boards/boards.html"
   },
+  "5555504429848988762": {
+    "source": "Could not delete this gem. Please retry.",
+    "file": "src/app/off-grids/off-grid-editor.ts"
+  },
   "5558151094212447064": {
     "source": "Guide picks",
     "file": "src/app/chat/chat.ts"
@@ -6963,6 +7363,10 @@
     "source": "Uses an energetic, youthful point of view without forced slang.",
     "file": "src/app/boards/board-narration-style.ts"
   },
+  "5568209569960932511": {
+    "source": "Cancel upload",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
   "55701353440365615": {
     "source": "Reddit",
     "file": "src/app/answer-card/answer-card.html"
@@ -6974,6 +7378,10 @@
   "5573477529762068251": {
     "source": "{$START_TAG_SPAN}travel_explore{$CLOSE_TAG_SPAN} Page not found ",
     "file": "src/app/not-found/not-found.html"
+  },
+  "5573607757215785010": {
+    "source": "Caption or transcript{$START_TAG_TEXTAREA}{$CLOSE_TAG_TEXTAREA}",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
   },
   "5574277100406011494": {
     "source": "A Spotify track was found, but no playable preview URL was available for this song.",
@@ -6998,6 +7406,10 @@
   "5584484697694224279": {
     "source": "Add to tour",
     "file": "src/app/boards/boards.html"
+  },
+  "5584821962052747543": {
+    "source": "Share this gem",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "5585336786825601578": {
     "source": " Manage every claimed business attached to {$INTERPOLATION}. Open the public page, edit details, or claim a new business from one place. ",
@@ -7115,6 +7527,14 @@
     "source": "Describe it",
     "file": "src/app/boards/boards.ts"
   },
+  "5659495961834700885": {
+    "source": "Latitude{$TAG_INPUT}",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
+  "5660074320035448783": {
+    "source": " This gem is private. Publish it from the review screen to share its location and PinTalks. ",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "5660227828366946260": {
     "source": "Clear Wiki search",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -7151,6 +7571,10 @@
     "source": "Timestamp",
     "file": "src/app/business-detail/business-activity.html"
   },
+  "5669145746110435778": {
+    "source": "Off Grid gems",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "5672342885880089752": {
     "source": "1 match",
     "file": "src/app/city-places/city-places.ts"
@@ -7183,6 +7607,10 @@
     "source": "person@example.com",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "5695892238965626544": {
+    "source": "Save private gem",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "5695942724218198223": {
     "source": "City Wikis",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -7214,6 +7642,10 @@
   "5711167623922265832": {
     "source": "Fenceline page",
     "file": "src/app/fence-line/fence-line.html"
+  },
+  "5720973353435316451": {
+    "source": "Off Grids",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "5722293572997738324": {
     "source": "How are you adding this place?",
@@ -7250,6 +7682,10 @@
   "5736481176444461852": {
     "source": "About Us",
     "file": "src/app/business-detail/business-detail.html"
+  },
+  "5737287568482767307": {
+    "source": "Grid",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "5738776740832108487": {
     "source": "Last run",
@@ -7351,6 +7787,10 @@
     "source": "Search narrator voices",
     "file": "src/app/boards/boards.html"
   },
+  "5798620275146581062": {
+    "source": "{$START_TAG_SPAN}●{$CLOSE_TAG_SPAN} A little off the beaten path",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "5800187103306660757": {
     "source": "Password updated",
     "file": "src/app/auth-action/auth-action.ts"
@@ -7407,6 +7847,10 @@
     "source": "Just me",
     "file": "src/app/boards/boards.ts"
   },
+  "5839438028889856005": {
+    "source": "Stop recording",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
   "5842949361840541833": {
     "source": "Edit Page",
     "file": "src/app/workspace-navigation/workspace-navigation.ts"
@@ -7426,6 +7870,10 @@
   "5851628688228555592": {
     "source": "AI generation is temporarily unavailable. No placeholder cards were created. Please try again shortly.",
     "file": "src/app/boards/boards.ts"
+  },
+  "5852909213112347729": {
+    "source": "Public gem link",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "5853877569956439161": {
     "source": "Could not start the Spotify connection.",
@@ -7507,6 +7955,10 @@
     "source": "This board is not open for Off-grid contributions.",
     "file": "src/app/boards/boards.ts"
   },
+  "5903517032352278387": {
+    "source": "Tell the story in your own words.",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "590616917486584580": {
     "source": "Make cover",
     "file": "src/app/boards/boards.html"
@@ -7514,6 +7966,10 @@
   "590685240033023104": {
     "source": "Wiki not found",
     "file": "src/app/atlas-landing/atlas-landing.html"
+  },
+  "5907432291219070185": {
+    "source": "Loading gems",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "5911629878274755333": {
     "source": "{$INTERPOLATION} sources",
@@ -7599,6 +8055,10 @@
     "source": "Could not upload that image.",
     "file": "src/app/profile/profile.ts"
   },
+  "5971530075075761455": {
+    "source": "Discover more",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "5971728511112412137": {
     "source": "Test QR destination",
     "file": "src/app/business-detail/business-detail.html"
@@ -7642,6 +8102,10 @@
   "6009939582129174098": {
     "source": "OpenClaw & the Agentic AI Revolution",
     "file": "src/app/public-wiki-catalog.ts"
+  },
+  "601361523172282978": {
+    "source": "A little story from the spot.",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "6013809289335979770": {
     "source": "“Never claim certainty when primary sources disagree.”",
@@ -7755,6 +8219,10 @@
     "source": "Business detail page",
     "file": "src/app/business-detail/business-detail.html"
   },
+  "6084736352831665596": {
+    "source": " Explore",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "6085335332272203520": {
     "source": "Could not refresh Philly green jobs.",
     "file": "src/app/green-jobs/green-jobs.ts"
@@ -7771,9 +8239,17 @@
     "source": "Cover image automation",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "6099245694231077613": {
+    "source": "Add a photo of your gem",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "6099582880838447961": {
     "source": "Checking for the latest version from each board.",
     "file": "src/app/video-library/video-library.html"
+  },
+  "6105613215859497884": {
+    "source": "Coordinates, Google Maps link or what3words",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "6109343307319603955": {
     "source": "PWD Apprenticeships",
@@ -7827,6 +8303,10 @@
     "source": "Public Wiki | LivingWiki",
     "file": "src/app/app.routes.ts"
   },
+  "6145437130739785842": {
+    "source": " Saved ",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "6145439649200570157": {
     "source": "Korean",
     "file": "src/app/business-claim/business-claim.ts"
@@ -7875,6 +8355,10 @@
     "source": " Claim a business to reserve its QR/chat link, review status, and profile settings under this account. ",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "6177699802550764402": {
+    "source": " Coordinates are required. what3words is optional. Moving the pin clears its three-word address. ",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "6178177745810006536": {
     "source": " Preview wiki page {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
     "file": "src/app/marketing/marketing.html"
@@ -7910,6 +8394,10 @@
   "6191643918822075959": {
     "source": "Story card",
     "file": "src/app/answer-card/answer-card.html"
+  },
+  "6193453858087646750": {
+    "source": " Copy link",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "619608034616931471": {
     "source": "Start with editable questions generated from your cards.",
@@ -7999,6 +8487,10 @@
     "source": "Coordinates",
     "file": "src/app/dymaxion/dymaxion.html"
   },
+  "6239508661682810520": {
+    "source": "Preparing your photo…",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "6245890642755322624": {
     "source": "Could not save business changes.",
     "file": "src/app/business-detail/business-edit.ts"
@@ -8066,6 +8558,10 @@
   "6278130351544603773": {
     "source": "{$START_TAG_SPAN}explore{$CLOSE_TAG_SPAN} Field guide ",
     "file": "src/app/shared-chat/shared-chat.html"
+  },
+  "627814099987965135": {
+    "source": "Take a cover photo",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "6278157756138747696": {
     "source": "Current business",
@@ -8338,6 +8834,10 @@
   "6424384710240015948": {
     "source": "Business name",
     "file": "src/app/business-claim/business-claim.html"
+  },
+  "6428471696911424036": {
+    "source": " Copy coordinates ",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "6430736772377396814": {
     "source": " This path drifted off the atlas. ",
@@ -8711,6 +9211,10 @@
     "source": "Let board viewers join",
     "file": "src/app/boards/boards.html"
   },
+  "662506850593821474": {
+    "source": "Save ",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "6626189682857360296": {
     "source": "Toxic doughnut",
     "file": "src/app/fence-line/fence-line.ts"
@@ -8730,6 +9234,10 @@
   "6642490651687261039": {
     "source": "Tip",
     "file": "src/app/chat/chat.ts"
+  },
+  "6642648242808655534": {
+    "source": "Longitude{$TAG_INPUT}",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "6644001206978479798": {
     "source": "Authentic German beer hall, 40+ taps, WC watch parties, private events, and a South Street crowd that wants the real thing.",
@@ -8847,6 +9355,10 @@
     "source": "Maintain",
     "file": "src/app/atlas-landing/atlas-landing.html"
   },
+  "6728737394627636297": {
+    "source": "Unsave this gem",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "6733698466922184657": {
     "source": "Saturday tasting appears in the neighborhood guide and public chat context.",
     "file": "src/app/business/business.html"
@@ -8874,6 +9386,10 @@
   "6752604898701886526": {
     "source": "Live view",
     "file": "src/app/boards/boards.html"
+  },
+  "6763931073785777715": {
+    "source": "Record now",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
   },
   "6775345672170917282": {
     "source": "Find the exact place, photo, description, and guide narration",
@@ -8991,6 +9507,10 @@
     "source": "Claim your first business page.",
     "file": "src/app/business/business.html"
   },
+  "6852199912506856005": {
+    "source": "Check your exact point",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "6852682759248251347": {
     "source": "{$INTERPOLATION} attempts",
     "file": "src/app/boards/boards.html"
@@ -9047,6 +9567,10 @@
     "source": "LivingWiki automatically organizes your data into a structured system that updates as you learn.",
     "file": "src/app/marketing/marketing.html"
   },
+  "6894838172927236451": {
+    "source": "Upload photo",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "6900280966549552372": {
     "source": "Upgrade your LivingWiki account",
     "file": "src/app/pricing/pricing.ts"
@@ -9095,6 +9619,10 @@
     "source": "Upload",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "693371408487151730": {
+    "source": "Take a photo{$TAG_INPUT}",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "6935315805069504472": {
     "source": " No topics match \"{$INTERPOLATION}\". ",
     "file": "src/app/wiki/wiki.html"
@@ -9131,6 +9659,10 @@
     "source": "Password reset complete",
     "file": "src/app/auth-action/auth-action.ts"
   },
+  "6946800720995113365": {
+    "source": "Choose a valid video trim.",
+    "file": "src/app/off-grids/pin-talk-recorder.ts"
+  },
   "6949151938064817789": {
     "source": "Rendered",
     "file": "src/app/video-library/video-library.html"
@@ -9146,6 +9678,10 @@
   "6951139727306411861": {
     "source": "Add a photo (optional)",
     "file": "src/app/boards/boards.html"
+  },
+  "6952619315337946240": {
+    "source": "Your next gem starts here",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "6958097997696505580": {
     "source": " Chester, Pennsylvania has lived beside the nation's largest trash incinerator for more than thirty years. It is not alone. Twenty-three communities, one shared scorecard, no sacrifice zones. ",
@@ -9207,6 +9743,10 @@
     "source": "Owned",
     "file": "src/app/wiki-home/wiki-home.html"
   },
+  "6990424485062673905": {
+    "source": "Set location",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "6994128529778512071": {
     "source": "Local time",
     "file": "src/app/public-wikis/public-wikis.ts"
@@ -9246,6 +9786,14 @@
   "70247719450316174": {
     "source": "I confirm this recording contains only my own voice.",
     "file": "src/app/boards/boards.html"
+  },
+  "7025639060416370216": {
+    "source": "Uploading · ",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
+  "7025739814467678234": {
+    "source": "Give this gem a name and confirm the point.",
+    "file": "src/app/off-grids/off-grid-editor.ts"
   },
   "7026624912846603653": {
     "source": "Schools",
@@ -9327,6 +9875,10 @@
     "source": "How would you like to explore?",
     "file": "src/app/boards/boards.html"
   },
+  "7088510093007503204": {
+    "source": "Publish gem",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "7107218117130409950": {
     "source": "Boards",
     "file": "src/app/boards/boards.html"
@@ -9338,10 +9890,6 @@
   "7122661321319980206": {
     "source": "Reading document",
     "file": "src/app/marketing/marketing.ts"
-  },
-  "712633016065968483": {
-    "source": "Search titles, places, creators, or topics…",
-    "file": "src/app/public-wikis/public-wikis.html"
   },
   "7127864144505863678": {
     "source": "Place",
@@ -9555,6 +10103,10 @@
     "source": "You have used the anonymous question limit for this atlas. Sign in to keep the conversation going.",
     "file": "src/app/chat/chat.ts"
   },
+  "7276420986470652852": {
+    "source": "{$START_TAG_SPAN}map{$CLOSE_TAG_SPAN}Drop a pin ",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "7276980897773952881": {
     "source": "The card could not be added.",
     "file": "src/app/boards/boards.ts"
@@ -9562,6 +10114,10 @@
   "7284318737681797324": {
     "source": "{$START_TAG_SPAN}settings{$CLOSE_TAG_SPAN} Settings ",
     "file": "src/app/account-menu/account-menu.html"
+  },
+  "7287764725810172146": {
+    "source": "Gem collections",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "7294634055242110420": {
     "source": "{$START_TAG_SPAN}photo_library{$CLOSE_TAG_SPAN} Your photos ",
@@ -9598,6 +10154,10 @@
   "7307236732616849044": {
     "source": "Markets",
     "file": "src/app/public-wikis/public-wikis.ts"
+  },
+  "7307617403046327210": {
+    "source": "Display mode",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "7311787614683514683": {
     "source": "Ask the wiki anytime",
@@ -9695,6 +10255,10 @@
     "source": "Places I like to eat",
     "file": "src/app/boards/boards.html"
   },
+  "7365517136074263312": {
+    "source": "QR code",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "7366879854446681438": {
     "source": "communities",
     "file": "src/app/fence-line/fence-line.html"
@@ -9715,9 +10279,17 @@
     "source": "Copy a board link",
     "file": "src/app/boards/boards.html"
   },
+  "7379437887668220432": {
+    "source": "A quiet corner with a view",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "7381623063898994695": {
     "source": "Choose a background music mood",
     "file": "src/app/boards/boards.html"
+  },
+  "7384104243389196009": {
+    "source": "Your PinTalk stays private with this gem.",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "7384516335504872663": {
     "source": " Create a local business page, reserve the business key, and generate a multilingual QR badge connected to the city wiki. ",
@@ -9811,6 +10383,10 @@
     "source": "{$START_TAG_SPAN}delete{$CLOSE_TAG_SPAN} Remove card ",
     "file": "src/app/boards/boards.html"
   },
+  "7450657928895111265": {
+    "source": "Add PinTalk",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "7450793172571466924": {
     "source": "Rising searches",
     "file": "src/app/business/business.html"
@@ -9834,6 +10410,10 @@
   "7459237205491783813": {
     "source": "Follow public LivingWiki pages and keep a lightweight local knowledge home.",
     "file": "src/app/pricing/pricing.ts"
+  },
+  "7460126591065098408": {
+    "source": "Wait for the photo to finish uploading.",
+    "file": "src/app/off-grids/off-grid-editor.ts"
   },
   "7461110657103736564": {
     "source": "The History of the Internet",
@@ -9883,6 +10463,14 @@
     "source": "Card editor sections",
     "file": "src/app/boards/boards.html"
   },
+  "749435979294434408": {
+    "source": "Search this area",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
+  "750444394003876538": {
+    "source": "Start recording",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
   "7507746824658234201": {
     "source": "Account-owned setup",
     "file": "src/app/business-claim/business-claim.html"
@@ -9898,6 +10486,10 @@
   "7515883357904500238": {
     "source": "Are you sure?",
     "file": "src/app/chat/chat.ts"
+  },
+  "7516391445187540763": {
+    "source": "Could not generate the QR code.",
+    "file": "src/app/off-grids/off-grids.ts"
   },
   "7520155379629775330": {
     "source": "QR guide link",
@@ -9915,6 +10507,10 @@
     "source": "Elon Musk: The Complete Timeline",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "7540381902346070209": {
+    "source": "{$START_TAG_SPAN}location_on{$CLOSE_TAG_SPAN} Off Grids",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "7546732776556629045": {
     "source": "No account needed. We’ll only email you about this place.",
     "file": "src/app/boards/boards.html"
@@ -9922,6 +10518,10 @@
   "755320780261948199": {
     "source": "Saved on this browser, but Firebase sync failed.",
     "file": "src/app/boards/boards.ts"
+  },
+  "755340755920043208": {
+    "source": "This gem is now private.",
+    "file": "src/app/off-grids/off-grids.ts"
   },
   "7554385645067100439": {
     "source": "No responses yet.",
@@ -9946,6 +10546,10 @@
   "7564665875993875304": {
     "source": "Visited",
     "file": "src/app/boards/boards.ts"
+  },
+  "7564670109740122644": {
+    "source": "Lots of gems here. Zoom in to see more.",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "7565716024468232322": {
     "source": "Links",
@@ -10106,6 +10710,10 @@
   "766371824753969784": {
     "source": "Voice description",
     "file": "src/app/atlas-persona/atlas-persona.html"
+  },
+  "7666796390926078925": {
+    "source": "Give it a little story",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "7671686035273089740": {
     "source": "We could not translate this board right now. Please try again.",
@@ -10283,6 +10891,10 @@
     "source": "Lead in drinking water",
     "file": "src/app/fence-line/fence-line.ts"
   },
+  "7777088129513181521": {
+    "source": "39.9500, -75.1600 or ///three.word.address",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "7780444731963875194": {
     "source": "Could not load Spotify devices.",
     "file": "src/app/spotify-playback.service.ts"
@@ -10322,10 +10934,6 @@
   "7813846944360361065": {
     "source": "Submit {$INTERPOLATION} for review.",
     "file": "src/app/business-claim/business-claim.html"
-  },
-  "7814518771576794254": {
-    "source": "Explore more",
-    "file": "src/app/public-wikis/public-wikis.html"
   },
   "7818565774709897459": {
     "source": " Current tone: {$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN} - {$INTERPOLATION_1} ",
@@ -10407,6 +11015,10 @@
     "source": "Background music",
     "file": "src/app/boards/boards.html"
   },
+  "7877163847425075770": {
+    "source": "Directions to this gem",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "7882010013989109058": {
     "source": "Ingesting document",
     "file": "src/app/library/library.html"
@@ -10478,6 +11090,10 @@
   "7910092621560644776": {
     "source": "Refinery row sits directly across the street from public housing.",
     "file": "src/app/fence-line/fence-line.ts"
+  },
+  "7910286412476054786": {
+    "source": "Save this gem",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "7915998431668180872": {
     "source": " Latest stored refresh: {$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}",
@@ -10699,6 +11315,10 @@
     "source": "this wiki",
     "file": "src/app/chat/chat.ts"
   },
+  "8057745565493131709": {
+    "source": "Copied to clipboard.",
+    "file": "src/app/off-grids/off-grids.ts"
+  },
   "8058495689153782394": {
     "source": " “{$INTERPOLATION}” ",
     "file": "src/app/city-places/city-places.html"
@@ -10750,6 +11370,10 @@
   "809541642370719476": {
     "source": "Take",
     "file": "src/app/boards/boards.ts"
+  },
+  "8096543901178232659": {
+    "source": "Finding more gems…",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "8099281902216661193": {
     "source": " Sign in to continue exploring your saved places, ideas, and connections. ",
@@ -10879,6 +11503,10 @@
     "source": " {$INTERPOLATION} stop{$INTERPOLATION_1} ",
     "file": "src/app/shared-chat/shared-chat.html"
   },
+  "8155568300542804937": {
+    "source": "Mark a gem",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "8156602685712437139": {
     "source": "All users",
     "file": "src/app/admin-users/admin-users.html"
@@ -10947,6 +11575,10 @@
     "source": " Remove ",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "8212906256415538361": {
+    "source": "Upload a video",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
   "8220277555215112347": {
     "source": "Users | LivingWiki",
     "file": "src/app/app.routes.ts"
@@ -11010,6 +11642,10 @@
   "8264702528227770819": {
     "source": " Next card {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
     "file": "src/app/boards/boards.html"
+  },
+  "8264726421735692802": {
+    "source": "One link shares the photo, exact pin, directions and PinTalks.",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "8265782935899108723": {
     "source": "Serious knowledge deserves serious boundaries.",
@@ -11207,6 +11843,10 @@
     "source": "Keep video",
     "file": "src/app/video-library/video-library.html"
   },
+  "8399090583546402149": {
+    "source": " Make this gem private ",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "8400867234732762128": {
     "source": "{$START_TAG_SPAN}trending_up{$CLOSE_TAG_SPAN} Signal ",
     "file": "src/app/business/business.html"
@@ -11250,6 +11890,10 @@
   "8415650686000293071": {
     "source": "Taylor Swift: The Living Discography",
     "file": "src/app/public-wiki-catalog.ts"
+  },
+  "8417708099232054046": {
+    "source": "Trail entrance, parking, accessibility or opening hours",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "8418303242280274717": {
     "source": "Default conversation voice",
@@ -11327,6 +11971,10 @@
     "source": "saved videos",
     "file": "src/app/video-library/video-library.html"
   },
+  "8481445465786501102": {
+    "source": "This gem is private or unavailable. Sign in if it belongs to you.",
+    "file": "src/app/off-grids/off-grids.ts"
+  },
   "8483200992106367473": {
     "source": " Sign in to explore ",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -11366,6 +12014,10 @@
   "8500486778808537311": {
     "source": "Invite friends to play",
     "file": "src/app/boards/boards.html"
+  },
+  "8502809476130133618": {
+    "source": "Add a photo and a name for this gem.",
+    "file": "src/app/off-grids/off-grid-editor.ts"
   },
   "8509550095023837712": {
     "source": "PWD Apprenticeship Program",
@@ -11451,6 +12103,10 @@
     "source": "Ask up to 5 questions without signing in. {count} remaining.",
     "file": "src/app/chat/chat.ts"
   },
+  "8600751532531570480": {
+    "source": "✓ Confirmed",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "8602268970635203462": {
     "source": "LivingWiki collections",
     "file": "src/app/boards/boards.html"
@@ -11479,6 +12135,10 @@
     "source": "Start with a neighborhood presence, then grow into featured placement and citywide sponsorship as the public wiki expands.",
     "file": "src/app/business/business.html"
   },
+  "8628944364002631872": {
+    "source": "Could not load this map area. Try again.",
+    "file": "src/app/off-grids/off-grids.ts"
+  },
   "8629595768338818966": {
     "source": "Supply chain logistics...",
     "file": "src/app/marketing/marketing.html"
@@ -11490,6 +12150,10 @@
   "8633250303431621645": {
     "source": "On a phone, this opens the rear camera. After the photo, we will request your precise location and find its three words.",
     "file": "src/app/boards/boards.html"
+  },
+  "8638122479556610178": {
+    "source": "Location is unavailable. Drop a pin or enter coordinates.",
+    "file": "src/app/off-grids/off-grid-editor.ts"
   },
   "8638312750987106240": {
     "source": "Coral",
@@ -11603,9 +12267,17 @@
     "source": "Pick the reach that matches your footprint.",
     "file": "src/app/business/business.html"
   },
+  "8725228614120895554": {
+    "source": "Name your gem{$TAG_INPUT}",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "8727178487027768435": {
     "source": "Share the challenge",
     "file": "src/app/boards/boards.html"
+  },
+  "8727393005339508641": {
+    "source": "Open directions {$START_TAG_SPAN}↗{$CLOSE_TAG_SPAN}",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "8733628623355862210": {
     "source": "No claimed businesses yet.",
@@ -11647,9 +12319,17 @@
     "source": "Choose a strong password",
     "file": "src/app/auth-action/auth-action.html"
   },
+  "8752187539132733831": {
+    "source": "Finding gems…",
+    "file": "src/app/off-grids/off-grid-copy.ts"
+  },
   "8753815833860304936": {
     "source": " No match yet. Try the exact place name plus a neighborhood or nearby town. ",
     "file": "src/app/city-places/city-places.html"
+  },
+  "8753948793780416778": {
+    "source": " Save draft ",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "8756910227198054359": {
     "source": "Pets",
@@ -11714,6 +12394,10 @@
   "8803977195874302490": {
     "source": "What are people debating about {city} right now?",
     "file": "src/app/chat/chat.ts"
+  },
+  "8810588430336725070": {
+    "source": "Review and publish",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "8811308202853248254": {
     "source": "The board owner has not published a quiz yet.",
@@ -11786,6 +12470,10 @@
   "8848949955300892252": {
     "source": "Suggest an Update",
     "file": "src/app/business/business.html"
+  },
+  "8853806612195136029": {
+    "source": "Choose a video under 100 MB.",
+    "file": "src/app/off-grids/pin-talk-recorder.ts"
   },
   "885696039304603939": {
     "source": "No existing pending claim was found online. You can submit this draft when the details are ready.",
@@ -11902,6 +12590,10 @@
   "8925168682062960330": {
     "source": "Community monitors",
     "file": "src/app/fence-line/fence-line.html"
+  },
+  "892568819614627902": {
+    "source": "Edit gem",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "8927847276499957890": {
     "source": "No source documents are attached yet, so answers use internet context and current public sources.",
@@ -12075,6 +12767,10 @@
     "source": "The location request timed out. Try again, preferably outdoors.",
     "file": "src/app/boards/boards.ts"
   },
+  "9006113236087418805": {
+    "source": "Find a gem. Drop a pin. Tell its story.",
+    "file": "src/app/off-grids/off-grids.html"
+  },
   "9006223843394542046": {
     "source": "Admin console",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -12099,9 +12795,17 @@
     "source": "Delete thread {title}",
     "file": "src/app/chat/chat.ts"
   },
+  "9020088253532548946": {
+    "source": "Show us the gem · up to 90 seconds",
+    "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
   "9025935389437417374": {
     "source": "YouTube video {$START_SMALL_TEXT}(optional){$CLOSE_SMALL_TEXT}",
     "file": "src/app/boards/boards.html"
+  },
+  "9026305742213622007": {
+    "source": "Confirm the exact point before continuing.",
+    "file": "src/app/off-grids/off-grid-editor.ts"
   },
   "9027131328158506822": {
     "source": "Edit card",
@@ -12154,6 +12858,10 @@
   "9054497901110845106": {
     "source": "Rate limit",
     "file": "src/app/web-scraper/web-scraper.html"
+  },
+  "905931306056454056": {
+    "source": "Keep a few gems for later",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "9060820198169675816": {
     "source": "LivingWiki of every country's climate commitments, actual emissions, NDC progress, and policy implementations — the COP process made navigable.",
@@ -12303,10 +13011,6 @@
     "source": "Ship Channel pollution",
     "file": "src/app/fence-line/fence-line.ts"
   },
-  "9163635942070777322": {
-    "source": "Search public boards",
-    "file": "src/app/public-wikis/public-wikis.html"
-  },
   "916581608141208398": {
     "source": "This chat is unavailable",
     "file": "src/app/chat/chat.html"
@@ -12338,6 +13042,10 @@
   "9187580480258537751": {
     "source": "“Answer in the first person, grounded in the historical record.”",
     "file": "src/app/atlas-persona/atlas-persona.html"
+  },
+  "9188331972161718906": {
+    "source": " Cancel upload ",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "9188397733808972472": {
     "source": "Census-tract health outcomes connecting pollution exposure to people.",
@@ -12379,6 +13087,10 @@
     "source": "One command bar to search across your source files, web results, and existing LivingWiki simultaneously.",
     "file": "src/app/marketing/marketing.html"
   },
+  "9221717153538095528": {
+    "source": "Why it’s special, when to go, what to look for…",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "926039708040434207": {
     "source": "Add trip",
     "file": "src/app/public-wikis/public-wikis.ts"
@@ -12403,6 +13115,10 @@
     "source": "Set a new password for your LivingWiki account.",
     "file": "src/app/auth-action/auth-action.ts"
   },
+  "939904289010667839": {
+    "source": "Could not save this gem. Please retry.",
+    "file": "src/app/off-grids/off-grids.ts"
+  },
   "9401498095936883": {
     "source": "{$START_TAG_SPAN}dashboard{$CLOSE_TAG_SPAN} My Wikis ",
     "file": "src/app/account-menu/account-menu.html"
@@ -12418,6 +13134,10 @@
   "946937662146994749": {
     "source": "#{$INTERPOLATION} of {$INTERPOLATION_1}",
     "file": "src/app/boards/boards.html"
+  },
+  "948476709015260931": {
+    "source": "Your gem is private by default. You can publish it any time.",
+    "file": "src/app/off-grids/off-grid-copy.ts"
   },
   "952673535148558625": {
     "source": "Queueing URL for background ingestion",
@@ -12474,6 +13194,10 @@
   "97947237076991101": {
     "source": "Wiki topics",
     "file": "src/app/atlas-landing/atlas-landing.html"
+  },
+  "979550420016135776": {
+    "source": " Approve PinTalk ",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "985253845618865624": {
     "source": "New Wiki",

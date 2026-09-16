@@ -1,3 +1,5 @@
+import { httpsCallable } from 'firebase/functions';
+import { getFirebaseFunctions } from '../firebase.client';
 export type What3WordsLocation = {
   words: string;
   url: string;
@@ -12,9 +14,7 @@ export type ResolvedWhat3WordsLocation = What3WordsLocation & {
 
 type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
-// Jim supplied this browser key for the shared prototype. Keep it isolated here
-// so it can be replaced by a server-side proxy before the feature leaves prototype status.
-const WHAT3WORDS_API_KEY = '2BP05REC';
+// Provider calls are proxied through the authenticated backend.
 const WHAT3WORDS_API_URL = 'https://api.what3words.com/v3';
 
 const WHAT3WORDS_HOSTS = new Set([
@@ -71,7 +71,7 @@ export function what3wordsLocation(value: unknown): What3WordsLocation | null {
 export async function what3wordsFromCoordinates(
   lat: number,
   lng: number,
-  fetcher: FetchLike = fetch,
+  fetcher?: FetchLike,
 ): Promise<ResolvedWhat3WordsLocation> {
   if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lng) || lng < -180 || lng > 180) {
     throw new Error('The browser returned an invalid location.');
@@ -85,7 +85,7 @@ export async function what3wordsFromCoordinates(
 
 export async function resolveWhat3WordsAddress(
   value: unknown,
-  fetcher: FetchLike = fetch,
+  fetcher?: FetchLike,
 ): Promise<ResolvedWhat3WordsLocation> {
   const words = normalizeWhat3WordsAddress(value);
   if (!words) {
@@ -97,11 +97,16 @@ export async function resolveWhat3WordsAddress(
 async function requestWhat3Words(
   endpoint: 'convert-to-3wa' | 'convert-to-coordinates',
   parameters: Record<string, string>,
-  fetcher: FetchLike,
+  fetcher: FetchLike | undefined,
 ): Promise<ResolvedWhat3WordsLocation> {
+  if (!fetcher) {
+    const request = httpsCallable(getFirebaseFunctions(), 'offGridCommand');
+    const [lat, lng] = (parameters['coordinates'] || '').split(',').map(Number);
+    return (await request({action: 'resolveLocation', ...(parameters['words'] ? {words: parameters['words']} : {lat, lng})})).data as ResolvedWhat3WordsLocation;
+  }
   const url = new URL(`${WHAT3WORDS_API_URL}/${endpoint}`);
   Object.entries(parameters).forEach(([key, value]) => url.searchParams.set(key, value));
-  url.searchParams.set('key', WHAT3WORDS_API_KEY);
+
   const response = await fetcher(url);
   let payload: Record<string, unknown> = {};
   try {

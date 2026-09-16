@@ -1,0 +1,424 @@
+<div class="off-grid-shell">
+  <app-workspace-sidebar active="off-grids" [rail]="true"></app-workspace-sidebar>
+  <main class="off-grid-main">
+    <header class="off-grid-topbar">
+      <div class="brand-row">
+        <app-mobile-menu activePage="off-grids"></app-mobile-menu
+        ><a routerLink="/home" aria-label="LivingWiki home" i18n-aria-label
+          ><img src="/assets/image/livingwiki-brand.svg" alt="LivingWiki" i18n-alt
+        /></a>
+      </div>
+      <span class="topbar-label" i18n>Mark a gem</span>
+      <div class="button-row">
+        <app-theme-toggle></app-theme-toggle><app-account-menu></app-account-menu>
+      </div>
+    </header>
+    <div class="editor-shell">
+      <a routerLink="/off-grids" class="text-button editor-back" i18n
+        ><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span> Off Grids</a
+      >
+      <p class="eyebrow" i18n><span class="pin">●</span> Keep a little wonder</p>
+      <h1>{{ original()?.status === 'active' ? copy.refineYourGem : copy.markAGem }}</h1>
+      <p class="intro" i18n>A photo. An exact pin. A story worth sharing.</p>
+      <ol class="stepper" aria-label="Creation progress" i18n-aria-label>
+        @for (label of [copy.place, copy.story, copy.review]; track label; let index = $index) {
+          <li
+            [class.current]="step() === index + 1"
+            [class.done]="step() > index + 1"
+            [attr.aria-current]="step() === index + 1 ? 'step' : null"
+          >
+            <span>{{ index + 1 }}</span
+            >{{ label }}
+          </li>
+        }
+      </ol>
+      @if (loading()) {
+        <div class="empty-state" role="status" i18n>Opening your gem…</div>
+      } @else if (id()) {
+        <section class="editor-card">
+          @if (step() === 1) {
+            <div class="section-heading">
+              <div>
+                <h2 i18n>Where’s your gem?</h2>
+                <p i18n>Place the pin exactly where someone should go.</p>
+              </div>
+              <span class="material-symbols-outlined pin" aria-hidden="true">add_location_alt</span>
+            </div>
+            <div class="location-options">
+              <button
+                type="button"
+                class="secondary"
+                [disabled]="locating()"
+                (click)="useLocation()"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">my_location</span
+                >{{ locating() ? copy.findingLocation : copy.useMyLocation }}</button
+              ><button type="button" class="secondary" (click)="showMap.set(true)" i18n>
+                <span class="material-symbols-outlined" aria-hidden="true">map</span>Drop a pin
+              </button>
+            </div>
+            <label class="field" i18n
+              >Paste a location
+              <div class="paste-row">
+                <input
+                  [(ngModel)]="paste"
+                  placeholder="39.9500, -75.1600 or ///three.word.address"
+                  aria-label="Coordinates, Google Maps link or what3words"
+                  i18n-placeholder
+                  i18n-aria-label
+                /><button
+                  type="button"
+                  class="secondary"
+                  [disabled]="locating() || !paste.trim()"
+                  (click)="resolvePaste()"
+                >
+                  Find
+                </button>
+              </div></label
+            >
+            <div class="coordinate-fields">
+              <label class="field" i18n
+                >Latitude<input
+                  type="number"
+                  min="-90"
+                  max="90"
+                  step="any"
+                  [(ngModel)]="latitude"
+                  (ngModelChange)="coordinatesChanged()"
+                  placeholder="−90 to 90"
+                  i18n-placeholder /></label
+              ><label class="field" i18n
+                >Longitude<input
+                  type="number"
+                  min="-180"
+                  max="180"
+                  step="any"
+                  [(ngModel)]="longitude"
+                  (ngModelChange)="coordinatesChanged()"
+                  placeholder="−180 to 180"
+                  i18n-placeholder
+              /></label>
+            </div>
+            @if (showMap()) {
+              @defer {
+                <app-off-grid-map
+                  [point]="point()"
+                  [picking]="true"
+                  (pointChanged)="setPoint($event)"
+                ></app-off-grid-map>
+              } @placeholder {
+                <div class="empty-state">Loading map…</div>
+              }
+            }
+            <label class="field" i18n
+              >Area or nearest town <span class="optional">optional</span
+              ><input
+                maxlength="120"
+                [(ngModel)]="area"
+                (ngModelChange)="persist()"
+                placeholder="e.g. North Cape May, NJ"
+                i18n-placeholder
+            /></label>
+            @if (point(); as point) {
+              <div class="point-confirmation" [class.confirmed]="confirmed()">
+                <div>
+                  <strong>{{
+                    confirmed() ? copy.exactPointConfirmed : copy.checkYourExactPoint
+                  }}</strong>
+                  <p class="coordinates">{{ point.lat.toFixed(6) }}, {{ point.lng.toFixed(6) }}</p>
+                  @if (point.words) {
+                    <p class="words">///{{ point.words }}</p>
+                  }
+                  @if (point.accuracy) {
+                    <small
+                      >GPS accuracy ±{{ point.accuracy.toFixed(0) }} m. Adjust the pin if
+                      needed.</small
+                    >
+                  }
+                </div>
+                <button type="button" class="primary" (click)="confirmPoint()">
+                  {{ confirmed() ? copy.confirmed : copy.confirmThisPoint }}
+                </button>
+              </div>
+            }
+            <p class="subtle" i18n>
+              Coordinates are required. what3words is optional. Moving the pin clears its three-word
+              address.
+            </p>
+          }
+          @if (step() === 2) {
+            <div class="section-heading">
+              <div>
+                <h2 i18n>Give it a little story</h2>
+                <p i18n>Show what makes this place special.</p>
+              </div>
+              <span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span>
+            </div>
+            <div class="photo-upload">
+              @if (photo()) {
+                <img [src]="photo()" alt="Your gem’s cover photo" i18n-alt />
+              } @else {
+                <span class="material-symbols-outlined" aria-hidden="true"
+                  >add_photo_alternate</span
+                >
+                <p i18n>Add a photo of your gem</p>
+              }
+              <div class="button-row">
+                <label class="secondary file-choice"
+                  >{{ photo() ? copy.changePhoto : copy.uploadPhoto
+                  }}<input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+                    [disabled]="photoUploading()"
+                    (change)="choosePhoto($event)"
+                    aria-label="Upload a cover photo"
+                    i18n-aria-label /></label
+                ><label class="secondary file-choice" i18n
+                  >Take a photo<input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    [disabled]="photoUploading()"
+                    (change)="choosePhoto($event)"
+                    aria-label="Take a cover photo"
+                    i18n-aria-label
+                /></label>
+              </div>
+            </div>
+            @if (photoUploading()) {
+              <div class="upload-status" role="status">
+                <progress max="100" [value]="photoProgress()"></progress>
+                <p>
+                  {{
+                    photoProcessing()
+                      ? copy.preparingYourPhoto
+                      : copy.uploadingPhoto + photoProgress() + '%'
+                  }}
+                </p>
+                @if (!photoProcessing()) {
+                  <button type="button" class="text-button" (click)="cancelPhoto()" i18n>
+                    Cancel upload
+                  </button>
+                }
+              </div>
+            }
+            <label class="field" i18n
+              >Name your gem<input
+                maxlength="80"
+                [(ngModel)]="title"
+                (ngModelChange)="persist()"
+                placeholder="A quiet corner with a view"
+                i18n-placeholder /></label
+            ><label class="field" i18n
+              >The little tip<textarea
+                rows="4"
+                maxlength="1600"
+                [(ngModel)]="tip"
+                (ngModelChange)="persist()"
+                placeholder="Why it’s special, when to go, what to look for…"
+                i18n-placeholder
+              ></textarea></label
+            ><label class="field" i18n
+              >Getting there &amp; access <span class="optional">optional</span
+              ><textarea
+                rows="2"
+                maxlength="1000"
+                [(ngModel)]="accessNote"
+                (ngModelChange)="persist()"
+                placeholder="Trail entrance, parking, accessibility or opening hours"
+                i18n-placeholder
+              ></textarea>
+            </label>
+            <div class="section-heading">
+              <div>
+                <h3 i18n>PinTalk <span class="optional">optional</span></h3>
+                <p i18n>Tell the story in your own words.</p>
+              </div>
+              <span class="ready-count">{{
+                clipCount() ? clipCount() + ' ready' : copy.recordOrUpload
+              }}</span>
+            </div>
+            @if (!composer()) {
+              <button type="button" class="secondary wide" (click)="composer.set(true)" i18n>
+                <span class="material-symbols-outlined" aria-hidden="true">videocam</span>Add a
+                PinTalk
+              </button>
+            } @else {
+              @defer {
+                <app-pin-talk-recorder
+                  [spotId]="id()"
+                  (completed)="pinTalkAdded()"
+                  (busyChange)="clipBusy.set($event)"
+                ></app-pin-talk-recorder>
+              } @placeholder {
+                <p>Opening recorder…</p>
+              }
+            }
+            <p class="subtle">
+              {{
+                original()?.visibility === 'public'
+                  ? copy.addingAPinTalkPlacesItOn
+                  : copy.yourPinTalkStaysPrivateUntilYou
+              }}
+            </p>
+          }
+          @if (step() === 3) {
+            <div class="section-heading">
+              <div>
+                <h2 i18n>Your gem, ready to go</h2>
+                <p i18n>Choose who gets to discover it.</p>
+              </div>
+              <span class="material-symbols-outlined pin" aria-hidden="true">location_on</span>
+            </div>
+            <article class="review-gem">
+              @if (photo()) {
+                <img [src]="photo()" [alt]="title" />
+              }
+              <div>
+                <h2>{{ title }}</h2>
+                <p>{{ tip }}</p>
+                <p class="coordinates">
+                  {{ point()?.lat?.toFixed(6) }}, {{ point()?.lng?.toFixed(6) }}
+                </p>
+                @if (point()?.words) {
+                  <p class="words">///{{ point()?.words }}</p>
+                }
+                @if (clipCount()) {
+                  <span class="ready-count"
+                    ><span class="material-symbols-outlined" aria-hidden="true">play_circle</span>
+                    {{ clipCount() }} PinTalk{{ clipCount() > 1 ? 's' : '' }} ready</span
+                  >
+                }
+              </div>
+            </article>
+            <fieldset class="visibility-options">
+              <legend i18n>Who can see this gem?</legend>
+              <label [class.chosen]="visibility === 'private'"
+                ><input
+                  type="radio"
+                  name="visibility"
+                  value="private"
+                  [(ngModel)]="visibility"
+                /><span class="material-symbols-outlined" aria-hidden="true">lock</span
+                ><span
+                  ><strong i18n>Private</strong
+                  ><small i18n>Only you. A little gem for later.</small></span
+                ></label
+              ><label [class.chosen]="visibility === 'public'"
+                ><input
+                  type="radio"
+                  name="visibility"
+                  value="public"
+                  [(ngModel)]="visibility"
+                /><span class="material-symbols-outlined" aria-hidden="true">public</span
+                ><span
+                  ><strong i18n>Public</strong
+                  ><small i18n
+                    >Share its photo, exact location and PinTalks with everyone.</small
+                  ></span
+                ></label
+              >
+            </fieldset>
+            @if (visibility === 'public') {
+              <label class="check-label" i18n
+                ><input type="checkbox" [(ngModel)]="allowContributions" /> Let accepted LivingWiki
+                friends submit PinTalks for my approval.</label
+              >
+            }
+            <div class="privacy-note">
+              <span class="material-symbols-outlined" aria-hidden="true">{{
+                visibility === 'private' ? 'lock' : 'info'
+              }}</span>
+              <p>
+                {{
+                  visibility === 'private'
+                    ? copy.yourGemIsPrivateByDefault
+                    : copy.publishingSharesTheExactCoordinatesPhoto
+                }}
+              </p>
+            </div>
+          }
+        </section>
+        <div class="editor-footer">
+          <div class="button-row">
+            @if (step() > 1) {
+              <button
+                type="button"
+                class="secondary"
+                [disabled]="saving()"
+                (click)="step.set(step() - 1)"
+                i18n
+              >
+                Back
+              </button>
+            }
+            @if (original()?.status === 'draft') {
+              <button
+                type="button"
+                class="text-button"
+                [disabled]="saving() || photoUploading() || clipBusy()"
+                (click)="saved(true)"
+                i18n
+              >
+                Save draft
+              </button>
+            }
+          </div>
+          @if (step() < 3) {
+            <button
+              type="button"
+              class="primary"
+              [disabled]="photoUploading() || saving() || clipBusy()"
+              (click)="next()"
+            >
+              {{ step() === 1 ? copy.continueToStory : copy.reviewGem }}
+              <span aria-hidden="true">→</span>
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="primary"
+              [disabled]="saving() || photoUploading() || clipBusy()"
+              (click)="saved()"
+            >
+              {{
+                saving()
+                  ? copy.saving
+                  : visibility === 'public'
+                    ? copy.publishGem
+                    : copy.savePrivateGem
+              }}
+            </button>
+          }
+        </div>
+        @if (original() && original()?.status !== 'draft') {
+          <div class="delete-area">
+            @if (!deleteConfirm()) {
+              <button
+                type="button"
+                class="text-button danger-text"
+                (click)="deleteConfirm.set(true)"
+                i18n
+              >
+                Delete gem
+              </button>
+            } @else {
+              <p>Delete this gem{{ original()?.sourceRef ? ' and its source board card' : '' }}?</p>
+              <button type="button" class="danger" [disabled]="saving()" (click)="deleteGem()" i18n>
+                Delete gem</button
+              ><button type="button" class="text-button" (click)="deleteConfirm.set(false)" i18n>
+                Keep gem
+              </button>
+            }
+          </div>
+        }
+      }
+      @if (error()) {
+        <p class="error-message" role="alert">{{ error() }}</p>
+      }
+      @if (message()) {
+        <p class="status-message" role="status">{{ message() }}</p>
+      }
+    </div>
+  </main>
+</div>

@@ -1,0 +1,20 @@
+{
+  "mode": "apply",
+  "boardsScanned": 4,
+  "eligibleBoards": 4,
+  "cards": 17,
+  "privateCards": 0,
+  "located": 15,
+  "wordsOnly": 2,
+  "missingLocation": 0,
+  "missingId": 0,
+  "legacyVideos": 1,
+  "spots": 17,
+  "publicPreviews": 17,
+  "repairNeeded": 0,
+  "failures": [],
+  "initialBoardsAudited": 3411,
+  "finalConfirmedCoordinates": 17,
+  "finalOptimizedCovers": 17,
+  "wordsRepaired": 2
+}

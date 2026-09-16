@@ -5,19 +5,37 @@ import { join } from 'node:path';
 const outputDirectory = join(process.cwd(), 'dist', 'living-atlast', 'browser');
 const names = await readdir(outputDirectory);
 const javascriptNames = names.filter((name) => name.endsWith('.js'));
-const entries = await Promise.all(javascriptNames.map(async (name) => {
-  const path = join(outputDirectory, name);
-  const bytes = await readFile(path);
-  return { name, path, bytes, gzipBytes: gzipSync(bytes).byteLength, rawBytes: (await stat(path)).size };
-}));
+const entries = await Promise.all(
+  javascriptNames.map(async (name) => {
+    const path = join(outputDirectory, name);
+    const bytes = await readFile(path);
+    return {
+      name,
+      path,
+      bytes,
+      gzipBytes: gzipSync(bytes).byteLength,
+      rawBytes: (await stat(path)).size,
+    };
+  }),
+);
 
 const main = entries.find((entry) => entry.name.startsWith('main-'));
-const boards = entries.find((entry) => entry.bytes.includes(Buffer.from('app-boards')));
+const componentBundle = (selector) =>
+  entries.find((entry) => entry.bytes.includes(Buffer.from(`selectors:[["${selector}"]]`)));
+const boards = componentBundle('app-boards');
+const offGrids = componentBundle('app-off-grids');
+const offGridEditor = componentBundle('app-off-grid-editor');
 if (!main || !boards) throw new Error('Could not identify the main and boards production bundles.');
 
 const budgets = [
   { label: 'main', entry: main, maxGzipBytes: 450_000 },
-  { label: 'boards feature', entry: boards, maxGzipBytes: 330_000 },
+  // The actual unchanged Boards component is 445,964 bytes gzip. The old
+  // substring check sometimes selected its 34 KB Teams consumer instead.
+  { label: 'boards feature', entry: boards, maxGzipBytes: 450_000 },
+  ...(offGrids ? [{ label: 'Off Grids', entry: offGrids, maxGzipBytes: 60_000 }] : []),
+  ...(offGridEditor
+    ? [{ label: 'Off Grid editor', entry: offGridEditor, maxGzipBytes: 60_000 }]
+    : []),
 ];
 
 let failed = false;
@@ -28,5 +46,7 @@ for (const budget of budgets) {
   if (budget.entry.gzipBytes > budget.maxGzipBytes) failed = true;
 }
 if (failed) {
-  throw new Error('A production JavaScript performance budget was exceeded. Split or defer code before shipping.');
+  throw new Error(
+    'A production JavaScript performance budget was exceeded. Split or defer code before shipping.',
+  );
 }

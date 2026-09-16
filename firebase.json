@@ -24,13 +24,22 @@
   },
   "hosting": {
     "public": "dist/living-atlast/browser",
-    "predeploy": ["node scripts/prepare-hosting-runtime-config.mjs"],
+    "predeploy": [
+      "node scripts/prepare-hosting-runtime-config.mjs"
+    ],
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
     "rewrites": [
+      {
+        "source": "/share/off-grid/**",
+        "function": {
+          "functionId": "offGridShare",
+          "region": "us-central1"
+        }
+      },
       {
         "source": "/share/answer-card/**",
         "function": {
@@ -90,7 +99,12 @@
     "headers": [
       {
         "source": "/{,fr/,ja/}notifications{,/**}",
-        "headers": [{ "key": "Cache-Control", "value": "no-cache,max-age=0,must-revalidate" }]
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache,max-age=0,must-revalidate"
+          }
+        ]
       },
       {
         "source": "/teams{,/**}",
@@ -139,7 +153,12 @@
       },
       {
         "source": "/{,fr/,ja/}runtime-config.js",
-        "headers": [{ "key": "Cache-Control", "value": "no-cache,max-age=0,must-revalidate" }]
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache,max-age=0,must-revalidate"
+          }
+        ]
       }
     ]
   }

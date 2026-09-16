@@ -1,0 +1,126 @@
+<div class="pin-talk-composer">
+  @if (!camera() && !reviewUrl()) {
+    <div class="capture-options">
+      <button type="button" class="capture-choice" (click)="openCamera()">
+        <span class="material-symbols-outlined" aria-hidden="true">videocam</span
+        ><strong i18n>Record now</strong><small i18n>Show us the gem · up to 90 seconds</small>
+      </button>
+      <label class="capture-choice file-choice"
+        ><span class="material-symbols-outlined" aria-hidden="true">upload</span
+        ><strong i18n>Upload a video</strong><small i18n>MP4, MOV or WebM · 3 min · 100 MB</small
+        ><input
+          type="file"
+          accept="video/mp4,video/quicktime,video/webm,video/x-m4v,.mov,.mp4,.webm,.m4v"
+          (change)="selected($event)"
+          aria-label="Upload a PinTalk video"
+          i18n-aria-label
+      /></label>
+    </div>
+    @if (!supported() || error()) {
+      <label class="native-capture" i18n
+        >Use your phone camera<input
+          type="file"
+          accept="video/*"
+          capture="environment"
+          (change)="selected($event)"
+      /></label>
+    }
+  }
+  @if (camera()) {
+    <div class="camera-frame">
+      <video
+        #preview
+        autoplay
+        muted
+        playsinline
+        aria-label="Camera preview"
+        i18n-aria-label
+      ></video>
+      @if (recording()) {
+        <span class="record-time">● {{ seconds() }} / 90s</span>
+      }
+    </div>
+    <div class="button-row">
+      <button type="button" class="secondary" (click)="toggleMic()">
+        {{ muted() ? copy.unmuteMic : copy.muteMic }}</button
+      ><button type="button" class="secondary" (click)="flipCamera()" [disabled]="recording()" i18n>
+        Flip camera
+      </button>
+      @if (recording()) {
+        <button type="button" class="danger" (click)="stop()" i18n>Stop recording</button>
+      } @else {
+        <button type="button" class="primary" (click)="start()" i18n>Start recording</button
+        ><button type="button" class="text-button" (click)="closeCamera()" i18n>Cancel</button>
+      }
+    </div>
+  }
+  @if (reviewUrl()) {
+    <video
+      class="review-video"
+      controls
+      playsinline
+      preload="metadata"
+      [src]="reviewUrl()"
+      (loadedmetadata)="metadata($event)"
+      aria-label="Review your PinTalk"
+      i18n-aria-label
+    ></video>
+    <div class="trim-row">
+      <label i18n
+        >Start (seconds)<input
+          type="number"
+          min="0"
+          [max]="duration()"
+          step="0.1"
+          [(ngModel)]="trimStart"
+          [disabled]="uploading()" /></label
+      ><label i18n
+        >End (seconds)<input
+          type="number"
+          min="0"
+          [max]="duration() || 180"
+          step="0.1"
+          [(ngModel)]="trimEnd"
+          [disabled]="uploading()"
+      /></label>
+    </div>
+    <label class="field" i18n
+      >Caption or transcript<textarea
+        rows="3"
+        maxlength="600"
+        [(ngModel)]="caption"
+        [disabled]="uploading()"
+        placeholder="What should someone know about this place?"
+        i18n-placeholder
+      ></textarea>
+    </label>
+    @if (uploading()) {
+      <div class="upload-status" role="status">
+        <progress max="100" [value]="progress()"></progress
+        ><span>{{
+          processing() ? copy.preparingYourVideoAndCover : copy.uploading + progress() + '%'
+        }}</span>
+        @if (!processing()) {
+          <button class="text-button" type="button" (click)="cancelUpload()" i18n>
+            Cancel upload
+          </button>
+        }
+      </div>
+    }
+    <div class="button-row">
+      <button
+        type="button"
+        class="primary"
+        [disabled]="uploading() || duration() > 180.5"
+        (click)="submit()"
+      >
+        {{ uploading() ? copy.addingPinTalk : copy.addThisPinTalk }}</button
+      ><button type="button" class="secondary" [disabled]="uploading()" (click)="remove()" i18n>
+        Remove / retry
+      </button>
+    </div>
+  }
+  @if (error()) {
+    <p class="error-message" role="alert">{{ error() }}</p>
+  }
+</div>

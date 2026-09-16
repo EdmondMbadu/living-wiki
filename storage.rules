@@ -37,6 +37,11 @@ service firebase.storage {
         );
     }
 
+    // Server-issued resumable upload sessions write originals. Playback goes
+    // through offGridMedia and checks current visibility on every request.
+    match /off-grid-originals/{fileName=**} { allow read, write: if false; }
+    match /off-grid-media/{fileName=**} { allow read, write: if false; }
+
     match /public-board-covers/{boardId}/{fileName=**} {
       allow read: if true;
       allow write: if false;

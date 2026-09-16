@@ -29,6 +29,7 @@
         class="workspace-sidebar__item"
         [class.is-active]="navigation.isActive(item.key)"
         [class.workspace-sidebar__item--trove]="item.key === 'trove'"
+        [class.workspace-sidebar__item--off-grids]="item.key === 'off-grids'"
         [attr.aria-current]="navigation.isActive(item.key) ? 'page' : null"
       >
         @if (item.iconImageUrl) {

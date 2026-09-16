@@ -1,6 +1,8 @@
 import { RenderMode, ServerRoute } from '@angular/ssr';
 
 export const serverRoutes: ServerRoute[] = [
+  { path: 'off-grids/**', renderMode: RenderMode.Client },
+  { path: 'off-grids', renderMode: RenderMode.Client },
   { path: 'teams/**', renderMode: RenderMode.Client },
   { path: 'teams', renderMode: RenderMode.Client },
   { path: 'team/:slug', renderMode: RenderMode.Client },
