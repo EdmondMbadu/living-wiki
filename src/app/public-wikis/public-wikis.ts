@@ -34,6 +34,7 @@ import { WorkspaceNavigationService } from '../workspace-navigation/workspace-na
 import { LanguageSwitcherComponent } from '../language-switcher/language-switcher';
 import { MobileMenuComponent } from '../mobile-menu/mobile-menu';
 import type { VideoLibraryItem } from '../video-library/video-library.models';
+import { isRealEstateTalkThru } from '../boards/listing-talking-card';
 
 const CITIES_CATEGORY = 'Cities';
 const UNIVERSITIES_CATEGORY = 'Universities';
@@ -129,6 +130,17 @@ interface MobileBoard {
   searchText: string;
 }
 
+interface MobileDiscoverSessionCache {
+  uid: string;
+  boards: MobileBoard[];
+  cursor: QueryDocumentSnapshot<DocumentData> | null;
+  usesNewestFirstQuery: boolean;
+  hasMore: boolean;
+  cachedAt: number;
+}
+
+let mobileDiscoverSessionCache: MobileDiscoverSessionCache | null = null;
+
 interface MobileFriend {
   userId: string;
   email: string;
@@ -206,6 +218,7 @@ const MOBILE_BOARD_ACTIONS_STORAGE_KEY = 'lw-board-actions';
 const MOBILE_DEMO_BOARD_IDS = new Set(['board-summer-places', 'board-eats', 'board-weekend']);
 const HOME_SECTION_PAGE_SIZE = 10;
 const HOME_BOARD_QUERY_PAGE_SIZE = HOME_SECTION_PAGE_SIZE + 1;
+const MOBILE_DISCOVER_SESSION_CACHE_TTL_MS = 2 * 60 * 1000;
 const DISCOVER_SEARCH_QUERY_PAGE_SIZE = 50;
 const DISCOVER_SEARCH_DEBOUNCE_MS = 140;
 const DISCOVER_AUTOLOAD_ROOT_MARGIN_PX = 600;
@@ -223,11 +236,15 @@ export function sortDiscoverBoardsNewestFirst<T extends { id: string; title: str
 
 export function shouldAutoLoadDiscoverBoards(options: {
   isDiscoverRoute: boolean;
+  isPropertiesRoute?: boolean;
   isIntersecting: boolean;
   hasMore: boolean;
   loading: boolean;
 }): boolean {
-  return options.isDiscoverRoute && options.isIntersecting && options.hasMore && !options.loading;
+  return (options.isDiscoverRoute || Boolean(options.isPropertiesRoute))
+    && options.isIntersecting
+    && options.hasMore
+    && !options.loading;
 }
 
 export function shouldAutoLoadPublicWikis(options: {
@@ -271,6 +288,32 @@ type DiscoverBoardSearchDocument = {
   details: string;
   all: string;
 };
+
+function isPropertyBoard(board: MobileBoard): boolean {
+  if (isRealEstateTalkThru(board)) return true;
+  const tags = new Set(
+    board.cards.flatMap((card) => card.tags.map((tag) => tag.trim().toLowerCase())).filter(Boolean),
+  );
+  if (
+    tags.has('listing-story')
+    || (tags.has('listing') && (tags.has('real-estate') || tags.has('lodging') || tags.has('rental')))
+  ) {
+    return true;
+  }
+  const legacyPropertySignal = /\b(?:condo(?:minium)?|house|home|property|apartment|unit)\b/i
+    .test(`${board.title} ${board.description}`)
+    || tags.has('condo')
+    || tags.has('condominium');
+  if (legacyPropertySignal && tags.has('agent-intro') && tags.has('contact-card')) return true;
+
+  const residentialTourSignal = /\b(?:condo(?:minium)?|house|home|property|rental|retreat|getaway)\b/i
+    .test(`${board.title} ${board.description}`);
+  const residentialRoomCount = board.cards.filter((card) =>
+    /\b(?:bed(?:room)?|bath(?:room)?|kitchen|living room|laundry|backyard|porch|hot tub)\b/i
+      .test(`${card.title} ${card.subtitle} ${card.tags.join(' ')}`),
+  ).length;
+  return residentialTourSignal && residentialRoomCount >= 4;
+}
 
 export function normalizeDiscoverSearchValue(value: string): string {
   return value
@@ -698,6 +741,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
   readonly publicWikiAutoLoading = signal(false);
   readonly mobileSectionLimits = signal<Record<string, number>>({});
   readonly mobileDiscoverLimit = signal(HOME_SECTION_PAGE_SIZE);
+  readonly mobilePropertyLimit = signal(HOME_SECTION_PAGE_SIZE);
   readonly mobileFeaturedCityLimit = signal(HOME_SECTION_PAGE_SIZE);
   readonly mobileBoardsHasMore = signal(false);
   readonly mobileBoardRemoteExhausted = signal(false);
@@ -709,6 +753,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
   readonly directoryActiveSuggestionIndex = signal(0);
   readonly isHomeRoute = signal(Boolean(this.route.snapshot.data['signedInHome']));
   readonly isDiscoverRoute = signal(Boolean(this.route.snapshot.data['discoverPage']));
+  readonly isPropertiesRoute = signal(Boolean(this.route.snapshot.data['propertiesPage']));
   readonly isDirectoryRoute = signal(Boolean(this.route.snapshot.data['directoryPage']));
   readonly homeIconUrls = HOME_ICON_URLS;
   readonly mobileSelectedCitySlug = signal<string | null>('philly');
@@ -770,12 +815,21 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
   readonly discoverSearchQuery = computed(() =>
     normalizeDiscoverSearchValue(this.discoverSearchTerm()),
   );
+  readonly mobilePropertyBoards = computed(() =>
+    this.mobileDiscoverBoards().filter((board) => isPropertyBoard(board)),
+  );
+  readonly mobileGeneralDiscoverBoards = computed(() =>
+    this.mobileDiscoverBoards().filter((board) => !isPropertyBoard(board)),
+  );
+  readonly mobileBrowseBoards = computed(() =>
+    this.isPropertiesRoute() ? this.mobilePropertyBoards() : this.mobileGeneralDiscoverBoards(),
+  );
   readonly mobileDiscoverSearchDocuments = computed(() =>
-    this.mobileDiscoverBoards().map((board, ordinal) => discoverSearchDocument(board, ordinal)),
+    this.mobileBrowseBoards().map((board, ordinal) => discoverSearchDocument(board, ordinal)),
   );
   readonly mobileDiscoverFilteredBoards = computed(() => {
     const query = this.discoverSearchQuery();
-    if (!query) return this.mobileDiscoverBoards();
+    if (!query) return this.mobileBrowseBoards();
     return this.mobileDiscoverSearchDocuments()
       .map((document) => ({ document, score: discoverSearchScore(document, query) }))
       .filter((result): result is { document: DiscoverBoardSearchDocument; score: number } => result.score !== null)
@@ -784,6 +838,9 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
   });
   readonly mobileDiscoverPreviewBoards = computed(() =>
     this.mobileDiscoverFilteredBoards().slice(0, this.mobileDiscoverLimit()),
+  );
+  readonly mobilePropertyPreviewBoards = computed(() =>
+    this.mobilePropertyBoards().slice(0, this.mobilePropertyLimit()),
   );
   readonly allMobileSavedBoardCards = computed(() => {
     const saved = this.savedBoardIds();
@@ -971,7 +1028,11 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
       : 'Search cities by name, country, or region...',
   );
   readonly hasMoreMobileDiscoverBoards = computed(() =>
-    this.mobileDiscoverPreviewBoards().length < this.mobileDiscoverBoards().length
+    this.mobileDiscoverPreviewBoards().length < this.mobileDiscoverFilteredBoards().length
+      || this.mobileDiscoverHasMore(),
+  );
+  readonly hasMoreMobilePropertyBoards = computed(() =>
+    this.mobilePropertyPreviewBoards().length < this.mobilePropertyBoards().length
       || this.mobileDiscoverHasMore(),
   );
   readonly mobileSelectedCity = computed(() => {
@@ -1485,6 +1546,13 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
     this.moveHomeRail('discover', direction);
   }
 
+  async movePropertyRail(direction: -1 | 1): Promise<void> {
+    if (direction > 0 && this.homeRailNeedsMore('properties') && this.hasMoreMobilePropertyBoards()) {
+      await this.showMoreMobilePropertyBoards();
+    }
+    this.moveHomeRail('properties', direction);
+  }
+
   async moveDirectoryRail(direction: -1 | 1): Promise<void> {
     if (direction > 0 && this.homeRailNeedsMore('directory') && this.hasMoreMobileFeaturedWikis()) {
       this.showMoreMobileFeaturedWikis();
@@ -1544,12 +1612,31 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
 
   async showMoreMobileDiscoverBoards(): Promise<void> {
     if (this.mobileDiscoverLoadingMore()) return;
-    const nextLimit = this.mobileDiscoverLimit() + HOME_SECTION_PAGE_SIZE;
+    const currentLimit = this.mobileDiscoverLimit();
+    const nextLimit = this.mobileDiscoverFilteredBoards().length < currentLimit
+      ? currentLimit
+      : currentLimit + HOME_SECTION_PAGE_SIZE;
     this.mobileDiscoverLimit.set(nextLimit);
     while (this.mobileDiscoverFilteredBoards().length < nextLimit && this.mobileDiscoverHasMore()) {
       const fetched = await this.fetchNextMobileDiscoverPage(
         this.authService.uid(),
         this.discoverSearchQuery() ? DISCOVER_SEARCH_QUERY_PAGE_SIZE : HOME_BOARD_QUERY_PAGE_SIZE,
+      );
+      if (!fetched) break;
+    }
+  }
+
+  async showMoreMobilePropertyBoards(): Promise<void> {
+    if (this.mobileDiscoverLoadingMore()) return;
+    const currentLimit = this.mobilePropertyLimit();
+    const nextLimit = this.mobilePropertyBoards().length < currentLimit
+      ? currentLimit
+      : currentLimit + HOME_SECTION_PAGE_SIZE;
+    this.mobilePropertyLimit.set(nextLimit);
+    while (this.mobilePropertyBoards().length < nextLimit && this.mobileDiscoverHasMore()) {
+      const fetched = await this.fetchNextMobileDiscoverPage(
+        this.authService.uid(),
+        HOME_BOARD_QUERY_PAGE_SIZE,
       );
       if (!fetched) break;
     }
@@ -1591,6 +1678,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
   async onDiscoverLoadSentinelIntersection(isIntersecting: boolean): Promise<void> {
     if (!shouldAutoLoadDiscoverBoards({
       isDiscoverRoute: this.isDiscoverRoute(),
+      isPropertiesRoute: this.isPropertiesRoute(),
       isIntersecting,
       hasMore: this.hasMoreMobileDiscoverBoards(),
       loading: this.mobileDiscoverLoadingMore(),
@@ -1604,7 +1692,11 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
   private observeDiscoverLoadSentinel(): void {
     this.discoverLoadObserver?.disconnect();
     this.discoverLoadObserver = null;
-    if (!this.isBrowser || !this.isDiscoverRoute() || !this.discoverLoadSentinelElement) {
+    if (
+      !this.isBrowser
+      || (!this.isDiscoverRoute() && !this.isPropertiesRoute())
+      || !this.discoverLoadSentinelElement
+    ) {
       return;
     }
     this.discoverLoadObserver = new IntersectionObserver((entries) => {
@@ -1777,19 +1869,16 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
 
     this.mobileDiscoverLoading.set(true);
     try {
+      const currentUid = this.authService.uid();
+      if (currentUid && this.restoreMobileDiscoverSessionCache(currentUid)) return;
       await this.authService.waitForReady();
       const uid = this.authService.uid();
+      if (this.restoreMobileDiscoverSessionCache(uid)) return;
       this.mobileDiscoverCursor = null;
       this.mobileDiscoverUsesNewestFirstQuery = true;
       this.mobileDiscoverHasMore.set(true);
       this.mobileDiscoverBoards.set([]);
       await this.fetchNextMobileDiscoverPage(uid);
-      while (
-        this.mobileDiscoverBoards().length < HOME_SECTION_PAGE_SIZE
-        && this.mobileDiscoverHasMore()
-      ) {
-        await this.fetchNextMobileDiscoverPage(uid);
-      }
     } catch {
       this.mobileDiscoverBoards.set([]);
       this.mobileDiscoverHasMore.set(false);
@@ -1850,6 +1939,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
       this.mobileDiscoverBoards.update((existingBoards) => appendDiscoverBoardPage(existingBoards, boards));
       this.mobileDiscoverCursor = snapshot.docs.at(-1) ?? this.mobileDiscoverCursor;
       this.mobileDiscoverHasMore.set(snapshot.docs.length === pageSize);
+      this.saveMobileDiscoverSessionCache(uid);
       return true;
     } catch {
       this.mobileDiscoverHasMore.set(false);
@@ -1857,6 +1947,34 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
     } finally {
       this.mobileDiscoverLoadingMore.set(false);
     }
+  }
+
+  private restoreMobileDiscoverSessionCache(uid: string): boolean {
+    const cache = mobileDiscoverSessionCache;
+    if (
+      !uid
+      || !cache
+      || cache.uid !== uid
+      || Date.now() - cache.cachedAt > MOBILE_DISCOVER_SESSION_CACHE_TTL_MS
+    ) {
+      return false;
+    }
+    this.mobileDiscoverBoards.set([...cache.boards]);
+    this.mobileDiscoverCursor = cache.cursor;
+    this.mobileDiscoverUsesNewestFirstQuery = cache.usesNewestFirstQuery;
+    this.mobileDiscoverHasMore.set(cache.hasMore);
+    return true;
+  }
+
+  private saveMobileDiscoverSessionCache(uid: string): void {
+    mobileDiscoverSessionCache = {
+      uid,
+      boards: [...this.mobileDiscoverBoards()],
+      cursor: this.mobileDiscoverCursor,
+      usesNewestFirstQuery: this.mobileDiscoverUsesNewestFirstQuery,
+      hasMore: this.mobileDiscoverHasMore(),
+      cachedAt: Date.now(),
+    };
   }
 
   toggleBoardLike(board: MobileBoard): void {

@@ -54,6 +54,7 @@ describe('MobileMenuComponent', () => {
     expect(labels).toEqual([
       'Home',
       'Discover',
+      'Properties',
       'My City Las Vegas',
       'My Boards',
       'My Songs',

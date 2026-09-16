@@ -1,5 +1,5 @@
 <div class="min-h-screen bg-[var(--bg)] text-[var(--text)] selection:bg-[var(--accent)] selection:text-[var(--accent-contrast)]">
-  @if (isSignedIn() && (isHomeRoute() || isDiscoverRoute())) {
+  @if (isSignedIn() && (isHomeRoute() || isDiscoverRoute() || isPropertiesRoute())) {
   <div class="mobile-public-home" [class.sidebar-closed]="workspaceNavigation.sidebarCollapsed()">
     <app-workspace-sidebar active="home" [rail]="true"></app-workspace-sidebar>
     <div class="mobile-home-surface">
@@ -389,6 +389,68 @@
           }
           </div>
         </section>
+        @if (section.id === 'videos') {
+          <section id="mobile-properties" class="mobile-discover-section" aria-label="Properties">
+            <div class="mobile-discover-head">
+              <span class="material-symbols-outlined">real_estate_agent</span>
+              <div>
+                <p>Properties</p>
+                <h2>Homes and places from around LivingWiki</h2>
+              </div>
+              <a routerLink="/properties" class="mobile-rail-view-all">View all</a>
+            </div>
+            <div class="mobile-card-rail">
+            <div class="mobile-card-row" data-home-rail="properties" (scroll)="onHomeRailScroll('properties', $event)">
+              <a routerLink="/properties" class="mobile-icon-tile" aria-label="Explore properties">
+                <span class="material-symbols-outlined mobile-section-icon">real_estate_agent</span>
+                <span class="mobile-plus">+</span>
+              </a>
+              @if (mobileDiscoverLoading()) {
+                <div class="mobile-discover-empty" i18n>Loading...</div>
+              } @else if (mobilePropertyPreviewBoards().length) {
+                @for (board of mobilePropertyPreviewBoards(); track board.id) {
+                  <a
+                    [routerLink]="boardViewLink(board)"
+                    class="mobile-content-card"
+                    [class.mobile-content-card--with-image]="board.imageUrl"
+                  >
+                    @if (board.imageUrl) {
+                      <img [src]="board.imageUrl" [alt]="board.title" loading="lazy" class="mobile-content-card-image" />
+                    }
+                    <span class="material-symbols-outlined">{{ boardIcon(board) }}</span>
+                    <b>{{ board.title }}</b>
+                    <small>{{ ownerLabel(board) }} · {{ countLabel(board.cards.length, boardSongCards(board).length ? 'song' : 'card') }}</small>
+                  </a>
+                }
+              } @else {
+                <div class="mobile-discover-empty">No properties yet.</div>
+              }
+            </div>
+            @if (homeRailCanGoBack('properties')) {
+              <button
+                type="button"
+                class="mobile-rail-arrow mobile-rail-arrow--back"
+                aria-label="Previous properties"
+                (click)="movePropertyRail(-1)"
+              >
+                <span class="material-symbols-outlined">chevron_left</span>
+              </button>
+            }
+            @if (homeRailCanGoForward('properties', hasMoreMobilePropertyBoards(), mobilePropertyPreviewBoards().length + 1)) {
+              <button
+                type="button"
+                class="mobile-rail-arrow mobile-rail-arrow--forward"
+                aria-label="More properties"
+                [class.loading]="mobileDiscoverLoadingMore()"
+                [disabled]="mobileDiscoverLoadingMore()"
+                (click)="movePropertyRail(1)"
+              >
+                <span class="material-symbols-outlined">{{ mobileDiscoverLoadingMore() ? 'progress_activity' : 'chevron_right' }}</span>
+              </button>
+            }
+            </div>
+          </section>
+        }
       }
 
       <section id="mobile-trove" class="mobile-game-section">
@@ -419,21 +481,32 @@
     </main>
     } @else {
     <main class="mobile-home-main mobile-discover-page">
-      <section class="mobile-discover-section mobile-discover-section--page" aria-label="Explore more boards" i18n-aria-label>
+      <section
+        class="mobile-discover-section mobile-discover-section--page"
+        [attr.aria-label]="isPropertiesRoute() ? 'Explore properties' : 'Explore more boards'"
+      >
         <div class="mobile-discover-page-hero">
           <a routerLink="/home" class="mobile-discover-back" i18n>
             <span class="material-symbols-outlined">arrow_back</span>
             Home
           </a>
-          <img [src]="homeIconUrls.boards" alt="" />
+          @if (isPropertiesRoute()) {
+            <span class="material-symbols-outlined mobile-discover-page-hero__property-icon" aria-hidden="true">real_estate_agent</span>
+          } @else {
+            <img [src]="homeIconUrls.boards" alt="" />
+          }
           <span class="mobile-plus">+</span>
           <div>
-            <h1 i18n>Explore more</h1>
+            <h1>{{ isPropertiesRoute() ? 'Explore properties' : 'Explore more' }}</h1>
           </div>
         </div>
 
-        <div class="mobile-discover-search" role="search" aria-label="Search public boards" i18n-aria-label>
-          <label class="sr-only" for="discover-board-search" i18n>Search public boards</label>
+        <div
+          class="mobile-discover-search"
+          role="search"
+          [attr.aria-label]="isPropertiesRoute() ? 'Search properties' : 'Search public boards'"
+        >
+          <label class="sr-only" for="discover-board-search">{{ isPropertiesRoute() ? 'Search properties' : 'Search public boards' }}</label>
           <div class="mobile-discover-search__field">
             <span class="material-symbols-outlined" aria-hidden="true">search</span>
             <input
@@ -443,8 +516,7 @@
               spellcheck="false"
               [ngModel]="discoverSearchTerm()"
               (ngModelChange)="onDiscoverSearchInput($event)"
-              placeholder="Search titles, places, creators, or topics…"
-              i18n-placeholder
+              [placeholder]="isPropertiesRoute() ? 'Search addresses, places, agents, or features…' : 'Search titles, places, creators, or topics…'"
             />
             @if (discoverSearchTerm()) {
               <button
@@ -526,12 +598,12 @@
               </span>
               <strong>{{ mobileDiscoverLoadingMore() ? 'Searching more boards…' : 'No matching boards' }}</strong>
               @if (!mobileDiscoverLoadingMore()) {
-                <span>Try a title, place, creator, card, or topic.</span>
+                <span>{{ isPropertiesRoute() ? 'Try an address, place, agent, or property feature.' : 'Try a title, place, creator, card, or topic.' }}</span>
                 <button type="button" (click)="clearDiscoverSearch()">Clear search</button>
               }
             </div>
           } @else {
-            <div class="mobile-discover-empty" i18n>No boards yet.</div>
+            <div class="mobile-discover-empty">{{ isPropertiesRoute() ? 'No properties yet.' : 'No boards yet.' }}</div>
           }
         </div>
         @if (hasMoreMobileDiscoverBoards()) {

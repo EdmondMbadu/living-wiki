@@ -13,7 +13,7 @@ import {
 } from './public-wikis';
 
 describe('PublicWikisComponent home pagination', () => {
-  function createComponent(discoverPage = false): PublicWikisComponent {
+  function createComponent(discoverPage = false, propertiesPage = false): PublicWikisComponent {
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
@@ -33,8 +33,12 @@ describe('PublicWikisComponent home pagination', () => {
           provide: ActivatedRoute,
           useValue: {
             snapshot: {
-              data: discoverPage ? { discoverPage: true } : { signedInHome: true },
-              routeConfig: { path: discoverPage ? 'discover' : 'home' },
+              data: propertiesPage
+                ? { propertiesPage: true }
+                : discoverPage
+                  ? { discoverPage: true }
+                  : { signedInHome: true },
+              routeConfig: { path: propertiesPage ? 'properties' : discoverPage ? 'discover' : 'home' },
             },
           },
         },
@@ -113,6 +117,90 @@ describe('PublicWikisComponent home pagination', () => {
     await component.showMoreMobileDiscoverBoards();
     expect(component.mobileDiscoverPreviewBoards().length).toBe(25);
     expect(component.hasMoreMobileDiscoverBoards()).toBeFalse();
+  });
+
+  it('fills a sparse category before advancing to another reveal batch', async () => {
+    const component = createComponent();
+    component.mobileDiscoverBoards.set(Array.from({ length: 4 }, (_, index) => board(index)));
+
+    await component.showMoreMobileDiscoverBoards();
+
+    expect(component.mobileDiscoverLimit()).toBe(10);
+    expect(component.mobileDiscoverPreviewBoards().length).toBe(4);
+  });
+
+  it('separates real-estate boards from general discovery', () => {
+    const component = createComponent();
+    component.mobileDiscoverBoards.set([
+      { ...board(1), id: 'food', title: 'Neighborhood restaurants' },
+      {
+        ...board(2),
+        id: 'listing',
+        title: '1428 Pine Street',
+        cards: [{ title: 'Living room', tags: ['listing', 'real-estate', 'listing-story'] }],
+      },
+      {
+        ...board(3),
+        id: 'rental',
+        title: 'Beach holiday condo',
+        cards: [{ title: 'Ocean view', tags: ['listing', 'lodging'] }],
+      },
+      {
+        ...board(4),
+        id: 'legacy-listing',
+        title: '3110 Atlantic Ave Unit 205',
+        cards: [
+          { title: 'Beach Holiday Condominiums', tags: ['condo', 'real-estate'] },
+          { title: 'View full listing', tags: ['listing'] },
+        ],
+      },
+      {
+        ...board(5),
+        id: 'legacy-condo',
+        title: 'Beach Holiday Condo',
+        cards: [
+          { title: 'Welcome from the owner', tags: ['agent-intro'] },
+          { title: 'Exterior', tags: ['condominium'] },
+          { title: 'Contact the owner', tags: ['contact-card'] },
+        ],
+      },
+      {
+        ...board(6),
+        id: 'legacy-home-tour',
+        title: 'Ohana Breeze Getaway',
+        description: 'A tropical-inspired retreat for the whole family.',
+        cards: [
+          { title: 'Primary bedroom', tags: [] },
+          { title: 'Kitchen and island', tags: [] },
+          { title: 'Living room', tags: [] },
+          { title: 'Second floor bathroom', tags: [] },
+        ],
+      },
+    ]);
+
+    expect(component.mobileDiscoverPreviewBoards().map((item) => item.id)).toEqual(['food']);
+    expect(component.mobilePropertyPreviewBoards().map((item) => item.id)).toEqual([
+      'listing',
+      'rental',
+      'legacy-listing',
+      'legacy-condo',
+      'legacy-home-tour',
+    ]);
+  });
+
+  it('uses only real-estate boards on the Properties page', () => {
+    const component = createComponent(false, true);
+    component.mobileDiscoverBoards.set([
+      { ...board(1), id: 'food', title: 'Neighborhood restaurants' },
+      {
+        ...board(2),
+        id: 'listing',
+        title: '1428 Pine Street',
+        cards: [{ title: 'Kitchen', tags: ['listing', 'real-estate', 'listing-story'] }],
+      },
+    ]);
+
+    expect(component.mobileDiscoverPreviewBoards().map((item) => item.id)).toEqual(['listing']);
   });
 
   it('searches discover boards across titles, places, creators, and card details', () => {
@@ -253,6 +341,13 @@ describe('PublicWikisComponent home pagination', () => {
       hasMore: true,
       loading: true,
     })).toBeFalse();
+    expect(shouldAutoLoadDiscoverBoards({
+      isDiscoverRoute: false,
+      isPropertiesRoute: true,
+      isIntersecting: true,
+      hasMore: true,
+      loading: false,
+    })).toBeTrue();
   });
 
   it('reveals public directory pages 10 at a time when the landing sentinel enters view', async () => {
