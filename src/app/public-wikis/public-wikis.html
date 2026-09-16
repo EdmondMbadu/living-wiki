@@ -548,14 +548,16 @@
         </div>
 
         <div class="mobile-discover-page-grid">
-          @if (mobileDiscoverLoading()) {
+          @if (mobileDiscoverLoading() && !mobileDiscoverPreviewBoards().length) {
             <div class="mobile-discover-empty" i18n>Loading...</div>
           } @else if (mobileDiscoverPreviewBoards().length) {
-            @for (board of mobileDiscoverPreviewBoards(); track board.id) {
+            @for (board of mobileDiscoverPreviewBoards(); track board.id; let index = $index) {
               <article class="mobile-discover-card">
                 <a [routerLink]="boardViewLink(board)" class="mobile-discover-card__media" [style.background]="boardAccent(board)">
                   @if (board.imageUrl) {
-                    <img [src]="board.imageUrl" [alt]="board.title" loading="lazy" />
+                    <img [src]="board.imageUrl" [attr.srcset]="board.imageWebpSrcset || null"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      [alt]="board.title" [attr.loading]="index < 3 ? 'eager' : 'lazy'" decoding="async" />
                   } @else {
                     <span class="mobile-discover-card__fallback">{{ initialsFor(board.title) }}</span>
                   }
@@ -564,7 +566,7 @@
                   </span>
                   <span class="mobile-discover-card__meta">
                     <strong>{{ board.title }}</strong>
-                    <small>{{ ownerLabel(board) }} · {{ countLabel(board.cards.length, boardSongCards(board).length ? 'song' : 'card') }}</small>
+                    <small>{{ ownerLabel(board) }} · {{ countLabel(board.cardCount ?? board.cards.length, boardSongCards(board).length ? 'song' : 'card') }}</small>
                   </span>
                 </a>
                 <div class="mobile-discover-card__actions">
@@ -587,6 +589,8 @@
                 </div>
               </article>
             }
+          } @else if (mobileDiscoverError()) {
+            <div class="mobile-discover-empty">Couldn’t load boards. Please try again.</div>
           } @else if (discoverSearchQuery()) {
             <div class="mobile-discover-empty mobile-discover-empty--search">
               <span
@@ -606,6 +610,9 @@
             <div class="mobile-discover-empty">{{ isPropertiesRoute() ? 'No properties yet.' : 'No boards yet.' }}</div>
           }
         </div>
+        @if (mobileDiscoverError()) {
+          <button type="button" (click)="retryMobileDiscoverBoards()">Try again</button>
+        }
         @if (hasMoreMobileDiscoverBoards()) {
           <div
             #discoverLoadSentinel

@@ -2,8 +2,9 @@ import { createHash, randomUUID } from 'node:crypto';
 import type { Bucket } from '@google-cloud/storage';
 import sharp from 'sharp';
 import { boardCoverPhotoUrl, placePhotoUrl } from './place-photo';
+import { isPropertyBoardContent } from './property-board';
 
-export const PUBLIC_BOARD_SUMMARY_SCHEMA_VERSION = 1;
+export const PUBLIC_BOARD_SUMMARY_SCHEMA_VERSION = 2;
 
 type BoardData = Record<string, unknown>;
 
@@ -179,6 +180,18 @@ export async function optimizePublicBoardCover(
   };
 }
 
+// Search the preview without transferring scripts, conversations, or full card payloads.
+function publicCardSearchText(card: BoardData): string {
+  const tour = card['tour'] && typeof card['tour'] === 'object' ? card['tour'] as BoardData : {};
+  return [
+    ...['title', 'subtitle', 'entityName', 'entity_name', 'shortSummary', 'short_summary']
+      .map((field) => stringValue(card[field], 500)),
+    ...(Array.isArray(card['tags']) ? card['tags'] : []).map((tag) => stringValue(tag, 80)),
+    ...['address', 'startAddress', 'endAddress', 'locationLabel', 'nearestPlace']
+      .map((field) => stringValue(tour[field], 240)),
+  ].filter(Boolean).join(' ');
+}
+
 export function publicBoardSummaryFromBoard(
   boardId: string,
   board: BoardData,
@@ -206,6 +219,9 @@ export function publicBoardSummaryFromBoard(
     visibility: board['visibility'] === 'public' ? 'public' : 'private',
     is_root: !stringValue(board['parentCardId'], 160),
     kind: stringValue(board['kind'], 40) || 'standard',
+    is_property: isPropertyBoardContent({ ...board, cards }),
+    logoUrl: stringValue(board['logoUrl']),
+    like_count: numberValue(board['like_count']),
     sortOrder: numberValue(board['sortOrder']),
     title: stringValue(board['title'], 240),
     description: stringValue(board['description'], 500),
@@ -221,7 +237,7 @@ export function publicBoardSummaryFromBoard(
     favorite_card_count: favoriteCardCount,
     search_text: cards
       .map((card) => card && typeof card === 'object'
-        ? stringValue((card as BoardData)['title'], 240)
+        ? publicCardSearchText(card as BoardData)
         : '')
       .filter(Boolean)
       .join(' ')

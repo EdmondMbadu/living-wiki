@@ -83,37 +83,47 @@ async function mapWithConcurrency(values, concurrency, mapper) {
 }
 
 async function backfillSummariesOnly(documents) {
-  const results = [];
-  for (let index = 0; index < documents.length; index += 400) {
-    const chunk = documents.slice(index, index + 400);
-    const references = chunk.map((document) =>
-      db.collection('public_board_summaries').doc(document.id));
-    const existingSnapshots = await db.getAll(...references);
-    const batch = db.batch();
-    chunk.forEach((document, chunkIndex) => {
-      const board = document.data();
-      const sourceImageUrl = typeof board.imageUrl === 'string'
-        ? board.imageUrl.trim().slice(0, 2_000)
-        : '';
-      const cover = existingCover(existingSnapshots[chunkIndex]?.data(), sourceImageUrl);
-      batch.set(references[chunkIndex], {
-        ...publicBoardSummaryFromBoard(document.id, board, cover),
-        source_board_update_ms: document.updateTime?.toMillis() || Date.now(),
-        server_updated_at: admin.firestore.FieldValue.serverTimestamp(),
+  // Read canonical boards inside the same transaction as the preview write.
+  // A concurrent edit/unpublish retries instead of restoring a stale public copy.
+  const chunks = [];
+  for (let index = 0; index < documents.length; index += 40) chunks.push(documents.slice(index, index + 40));
+  let completed = 0;
+  const results = await mapWithConcurrency(chunks, 3, async (chunk) => {
+    const written = await db.runTransaction(async (transaction) => {
+      const references = chunk.map((document) => db.collection('public_board_summaries').doc(document.id));
+      const snapshots = await transaction.getAll(...chunk.map((document) => document.ref), ...references);
+      return chunk.map((document, index) => {
+        const current = snapshots[index];
+        const board = current.data();
+        if (!board || board.visibility !== 'public' || String(board.parentCardId || '').trim()) {
+          return { id: document.id, imageStatus: 'skipped-nonpublic' };
+        }
+        const base = publicBoardSummaryFromBoard(document.id, board);
+        const cover = existingCover(snapshots[chunk.length + index]?.data(), base.source_image_url);
+        transaction.set(references[index], {
+          ...publicBoardSummaryFromBoard(document.id, board, cover),
+          source_board_update_ms: current.updateTime.toMillis(),
+          server_updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return { id: document.id, imageStatus: cover ? 'reused' : 'skipped' };
       });
-      results.push({ id: document.id, imageStatus: cover ? 'reused' : 'skipped' });
     });
-    await batch.commit();
-    console.log(`Wrote compact summaries ${Math.min(index + chunk.length, documents.length)}/${documents.length}.`);
-  }
-  return results;
+    completed += chunk.length;
+    if (completed % 400 === 0 || completed === documents.length) {
+      console.log(`Wrote compact summaries ${completed}/${documents.length}.`);
+    }
+    return written;
+  });
+  return results.flat();
 }
 
 async function main() {
   let query = db.collection('boards').where('visibility', '==', 'public');
   if (ownerSlug) query = query.where('owner_public_slug', '==', ownerSlug);
   query = query.orderBy('created_at_iso', 'desc');
-  const snapshot = await query.limit(limit).get();
+  // The transactional path reads canonical data per chunk; enumerate IDs only
+  // to avoid downloading the entire board collection twice.
+  const snapshot = await (apply && skipImages ? query.select() : query).limit(limit).get();
   const documents = snapshot.docs.filter((document) => {
     const parentCardId = document.data().parentCardId;
     return typeof parentCardId !== 'string' || !parentCardId.trim();
@@ -155,7 +165,7 @@ async function main() {
       return summary.visibility === 'public' && summary.is_root === true;
     })
     .map((document) => document.id));
-  const missing = documents.map((document) => document.id).filter((id) => !summaryIds.has(id));
+  const missing = results.filter((result) => result.imageStatus !== 'skipped-nonpublic').map((result) => result.id).filter((id) => !summaryIds.has(id));
   console.log(JSON.stringify({
     written: results.length,
     verified: results.length - missing.length,

@@ -47,3 +47,41 @@ assert.equal(nested.visibility, 'private');
 assert.equal(nested.imageUrl, board.imageUrl);
 
 console.log('public board summary tests passed');
+
+// Browser fallback and server classification must agree as formats evolve.
+const fs = require('node:fs');
+const path = require('node:path');
+assert.equal(
+  fs.readFileSync(path.join(__dirname, '../src/property-board.ts'), 'utf8'),
+  fs.readFileSync(path.join(__dirname, '../../src/app/boards/property-board.ts'), 'utf8'),
+);
+const propertySummary = (value) => publicBoardSummaryFromBoard('property', { ...board, ...value });
+for (const value of [
+  { cards: [{ title: 'Kitchen', tags: ['listing', 'real-estate'] }] },
+  { cards: [{ tags: ['listing-story'] }] },
+  { cards: [{ tags: ['listing', 'rental'] }] },
+  { title: 'Real Estate VirtualTalkThru', cards: [] },
+  { title: 'Condo', cards: [{ tags: ['agent-intro', 'contact-card'] }] },
+  { title: 'Home tour', cards: ['Bedroom', 'Kitchen', 'Bathroom', 'Living room'].map((title) => ({ title })) },
+]) assert.equal(propertySummary(value).is_property, true, JSON.stringify(value));
+for (const value of [
+  { title: 'House music', cards: [{ title: 'Kitchen' }] },
+  { title: 'City guide', cards: [] },
+  { cards: [{ title: 'Secret address', tags: ['listing-story'], authorOnly: true }] },
+  { cards: [null, 'broken', { tags: [null, 3] }] },
+]) assert.equal(propertySummary(value).is_property, false, JSON.stringify(value));
+const property = propertySummary({
+  like_count: 12,
+  logoUrl: 'https://example.com/logo.png',
+  cards: [
+    { title: 'Kitchen', subtitle: 'Philadelphia', shortSummary: 'Garden view', tags: ['listing-story'], tour: { address: '1428 Pine Street' } },
+    { title: 'Secret address', subtitle: 'Secret city', shortSummary: 'Secret summary', tags: ['hidden'], authorOnly: true },
+  ],
+});
+assert.equal(property.card_count, 1);
+assert.equal(property.like_count, 12);
+assert.equal(property.logoUrl, 'https://example.com/logo.png');
+for (const term of ['Philadelphia', 'Garden view', '1428 Pine Street']) assert.ok(property.search_text.includes(term));
+assert.equal(JSON.stringify(property).includes('Secret'), false);
+assert.ok(propertySummary({ cards: Array.from({ length: 200 }, () => ({ title: 'X'.repeat(1000), subtitle: 'Y'.repeat(1000) })) }).search_text.length <= 8000);
+console.log('property classification, search, and privacy tests passed');

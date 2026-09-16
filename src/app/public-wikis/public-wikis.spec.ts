@@ -298,6 +298,118 @@ describe('PublicWikisComponent home pagination', () => {
     expect(component.mobileDiscoverPreviewBoards().map((item) => item.id)).toEqual(['listing']);
   });
 
+  it('loads Properties without fetching unrelated home or atlas data', async () => {
+    const component = createComponent(false, true);
+    const atlasService = TestBed.inject(AtlasService) as any;
+    atlasService.listPublicAtlases = jasmine.createSpy('listPublicAtlases');
+    const home = spyOn<any>(component, 'loadHomePreferences');
+    const personalBoards = spyOn<any>(component, 'loadMobileBoards');
+    const friends = spyOn<any>(component, 'scheduleMobileFriendsLoad');
+    const feed = spyOn<any>(component, 'loadMobileDiscoverBoards').and.resolveTo();
+    await component.ngOnInit();
+    expect(feed).toHaveBeenCalledTimes(1);
+    expect(atlasService.listPublicAtlases).not.toHaveBeenCalled();
+    expect(home).not.toHaveBeenCalled();
+    expect(personalBoards).not.toHaveBeenCalled();
+    expect(friends).not.toHaveBeenCalled();
+    expect(component.isLoadingLiveWikis()).toBeFalse();
+  });
+
+  for (const page of ['properties', 'discover', 'home']) {
+    it(`includes the viewer's public boards only in the Properties directory (${page})`, () => {
+      const component = createComponent(page === 'discover', page === 'properties');
+      const include = (value: any) => (component as any).shouldIncludeMobileDiscoverBoard(value, 'user-1');
+      const ownPublicProperty = { ...board(1), visibility: 'public', isProperty: true };
+      expect(include(ownPublicProperty)).toBe(page === 'properties');
+      expect(include({ ...ownPublicProperty, ownerUserId: 'another-owner' })).toBeTrue();
+      expect(include({ ...ownPublicProperty, visibility: 'private' })).toBeFalse();
+      expect(include({ ...ownPublicProperty, ownerUserId: 'another-owner', visibility: 'private' })).toBeFalse();
+      expect(include({ ...ownPublicProperty, id: 'board-eats', ownerUserId: 'another-owner' })).toBeFalse();
+    });
+  }
+
+  it('renders and searches compact property previews without downloading cards', () => {
+    const component = createComponent(false, true);
+    const summary = (component as any).mobileBoardFromRecord('pine', {
+      title: 'Pine Street home tour', visibility: 'public', is_property: true,
+      card_count: 18, like_count: 12, imageUrl: '/cover.jpg',
+      image_webp_srcset: '/cover-small.webp 320w, /cover.webp 640w',
+      search_text: 'Philadelphia Garden view 1428 Pine Street',
+    });
+    component.mobileDiscoverBoards.set([summary]);
+    expect(component.mobileDiscoverPreviewBoards().length).toBe(1);
+    expect(summary.cards).toEqual([]);
+    expect(summary.cardCount).toBe(18);
+    expect(summary.likeCount).toBe(12);
+    expect(summary.imageWebpSrcset).toContain('320w');
+    expect(component.boardViewLink(summary)).toBe('/boards/pine');
+    component.onDiscoverSearchInput('Philadelphia garden');
+    expect(component.mobileDiscoverFilteredBoards().map((item) => item.id)).toEqual(['pine']);
+  });
+
+  it('finishes a property feed shorter than 10 without scanning general boards', async () => {
+    const component = createComponent(false, true);
+    prepareInitialDiscoverLoad(component);
+    const fetchPage = spyOn<any>(component, 'fetchNextMobileDiscoverPage').and.callFake(async () => {
+      component.mobileDiscoverBoards.set([{ ...board(1), isProperty: true, cardCount: 18 }]);
+      component.mobileDiscoverHasMore.set(false);
+      return true;
+    });
+    await (component as any).loadMobileDiscoverBoards();
+    expect(fetchPage).toHaveBeenCalledTimes(1);
+    expect(component.mobileDiscoverPreviewBoards().length).toBe(1);
+    expect(component.mobileDiscoverLoading()).toBeFalse();
+  });
+
+  it('keeps cached Properties previews and cursors separate from Discover', () => {
+    const properties = createComponent(false, true);
+    const uid = 'property-cache-test';
+    properties.mobileDiscoverBoards.set([{ ...board(4), isProperty: true }]);
+    (properties as any).mobileDiscoverCursor = { id: 'property-cursor' };
+    (properties as any).saveMobileDiscoverSessionCache(uid);
+    TestBed.resetTestingModule();
+    const discover = createComponent(true);
+    expect((discover as any).restoreMobileDiscoverSessionCache(uid)).toBeFalse();
+    discover.mobileDiscoverBoards.set([board(9)]);
+    (discover as any).saveMobileDiscoverSessionCache(uid);
+    TestBed.resetTestingModule();
+    const revisit = createComponent(false, true);
+    expect((revisit as any).restoreMobileDiscoverSessionCache(uid)).toBeTrue();
+    expect(revisit.mobileDiscoverPreviewBoards().map((item) => item.id)).toEqual(['board-4']);
+    expect((revisit as any).mobileDiscoverCursor.id).toBe('property-cursor');
+  });
+
+  it('does not start concurrent pagination while the initial feed is loading', async () => {
+    const component = createComponent(false, true);
+    component.mobileDiscoverLoading.set(true);
+    component.mobileDiscoverHasMore.set(true);
+    const fetchPage = spyOn<any>(component, 'fetchNextMobileDiscoverPage');
+    await component.onDiscoverLoadSentinelIntersection(true);
+    await component.showMoreMobileDiscoverBoards();
+    expect(fetchPage).not.toHaveBeenCalled();
+  });
+
+  it('retries a failed page without discarding visible properties or its cursor', async () => {
+    const component = createComponent(false, true);
+    component.mobileDiscoverBoards.set([{ ...board(1), isProperty: true }]);
+    component.mobileDiscoverError.set(true);
+    component.mobileDiscoverHasMore.set(false);
+    const cursor = { id: 'last-successful-preview' };
+    (component as any).mobileDiscoverCursor = cursor;
+    const queue = spyOn<any>(component, 'queueDiscoverLoadIfSentinelStillNearViewport');
+    const fetchPage = spyOn<any>(component, 'fetchNextMobileDiscoverPage').and.callFake(async () => {
+      expect((component as any).mobileDiscoverCursor).toBe(cursor);
+      component.mobileDiscoverBoards.update((boards) => [...boards, { ...board(2), isProperty: true }]);
+      component.mobileDiscoverHasMore.set(false);
+      return true;
+    });
+    await component.retryMobileDiscoverBoards();
+    expect(fetchPage).toHaveBeenCalledTimes(1);
+    expect(component.mobileDiscoverError()).toBeFalse();
+    expect(component.mobileDiscoverPreviewBoards().map((item) => item.id)).toEqual(['board-1', 'board-2']);
+    expect(queue).toHaveBeenCalledTimes(1);
+  });
+
   it('searches discover boards across titles, places, creators, and card details', () => {
     const component = createComponent(true);
     component.mobileDiscoverBoards.set([
