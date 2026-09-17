@@ -40,6 +40,8 @@ beforeEach(async () => {
       setDoc(doc(db, 'teams', 'team-a', 'members', 'member'), { status: 'active', role: 'member' }),
       setDoc(doc(db, 'teams', 'team-b', 'members', 'other'), { status: 'active', role: 'admin' }),
       setDoc(doc(db, 'users', 'platform'), { role: 'admin' }),
+      setDoc(doc(db, 'users', 'board-admin'), { role: 'admin', board_admin_access: true }),
+      setDoc(doc(db, 'users', 'flagged-user'), { role: 'user', board_admin_access: true }),
       setDoc(doc(db, 'team_boards', 'listing'), {
         id: 'listing',
         team_id: 'team-a',
@@ -61,18 +63,48 @@ beforeEach(async () => {
     ]);
   });
 });
-test('accepted members read team working copies; visitors, other teams, and uninvited platform admins do not', async () => {
-  for (const uid of ['owner', 'member'])
+test('accepted members and authorized board admins read working copies; other users and admins do not', async () => {
+  for (const uid of ['owner', 'member', 'board-admin'])
     await assertSucceeds(
       getDoc(doc(env.authenticatedContext(uid).firestore(), 'team_boards', 'listing')),
     );
-  for (const uid of ['other', 'pending', 'platform'])
+  for (const uid of ['other', 'pending', 'platform', 'flagged-user'])
     await assertFails(
       getDoc(doc(env.authenticatedContext(uid).firestore(), 'team_boards', 'listing')),
     );
   await assertFails(
     getDoc(doc(env.unauthenticatedContext().firestore(), 'team_boards', 'listing')),
   );
+});
+test('authorized board admins can resolve unpublished links and read private boards across teams', async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, 'teams', 'team-b'), { status: 'archived' });
+    await setDoc(doc(db, 'team_boards', 'unpublished'), {
+      team_id: 'team-b', visibility: 'private', title: 'Archived team draft',
+    });
+    await setDoc(doc(db, 'boards', 'personal-private'), {
+      owner_user_id: 'other', visibility: 'private', title: 'Private personal board',
+    });
+  });
+  const db = env.authenticatedContext('board-admin').firestore();
+  const missingPublicCopy = await assertSucceeds(getDoc(doc(db, 'boards', 'unpublished')));
+  assert.equal(missingPublicCopy.exists(), false);
+  await assertSucceeds(getDoc(doc(db, 'team_boards', 'unpublished')));
+  await assertSucceeds(getDoc(doc(db, 'boards', 'personal-private')));
+  assert.equal((await assertSucceeds(getDocs(collection(db, 'team_boards')))).size, 2);
+  await assertFails(getDocs(collection(env.authenticatedContext('other').firestore(), 'team_boards')));
+  await env.withSecurityRulesDisabled(context => updateDoc(doc(context.firestore(), 'users', 'board-admin'), { board_admin_access: false }));
+  await assertFails(getDoc(doc(db, 'team_boards', 'unpublished')));
+});
+test('users and platform admins cannot grant themselves board-admin access', async () => {
+  for (const uid of ['platform', 'flagged-user', 'board-admin']) {
+    const db = env.authenticatedContext(uid).firestore();
+    await assertFails(updateDoc(doc(db, 'users', uid), { board_admin_access: uid === 'platform' }));
+  }
+  await assertFails(setDoc(doc(env.authenticatedContext('new-user').firestore(), 'users', 'new-user'), {
+    board_admin_access: true,
+  }));
 });
 test('public callers receive only public snapshots, never private collections', async () => {
   const db = env.unauthenticatedContext().firestore();
@@ -91,7 +123,7 @@ test('public callers receive only public snapshots, never private collections', 
     await assertFails(getDoc(doc(db, path, 'listing')));
 });
 test('server-owned team records cannot be forged even by platform admins', async () => {
-  for (const uid of ['owner', 'member', 'platform']) {
+  for (const uid of ['owner', 'member', 'platform', 'board-admin']) {
     const db = env.authenticatedContext(uid).firestore();
     await assertFails(setDoc(doc(db, 'teams', 'fake-team'), { owner_id: uid }));
     await assertFails(updateDoc(doc(db, 'team_boards', 'listing'), { cards: [] }));

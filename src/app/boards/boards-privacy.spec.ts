@@ -5,7 +5,7 @@ import { BoardsComponent } from './boards';
 function harness(): any {
   const component = Object.create(BoardsComponent.prototype);
   Object.assign(component, {
-    authService: { uid: () => 'owner' },
+    authService: { uid: () => 'owner', isAdmin: () => false, canAccessAllBoards: () => false },
     teamContextId: () => '',
     isBrowser: true,
     storage: {},
@@ -49,6 +49,22 @@ function savedBoard(component: any, overrides: Record<string, unknown> = {}): an
 }
 
 describe('board privacy and video creation', () => {
+  it('lets authorized board admins view all cards without granting team editing or local persistence', () => {
+    const component = harness();
+    component.authService.canAccessAllBoards = () => true;
+    const board = savedBoard(component, {
+      team_id: 'other-team', owner_user_id: 'team:other-team', team_status: 'draft',
+      cards: [{ id: 'setup', title: 'Setup', authorOnly: true }, { id: 'room', title: 'Room' }],
+    });
+    expect(board.cards.map((card: any) => card.id)).toEqual(['setup', 'room']);
+    expect(component.canEditBoard(board)).toBeFalse();
+    expect(component.canStoreBoardLocally(board)).toBeFalse();
+    const personal = savedBoard(component, {
+      owner_user_id: 'another-owner', cards: [{ id: 'setup', title: 'Setup', authorOnly: true }],
+    });
+    expect(personal.cards.length).toBe(1);
+    expect(component.canEditBoard(personal)).toBeFalse();
+  });
   it('grants studio access to active teammates without making them the personal owner', () => {
     const component = harness();
     component.teamContextId = () => 'team-a';

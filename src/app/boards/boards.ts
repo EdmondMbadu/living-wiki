@@ -1,3 +1,4 @@
+import { canonicalCardNarration, withSavedNarration, invalidatedNarrationMedia } from '../../../functions/src/card-narration';
 import { isPlatformBrowser } from '@angular/common';
 import { boardCoverPhotoUrl, stablePlacePhotoUrl } from '../place-photo';
 import { PlacePhotoDirective } from '../place-photo.directive';
@@ -8,6 +9,7 @@ import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import { FirebaseError } from 'firebase/app';
 import { collection, deleteDoc, doc, getDoc, getDocs, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, startAfter, updateDoc, where, writeBatch, type DocumentData, type Firestore, type QueryConstraint, type QueryDocumentSnapshot, type QuerySnapshot, type Unsubscribe } from 'firebase/firestore';
 import { TeamsService } from '../teams/teams.service';
+import { loadBoardRouteRecord } from './board-route-record';
 import type { TeamMember } from '../teams/team.models';
 import { TeamContactComponent } from '../teams/team-contact';
 import { RealEstateWizardSourceComponent } from './real-estate-wizard-source';
@@ -873,6 +875,7 @@ type BoardWizardGeneratedCard = {
   status: BoardCardStatus;
   rating: number;
   authorOnly?: boolean;
+  contactDetails?: ListingContactData;
   tags: string[];
   image_query: string;
   place_query: string;
@@ -1720,6 +1723,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   private readonly functions: Functions | null = this.isBrowser ? getFirebaseFunctions() : null;
   private readonly storage: FirebaseStorage | null = this.isBrowser ? getFirebaseStorage() : null;
   readonly isPlatformAdmin = this.authService.isAdmin;
+  private readonly adminTeamBoardIds = new Set<string>();
   private hasLoaded = false;
   private loadedStoredLocalBoards = false;
   private placeSearchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -2352,6 +2356,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly stackScriptRegeneratingCardId = signal<string | null>(null);
   readonly stackScriptShortenMenuOpen = signal(false);
   readonly stackScriptShortening = signal(false);
+  private stackScriptAdjustmentRequest = 0;
   readonly stackScriptShortenUndoNarrations = signal<Record<string, string> | null>(null);
   readonly stackScriptLengthSourceNarrations = signal<Record<string, string>>({});
   readonly stackScriptShortenNotice = signal<string | null>(null);
@@ -6338,6 +6343,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       status: card.status,
       rating: Math.max(1, Math.min(5, Math.round(card.rating) || 4)),
       authorOnly: card.authorOnly === true,
+      contactDetails: this.normalizeListingContactData(card.contactDetails),
       entityName: card.entity_name?.trim() || card.title.trim(),
       entityType: card.entity_type ?? (card.type === 'place' || card.type === 'shop' ? 'place' : card.type === 'food' ? 'food' : 'other'),
       imageIntent: card.image_intent ?? (card.type === 'place' || card.type === 'shop' ? 'place' : card.type === 'food' ? 'food' : 'other'),
@@ -9303,6 +9309,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       title,
       subtitle,
       notes: persistedNotes,
+      ...(existing && (draftTour?.guideScript || persistedNotes) !== (existing.tour?.guideScript || existing.notes)
+        ? { stackNarrationSource: draftTour?.guideScript || persistedNotes } : {}),
       ...(contactEdit ? {
         stackNarration: contactEdit.stackNarration,
         contactDetails: contactEdit.contactDetails,
@@ -14920,6 +14928,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private closeStackStudioImmediately(): void {
+    this.stackScriptAdjustmentRequest++;
     this.stopSongPreview();
     this.stopStackAudioPreview();
     this.stopStackVoicePreview();
@@ -15044,6 +15053,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   updateStackScriptCard(cardId: string, field: keyof StackScriptCardDraft, value: string): void {
     if (field === 'narration') {
+      this.stopStackPlayback();
       this.clearStackScriptShortenUndo();
       this.stackScriptLengthSourceNarrations.update((sources) => ({ ...sources, [cardId]: value }));
     }
@@ -15142,7 +15152,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     event?.stopPropagation();
     const board = this.stackBoard();
     const sentenceLimit = Math.max(1, Math.min(3, Math.trunc(targetSentences) || 2));
-    if (!board || this.stackScriptShortening()) return;
+    if (!board || this.stackScriptShortening() || this.stackScriptSaving() || this.stackCoverSaving()) return;
+    const requestId = ++this.stackScriptAdjustmentRequest;
     const previousUndo = this.stackScriptShortenUndoNarrations();
     const sourceNarrations = this.stackScriptLengthSourceNarrations();
     const cards = this.stackSelectedCards()
@@ -15168,6 +15179,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       ...Object.fromEntries(cards.map((card) => [card.cardId, card.sourceNarration])),
     }));
 
+    this.stopStackPlayback();
     this.stackScriptShortening.set(true);
     this.stackScriptShortenMenuOpen.set(false);
     this.stackScriptError.set(null);
@@ -15176,14 +15188,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     let results: StackScriptShortenResult[] = [];
     let usedLocalFallback = false;
     try {
-      if (!this.functions) throw new Error('Script rewriting is unavailable.');
-      const callable = httpsCallable<{
-        boardId: string;
-        targetSentences: number;
-        cards: typeof cards;
-      }, { cards?: StackScriptShortenResult[] }>(this.functions, 'shortenStackScript', { timeout: 120_000 });
-      const response = await callable({ boardId: board.id, targetSentences: sentenceLimit, cards });
-      results = Array.isArray(response.data?.cards) ? response.data.cards : [];
+      results = await this.requestStackScriptRewrite(board.id, cards, sentenceLimit);
     } catch {
       usedLocalFallback = true;
       results = cards.map((card) => ({
@@ -15192,6 +15197,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       }));
     }
 
+    // A late response belongs only to the editor session that requested it.
+    if (requestId !== this.stackScriptAdjustmentRequest) return;
+    if (this.stackBoard()?.id !== board.id || !this.stackStudioOpen()) {
+      this.stackScriptShortening.set(false);
+      return;
+    }
     const normalized = normalizeStackScriptShortenResults(cards, results, sentenceLimit);
     const changed = normalized.filter((result) => {
       const currentCard = this.stackSelectedCards().find((card) => card.id === result.cardId);
@@ -15209,14 +15220,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         }
         return next;
       });
-      this.stackScriptShortenUndoNarrations.set(undoNarrations);
+      this.stackScriptShortenUndoNarrations.set(Object.fromEntries(changed.map((result) => [result.cardId, undoNarrations[result.cardId]])));
       this.stackScriptShortenNotice.set(
         usedLocalFallback
           ? `Adjusted ${changed.length} card${changed.length === 1 ? '' : 's'} from the fullest available script to about ${sentenceLimit} ${sentenceLimit === 1 ? 'sentence' : 'sentences'} each. Review before saving.`
           : `Refined ${changed.length} card${changed.length === 1 ? '' : 's'} to about ${sentenceLimit} ${sentenceLimit === 1 ? 'sentence' : 'sentences'} each. Review before saving.`,
       );
     } else {
-      this.stackScriptShortenUndoNarrations.set(null);
+      this.stackScriptShortenUndoNarrations.set(previousUndo);
       const needsExpansion = cards.some((card) => stackScriptSentenceCount(card.narration) < sentenceLimit);
       this.stackScriptShortenNotice.set(
         needsExpansion && usedLocalFallback
@@ -15227,11 +15238,24 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stackScriptShortening.set(false);
   }
 
+  private async requestStackScriptRewrite(
+    boardId: string,
+    cards: Array<{ cardId: string; title: string; narration: string; sourceNarration: string }>,
+    targetSentences: number,
+  ): Promise<StackScriptShortenResult[]> {
+    if (!this.functions) throw new Error('Script rewriting is unavailable.');
+    const callable = httpsCallable<{ boardId: string; targetSentences: number; cards: typeof cards },
+      { cards?: StackScriptShortenResult[] }>(this.functions, 'shortenStackScript', { timeout: 120_000 });
+    const response = await callable({ boardId, targetSentences, cards });
+    return Array.isArray(response.data?.cards) ? response.data.cards : [];
+  }
+
   undoStackScriptShortening(event?: Event): void {
     event?.preventDefault();
     event?.stopPropagation();
     const undo = this.stackScriptShortenUndoNarrations();
-    if (!undo) return;
+    if (!undo || this.stackScriptShortening()) return;
+    this.stopStackPlayback();
     this.stackScriptCardDrafts.update((drafts) => {
       const next = { ...drafts };
       for (const [cardId, narration] of Object.entries(undo)) {
@@ -15368,6 +15392,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   async saveStackScript(board: Board): Promise<boolean> {
     if (!this.canEditBoard(board) || this.stackScriptSaving() || this.stackCoverSaving()) return false;
+    if (this.stackScriptShortening()) {
+      this.stackScriptError.set('Wait for the length adjustment to finish before saving.');
+      return false;
+    }
     const title = this.stackScriptBoardTitle().trim();
     if (!title) {
       this.stackScriptError.set('Add a board title before saving.');
@@ -15395,10 +15423,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         const subtitle = draft.subtitle.trim();
         const isContactCard = this.isListingContactCard(card) && !card.tour;
         const contact = isContactCard
-          ? contactDetailsForListingCard({ ...card, title, subtitle, contactDetails: null })
+          ? contactDetailsForListingCard({ ...card, title, subtitle })
           : null;
         return {
-          ...card,
+          ...withSavedNarration(card, narration, this.stackScriptLengthSourceNarrations()[card.id] || narration),
           title,
           subtitle,
           notes: card.tour ? card.notes : narration,
@@ -15412,20 +15440,21 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
               email: contact?.email || '',
             },
           } : {}),
-          stackNarrationSource: this.stackScriptRicherNarration(
-            this.stackScriptLengthSourceNarrations()[card.id],
-            narration,
-          ).slice(0, 3000),
           updatedAt: now,
         };
       }),
-      socialVideoRenderVersion: '',
-      trailerVideoRenderVersion: '',
+      ...invalidatedNarrationMedia(),
       updatedAt: now,
     };
     try {
       const saved = await this.persistAndReplaceBoard(nextBoard);
       if (!saved) throw new Error('The script could not be synchronized. Your draft is still here.');
+      for (const ratio of ['vertical', 'landscape'] as const) {
+        this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, ratio));
+        this.publishedStackTrailerFiles.delete(this.stackPublishedFileKey(board.id, ratio));
+      }
+      this.stackPublishedVideoReady.set(false);
+      this.stackPublishedTrailerReady.set(false);
       const savedBoard = this.boards().find((item) => item.id === nextBoard.id) ?? nextBoard;
       this.applyStackCoverState(savedBoard);
       this.stackScriptCardDrafts.set(Object.fromEntries(savedBoard.cards.map((card) => [card.id, {
@@ -16708,8 +16737,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private persistedStackCardNarrationText(card: BoardCard): string {
-    if (this.isListingContactCard(card)) return listingContactScript(card);
-    return (card.notes || card.shortSummary || card.subtitle).trim();
+    return canonicalCardNarration(card);
   }
 
   private stackVoicePreviewSample(fallback: string): string {
@@ -18021,6 +18049,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private prepareStackForBoard(board: Board): void {
+    this.stackScriptAdjustmentRequest++;
     this.stopStackPlayback();
     this.stopStackAudioPreview();
     this.stopStackVoicePreview();
@@ -19808,8 +19837,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return null;
     }
     const type = this.isBoardCardType(data['type']) ? data['type'] : this.wizardDefaultType();
-    const subtitle = this.stringValue(data['subtitle'], 'Wizard draft', 120);
-    const notes = this.stringValue(data['notes'], 'Review and edit this card before saving.', 3600);
+    const subtitle = this.stringValue(data['subtitle'], '', 120);
+    const notes = typeof data['notes'] === 'string' ? data['notes'].trim() : '';
     const sourceUrl = this.stringValue(data['sourceUrl'], '', 2000);
     const what3wordsAddress = what3WordsAddressFromCard({
       what3wordsAddress: data['what3wordsAddress'],
@@ -19837,6 +19866,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       status: this.isBoardCardStatus(data['status']) ? data['status'] : 'saved',
       rating: this.numberValue(data['rating'], 4, 1, 5),
       authorOnly: data['authorOnly'] === true,
+      contactDetails: this.normalizeListingContactData(data['contactDetails']),
       tags,
       image_query: this.normalizeWizardImageQuery(title, imageQuery, subtitle, notes, tags, entityType, imageIntent),
       place_query: this.stringValue(data['place_query'], title, 140),
@@ -19900,6 +19930,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       title: card.title,
       subtitle: card.subtitle,
       notes: card.notes,
+      contactDetails: card.contactDetails,
       type: card.type,
       scope: card.scope,
       status: card.status,
@@ -21494,14 +21525,15 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (!this.isBrowser || !this.firestore || !boardId) {
       return;
     }
+    const teamWorkingCopy = !!this.teamContextId() || this.adminTeamBoardIds.has(boardId);
     this.selectedBoardUnsubscribe = onSnapshot(
-      doc(this.firestore, this.teamContextId() ? 'team_boards' : 'boards', boardId),
+      doc(this.firestore, teamWorkingCopy ? 'team_boards' : 'boards', boardId),
       async (snapshot) => {
         if (!snapshot.exists() || this.selectedBoardId() !== boardId) {
           return;
         }
         let record: Record<string, unknown>;
-        try { record = this.teamContextId() ? await this.teams.hydrateMedia(snapshot.data()) : snapshot.data(); }
+        try { record = teamWorkingCopy ? await this.teams.hydrateMedia(snapshot.data()) : snapshot.data(); }
         catch { this.boardsSyncError.set('Listing media could not be loaded. Check your connection or team access.'); return; }
         if (this.selectedBoardId() !== boardId) return;
         // Keep the revision the editor opened with. The server can then merge
@@ -21530,7 +21562,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         }
       },
       () => {
-        if (this.teamContextId()) {
+        if (teamWorkingCopy) {
           this.boardLoadSequence++;
           this.boards.set([]); this.teams.clearPrivateMedia(); this.wizardOpen.set(false);
           this.cardDialogOpen.set(false); this.boardDialogOpen.set(false); this.boardSettingsBoardId.set(null);
@@ -21647,8 +21679,17 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         return this.boardFromRecord(targetSnapshot.id, targetSnapshot.data());
       }
     }
-    const snapshot = await getDoc(doc(this.firestore, 'boards', boardId));
-    return snapshot.exists() ? this.boardFromRecord(snapshot.id, snapshot.data()) : null;
+    const result = await loadBoardRouteRecord(
+      async () => {
+        const snapshot = await getDoc(doc(this.firestore!, 'boards', boardId));
+        return snapshot.exists() ? snapshot.data() : null;
+      },
+      () => this.teams.loadBoard(boardId),
+      this.authService.canAccessAllBoards(),
+    );
+    if (result?.collection === 'team_boards') this.adminTeamBoardIds.add(boardId);
+    else this.adminTeamBoardIds.delete(boardId);
+    return result ? this.boardFromRecord(boardId, result.record) : null;
   }
 
   private canonicalizeBoardPublicUrl(board: Board, requestedRouteKey: string): void {
@@ -21835,10 +21876,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
               ? Math.max(0, Math.trunc((card as Partial<BoardCard>).videoNarrationRevision!))
               : 0,
             stackNarrationSource: typeof (card as Partial<BoardCard>).stackNarrationSource === 'string'
-              ? (card as Partial<BoardCard>).stackNarrationSource!.replace(/\s+/g, ' ').trim().slice(0, 3000)
+              ? (card as Partial<BoardCard>).stackNarrationSource!.trim()
               : '',
             stackNarration: typeof (card as Partial<BoardCard>).stackNarration === 'string'
-              ? (card as Partial<BoardCard>).stackNarration!.trim().slice(0, 3000)
+              ? (card as Partial<BoardCard>).stackNarration!.trim()
               : '',
             contactDetails: this.normalizeListingContactData((card as Partial<BoardCard>).contactDetails),
             nearby: this.normalizeNearbyGemMetrics((card as Partial<BoardCard>).nearby),
@@ -22180,7 +22221,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const ownerUserId = typeof data['owner_user_id'] === 'string' ? data['owner_user_id'] : '';
     const rawCards = cardsVisibleToBoardViewer(
       Array.isArray(data['cards']) ? data['cards'] as Array<Record<string, unknown>> : [],
-      data['team_id'] && this.teamContextId() === data['team_id'] ? this.authService.uid() : ownerUserId,
+      this.authService.canAccessAllBoards?.() || (data['team_id'] && this.teamContextId() === data['team_id'])
+        ? this.authService.uid() : ownerUserId,
       this.authService.uid(),
     );
     return {
@@ -22351,8 +22393,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       rank: typeof data['rank'] === 'number' ? Math.max(0, Math.min(100, Math.trunc(data['rank']))) : this.rankFromTags(data['tags']),
       nearby: this.normalizeNearbyGemMetrics(data['nearby']),
       contactDetails: this.normalizeListingContactData(data['contactDetails']),
+      stackNarrationSource: typeof data['stackNarrationSource'] === 'string' ? data['stackNarrationSource'].trim() : '',
       stackNarration: typeof data['stackNarration'] === 'string'
-        ? data['stackNarration'].trim().slice(0, 3000)
+        ? data['stackNarration'].trim()
         : '',
       videoNarrationRevision: typeof data['videoNarrationRevision'] === 'number'
         ? Math.max(0, Math.trunc(data['videoNarrationRevision']))

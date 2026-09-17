@@ -1,3 +1,5 @@
+import { finalizeBoardWizardCopy, BOARD_COPY_VERSION } from './board-wizard-copy-quality';
+import { repairBoardWizardCopy } from './gemini';
 export { offGridCommand, offGridDirectory, offGridMedia, offGridShare, syncOffGridSpots } from './off-grids';
 import { resolveWords as resolveOffGridWords } from './off-grids/location';
 import { validCoordinates as validOffGridCoordinates } from './off-grids/model';
@@ -6625,7 +6627,7 @@ function buildAccommodationWizardBatch(
   cards.push({
     title: 'Book Now',
     subtitle: 'Open the original listing',
-    notes: 'Use this action card to review availability, price, fees, house rules, and booking terms on the source page.',
+    notes: 'Check availability, price, fees, house rules, and booking terms on the original listing.',
     type: 'note',
     scope: 'place',
     status: 'planned',
@@ -7640,14 +7642,16 @@ export const shortenStackScript = onCall(
       const record = value as Record<string, unknown>;
       const cardId = stringOrEmpty(record['cardId']).trim().slice(0, 160);
       const title = stringOrEmpty(record['title']).replace(/\s+/g, ' ').trim().slice(0, 160);
-      const narration = stringOrEmpty(record['narration']).replace(/\s+/g, ' ').trim().slice(0, 3000);
-      const sourceNarration = stringOrEmpty(record['sourceNarration'] || narration).replace(/\s+/g, ' ').trim().slice(0, 3000);
+      const narration = stringOrEmpty(record['narration']).replace(/\s+/g, ' ').trim();
+      const sourceNarration = stringOrEmpty(record['sourceNarration'] || narration).replace(/\s+/g, ' ').trim();
       if (!cardId || !narration || seen.has(cardId) || !boardCardIds.has(cardId)) return [];
-      if (totalCharacters + narration.length + sourceNarration.length > 90_000) return [];
+      if (narration.length > 12_000 || sourceNarration.length > 12_000 || totalCharacters + narration.length + sourceNarration.length > 90_000) {
+        throw new HttpsError('invalid-argument', 'Select fewer cards or a shorter source for this rewrite. Your original text has been preserved.');
+      }
       seen.add(cardId);
       totalCharacters += narration.length + sourceNarration.length;
       return [{ cardId, title, narration, sourceNarration }];
-    }).slice(0, 50);
+    });
     if (!cards.length) {
       throw new HttpsError('invalid-argument', 'Select at least one narrated card.');
     }
@@ -8354,10 +8358,16 @@ export const generateBoardWizardBatch = onCall(
       : articleManifest
         ? shapeArticleSourceWizardBatch(imageProvenanceResult, articleManifest, defaultType)
         : imageProvenanceResult;
+    let copyReadyResult: GeneratedBoardWizardBatch;
+    try {
+      copyReadyResult = await finalizeBoardWizardCopy(result, repairBoardWizardCopy);
+    } catch (error) {
+      throw new HttpsError('failed-precondition', error instanceof Error ? error.message : 'The narration could not be completed. Please try again.');
+    }
     const previewReadyResult = deferMediaEnrichment
-      ? result
+      ? copyReadyResult
       : await enrichBoardWizardBatchWithSongAudioPreviews(
-          result,
+          copyReadyResult,
           [
             effectivePrompt || prompt || pastedList || url || photoNames.join(', '),
             targetBoardTitle,
@@ -8426,6 +8436,7 @@ export const generateBoardWizardBatch = onCall(
       vibe,
       media_mode: mediaMode,
       narration_style: narrationStyle,
+      copy_version: BOARD_COPY_VERSION,
       requested_count: generationCount,
       count_policy: generationCountPolicy,
       generated_count: resultWithGenerationSummary.cards.length,
@@ -12312,7 +12323,7 @@ function buildRestaurantMenuWizardBatch(
     {
       title: 'Open Menu',
       subtitle: 'View the original menu',
-      notes: 'Use this card as the action link back to the restaurant menu.',
+      notes: 'Open the restaurant menu for current dishes, prices, and ordering details.',
       type: 'note',
       scope: 'place',
       status: 'planned',
@@ -12391,7 +12402,7 @@ function shapeRestaurantMenuWizardBatch(
     : {
         title: 'Open Menu',
         subtitle: 'View the source menu',
-        notes: 'Use this card as the action link back to the restaurant menu.',
+        notes: 'Open the restaurant menu for current dishes, prices, and ordering details.',
         type: 'note',
         scope: 'place',
         status: 'planned',

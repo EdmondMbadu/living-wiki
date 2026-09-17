@@ -651,6 +651,9 @@ async function saveListing(teamId: string, uid: string, data: TeamRecord) {
     if (current && data.revision === undefined) fail('Reload the listing before saving.');
     let content = incoming;
     if (current && current['team_revision'] !== data.revision) {
+      if (data.requireExactRevision === true) {
+        throw new HttpsError('aborted', 'The listing changed after review. Rescan before applying the copy repair.');
+      }
       if (!baseDoc?.exists)
         throw new HttpsError(
           'aborted',
@@ -707,6 +710,14 @@ export async function saveGeneratedTeamBoard(uid: string, board: TeamRecord, pat
   return saveListing(board['team_id'], uid, {
     boardId: board['id'],
     revision: board['team_revision'],
+    board: { ...board, ...patch },
+  });
+}
+
+/** Operator-reviewed copy repair uses normal membership, history and idempotency. */
+export async function saveReviewedTeamBoardCopy(uid: string, board: TeamRecord, patch: TeamRecord) {
+  return saveListing(board['team_id'], uid, {
+    boardId: board['id'], revision: board['team_revision'], requireExactRevision: true,
     board: { ...board, ...patch },
   });
 }

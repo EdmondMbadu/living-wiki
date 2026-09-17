@@ -22,6 +22,13 @@ import {
   type BoardWizardListingIntent,
 } from './board-wizard-listing';
 import type { BoardNarrationStyleId } from './board-wizard-narration';
+import { boardNarrationTargetWords } from './board-narration-length';
+import { fitNarrationToWords, isFinishedNarration, narrationSummary, narrationNumberTokens } from './narration-text';
+import {
+  buildListingCopyPlan, DISALLOWED_STORY_SCENES, LISTING_GROUP_DEFINITIONS,
+  listingPhotoGroups, listingGroupKey, orderedListingGroupPhotos, normalizeListingStoryRole,
+  type ListingGroupKey, type ListingPhotoGroup,
+} from './board-wizard-copy-plan';
 
 export type BoardWizardListingMarketingStyle = 'warm' | 'guided' | 'luxury' | 'brisk' | 'investor';
 
@@ -59,56 +66,10 @@ export type BoardWizardListingPreview = {
 };
 
 const PHOTO_ANALYSIS_VERSION = 'listing-photo-v2-furnishings';
-const STORY_VERSION = 'listing-story-v2-staging';
+const STORY_VERSION = 'listing-story-v3-group-copy';
 const PHOTO_BATCH_SIZE = 10;
 const MAX_ANALYZED_PHOTOS = 48;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-const DISALLOWED_STORY_SCENES = new Set(['agent', 'logo', 'map', 'duplicate']);
-const ALLOWED_PROPERTY_STORY_ROLES = new Set([
-  'hook', 'arrival', 'overview', 'exterior', 'aerial', 'entry', 'living', 'kitchen', 'dining',
-  'bedroom', 'bathroom', 'office', 'flex', 'laundry', 'garage', 'outdoor', 'balcony', 'view',
-  'amenity', 'floor-plan', 'property-view', 'facts', 'fact-and-action', 'action', 'next-step',
-]);
-
-type ListingGroupKey =
-  | 'overview'
-  | 'exterior'
-  | 'living'
-  | 'kitchen'
-  | 'dining'
-  | 'bedrooms'
-  | 'bathrooms'
-  | 'work-utility'
-  | 'outdoor'
-  | 'amenities'
-  | 'floor-plans'
-  | 'additional'
-  | 'next-step';
-
-type ListingPhotoGroup = {
-  key: ListingGroupKey;
-  label: string;
-  priority: number;
-  reviewStatus: 'verified' | 'needs-review';
-  analyses: BoardWizardListingPhotoAnalysis[];
-};
-
-const LISTING_GROUP_DEFINITIONS: Record<ListingGroupKey, { label: string; priority: number }> = {
-  overview: { label: 'Property Overview', priority: 0 },
-  exterior: { label: 'Exterior & Arrival', priority: 10 },
-  living: { label: 'Living Areas', priority: 20 },
-  kitchen: { label: 'Kitchen', priority: 30 },
-  dining: { label: 'Dining Areas', priority: 35 },
-  bedrooms: { label: 'Bedrooms', priority: 40 },
-  bathrooms: { label: 'Bathrooms', priority: 50 },
-  'work-utility': { label: 'More Spaces', priority: 60 },
-  outdoor: { label: 'Outdoor Spaces & Views', priority: 70 },
-  amenities: { label: 'Amenities', priority: 80 },
-  'floor-plans': { label: 'Floor Plans', priority: 90 },
-  additional: { label: 'Additional Photos', priority: 95 },
-  'next-step': { label: 'Next Step', priority: 100 },
-};
-
 const LISTING_PRESENTATION_IMAGE_LIMIT = 4;
 
 export function normalizeBoardWizardListingMarketingOptions(value: unknown): BoardWizardListingMarketingOptions {
@@ -238,20 +199,11 @@ export function buildBoardWizardListingMarketingBatchFromAnalyses(options: {
     listingIntent,
     furnishingsIncluded,
   );
-  const scenes = completeStoryScenes({
-    extraction,
-    analyses: allAnalyses,
-    aiScenes,
-    count: Math.max(1, Math.min(24, extraction.images.length, Math.round(options.count) || 12)),
-    secondsPerCard: options.narrationSecondsPerCard,
-    style: options.style,
-    listingIntent,
-    furnishingsIncluded,
-  });
   return buildMarketingBatch({
     extraction,
     targetBoardTitle: options.targetBoardTitle,
-    scenes,
+    scenes: aiScenes,
+    secondsPerCard: options.narrationSecondsPerCard,
     analyses: allAnalyses,
     maxCards: Math.max(1, Math.min(24, Math.round(options.count) || 12)),
     listingIntent,
@@ -285,23 +237,26 @@ export async function generateBoardWizardListingMarketingBatch(options: {
   const startedAt = Date.now();
   let analyses: BoardWizardListingPhotoAnalysis[] = [];
   let aiScenes: BoardWizardListingStoryScene[] = [];
+  const rejectionReasons: Record<string, number> = {};
   try {
     analyses = await analyzeListingGallery(extraction);
-    const usable = analyses.filter((analysis) => !DISALLOWED_STORY_SCENES.has(analysis.sceneType));
+    const usable = mergeWithFallbackAnalyses(extraction, analyses).filter((analysis) => !DISALLOWED_STORY_SCENES.has(analysis.sceneType));
     if (usable.length) {
       aiScenes = await cachedListingStoryPlan({
         listingName: extraction.listingName,
         address: extraction.address,
         facts: listingFacts(extraction),
         photos: usable,
-        sceneCount: Math.min(sceneCount, usable.length),
+        sceneCount,
+        cardPlan: buildListingCopyPlan(usable, sceneCount),
         narrationStyle: options.narrationStyle,
         narrationSecondsPerCard: options.narrationSecondsPerCard,
         marketingStyle: marketingStyleDescription(options.marketing.style),
         direction: options.marketing.direction,
         listingIntent,
         furnishingsIncluded,
-      });
+      }, (scenes) => validateAiScenes(scenes, usable, extraction, listingIntent, furnishingsIncluded,
+        (reason) => { rejectionReasons[reason] = (rejectionReasons[reason] || 0) + 1; }));
     }
   } catch (error) {
     logger.warn('Listing Marketing Specialist AI pass failed; using the grounded story fallback.', {
@@ -318,38 +273,23 @@ export async function generateBoardWizardListingMarketingBatch(options: {
     listingIntent,
     furnishingsIncluded,
   );
-  const scenes = completeStoryScenes({
-    extraction,
-    analyses: allAnalyses,
-    aiScenes: validatedAiScenes,
-    count: sceneCount,
-    secondsPerCard: options.narrationSecondsPerCard,
-    style: options.marketing.style,
-    listingIntent,
-    furnishingsIncluded,
-  });
-  if (!scenes.length) {
-    return buildBoardWizardListingBatch({
-      extraction,
-      targetBoardTitle: options.targetBoardTitle,
-      count: options.count,
-      listingIntent,
-    });
-  }
-
   logger.info('Listing Marketing Specialist completed.', {
     sourceHost: safeHostname(extraction.sourceUrl),
     sourceImageCount: extraction.images.length,
     analyzedImageCount: analyses.length,
     aiSceneCount: validatedAiScenes.length,
-    finalSceneCount: scenes.length,
+    plannedCardCount: buildListingCopyPlan(allAnalyses, sceneCount).length,
+    rejectedSceneCount: Object.values(rejectionReasons).reduce((sum, count) => sum + count, 0),
+    rejectionReasons,
+    fallbackCardCount: Math.max(0, buildListingCopyPlan(allAnalyses, sceneCount).length - validatedAiScenes.length),
     durationMs: Date.now() - startedAt,
     version: STORY_VERSION,
   });
   return buildMarketingBatch({
     extraction,
     targetBoardTitle: options.targetBoardTitle,
-    scenes,
+    scenes: validatedAiScenes,
+    secondsPerCard: options.narrationSecondsPerCard,
     analyses: allAnalyses,
     maxCards: sceneCount,
     listingIntent,
@@ -357,35 +297,45 @@ export async function generateBoardWizardListingMarketingBatch(options: {
   });
 }
 
-async function cachedListingStoryPlan(params: Parameters<typeof generateBoardWizardListingStory>[0]): Promise<BoardWizardListingStoryScene[]> {
+async function cachedListingStoryPlan(
+  params: Parameters<typeof generateBoardWizardListingStory>[0],
+  validate: (scenes: BoardWizardListingStoryScene[]) => BoardWizardListingStoryScene[],
+): Promise<BoardWizardListingStoryScene[]> {
   const cacheKey = createHash('sha256').update(JSON.stringify({ version: STORY_VERSION, ...params })).digest('hex');
   const reference = db.collection('listing_story_plans').doc(cacheKey);
+  let scenes: BoardWizardListingStoryScene[] = [];
+  let cached = false;
   try {
     const snapshot = await reference.get();
-    const cachedScenes = normalizeCachedStoryScenes(snapshot.data()?.['scenes']);
-    if (cachedScenes.length) return cachedScenes;
+    if (snapshot.data()?.['version'] === STORY_VERSION) {
+      scenes = normalizeCachedStoryScenes(snapshot.data()?.['scenes']);
+      cached = scenes.length > 0;
+    }
   } catch (error) {
-    logger.warn('Listing story-plan cache read failed.', {
-      errorMessage: error instanceof Error ? error.message : String(error),
-    });
+    logger.warn('Listing story-plan cache read failed.', { errorMessage: error instanceof Error ? error.message : String(error) });
   }
-  const scenes = await generateBoardWizardListingStory(params);
-  if (scenes.length) {
+  if (!scenes.length) scenes = await generateBoardWizardListingStory(params);
+  const accepted = validate(scenes);
+  const acceptedKeys = new Set(accepted.map((scene) => scene.cardKey));
+  const missing = (params.cardPlan || []).filter((card) => !acceptedKeys.has(card.cardKey));
+  if (missing.length) {
+    logger.info('Repairing listing card copy.', { planned: params.cardPlan?.length, missing: missing.map((card) => card.cardKey), cached });
     try {
-      await reference.set({
-        version: STORY_VERSION,
-        scenes,
-        listing_name: params.listingName,
-        address: params.address,
-        updated_at: new Date().toISOString(),
-      }, { merge: true });
+      accepted.push(...validate(await generateBoardWizardListingStory({ ...params, cardPlan: missing })));
     } catch (error) {
-      logger.warn('Listing story-plan cache write failed.', {
-        errorMessage: error instanceof Error ? error.message : String(error),
-      });
+      logger.warn('Listing copy repair failed; using complete factual sentences.', { errorMessage: error instanceof Error ? error.message : String(error) });
     }
   }
-  return scenes;
+  // Store only accepted copy. A fallback remains distinguishable from an AI-written scene.
+  if (accepted.length && (!cached || missing.length)) {
+    try {
+      await reference.set({ version: STORY_VERSION, scenes: accepted, listing_name: params.listingName,
+        address: params.address, updated_at: new Date().toISOString() }, { merge: true });
+    } catch (error) {
+      logger.warn('Listing story-plan cache write failed.', { errorMessage: error instanceof Error ? error.message : String(error) });
+    }
+  }
+  return accepted;
 }
 
 function normalizeCachedStoryScenes(value: unknown): BoardWizardListingStoryScene[] {
@@ -394,11 +344,12 @@ function normalizeCachedStoryScenes(value: unknown): BoardWizardListingStoryScen
     const scene = item && typeof item === 'object' ? item as Record<string, unknown> : {};
     const photoIndex = Number(scene.photoIndex);
     const title = cleanText(scene.title, 80);
-    const narration = cleanText(scene.narration, 3600);
-    if (!Number.isInteger(photoIndex) || photoIndex < 0 || !title || !narration) return [];
+    const narration = typeof scene.narration === 'string' ? scene.narration.trim() : '';
+    if (!Number.isInteger(photoIndex) || photoIndex < 0 || !title || !narration || narration.length > 3600) return [];
     return [{
       photoIndex,
-      role: cleanText(scene.role, 40),
+      role: normalizeListingStoryRole(cleanText(scene.role, 40)) || '',
+      cardKey: cleanText(scene.cardKey, 40) || undefined,
       title,
       subtitle: cleanText(scene.subtitle, 120),
       narration,
@@ -508,75 +459,52 @@ async function analyzeListingGallery(extraction: BoardWizardListingExtraction): 
   return Array.from(cached.values()).sort((left, right) => left.index - right.index);
 }
 
-function completeStoryScenes(options: {
-  extraction: BoardWizardListingExtraction;
-  analyses: BoardWizardListingPhotoAnalysis[];
-  aiScenes: BoardWizardListingStoryScene[];
-  count: number;
-  secondsPerCard: number;
-  style: BoardWizardListingMarketingStyle;
-  listingIntent: BoardWizardListingIntent;
-  furnishingsIncluded: boolean;
-}): BoardWizardListingStoryScene[] {
-  const usable = options.analyses.filter((analysis) => !DISALLOWED_STORY_SCENES.has(analysis.sceneType));
-  const used = new Set(options.aiScenes.map((scene) => scene.photoIndex));
-  const scenes = [...options.aiScenes];
-  for (const analysis of orderedAnalyses(usable)) {
-    if (scenes.length >= options.count || used.has(analysis.index)) continue;
-    scenes.push(fallbackScene(
-      options.extraction,
-      analysis,
-      scenes.length,
-      options.secondsPerCard,
-      options.style,
-      options.listingIntent,
-      options.furnishingsIncluded,
-    ));
-    used.add(analysis.index);
-  }
-  const limited = scenes.slice(0, options.count);
-  if (!limited.length) return limited;
-  const last = limited[limited.length - 1];
-  const close = listingClose(options.extraction, options.listingIntent, options.furnishingsIncluded);
-  const rental = options.listingIntent === 'rental';
-  const shortTermRental = rental && options.extraction.kind === 'vacation-rental';
-  limited[limited.length - 1] = {
-    ...last,
-    role: 'next-step',
-    title: rental
-      ? shortTermRental ? 'Check availability & book' : 'Check availability & apply'
-      : options.extraction.price ? `The next step · ${options.extraction.price}` : 'See the full listing',
-    subtitle: closingSubtitle(options.extraction, options.listingIntent),
-    narration: appendSentence(last.narration, close, 3600),
-    factKeys: Array.from(new Set([...last.factKeys, 'price', 'status', 'contact', 'brokerage'].filter((key) => !!listingFacts(options.extraction)[key]))),
-  };
-  return limited;
-}
-
 function validateAiScenes(
   scenes: BoardWizardListingStoryScene[],
   analyses: BoardWizardListingPhotoAnalysis[],
   extraction: BoardWizardListingExtraction,
   listingIntent: BoardWizardListingIntent,
   furnishingsIncluded: boolean,
+  onReject?: (reason: string) => void,
 ): BoardWizardListingStoryScene[] {
+  const reject = (reason: string): [] => { onReject?.(reason); return []; };
   const analysisByIndex = new Map(analyses.map((analysis) => [analysis.index, analysis]));
   const factValues = Object.values(listingFacts(extraction)).join(' ');
-  const seen = new Set<number>();
-  return scenes.filter((scene) => {
+  const plans = new Map(buildListingCopyPlan(analyses, 24).map((card) => [card.cardKey, card]));
+  const seen = new Set<string>();
+  const keyCounts = new Map<string, number>();
+  for (const scene of scenes) if (scene.cardKey) keyCounts.set(scene.cardKey, (keyCounts.get(scene.cardKey) || 0) + 1);
+  return scenes.flatMap((scene) => {
     const analysis = analysisByIndex.get(scene.photoIndex);
-    if (!analysis || seen.has(scene.photoIndex) || DISALLOWED_STORY_SCENES.has(analysis.sceneType)) return false;
-    if (!ALLOWED_PROPERTY_STORY_ROLES.has(normalizedRole(scene.role))) return false;
-    if (containsUnsafeListingLanguage(scene.narration)) return false;
-    if (
-      listingIntent !== 'rental'
-      && !furnishingsIncluded
-      && containsUnqualifiedSaleFurnishingClaim([scene.title, scene.subtitle, scene.narration].join('. '))
-    ) return false;
-    const narrationNumbers = scene.narration.match(/\b\d[\d,.]*\b/g) ?? [];
-    if (narrationNumbers.some((number) => !factValues.includes(number))) return false;
-    seen.add(scene.photoIndex);
-    return true;
+    const role = normalizeListingStoryRole(scene.role);
+    if (!analysis || !role || DISALLOWED_STORY_SCENES.has(analysis.sceneType)) return reject('invalid-role-or-photo');
+    const key = scene.cardKey || listingGroupKey(analysis);
+    const plan = plans.get(key as ListingGroupKey);
+    if (!plan || seen.has(key) || (keyCounts.get(key) || 0) > 1 || !plan.photoIndices.includes(scene.photoIndex)) return reject('invalid-card-photo-membership');
+    if (scene.cardKey && role !== plan.role) return reject('role-mismatch');
+    // A legacy hook/CTA cannot be recycled as a room description.
+    if (!scene.cardKey && (['hook', 'overview', 'action', 'next-step', 'fact-and-action'].includes(role)
+      || (role !== plan.role && role !== normalizeListingStoryRole(analysis.sceneType)))) return reject('legacy-role-mismatch');
+    const copy = [scene.title, scene.subtitle, scene.narration].join('. ');
+    if (!isFinishedNarration(scene.narration) || containsUnsafeListingLanguage(copy)) return reject('unfinished-or-unsafe-copy');
+    if (/\b(?:each|every|all)\s+(?:of the\s+)?(?:bedrooms?|bathrooms?|rooms?)\b/iu.test(copy)) return reject('unverified-room-coverage');
+    if (listingIntent !== 'rental' && !furnishingsIncluded && containsUnqualifiedSaleFurnishingClaim(copy)) return reject('unqualified-furnishings');
+    const evidence = factValues + ' ' + plan.photoIndices.flatMap((index) => {
+      const photo = analysisByIndex.get(index);
+      return photo ? [...photo.features, ...(photo.movableFurnishings || [])] : [];
+    }).join(' ');
+    const numericValues = (text: string) => narrationNumberTokens(text).map((token) => token.match(/[\d.]+/)?.[0]);
+    const approved = new Set(numericValues(evidence));
+    if (numericValues(copy.replace(/\b(?:one|1) (?:of|possible)\b/gi, '')).some((number) => !approved.has(number))) return reject('unsupported-number');
+    for (const token of narrationNumberTokens(copy)) {
+      const claim = token.match(/^([\d.]+)(bedrooms?|beds?|bathrooms?|baths?)$/);
+      if (!claim) continue;
+      const expected = claim[2].startsWith('bed') ? extraction.realEstate.bedrooms : extraction.realEstate.bathrooms;
+      if (Number(claim[1]) !== Number(expected) || !expected) return reject('conflicting-room-count');
+    }
+    if (scene.factKeys.some((key) => !(key in listingFacts(extraction)))) return reject('unknown-fact-key');
+    seen.add(key);
+    return [{ ...scene, role, cardKey: key }];
   });
 }
 
@@ -584,6 +512,7 @@ function buildMarketingBatch(options: {
   extraction: BoardWizardListingExtraction;
   targetBoardTitle: string;
   scenes: BoardWizardListingStoryScene[];
+  secondsPerCard: number;
   analyses: BoardWizardListingPhotoAnalysis[];
   maxCards: number;
   listingIntent: BoardWizardListingIntent;
@@ -594,17 +523,12 @@ function buildMarketingBatch(options: {
   const groups = listingPhotoGroups(options.analyses)
     .filter((group) => group.analyses.some((analysis) => !!options.extraction.images[analysis.index]))
     .sort((left, right) => left.priority - right.priority);
-  const sceneByPhotoIndex = new Map(options.scenes.map((scene) => [scene.photoIndex, scene]));
-  const knownAnalyses = groups.flatMap((group) => group.reviewStatus === 'verified' ? group.analyses : []);
-  const heroAnalyses = [...knownAnalyses].sort((left, right) =>
-    right.heroScore - left.heroScore || right.qualityScore - left.qualityScore || left.index - right.index);
-  const fallbackAnalyses = [...options.analyses]
-    .filter((analysis) => !DISALLOWED_STORY_SCENES.has(analysis.sceneType))
-    .sort((left, right) => right.qualityScore - left.qualityScore || left.index - right.index);
-  const overviewAnalyses = uniqueAnalyses([...heroAnalyses, ...fallbackAnalyses]).slice(0, 3);
+  const plan = buildListingCopyPlan(options.analyses, options.maxCards);
+  const sceneByKey = new Map(options.scenes.map((scene) => [scene.cardKey, scene]));
+  const overviewAnalyses = plan[0].photoIndices.flatMap((index) => options.analyses.find((photo) => photo.index === index) || []);
   const overviewUrls = listingAnalysisUrls(options.extraction, overviewAnalyses);
-  const overviewScene = overviewAnalyses.map((analysis) => sceneByPhotoIndex.get(analysis.index)).find(Boolean)
-    ?? options.scenes[0];
+  const overviewScene = sceneByKey.get('overview');
+  const overviewNotes = finishListingCopy(overviewScene?.narration, listingOverviewNotes(options.extraction), options.secondsPerCard);
   const maxCards = Math.max(1, options.maxCards);
   const reserveNextStep = maxCards > 1 || (options.marketing?.personalized === true && options.listingIntent !== 'rental');
   // Once grouping is enabled, every confidently identified space remains
@@ -626,7 +550,7 @@ function buildMarketingBatch(options: {
     ...shared,
     title: options.extraction.listingName.slice(0, 80),
     subtitle: (overviewScene?.subtitle || listingOverviewSubtitleForStory(options.extraction)).slice(0, 120),
-    notes: (overviewScene?.narration || options.extraction.description || `Explore ${options.extraction.listingName} through its verified listing gallery.`).slice(0, 3600),
+    notes: overviewNotes,
     type: 'place',
     status: 'saved',
     rating: 5,
@@ -648,26 +572,24 @@ function buildMarketingBatch(options: {
     },
   };
   const groupCards = selectedGroups.map((group, index): GeneratedBoardWizardCard => {
-    const ordered = [...group.analyses].sort((left, right) =>
-      right.qualityScore - left.qualityScore || right.heroScore - left.heroScore || left.index - right.index);
+    const ordered = orderedListingGroupPhotos(group);
     const urls = listingAnalysisUrls(options.extraction, ordered);
-    const representative = ordered.map((analysis) => sceneByPhotoIndex.get(analysis.index)).find(Boolean);
-    const subtitle = listingGroupSubtitle(group, ordered);
-    const notes = group.reviewStatus === 'needs-review'
-      ? 'These verified source photographs could not be classified confidently. Review them before assigning a specific room label.'
-      : representative?.narration || `Continue the property tour through ${group.label.toLowerCase()}, using only details visible in the source photographs.`;
+    const representative = sceneByKey.get(group.key);
+    const subtitle = representative?.subtitle || listingGroupSubtitle(group, ordered.slice(0, LISTING_PRESENTATION_IMAGE_LIMIT));
+    const notes = finishListingCopy(representative?.narration, listingGroupFallback(group, options.listingIntent,
+      boardWizardListingFurnishingsIncluded(options.extraction), options.secondsPerCard), options.secondsPerCard);
     return {
       ...shared,
       title: group.label,
       subtitle,
-      notes: notes.slice(0, 3600),
+      notes,
       type: 'note',
       status: 'saved',
       rating: 4,
       tags: ['listing', rentalTag, 'listing-story', 'listing-group', `group-${group.key}`, 'source-image'],
       image_query: `${options.extraction.listingName} ${group.label}`.slice(0, 120),
       image_context: group.reviewStatus === 'needs-review' ? 'Unclassified source listing photographs' : group.label,
-      short_summary: subtitle.slice(0, 160),
+      short_summary: narrationSummary(notes),
       rank: index + 2,
       imageUrl: urls[0],
       imageUrls: urls,
@@ -728,7 +650,7 @@ function buildMarketingBatch(options: {
     });
   }
   if (reserveNextStep) {
-    const finalScene = options.scenes.at(-1);
+    const finalScene = sceneByKey.get('next-step');
     const nextStepImage = overviewUrls[0] || gallery[0];
     const showContact = options.marketing?.personalized === true
       && options.listingIntent !== 'rental'
@@ -740,12 +662,6 @@ function buildMarketingBatch(options: {
     const contactPhone = showContact ? options.marketing?.contactPhone.trim() || '' : '';
     const agency = showContact ? options.marketing?.agency.trim() || '' : options.extraction.realEstate.brokerage;
     const isListingContact = showContact && !!(contactPhone || contactEmail);
-    const contactLines = [
-      contactName,
-      agency && agency !== contactName ? agency : '',
-      contactPhone ? `Phone: ${contactPhone}` : '',
-      contactEmail ? `Email: ${contactEmail}` : '',
-    ].filter(Boolean);
     const nextStepTitle = options.listingIntent === 'rental'
       ? options.extraction.kind === 'vacation-rental' ? 'Check availability & book' : 'Check availability & apply'
       : isListingContact ? `Contact ${contactName || 'the listing agent'}`
@@ -755,13 +671,18 @@ function buildMarketingBatch(options: {
       ? `Questions about this home? Get in touch with ${contactName || 'the listing agent'}.`
       : closingSubtitle(options.extraction, options.listingIntent);
     const closingNotes = isListingContact
-      ? [contactInvitation, ...contactLines].filter(Boolean).join('\n')
-      : [finalScene?.narration || listingClose(options.extraction, options.listingIntent, boardWizardListingFurnishingsIncluded(options.extraction))].filter(Boolean).join('\n');
+      ? contactInvitation
+      : finishListingCopy(finalScene?.narration, options.secondsPerCard <= 10
+        ? options.listingIntent === 'rental'
+          ? 'Check the original listing for current availability, pricing, and rental terms.'
+          : 'Contact the listing representative for current details and showing availability.'
+        : listingClose(options.extraction, options.listingIntent, boardWizardListingFurnishingsIncluded(options.extraction)), options.secondsPerCard);
     cards.push({
       ...shared,
       title: nextStepTitle.slice(0, 80),
       subtitle: closingSubtitleText.slice(0, 120),
-      notes: closingNotes.slice(0, 3600),
+      notes: closingNotes,
+      ...(isListingContact ? { contactDetails: { name: contactName, organization: agency, phone: contactPhone, email: contactEmail } } : {}),
       type: 'note',
       status: 'planned',
       rating: 4,
@@ -779,55 +700,12 @@ function buildMarketingBatch(options: {
   return {
     board: {
       title: (options.targetBoardTitle || options.extraction.listingName).slice(0, 90),
-      description: storyBoardDescription(options.extraction, options.listingIntent).slice(0, 240),
+      description: narrationSummary(storyBoardDescription(options.extraction, options.listingIntent), 240),
       icon: options.listingIntent === 'rental' ? 'key' : 'apartment',
       tone: options.listingIntent === 'rental' ? 'sky' : 'teal',
     },
     cards: cards.map((card, index) => ({ ...card, rank: index + 1 })),
   };
-}
-
-function listingPhotoGroups(analyses: BoardWizardListingPhotoAnalysis[]): ListingPhotoGroup[] {
-  const groups = new Map<ListingGroupKey, ListingPhotoGroup>();
-  for (const analysis of analyses) {
-    if (DISALLOWED_STORY_SCENES.has(analysis.sceneType)) continue;
-    const key = listingGroupKey(analysis);
-    const definition = LISTING_GROUP_DEFINITIONS[key];
-    const group = groups.get(key) ?? {
-      key,
-      label: definition.label,
-      priority: definition.priority,
-      reviewStatus: key === 'additional' ? 'needs-review' : 'verified',
-      analyses: [],
-    };
-    group.analyses.push(analysis);
-    groups.set(key, group);
-  }
-  return Array.from(groups.values());
-}
-
-function listingGroupKey(analysis: BoardWizardListingPhotoAnalysis): ListingGroupKey {
-  if (analysis.confidence < 0.65 || analysis.sceneType === 'unknown') return 'additional';
-  switch (analysis.sceneType) {
-    case 'exterior':
-    case 'aerial':
-    case 'entry': return 'exterior';
-    case 'living': return 'living';
-    case 'kitchen': return 'kitchen';
-    case 'dining': return 'dining';
-    case 'bedroom': return 'bedrooms';
-    case 'bathroom': return 'bathrooms';
-    case 'office':
-    case 'flex':
-    case 'laundry':
-    case 'garage': return 'work-utility';
-    case 'outdoor':
-    case 'balcony':
-    case 'view': return 'outdoor';
-    case 'amenity': return 'amenities';
-    case 'floor-plan': return 'floor-plans';
-    default: return 'additional';
-  }
 }
 
 function listingAnalysisUrls(
@@ -837,15 +715,6 @@ function listingAnalysisUrls(
   return Array.from(new Set(analyses
     .map((analysis) => extraction.images[analysis.index]?.url || '')
     .filter(Boolean)));
-}
-
-function uniqueAnalyses(analyses: BoardWizardListingPhotoAnalysis[]): BoardWizardListingPhotoAnalysis[] {
-  const seen = new Set<number>();
-  return analyses.filter((analysis) => {
-    if (seen.has(analysis.index)) return false;
-    seen.add(analysis.index);
-    return true;
-  });
 }
 
 function listingPresentation(
@@ -871,13 +740,39 @@ function listingPresentation(
 
 function listingGroupSubtitle(group: ListingPhotoGroup, analyses: BoardWizardListingPhotoAnalysis[]): string {
   const features = Array.from(new Set(analyses.flatMap(listingFixedFeatures))).slice(0, 3);
-  if (group.reviewStatus === 'needs-review') {
-    return `${analyses.length} source ${analyses.length === 1 ? 'photo' : 'photos'} · Needs review`;
-  }
-  return [
-    `${analyses.length} ${analyses.length === 1 ? 'photo' : 'photos'}`,
-    features.join(' · '),
-  ].filter(Boolean).join(' · ').slice(0, 120);
+  return narrationSummary(features.join(' · ') || group.label, 120);
+}
+
+function finishListingCopy(candidate: string | undefined, fallback: string, seconds: number): string {
+  const selected = candidate && isFinishedNarration(candidate) ? candidate : fallback;
+  return fitNarrationToWords(selected, boardNarrationTargetWords(seconds)) || fallback;
+}
+
+function listingOverviewNotes(extraction: BoardWizardListingExtraction): string {
+  const details = extraction.realEstate;
+  const rooms = [details.bedrooms ? `${details.bedrooms} bedrooms` : '', details.bathrooms ? `${details.bathrooms} bathrooms` : ''].filter(Boolean);
+  if (rooms.length) return `This home has ${rooms.join(' and ')}.`;
+  return `Explore the spaces at ${extraction.listingName}.`;
+}
+
+function listingGroupFallback(group: ListingPhotoGroup, intent: BoardWizardListingIntent, furnished: boolean, seconds: number): string {
+  if (group.reviewStatus === 'needs-review') return 'Additional photographs offer further views of the property.';
+  const photos = orderedListingGroupPhotos(group).slice(0, LISTING_PRESENTATION_IMAGE_LIMIT);
+  // Use a single photograph's observations: never combine distinct bedrooms into one invented room.
+  const photo = photos.find((entry) => listingFixedFeatures(entry).length) || photos[0];
+  const features = photo ? listingFixedFeatures(photo).slice(0, seconds <= 10 ? 2 : 3) : [];
+  const label = group.key === 'bedrooms' ? 'bedroom' : group.key === 'bathrooms' ? 'bathroom'
+    : group.key === 'living' ? 'living area' : group.key === 'dining' ? 'dining area'
+    : group.key === 'outdoor' ? 'outdoor space' : group.key === 'work-utility' ? 'space'
+    : group.key === 'exterior' ? 'exterior' : group.label.toLowerCase();
+  const sentences = [features.length
+    ? `The pictured ${label} features ${humanList(features)}.`
+    : `These photographs show the property's ${group.label.toLowerCase()}.`];
+  const movable = photo ? listingMovableFurnishings(photo) : [];
+  if (seconds > 10 && movable.length) sentences.push(intent === 'rental' || furnished
+    ? `The photographs also show ${humanList(movable.slice(0, 3))}.`
+    : `Shown staged with ${humanList(movable.slice(0, 3))}, the space illustrates one possible arrangement.`);
+  return fitNarrationToWords(sentences.join(' '), boardNarrationTargetWords(seconds)) || sentences[0];
 }
 
 function listingOverviewSubtitleForStory(extraction: BoardWizardListingExtraction): string {
@@ -886,62 +781,6 @@ function listingOverviewSubtitleForStory(extraction: BoardWizardListingExtractio
     extraction.realEstate.bedrooms ? `${extraction.realEstate.bedrooms} beds` : '',
     extraction.realEstate.bathrooms ? `${extraction.realEstate.bathrooms} baths` : '',
   ].filter(Boolean).join(' · ') || extraction.address || 'Property overview';
-}
-
-function orderedAnalyses(analyses: BoardWizardListingPhotoAnalysis[]): BoardWizardListingPhotoAnalysis[] {
-  const priority: Record<string, number> = {
-    exterior: 10, aerial: 15, entry: 20, living: 30, kitchen: 40, dining: 45,
-    bedroom: 55, bathroom: 65, office: 70, flex: 72, laundry: 75, garage: 78,
-    outdoor: 82, balcony: 84, view: 86, amenity: 88, 'floor-plan': 95, unknown: 90,
-  };
-  const candidates = [...analyses].sort((left, right) => {
-    const leftPriority = priority[left.sceneType] ?? 90;
-    const rightPriority = priority[right.sceneType] ?? 90;
-    if (leftPriority !== rightPriority) return leftPriority - rightPriority;
-    return right.qualityScore - left.qualityScore || left.index - right.index;
-  });
-  const hero = [...candidates]
-    .filter((item) => ['exterior', 'living', 'kitchen', 'view', 'outdoor'].includes(item.sceneType))
-    .sort((left, right) => right.heroScore - left.heroScore || right.qualityScore - left.qualityScore)[0];
-  return hero ? [hero, ...candidates.filter((item) => item.index !== hero.index)] : candidates;
-}
-
-function fallbackScene(
-  extraction: BoardWizardListingExtraction,
-  analysis: BoardWizardListingPhotoAnalysis,
-  position: number,
-  secondsPerCard: number,
-  style: BoardWizardListingMarketingStyle,
-  listingIntent: BoardWizardListingIntent,
-  furnishingsIncluded: boolean,
-): BoardWizardListingStoryScene {
-  const role = position === 0 ? 'hook' : analysis.sceneType;
-  const room = analysis.confidence >= 0.65 ? analysis.roomType : neutralRoomLabel(analysis.sceneType);
-  const fixedFeatures = listingFixedFeatures(analysis);
-  const movableFurnishings = listingMovableFurnishings(analysis);
-  const visibleFeatures = listingIntent === 'rental' || furnishingsIncluded
-    ? [...fixedFeatures, ...movableFurnishings]
-    : fixedFeatures;
-  const featureText = visibleFeatures.slice(0, 2).join(' and ');
-  const transition = position === 0
-    ? `${styleLead(style)} ${room} opens the visual story of ${extraction.listingName}.`
-    : `From here, the tour moves into ${room.toLowerCase()}.`;
-  const visible = featureText ? `The photograph highlights ${featureText}, keeping the focus on details visible in the listing itself.` : '';
-  const staging = listingIntent !== 'rental' && !furnishingsIncluded && movableFurnishings.length
-    ? `Shown staged with ${humanList(movableFurnishings.slice(0, 3))}, the room demonstrates one possible arrangement; these furnishings may not be included with the property.`
-    : '';
-  const furnished = listingIntent !== 'rental' && furnishingsIncluded && movableFurnishings.length
-    ? `The listing states that the property is offered furnished; confirm the exact included inventory on the original listing.`
-    : '';
-  return {
-    photoIndex: analysis.index,
-    role,
-    title: position === 0 ? `Begin at ${shortAddress(extraction)}` : room,
-    subtitle: visibleFeatures.slice(0, 3).join(' · ') || `Source listing photo ${analysis.index + 1}`,
-    narration: fitFallbackNarration([transition, staging, visible, furnished].filter(Boolean).join(' '), secondsPerCard),
-    durationSeconds: secondsPerCard,
-    factKeys: [],
-  };
 }
 
 function mergeWithFallbackAnalyses(
@@ -1029,7 +868,7 @@ function storyBoardDescription(extraction: BoardWizardListingExtraction, listing
     extraction.realEstate.bathrooms ? `${extraction.realEstate.bathrooms} bathrooms` : '',
     extraction.realEstate.propertyType,
   ].filter(Boolean).join(' · ');
-  return `A connected ${listingIntent === 'rental' ? 'rental TalkThru' : 'Real Estate VirtualTalkThru'} of ${extraction.listingName}${details ? ` — ${details}` : ''}, arranged from arrival through the living spaces to the next step.`;
+  return `${extraction.listingName}${details ? ` — ${details}` : ''}.`;
 }
 
 function listingClose(
@@ -1038,20 +877,17 @@ function listingClose(
   furnishingsIncluded: boolean,
 ): string {
   const contact = extraction.realEstate.agentName
-    ? `The source page identifies ${extraction.realEstate.agentName} as ${extraction.realEstate.agentRole || 'the site contact'}.`
+    ? `Contact ${extraction.realEstate.agentName}, the ${extraction.realEstate.agentRole || 'site contact'}, to ask a question or arrange a showing.`
     : '';
-  const brokerage = extraction.realEstate.brokerage ? `The listing shows ${extraction.realEstate.brokerage} as the brokerage.` : '';
-  return [
-    contact,
-    brokerage,
-    listingIntent === 'rental'
-      ? extraction.kind === 'vacation-rental'
-        ? 'Open the original rental listing to confirm the current price, availability, fees, cancellation terms, house rules, and booking details.'
-        : 'Open the original rental listing to confirm the current rent, availability, lease terms, deposits, fees, application requirements, and contact details.'
-      : furnishingsIncluded
-        ? 'The source describes the property as furnished. Confirm the exact furniture inventory, exclusions, current price, status, disclosures, fees, showing availability, and contact details on the original listing.'
-        : 'Furnishings and decor shown in listing photographs may be staging and may not be included in the sale. Confirm all inclusions, current price, status, disclosures, fees, showing availability, and contact details on the original listing.',
-  ].filter(Boolean).join(' ');
+  const action = listingIntent === 'rental'
+    ? extraction.kind === 'vacation-rental'
+      ? 'Open the original rental listing to confirm current price, availability, fees, cancellation terms, house rules, and booking details.'
+      : 'Open the original rental listing to confirm current rent, availability, lease terms, deposits, fees, application requirements, and contact details.'
+    : 'Confirm current price, status, disclosures, fees, showing availability, and contact details on the original listing.';
+  const qualification = listingIntent === 'rental' ? '' : furnishingsIncluded
+    ? 'The source describes the property as furnished; confirm the exact furniture inventory and exclusions.'
+    : 'Furnishings and decor shown in photographs may be staging and may not be included in the sale.';
+  return [action, contact, qualification].filter(Boolean).join(' ');
 }
 
 function closingSubtitle(extraction: BoardWizardListingExtraction, listingIntent: BoardWizardListingIntent): string {
@@ -1061,20 +897,6 @@ function closingSubtitle(extraction: BoardWizardListingExtraction, listingIntent
     extraction.realEstate.mlsId ? `MLS# ${extraction.realEstate.mlsId}` : '',
     extraction.realEstate.brokerage,
   ].filter(Boolean).join(' · ').slice(0, 120);
-}
-
-function appendSentence(value: string, sentence: string, max: number): string {
-  const cleanValue = value.trim().replace(/\s+/g, ' ');
-  const cleanSentence = sentence.trim().replace(/\s+/g, ' ');
-  if (!cleanSentence || cleanValue.includes(cleanSentence)) return cleanValue.slice(0, max);
-  return `${cleanValue}${/[.!?]$/.test(cleanValue) ? '' : '.'} ${cleanSentence}`.slice(0, max).trim();
-}
-
-function fitFallbackNarration(value: string, seconds: number): string {
-  const maxWords = Math.max(12, Math.round(Math.max(5, seconds) * 2.6));
-  const words = value.split(/\s+/).filter(Boolean);
-  if (words.length <= maxWords) return value;
-  return `${words.slice(0, maxWords).join(' ').replace(/[,:;]$/, '')}.`;
 }
 
 function marketingStyleDescription(style: BoardWizardListingMarketingStyle): string {
@@ -1113,30 +935,6 @@ function humanList(values: string[]): string {
   if (values.length <= 1) return values[0] ?? '';
   if (values.length === 2) return `${values[0]} and ${values[1]}`;
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`;
-}
-
-function styleLead(style: BoardWizardListingMarketingStyle): string {
-  switch (style) {
-    case 'guided': return 'Step into the property as the tour begins.';
-    case 'luxury': return 'The story begins with a composed first impression.';
-    case 'brisk': return 'Start with the strongest first look.';
-    case 'investor': return 'The walkthrough begins with the property itself.';
-    default: return 'The first frame sets the tone for the walk-through.';
-  }
-}
-
-function neutralRoomLabel(sceneType: string): string {
-  if (sceneType === 'exterior' || sceneType === 'aerial') return 'Property exterior';
-  if (sceneType === 'outdoor' || sceneType === 'balcony' || sceneType === 'view') return 'Outdoor view';
-  return 'Interior view';
-}
-
-function shortAddress(extraction: BoardWizardListingExtraction): string {
-  return (extraction.address || extraction.listingName).split(',').slice(0, 2).join(',').slice(0, 60);
-}
-
-function normalizedRole(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'property-view';
 }
 
 function containsUnsafeListingLanguage(value: string): boolean {

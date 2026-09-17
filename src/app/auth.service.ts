@@ -66,6 +66,7 @@ export interface AuthUserProfile {
   profilePictureType: 'icon' | 'image' | null;
   providers: string[];
   role: AuthUserRole;
+  boardAdminAccess?: boolean;
   pricingPlan: string | null;
   businessPlan: string | null;
   subscriptionStatus: string | null;
@@ -83,6 +84,7 @@ export class AuthService {
   readonly initialized = signal(false);
   readonly isAuthenticated = computed(() => this.user() !== null);
   readonly isAdmin = computed(() => this.profile()?.role === 'admin');
+  readonly canAccessAllBoards = computed(() => this.isAdmin() && this.profile()?.boardAdminAccess === true);
   readonly canCreateWikis = computed(() => this.isAdmin() || this.hasActivePersonalWikiPlan());
   readonly uid = computed(() => this.user()?.uid ?? '');
   readonly emailVerified = computed(() => this.user()?.emailVerified ?? false);
@@ -577,6 +579,7 @@ export class AuthService {
         ? data['providers'].filter((provider): provider is string => typeof provider === 'string')
         : [],
       role: String(data['role'] ?? '').trim().toLowerCase() === 'admin' ? 'admin' : 'user',
+      boardAdminAccess: data['board_admin_access'] === true,
       pricingPlan: this.stringField(data, 'pricingPlan', 'pricing_plan'),
       businessPlan: this.stringField(data, 'businessPlan', 'business_plan'),
       subscriptionStatus: this.stringField(data, 'subscriptionStatus', 'subscription_status'),

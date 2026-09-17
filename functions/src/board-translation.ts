@@ -39,10 +39,12 @@ export function extractBoardTranslationSource(value: unknown): BoardTranslationS
 
   arrayOrEmpty(board['cards']).slice(0, maximumBoardTranslationCards).forEach((value, index) => {
     const card = recordOrEmpty(value);
+    if (card['authorOnly'] === true) return;
     const prefix = `cards.${index}`;
     addSegment(segments, `${prefix}.title`, card['title']);
     addSegment(segments, `${prefix}.subtitle`, card['subtitle']);
     addSegment(segments, `${prefix}.notes`, card['notes']);
+    addSegment(segments, `${prefix}.stackNarration`, card['stackNarration']);
     addSegment(segments, `${prefix}.shortSummary`, card['shortSummary']);
     addSegment(segments, `${prefix}.availability`, card['availability']);
     addSegment(segments, `${prefix}.productCategory`, card['productCategory']);

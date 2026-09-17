@@ -1,3 +1,4 @@
+import { canonicalCardNarration } from './card-narration';
 export type StackVideoNarrationCard = Record<string, unknown>;
 
 const maxNarrationSpeechTextLength = 4000;
@@ -49,17 +50,8 @@ export function stackVideoNarrationTextFromCard(
   normalize: (value: unknown) => string = (candidate) => String(candidate ?? '').replace(/\s+/g, ' ').trim(),
 ): string {
   const card = value && typeof value === 'object' ? value as StackVideoNarrationCard : {};
-  const tour = card['tour'] && typeof card['tour'] === 'object'
-    ? card['tour'] as Record<string, unknown>
-    : {};
-  const title = String(card['title'] ?? '').trim();
-  return normalize(
-    tour['guideScript']
-      || card['notes']
-      || card['shortSummary']
-      || card['subtitle']
-      || (title ? `${title}.` : ''),
-  );
+  if (card['authorOnly'] === true) return '';
+  return normalize(canonicalCardNarration(card));
 }
 
 export function stackVideoNarrationRevisionFromCard(value: unknown): number {

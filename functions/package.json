@@ -6,6 +6,10 @@
   },
   "main": "lib/runtime.js",
   "scripts": {
+    "repair:board-copy": "npm run build && node scripts/repair-board-copy.cjs",
+    "test:board-copy-repair": "npm run build && node scripts/test-board-copy-repair.cjs",
+    "eval:board-copy:live": "npm run build && node scripts/eval-board-copy.cjs --live",
+    "test:board-copy": "npm run build && node scripts/test-board-copy-quality.cjs && node scripts/test-card-narration.cjs && node scripts/test-stack-script-shortening.cjs && node scripts/test-board-wizard-listing.cjs && node scripts/test-board-wizard-narration.cjs && node scripts/test-stack-video-narration.cjs && node scripts/test-board-translation.cjs",
     "test:place-photo": "npm run build && node --test scripts/test-place-photo.cjs",
     "test:teams": "npm run build && node --test scripts/test-teams.cjs scripts/test-team-analytics.cjs scripts/test-team-profiles.cjs",
     "build": "tsc -p tsconfig.json",

@@ -34,13 +34,13 @@ assert.match(guided, /second-person guide/i);
 const documentary = boardNarrationPromptInstructions('documentary');
 assert.match(documentary, /objective third-person documentary/i);
 
-assert.match(
+assert.equal(
   boardNarrationFallbackDescription('teen-perspective', 'Summer Festivals', 'Five celebrations worth seeing.'),
-  /^Here’s my take on Summer Festivals/i,
+  'Five celebrations worth seeing.',
 );
-assert.match(
+assert.equal(
   boardNarrationFallbackNotes('guided-tour', 'Main Stage', 'Live music begins at noon.'),
-  /^Take a closer look at Main Stage/i,
+  'Live music begins at noon.',
 );
 assert.equal(
   boardNarrationFallbackDescription('storyteller', 'Summer Festivals', 'Five celebrations worth seeing.'),

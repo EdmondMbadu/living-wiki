@@ -718,12 +718,12 @@ assert.equal(bedroomGroup.imageUrls.length, 2, 'multiple bedroom photographs sho
 assert.equal(bedroomGroup.listingPresentation.presentationImageUrls.length, 2);
 const additionalGroup = expStory.cards.find((card) => card.tags.includes('group-additional'));
 assert.equal(additionalGroup.listingPresentation.reviewStatus, 'needs-review');
-assert.match(additionalGroup.subtitle, /Needs review/);
+assert.doesNotMatch(additionalGroup.subtitle + additionalGroup.notes, /Needs review|Review them before|could not be classified/i, 'review instructions belong only in editor metadata');
 assert.equal(expStory.cards.some((card) => /profiles|agent portrait|brokerage logo/i.test(`${card.imageUrl} ${card.title}`)), false, 'agent and logo images must never enter the property story');
 assert.ok(expStory.cards.at(-1).tags.includes('group-next-step'));
 assert.match(expStory.cards.at(-1).title, /\$729,000/);
 assert.match(expStory.cards.at(-1).notes, /current price, status, disclosures, fees, showing availability/i);
-assert.match(expStory.cards.at(-1).notes, /Site contact/i);
+assert.match(expStory.cards.at(-1).notes, /original listing/i);
 
 const personalizedMarketing = normalizeBoardWizardListingMarketingOptions({
   personalized: true,
@@ -757,9 +757,10 @@ assert.ok(personalizedTalkingCardSetup.tags.includes('author-only'));
 assert.equal(personalizedStory.cards.at(-1).title, 'Contact Jenny Morgan');
 assert.equal(personalizedStory.cards.at(-1).subtitle, 'Questions about this home? Get in touch with Jenny Morgan.');
 assert.equal(personalizedStory.cards.at(-1).short_summary, 'Questions about this home? Get in touch with Jenny Morgan.');
-assert.match(personalizedStory.cards.at(-1).notes, /Phone: \(609\) 555-0147/);
-assert.match(personalizedStory.cards.at(-1).notes, /Email: jenny@harborrealty.com/);
-assert.match(personalizedStory.cards.at(-1).notes, /Harbor Realty/);
+assert.equal(personalizedStory.cards.at(-1).contactDetails.phone, '(609) 555-0147');
+assert.equal(personalizedStory.cards.at(-1).contactDetails.email, 'jenny@harborrealty.com');
+assert.equal(personalizedStory.cards.at(-1).contactDetails.organization, 'Harbor Realty');
+assert.doesNotMatch(personalizedStory.cards.at(-1).notes, /Email:|Phone:/, 'contact actions must not leak metadata into narration');
 assert.match(personalizedStory.cards.at(-1).notes, /arrange a private showing/i);
 assert.doesNotMatch(personalizedStory.cards.at(-1).notes, /current price|status, disclosures|showing availability/i);
 assert.ok(personalizedStory.cards.at(-1).tags.includes('listing-contact'));
@@ -952,7 +953,8 @@ const longTermRentalStory = buildBoardWizardListingMarketingBatchFromAnalyses({
 assert.equal(longTermRentalStory.cards.at(-1).title, 'Check availability & apply');
 assert.match(longTermRentalStory.cards.at(-1).notes, /lease terms.*deposits.*application requirements/i);
 assert.ok(longTermRentalStory.cards.every((card) => card.tags.includes('rental')));
-assert.match(longTermRentalStory.board.description, /rental TalkThru/);
+assert.match(longTermRentalStory.board.description, /3721 Pacific Avenue/);
+assert.doesNotMatch(longTermRentalStory.board.description, /TalkThru|using only|generated/i);
 
 const vacationRentalStory = buildBoardWizardListingMarketingBatchFromAnalyses({
   extraction: airbnb,

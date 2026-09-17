@@ -198,7 +198,7 @@ export function extractBoardWizardListing(
     finalUrl: baseUrl,
     siteName,
     listingName,
-    description: cleanText(description).slice(0, 1200),
+    description: cleanText(description).slice(0, 6000),
     address: cleanText(address).slice(0, 300),
     host: extractHost(primaryNode, pageText),
     price: normalizeCurrency(firstText(formatOfferPrice(offers), realEstateFieldPrice(document))),
@@ -342,7 +342,7 @@ export function extractBoardWizardListingFromMarkdown(
       : /^(?:#{1,6}\s*)?What's special\s*$/im,
   );
   const fallbackDescription = markdown.match(/\b(?:For sale|For rent)[\s\S]{0,1200}/i)?.[0] || '';
-  const description = markdownToPlainText(specialDescription || fallbackDescription).slice(0, 1200);
+  const description = markdownToPlainText(specialDescription || fallbackDescription).slice(0, 6000);
   const factsText = markdownToPlainText(markdown.slice(0, Math.min(markdown.length, 24_000)));
   const price = factsText.match(/\$[\d,]+(?:\.\d{2})?/)?.[0] || '';
   const latitude = finiteNumber(markdown.match(/[?&]center=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/i)?.[1]);

@@ -78,6 +78,39 @@ test('team branding is public-readable but only team admins can upload it', asyn
   await assertFails(uploadBytes(ref(admin, 'team-branding/team-b/logo.png'), new Uint8Array([1]), { contentType: 'image/png' }));
 });
 
+test('only explicitly authorized board admins can view private board media across teams and owners', async () => {
+  const paths = [
+    'team-media/team-a/listing-a/image.png',
+    'public-team-media/team-a/listing-a/image.png',
+    `users/${ownerUid}/video-library/boards/private-board/full/vertical/video.mp4`,
+  ];
+  await testEnvironment.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), 'users', 'board-admin'), { role: 'admin', board_admin_access: true });
+    await setDoc(doc(context.firestore(), 'users', 'platform'), { role: 'admin' });
+    await setDoc(doc(context.firestore(), 'users', 'flagged-user'), { role: 'user', board_admin_access: true });
+    await setDoc(doc(context.firestore(), 'teams', 'team-a'), { status: 'archived' });
+    for (const path of [...paths, `users/${ownerUid}/voice-samples/private.mp3`, `users/${ownerUid}/video-library/personal.mp4`]) {
+      await uploadBytes(ref(context.storage(), path), new Uint8Array([1]), { contentType: path.endsWith('.png') ? 'image/png' : 'video/mp4' });
+    }
+  });
+  const admin = testEnvironment.authenticatedContext('board-admin').storage();
+  const outsider = testEnvironment.authenticatedContext(otherUid).storage();
+  for (const path of paths) {
+    await assertSucceeds(getBytes(ref(admin, path)));
+    await assertFails(getBytes(ref(outsider, path)));
+    await assertFails(getBytes(ref(testEnvironment.authenticatedContext('platform').storage(), path)));
+    await assertFails(getBytes(ref(testEnvironment.authenticatedContext('flagged-user').storage(), path)));
+    await assertFails(getBytes(ref(testEnvironment.unauthenticatedContext().storage(), path)));
+    await assertFails(deleteObject(ref(admin, path)));
+    await assertFails(uploadBytes(ref(admin, path), new Uint8Array([2]), { contentType: 'image/png' }));
+  }
+  await assertFails(uploadBytes(ref(admin, 'team-media/team-a/listing-a/new.png'), new Uint8Array([2]), { contentType: 'image/png' }));
+  await assertFails(getBytes(ref(admin, `users/${ownerUid}/voice-samples/private.mp3`)));
+  await assertFails(getBytes(ref(admin, `users/${ownerUid}/video-library/personal.mp4`)));
+  await testEnvironment.withSecurityRulesDisabled(context => setDoc(doc(context.firestore(), 'users', 'board-admin'), { role: 'admin', board_admin_access: false }));
+  for (const path of paths) await assertFails(getBytes(ref(admin, path)));
+});
+
 test('published team media requires the matching public snapshot and becomes private when unpublished', async () => {
   await seedTeam();
   const path = 'public-team-media/team-a/listing-a/image.png';

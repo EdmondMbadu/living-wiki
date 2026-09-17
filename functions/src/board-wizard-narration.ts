@@ -38,27 +38,14 @@ export function boardNarrationPromptInstructions(value: unknown): string {
   ].join(' ');
 }
 
-function joinNarrationCopy(lead: string, original: string, maxLength: number): string {
-  const cleanLead = lead.replace(/\s+/g, ' ').trim();
-  const cleanOriginal = original.replace(/\s+/g, ' ').trim();
-  return [cleanLead, cleanOriginal].filter(Boolean).join(' ').slice(0, maxLength).trim();
-}
-
 export function boardNarrationFallbackDescription(
   value: unknown,
   title: string,
   description: string,
 ): string {
-  const style = normalizeBoardNarrationStyle(value);
-  const cleanTitle = title.replace(/\s+/g, ' ').trim() || 'this collection';
-  const lead: Record<BoardNarrationStyleId, string> = {
-    storyteller: '',
-    'personal-story': `I put together ${cleanTitle} to share what makes it worth knowing.`,
-    'teen-perspective': `Here’s my take on ${cleanTitle} and what makes it stand out.`,
-    'guided-tour': `Explore ${cleanTitle} and discover what matters along the way.`,
-    documentary: `${cleanTitle} brings together the key facts and context in this collection.`,
-  };
-  return joinNarrationCopy(lead[style], description, 500);
+  // Style belongs in the writing prompt. Adding stock introductions here invented
+  // first-person experience and used up the shortest scripts' entire word budget.
+  return description.replace(/\s+/g, ' ').trim();
 }
 
 export function boardNarrationFallbackNotes(
@@ -66,14 +53,5 @@ export function boardNarrationFallbackNotes(
   title: string,
   notes: string,
 ): string {
-  const style = normalizeBoardNarrationStyle(value);
-  const cleanTitle = title.replace(/\s+/g, ' ').trim() || 'This item';
-  const lead: Record<BoardNarrationStyleId, string> = {
-    storyteller: '',
-    'personal-story': `I included ${cleanTitle} because it belongs in this story.`,
-    'teen-perspective': `Here’s why ${cleanTitle} stood out to me.`,
-    'guided-tour': `Take a closer look at ${cleanTitle}.`,
-    documentary: `${cleanTitle} is presented here with its relevant facts and context.`,
-  };
-  return joinNarrationCopy(lead[style], notes, 3600);
+  return notes.replace(/\s+/g, ' ').trim();
 }
