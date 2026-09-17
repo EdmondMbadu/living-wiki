@@ -249,6 +249,8 @@ import {
   stackStoryFrameKey,
   type StackStoryFrame,
 } from './stack-story-frames';
+import { realEstateLiveContactCard } from './listing-live-ending';
+import { ListingLiveClosingComponent } from './listing-live-closing';
 import {
   adjustStackScriptNarration,
   normalizeStackScriptShortenResults,
@@ -1684,7 +1686,7 @@ type BoardLoadContext = {
 
 @Component({
   selector: 'app-boards',
-  imports: [PlacePhotoDirective, RealEstateWizardSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
+  imports: [ListingLiveClosingComponent, PlacePhotoDirective, RealEstateWizardSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
   providers: [DocxExportService],
   templateUrl: './boards.html',
   styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './real-estate-wizard-modal.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
@@ -3269,7 +3271,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly stackSelectedCount = computed(() => this.stackSelectedCards().length);
   readonly stackFrames = computed<StackFrame[]>(() => {
     const board = this.stackDirectView() ? this.selectedBoard() : this.stackBoard();
-    const baseFrames = buildStackStoryFrames(this.stackSelectedCards(), this.isTourBoard(board));
+    const cards = this.stackSelectedCards();
+    const contact = realEstateLiveContactCard(board, cards, this.stackDirectView());
+    const baseFrames = buildStackStoryFrames(cards, this.isTourBoard(board), contact);
     return baseFrames.map((frame, index) => ({
       ...frame,
       index,
@@ -3282,6 +3286,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   );
   readonly stackCurrentFrame = computed<StackFrame>(() => {
     return this.stackFrameAtIndex(this.stackFrameIndex());
+  });
+  readonly stackClosingContact = computed(() => {
+    const frame = this.stackCurrentFrame();
+    return frame.kind === 'closing' ? frame.contactCard ?? null : null;
   });
   readonly stackCurrentCard = computed<BoardCard | null>(() => {
     const frame = this.stackCurrentFrame();
@@ -18493,6 +18501,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private advanceStackFrame(options: { forceNarration?: boolean } = {}): void {
+    if (this.stackFrameIndex() >= this.stackFrameCount() - 1) {
+      this.stopStackPlayback();
+      return;
+    }
     this.stackExpandedCardId.set(null);
     let reachedClosingFrame = false;
     this.stackFrameIndex.update((index) => {
@@ -18800,6 +18812,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   private prefetchNextStackNarration(currentFrameKey: string): void {
     if (!this.isBrowser || stackStoryFrameKey(this.stackCurrentFrame()) !== currentFrameKey) return;
+    if (this.stackFrameIndex() >= this.stackFrameCount() - 1) return;
     const nextFrame = this.stackFrameAtIndex(this.stackFrameIndex() + 1);
     const tourFrame = this.stackTourFrameFromStackFrame(nextFrame);
     if (!tourFrame) return;
@@ -18836,6 +18849,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private scheduleStackFrameAdvance(delayMs: number, token: number): void {
+    if (token !== this.stackTourNarrationSwitchToken) return;
+    // The ending is always silent, even when it repeats the contact buttons.
+    // It never schedules another beat or a restart.
+    if (this.stackCurrentFrame().kind === 'closing') {
+      this.stopStackPlayback();
+      return;
+    }
     this.clearStackPlaybackTimer();
     this.stackPlaybackTimer = setTimeout(() => {
       if (token !== this.stackTourNarrationSwitchToken || !this.stackPlaying() || !this.isNarratedStackLiveView()) {

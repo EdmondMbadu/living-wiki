@@ -1,0 +1,31 @@
+<section class="listing-ending" aria-label="Property tour complete" i18n-aria-label>
+  @if (imageUrl()) {
+    <figure><img [src]="imageUrl()" [alt]="propertyTitle()" /></figure>
+  }
+  <div class="invitation">
+    <span class="eyebrow" i18n>Tour complete</span>
+    <h2 i18n>Interested in this home?</h2>
+    <p class="agent" i18n>Contact {{ contact().name || agentLabel }}</p>
+    @if (contact().agency) { <p class="agency">{{ contact().agency }}</p> }
+    <p class="message" i18n>Ask a question or arrange a private showing.</p>
+  </div>
+  <div class="contact-actions">
+    @if (contact().phoneHref) {
+      <a [href]="contact().phoneHref" [attr.aria-label]="callLabel + ' ' + (contact().name || agentLabel)" (click)="$event.stopPropagation()">
+        <span class="material-symbols-outlined" aria-hidden="true">call</span>
+        <span><strong i18n>Call</strong><small>{{ contact().phone }}</small></span>
+      </a>
+    }
+    @if (contact().emailHref) {
+      <a [href]="contact().emailHref" [attr.aria-label]="emailLabel + ' ' + (contact().name || agentLabel)" (click)="$event.stopPropagation()">
+        <span class="material-symbols-outlined" aria-hidden="true">mail</span>
+        <span><strong i18n>Email</strong><small>{{ contact().email }}</small></span>
+      </a>
+    }
+  </div>
+  <nav class="tour-actions" aria-label="After the tour" i18n-aria-label>
+    <button type="button" (click)="$event.stopPropagation(); replay.emit()"><span class="material-symbols-outlined" aria-hidden="true">replay</span><span i18n>Watch again</span></button>
+    <button type="button" (click)="$event.stopPropagation(); returnToBoard.emit()"><span class="material-symbols-outlined" aria-hidden="true">dashboard_customize</span><span i18n>Return to board</span></button>
+  </nav>
+  <footer><span i18n>Made with</span> <strong>LivingWiki.com</strong></footer>
+</section>

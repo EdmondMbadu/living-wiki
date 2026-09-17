@@ -13,7 +13,7 @@
         [style.--board-accent]="toneAccent(board.tone)"
         [style.--board-soft]="toneSoft(board.tone)"
       >
-        <main class="stack-viewer-reel" aria-label="Stack reel" [style.--stack-frame-duration]="stackActiveFrameDurationMs() + 'ms'" i18n-aria-label>
+        <main class="stack-viewer-reel" [class.stack-viewer-reel--contact-ending]="!!stackClosingContact()" aria-label="Stack reel" [style.--stack-frame-duration]="stackActiveFrameDurationMs() + 'ms'" i18n-aria-label>
           <button type="button" class="stack-viewer-side stack-viewer-side--prev" aria-label="Previous frame" (click)="previousStackFrame()" i18n-aria-label>
             <span class="material-symbols-outlined">chevron_left</span>
           </button>
@@ -31,8 +31,8 @@
               @for (frameIndex of stackProgressFrames(); track frameIndex) {
                 <span
                   class="stack-viewer-progress__segment"
-                  [class.stack-viewer-progress__segment--done]="frameIndex < stackFrameIndex()"
-                  [class.stack-viewer-progress__segment--active]="frameIndex === stackFrameIndex()"
+                  [class.stack-viewer-progress__segment--done]="frameIndex < stackFrameIndex() || (frameIndex === stackFrameIndex() && stackCurrentFrame().kind === 'closing' && !stackPlaying())"
+                  [class.stack-viewer-progress__segment--active]="frameIndex === stackFrameIndex() && (stackCurrentFrame().kind !== 'closing' || stackPlaying())"
                   [class.stack-viewer-progress__segment--paused]="!stackPlaying()"
                 >
                   <i></i>
@@ -312,6 +312,14 @@
                       <strong>Directions</strong>
                     </a>
                   </div>
+                } @else if (frame.kind === 'closing' && frame.contactCard) {
+                  <app-listing-live-closing
+                    [contact]="listingContactDetails(frame.contactCard)"
+                    [imageUrl]="stackCoverImage(board)"
+                    [propertyTitle]="board.title"
+                    (replay)="replayStack(board)"
+                    (returnToBoard)="closeStackView(board)"
+                  />
                 } @else {
                   <div class="stack-preview__closing stack-preview__closing--viewer">
                     @if (stackCoverImage(board); as closingImage) {

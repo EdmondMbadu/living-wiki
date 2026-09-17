@@ -975,6 +975,10 @@
     "source": "What is {topic}?",
     "file": "src/app/chat/chat.ts"
   },
+  "1559734204852624187": {
+    "source": "Tour complete",
+    "file": "src/app/boards/listing-live-closing.html"
+  },
   "156286080525186113": {
     "source": "Waste proximity percentile",
     "file": "src/app/fence-line/fence-line.ts"
@@ -2347,6 +2351,10 @@
     "source": "Loading businesses...",
     "file": "src/app/admin-users/admin-users.html"
   },
+  "2449683301499950542": {
+    "source": "Property tour complete",
+    "file": "src/app/boards/listing-live-closing.html"
+  },
   "2453142225616430507": {
     "source": " Active ",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -2818,6 +2826,10 @@
   "2744939482590254957": {
     "source": "Pick a profile sticker.",
     "file": "src/app/profile/profile.html"
+  },
+  "2746117203757123996": {
+    "source": "Watch again",
+    "file": "src/app/boards/listing-live-closing.html"
   },
   "2751945587032314141": {
     "source": "Describe the card",
@@ -4562,6 +4574,10 @@
   "3790213593960300483": {
     "source": "Historically Black neighborhoods sit beside some of the largest oil refineries in the Western Hemisphere, with LNG expansion on the horizon.",
     "file": "src/app/fence-line/fence-line.ts"
+  },
+  "3791564161071494999": {
+    "source": "After the tour",
+    "file": "src/app/boards/listing-live-closing.html"
   },
   "3795479537215970030": {
     "source": "Only the owner or an admin of this wiki can edit its voice & personality.",
@@ -8763,6 +8779,10 @@
     "source": "Failed to save business changes.",
     "file": "src/app/atlas-manage/atlas-manage.ts"
   },
+  "6398433642385327932": {
+    "source": "Call",
+    "file": "src/app/boards/listing-live-closing.html"
+  },
   "6399303218734406494": {
     "source": "Water",
     "file": "src/app/public-wikis/public-wikis.ts"
@@ -9030,6 +9050,10 @@
   "6528006466294366161": {
     "source": "AI generation did not return any usable cards. Please try again.",
     "file": "src/app/boards/boards.ts"
+  },
+  "6528658358800356495": {
+    "source": "Ask a question or arrange a private showing.",
+    "file": "src/app/boards/listing-live-closing.html"
   },
   "6529071904243136030": {
     "source": "Clear board search",
@@ -9954,6 +9978,10 @@
   "7165989788096469412": {
     "source": "This square could not be verified.",
     "file": "src/app/boards/boards.ts"
+  },
+  "7168579043168193728": {
+    "source": "the listing agent",
+    "file": "src/app/boards/listing-live-closing.ts"
   },
   "7179599845845789003": {
     "source": "Foodie",
@@ -11347,6 +11375,10 @@
     "source": "Japan",
     "file": "src/app/dymaxion/dymaxion.ts"
   },
+  "8070084528136607468": {
+    "source": "Interested in this home?",
+    "file": "src/app/boards/listing-live-closing.html"
+  },
   "8080927873099716124": {
     "source": "Generate ordered stops, guide scripts, a route, and wayfinder cards.",
     "file": "src/app/boards/boards.ts"
@@ -11682,6 +11714,10 @@
   "8277759983404229634": {
     "source": "Checkout could not be started. Check the Stripe price configuration and try again.",
     "file": "src/app/pricing/pricing.ts"
+  },
+  "8279987132855238314": {
+    "source": "Made with",
+    "file": "src/app/boards/listing-live-closing.html"
   },
   "8280690953751117430": {
     "source": "Close related cards",
@@ -12362,6 +12398,10 @@
   "8775285861834538237": {
     "source": "Internet mode enabled",
     "file": "src/app/chat/chat.ts"
+  },
+  "8777876005321924624": {
+    "source": "Contact {$INTERPOLATION}",
+    "file": "src/app/boards/listing-live-closing.html"
   },
   "87794999272632427": {
     "source": "Could not disconnect Spotify.",
@@ -13102,6 +13142,10 @@
   "927188635374839833": {
     "source": "Delete this video?",
     "file": "src/app/video-library/video-library.html"
+  },
+  "927640898361090857": {
+    "source": "Return to board",
+    "file": "src/app/boards/listing-live-closing.html"
   },
   "928605580772916369": {
     "source": "Your score was saved to this board.",

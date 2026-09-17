@@ -8,7 +8,7 @@ export type StackStoryFrame<T> =
   | { kind: 'cover' }
   | { kind: 'card'; card: T }
   | { kind: 'handoff'; card: T; nextCard: T }
-  | { kind: 'closing' };
+  | { kind: 'closing'; contactCard?: T };
 
 function tourDisplayOrder<T extends StackStoryCardLike>(cards: readonly T[]): T[] {
   const tourCards = cards
@@ -25,7 +25,11 @@ function tourDisplayOrder<T extends StackStoryCardLike>(cards: readonly T[]): T[
 export function buildStackStoryFrames<T extends StackStoryCardLike>(
   cards: readonly T[],
   tourBoard: boolean,
+  closingContact?: T | null,
 ): Array<StackStoryFrame<T>> {
+  // Contact data can also appear on the silent ending. Preserve every ordinary
+  // card and its narration in the original order.
+  const contactCard = cards.find((card) => card.id === closingContact?.id);
   const orderedCards = tourBoard ? tourDisplayOrder(cards) : [...cards];
   const frames: Array<StackStoryFrame<T>> = [{ kind: 'cover' }];
   orderedCards.forEach((card, index) => {
@@ -35,7 +39,7 @@ export function buildStackStoryFrames<T extends StackStoryCardLike>(
       frames.push({ kind: 'handoff', card, nextCard });
     }
   });
-  frames.push({ kind: 'closing' });
+  frames.push(contactCard ? { kind: 'closing', contactCard } : { kind: 'closing' });
   return frames;
 }
 

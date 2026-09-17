@@ -1,0 +1,31 @@
+:host { display: block; width: 100%; height: 100%; min-height: 0; color: #fff; }
+.listing-ending {
+  display: flex; flex-direction: column; align-items: center; justify-content: safe center;
+  box-sizing: border-box; width: 100%; height: 100%; overflow-y: auto;
+  gap: clamp(.75rem, 3cqw, 1rem); text-align: center;
+  padding: clamp(6rem, 23cqw, 7rem) max(1.5rem, env(safe-area-inset-right)) max(1.5rem, env(safe-area-inset-bottom)) max(1.5rem, env(safe-area-inset-left));
+  background: radial-gradient(ellipse at 50% 20%, #315e48, #10291f 65%, #08150f);
+}
+figure { flex: 0 0 auto; width: 82%; aspect-ratio: 16 / 9; margin: 0; overflow: hidden; border-radius: 1.15rem; border: 1px solid #ffffff55; }
+img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.invitation { display: grid; gap: .45rem; width: 100%; }
+.eyebrow { color: #bde3ce; font-size: .65rem; font-weight: 850; letter-spacing: .14em; text-transform: uppercase; }
+h2 { margin: 0; font-size: clamp(1.9rem, 9cqw, 2.8rem); line-height: 1.04; letter-spacing: -.045em; }
+p { margin: 0; overflow-wrap: anywhere; }
+.agent { font-size: clamp(1rem, 4cqw, 1.2rem); font-weight: 800; }
+.agency, .message { color: #ffffffc4; font-size: .85rem; line-height: 1.4; }
+.contact-actions { display: grid; gap: .65rem; width: 100%; }
+a { display: flex; align-items: center; gap: .85rem; min-height: 3.4rem; border: 1px solid #ffffff70; border-radius: 1rem; padding: .6rem 1rem; background: #ffffff12; color: #fff; text-decoration: none; text-align: left; }
+a:first-child { background: #fff; color: #123f31; border-color: #fff; }
+a > span:last-child { display: grid; gap: .12rem; min-width: 0; }
+strong { font-size: .95rem; }
+small { font-size: .78rem; overflow-wrap: anywhere; }
+.tour-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: .4rem; }
+button { display: flex; justify-content: center; align-items: center; gap: .3rem; min-height: 2.75rem; padding: .35rem; border: 0; border-radius: .65rem; background: transparent; color: #ffffffd9; font: inherit; font-size: .77rem; cursor: pointer; }
+.material-symbols-outlined { font-size: 1.3rem; flex: 0 0 auto; }
+button .material-symbols-outlined { font-size: 1.05rem; }
+footer { display: flex; justify-content: center; gap: .2rem; color: #ffffff80; font-size: .65rem; }
+footer strong { font-size: inherit; }
+a:focus-visible, button:focus-visible { outline: 3px solid #baf9df; outline-offset: 3px; }
+a:hover, button:hover { box-shadow: inset 0 0 0 2px #baf9df; }
+@media (max-height: 640px) { figure { display: none; } .listing-ending { gap: .6rem; } }

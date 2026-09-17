@@ -1,4 +1,11 @@
 /* Real-estate closing cards are invitations, not another property-fact chapter. */
+@media (max-width: 640px) {
+  .stack-viewer-reel--contact-ending .stack-viewer-side--prev {
+    top: max(6rem, calc(env(safe-area-inset-top) + 5rem));
+    transform: none;
+  }
+}
+
 .stack-preview--viewer .stack-preview__shade--contact {
   background:
     linear-gradient(180deg, rgba(5, 20, 16, 0.34) 0%, rgba(5, 20, 16, 0.04) 28%, rgba(5, 20, 16, 0.9) 70%, #071b15 100%),
