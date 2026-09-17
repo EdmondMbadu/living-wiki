@@ -1,0 +1,73 @@
+.gem-stage {
+  width: min(1100px, calc(100% - 80px));
+  margin: 0 auto;
+  padding: 30px 0 64px;
+}
+.detail-back { margin-bottom: 24px; padding-left: 0; }
+.gem-heading { position: relative; padding-right: 64px; margin-bottom: 24px; }
+.detail-kicker { margin: 0 0 10px; }
+.detail-kicker .icon-button { position: absolute; right: 0; top: 20px; }
+.detail-title { font-size: clamp(30px, 3.5vw, 44px); line-height: 1.15; letter-spacing: -1.2px; overflow-wrap: anywhere; }
+.detail-title:focus { outline: none; }
+.gem-heading .creator { margin-top: 12px; }
+.hero-cover { position: relative; margin: 0; height: clamp(250px, 38vw, 480px); border-radius: 18px; overflow: hidden; background: var(--soft-fill); }
+.hero-cover img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.hero-cover .hero-preview { position: absolute; inset: 0; pointer-events: none; }
+.hero-cover .hero-loading { opacity: 0; }
+.hero-placeholder { height: 100%; display: grid; place-items: center; color: var(--muted); }
+.hero-placeholder span { font-size: 64px; }
+.main-actions { justify-content: center; margin: 20px 0 32px; }
+.main-actions .primary, .main-actions .secondary { min-width: 200px; }
+.gem-information { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 330px); gap: 44px; align-items: start; }
+.gem-story h2 { margin-bottom: 14px; }
+.detail-tip { margin: 0; font-size: 17px; line-height: 1.75; white-space: pre-line; overflow-wrap: anywhere; }
+.access-note { margin-top: 20px; }
+.gem-location { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+.location-section { padding: 0; border: 0; }
+.coordinates { overflow-wrap: anywhere; }
+.map-trigger { margin: 14px 0; width: 100%; }
+.map-placeholder { min-height: 110px; margin-top: 0; }
+.pin-talk-section { margin-top: 32px; padding-top: 28px; border-top: 1px solid var(--line); }
+.pin-talk-card { max-width: 760px; margin: 18px auto; }
+.pin-talk-empty { margin: 16px 0 0; }
+.source-link { margin-top: 24px; padding-top: 24px; text-align: center; }
+.detail-status { margin: -16px 0 24px; color: var(--muted); font-size: 14px; text-align: center; }
+.stage-error { min-height: 420px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; text-align: center; }
+.stage-error p { max-width: 460px; color: var(--muted); line-height: 1.6; }
+.stage-skeleton > span, .skeleton-hero, .skeleton-actions span { display: block; background: var(--soft-fill); border-radius: 10px; animation: stage-pulse 1.5s ease-in-out infinite alternate; }
+.skeleton-kicker { width: 120px; height: 14px; margin-bottom: 18px; }
+.skeleton-title { width: min(720px, 85%); height: 48px; margin-bottom: 16px; }
+.skeleton-creator { width: 180px; height: 16px; margin-bottom: 24px; }
+.skeleton-hero { height: clamp(250px, 38vw, 480px); border-radius: 18px; }
+.skeleton-actions { display: flex; justify-content: center; gap: 14px; margin: 20px 0; }
+.skeleton-actions span { width: 200px; height: 48px; }
+@keyframes stage-pulse { to { opacity: .45; } }
+@media (max-width: 1023px) {
+  .gem-stage { width: calc(100% - 48px); }
+  .gem-information { gap: 24px; grid-template-columns: minmax(0, 1fr) minmax(240px, 300px); }
+}
+@media (max-width: 760px) {
+  .gem-stage { width: calc(100% - 40px); padding: 20px 0 calc(108px + env(safe-area-inset-bottom)); }
+  .detail-back { margin-bottom: 20px; }
+  .gem-heading { padding-right: 48px; margin-bottom: 20px; }
+  .detail-kicker .icon-button { top: 26px; }
+  .detail-title { font-size: clamp(28px, 6vw, 36px); letter-spacing: -.8px; }
+  .hero-cover, .skeleton-hero { height: clamp(220px, 65vw, 400px); border-radius: 12px; }
+  .gem-information { display: flex; flex-direction: column; gap: 24px; margin-top: 24px; }
+  .gem-story, .gem-location { width: 100%; }
+  .detail-tip { font-size: 16px; line-height: 1.65; }
+  .main-actions {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 70;
+    margin: 0; padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+    background: var(--surface); border-top: 1px solid var(--line);
+    box-shadow: 0 -4px 20px #00000008; flex-wrap: wrap; gap: 8px;
+  }
+  .main-actions .primary, .main-actions .secondary { flex: 1; min-width: 0; }
+  .main-actions .text-button { width: 100%; min-height: 32px; padding: 4px; }
+  .gem-stage:has(.main-actions .text-button) { padding-bottom: calc(146px + env(safe-area-inset-bottom)); }
+  .pin-talk-section .section-heading { flex-wrap: wrap; align-items: flex-start; gap: 14px; }
+  .detail-status { margin: 12px 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-skeleton > span, .skeleton-hero, .skeleton-actions span { animation: none; }
+}

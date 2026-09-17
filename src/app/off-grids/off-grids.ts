@@ -1,197 +1,146 @@
 import { offGridCopy } from './off-grid-copy';
 import { isPlatformBrowser } from '@angular/common';
-import {
-  Component,
-  afterNextRender,
-  Injector,
-  HostListener,
-  effect,
-  DestroyRef,
-  PLATFORM_ID,
-  computed,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, afterNextRender, Injector, effect, DestroyRef, PLATFORM_ID, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, Scroll } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Title, Meta } from '@angular/platform-browser';
 import { WorkspaceSidebarComponent } from '../workspace-sidebar/workspace-sidebar';
 import { MobileMenuComponent } from '../mobile-menu/mobile-menu';
 import { AccountMenuComponent } from '../account-menu/account-menu';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
-import { OffGridService } from './off-grid.service';
-import { OffGridScope, OffGridSpot, SpotPage, directionsUrl } from './off-grid.models';
+import { OffGridBrowseState, OffGridService } from './off-grid.service';
+import { OffGridScope, OffGridSpot, SpotPage } from './off-grid.models';
 import { OffGridMapComponent } from './off-grid-map';
-import { PinTalkRecorderComponent } from './pin-talk-recorder';
 @Component({
   selector: 'app-off-grids',
-  imports: [
-    FormsModule,
-    RouterLink,
-    WorkspaceSidebarComponent,
-    MobileMenuComponent,
-    AccountMenuComponent,
-    ThemeToggleComponent,
-    OffGridMapComponent,
-    PinTalkRecorderComponent,
-  ],
+  imports: [FormsModule, RouterLink, WorkspaceSidebarComponent, MobileMenuComponent, AccountMenuComponent, ThemeToggleComponent, OffGridMapComponent],
   templateUrl: './off-grids.html',
   styleUrl: './off-grids.css',
 })
 export class OffGridsComponent {
   readonly copy = offGridCopy;
   readonly service = inject(OffGridService);
-  private route = inject(ActivatedRoute);
   private router = inject(Router);
   private destroy = inject(DestroyRef);
   private injector = inject(Injector);
-  private title = inject(Title);
-  private meta = inject(Meta);
   private isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   readonly items = signal<OffGridSpot[]>([]);
   readonly scope = signal<OffGridScope>('explore');
   readonly mode = signal<'grid' | 'map'>('grid');
-  readonly selected = signal<OffGridSpot | null>(null);
   readonly loading = signal(true);
-  readonly detailLoading = signal(false);
   readonly error = signal('');
-  readonly detailError = signal('');
   readonly message = signal('');
   readonly saved = signal(new Set<string>());
-  readonly composer = signal(false);
-  readonly sheet = signal<'share' | 'directions' | null>(null);
-  readonly qr = signal('');
   readonly busy = signal(false);
   readonly mapItems = signal<OffGridSpot[] | null>(null);
   readonly mapBusy = signal(false);
   readonly mapTruncated = signal(false);
-  private cursor: SpotPage['cursor'] = null;
   readonly more = signal(false);
+  private cursor: SpotPage['cursor'] = null;
   search = '';
   private requestVersion = 0;
-  private detailVersion = 0;
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
-  private bounds: { north: number; south: number; east: number; west: number } | null = null;
-  private previousFocus: HTMLElement | null = null;
-  openSheet(value: 'share' | 'directions'): void {
-    this.previousFocus = document.activeElement as HTMLElement;
-    this.sheet.set(value);
-    afterNextRender(() => document.querySelector<HTMLElement>('.action-sheet button')?.focus(), { injector: this.injector });
-  }
-  closeSheet(): void {
-    this.sheet.set(null);
-    this.previousFocus?.focus();
-  }
-  @HostListener('document:keydown', ['$event']) onKey(event: KeyboardEvent): void {
-    if (!this.sheet()) return;
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      this.closeSheet();
-      return;
-    }
-    if (event.key !== 'Tab') return;
-    const nodes = Array.from(
-      document.querySelectorAll<HTMLElement>(
-        '.action-sheet button:not(:disabled),.action-sheet a[href],.action-sheet input',
-      ),
-    );
-    if (!nodes.length) return;
-    const first = nodes[0],
-      last = nodes[nodes.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  }
-  readonly toggle = (v: boolean) => !v;
-  get routeSpotId(): string {
-    return this.route.snapshot.paramMap.get('spotId') || '';
-  }
-  private renewed = false;
-  renewPlayback(): void {
-    if (!this.renewed && this.selected()?.visibility === 'private') {
-      this.renewed = true;
-      void this.loadDetail(this.selected()!.id);
-    }
-  }
-  readonly owner = computed(
-    () => !!this.selected() && this.selected()!.ownerUid === this.service.auth.uid(),
-  );
-  readonly sortedClips = computed(() =>
-    [...(this.selected()?.clips || [])].sort((a, b) => Number(b.featured) - Number(a.featured)),
-  );
+  bounds: { north: number; south: number; east: number; west: number } | null = null;
+  private disposed = false;
+  private authReady = false;
   constructor() {
-    if (!this.isBrowser) {
-      this.loading.set(false);
-      return;
+    if (!this.isBrowser) { this.loading.set(false); return; }
+    const browse = this.service.restoreBrowse();
+    if (browse) {
+      // Angular's global scroll-to-top runs after navigation. Restore our browse
+      // position after that event as well as after any stale-page refresh.
+      this.router.events.pipe(takeUntilDestroyed(this.destroy)).subscribe(event => {
+        if (event instanceof Scroll && !event.anchor && this.items().length && !this.loading()) this.restorePosition(browse);
+      });
     }
-    this.route.paramMap.pipe(takeUntilDestroyed(this.destroy)).subscribe((params) => {
-      const id = params.get('spotId');
-      this.sheet.set(null);
-      this.composer.set(false);
-      if (id) void this.loadDetail(id);
-      else {
-        this.detailVersion++;
-        this.selected.set(null);
-        this.detailError.set('');
-        this.detailLoading.set(false);
-        this.title.setTitle($localize`Off Grids | LivingWiki`);
-        this.meta.removeTag('property="og:image"');
+    if (browse) {
+      this.scope.set(browse.scope);
+      this.mode.set(browse.mode);
+      this.search = browse.search;
+      this.items.set(browse.items);
+      this.cursor = browse.cursor;
+      this.more.set(browse.more);
+      this.mapItems.set(browse.mapItems);
+      this.mapTruncated.set(browse.mapTruncated);
+      this.bounds = browse.bounds;
+      if (browse.items.length) {
+        this.loading.set(false);
+        this.restorePosition(browse);
       }
-    });
+    }
+    if (!this.items().length) {
+      if (browse) void this.refreshBrowse(browse);
+      else void this.load();
+    }
     let previousUid = this.service.auth.uid();
     effect(() => {
       const uid = this.service.auth.uid();
-      if (previousUid && uid !== previousUid) {
-        this.service.invalidate();
-        this.saved.set(new Set());
-        if (this.selected()?.visibility === 'private') this.close();
-        if (this.scope() !== 'explore') {
+      if (uid !== previousUid) {
+        if (previousUid) {
+          this.requestVersion++;
+          this.service.invalidate();
+          this.saved.set(new Set());
           this.scope.set('explore');
           this.items.set([]);
+          this.mapItems.set(null);
           void this.load();
         }
+        if (this.authReady) void this.loadSaved();
       }
       previousUid = uid;
     });
-    void this.load();
     void this.service.auth.waitForReady().then(() => {
-      void this.service
-        .savedIds()
-        .then((ids) => this.saved.set(ids))
-        .catch(() => undefined);
-      if (this.selected()) void this.loadDetail(this.selected()!.id);
+      this.authReady = true;
+      if (!this.disposed) void this.loadSaved();
     });
     this.destroy.onDestroy(() => {
+      this.disposed = true;
+      this.requestVersion++;
       if (this.searchTimer) clearTimeout(this.searchTimer);
     });
   }
+  private restorePosition(browse: OffGridBrowseState): void {
+    afterNextRender(() => {
+      if (this.disposed) return;
+      const card = Array.from(document.querySelectorAll<HTMLElement>('[data-spot-id]')).find(el => el.dataset['spotId'] === browse.selectedId);
+      card?.focus({ preventScroll: true });
+      window.scrollTo({ top: browse.scrollY, behavior: 'instant' });
+    }, { injector: this.injector });
+  }
+  private async refreshBrowse(browse: OffGridBrowseState): Promise<void> {
+    await this.load();
+    let version = this.requestVersion;
+    while (!this.disposed && !this.error() && version === this.requestVersion && this.more() && this.items().length < (browse.restoreCount || 0)) {
+      await this.load(true);
+      version++;
+    }
+    if (this.disposed || version !== this.requestVersion || browse.uid !== this.service.auth.uid()) return;
+    if (browse.mode === 'map' && browse.bounds) await this.searchMap();
+    if (!this.disposed && version === this.requestVersion) this.restorePosition(browse);
+  }
+  private async loadSaved(): Promise<void> {
+    const uid = this.service.auth.uid();
+    try {
+      const ids = await this.service.savedIds();
+      if (!this.disposed && uid === this.service.auth.uid()) this.saved.set(ids);
+    } catch { /* Browse remains usable when optional Saved state is unavailable. */ }
+  }
   async load(append = false): Promise<void> {
     const version = ++this.requestVersion;
+    const scope = this.scope();
+    const uid = this.service.auth.uid();
     this.loading.set(true);
     this.error.set('');
     try {
-      const page = await this.service.list(this.scope(), append ? this.cursor : null, this.search);
-      if (version !== this.requestVersion) return;
-      this.items.set(
-        append
-          ? [
-              ...this.items(),
-              ...page.items.filter((s) => !this.items().some((old) => old.id === s.id)),
-            ]
-          : page.items,
-      );
+      const page = await this.service.list(scope, append ? this.cursor : null, this.search);
+      if (this.disposed || version !== this.requestVersion || (scope !== 'explore' && uid !== this.service.auth.uid())) return;
+      this.items.set(append ? [...this.items(), ...page.items.filter(s => !this.items().some(old => old.id === s.id))] : page.items);
       this.cursor = page.cursor;
       this.more.set(!!page.cursor);
     } catch (error) {
-      if (version === this.requestVersion)
-        this.error.set(error instanceof Error ? error.message : 'Could not load gems.');
+      if (!this.disposed && version === this.requestVersion) this.error.set(error instanceof Error ? error.message : 'Could not load gems.');
     } finally {
-      if (version === this.requestVersion) this.loading.set(false);
+      if (!this.disposed && version === this.requestVersion) this.loading.set(false);
     }
   }
   setScope(scope: OffGridScope): void {
@@ -200,156 +149,63 @@ export class OffGridsComponent {
       return;
     }
     this.scope.set(scope);
+    this.items.set([]);
+    this.cursor = null;
+    this.more.set(false);
     this.mapItems.set(null);
     void this.load();
   }
   searchChanged(): void {
     if (this.searchTimer) clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(() => void this.load(), 300);
+    this.requestVersion++;
+    this.items.set([]);
+    this.mapItems.set(null);
+    this.cursor = null;
+    this.more.set(false);
+    this.loading.set(true);
+    this.searchTimer = setTimeout(() => { this.searchTimer = null; void this.load(); }, 300);
+  }
+  rememberSelection(spot: OffGridSpot, event?: MouseEvent): void {
+    // Preserve standard link behavior for a new tab, while remembering ordinary navigation.
+    if (event && (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) return;
+    this.service.rememberSelection(spot);
+    this.service.rememberBrowse({
+      uid: this.service.auth.uid(), scope: this.scope(), mode: this.mode(), search: this.search,
+      items: this.items(), cursor: this.cursor, more: this.more(), mapItems: this.mapItems(),
+      mapTruncated: this.mapTruncated(), bounds: this.bounds, scrollY: window.scrollY, selectedId: spot.id,
+    });
   }
   open(spot: OffGridSpot): void {
+    this.rememberSelection(spot);
     void this.router.navigate(['/off-grids', spot.id]);
-  }
-  close(): void {
-    void this.router.navigate(['/off-grids']);
-  }
-  async loadDetail(id: string): Promise<void> {
-    const version = ++this.detailVersion;
-    this.detailLoading.set(true);
-    this.detailError.set('');
-    try {
-      const spot = await this.service.detail(id);
-      if (version !== this.detailVersion) return;
-      this.selected.set(spot);
-      this.title.setTitle(`${spot.title} · Off Grids | LivingWiki`);
-      this.meta.updateTag({ name: 'description', content: spot.tip });
-      if (spot.visibility === 'public')
-        this.meta.updateTag({ property: 'og:image', content: spot.coverUrl || '' });
-      else this.meta.removeTag('property="og:image"');
-    } catch (error) {
-      if (version !== this.detailVersion) return;
-      this.selected.set(null);
-      this.detailError.set(
-        $localize`This gem is private or unavailable. Sign in if it belongs to you.`,
-      );
-    } finally {
-      if (version === this.detailVersion) this.detailLoading.set(false);
-    }
   }
   async toggleSave(spot: OffGridSpot): Promise<void> {
     if (this.busy()) return;
     if (!this.service.auth.uid()) {
-      void this.router.navigate(['/sign-in'], {
-        queryParams: { redirectTo: `/off-grids/${spot.id}` },
-      });
+      void this.router.navigate(['/sign-in'], { queryParams: { redirectTo: `/off-grids/${spot.id}` } });
       return;
     }
     this.busy.set(true);
     try {
       const value = !this.saved().has(spot.id);
       await this.service.savePin(spot.id, value);
-      this.saved.update((set) => {
-        const next = new Set(set);
-        value ? next.add(spot.id) : next.delete(spot.id);
-        return next;
-      });
+      if (this.disposed) return;
+      this.saved.update(set => { const next = new Set(set); value ? next.add(spot.id) : next.delete(spot.id); return next; });
       if (this.scope() === 'saved') void this.load();
-    } catch {
-      this.message.set($localize`Could not save this gem. Please retry.`);
-    } finally {
-      this.busy.set(false);
-    }
+    } catch { this.message.set($localize`Could not save this gem. Please retry.`); }
+    finally { this.busy.set(false); }
   }
-  directions(spot: OffGridSpot): string {
-    return spot.location ? directionsUrl(spot.location) : '';
-  }
-  async copyToClipboard(value: string): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(value);
-      this.message.set($localize`Copied to clipboard.`);
-    } catch {
-      this.message.set($localize`Copy is unavailable. Select and copy the link shown below.`);
-    }
-  }
-  async share(): Promise<void> {
-    const spot = this.selected();
-    if (!spot || spot.visibility !== 'public') return;
-    const data = { title: spot.title, text: spot.tip, url: spot.shareUrl };
-    try {
-      if (navigator.share) await navigator.share(data);
-      else await this.copyToClipboard(spot.shareUrl || location.href);
-    } catch (error) {
-      if (!(error instanceof DOMException && error.name === 'AbortError'))
-        this.message.set($localize`Sharing is unavailable. Use Copy link.`);
-    }
-  }
-  async showQr(): Promise<void> {
-    try {
-      const { generateQrSvgDataUrl } = await import('../qr-code');
-      this.qr.set(generateQrSvgDataUrl(this.selected()?.shareUrl || '', { margin: 4 }));
-    } catch {
-      this.message.set($localize`Could not generate the QR code.`);
-    }
-  }
-  async clipAction(action: string, clipId: string): Promise<void> {
-    if (this.busy()) return;
-    const id = this.selected()!.id;
-    this.busy.set(true);
-    try {
-      await this.service.command(action, id, { clipId });
-      this.service.invalidate();
-      await this.loadDetail(id);
-    } catch {
-      this.message.set($localize`Could not update this PinTalk. Please retry.`);
-    } finally {
-      this.busy.set(false);
-    }
-  }
-  async pinTalkAdded(): Promise<void> {
-    this.composer.set(false);
-    this.message.set(
-      this.owner() ? 'PinTalk added.' : 'Your PinTalk was sent to the owner for approval.',
-    );
-    this.service.invalidate();
-    await this.loadDetail(this.selected()!.id);
-  }
-  mapBounds(bounds: { north: number; south: number; east: number; west: number }): void {
-    this.bounds = bounds;
-  }
+  mapBounds(bounds: { north: number; south: number; east: number; west: number }): void { this.bounds = bounds; }
   async searchMap(): Promise<void> {
     if (!this.bounds || this.mapBusy()) return;
+    const version = this.requestVersion;
     this.mapBusy.set(true);
     try {
-      const page = await this.service.command<SpotPage>('map', 'directory', {
-        bounds: this.bounds,
-      });
+      const page = await this.service.command<SpotPage>('map', 'directory', { bounds: this.bounds });
+      if (this.disposed || version !== this.requestVersion) return;
       this.mapItems.set(page.items);
       this.mapTruncated.set(!!page.truncated);
-    } catch {
-      this.message.set($localize`Could not load this map area. Try again.`);
-    } finally {
-      this.mapBusy.set(false);
-    }
-  }
-  async unpublish(): Promise<void> {
-    const spot = this.selected();
-    if (!spot || this.busy()) return;
-    this.busy.set(true);
-    try {
-      await this.service.command('save', spot.id, {
-        ...spot,
-        visibility: 'private',
-        status: 'active',
-      });
-      this.service.invalidate();
-      await this.loadDetail(spot.id);
-      void this.load();
-      this.sheet.set(null);
-      this.message.set($localize`This gem is now private.`);
-    } catch (error) {
-      this.message.set(error instanceof Error ? error.message : 'Could not make this gem private.');
-    } finally {
-      this.busy.set(false);
-    }
+    } catch { this.message.set($localize`Could not load this map area. Try again.`); }
+    finally { this.mapBusy.set(false); }
   }
 }

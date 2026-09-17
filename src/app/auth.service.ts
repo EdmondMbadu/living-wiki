@@ -156,6 +156,10 @@ export class AuthService {
   waitForReady(): Promise<void> {
     return this.readyPromise;
   }
+  // Reads need the restored authentication context, not the profile-sync write.
+  waitForSession(): Promise<void> {
+    return this.auth?.authStateReady() ?? Promise.resolve();
+  }
 
   async signInWithEmail(payload: SignInPayload): Promise<AuthResult> {
     const auth = this.requireAuth();

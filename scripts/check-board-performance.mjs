@@ -25,6 +25,7 @@ const componentBundle = (selector) =>
 const boards = componentBundle('app-boards');
 const offGrids = componentBundle('app-off-grids');
 const offGridEditor = componentBundle('app-off-grid-editor');
+const offGridDetail = componentBundle('app-off-grid-detail');
 if (!main || !boards) throw new Error('Could not identify the main and boards production bundles.');
 
 const budgets = [
@@ -33,6 +34,7 @@ const budgets = [
   // substring check sometimes selected its 34 KB Teams consumer instead.
   { label: 'boards feature', entry: boards, maxGzipBytes: 450_000 },
   ...(offGrids ? [{ label: 'Off Grids', entry: offGrids, maxGzipBytes: 60_000 }] : []),
+  ...(offGridDetail ? [{ label: 'Off Grid detail', entry: offGridDetail, maxGzipBytes: 60_000 }] : []),
   ...(offGridEditor
     ? [{ label: 'Off Grid editor', entry: offGridEditor, maxGzipBytes: 60_000 }]
     : []),

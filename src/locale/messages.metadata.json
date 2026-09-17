@@ -817,7 +817,7 @@
   },
   "1486355439024128730": {
     "source": "{$START_TAG_SPAN}arrow_back{$CLOSE_TAG_SPAN} All Off Grids ",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "1486625977314947145": {
     "source": "{$START_TAG_SPAN}deselect{$CLOSE_TAG_SPAN} Clear ",
@@ -1057,7 +1057,7 @@
   },
   "1601141984880840937": {
     "source": "Could not update this PinTalk. Please retry.",
-    "file": "src/app/off-grids/off-grids.ts"
+    "file": "src/app/off-grids/off-grid-detail.ts"
   },
   "1606346231769336177": {
     "source": "Create an even mix, with images kept as reliable fallbacks.",
@@ -1901,7 +1901,7 @@
   },
   "2185406886234178302": {
     "source": "The exact spot",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "2189507244978938064": {
     "source": "ERROR",
@@ -2117,7 +2117,7 @@
   },
   "231860958035139417": {
     "source": "Opening this gem…",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "2326055153434981693": {
     "source": "Best score per person",
@@ -2365,7 +2365,7 @@
   },
   "2473528728074319344": {
     "source": "PinTalk",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "2476720291978934849": {
     "source": "Back to {$INTERPOLATION}",
@@ -3217,7 +3217,7 @@
   },
   "3000107368976686051": {
     "source": "Selected gem",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "3000436585277219288": {
     "source": "Save the parent card before adding related cards.",
@@ -3821,7 +3821,7 @@
   },
   "3351209217299739942": {
     "source": "Dismiss message",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "335464837566395534": {
     "source": "Translating this board…",
@@ -4125,7 +4125,7 @@
   },
   "3519978665353285906": {
     "source": "No PinTalk yet. The place already has a story.",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "352109584849203881": {
     "source": "Market Signal",
@@ -4133,7 +4133,7 @@
   },
   "3523330752741150313": {
     "source": "QR code for this gem",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "3524352048804983227": {
     "source": "{$INTERPOLATION} of {$INTERPOLATION_1} processed · {$INTERPOLATION_2} added · {$INTERPOLATION_3} failed",
@@ -4305,7 +4305,7 @@
   },
   "3615372081756955189": {
     "source": "This gem needs a confirmed location before it can be shared.",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "3621411074611200765": {
     "source": "Create public city Wikis in bulk.",
@@ -4349,7 +4349,7 @@
   },
   "3647052596401391686": {
     "source": "{$START_TAG_SPAN}near_me{$CLOSE_TAG_SPAN} Let’s go",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "3647578343321290452": {
     "source": "Send a message to start a chat",
@@ -4537,7 +4537,7 @@
   },
   "378036953025015729": {
     "source": "Copy is unavailable. Select and copy the link shown below.",
-    "file": "src/app/off-grids/off-grids.ts"
+    "file": "src/app/off-grids/off-grid-detail.ts"
   },
   "3781832327366529005": {
     "source": "A strong first pass. The cards are here when you’re ready.",
@@ -4865,7 +4865,7 @@
   },
   "3978921383846633878": {
     "source": "Download QR code",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "3983481141170710649": {
     "source": "This browser cannot access your location.",
@@ -5209,7 +5209,7 @@
   },
   "4213702599400541027": {
     "source": "Off Grids | LivingWiki",
-    "file": "src/app/off-grids/off-grids.ts"
+    "file": "src/app/off-grids/off-grid-detail.ts"
   },
   "4215991549357490776": {
     "source": "My Videos | LivingWiki",
@@ -5234,6 +5234,10 @@
   "4223718443204974440": {
     "source": "The World's Universities Ranked",
     "file": "src/app/public-wiki-catalog.ts"
+  },
+  "4226829235700701789": {
+    "source": "Show map",
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "422729161580737324": {
     "source": " Optional city-aware landing data and worldometer-style metrics. ",
@@ -5385,7 +5389,7 @@
   },
   "4322110766959005087": {
     "source": "Gem unavailable",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "4323470180912194028": {
     "source": "Copy",
@@ -5681,7 +5685,7 @@
   },
   "4526591760407029960": {
     "source": "View the original board {$START_TAG_SPAN}↗{$CLOSE_TAG_SPAN}",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "452663918652422541": {
     "source": "Describe the picture",
@@ -6693,7 +6697,7 @@
   },
   "5146666426693766743": {
     "source": "Sharing is unavailable. Use Copy link.",
-    "file": "src/app/off-grids/off-grids.ts"
+    "file": "src/app/off-grids/off-grid-detail.ts"
   },
   "5148838957084536853": {
     "source": "Make quiz challenge",
@@ -6753,7 +6757,7 @@
   },
   "5178262306084720005": {
     "source": " Feature ",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "5178279567184039683": {
     "source": "Americas",
@@ -7363,10 +7367,6 @@
     "source": "Uses an energetic, youthful point of view without forced slang.",
     "file": "src/app/boards/board-narration-style.ts"
   },
-  "5568209569960932511": {
-    "source": "Cancel upload",
-    "file": "src/app/off-grids/pin-talk-recorder.html"
-  },
   "55701353440365615": {
     "source": "Reddit",
     "file": "src/app/answer-card/answer-card.html"
@@ -7533,7 +7533,7 @@
   },
   "5660074320035448783": {
     "source": " This gem is private. Publish it from the review screen to share its location and PinTalks. ",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "5660227828366946260": {
     "source": "Clear Wiki search",
@@ -7873,7 +7873,7 @@
   },
   "5852909213112347729": {
     "source": "Public gem link",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "5853877569956439161": {
     "source": "Could not start the Spotify connection.",
@@ -8105,7 +8105,7 @@
   },
   "601361523172282978": {
     "source": "A little story from the spot.",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "6013809289335979770": {
     "source": "“Never claim certainty when primary sources disagree.”",
@@ -8397,7 +8397,7 @@
   },
   "6193453858087646750": {
     "source": " Copy link",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "619608034616931471": {
     "source": "Start with editable questions generated from your cards.",
@@ -8837,7 +8837,7 @@
   },
   "6428471696911424036": {
     "source": " Copy coordinates ",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "6430736772377396814": {
     "source": " This path drifted off the atlas. ",
@@ -9487,6 +9487,10 @@
     "source": "Video narration",
     "file": "src/app/boards/boards.html"
   },
+  "6826197192915175988": {
+    "source": "The story",
+    "file": "src/app/off-grids/off-grid-detail.html"
+  },
   "683053614579539412": {
     "source": "Ask {city} anything from your sources.",
     "file": "src/app/chat/chat.ts"
@@ -9745,7 +9749,7 @@
   },
   "6990424485062673905": {
     "source": "Set location",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "6994128529778512071": {
     "source": "Local time",
@@ -10257,7 +10261,7 @@
   },
   "7365517136074263312": {
     "source": "QR code",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "7366879854446681438": {
     "source": "communities",
@@ -10489,7 +10493,7 @@
   },
   "7516391445187540763": {
     "source": "Could not generate the QR code.",
-    "file": "src/app/off-grids/off-grids.ts"
+    "file": "src/app/off-grids/off-grid-detail.ts"
   },
   "7520155379629775330": {
     "source": "QR guide link",
@@ -10509,7 +10513,7 @@
   },
   "7540381902346070209": {
     "source": "{$START_TAG_SPAN}location_on{$CLOSE_TAG_SPAN} Off Grids",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "7546732776556629045": {
     "source": "No account needed. We’ll only email you about this place.",
@@ -10521,7 +10525,7 @@
   },
   "755340755920043208": {
     "source": "This gem is now private.",
-    "file": "src/app/off-grids/off-grids.ts"
+    "file": "src/app/off-grids/off-grid-detail.ts"
   },
   "7554385645067100439": {
     "source": "No responses yet.",
@@ -11317,7 +11321,7 @@
   },
   "8057745565493131709": {
     "source": "Copied to clipboard.",
-    "file": "src/app/off-grids/off-grids.ts"
+    "file": "src/app/off-grids/off-grid-detail.ts"
   },
   "8058495689153782394": {
     "source": " “{$INTERPOLATION}” ",
@@ -11645,7 +11649,7 @@
   },
   "8264726421735692802": {
     "source": "One link shares the photo, exact pin, directions and PinTalks.",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "8265782935899108723": {
     "source": "Serious knowledge deserves serious boundaries.",
@@ -11845,7 +11849,7 @@
   },
   "8399090583546402149": {
     "source": " Make this gem private ",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "8400867234732762128": {
     "source": "{$START_TAG_SPAN}trending_up{$CLOSE_TAG_SPAN} Signal ",
@@ -11973,7 +11977,7 @@
   },
   "8481445465786501102": {
     "source": "This gem is private or unavailable. Sign in if it belongs to you.",
-    "file": "src/app/off-grids/off-grids.ts"
+    "file": "src/app/off-grids/off-grid-detail.ts"
   },
   "8483200992106367473": {
     "source": " Sign in to explore ",
@@ -12277,7 +12281,7 @@
   },
   "8727393005339508641": {
     "source": "Open directions {$START_TAG_SPAN}↗{$CLOSE_TAG_SPAN}",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "8733628623355862210": {
     "source": "No claimed businesses yet.",
@@ -12397,7 +12401,7 @@
   },
   "8810588430336725070": {
     "source": "Review and publish",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "8811308202853248254": {
     "source": "The board owner has not published a quiz yet.",
@@ -12593,7 +12597,7 @@
   },
   "892568819614627902": {
     "source": "Edit gem",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "8927847276499957890": {
     "source": "No source documents are attached yet, so answers use internet context and current public sources.",
@@ -13117,7 +13121,7 @@
   },
   "939904289010667839": {
     "source": "Could not save this gem. Please retry.",
-    "file": "src/app/off-grids/off-grids.ts"
+    "file": "src/app/off-grids/off-grid-detail.ts"
   },
   "9401498095936883": {
     "source": "{$START_TAG_SPAN}dashboard{$CLOSE_TAG_SPAN} My Wikis ",
@@ -13197,7 +13201,7 @@
   },
   "979550420016135776": {
     "source": " Approve PinTalk ",
-    "file": "src/app/off-grids/off-grids.html"
+    "file": "src/app/off-grids/off-grid-detail.html"
   },
   "985253845618865624": {
     "source": "New Wiki",

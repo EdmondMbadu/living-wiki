@@ -113,6 +113,7 @@ export class OffGridMapComponent implements AfterViewInit {
   private disposed = false;
   readonly spots = input<OffGridSpot[]>([]);
   readonly point = input<OffGridLocation | null>(null);
+  readonly initialBounds = input<{ north: number; south: number; east: number; west: number } | null>(null);
   readonly picking = input(false);
   readonly selected = output<OffGridSpot>();
   readonly pointChanged = output<OffGridLocation>();
@@ -222,8 +223,8 @@ export class OffGridMapComponent implements AfterViewInit {
     if (this.point()) {
       this.map.setCenter(this.point());
       this.map.setZoom(15);
-    } else if (points.length && !this.fitted) {
-      this.map.fitBounds(bounds, 45);
+    } else if (!this.fitted && (this.initialBounds() || points.length)) {
+      this.map.fitBounds(this.initialBounds() || bounds, 45);
       this.fitted = true;
     }
   }

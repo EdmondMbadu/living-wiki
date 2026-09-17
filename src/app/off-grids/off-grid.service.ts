@@ -9,12 +9,58 @@ export interface MediaUpload {
   cancel: () => void;
   promise: Promise<{ ticketId: string }>;
 }
+export interface OffGridBrowseState {
+  uid: string;
+  scope: OffGridScope;
+  mode: 'grid' | 'map';
+  search: string;
+  items: OffGridSpot[];
+  cursor: SpotPage['cursor'];
+  more: boolean;
+  mapItems: OffGridSpot[] | null;
+  mapTruncated: boolean;
+  bounds: { north: number; south: number; east: number; west: number } | null;
+  scrollY: number;
+  selectedId: string;
+  restoreCount?: number;
+}
 @Injectable({ providedIn: 'root' })
 export class OffGridService {
   readonly auth = inject(AuthService);
   private cache = new Map<string, { at: number; page: SpotPage }>();
   private pending = new Map<string, Promise<SpotPage>>();
   private cacheVersion = 0;
+  private detailPending = new Map<string, Promise<OffGridSpot>>();
+  private browse: { state: OffGridBrowseState; at: number; version: number } | null = null;
+  private selection: { spot: OffGridSpot; uid: string; at: number } | null = null;
+  rememberBrowse(state: OffGridBrowseState): void {
+    // One bounded, memory-only snapshot. No private data survives an account change.
+    this.browse = { state: {
+      ...state,
+      items: state.items.length <= 240 ? [...state.items] : [],
+      mapItems: state.mapItems ? state.mapItems.slice(0, 100) : null,
+    }, at: Date.now(), version: this.cacheVersion };
+  }
+  restoreBrowse(): OffGridBrowseState | null {
+    const stored = this.browse;
+    if (!stored || stored.state.uid !== this.auth.uid() || Date.now() - stored.at > 300000) {
+      this.browse = null;
+      this.selection = null;
+      return null;
+    }
+    if (stored.version !== this.cacheVersion || Date.now() - stored.at > 15000 || !stored.state.items.length) {
+      return { ...stored.state, items: [], cursor: null, more: false, mapItems: null, restoreCount: stored.state.items.length };
+    }
+    return stored.state;
+  }
+  rememberSelection(spot: OffGridSpot): void {
+    this.selection = { spot, uid: this.auth.uid(), at: Date.now() };
+  }
+  preview(id: string): OffGridSpot | null {
+    const selection = this.selection;
+    if (!selection || selection.uid !== this.auth.uid() || selection.spot.id !== id || Date.now() - selection.at > 15000) return null;
+    return { ...selection.spot, ownerUid: '', creatorUid: '', clips: [], canContribute: false, sourceRef: null, shareUrl: undefined };
+  }
   async command<T = Record<string, unknown>>(
     action: string,
     spotId: string,
@@ -61,13 +107,24 @@ export class OffGridService {
     if (!response.ok) throw new Error('Unable to load gems. Please retry.');
     return response.json();
   }
-  detail(id: string): Promise<OffGridSpot> {
-    return this.command<OffGridSpot>('detail', id);
+  async detail(id: string): Promise<OffGridSpot> {
+    await this.auth.waitForSession();
+    const key = JSON.stringify([this.auth.uid() || '', id]);
+    const existing = this.detailPending.get(key);
+    if (existing) return existing;
+    const request = this.command<OffGridSpot>('detail', id);
+    this.detailPending.set(key, request);
+    const clear = () => { if (this.detailPending.get(key) === request) this.detailPending.delete(key); };
+    void request.then(clear, clear);
+    return request;
   }
   invalidate(): void {
     this.cacheVersion++;
     this.cache.clear();
     this.pending.clear();
+    this.detailPending.clear();
+    this.selection = null;
+    if (this.browse && this.browse.state.uid !== this.auth.uid()) this.browse = null;
   }
   async savedIds(): Promise<Set<string>> {
     await this.auth.waitForReady();

@@ -20,10 +20,7 @@
         <app-theme-toggle></app-theme-toggle><app-account-menu></app-account-menu>
       </div>
     </header>
-    <div
-      class="off-grid-content"
-      [class.has-detail]="selected() || detailLoading() || detailError()"
-    >
+    <div class="off-grid-content">
       <section class="directory" aria-label="Off Grid gems" i18n-aria-label>
         <div class="directory-heading">
           <div>
@@ -99,6 +96,7 @@
           @defer {
             <app-off-grid-map
               [spots]="mapItems() || items()"
+              [initialBounds]="bounds"
               (selected)="open($event)"
               (boundsChanged)="mapBounds($event)"
             ></app-off-grid-map>
@@ -125,17 +123,11 @@
         <div class="gem-grid">
           @for (spot of mode() === 'map' ? mapItems() || items() : items(); track spot.id; let index = $index) {
             <article class="gem-card">
-              <a [routerLink]="['/off-grids', spot.id]" class="gem-card-link"
+              <a [routerLink]="['/off-grids', spot.id]" class="gem-card-link" [attr.data-spot-id]="spot.id" (click)="rememberSelection(spot, $event)"
                 ><div class="gem-cover">
                   @if (spot.coverUrl) {
                     <img
                       [src]="spot.coverUrl"
-                      [attr.srcset]="
-                        spot.coverLargeUrl
-                          ? spot.coverUrl + ' 600w, ' + spot.coverLargeUrl + ' 1600w'
-                          : null
-                      "
-                      sizes="(max-width: 640px) 100vw, 400px"
                       [alt]="spot.title"
                       [attr.loading]="index < 3 ? 'eager' : 'lazy'"
                       [attr.fetchpriority]="index === 0 ? 'high' : 'auto'"
@@ -237,227 +229,6 @@
           </div>
         }
       </section>
-      @if (detailLoading() || detailError() || selected()) {
-        <aside class="gem-detail" aria-label="Selected gem" i18n-aria-label>
-          <button type="button" class="detail-back text-button" (click)="close()" i18n>
-            <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span> All Off
-            Grids
-          </button>
-          @if (detailLoading()) {
-            <div class="empty-state" role="status" i18n>Opening this gem…</div>
-          }
-          @if (detailError()) {
-            <div class="empty-state" role="alert">
-              <h2 i18n>Gem unavailable</h2>
-              <p>{{ detailError() }}</p>
-              <a
-                routerLink="/sign-in"
-                [queryParams]="{ redirectTo: '/off-grids/' + routeSpotId }"
-                class="primary"
-                i18n
-                >Sign in</a
-              >
-            </div>
-          }
-          @if (selected(); as spot) {
-            @if (spot.coverUrl) {
-              <img class="detail-cover" [src]="spot.coverUrl" [alt]="spot.title" decoding="async" />
-            }
-            <div class="detail-body">
-              <div class="detail-kicker">
-                <span class="eyebrow pin"
-                  >● {{ spot.visibility === 'private' ? copy.privateGem : copy.offGridGem }}</span
-                ><button
-                  type="button"
-                  class="icon-button"
-                  [attr.aria-label]="saved().has(spot.id) ? copy.unsaveThisGem : copy.saveThisGem"
-                  (click)="toggleSave(spot)"
-                >
-                  <span class="material-symbols-outlined" aria-hidden="true">{{
-                    saved().has(spot.id) ? 'bookmark_added' : 'bookmark_add'
-                  }}</span>
-                </button>
-              </div>
-              <h2 class="detail-title">{{ spot.title }}</h2>
-              <p class="creator">Pinned by {{ spot.creatorName }}</p>
-              <p class="detail-tip">{{ spot.tip }}</p>
-              @if (spot.accessNote) {
-                <div class="access-note">
-                  <span class="material-symbols-outlined" aria-hidden="true">hiking</span>
-                  <p>{{ spot.accessNote }}</p>
-                </div>
-              }
-              <div class="button-row main-actions">
-                <button
-                  type="button"
-                  class="primary"
-                  [disabled]="!spot.location"
-                  (click)="openSheet('directions')"
-                  i18n
-                >
-                  <span class="material-symbols-outlined" aria-hidden="true">near_me</span> Let’s go</button
-                ><button
-                  type="button"
-                  class="secondary"
-                  (click)="openSheet('share'); qr.set('')"
-                  i18n
-                >
-                  <span class="material-symbols-outlined" aria-hidden="true">ios_share</span> Share
-                </button>
-                @if (owner()) {
-                  <a [routerLink]="['/off-grids', spot.id, 'edit']" class="text-button" i18n
-                    >Edit gem</a
-                  >
-                }
-              </div>
-              @if (spot.location; as point) {
-                <section class="location-section">
-                  <h3 i18n>The exact spot</h3>
-                  <p class="coordinates">{{ point.lat.toFixed(6) }}, {{ point.lng.toFixed(6) }}</p>
-                  @if (point.words) {
-                    <a
-                      [href]="'https://what3words.com/' + point.words"
-                      target="_blank"
-                      rel="noopener"
-                      class="words"
-                      >///{{ point.words }}</a
-                    >
-                  }
-                  @defer (on viewport) {
-                    <app-off-grid-map [point]="point"></app-off-grid-map>
-                  } @placeholder {
-                    <a
-                      class="map-placeholder"
-                      [href]="directions(spot)"
-                      target="_blank"
-                      rel="noopener"
-                      ><span class="material-symbols-outlined pin" aria-hidden="true"
-                        >location_on</span
-                      >
-                      Open this exact location</a
-                    >
-                  }
-                </section>
-              } @else {
-                <div class="access-note">
-                  <p i18n>This gem needs a confirmed location before it can be shared.</p>
-                  @if (owner()) {
-                    <a [routerLink]="['/off-grids', spot.id, 'edit']" class="primary" i18n
-                      >Set location</a
-                    >
-                  }
-                </div>
-              }
-              <section class="pin-talk-section">
-                <div class="section-heading">
-                  <div>
-                    <h3 i18n>PinTalk</h3>
-                    <p i18n>A little story from the spot.</p>
-                  </div>
-                  @if (spot.canContribute) {
-                    <button type="button" class="secondary" (click)="composer.update(toggle)">
-                      <span class="material-symbols-outlined" aria-hidden="true">videocam</span>
-                      {{ composer() ? copy.close : copy.addPinTalk }}
-                    </button>
-                  }
-                </div>
-                @if (composer()) {
-                  @defer {
-                    <app-pin-talk-recorder
-                      [spotId]="spot.id"
-                      (completed)="pinTalkAdded()"
-                    ></app-pin-talk-recorder>
-                  } @placeholder {
-                    <p>Opening recorder…</p>
-                  }
-                  <p class="subtle">
-                    {{
-                      owner()
-                        ? spot.visibility === 'private'
-                          ? copy.yourPinTalkStaysPrivateWithThis
-                          : copy.addingThisPinTalkMakesItVisible
-                        : copy.yourPinTalkWillBePrivateUntil
-                    }}
-                  </p>
-                }
-                @for (clip of sortedClips(); track clip.id) {
-                  <article class="pin-talk-card">
-                    <video
-                      controls
-                      playsinline
-                      preload="none"
-                      [src]="clip.playbackUrl"
-                      [poster]="clip.posterUrl || spot.coverUrl || ''"
-                      [attr.aria-label]="copy.pintalkBy + clip.contributorName"
-                      (error)="renewPlayback()"
-                    ></video>
-                    <div class="clip-body">
-                      <div class="clip-meta">
-                        <strong
-                          >{{ clip.featured ? copy.featuredPinTalk : copy.pintalk
-                          }}{{
-                            clip.duration ? ' · ' + clip.duration.toFixed(0) + 's' : ''
-                          }}</strong
-                        ><span>{{
-                          clip.approval === 'pending' ? copy.awaitingApproval : clip.contributorName
-                        }}</span>
-                      </div>
-                      @if (clip.caption) {
-                        <p class="clip-caption">{{ clip.caption }}</p>
-                      }
-                      @if (owner()) {
-                        <div class="button-row">
-                          @if (clip.approval === 'pending') {
-                            <button
-                              type="button"
-                              class="primary"
-                              [disabled]="busy()"
-                              (click)="clipAction('approveClip', clip.id)"
-                              i18n
-                            >
-                              Approve PinTalk
-                            </button>
-                          } @else if (!clip.featured) {
-                            <button
-                              type="button"
-                              class="text-button"
-                              [disabled]="busy()"
-                              (click)="clipAction('featureClip', clip.id)"
-                              i18n
-                            >
-                              Feature
-                            </button>
-                          }
-                          <button
-                            type="button"
-                            class="text-button danger-text"
-                            [disabled]="busy()"
-                            (click)="clipAction('removeClip', clip.id)"
-                            i18n
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      }
-                    </div>
-                  </article>
-                }
-                @if (!sortedClips().length && !composer()) {
-                  <div class="pin-talk-empty">
-                    <span class="material-symbols-outlined" aria-hidden="true">videocam</span>
-                    <p i18n>No PinTalk yet. The place already has a story.</p>
-                  </div>
-                }
-              </section>
-              @if (spot.sourceRef) {
-                <a [routerLink]="['/boards', spot.sourceRef.boardId]" class="source-link" i18n
-                  >View the original board <span aria-hidden="true">↗</span></a
-                >
-              }
-            </div>
-          }
-        </aside>
-      }
     </div>
     @if (message()) {
       <div class="toast" role="status">
@@ -474,111 +245,3 @@
     }
   </main>
 </div>
-@if (sheet() && selected(); as spot) {
-  <div class="sheet-backdrop" (click)="closeSheet()">
-    <section
-      class="action-sheet"
-      role="dialog"
-      aria-modal="true"
-      [attr.aria-label]="sheet() === 'share' ? copy.shareThisGem : copy.directionsToThisGem"
-      (click)="$event.stopPropagation()"
-      (keydown.escape)="closeSheet()"
-    >
-      <div class="section-heading">
-        <h2>{{ sheet() === 'share' ? copy.shareThisGem : copy.letSGo }}</h2>
-        <button
-          class="icon-button"
-          type="button"
-          aria-label="Close"
-          (click)="closeSheet()"
-          i18n-aria-label
-        >
-          ×
-        </button>
-      </div>
-      <p>{{ spot.title }}</p>
-      @if (sheet() === 'directions' && spot.location; as point) {
-        <p class="coordinates">{{ point.lat }}, {{ point.lng }}</p>
-        <a class="primary wide" [href]="directions(spot)" target="_blank" rel="noopener" i18n
-          >Open directions <span aria-hidden="true">↗</span></a
-        ><button
-          class="secondary wide"
-          type="button"
-          (click)="copyToClipboard(point.lat + ', ' + point.lng)"
-          i18n
-        >
-          Copy coordinates
-        </button>
-        @if (point.words) {
-          <a
-            [href]="'https://what3words.com/' + point.words"
-            target="_blank"
-            rel="noopener"
-            class="secondary wide"
-            >///{{ point.words }}</a
-          >
-        }
-      }
-      @if (sheet() === 'share') {
-        @if (spot.visibility === 'public') {
-          <p class="subtle" i18n>One link shares the photo, exact pin, directions and PinTalks.</p>
-          <input
-            class="share-link"
-            [value]="spot.shareUrl"
-            readonly
-            aria-label="Public gem link"
-            i18n-aria-label
-          />
-          <div class="button-row">
-            <button class="primary" type="button" (click)="share()" i18n>Share</button
-            ><button
-              class="secondary"
-              type="button"
-              (click)="copyToClipboard(spot.shareUrl || '')"
-              i18n
-            >
-              Copy link</button
-            ><button class="secondary" type="button" (click)="showQr()" i18n>QR code</button>
-          </div>
-          @if (qr()) {
-            <img class="qr-image" [src]="qr()" alt="QR code for this gem" i18n-alt /><a
-              class="text-button"
-              [href]="qr()"
-              [download]="spot.title + '-qr.svg'"
-              i18n
-              >Download QR code</a
-            >
-          }
-          @if (owner()) {
-            <button
-              class="text-button danger-text"
-              type="button"
-              [disabled]="busy()"
-              (click)="unpublish()"
-              i18n
-            >
-              Make this gem private
-            </button>
-          }
-        } @else {
-          <div class="privacy-note">
-            <span class="material-symbols-outlined" aria-hidden="true">lock</span>
-            <p i18n>
-              This gem is private. Publish it from the review screen to share its location and
-              PinTalks.
-            </p>
-          </div>
-          @if (owner()) {
-            <a
-              class="primary wide"
-              [routerLink]="['/off-grids', spot.id, 'edit']"
-              (click)="closeSheet()"
-              i18n
-              >Review and publish</a
-            >
-          }
-        }
-      }
-    </section>
-  </div>
-}

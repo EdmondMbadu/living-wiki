@@ -5,7 +5,7 @@ Implemented September 16, 2026. Available at `/off-grids`, with a sidebar entry 
 ## Delivered behavior
 
 - Explore, My pins, Saved, search, cursor pagination, and a lazy Google Maps view.
-- Photo-led cards, desktop detail panel, mobile detail page, dark theme support, accessible dialogs, and 44-pixel view/map controls.
+- Photo-led cards, a centered gem destination on desktop and mobile, dark theme support, accessible dialogs, and 44-pixel view/map controls. See [the center-stage verification](center-stage-verification-2026-09-16.md) for the latest local implementation and measurements.
 - Place → Story → Review creation, with GPS, map pin, coordinates, supported Google Maps coordinate links, and server-side what3words lookup. A valid latitude/longitude and explicit point confirmation are required to finish a gem.
 - Private drafts and new gems by default. Public publishing is an explicit review choice. Existing imported cards retain their source visibility.
 - PinTalk camera recording, microphone control, camera switching, local review, upload, trim, caption/transcript, progress, cancellation, retry, and server processing. In-app recordings are limited to 90 seconds; uploaded videos to three minutes and 100 MB.

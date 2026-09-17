@@ -12,7 +12,7 @@ const loadWikiComponent = () => import('./wiki/wiki').then((m) => m.WikiComponen
 export const routes: Routes = [
   { path: 'off-grids/new', loadComponent: () => import('./off-grids/off-grid-editor').then(m => m.OffGridEditorComponent), canActivate: [authGuard], title: 'Mark a gem | LivingWiki' },
   { path: 'off-grids/:spotId/edit', loadComponent: () => import('./off-grids/off-grid-editor').then(m => m.OffGridEditorComponent), canActivate: [authGuard], title: 'Edit gem | LivingWiki' },
-  { path: 'off-grids/:spotId', loadComponent: () => import('./off-grids/off-grids').then(m => m.OffGridsComponent), title: 'Off Grids | LivingWiki' },
+  { path: 'off-grids/:spotId', loadComponent: () => import('./off-grids/off-grid-detail').then(m => m.OffGridDetailComponent), title: 'Off Grids | LivingWiki' },
   { path: 'off-grids', loadComponent: () => import('./off-grids/off-grids').then(m => m.OffGridsComponent), title: 'Off Grids | LivingWiki' },
   { path: 'notifications', loadComponent: () => import('./notifications/notifications').then(m => m.NotificationsComponent), canActivate: [authGuard], title: 'Notifications | LivingWiki' },
   { path: 'teams/new', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), canActivate: [authGuard], title: 'Create team | LivingWiki' },
