@@ -1,7 +1,7 @@
 <div class="boards-page min-h-screen bg-[var(--bg)] text-[var(--text)] selection:bg-[var(--accent)] selection:text-[var(--accent-contrast)]" [class.boards-page--team-wizard-only]="teamWizardOnly()">
   @if (!teamWizardOnly()) {
   @if (teamContextId()) {
-    <div class="team-edit-notice" role="status"><a [routerLink]="['/teams', teamContextId()]"><span class="material-symbols-outlined">arrow_back</span>{{ teamContextName() }}</a><span><strong>Team working copy</strong> · Edits are shared with members. Publish from the team page when ready.</span></div>
+    <div class="team-edit-notice" role="status"><a [routerLink]="['/teams', teamContextId()]"><span class="material-symbols-outlined">arrow_back</span>{{ teamContextName() }}</a><span><strong>Team working copy</strong> · Edits are shared with members. Choose visitor visibility in Board settings or Manage on the team page.</span></div>
   }
   @if (selectedBoard()?.teamId && !teamContextId()) {
     <div class="mx-auto max-w-xl px-4 py-3"><app-team-contact [teamId]="selectedBoard()!.teamId!" [boardId]="selectedBoard()!.id" /></div>
@@ -925,7 +925,7 @@
             (click)="setGalleryTab('private')"
           >
             <span class="material-symbols-outlined">lock</span>
-            Private
+            Private &amp; unlisted
           </button>
         }
       </nav>
@@ -994,7 +994,7 @@
                       ? 'Favorites'
                       : activeGalleryTab() === 'collections'
                         ? 'Collections'
-                        : 'Private boards'
+                        : 'Private & unlisted boards'
               }}
             </h2>
             <p>
@@ -1013,7 +1013,7 @@
               <input
                 type="search"
                 autocomplete="off"
-                [placeholder]="activeGalleryTab() === 'boards' ? 'Search boards...' : activeGalleryTab() === 'private' ? 'Search private boards...' : activeGalleryTab() === 'collections' ? 'Search collections...' : 'Search cards...'"
+                [placeholder]="activeGalleryTab() === 'boards' ? 'Search boards...' : activeGalleryTab() === 'private' ? 'Search private & unlisted boards...' : activeGalleryTab() === 'collections' ? 'Search collections...' : 'Search cards...'"
                 [value]="boardSearch()"
                 (input)="onBoardSearchInput($any($event.target).value)"
               />
@@ -1114,7 +1114,9 @@
                     <span class="board-square__content">
                       <span class="board-square__title-row">
                         <strong>{{ board.title }}</strong>
-                        @if (board.visibility === 'private') {
+                        @if (board.visibility === 'unlisted') {
+                          <span class="board-square__privacy-lock" title="Unlisted · Anyone with the link" aria-label="Unlisted board"><span class="material-symbols-outlined" aria-hidden="true">link</span>Unlisted</span>
+                        } @else if (board.visibility === 'private') {
                           <span class="board-square__privacy-lock" title="Private · Only you can see this board" aria-label="Private board">
                             <span class="material-symbols-outlined" aria-hidden="true">lock</span>
                           </span>
@@ -1231,8 +1233,8 @@
             } @empty {
               <div class="boards-empty-state">
                 <span class="material-symbols-outlined" [class.board-translation-control__spinner]="boardsLoading()">{{ boardsLoading() ? 'progress_activity' : activeGalleryTab() === 'private' ? 'lock' : 'dashboard_customize' }}</span>
-                <h2>{{ boardsLoading() ? 'Loading boards…' : activeGalleryTab() === 'private' ? 'No private boards yet.' : publicOwnerKey() ? 'No public boards yet.' : 'No boards yet.' }}</h2>
-                <p>{{ boardsLoading() ? 'Bringing in the first 10 boards.' : activeGalleryTab() === 'private' ? 'Boards you keep for yourself—including Gems Near Me—will appear here.' : publicOwnerKey() ? 'This public boards page is ready, but there are no public boards to show yet.' : 'Create a collection for places, restaurants, memories, ideas, or anything you want to keep together.' }}</p>
+                <h2>{{ boardsLoading() ? 'Loading boards…' : activeGalleryTab() === 'private' ? 'No private or unlisted boards yet.' : publicOwnerKey() ? 'No public boards yet.' : 'No boards yet.' }}</h2>
+                <p>{{ boardsLoading() ? 'Bringing in the first 10 boards.' : activeGalleryTab() === 'private' ? 'Your Private and Unlisted boards appear here. They stay off your public profile.' : publicOwnerKey() ? 'This public boards page is ready, but there are no public boards to show yet.' : 'Create a collection for places, restaurants, memories, ideas, or anything you want to keep together.' }}</p>
                 @if (!boardsLoading() && canCreateBoard()) {
                   <button type="button" class="boards-primary-action" (click)="openCreateBoard()" i18n>
                     <span class="material-symbols-outlined">add</span>
@@ -1622,14 +1624,14 @@
                   <span class="material-symbols-outlined" aria-hidden="true">ios_share</span>
                   <span>Share</span>
                 </button>
-                @if (board.visibility === 'public' || canForkBoard(board) || canEditBoard(board) || canUseStackStudio(board) || (board.stackCtaLabel && stackCtaHref(board))) {
+                @if (isLinkReadableVisibility(board.visibility) || canForkBoard(board) || canEditBoard(board) || canUseStackStudio(board) || (board.stackCtaLabel && stackCtaHref(board))) {
                   <details class="board-editorial-hero__more">
                     <summary>
                       <span class="material-symbols-outlined" aria-hidden="true">more_horiz</span>
                       <span>More</span>
                     </summary>
                     <div class="board-editorial-hero__more-menu">
-                    @if (board.visibility === 'public') {
+                    @if (isLinkReadableVisibility(board.visibility)) {
                       <button
                         type="button"
                         [id]="'board-promo-trigger-' + board.id"
@@ -1938,7 +1940,7 @@
                         <span class="material-symbols-outlined">content_copy</span>
                         <span i18n>Copy</span>
                       </button>
-                      @if (board.visibility === 'public') {
+                      @if (isLinkReadableVisibility(board.visibility)) {
                         <button
                           type="button"
                           class="board-share-destination__mini-action"
@@ -2882,7 +2884,7 @@
                               <span class="material-symbols-outlined">content_copy</span>
                               <span i18n>Copy</span>
                             </button>
-                            @if (board.visibility === 'public') {
+                            @if (isLinkReadableVisibility(board.visibility)) {
                               <button
                                 type="button"
                                 class="board-share-destination__mini-action"
@@ -7088,11 +7090,17 @@
                     <span>Continue to the private Photo Story Studio. Nothing is published until you publish from Studio.</span>
                   } @else if (wizardMode() === 'nearby-gems') {
                     <span>Your starting location is not stored. Saving creates a private board that only you can open.</span>
+                  } @else if (teamContextId()) {
+                    <span>Save a private team draft. Choose visitor visibility in Board settings or Manage on the team page.</span>
                   } @else {
-                    <span>Closing keeps this draft. Publishing creates the board and notifies your friends.</span>
+                    <span>Closing keeps this draft. Saving creates the board with your selected visibility. Only Public boards notify your friends.</span>
                   }
                   }
                 </span>
+                @if (!teamContextId() && wizardTargetBoardId() === 'new' && !isNewPhotoWizardBoard() && wizardMode() !== 'nearby-gems') {
+                  <app-board-visibility-control [value]="wizardVisibility()" [disabled]="wizardSaving()"
+                    (valueChange)="setWizardVisibility($event)" />
+                }
                 <button
                   type="button"
                   class="boards-primary-action"
@@ -7120,7 +7128,7 @@
                   } @else if (wizardMode() === 'nearby-gems') {
                     <span>Save private board</span>
                   } @else {
-                    <span>Save and publish</span>
+                    <span>{{ teamContextId() ? 'Save team draft' : wizardVisibility() === 'public' ? 'Save and publish' : wizardVisibility() === 'unlisted' ? 'Save unlisted board' : 'Save private board' }}</span>
                   }
                 </button>
               }
@@ -7325,6 +7333,16 @@
                     </h4>
                   </div>
                   <div class="stack-panel__actions">
+                    @if (!board.teamId) {
+                    <label class="stack-studio__notice">Share as
+                      <select aria-label="Photo story visitor visibility" [value]="photoPublishVisibility()"
+                        [disabled]="stackPhotoDraftPublishing()"
+                        (change)="photoPublishVisibility.set($any($event.target).value)">
+                        <option value="public">Public — appears in discovery</option>
+                        <option value="unlisted">Unlisted — anyone with the link</option>
+                      </select>
+                    </label>
+                    }
                     <button
                       type="button"
                       class="boards-primary-action"
@@ -7334,7 +7352,7 @@
                       <span class="material-symbols-outlined" aria-hidden="true">
                         {{ stackPhotoDraftPublishing() ? 'progress_activity' : 'publish' }}
                       </span>
-                      {{ stackPhotoDraftPublishing() ? 'Publishing…' : 'Publish board' }}
+                      {{ stackPhotoDraftPublishing() ? 'Saving…' : board.teamId ? 'Manage sharing' : photoPublishVisibility() === 'unlisted' ? 'Share unlisted board' : 'Publish board' }}
                     </button>
                   </div>
                 </div>
@@ -9077,14 +9095,14 @@
                   </div>
                 }
 
-                @if (board.visibility === 'public' || stackShareMode() !== 'live') {
+                @if (isLinkReadableVisibility(board.visibility) || stackShareMode() !== 'live') {
                 <div class="stack-share-sheet__destination-head">
                   <strong>{{ board.visibility === 'private' ? 'Share video files' : stackShareMode() === 'live' ? 'Share live-view link' : 'Open a social composer' }}</strong>
                   <span>{{ board.visibility === 'private' ? 'Share the video from your device or download it to attach in another app.' : stackShareMode() === 'live' ? 'Includes the board picture and opens the interactive board.' : 'Downloads the MP4 and opens the selected composer. Attach it for in-feed autoplay.' }}</span>
                 </div>
                 <div class="stack-share-sheet__destinations" aria-label="Share destinations" i18n-aria-label>
                   @for (target of stackLinkShareTargets; track target.id) {
-                    @if (board.visibility === 'public' || target.id === 'more') {
+                    @if (isLinkReadableVisibility(board.visibility) || target.id === 'more') {
                     <button
                       type="button"
                       (click)="shareSelectedStackLinkTo(target.id, board)"
@@ -9097,7 +9115,7 @@
                 </div>
                 }
 
-                @if (board.visibility === 'public') {
+                @if (isLinkReadableVisibility(board.visibility)) {
                 <div class="stack-share-sheet__link">
                   <span><small>{{ stackSelectedShareLabel() }}</small><strong>{{ stackSelectedShareUrl(board) }}</strong></span>
                   <button type="button" (click)="copySelectedStackShareUrl(board)" i18n>Copy</button>
@@ -9112,13 +9130,13 @@
               <details class="stack-video-single__more">
                 <summary i18n>More options</summary>
                 <div>
-                  @if (board.visibility === 'public') {
+                  @if (isLinkReadableVisibility(board.visibility)) {
                     <button type="button" (click)="copyBoardUrl(board)" i18n><span class="material-symbols-outlined">dashboard_customize</span> Copy board link</button>
                   }
-                  @if (board.visibility === 'public' && board.socialVideoUrl) {
+                  @if (isLinkReadableVisibility(board.visibility) && board.socialVideoUrl) {
                     <button type="button" (click)="copySocialVideoFileUrl(board)" i18n><span class="material-symbols-outlined">movie</span> Copy direct MP4</button>
                   }
-                  @if (board.visibility === 'public' && board.trailerVideoUrl) {
+                  @if (isLinkReadableVisibility(board.visibility) && board.trailerVideoUrl) {
                     <button type="button" (click)="copyTrailerVideoFileUrl(board)"><span class="material-symbols-outlined">movie_filter</span> Copy trailer MP4</button>
                   }
                   @if (canEditBoard(board) && stackShareMode() !== 'live' && (board.socialVideoUrl || board.trailerVideoUrl)) {
@@ -9235,7 +9253,7 @@
   }
 
   @if (boardSettingsBoard(); as settingsBoard) {
-    <div class="boards-modal-backdrop board-settings-backdrop" appBackdropDismiss (backdropDismiss)="closeBoardSettings()">
+    <div class="boards-modal-backdrop board-settings-backdrop" appBackdropDismiss (backdropDismiss)="!boardSettingsSaving() && closeBoardSettings()">
       <section
         class="boards-modal boards-modal--wide board-settings-modal"
         role="dialog"
@@ -9418,35 +9436,24 @@
             </section>
           }
 
-          <section class="board-inside-display board-settings-privacy" aria-labelledby="board-settings-privacy-title">
-            <span class="board-settings-privacy__icon material-symbols-outlined" aria-hidden="true">{{ boardSettingsDraft().visibility === 'private' ? 'lock' : 'public' }}</span>
-            <span class="board-settings-privacy__copy">
-              <strong id="board-settings-privacy-title">{{ settingsBoard.teamId ? 'Private team working copy' : boardSettingsDraft().visibility === 'private' ? 'Private board' : 'Public board' }}</strong>
-              <small>
-                @if (settingsBoard.teamId) {
-                  All accepted team members can collaborate here. Manage the public version with Publish on the team page.
-                } @else if (settingsBoard.parentCardId) {
-                  This board uses its parent board’s visibility.
-                } @else if (boardSettingsDraft().visibility === 'private') {
-                  Only you can view this board.
-                } @else {
-                  Anyone can view this board.
-                }
-              </small>
-            </span>
-            <button
-              type="button"
-              class="board-settings-toggle"
-              role="switch"
-              [class.board-settings-toggle--active]="boardSettingsDraft().visibility === 'private'"
-              [attr.aria-checked]="boardSettingsDraft().visibility === 'private'"
-              [attr.aria-label]="boardSettingsDraft().visibility === 'private' ? 'Make board public' : 'Make board private'"
-              [disabled]="boardSettingsSaving() || !!settingsBoard.parentCardId || !!settingsBoard.teamId"
-              (click)="setBoardSettingsVisibility(boardSettingsDraft().visibility === 'private' ? 'public' : 'private')"
-            >
-              <span class="board-settings-toggle__thumb" aria-hidden="true"></span>
-              <small>{{ boardSettingsDraft().visibility === 'private' ? 'ON' : 'OFF' }}</small>
-            </button>
+          <section class="board-inside-display board-visibility-section" aria-label="Board visibility">
+            @if (settingsBoard.teamId) {
+              <strong>Visitor visibility</strong>
+              <app-board-visibility-control [value]="boardSettingsDraft().visibility" [team]="true"
+                [disabled]="boardSettingsSaving() || !canPublishTeamBoard(settingsBoard)"
+                (valueChange)="setBoardSettingsVisibility($event)" />
+              <small>The team working copy stays private. Public or Unlisted saves publish all saved changes to the visitor version.</small>
+              @if (!canPublishTeamBoard(settingsBoard)) {
+                <small>Only the assigned representative or a team admin can change visitor visibility. Your edits save to the working copy.</small>
+              }
+            } @else {
+              <app-board-visibility-control [value]="boardSettingsDraft().visibility"
+                [disabled]="boardSettingsSaving() || !!settingsBoard.parentCardId"
+                (valueChange)="setBoardSettingsVisibility($event)" />
+              @if (settingsBoard.parentCardId) {
+                <small>This board uses its parent board’s visibility.</small>
+              }
+            }
           </section>
 
           @if (boardCustomUrl(settingsBoard); as settingsUrl) {
@@ -9482,7 +9489,7 @@
             >Cancel</button>
             <button type="submit" class="boards-primary-action board-settings-actions__save" [disabled]="boardSettingsSaving()">
               <span class="material-symbols-outlined" aria-hidden="true">{{ boardSettingsSaving() ? 'progress_activity' : 'check' }}</span>
-              <span>{{ boardSettingsSaving() ? 'Saving…' : 'Save changes' }}</span>
+              <span>{{ boardSettingsSaving() ? 'Saving…' : boardVisibilitySaveLabel(settingsBoard, boardSettingsDraft().visibility) }}</span>
             </button>
           </footer>
         </form>
@@ -9491,7 +9498,7 @@
   }
 
   @if (boardDialogOpen()) {
-    <div class="boards-modal-backdrop" appBackdropDismiss (backdropDismiss)="closeBoardDialog()">
+    <div class="boards-modal-backdrop" appBackdropDismiss (backdropDismiss)="!boardDialogSaving() && closeBoardDialog()">
       <section class="boards-modal" aria-label="Board form" (click)="$event.stopPropagation()" i18n-aria-label>
         <div class="boards-modal__head">
           <div>
@@ -9503,7 +9510,7 @@
               <h3>{{ editingBoardId() ? 'Title, subtitle, and picture' : 'Create board' }}</h3>
             }
           </div>
-          <button type="button" class="boards-icon-button" aria-label="Close" (click)="closeBoardDialog()" i18n-aria-label>
+          <button type="button" class="boards-icon-button" aria-label="Close" [disabled]="boardDialogSaving()" (click)="closeBoardDialog()" i18n-aria-label>
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -9553,36 +9560,25 @@
               <small>This board uses the parent board’s {{ boardDraft().visibility }} visibility.</small>
             </section>
           } @else {
-          <section class="boards-sticker-panel" style="background: color-mix(in srgb, var(--accent) 8%, var(--surface));">
-            <div class="boards-sticker-panel__head">
-              <div>
-                <span i18n>Visibility</span>
-                <strong>{{ boardDraft().visibility === 'private' ? 'Private board' : 'Public board' }}</strong>
-              </div>
-              <span class="material-symbols-outlined" style="color: var(--accent); font-size: 1.7rem; font-variation-settings: 'FILL' 1;">{{ boardDraft().visibility === 'private' ? 'lock' : 'public' }}</span>
-            </div>
-            <div class="boards-form__split">
-              <button
-                type="button"
-                class="boards-ghost-action"
-                [style.border-color]="boardDraft().visibility === 'public' ? 'var(--modal-ink, var(--ink))' : null"
-                [style.box-shadow]="boardDraft().visibility === 'public' ? '2px 2px 0 var(--modal-ink, var(--ink))' : null"
-                (click)="setBoardDraftVisibility('public')"
-               i18n>
-                <span class="material-symbols-outlined">public</span>
-                Public
-              </button>
-              <button
-                type="button"
-                class="boards-ghost-action"
-                [style.border-color]="boardDraft().visibility === 'private' ? 'var(--modal-ink, var(--ink))' : null"
-                [style.box-shadow]="boardDraft().visibility === 'private' ? '2px 2px 0 var(--modal-ink, var(--ink))' : null"
-                (click)="setBoardDraftVisibility('private')"
-               i18n>
-                <span class="material-symbols-outlined">lock</span>
-                Private
-              </button>
-            </div>
+          <section class="boards-sticker-panel" aria-label="Board visibility">
+            @if (teamContextId()) {
+              @if (boardDialogBoard(); as teamBoard) {
+                <strong>Visitor visibility</strong>
+                <app-board-visibility-control [value]="boardDraft().visibility" [team]="true"
+                  [disabled]="boardDialogSaving() || !canPublishTeamBoard(teamBoard)"
+                  (valueChange)="setBoardDraftVisibility($event)" />
+                <small>The team working copy stays private. Public or Unlisted saves publish all saved changes to the visitor version.</small>
+                @if (!canPublishTeamBoard(teamBoard)) {
+                  <small>Only the assigned representative or a team admin can change visitor visibility. Your edits save to the working copy.</small>
+                }
+              } @else {
+                <strong>Private team working copy</strong>
+                <small>Save the draft first. Then choose visitor visibility in board settings or Manage on the team page.</small>
+              }
+            } @else {
+              <app-board-visibility-control [value]="boardDraft().visibility"
+                (valueChange)="setBoardDraftVisibility($event)" />
+            }
           </section>
           }
 
@@ -9786,12 +9782,23 @@
             <div class="boards-form__error">{{ imageUploadError() }}</div>
           }
 
+          @if (boardDialogError()) {
+            <p class="boards-form__error" role="alert">{{ boardDialogError() }}</p>
+          }
+
           <div class="boards-form__actions">
-            <button type="button" class="boards-ghost-action" (click)="closeBoardDialog()" i18n>Cancel</button>
+            <button type="button" class="boards-ghost-action" [disabled]="boardDialogSaving()" (click)="closeBoardDialog()" i18n>Cancel</button>
+            @if (boardDialogSaving() || boardDialogBoard()?.teamId) {
+            <button type="submit" class="boards-primary-action" [disabled]="boardDialogSaving()">
+              <span class="material-symbols-outlined">{{ boardDialogSaving() ? 'progress_activity' : 'check' }}</span>
+              {{ boardDialogSaving() ? 'Saving…' : boardVisibilitySaveLabel(boardDialogBoard(), boardDraft().visibility) }}
+            </button>
+            } @else {
             <button type="submit" class="boards-primary-action" i18n>
               <span class="material-symbols-outlined">check</span>
               Save board
             </button>
+            }
           </div>
         </form>
       </section>
@@ -10952,13 +10959,14 @@
     [currentSlug]="customBoard.customSlug || ''"
     [insightsPath]="'/manage/boards/' + customBoard.id + '/insights'"
     [eligible]="customUrlEligible(customBoard)"
-    [publicResource]="customBoard.visibility === 'public'"
+    [publicResource]="isLinkReadableVisibility(customBoard.visibility)"
     (closed)="closeCustomUrlDialog()"
     (saved)="handleCustomUrlSaved($event)"
   ></app-custom-public-url-dialog>
 }
 
 @if (boardPromoImageBoard(); as promoBoard) {
+  @defer (on immediate) {
   <app-board-promo-image-dialog
     [title]="promoBoard.title"
     [description]="promoBoard.description"
@@ -10973,6 +10981,9 @@
     (closed)="closeBoardPromoImage()"
     (downloaded)="boardPromoImageDownloaded()"
   ></app-board-promo-image-dialog>
+  } @placeholder {
+    <p role="status">Preparing share image…</p>
+  }
 }
 
 @if (relatedCardEditorOpen() && relatedCardEditorParent(); as relatedParent) {

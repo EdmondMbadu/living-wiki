@@ -1126,4 +1126,16 @@ describe('TeamsComponent', () => {
     expect(page.settingsForm.heroUrl).toBe('https://example.com/retry.jpg');
     expect(page.modalError()).toBe('');
   });
+  it('uses an explicit unlisted publication operation so older servers cannot silently publish it publicly', async () => {
+    const page = await render();
+    const listing = data.listings[1];
+    page.showModal('listing', listing);
+    page.listingVisibility.set('unlisted');
+    page.saveListingVisibility(listing);
+    await fixture.whenStable();
+    expect(teams.command).toHaveBeenCalledWith('listing', jasmine.objectContaining({
+      operation: 'publishUnlisted', visibility: 'unlisted', boardId: listing.id,
+    }));
+  });
+
 });

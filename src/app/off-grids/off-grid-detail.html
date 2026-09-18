@@ -313,7 +313,7 @@
         }
       }
       @if (sheet() === 'share') {
-        @if (spot.visibility === 'public') {
+        @if (isLinkReadableVisibility(spot.visibility)) {
           <p class="subtle" i18n>One link shares the photo, exact pin, directions and PinTalks.</p>
           <input
             class="share-link"

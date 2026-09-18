@@ -1,3 +1,4 @@
+import { isLinkReadableVisibility } from './board-visibility';
 import chromium from '@sparticuz/chromium';
 import { createHash } from 'node:crypto';
 import type { Response } from 'express';
@@ -57,6 +58,7 @@ interface BoardShareQuiz {
 }
 
 interface BoardShare {
+  visibility?: 'public' | 'unlisted';
   id: string;
   customSlug: string;
   title: string;
@@ -161,6 +163,7 @@ export async function handleBoardShare(req: Request, res: Response): Promise<voi
     return;
   }
 
+  res.set('Cache-Control', 'private, no-store');
   const parsed = parseBoardSharePath(req.originalUrl || req.url || '');
   if (!parsed) {
     res.status(404).send('Board share link not found.');
@@ -169,16 +172,18 @@ export async function handleBoardShare(req: Request, res: Response): Promise<voi
 
   const board = await loadBoardShare(parsed.boardId);
   if (!board) {
-    res.status(404).send('Public board not found.');
+    res.set('X-Robots-Tag', 'noindex, nofollow').status(404).send('Board not found.');
     return;
   }
+
+  if (board.visibility === 'unlisted') res.set('X-Robots-Tag', 'noindex, nofollow');
 
   if (parsed.image) {
     const image = await getOrRenderBoardShareImage(board, parsed.quiz);
     res
       .status(200)
       .set('Content-Type', 'image/png')
-      .set('Cache-Control', 'public, max-age=86400, s-maxage=604800')
+      .set('Cache-Control', 'private, no-store')
       .send(req.method === 'HEAD' ? undefined : image);
     return;
   }
@@ -200,7 +205,7 @@ export async function handleBoardShare(req: Request, res: Response): Promise<voi
     res
       .status(200)
       .set('Content-Type', 'text/html; charset=utf-8')
-      .set('Cache-Control', 'public, max-age=300, s-maxage=3600')
+      .set('Cache-Control', 'private, no-store')
       .send(req.method === 'HEAD'
         ? undefined
         : parsed.player
@@ -212,7 +217,7 @@ export async function handleBoardShare(req: Request, res: Response): Promise<voi
   res
       .status(200)
       .set('Content-Type', 'text/html; charset=utf-8')
-      .set('Cache-Control', 'public, max-age=300, s-maxage=3600')
+      .set('Cache-Control', 'private, no-store')
       .send(req.method === 'HEAD'
         ? undefined
         : buildBoardSharePageHtml(
@@ -317,7 +322,7 @@ async function proxyBoardVideo(req: Request, res: Response, board: BoardShare, k
     const contentType = (upstream.headers.get('content-type') || asset.mimeType || 'video/mp4').split(';')[0] || 'video/mp4';
     res.status(upstream.status);
     res.set('Content-Type', contentType);
-    res.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+    res.set('Cache-Control', 'private, no-store');
     res.set('Accept-Ranges', upstream.headers.get('accept-ranges') || 'bytes');
     res.set('Content-Disposition', `inline; filename="${safeFileName(board.title)}${kind === 'trailer' ? '-trailer' : ''}-${ratio === 'landscape' ? 'landscape-16x9' : 'phone-9x16'}.mp4"`);
     for (const header of ['content-range', 'content-length'] as const) {
@@ -406,7 +411,7 @@ async function loadBoardShare(boardId: string): Promise<BoardShare | null> {
   }
 
   const data = snapshot.data() ?? {};
-  if (data.visibility !== 'public') {
+  if (!isLinkReadableVisibility(data.visibility)) {
     return null;
   }
 
@@ -425,6 +430,7 @@ async function loadBoardShare(boardId: string): Promise<BoardShare | null> {
 
   return {
     id: snapshot.id,
+    visibility: data.visibility === 'unlisted' ? 'unlisted' : 'public',
     customSlug: cleanText(data.custom_slug, 60),
     title,
     description: cleanText(data.description, 320),
@@ -873,7 +879,7 @@ function buildBoardSharePageHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(`${title} | LivingWiki`)}</title>
   <meta name="description" content="${escapeHtml(description)}">
-  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="robots" content="${board.visibility === 'unlisted' ? 'noindex,nofollow' : 'index,follow,max-image-preview:large'}">
   <link rel="canonical" href="${escapeHtml(shareUrl)}">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="LivingWiki">
@@ -944,7 +950,7 @@ function buildBoardVideoSharePageHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(`${board.title} | LivingWiki video`)}</title>
   <meta name="description" content="${escapeHtml(description)}">
-  <meta name="robots" content="index,follow,max-video-preview:-1,max-image-preview:large">
+  <meta name="robots" content="${board.visibility === 'unlisted' ? 'noindex,nofollow' : 'index,follow,max-video-preview:-1,max-image-preview:large'}">
   <link rel="icon" type="image/png" sizes="64x64" href="${appUrl}/assets/image/living-wiki-favicon.png">
   <link rel="apple-touch-icon" href="${appUrl}/assets/image/living-wiki-favicon.png">
   <link rel="canonical" href="${escapeHtml(shareUrl)}">

@@ -1,3 +1,4 @@
+import { isLinkReadableVisibility, type BoardVisibility } from '../../board-visibility';
 import { AfterViewInit, Component, ElementRef, ViewChild, computed, effect, inject, input, output, signal } from '@angular/core';
 import { GoogleMapsService } from '../../google-maps.service';
 import { PlacePhotoDirective } from '../../place-photo.directive';
@@ -56,7 +57,8 @@ export class NearbyGemsBoardComponent implements AfterViewInit {
   readonly title = input.required<string>();
   readonly description = input('');
   readonly locationLabel = input('your area');
-  readonly visibility = input.required<'public' | 'private'>();
+  readonly isLinkReadableVisibility = isLinkReadableVisibility;
+  readonly visibility = input.required<BoardVisibility>();
   readonly canEdit = input(false);
   readonly cards = input.required<NearbyGemsBoardCardView[]>();
   readonly travelMode = input<'walking' | 'driving'>('driving');

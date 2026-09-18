@@ -1,3 +1,4 @@
+import { isBoardVisibility, type BoardVisibility } from '../board-visibility';
 export type BoardPhotoStoryMode = 'generate' | 'blank';
 
 export type BoardPhotoStorySource = {
@@ -50,10 +51,10 @@ export function isBoardPhotoStudioDraft(board: {
 export function normalizeBoardPrivacy(board: {
   visibility?: unknown;
   photoStudioDraft?: unknown;
-}): { visibility: 'public' | 'private'; photoStudioDraft: boolean } {
-  const visibility = board.visibility === 'public' || board.visibility === 'private'
+}): { visibility: BoardVisibility; photoStudioDraft: boolean } {
+  const visibility = isBoardVisibility(board.visibility)
     ? board.visibility
-    : board.photoStudioDraft === true ? 'private' : 'public';
+    : board.visibility != null || board.photoStudioDraft === true ? 'private' : 'public';
   return { visibility, photoStudioDraft: visibility === 'private' && board.photoStudioDraft === true };
 }
 

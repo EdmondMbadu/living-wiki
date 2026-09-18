@@ -1,3 +1,4 @@
+import { isLinkReadableVisibility } from './board-visibility';
 import { createHash } from 'node:crypto';
 import { FieldValue, Timestamp, type Transaction } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
@@ -177,7 +178,7 @@ export const submitTeamContact = onCall(options, async (request) => {
     );
   const board = (await db.collection('boards').doc(boardId).get()).data();
   const teamId = board?.['team_id'];
-  if (!teamId || board?.['visibility'] !== 'public')
+  if (!teamId || !isLinkReadableVisibility(board?.['visibility']))
     throw new HttpsError('not-found', 'This listing is not available.');
   if (request.auth?.uid && (await isActiveTeamMember(teamId, request.auth.uid)))
     throw new HttpsError('failed-precondition', 'Team previews do not create visitor contacts.');

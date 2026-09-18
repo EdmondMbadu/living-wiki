@@ -756,7 +756,7 @@
                               class="status-pill"
                               [class.status-pill--published]="listing.status === 'published'"
                               [class.status-pill--archived]="listing.status === 'archived'"
-                              ><i></i>{{ listing.status }}</span
+                              ><i></i>{{ listing.status === 'published' ? listing.publishedVisibility === 'unlisted' ? 'Unlisted' : 'Public' : listing.status }}</span
                             >
                             @if (listing.hasUnpublishedChanges) {
                               <small class="pending-changes">Unpublished changes</small>
@@ -812,7 +812,7 @@
                                 class="icon-button"
                                 [disabled]="listing.status !== 'published'"
                                 title="Public listing QR code"
-                                aria-label="Public listing QR code"
+                                aria-label="Visitor listing QR code"
                                 (click)="showModal('qr', listing)"
                               >
                                 <span class="material-symbols-outlined">qr_code_2</span></button
@@ -1587,7 +1587,7 @@
           <span
             class="status-pill"
             [class.status-pill--published]="listing.status === 'published'"
-            >{{ listing.status }}</span
+            >{{ listing.status === 'published' ? listing.publishedVisibility === 'unlisted' ? 'Unlisted' : 'Public' : listing.status }}</span
           >
           @if (listing.hasUnpublishedChanges) {
             <span class="warning-text">Unpublished changes</span>
@@ -1607,7 +1607,7 @@
           >
           @if (listing.status === 'published') {
             <a class="button" [routerLink]="publicPath(listing)" target="_blank" rel="noopener"
-              >View public listing ↗</a
+              >View {{ listing.publishedVisibility === 'unlisted' ? 'unlisted' : 'public' }} listing ↗</a
             >
           }
           @if (
@@ -1615,12 +1615,12 @@
             mayPublish(listing) &&
             listing.status !== 'archived'
           ) {
-            <button
-              class="button"
-              [disabled]="busy() || !voiceAvailable(listing)"
-              (click)="listingAction('publish', listing)"
-            >
-              {{ listing.status === 'published' ? 'Update public listing' : 'Publish listing' }}
+            <app-board-visibility-control [value]="listingVisibility()" [team]="true" [disabled]="busy()"
+              (valueChange)="listingVisibility.set($event)" />
+            <button class="button button--primary"
+              [disabled]="busy() || (listingVisibility() !== 'private' && !voiceAvailable(listing)) || (listingVisibility() === 'private' && listing.status !== 'published')"
+              (click)="saveListingVisibility(listing)">
+              {{ listingVisibility() === 'private' ? 'Make private' : listing.status === 'published' ? listingVisibility() !== (listing.publishedVisibility || 'public') ? 'Publish ' + listingVisibility() + ' version' : 'Publish changes' : listingVisibility() === 'unlisted' ? 'Share unlisted listing' : 'Publish listing' }}
             </button>
             @if (listing.status === 'published') {
               <button
@@ -1634,7 +1634,7 @@
           }
         </div>
         <p class="field-help">
-          Saving edits does not change the public version. Publish when the team is ready.
+          Saving edits keeps the team working copy private. Publish changes when the visitor version is ready.
         </p>
         @if (currentTeam()?.status === 'active' && isAdmin()) {
           <section class="detail-section">
@@ -1854,7 +1854,7 @@
           published listing.
         </p>
         @if (qrUrl()) {
-          <img class="qr-preview" [src]="qrUrl()" alt="QR code for the public listing" />
+          <img class="qr-preview" [src]="qrUrl()" alt="QR code for the visitor listing" />
         } @else if (modalError()) {
           <button class="button" (click)="makeQr(listing)">Try again</button>
         } @else {
@@ -1871,7 +1871,10 @@
             >View listing ↗</a
           >
         </div>
-        <p class="field-help">Unpublishing or archiving makes this public link unavailable.</p>
+        @if (listing.publishedVisibility === 'unlisted') {
+          <p class="field-help">Unlisted: anyone with this link can view and forward it. It does not appear in public discovery.</p>
+        }
+        <p class="field-help">Unpublishing or archiving makes this visitor link unavailable.</p>
       } @else if (modal() === 'voice') {
         <p>
           Choose one of your personal voices to make available to this team. Your original samples

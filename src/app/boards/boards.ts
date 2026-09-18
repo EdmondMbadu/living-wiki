@@ -1,3 +1,5 @@
+import { BoardVisibilityControlComponent } from '../board-visibility-control';
+import { isLinkReadableVisibility, type BoardVisibility } from '../board-visibility';
 import { canonicalCardNarration, withSavedNarration, invalidatedNarrationMedia } from '../../../functions/src/card-narration';
 import { isPlatformBrowser } from '@angular/common';
 import { boardCoverPhotoUrl, stablePlacePhotoUrl } from '../place-photo';
@@ -5,7 +7,7 @@ import { PlacePhotoDirective } from '../place-photo.directive';
 import { AfterViewInit, Component, computed, effect, ElementRef, HostListener, inject, input, output, LOCALE_ID, OnDestroy, PLATFORM_ID, signal, ViewChild, type WritableSignal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, Meta, type SafeResourceUrl } from '@angular/platform-browser';
 import { FirebaseError } from 'firebase/app';
 import { collection, deleteDoc, doc, getDoc, getDocs, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, startAfter, updateDoc, where, writeBatch, type DocumentData, type Firestore, type QueryConstraint, type QueryDocumentSnapshot, type QuerySnapshot, type Unsubscribe } from 'firebase/firestore';
 import { TeamsService } from '../teams/teams.service';
@@ -138,6 +140,7 @@ import {
   boardWizardDraftListingPhotoSource,
   boardWizardDraftListingPhotos,
   boardWizardDraftMediaMode,
+  boardWizardDraftVisibility,
   boardWizardDraftNarrationSeconds,
   boardWizardDraftPayloadWithPreferences,
 } from './board-wizard-draft-persistence';
@@ -376,7 +379,6 @@ import {
 
 type BoardTone = 'teal' | 'coral' | 'yellow' | 'green' | 'blue' | 'sky' | 'purple';
 type BoardKind = 'standard' | 'nearby-gems' | 'off-grid' | 'walking-tour' | 'driving-tour';
-type BoardVisibility = 'public' | 'private';
 type BoardCardType = 'place' | 'food' | 'memory' | 'idea' | 'shop' | 'note';
 type BoardCardScope = 'place' | 'city' | 'country' | 'region';
 type BoardCardStatus = 'planned' | 'saved' | 'visited' | 'favorite';
@@ -595,6 +597,7 @@ type Board = {
   teamVideoBranding?: { mode: StackVideoBrandingMode; logoUrl: string; updatedAt: string };
   teamRevision?: number;
   teamStatus?: string;
+  teamPublishedVisibility?: 'public' | 'unlisted';
   teamDraft?: boolean;
   representativeId?: string;
   voiceOwnerId?: string;
@@ -857,6 +860,7 @@ type BoardFriendsSort = 'name' | 'email';
 type BoardFriendsView = 'friends' | 'requests' | 'sent';
 
 type BoardRecord = Omit<Board, 'createdAt' | 'updatedAt' | 'customSlug' | 'likeCount'> & {
+  visibility_schema_version?: 1;
   like_count: number;
   custom_slug?: string;
   owner_user_id: string;
@@ -1014,6 +1018,7 @@ type BoardWizardPreviewCard = BoardWizardGeneratedCard & {
 type BoardWizardDraftSaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 type BoardWizardDraft = {
+  visibility?: BoardVisibility;
   listingPhotoSource?: ListingPhotoSource;
   listingPhotos?: PersistedListingPhoto[];
   id: string;
@@ -1693,7 +1698,7 @@ type BoardLoadContext = {
 
 @Component({
   selector: 'app-boards',
-  imports: [ListingLiveClosingComponent, PlacePhotoDirective, RealEstateWizardSourceComponent, ListingPhotoSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
+  imports: [BoardVisibilityControlComponent, ListingLiveClosingComponent, PlacePhotoDirective, RealEstateWizardSourceComponent, ListingPhotoSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
   providers: [DocxExportService],
   templateUrl: './boards.html',
   styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './real-estate-wizard-modal.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
@@ -1935,6 +1940,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly boardSearch = signal('');
   readonly cardSearch = signal('');
   readonly boardDialogOpen = signal(false);
+  readonly boardDialogSaving = signal(false);
+  readonly boardDialogError = signal<string | null>(null);
+  readonly boardDialogBoard = computed(() => this.boards().find((board) => board.id === this.editingBoardId()) ?? null);
   readonly creatingBoardInside = signal<BoardInsideContext | null>(null);
   readonly cardDialogOpen = signal(false);
   readonly cardCreationOptions = CARD_CREATION_OPTIONS;
@@ -2157,6 +2165,19 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly wizardMode = signal<BoardWizardMode>('describe');
   readonly wizardEntryIntent = signal<BoardWizardEntryIntent>('default');
   readonly wizardDoorwayId = signal<BoardWizardDoorwayId>('real-estate');
+  readonly wizardVisibility = signal<BoardVisibility>('public');
+  readonly photoPublishVisibility = signal<'public' | 'unlisted'>('public');
+  readonly isLinkReadableVisibility = isLinkReadableVisibility;
+  private readonly meta = inject(Meta);
+
+  setWizardVisibility(visibility: BoardVisibility): void {
+    if (visibility === 'private' && !this.canUsePrivateBoards()) {
+      this.redirectToPrivateBoardsPricing();
+      return;
+    }
+    this.wizardVisibility.set(visibility);
+  }
+
   readonly wizardTargetBoardId = signal('new');
   readonly wizardLockedTargetBoardId = signal<string | null>(null);
   readonly wizardContributionBoardId = signal<string | null>(null);
@@ -2902,7 +2923,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       .filter((board) => !this.songsPage() || this.isSongBoard(board))
       .filter((board) => !this.tripsPage() || this.isTourBoard(board))
       .filter((board) => this.activeGalleryTab() === 'private'
-        ? board.visibility === 'private'
+        ? board.visibility !== 'public'
         : !this.publicOwnerKey() || board.visibility === 'public')
       .sort((a, b) => this.compareBoardGallerySelection(a, b));
     if (!query) {
@@ -3418,6 +3439,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   });
 
   constructor() {
+    effect(() => {
+      const board = this.originalSelectedBoard();
+      this.meta.updateTag({ name: 'robots', content: board && board.visibility !== 'public'
+        ? 'noindex,nofollow' : this.selectedBoardId() && !board
+          ? 'noindex,nofollow' : 'index,follow,max-image-preview:large' });
+    });
     this.loadBoardActionState();
     this.loadLocalBoards();
     effect(() => {
@@ -3773,6 +3800,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.meta.removeTag('name="robots"');
     this.docxExportService.release(this.stackDocsExportResult());
     this.wizardOffGridLocationRun += 1;
     this.boardLoadSequence += 1;
@@ -3843,7 +3871,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       const snapshot = await getDocs(query(
         collection(this.firestore, 'boards'),
         where('owner_user_id', '==', uid),
-        where('visibility', '==', 'private'),
+        where('visibility', 'in', ['private', 'unlisted']),
       ));
       if (this.activeGalleryTab() !== 'private') return;
       const privateBoards = snapshot.docs
@@ -3856,8 +3884,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       });
       this.boardsSyncError.set(null);
     } catch (error) {
-      console.error('Private boards load failed', error);
-      this.boardsSyncError.set('Private boards could not be loaded. Refresh and try again.');
+      console.error('Private and unlisted boards load failed', error);
+      this.boardsSyncError.set('Private and unlisted boards could not be loaded. Refresh and try again.');
     } finally {
       this.boardsLoading.set(false);
       this.scheduleGalleryViewportCheck();
@@ -4536,6 +4564,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   ): void {
     this.wizardEntryIntent.set(entryIntent);
     this.wizardSaveDestination.set('board');
+    this.wizardVisibility.set('public');
     this.wizardPhotoStudioNotice.set('');
     if (mode === 'manual') {
       const targetBoardId = this.wizardLockedTargetBoardId();
@@ -4746,6 +4775,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.creatingBoardInside.set(null);
     this.editingBoardId.set(null);
     this.imageUploadError.set(null);
+    this.boardDialogError.set(null);
     this.boardDraft.set({
       title: '',
       description: '',
@@ -4813,6 +4843,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.wizardMode.set(draft.mode);
     this.wizardEntryIntent.set(draft.entryIntent);
     this.wizardTargetBoardId.set(draft.targetBoardId);
+    this.wizardVisibility.set(draft.visibility ?? 'public');
     this.wizardLockedTargetBoardId.set(draft.lockedTargetBoardId || null);
     this.wizardContributionBoardId.set(draft.contributionBoardId || null);
     this.wizardDefaultType.set(draft.defaultType);
@@ -6525,9 +6556,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           forkedFromTitle: '',
           forkedFromOwnerUserId: '',
           forkedFromOwnerName: '',
-          visibility: this.wizardMode() === 'nearby-gems' || this.wizardSaveDestination() === 'studio'
+          visibility: this.teamContextId() || this.wizardMode() === 'nearby-gems' || this.wizardSaveDestination() === 'studio'
             ? 'private'
-            : 'public',
+            : this.wizardVisibility(),
           photoStoryBoard: this.wizardMode() === 'photos',
           photoStudioDraft: this.wizardSaveDestination() === 'studio',
           stickers: [],
@@ -6631,7 +6662,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.boardSettingsDraft.set({
       title: board.title,
       description: board.description,
-      visibility: board.visibility,
+      visibility: board.teamId ? this.teamBoardVisitorVisibility(board) : board.visibility,
       showCardNumbers: this.boardShowsCardNumbers(board),
       insideCardsDisplay: this.boardInsideDisplay(board),
     });
@@ -6661,7 +6692,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   setBoardSettingsVisibility(visibility: BoardVisibility): void {
     const board = this.boardSettingsBoard();
-    if (board?.teamId) { this.boardSettingsError.set('Team working copies stay private. Publish from the team page.'); return; }
+    if (board?.teamId) {
+      if (this.canPublishTeamBoard(board)) this.updateBoardSettingsDraft('visibility', visibility);
+      return;
+    }
     if (!board || board.parentCardId) return;
     if (visibility === 'private' && !this.canUsePrivateBoards() && !this.isNearbyGemsBoard(board)) {
       this.redirectToPrivateBoardsPricing();
@@ -6673,6 +6707,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   async saveBoardSettings(event: Event): Promise<void> {
     event.preventDefault();
     event.stopPropagation();
+    if (this.boardSettingsSaving()) return;
     const current = this.boardSettingsBoard();
     const draft = this.boardSettingsDraft();
     const title = draft.title.trim();
@@ -6685,7 +6720,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const visibility = current.parentCardId ? current.visibility : draft.visibility;
+    const visibility = current.teamId ? 'private' : current.parentCardId ? current.visibility : draft.visibility;
     if (visibility === 'private'
       && !this.canUsePrivateBoards()
       && !current.teamId
@@ -6693,14 +6728,15 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.redirectToPrivateBoardsPricing();
       return;
     }
-    if (visibility === 'public' && current.visibility !== 'public') {
-      const talkingCards = current.cards.filter((card) => this.isTalkingCard(card));
-      const avatars = await Promise.all(talkingCards.map((card) =>
-        this.atlasService.getAccessibleAtlasById(card.conversation?.atlasId ?? '')));
-      if (avatars.some((atlas) => !atlas?.is_public)) {
-        this.boardSettingsError.set('This board contains a private or unavailable Talking Card. Publish its avatar in Wiki settings, or remove that card, before making the board public.');
-        return;
-      }
+    this.boardSettingsSaving.set(true);
+    this.boardSettingsError.set(null);
+    try {
+      await this.assertBoardVisitorKnowledge({ ...current,
+        visibility: current.teamId && this.canPublishTeamBoard(current) ? draft.visibility : visibility });
+    } catch (error) {
+      this.boardSettingsError.set(error instanceof Error ? error.message : 'Talking Card knowledge could not be checked. Please try again.');
+      this.boardSettingsSaving.set(false);
+      return;
     }
 
     const showCardNumbersChanged = this.boardShowsCardNumbers(current) !== draft.showCardNumbers;
@@ -6722,7 +6758,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       updatedAt: now,
     };
 
-    this.boards.update((boards) => boards.map((board) => board.id === nextBoard.id ? nextBoard : board));
+    if (!current.teamId) {
+      this.boards.update((boards) => boards.map((board) => board.id === nextBoard.id ? nextBoard : board));
+    }
     if (insideCardsDisplayChanged) {
       this.activeAlongsideBoardIds.set(new Set());
     }
@@ -6732,18 +6770,18 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.stackPublishedVideoReady.set(false);
     }
 
-    this.boardSettingsSaving.set(true);
-    this.boardSettingsError.set(null);
     try {
       const visibilityOnlyEdit = !showCardNumbersChanged
         && !insideCardsDisplayChanged
         && this.isVisibilityOnlyBoardEdit(current, nextBoard);
-      const saved = visibilityOnlyEdit && !current.teamId
-        ? await this.persistVisibilityAndReplaceBoard(nextBoard)
-        : await this.persistAndReplaceBoard(nextBoard);
+      const saved = current.teamId
+        ? await this.persistTeamBoardAudience(nextBoard, draft.visibility)
+        : visibilityOnlyEdit
+          ? await this.persistVisibilityAndReplaceBoard(nextBoard)
+          : await this.persistAndReplaceBoard(nextBoard);
       if (!saved) {
-        this.boards.update((boards) => boards.map((board) => board.id === current.id ? current : board));
-        this.boardSettingsError.set('These changes could not be saved. Please try again.');
+        if (!current.teamId) this.boards.update((boards) => boards.map((board) => board.id === current.id ? current : board));
+        this.boardSettingsError.set(current.teamId ? this.boardsSyncError() : 'These changes could not be saved. Please try again.');
         return;
       }
 
@@ -6783,13 +6821,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.creatingBoardInside.set(null);
     this.editingBoardId.set(board.id);
     this.imageUploadError.set(null);
+    this.boardDialogError.set(null);
     this.boardDraft.set({
       title: board.title,
       description: board.description,
       backNote: board.backNote,
       icon: board.icon,
       tone: board.tone,
-      visibility: board.visibility,
+      visibility: board.teamId ? this.teamBoardVisitorVisibility(board) : board.visibility,
       imageUrl: board.imageUrl,
       logoUrl: board.logoUrl,
       logoLinkUrl: board.logoLinkUrl,
@@ -6800,6 +6839,67 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.boardDialogOpen.set(true);
   }
 
+  teamBoardVisitorVisibility(board: Board | null | undefined): BoardVisibility {
+    return board?.teamStatus === 'published' ? board.teamPublishedVisibility ?? 'public' : 'private';
+  }
+
+  canPublishTeamBoard(board: Board | null | undefined): boolean {
+    return !!board?.teamId && this.canEditBoard(board)
+      && (this.teams.isAdmin(board.teamId) || board.representativeId === this.authService.uid());
+  }
+
+  boardVisibilitySaveLabel(board: Board | null | undefined, visibility: BoardVisibility): string {
+    if (!board?.teamId || !this.canPublishTeamBoard(board)) return 'Save changes';
+    return visibility === 'public' ? 'Save and publish Public'
+      : visibility === 'unlisted' ? 'Save and share Unlisted'
+        : board.teamStatus === 'published' ? 'Save and make Private' : 'Save changes';
+  }
+
+  private async persistTeamBoardAudience(board: Board, audience: BoardVisibility): Promise<boolean> {
+    let workingCopySaved = false;
+    const mayPublish = this.canPublishTeamBoard(board);
+    try {
+      if (!mayPublish && audience !== this.teamBoardVisitorVisibility(board)) {
+        throw new Error('Only the assigned representative or a team admin can change visitor visibility.');
+      }
+      if (mayPublish) await this.assertBoardVisitorKnowledge({ ...board, visibility: audience });
+      const saved = await this.persistBoard({ ...board, visibility: 'private' });
+      workingCopySaved = true;
+      this.boards.update((boards) => boards.map((item) => item.id === saved.id ? saved : item));
+      if (mayPublish && (audience !== 'private' || saved.teamStatus === 'published')) {
+        if (!this.canPublishTeamBoard(saved)) throw new Error('Your publishing access changed. Reopen this board.');
+        await this.teams.command('listing', {
+          teamId: saved.teamId, boardId: saved.id, revision: saved.teamRevision,
+          operation: audience === 'private' ? 'unpublish' : audience === 'unlisted' ? 'publishUnlisted' : 'publish',
+          ...(audience !== 'private' ? { visibility: audience } : {}),
+        });
+        // Reflect only acknowledged publication; the working copy stays Private.
+        const acknowledged: Board = { ...saved,
+          teamStatus: audience === 'private' ? 'unpublished' : 'published',
+          teamRevision: (saved.teamRevision || 0) + (audience === 'private' ? 1 : 0),
+          ...(audience !== 'private' ? { teamPublishedVisibility: audience } : {}),
+        };
+        this.boards.update((boards) => boards.map((item) => item.id === saved.id ? acknowledged : item));
+        try {
+          const record = await this.teams.loadBoard(saved.id);
+          const refreshed = record ? this.boardFromRecord(saved.id, record) : null;
+          if (!refreshed) throw new Error('The refreshed listing is unavailable.');
+          this.boards.update((boards) => boards.map((item) => item.id === saved.id ? refreshed : item));
+        } catch {
+          this.boardsSyncError.set('Visibility was updated. Reopen the board to refresh its working copy.');
+          return true;
+        }
+      }
+      this.boardsSyncError.set(null);
+      return true;
+    } catch (error) {
+      this.boardsSyncError.set(workingCopySaved
+        ? `Your edits were saved to the team working copy, but visitor visibility could not be updated. ${teamError(error)}`
+        : teamError(error));
+      return false;
+    }
+  }
+
   closeBoardDialog(): void {
     this.boardDialogOpen.set(false);
     this.editingBoardId.set(null);
@@ -6807,6 +6907,20 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   async saveBoard(event: Event): Promise<void> {
+    event.preventDefault();
+    if (this.boardDialogSaving()) return;
+    this.boardDialogSaving.set(true);
+    this.boardDialogError.set(null);
+    try {
+      await this.saveBoardDraft(event);
+    } catch (error) {
+      this.boardDialogError.set(teamError(error));
+    } finally {
+      this.boardDialogSaving.set(false);
+    }
+  }
+
+  private async saveBoardDraft(event: Event): Promise<void> {
     event.preventDefault();
     const draft = this.boardDraft();
     const title = draft.title.trim();
@@ -6819,6 +6933,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       : null;
     if (draft.visibility === 'private'
       && !this.canUsePrivateBoards()
+      && !editingBoardForVisibility?.teamId
       && !this.isNearbyGemsBoard(editingBoardForVisibility)) {
       this.redirectToPrivateBoardsPricing();
       return;
@@ -6849,7 +6964,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
                   kind: board.kind,
                 }),
                 tone: draft.tone,
-                visibility: board.parentCardId ? board.visibility : draft.visibility,
+                visibility: board.teamId ? 'private' : board.parentCardId ? board.visibility : draft.visibility,
                 imageUrl: draft.imageUrl.trim(),
                 logoUrl: draft.logoUrl.trim(),
                 logoLinkUrl: draft.logoLinkUrl.trim(),
@@ -6858,7 +6973,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
                 stickers: draft.stickers,
                 updatedAt: now,
           };
-          return nextBoard;
+          return board.teamId ? board : nextBoard;
         }),
       );
     } else {
@@ -6964,20 +7079,23 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (nextBoard && (editingId || !insideContext)) {
       const visibilityOnlyEdit = !!editingBoardForVisibility
         && this.isVisibilityOnlyBoardEdit(editingBoardForVisibility, nextBoard);
-      const saved = visibilityOnlyEdit && !nextBoard.teamId
-        ? await this.persistVisibilityAndReplaceBoard(nextBoard)
-        : await this.persistAndReplaceBoard(nextBoard);
+      const saved = nextBoard.teamId
+        ? await this.persistTeamBoardAudience(nextBoard, draft.visibility)
+        : visibilityOnlyEdit
+          ? await this.persistVisibilityAndReplaceBoard(nextBoard)
+          : await this.persistAndReplaceBoard(nextBoard);
       if (!saved) {
+        this.boardDialogError.set(this.boardsSyncError() || 'These changes could not be saved. Please try again.');
         return;
       }
       if (editingId) {
         const linkedChildren = this.nestedBoardsUnder(editingId)
-          .filter((board) => board.visibility !== draft.visibility
+          .filter((board) => board.visibility !== nextBoard!.visibility
             || (board.parentBoardId === editingId && board.parentBoardTitle !== title))
           .map((board) => ({
             ...board,
             parentBoardTitle: board.parentBoardId === editingId ? title : board.parentBoardTitle,
-            visibility: draft.visibility,
+            visibility: nextBoard!.visibility,
             updatedAt: now,
           }));
         if (linkedChildren.length) {
@@ -7006,7 +7124,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   openCustomUrlDialog(board: Board, event?: Event): void {
     event?.preventDefault();
     event?.stopPropagation();
-    if (board.teamId) { this.boardsSyncError.set('Team listings use a stable public link. Manage sharing from the team page.'); return; }
+    if (board.teamId) { this.boardsSyncError.set('Team listings use a stable visitor link. Manage sharing in Board settings or on the team page.'); return; }
     if (!this.canEditBoard(board)) {
       this.boardsSyncError.set('Only the board owner can set its custom URL.');
       return;
@@ -7017,8 +7135,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   openBoardPromoImage(board: Board, event?: Event): void {
     event?.preventDefault();
     event?.stopPropagation();
-    if (board.visibility !== 'public') {
-      this.boardsSyncError.set('Make this board public before creating a promo image.');
+    if (!isLinkReadableVisibility(board.visibility)) {
+      this.boardsSyncError.set('Choose Public or Unlisted before creating a promo image.');
       return;
     }
     this.boardPromoImageBoard.set(board);
@@ -10258,6 +10376,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const editingBoard = this.editingBoardId()
       ? this.boards().find((board) => board.id === this.editingBoardId()) ?? null
       : null;
+    if (editingBoard?.teamId) {
+      if (this.canPublishTeamBoard(editingBoard)) this.updateBoardDraft('visibility', visibility);
+      return;
+    }
     if (visibility === 'private' && !this.canUsePrivateBoards() && !this.isNearbyGemsBoard(editingBoard)) {
       this.redirectToPrivateBoardsPricing();
       return;
@@ -11812,26 +11934,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     event?.preventDefault();
     event?.stopPropagation();
     if (!this.canEditBoard(board) || this.nearbyGemsVisibilitySavingId()) return;
-    const nextVisibility: BoardVisibility = board.visibility === 'private' ? 'public' : 'private';
-    if (nextVisibility === 'public' && this.isBrowser) {
-      const confirmed = window.confirm(
-        'Make this Gems board public? Anyone with the link will see the saved places and broad area label. Your precise starting point was never stored.',
-      );
-      if (!confirmed) return;
-    }
-    this.nearbyGemsVisibilitySavingId.set(board.id);
-    this.nearbyGemsVisibilityMessage.set('');
-    const saved = await this.persistVisibilityAndReplaceBoard({
-      ...board,
-      visibility: nextVisibility,
-      updatedAt: new Date().toISOString(),
-    });
-    this.nearbyGemsVisibilitySavingId.set(null);
-    this.nearbyGemsVisibilityMessage.set(saved
-      ? nextVisibility === 'public'
-        ? 'This board is now public. Your starting point remains private.'
-        : 'This board is private again. Only you can open it.'
-      : 'Visibility could not be changed. Please try again.');
+    this.openBoardSettings(board, event);
   }
 
   boardCategoryLabel(board: Board): string {
@@ -13670,7 +13773,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   boardQuizShareUrl(board: Board): string {
-    if (board.visibility === 'public') {
+    if (isLinkReadableVisibility(board.visibility)) {
       const version = encodeURIComponent(board.updatedAt || board.id);
       return `${PUBLIC_APP_URL}/share/board/${encodeURIComponent(board.id)}?v=${version}&learn=quiz`;
     }
@@ -14403,8 +14506,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   toggleBoardEmailShare(board: Board, event?: Event): void {
     event?.preventDefault();
     event?.stopPropagation();
-    if (board.visibility !== 'public') {
-      this.setShareMessage('Only public boards can be emailed.');
+    if (!isLinkReadableVisibility(board.visibility)) {
+      this.setShareMessage('Choose Public or Unlisted before emailing this board.');
       return;
     }
     const opening = this.boardEmailShareOpenId() !== board.id;
@@ -14439,8 +14542,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.signInToEmailBoard();
       return;
     }
-    if (!this.functions || board.visibility !== 'public') {
-      this.boardEmailShareError.set('Only public boards can be emailed.');
+    if (!this.functions || !isLinkReadableVisibility(board.visibility)) {
+      this.boardEmailShareError.set('Choose Public or Unlisted before emailing this board.');
       return;
     }
     const email = this.boardEmailShareRecipient().trim().toLowerCase();
@@ -14492,10 +14595,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       && translation.targetLanguage !== translation.sourceLanguage) {
       publicQuery.set('lang', translation.targetLanguage);
     }
-    const path = board.visibility === 'public'
+    const path = isLinkReadableVisibility(board.visibility)
       ? `/share/board/${encodeURIComponent(board.id)}?${publicQuery.toString()}`
       : this.boardPagePath(board);
-    if (board.visibility === 'public') {
+    if (isLinkReadableVisibility(board.visibility)) {
       return `${PUBLIC_APP_URL}${path}`;
     }
     if (!this.isBrowser) {
@@ -14505,7 +14608,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private boardPagePath(board: Board): string {
-    if (board.visibility === 'public' && board.customSlug) {
+    if (isLinkReadableVisibility(board.visibility) && board.customSlug) {
       return `/boards/${encodeURIComponent(board.customSlug)}`;
     }
     return `${this.boardRouteRoot(board)}/${encodeURIComponent(board.id)}`;
@@ -14520,7 +14623,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   boardCustomUrl(board: Board): string {
-    if (board.visibility !== 'public' || !board.customSlug?.trim()) {
+    if (!isLinkReadableVisibility(board.visibility) || !board.customSlug?.trim()) {
       return '';
     }
     return this.boardPageUrl(board);
@@ -14561,7 +14664,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   stackShareUrl(board: Board): string {
-    if (board.visibility !== 'public') {
+    if (!isLinkReadableVisibility(board.visibility)) {
       return `${this.boardPageUrl(board)}?view=stack`;
     }
     const separator = this.boardShareUrl(board).includes('?') ? '&' : '?';
@@ -14756,16 +14859,25 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       if (!current || !this.isPhotoStudioDraft(current)) {
         throw new Error('This photo draft is no longer available.');
       }
+      if (current.teamId) {
+        if (!await this.persistAndReplaceBoard({ ...current, visibility: 'private', photoStudioDraft: false })) {
+          throw new Error('The team draft could not be saved. Please try again.');
+        }
+        await this.router.navigate(['/teams', current.teamId], { queryParams: { listing: current.id } });
+        return;
+      }
       const published: Board = {
         ...current,
-        visibility: 'public',
+        visibility: this.photoPublishVisibility(),
         photoStudioDraft: false,
         updatedAt: new Date().toISOString(),
       };
       if (!await this.persistAndReplaceBoard(published)) {
         throw new Error('The board could not be published. It is still private.');
       }
-      this.setStackShareMessage('Board published. Its link and Stack are now ready to share.', false);
+      this.setStackShareMessage(published.visibility === 'unlisted'
+        ? 'Board saved as Unlisted. Anyone with its link can view; it stays out of public discovery.'
+        : 'Board published. Its link and Stack are now ready to share.', false);
     } catch (error) {
       this.stackScriptError.set(error instanceof Error ? error.message : 'The board could not be published. It is still private.');
     } finally {
@@ -16578,7 +16690,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   boardQrUrl(board: Board): string {
     // A team's editable working copy stays private even after its public board
     // is published. Its QR must still point to that public board, never localhost.
-    return board.visibility === 'public' || !!board.teamId
+    return isLinkReadableVisibility(board.visibility) || !!board.teamId
       ? publicBoardQrUrl(board.id)
       : this.stackShareUrl(board);
   }
@@ -16926,7 +17038,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const savedBoard = await this.stackBoardWithSavedVideoSettings(board);
     if (!savedBoard) return;
     board = savedBoard;
-    const url = board.visibility === 'public' ? this.stackShareUrl(board) : '';
+    const url = isLinkReadableVisibility(board.visibility) ? this.stackShareUrl(board) : '';
     const caption = this.stackCaption().trim() || `LivingWiki Stack: ${board.title}`;
     const text = [caption, url].filter(Boolean).join('\n');
     this.setStackShareMessage(null);
@@ -16995,7 +17107,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   socialVideoShareUrl(board: Board): string {
-    if (!board.socialVideoUrl || board.visibility !== 'public') return '';
+    if (!board.socialVideoUrl || !isLinkReadableVisibility(board.visibility)) return '';
     const version = encodeURIComponent(
       `${board.socialVideoUpdatedAt || board.updatedAt || board.id}-${playerCardVersion}`,
     );
@@ -17004,28 +17116,28 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   socialVideoFileUrl(board: Board): string {
-    if (!board.socialVideoUrl || board.visibility !== 'public') return '';
+    if (!board.socialVideoUrl || !isLinkReadableVisibility(board.visibility)) return '';
     const version = encodeURIComponent(board.socialVideoUpdatedAt || board.updatedAt || board.id);
     const path = `/share/board/${encodeURIComponent(board.id)}/video.mp4?v=${version}`;
     return `${PUBLIC_APP_URL}${path}`;
   }
 
   trailerVideoShareUrl(board: Board): string {
-    if (!board.trailerVideoUrl || board.visibility !== 'public') return '';
+    if (!board.trailerVideoUrl || !isLinkReadableVisibility(board.visibility)) return '';
     const version = encodeURIComponent(`${board.trailerVideoUpdatedAt || board.updatedAt || board.id}-${playerCardVersion}`);
     const path = `/share/board/${encodeURIComponent(board.id)}/trailer?v=${version}`;
     return `${PUBLIC_APP_URL}${path}`;
   }
 
   trailerVideoFileUrl(board: Board): string {
-    if (!board.trailerVideoUrl || board.visibility !== 'public') return '';
+    if (!board.trailerVideoUrl || !isLinkReadableVisibility(board.visibility)) return '';
     const version = encodeURIComponent(board.trailerVideoUpdatedAt || board.updatedAt || board.id);
     const path = `/share/board/${encodeURIComponent(board.id)}/trailer.mp4?v=${version}`;
     return `${PUBLIC_APP_URL}${path}`;
   }
 
   stackSelectedShareUrl(board: Board): string {
-    if (board.visibility !== 'public') return '';
+    if (!isLinkReadableVisibility(board.visibility)) return '';
     return this.stackShareMode() === 'trailer'
       ? this.trailerVideoShareUrl(board)
       : this.stackShareMode() === 'video'
@@ -17279,7 +17391,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       };
       const persisted = await this.persistBoardVideo(nextBoard, 'trailer');
       this.boards.update((boards) => boards.map((item) => item.id === persisted.id ? persisted : item));
-      const librarySave = board.visibility === 'public' ? await this.saveStackVideoToLibrary(persisted, vertical, {
+      const librarySave = isLinkReadableVisibility(board.visibility) ? await this.saveStackVideoToLibrary(persisted, vertical, {
         publicStoragePath: verticalUpload.path,
         publicShareUrl: this.trailerVideoShareUrl(persisted),
       }, 'trailer', {
@@ -17287,7 +17399,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         publicStoragePath: landscapeUpload.path,
       }) : null;
       this.setStackShareMessage(board.teamId
-        ? 'Both trailer formats are saved to the team listing. Publish from the team page when ready.'
+        ? 'Both trailer formats are saved to the team listing. Publish from Board settings or Manage on the team page when ready.'
         : board.visibility === 'private'
         ? 'Board Trailer created in both formats and saved to My Videos. Your board is still private.'
         : librarySave === false
@@ -17314,7 +17426,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const file = await this.preparePublishedStackFile(board, 'trailer', ratio);
     if (!file) return;
     const caption = this.stackCaption().trim() || `A quick look at ${board.title}.`;
-    const boardUrl = board.visibility === 'public' ? this.stackSocialShareUrl(board) : '';
+    const boardUrl = isLinkReadableVisibility(board.visibility) ? this.stackSocialShareUrl(board) : '';
     const shareText = [caption, boardUrl].filter(Boolean).join('\n');
     try {
       if (target === 'more' && this.canNativeShareFile(file)) {
@@ -17387,7 +17499,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       subtitle: this.stackCoverSubtitle().trim() || board.description,
       ownerName: this.ownerName(board),
       coverImageUrl: this.stackCoverImage(board),
-      liveUrl: board.visibility === 'public' ? this.stackShareUrl(board) : '',
+      liveUrl: isLinkReadableVisibility(board.visibility) ? this.stackShareUrl(board) : '',
       qrImageUrl: '',
       showCardNumbers: this.boardShowsCardNumbers(board),
       branding: this.effectiveStackVideoBranding(board),
@@ -17480,7 +17592,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       };
       const persisted = await this.persistBoardVideo(nextBoard, 'full');
       this.boards.update((boards) => boards.map((item) => item.id === persisted.id ? persisted : item));
-      const librarySave = board.visibility === 'public' ? await this.saveStackVideoToLibrary(persisted, vertical, {
+      const librarySave = isLinkReadableVisibility(board.visibility) ? await this.saveStackVideoToLibrary(persisted, vertical, {
         publicStoragePath: verticalUpload.path,
         publicShareUrl: this.socialVideoShareUrl(persisted),
       }, 'full', {
@@ -17488,7 +17600,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         publicStoragePath: landscapeUpload.path,
       }) : null;
       this.setStackShareMessage(board.teamId
-        ? 'Both video formats are saved to the team listing. Publish from the team page when ready.'
+        ? 'Both video formats are saved to the team listing. Publish from Board settings or Manage on the team page when ready.'
         : board.visibility === 'private'
         ? 'Video created in both formats and saved to My Videos. Your board is still private.'
         : librarySave === false
@@ -17515,7 +17627,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const file = await this.preparePublishedStackFile(board, 'full', ratio);
     if (!file) return;
     const caption = this.stackCaption().trim() || `LivingWiki Stack: ${board.title}`;
-    const liveUrl = board.visibility === 'public' ? this.stackSocialShareUrl(board) : '';
+    const liveUrl = isLinkReadableVisibility(board.visibility) ? this.stackSocialShareUrl(board) : '';
     const shareText = [caption, liveUrl].filter(Boolean).join('\n');
     try {
       if (target === 'more' && this.canNativeShareFile(file)) {
@@ -17693,13 +17805,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       subtitle: this.stackScriptBoardDescription().trim() || board.description,
       ownerName: this.ownerName(board),
       coverImageUrl: this.stackCoverImage(board),
-      liveUrl: board.visibility === 'public' ? this.stackShareUrl(board) : '',
-      qrImageUrl: board.visibility === 'public' ? this.stackQrImageUrl(board) : '',
+      liveUrl: isLinkReadableVisibility(board.visibility) ? this.stackShareUrl(board) : '',
+      qrImageUrl: isLinkReadableVisibility(board.visibility) ? this.stackQrImageUrl(board) : '',
       showCardNumbers: this.boardShowsCardNumbers(board),
       branding: this.effectiveStackVideoBranding(board),
       closingScreen: {
         ...this.currentStackFinalScreen(board),
-        showQrCode: board.visibility === 'public' && this.stackFinalScreenShowQrCode(),
+        showQrCode: isLinkReadableVisibility(board.visibility) && this.stackFinalScreenShowQrCode(),
       },
       cards: selectedCards.map((card) => ({
         title: this.stackScriptTitle(card),
@@ -17963,7 +18075,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     verticalUpload: { path: string; url: string; file: File };
     landscapeUpload: { path: string; url: string; file: File };
   }> {
-    if (board.teamId || board.visibility === 'public') {
+    if (board.teamId || isLinkReadableVisibility(board.visibility)) {
       const [verticalUpload, landscapeUpload] = await Promise.all([
         this.uploadPublishedStackVariant(this.authService.uid(), board, videoKind, 'vertical', results.vertical, generatedAt),
         this.uploadPublishedStackVariant(this.authService.uid(), board, videoKind, 'landscape', results.landscape, generatedAt),
@@ -18481,7 +18593,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       if (error.code === 'functions/failed-precondition') {
         return error.message.includes('Verify')
           ? 'Verify your account email before sharing a board by email.'
-          : 'Only public boards can be emailed.';
+          : 'Choose Public or Unlisted before emailing this board.';
       }
       if (error.code === 'functions/unauthenticated') {
         return 'Sign in before emailing a board.';
@@ -19014,6 +19126,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return '';
     }
     return JSON.stringify({
+      visibility: this.wizardVisibility(),
       mode: this.wizardMode(),
       entryIntent: this.wizardEntryIntent(),
       targetBoardId: this.wizardTargetBoardId(),
@@ -19136,6 +19249,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       const draft: BoardWizardDraft = {
         id: draftId,
         ownerUserId: uid,
+        visibility: this.wizardVisibility(),
         mode: this.wizardMode(),
         entryIntent: this.wizardEntryIntent(),
         targetBoardId: this.wizardTargetBoardId(),
@@ -19203,6 +19317,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         updated_at_iso: draft.updatedAt,
         server_updated_at: serverTimestamp(),
       }, draft.mediaMode, {
+        visibility: draft.visibility,
         listingPhotoSource: draft.listingPhotoSource,
         listingPhotos: draft.listingPhotos,
         countMode: draft.countMode,
@@ -19333,6 +19448,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return {
         id,
         ownerUserId,
+        visibility: boardWizardDraftVisibility(value),
         mode,
         entryIntent,
         targetBoardId: this.stringValue(value['target_board_id'], 'new', 180),
@@ -19431,6 +19547,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.wizardPhotoStoryMode.set(null);
     this.wizardPhotoStudioNotice.set('');
     this.wizardSaveDestination.set('board');
+    this.wizardVisibility.set('public');
     this.wizardOffGridName.set('');
     this.wizardOffGridAddress.set('');
     this.wizardOffGridTip.set('');
@@ -21652,7 +21769,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.selectedBoardUnsubscribe = onSnapshot(
       doc(this.firestore, teamWorkingCopy ? 'team_boards' : 'boards', boardId),
       async (snapshot) => {
-        if (!snapshot.exists() || this.selectedBoardId() !== boardId) {
+        if (this.selectedBoardId() !== boardId) {
+          return;
+        }
+        if (!snapshot.exists()) {
+          this.boards.update((boards) => boards.filter((board) => board.id !== boardId));
+          this.stopStackPlayback();
           return;
         }
         let record: Record<string, unknown>;
@@ -21692,6 +21814,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           this.relatedCardEditorOpen.set(false); this.specialCardEditorBoardId.set(null);
           this.closeStackStudioImmediately(); this.resetBoardWizard(); this.wizardDrafts.set([]);
           this.boardsSyncError.set('Your access to this team listing has ended.');
+        } else {
+          this.boards.update((boards) => boards.filter((board) => board.id !== boardId));
+          this.stopStackPlayback();
+          this.boardAnalytics.stopBoardSession();
         }
       },
     );
@@ -21816,7 +21942,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private canonicalizeBoardPublicUrl(board: Board, requestedRouteKey: string): void {
-    if (!this.isBrowser || board.visibility !== 'public' || !board.customSlug) return;
+    if (!this.isBrowser || !isLinkReadableVisibility(board.visibility) || !board.customSlug) return;
     const requestedSlug = normalizeCustomPublicUrlSlug(requestedRouteKey);
     const alreadyCanonical = !this.songsPage()
       && !this.tripsPage()
@@ -22062,7 +22188,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private async persistVisibilityAndReplaceBoard(board: Board): Promise<boolean> {
-    if (board.teamId) { this.boardsSyncError.set('Use Publish or Unpublish on the team page. Working listings remain private.'); return false; }
+    if (board.teamId) { this.boardsSyncError.set('Choose visitor visibility in Board settings or Manage on the team page. Working listings remain private.'); return false; }
     if (!this.canEditBoard(board)) {
       this.boardsSyncError.set($localize`Only the board owner can save changes.`);
       return false;
@@ -22074,9 +22200,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const updatedAt = board.updatedAt || new Date().toISOString();
     const nextBoard = { ...board, ...normalizeBoardPrivacy(board), updatedAt };
     try {
+      await this.assertBoardVisitorKnowledge(nextBoard);
       await updateDoc(doc(this.firestore, 'boards', board.id), {
         visibility: board.visibility,
-        ...(nextBoard.visibility === 'public' ? { photoStudioDraft: false } : {}),
+        ...(isLinkReadableVisibility(nextBoard.visibility) ? { photoStudioDraft: false } : {}),
         updated_at_iso: updatedAt,
         server_updated_at: serverTimestamp(),
       });
@@ -22156,6 +22283,24 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.wizardDraftSaveState.set('idle');
   }
 
+  private async assertBoardVisitorKnowledge(board: Board): Promise<void> {
+    if (isLinkReadableVisibility(board.visibility)) {
+      const atlasIds = new Set<string>();
+      const inspect = (cards: BoardCard[]): void => {
+        for (const card of cards) {
+          if (card.authorOnly) continue;
+          if (card.conversation?.atlasId) atlasIds.add(card.conversation.atlasId);
+          if (card.relatedCards?.length) inspect(card.relatedCards as BoardCard[]);
+        }
+      };
+      inspect(board.cards);
+      const atlases = await Promise.all([...atlasIds].map((id) => this.atlasService.getAccessibleAtlasById(id)));
+      if (atlases.some((atlas) => !atlas?.is_public)) {
+        throw new Error('This board contains private or unavailable Talking Card knowledge. Publish its avatar or remove the card before choosing Public or Unlisted.');
+      }
+    }
+  }
+
   private async prepareBoardForFirestore(
     board: Board,
     uid: string,
@@ -22163,6 +22308,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (board.ownerUserId !== uid) {
       throw new Error('Only the board owner can save changes.');
     }
+    await this.assertBoardVisitorKnowledge(board);
+
     const boardWithOwner = {
       ...board,
       ...normalizeBoardPrivacy(board),
@@ -22184,6 +22331,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       owner_profile_icon: prepared.ownerProfileIcon,
       owner_profile_picture_type: prepared.ownerProfilePictureType,
       visibility: prepared.visibility,
+      visibility_schema_version: 1,
       created_at_iso: prepared.createdAt,
       updated_at_iso: prepared.updatedAt,
       server_updated_at: serverTimestamp(),
@@ -22352,6 +22500,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       id,
       ...(typeof data['team_id'] === 'string' ? { teamId: data['team_id'], teamRevision: Number(data['team_revision']) || 0,
         teamStatus: String(data['team_status'] || 'published'), teamDraft: this.teamContextId() === data['team_id'],
+        teamPublishedVisibility: data['published_visibility'] === 'unlisted' || data['visibility'] === 'unlisted' ? 'unlisted' : 'public',
         representativeId: String(data['representative_id'] || ''), voiceOwnerId: String(data['voice_owner_id'] || ''),
         voiceId: String(data['voice_id'] || ''), voiceRevision: Number(data['voice_revision']) || 0 } : {}),
       ...(data['team_id'] ? { teamVoiceName: String(data['voice_name'] || 'System voice'),
@@ -22952,7 +23101,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private isBoardVisibility(value: unknown): value is BoardVisibility {
-    return value === 'public' || value === 'private';
+    return value === 'public' || value === 'unlisted' || value === 'private';
   }
 
   private isCommerceImageSource(

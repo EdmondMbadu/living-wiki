@@ -28,7 +28,7 @@ export interface OffGridSpot {
   creatorUid: string;
   creatorName: string;
   location: OffGridLocation | null;
-  visibility: 'private' | 'public';
+  visibility: 'private' | 'public' | 'unlisted';
   status: 'draft' | 'active' | 'needs-location';
   cover: boolean;
   coverUrl?: string;

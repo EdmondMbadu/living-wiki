@@ -5,12 +5,21 @@ import {
   boardWizardDraftListingPhotoSource,
   boardWizardDraftListingPhotos,
   boardWizardDraftMediaMode,
+  boardWizardDraftVisibility,
   boardWizardDraftNarrationSeconds,
   boardWizardDraftCardWithPersistedImages,
   boardWizardDraftPayloadWithPreferences,
 } from './board-wizard-draft-persistence';
 
 describe('board wizard draft persistence contract', () => {
+  it('preserves the chosen audience when reopening a wizard draft', () => {
+    for (const visibility of ['public', 'unlisted', 'private'] as const) {
+      const payload = boardWizardDraftPayloadWithPreferences({ id: 'draft', result: { cards: [] } }, 'images', { visibility });
+      expect(boardWizardDraftVisibility(payload)).toBe(visibility);
+      expect(Object.prototype.hasOwnProperty.call(payload, 'visibility')).toBeFalse();
+    }
+    expect(boardWizardDraftVisibility({ result: {} })).toBe('public');
+  });
   it('restores upload choice, storage references and cover order without persisting image bytes', () => {
     const photos = Array.from({ length: 24 }, (_, index) => ({ id: `p${index}`, name: `Photo ${index}`,
       imageUrl: `team-media:team-media/team-a/draft-a/${index}.jpg`, storagePath: `team-media/team-a/draft-a/${index}.jpg` }));

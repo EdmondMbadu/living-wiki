@@ -1,3 +1,5 @@
+import { BoardVisibilityControlComponent } from '../board-visibility-control';
+import type { BoardVisibility } from '../board-visibility';
 import { DatePipe, DecimalPipe, NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import {
   Component,
@@ -46,6 +48,7 @@ import {
 @Component({
   selector: 'app-teams',
   imports: [
+    BoardVisibilityControlComponent,
     RouterLink,
     FormsModule,
     DatePipe,
@@ -267,6 +270,13 @@ export class TeamsComponent {
   memberForm = { title: '', bio: '', publicVisible: false, contactEmail: '', contactPhone: '' };
   selectedVoiceId = '';
   selectedRepId = '';
+  readonly listingVisibility = signal<BoardVisibility>('private');
+
+  saveListingVisibility(listing: TeamListing): void {
+    const visibility = this.listingVisibility();
+    if (visibility === 'private') this.listingAction('unpublish', listing);
+    else this.listingAction('publish', listing, visibility);
+  }
 
   constructor() {
     combineLatest([this.route.paramMap, this.route.queryParamMap])
@@ -625,6 +635,8 @@ export class TeamsComponent {
     }
     if (kind === 'listing' && listing) {
       this.selectedRepId = listing.representativeId;
+      this.listingVisibility.set(listing.status === 'published'
+        ? listing.publishedVisibility === 'unlisted' ? 'unlisted' : 'public' : 'private');
       this.contacts.set([]);
       this.contactsError.set('');
       this.contactsCursor.set(null);
@@ -924,20 +936,26 @@ export class TeamsComponent {
       operation === 'transfer' ? 'Ownership transferred.' : 'Membership updated.',
     );
   }
-  listingAction(operation: string, listing: TeamListing): void {
+  listingAction(operation: string, listing: TeamListing, visibility?: BoardVisibility): void {
+    const audience = visibility || (listing.publishedVisibility === 'unlisted' ? 'unlisted' : 'public');
     if (
       ['unpublish', 'archive', 'delete'].includes(operation) &&
       !window.confirm(
         operation === 'delete'
           ? `Permanently delete “${listing.title}”? This cannot be undone.`
-          : `${operation === 'archive' ? 'Archive' : 'Unpublish'} “${listing.title}”? Its public link will become unavailable.`,
+          : `${operation === 'archive' ? 'Archive' : 'Unpublish'} “${listing.title}”? Its visitor link will become unavailable.`,
       )
     )
       return;
     void this.run(
       'listing',
-      { operation, boardId: listing.id, revision: listing.revision },
-      operation === 'publish' ? 'Public listing updated.' : 'Listing updated.',
+      { operation: operation === 'publish' && audience === 'unlisted' ? 'publishUnlisted' : operation,
+        boardId: listing.id, revision: listing.revision,
+        ...(operation === 'publish' ? { visibility: audience } : {}) },
+      operation === 'publish'
+        ? (visibility || listing.publishedVisibility) === 'unlisted'
+          ? 'Unlisted listing updated. Anyone with the link can view it.' : 'Public listing updated.'
+        : operation === 'unpublish' ? 'Listing is private. Visitor links are unavailable.' : 'Listing updated.',
     );
   }
   assign(): void {

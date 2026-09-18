@@ -736,9 +736,16 @@ function privateTombstone(board: TeamRecord): TeamRecord {
 
 async function listingAction(teamId: string, uid: string, data: TeamRecord) {
   const boardId = id(data.boardId);
-  const operation = data.operation;
+  // A distinct operation fails safely against older deployed servers rather
+  // than silently ignoring the audience and publishing an unlisted request.
+  const operation = data.operation === 'publishUnlisted' ? 'publish' : data.operation;
   let publicMedia: TeamRecord | null = null;
+  let publishedVisibility: 'public' | 'unlisted' = 'public';
   if (operation === 'publish') {
+    if (data.visibility !== undefined && !['public', 'unlisted'].includes(data.visibility))
+      fail('Choose Public or Unlisted before publishing. Use Unpublish to make a listing private.');
+    if (data.operation === 'publishUnlisted' && data.visibility !== undefined && data.visibility !== 'unlisted')
+      fail('Unlisted publication requires the Unlisted audience.');
     const { team, member } = await requireTeamMember(teamId, uid);
     active(team);
     const source = (await listingRef(boardId).get()).data();
@@ -746,10 +753,13 @@ async function listingAction(teamId: string, uid: string, data: TeamRecord) {
       throw new HttpsError('aborted', 'The listing changed. Refresh before publishing.');
     if (!canPublishTeamListing(member['role'], uid, source))
       throw new HttpsError('permission-denied', 'Only the representative or an admin can publish.');
+    // Older clients updating an unlisted listing must preserve its audience.
+    publishedVisibility = data.operation === 'publishUnlisted' ? 'unlisted'
+      : data.visibility || (source['published_visibility'] === 'unlisted' ? 'unlisted' : 'public');
     await validatePublicConversations(source['cards'] || []);
     // Copies are immutable and prepared outside the transaction; authorization and revision are rechecked before exposure.
     publicMedia = await publishMedia(
-      publicTeamBoard(source, teamId, team, new Date().toISOString()),
+      publicTeamBoard(source, teamId, team, new Date().toISOString(), publishedVisibility),
       teamId,
       boardId,
     );
@@ -796,9 +806,10 @@ async function listingAction(teamId: string, uid: string, data: TeamRecord) {
         );
       next['team_status'] = 'published';
       next['published_revision'] = board['team_revision'];
+      next['published_visibility'] = publishedVisibility;
       published = {
         ...publicMedia,
-        ...publicTeamBoard({ ...next, ...publicMedia }, teamId, team, now),
+        ...publicTeamBoard({ ...next, ...publicMedia }, teamId, team, now, publishedVisibility),
       };
     } else if (operation === 'unpublish') next['team_status'] = 'unpublished';
     else if (operation === 'archive') next['team_status'] = 'archived';
@@ -841,7 +852,7 @@ async function listingAction(teamId: string, uid: string, data: TeamRecord) {
         representative_id: next['representative_id'],
         revision: next['published_revision'],
       });
-      tx.set(db.collection('public_team_listings').doc(boardId), {
+      if (publishedVisibility === 'public') tx.set(db.collection('public_team_listings').doc(boardId), {
         teamId,
         id: boardId,
         title: published['title'],
@@ -850,6 +861,7 @@ async function listingAction(teamId: string, uid: string, data: TeamRecord) {
         representativeId: next['representative_id'],
         updatedAt: now,
       });
+      else tx.delete(db.collection('public_team_listings').doc(boardId));
     } else if (['unpublish', 'archive', 'restore'].includes(operation)) {
       tx.set(db.collection('boards').doc(boardId), privateTombstone(next));
       tx.delete(db.collection('public_team_listings').doc(boardId));

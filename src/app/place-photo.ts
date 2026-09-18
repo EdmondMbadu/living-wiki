@@ -1,3 +1,4 @@
+import { isLinkReadableVisibility } from './board-visibility';
 // Keep this pure URL contract in sync with functions/src/place-photo.ts.
 export const PLACE_PHOTO_ENDPOINT = 'https://us-central1-living-atlas-7622a.cloudfunctions.net/boardPlacePhoto';
 
@@ -35,6 +36,6 @@ export function boardCoverPhotoUrl(boardId: string, board: Record<string, unknow
   const match = cards.find((card) => card && typeof card === 'object'
     && card.authorOnly !== true
     && (card.imageUrl === source || (Array.isArray(card.imageUrls) && card.imageUrls.includes(source))));
-  return stablePlacePhotoUrl(source, match?.placeId, board['visibility'] === 'public' ? boardId : undefined);
+  return stablePlacePhotoUrl(source, match?.placeId, isLinkReadableVisibility(board['visibility']) ? boardId : undefined);
 }
 

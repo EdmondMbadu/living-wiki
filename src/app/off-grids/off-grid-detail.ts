@@ -1,3 +1,4 @@
+import { isLinkReadableVisibility } from '../board-visibility';
 import { offGridCopy } from './off-grid-copy';
 import { isPlatformBrowser } from '@angular/common';
 import {
@@ -182,6 +183,7 @@ export class OffGridDetailComponent {
       void this.loadSaved();
     });
     this.destroy.onDestroy(() => {
+      this.meta.removeTag('name="robots"');
       this.disposed = true;
       this.detailVersion++;
     });
@@ -220,7 +222,8 @@ export class OffGridDetailComponent {
       this.setHero(spot.coverUrl || '');
       this.title.setTitle(`${spot.title} · Off Grids | LivingWiki`);
       this.meta.updateTag({ name: 'description', content: spot.tip });
-      if (spot.visibility === 'public') this.meta.updateTag({ property: 'og:image', content: spot.coverUrl || '' });
+      this.meta.updateTag({ name: 'robots', content: spot.visibility === 'public' ? 'index,follow' : 'noindex,nofollow' });
+      if (isLinkReadableVisibility(spot.visibility)) this.meta.updateTag({ property: 'og:image', content: spot.coverUrl || '' });
       else this.meta.removeTag('property="og:image"');
     } catch (error) {
       if (!uid && !this.authReady) await this.service.auth.waitForReady();
@@ -278,9 +281,10 @@ export class OffGridDetailComponent {
       this.message.set($localize`Copy is unavailable. Select and copy the link shown below.`);
     }
   }
+  readonly isLinkReadableVisibility = isLinkReadableVisibility;
   async share(): Promise<void> {
     const spot = this.selected();
-    if (!spot || spot.visibility !== 'public') return;
+    if (!spot || !isLinkReadableVisibility(spot.visibility)) return;
     const data = { title: spot.title, text: spot.tip, url: spot.shareUrl };
     try {
       if (navigator.share) await navigator.share(data);

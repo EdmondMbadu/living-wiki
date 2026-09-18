@@ -1,3 +1,4 @@
+import { isLinkReadableVisibility } from './board-visibility';
 import { boardCoverPhotoUrl, placePhotoUrl, safePlaceId } from './place-photo';
 
 type Dependencies = {
@@ -18,7 +19,7 @@ export async function resolvePlacePhoto(
     if (typeof boardId !== 'string' || !/^[A-Za-z0-9_-]{1,180}$/.test(boardId)) return { status: 400 };
     const board = await deps.getBoard(boardId);
     // A public image endpoint must not reveal private boards or author-only cards.
-    if (!board || board['visibility'] !== 'public' || board['deleted_at'] || board['team_draft'] === true) return { status: 404 };
+    if (!board || !isLinkReadableVisibility(board['visibility']) || board['deleted_at'] || board['team_draft'] === true) return { status: 404 };
     placeId = safePlaceId(placePhotoUrl(boardCoverPhotoUrl(boardId, board))?.searchParams.get('placeId'));
     if (!placeId) return { status: 404 };
   }

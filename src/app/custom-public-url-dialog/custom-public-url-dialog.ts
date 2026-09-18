@@ -183,7 +183,7 @@ export class CustomPublicUrlDialogComponent implements OnInit, AfterViewInit, On
       : '';
     if (/already|taken/i.test(message)) return 'That custom URL is already taken.';
     if (/membership|upgrade|permission/i.test(message)) return 'An active paid membership is required to set a custom URL.';
-    if (/public/i.test(message)) return `Make this ${this.resourceLabel()} public before setting a custom URL.`;
+    if (/public/i.test(message)) return this.resourceType() === 'board' ? 'Choose Public or Unlisted before setting a custom URL.' : 'Make this collection public before setting a custom URL.';
     return message.replace(/^FirebaseError:\s*/i, '') || 'The custom URL could not be saved.';
   }
 }

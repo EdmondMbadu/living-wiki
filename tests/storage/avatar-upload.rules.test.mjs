@@ -212,3 +212,21 @@ test('voice samples remain private and reject non-audio content', async () => {
     { contentType: 'text/plain' },
   ));
 });
+
+
+test('team visitor media supports Unlisted while originals remain private and unpublishing revokes reads', async () => {
+  const publicPath = 'public-team-media/team-a/listing-unlisted/image.png';
+  const privatePath = 'team-media/team-a/listing-unlisted/original.png';
+  await testEnvironment.withSecurityRulesDisabled(async c => {
+    await setDoc(doc(c.firestore(), 'boards', 'listing-unlisted'), { team_id: 'team-a', visibility: 'unlisted' });
+    await uploadBytes(ref(c.storage(), publicPath), new Uint8Array([1, 2]), { contentType: 'image/png' });
+    await uploadBytes(ref(c.storage(), privatePath), new Uint8Array([1, 2]), { contentType: 'image/png' });
+  });
+  const guest = testEnvironment.unauthenticatedContext().storage();
+  await assertSucceeds(getBytes(ref(guest, publicPath)));
+  await assertFails(getBytes(ref(guest, privatePath)));
+  await testEnvironment.withSecurityRulesDisabled(async c => {
+    await setDoc(doc(c.firestore(), 'boards', 'listing-unlisted'), { team_id: 'team-a', visibility: 'private' });
+  });
+  await assertFails(getBytes(ref(guest, publicPath)));
+});

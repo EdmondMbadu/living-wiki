@@ -454,3 +454,5 @@
     width: 100%;
   }
 }
+
+.board-visibility-section { flex-direction: column; align-items: stretch; gap: .5rem; }

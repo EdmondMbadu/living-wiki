@@ -1,3 +1,4 @@
+import { isLinkReadableVisibility } from '../board-visibility';
 import { randomUUID } from 'node:crypto';
 import { geohashQueryBounds, distanceBetween } from 'geofire-common';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -32,27 +33,37 @@ const identifier = (v: unknown): string => {
     throw new HttpsError('invalid-argument', 'Invalid gem identifier.');
   return id;
 };
-export async function effectivePublic(
+export async function effectiveVisitorAccess(
   spot: Record<string, any>,
   providedSource?: FirebaseFirestore.DocumentData | null,
 ): Promise<boolean> {
-  if (spot.visibility !== 'public' || spot.status !== 'active') return false;
-  if (!spot.sourceRef) return true;
+  if (!isLinkReadableVisibility(spot.visibility) || spot.status !== 'active') return false;
+  if (!spot.sourceRef) return spot.visibility === 'public';
   const source =
     providedSource === undefined
       ? await currentSource(spot.sourceRef.boardId)
       : providedSource;
   return (
-    source?.visibility === 'public' &&
+    !!source && isLinkReadableVisibility(source.visibility) &&
     Array.isArray(source.cards) &&
     source.cards.some(
       (c: any) => c.id === spot.sourceRef.cardId && !c.authorOnly && isOffGridCard(source, c),
     )
   );
 }
+/** Directory visibility remains strictly Public, including the current parent board. */
+export async function effectivePublic(
+  spot: Record<string, any>, providedSource?: FirebaseFirestore.DocumentData | null,
+): Promise<boolean> {
+  if (spot.visibility !== 'public') return false;
+  const source = spot.sourceRef
+    ? providedSource === undefined ? await currentSource(spot.sourceRef.boardId) : providedSource
+    : null;
+  return (!spot.sourceRef || source?.visibility === 'public') && effectiveVisitorAccess(spot, source);
+}
 async function canContribute(spot: Record<string, any>, uid: string): Promise<boolean> {
   if (spot.ownerUid === uid) return true;
-  if (!spot.allowContributions || !(await effectivePublic(spot))) return false;
+  if (!spot.allowContributions || !(await effectiveVisitorAccess(spot))) return false;
   const ids = [spot.ownerUid, uid].sort();
   // Match the existing accepted-friend relation without assuming its document key.
   const friends = await db
@@ -84,8 +95,9 @@ export const offGridCommand = onCall(
     const id = identifier(data.spotId);
     if (action === 'detail') {
       const spot = await getSpot(id),
+        source = spot.sourceRef ? await currentSource(spot.sourceRef.boardId) : null,
         owner = uid === spot.ownerUid,
-        visible = await effectivePublic(spot);
+        visible = await effectiveVisitorAccess(spot, source);
       if (!owner && !visible)
         throw new HttpsError('not-found', 'This gem is private or unavailable.');
       const clips = await db
@@ -113,7 +125,8 @@ export const offGridCommand = onCall(
         ownerUid: spot.ownerUid,
         creatorUid: spot.creatorUid,
         creatorName: spot.creatorName,
-        visibility: spot.visibility,
+        visibility: spot.sourceRef && isLinkReadableVisibility(spot.visibility)
+          ? source?.visibility || 'private' : spot.visibility,
         status: spot.status,
         location: spot.location,
         createdAt: spot.createdAt,
@@ -395,10 +408,10 @@ export const offGridCommand = onCall(
               'permission-denied',
               'Only the source board owner can edit this gem.',
             );
-          if (visibility === 'public' && board.visibility !== 'public')
+          if (visibility === 'public' && !isLinkReadableVisibility(board.visibility))
             throw new HttpsError(
               'failed-precondition',
-              'Make the source board public before publishing this gem.',
+              'Choose Public or Unlisted for the source board before sharing this gem.',
             );
         }
         const now = new Date().toISOString(),
@@ -412,7 +425,7 @@ export const offGridCommand = onCall(
                   tip: text(data.tip, 1600),
                   accessNote: text(data.accessNote, 1000),
                   location,
-                  visibility,
+                  visibility: board && visibility === 'public' ? board.visibility : visibility,
                   status,
                   updatedAt: now,
                   allowContributions: data.allowContributions !== false,
@@ -469,7 +482,7 @@ export const offGridMedia = onRequest(
         if ((g?.spotId === id || g?.spotId === '*') && g.expiresAt > Date.now()) uid = g.uid;
       }
       const owner = uid === spot.ownerUid,
-        visible = await effectivePublic(spot);
+        visible = await effectiveVisitorAccess(spot);
       let path = '';
       if (req.query.asset === 'staged-cover') {
         const job = (await db.doc(`off_grid_uploads/${identifier(req.query.ticket)}`).get()).data();
@@ -551,11 +564,14 @@ export const offGridShare = onRequest({ region }, async (req, res) => {
   res.set('Cache-Control', 'private, no-store');
   try {
     const id = identifier(req.path.split('/').filter(Boolean).pop()),
-      s = await getSpot(id);
-    if (!(await effectivePublic(s))) {
+      s = await getSpot(id),
+      source = s.sourceRef ? await currentSource(s.sourceRef.boardId) : null;
+    if (!(await effectiveVisitorAccess(s, source))) {
       res.sendStatus(404);
       return;
     }
+    if (s.visibility === 'unlisted' || source?.visibility === 'unlisted')
+      res.set('X-Robots-Tag', 'noindex, nofollow');
     const url = `https://${process.env.GCLOUD_PROJECT}.web.app/off-grids/${id}`,
       image = `${mediaBase()}?spot=${id}&asset=cover-large`,
       point = pointFrom(s.location)!;

@@ -256,6 +256,7 @@ service cloud.firestore {
         'forkedFromOwnerUserId',
         'forkedFromOwnerName',
         'visibility',
+        'visibility_schema_version',
         'photoStoryBoard',
         'photoStudioDraft',
         'kind',
@@ -933,7 +934,15 @@ service cloud.firestore {
         // team snapshots must never enter a legacy owner or platform-admin write path.
         return request.method == 'create' || resource.data.get('team_id', '') == '';
       }
-      allow get: if resource.data.visibility == 'public'
+      function safeFullBoardVisibilityMutation() {
+        // Old two-state clients can misread Unlisted as Public on a full save.
+        // Explicit visibility-only updates still use the separate narrow rule.
+        return request.method == 'create'
+          || resource.data.visibility != 'unlisted'
+          || request.resource.data.visibility != 'public'
+          || request.resource.data.get('visibility_schema_version', 0) == 1;
+      }
+      allow get: if resource.data.visibility in ['public', 'unlisted']
         || (isSignedIn() && resource.data.owner_user_id == request.auth.uid)
         || (resource.data.atlas_id is string && canAdminAtlasById(resource.data.atlas_id))
         || isPlatformAdmin();
@@ -956,7 +965,7 @@ service cloud.firestore {
         && resource.data.owner_user_id == request.auth.uid
         && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['photoStudioDraft'])
-          || (request.resource.data.photoStudioDraft == false && request.resource.data.visibility == 'public')
+          || (request.resource.data.photoStudioDraft == false && request.resource.data.visibility in ['public', 'unlisted'])
         )
         && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['stackNarratorVoiceId'])
@@ -965,9 +974,9 @@ service cloud.firestore {
         && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['visibility'])
           || (
-            request.resource.data.visibility in ['public', 'private']
+            request.resource.data.visibility in ['public', 'unlisted', 'private']
             && (
-              request.resource.data.visibility == 'public'
+              request.resource.data.visibility in ['public', 'unlisted']
               || resource.data.kind == 'nearby-gems'
               || isPlatformAdmin()
               || hasActivePersonalWikiPlan()
@@ -1005,7 +1014,8 @@ service cloud.firestore {
         && request.resource.data.id == boardId
         && resource.data.kind == 'nearby-gems'
         && request.resource.data.kind == 'nearby-gems'
-        && request.resource.data.visibility in ['public', 'private']
+        && safeFullBoardVisibilityMutation()
+        && request.resource.data.visibility in ['public', 'unlisted', 'private']
         && hasNearbyGemsGenerationGrant(request.resource.data, boardId, false)
         && request.resource.data.keys().hasOnly(personalBoardKeys())
         && hasNoCityPublishingMetadata(request.resource.data)
@@ -1025,44 +1035,18 @@ service cloud.firestore {
         && request.resource.data.owner_user_id == request.auth.uid
         && request.resource.data.id == boardId
         && (request.method == 'create' || resource.data.owner_user_id == request.auth.uid)
-        && request.resource.data.visibility in ['public', 'private']
+        && safeFullBoardVisibilityMutation()
+        && request.resource.data.visibility in ['public', 'unlisted', 'private']
         && (
-          request.resource.data.visibility == 'public'
+          request.resource.data.visibility in ['public', 'unlisted']
           || isPhotoStudioDraft(request.resource.data)
           || isPlatformAdmin()
           || hasActivePersonalWikiPlan()
         )
         && request.resource.data.keys().hasOnly(personalBoardKeys())
         && hasNoCityPublishingMetadata(request.resource.data)
-        && request.resource.data.keys().hasAll([
-          'id',
-          'owner_user_id',
-          'owner_public_slug',
-          'owner_display_name',
-          'owner_photo_url',
-          'owner_profile_icon',
-          'owner_profile_picture_type',
-          'visibility',
-          'title',
-          'description',
-          'backNote',
-          'icon',
-          'tone',
-          'imageUrl',
-          'logoUrl',
-          'logoLinkUrl',
-          'stackCtaLabel',
-          'stackCtaUrl',
-          'socialVideoUrl',
-          'socialVideoMimeType',
-          'socialVideoUpdatedAt',
-          'socialVideoRatio',
-          'stickers',
-          'cards',
-          'created_at_iso',
-          'updated_at_iso',
-          'server_updated_at'
-        ])
+        // Required fields are already accessed and type-checked below. Avoid
+        // a redundant hasAll list so full saves stay within the expression limit.
         && request.resource.data.owner_public_slug is string
         && request.resource.data.owner_public_slug.size() >= 2
         && request.resource.data.owner_public_slug.size() <= 80
@@ -1151,6 +1135,7 @@ service cloud.firestore {
           'forkedFromOwnerUserId',
           'forkedFromOwnerName',
           'visibility',
+          'visibility_schema_version',
           'kind',
           'sortOrder',
           'title',
@@ -1411,9 +1396,10 @@ service cloud.firestore {
             && request.resource.data.owner_user_id == resource.data.owner_user_id
           )
         )
-        && request.resource.data.visibility in ['public', 'private']
+        && safeFullBoardVisibilityMutation()
+        && request.resource.data.visibility in ['public', 'unlisted', 'private']
         && (
-          request.resource.data.visibility == 'public'
+          request.resource.data.visibility in ['public', 'unlisted']
           || isPlatformAdmin()
           || hasActivePersonalWikiPlan()
         )
@@ -1430,6 +1416,7 @@ service cloud.firestore {
           'forkedFromOwnerUserId',
           'forkedFromOwnerName',
           'visibility',
+          'visibility_schema_version',
           'kind',
           'sortOrder',
           'title',

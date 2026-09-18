@@ -1,3 +1,4 @@
+import { isLinkReadableVisibility } from './board-visibility';
 import { FieldValue } from 'firebase-admin/firestore';
 import { onDocumentDeleted } from 'firebase-functions/v2/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
@@ -101,8 +102,8 @@ export const setCustomPublicUrl = onCall(
       if (profile?.['role'] !== 'admin' && resource['owner_user_id'] !== userId) {
         throw new HttpsError('permission-denied', `Only the ${type} owner can set its custom URL.`);
       }
-      if (resource['visibility'] !== 'public') {
-        throw new HttpsError('failed-precondition', `Make this ${type} public before setting a custom URL.`);
+      if (type === 'board' ? !isLinkReadableVisibility(resource['visibility']) : resource['visibility'] !== 'public') {
+        throw new HttpsError('failed-precondition', `${type === 'board' ? 'Choose Public or Unlisted for this board' : 'Make this collection public'} before setting a custom URL.`);
       }
       if (collidingResourceSnapshot.exists && collidingResourceSnapshot.id !== resourceId) {
         throw new HttpsError('already-exists', 'That custom URL is already taken.');

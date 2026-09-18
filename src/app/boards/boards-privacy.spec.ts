@@ -1,6 +1,44 @@
 import { signal } from '@angular/core';
 import { BoardsComponent } from './boards';
 
+function teamPublicationHarness(): any {
+  const component = harness();
+  let record: Record<string, any> = {
+    id: 'listing-a', team_id: 'team-a', owner_user_id: 'team:team-a',
+    team_status: 'published', team_revision: 4, published_visibility: 'unlisted',
+    title: 'Shared home', visibility: 'private', representative_id: 'owner', cards: [{ id: 'room', title: 'Room' }],
+  };
+  component.teamContextId = () => 'team-a';
+  component.teams = {
+    isAdmin: () => true,
+    hasAccess: () => true,
+    saveBoard: jasmine.createSpy('save team draft').and.callFake(async (_team: string, _id: string, board: any, revision: number) => {
+      record = { ...record, title: board.title, description: board.description,
+        visibility: board.visibility, team_revision: revision + 1 };
+      return record;
+    }),
+    command: jasmine.createSpy('publish visitor version').and.callFake(async (_action: string, data: any) => {
+      record = { ...record, team_status: data.operation === 'unpublish' ? 'unpublished' : 'published',
+        published_visibility: data.visibility || record['published_visibility'],
+        team_revision: record['team_revision'] + (data.operation === 'unpublish' ? 1 : 0) };
+      return { ok: true };
+    }),
+    loadBoard: jasmine.createSpy('refresh team draft').and.callFake(async () => record),
+  };
+  Object.assign(component, {
+    boardsSyncError: signal(null), boardSettingsError: signal(null), boardSettingsSaving: signal(false),
+    boardSettingsBoardId: signal(null), boardSettingsDraft: signal({}),
+    boardSettingsBoard: () => component.boards()[0],
+    canUsePrivateBoards: () => false,
+    redirectToPrivateBoardsPricing: jasmine.createSpy('private pricing'),
+    closeBoardSettings: jasmine.createSpy('close settings'),
+    creatingBoardInside: signal(null), editingBoardId: signal(null), imageUploadError: signal(null),
+    boardDraft: signal({}), boardDialogError: signal(null), boardDialogOpen: signal(false), boardDialogSaving: signal(false),
+  });
+  component.boards.set([component.boardFromRecord('listing-a', record)]);
+  return component;
+}
+
 // Exercise the real save/render orchestration without starting gallery subscriptions.
 function harness(): any {
   const component = Object.create(BoardsComponent.prototype);
@@ -12,6 +50,7 @@ function harness(): any {
     firestore: null,
     boards: signal([]),
     boardTranslationActive: () => false,
+    boardTranslationResult: () => null,
     stackVideoExporting: signal(false),
     stackVideoBrandingLoading: () => false,
     stackVideoBrandingSaving: () => false,
@@ -213,5 +252,116 @@ describe('board privacy and video creation', () => {
     component.createStackVideoPair = jasmine.createSpy('render');
     await component.publishStackVideo(savedBoard(component, { owner_user_id: 'another-owner' }));
     expect(component.createStackVideoPair).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('unlisted board access and sharing', () => {
+  it('preserves an unlisted photo story across loading and full saves', async () => {
+    const component = harness();
+    const board = savedBoard(component, { visibility: 'unlisted' });
+    expect(board.visibility).toBe('unlisted');
+    expect(board.photoStudioDraft).toBeFalse();
+    const saved = await component.persistBoard({ ...board, photoStudioDraft: true });
+    expect(saved.visibility).toBe('unlisted');
+    expect(saved.photoStudioDraft).toBeFalse();
+  });
+
+  it('uses normal production share, QR, custom alias, and video links without enabling forks', () => {
+    const component = harness();
+    const board = savedBoard(component, { visibility: 'unlisted', custom_slug: 'link-only-story', socialVideoUrl: 'https://example.test/video.mp4' });
+    expect(component.boardShareUrl(board)).toContain('https://www.livingwiki.com/share/board/board-1');
+    expect(component.boardPageUrl(board)).toContain('/boards/link-only-story');
+    expect(component.boardQrUrl(board)).toContain('https://www.livingwiki.com/boards/board-1');
+    expect(component.socialVideoShareUrl(board)).toContain('/share/board/board-1/video');
+    component.authService.uid = () => 'visitor';
+    component.authService.isAuthenticated = () => true;
+    expect(component.canEditBoard(board)).toBeFalse();
+    expect(component.canForkBoard(board)).toBeFalse();
+  });
+
+  it('creates both video formats for an unlisted board through the visitor media path', async () => {
+    const component = harness();
+    const board = savedBoard(component, { visibility: 'unlisted' });
+    const result = { blob: new Blob(['video']), extension: 'mp4', mimeType: 'video/mp4', durationSeconds: 4 };
+    component.uploadPublishedStackVariant = jasmine.createSpy('upload').and.resolveTo({ path: 'shared/video', url: 'https://example.test/video', file: new File([], 'video.mp4') });
+    component.saveStackVideoToLibrary = jasmine.createSpy('private library');
+    await component.storeStackVideoPair(board, { vertical: result, landscape: result }, 'full', 'now');
+    expect(component.uploadPublishedStackVariant).toHaveBeenCalledTimes(2);
+    expect(component.saveStackVideoToLibrary).not.toHaveBeenCalled();
+    expect(board.visibility).toBe('unlisted');
+  });
+
+  it('rejects sharing private Talking Card knowledge as Unlisted before writing or uploading', async () => {
+    const component = harness();
+    const board = savedBoard(component, { visibility: 'unlisted', cards: [{ id: 'agent', title: 'Agent', conversation: { atlasId: 'private-agent', provider: 'atlas' } }] });
+    component.atlasService = { getAccessibleAtlasById: jasmine.createSpy('avatar').and.resolveTo({ is_public: false }) };
+    await expectAsync(component.prepareBoardForFirestore(board, 'owner')).toBeRejectedWithError(/private or unavailable Talking Card/);
+  });
+});
+
+describe('team visitor visibility in the board editor', () => {
+  for (const audience of ['public', 'unlisted', 'private']) {
+    it(`saves the team working copy before applying ${audience} with the new revision`, async () => {
+      const component = teamPublicationHarness();
+      component.openBoardSettings(component.boards()[0]);
+      expect(component.boardSettingsDraft().visibility).toBe('unlisted');
+      component.updateBoardSettingsDraft('title', 'Updated home');
+      component.setBoardSettingsVisibility(audience);
+      await component.saveBoardSettings(new Event('submit'));
+      expect(component.teams.saveBoard).toHaveBeenCalledWith('team-a', 'listing-a',
+        jasmine.objectContaining({ visibility: 'private', title: 'Updated home' }), 4);
+      expect(component.teams.command).toHaveBeenCalledOnceWith('listing', jasmine.objectContaining({
+        teamId: 'team-a', boardId: 'listing-a', revision: 5,
+        operation: audience === 'private' ? 'unpublish' : audience === 'unlisted' ? 'publishUnlisted' : 'publish',
+      }));
+      expect(component.boards()[0].visibility).toBe('private');
+      expect(component.teamBoardVisitorVisibility(component.boards()[0])).toBe(audience);
+      expect(component.redirectToPrivateBoardsPricing).not.toHaveBeenCalled();
+      expect(component.closeBoardSettings).toHaveBeenCalled();
+      expect(component.boardSettingsSaving()).toBeFalse();
+    });
+  }
+
+  it('lets ordinary members save working edits without publishing or changing the audience', async () => {
+    const component = teamPublicationHarness();
+    component.teams.isAdmin = () => false;
+    component.boards.set([{ ...component.boards()[0], representativeId: 'other-member' }]);
+    component.openBoardSettings(component.boards()[0]);
+    component.setBoardSettingsVisibility('public');
+    expect(component.boardSettingsDraft().visibility).toBe('unlisted');
+    expect(component.boardVisibilitySaveLabel(component.boards()[0], 'unlisted')).toBe('Save changes');
+    await component.saveBoardSettings(new Event('submit'));
+    expect(component.teams.saveBoard).toHaveBeenCalled();
+    expect(component.teams.command).not.toHaveBeenCalled();
+  });
+
+  it('keeps saved working edits and the previous audience when publication fails', async () => {
+    const component = teamPublicationHarness();
+    component.teams.command.and.rejectWith(new Error('The listing changed. Refresh before publishing.'));
+    component.openBoardSettings(component.boards()[0]);
+    component.updateBoardSettingsDraft('title', 'Saved draft title');
+    component.setBoardSettingsVisibility('public');
+    await component.saveBoardSettings(new Event('submit'));
+    expect(component.boards()[0].title).toBe('Saved draft title');
+    expect(component.boards()[0].visibility).toBe('private');
+    expect(component.teamBoardVisitorVisibility(component.boards()[0])).toBe('unlisted');
+    expect(component.boardSettingsError()).toContain('edits were saved');
+    expect(component.closeBoardSettings).not.toHaveBeenCalled();
+    expect(component.boardSettingsSaving()).toBeFalse();
+  });
+
+  it('uses the same visitor controls and revisioned publication when editing the board cover', async () => {
+    const component = teamPublicationHarness();
+    component.openEditBoard(component.boards()[0]);
+    expect(component.boardDraft().visibility).toBe('unlisted');
+    component.setBoardDraftVisibility('public');
+    await component.saveBoard(new Event('submit'));
+    expect(component.teams.command).toHaveBeenCalledOnceWith('listing', jasmine.objectContaining({
+      revision: 5, operation: 'publish', visibility: 'public',
+    }));
+    expect(component.boards()[0].visibility).toBe('private');
+    expect(component.boardDialogOpen()).toBeFalse();
+    expect(component.boardDialogSaving()).toBeFalse();
   });
 });

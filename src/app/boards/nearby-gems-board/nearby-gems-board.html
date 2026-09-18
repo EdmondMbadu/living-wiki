@@ -26,7 +26,7 @@
       } @else {
         <div class="nearby-gems-board__privacy nearby-gems-board__privacy--public" role="status">
           <span class="material-symbols-outlined" aria-hidden="true">public</span>
-          <span><strong>Public board</strong><small>Anyone with the link can see these saved places.</small></span>
+          <span><strong>{{ visibility() === 'unlisted' ? 'Unlisted board' : 'Public board' }}</strong><small>{{ visibility() === 'unlisted' ? 'Anyone with the link can view. Hidden from public discovery.' : 'Anyone can view these saved places.' }}</small></span>
         </div>
       }
     </div>
@@ -47,10 +47,10 @@
               <span class="material-symbols-outlined">add_location_alt</span>
               Add a place
             </button>
-            @if (visibility() === 'public') {
+            @if (isLinkReadableVisibility(visibility())) {
               <button type="button" (click)="shareRequested.emit()">
                 <span class="material-symbols-outlined">content_copy</span>
-                Copy public link
+                Copy link
               </button>
               <button type="button" (click)="customUrlRequested.emit()">
                 <span class="material-symbols-outlined">link</span>
@@ -58,13 +58,13 @@
               </button>
             }
             <button type="button" [disabled]="visibilitySaving()" (click)="visibilityRequested.emit()">
-              <span class="material-symbols-outlined">{{ visibilitySaving() ? 'progress_activity' : visibility() === 'private' ? 'public' : 'lock' }}</span>
-              {{ visibilitySaving() ? 'Saving…' : visibility() === 'private' ? 'Make public' : 'Make private' }}
+              <span class="material-symbols-outlined">{{ visibilitySaving() ? 'progress_activity' : 'settings' }}</span>
+              {{ visibilitySaving() ? 'Saving…' : 'Change visibility' }}
             </button>
           </div>
         </details>
       </div>
-    } @else if (visibility() === 'public') {
+    } @else if (isLinkReadableVisibility(visibility())) {
       <div class="nearby-gems-board__owner-actions">
         <button type="button" class="nearby-gems-board__edit" (click)="shareRequested.emit()">
           <span class="material-symbols-outlined">content_copy</span>

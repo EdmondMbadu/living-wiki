@@ -1,3 +1,4 @@
+import { isLinkReadableVisibility } from './board-visibility';
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { HttpsError, onRequest } from 'firebase-functions/v2/https';
@@ -40,7 +41,7 @@ export async function teamVoiceBinding(
   const internal = !!uid && (await isActiveTeamMember(teamId, uid));
   const board = internal && !publicOnly ? draft : published;
   const config = internal && !publicOnly ? draft : configDoc.data();
-  if (!board || !config || (!internal && board['visibility'] !== 'public'))
+  if (!board || !config || (!internal && !isLinkReadableVisibility(board['visibility'])))
     throw new HttpsError('permission-denied', 'This team listing is not available.');
   const team = (await db.collection('teams').doc(teamId).get()).data();
   if (team?.['status'] !== 'active')

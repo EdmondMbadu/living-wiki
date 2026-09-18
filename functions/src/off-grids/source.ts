@@ -1,3 +1,4 @@
+import { isLinkReadableVisibility } from '../board-visibility';
 import { db, storage } from '../firebase';
 import {
   bucketObject,
@@ -124,7 +125,7 @@ export async function syncOffGridBoard(boardId: string, attempt = 0): Promise<vo
             }
           : null,
         status: located ? 'active' : 'needs-location',
-        visibility: board!.visibility === 'public' && !card.authorOnly ? 'public' : 'private',
+        visibility: isLinkReadableVisibility(board!.visibility) && !card.authorOnly ? board!.visibility : 'private',
         createdAt: previous?.createdAt || card.createdAt || board!.created_at_iso || now,
         updatedAt: now,
         sourceRef: { boardId, cardId: card.id },

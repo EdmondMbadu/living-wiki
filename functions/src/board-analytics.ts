@@ -1,3 +1,4 @@
+import { isLinkReadableVisibility } from './board-visibility';
 import { createHash } from 'node:crypto';
 import { FieldValue, Timestamp, type DocumentReference } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
@@ -177,7 +178,7 @@ export const recordBoardAnalyticsEvent = onCall(
     const boardSnapshot = await db.collection('boards').doc(boardId).get();
     if (!boardSnapshot.exists) throw new HttpsError('not-found', 'The board could not be found.');
     const board = boardSnapshot.data() as Record<string, unknown>;
-    if (board['visibility'] !== 'public') return { accepted: false, reason: 'private' };
+    if (!isLinkReadableVisibility(board['visibility'])) return { accepted: false, reason: 'private' };
     if (request.auth?.uid && request.auth.uid === board['owner_user_id']) {
       return { accepted: false, reason: 'owner' };
     }
@@ -400,7 +401,7 @@ export const getBoardInsights = onCall(
         id: boardId,
         title: cleanText(board['title'], 120) || 'Untitled board',
         customSlug: cleanText(board['custom_slug'], 60),
-        visibility: board['visibility'] === 'public' ? 'public' : 'private',
+        visibility: board['visibility'] === 'unlisted' ? 'unlisted' : board['visibility'] === 'public' ? 'public' : 'private',
       },
       range: { days, from: dateKeys[0], to: dateKeys.at(-1) },
       totals,

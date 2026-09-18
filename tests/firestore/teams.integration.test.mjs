@@ -940,3 +940,133 @@ test('late verified callbacks cannot recreate deleted team data', async () => {
   assert.equal((await db.collection('team_conversations').get()).size, 0);
   assert.equal((await db.collection('team_analytics_daily').get()).size, 0);
 });
+
+
+test('team visitor visibility stays separate from drafts, directories, and publication permissions', async () => {
+  const { teamId } = await create('owner');
+  await addMember(teamId, 'member');
+  const board = await save(teamId);
+  const publish = visibility => command('owner', 'listing', { teamId, boardId: board.id, revision: 1, operation: 'publish', ...(visibility ? { visibility } : {}) });
+  await assert.rejects(command('member', 'listing', { teamId, boardId: board.id, revision: 1, operation: 'publish', visibility: 'unlisted' }), /representative/);
+  await assert.rejects(publish('private'), /Public or Unlisted/);
+  await publish('unlisted');
+  assert.equal((await db.doc(`boards/${board.id}`).get()).data().visibility, 'unlisted');
+  assert.equal((await db.doc(`team_boards/${board.id}`).get()).data().visibility, 'private');
+  assert.equal((await db.doc(`teams/${teamId}/listings/${board.id}`).get()).data().publishedVisibility, 'unlisted');
+  assert.equal((await db.doc(`public_team_listings/${board.id}`).get()).exists, false);
+  assert.equal((await db.doc(`team_published_configs/${board.id}`).get()).exists, true);
+  await publish(); // A legacy client's update must not republish as Public.
+  assert.equal((await db.doc(`boards/${board.id}`).get()).data().visibility, 'unlisted');
+  await publish('public');
+  assert.equal((await db.doc(`public_team_listings/${board.id}`).get()).exists, true);
+  await publish('unlisted');
+  assert.equal((await db.doc(`public_team_listings/${board.id}`).get()).exists, false);
+  await command('owner', 'listing', { teamId, boardId: board.id, revision: 1, operation: 'unpublish' });
+  assert.equal((await db.doc(`boards/${board.id}`).get()).data().visibility, 'private');
+  assert.equal((await db.doc(`team_published_configs/${board.id}`).get()).exists, false);
+  assert.equal((await db.doc(`teams/${teamId}/listings/${board.id}`).get()).data().publishedVisibility, 'private');
+});
+
+test('unlisted publication rejects private Talking Card knowledge without exposing a snapshot', async () => {
+  const { teamId } = await create('owner');
+  await db.doc('atlases/private-unlisted-agent').set({ user_id: 'owner', is_public: false });
+  const board = await save(teamId, 'owner', 'unlisted-private-agent', {
+    title: 'Ask us', cards: [{ id: 'agent', title: 'Private knowledge', conversation: { atlasId: 'private-unlisted-agent' } }],
+  });
+  await assert.rejects(command('owner', 'listing', { teamId, boardId: board.id, revision: 1, operation: 'publish', visibility: 'unlisted' }), /private|public/i);
+  assert.equal((await db.doc(`boards/${board.id}`).get()).exists, false);
+  assert.equal((await db.doc(`public_team_listings/${board.id}`).get()).exists, false);
+});
+
+test('discovery cleanup removes hidden board references and is safe to retry after republication', async () => {
+  const { removeHiddenBoardFromDiscovery } = require('./lib/board-discovery');
+  await db.doc('boards/hidden').set({ visibility: 'unlisted' });
+  await db.doc('public_board_summaries/hidden').set({ title: 'Old public title' });
+  await db.doc('public_team_listings/hidden').set({ title: 'Old team title' });
+  await db.doc('board_collections/collection').set({ board_ids: ['hidden', 'other'], title: 'Collection' });
+  assert.equal(await removeHiddenBoardFromDiscovery('hidden'), true);
+  assert.equal((await db.doc('public_board_summaries/hidden').get()).exists, false);
+  assert.equal((await db.doc('public_team_listings/hidden').get()).exists, false);
+  assert.deepEqual((await db.doc('board_collections/collection').get()).data().board_ids, ['other']);
+  await db.doc('boards/hidden').update({ visibility: 'public' });
+  await db.doc('public_board_summaries/hidden').set({ title: 'New public title' });
+  await db.doc('board_collections/collection').update({ board_ids: ['hidden', 'other'] });
+  assert.equal(await removeHiddenBoardFromDiscovery('hidden'), false);
+  assert.equal((await db.doc('public_board_summaries/hidden').get()).data().title, 'New public title');
+  assert.deepEqual((await db.doc('board_collections/collection').get()).data().board_ids, ['hidden', 'other']);
+});
+
+test('unlisted board share previews use noindex and no-store, and stop serving after unpublishing', async () => {
+  const { handleBoardShare } = require('./lib/answer-card-share');
+  const boardRef = db.doc('boards/shared-unlisted');
+  await boardRef.set({ visibility: 'unlisted', title: 'Link only story', cards: [], socialVideoUrl: 'https://example.com/video.mp4' });
+  const request = suffix => ({ method: 'GET', originalUrl: `/share/board/shared-unlisted${suffix}`, get: () => undefined });
+  function response() {
+    return { headers: {}, code: 200, body: '', set(k, v) { this.headers[k] = v; return this; }, status(code) { this.code = code; return this; }, send(body) { this.body = body; return this; } };
+  }
+  for (const path of ['', '/video', '/video/player']) {
+    const res = response();
+    await handleBoardShare(request(path), res);
+    assert.equal(res.code, 200);
+    assert.equal(res.headers['X-Robots-Tag'], 'noindex, nofollow');
+    assert.equal(res.headers['Cache-Control'], 'private, no-store');
+    if (path !== '/video/player') assert.match(res.body, /name="robots" content="noindex,nofollow"/);
+  }
+  await boardRef.update({ visibility: 'private' });
+  const res = response();
+  await handleBoardShare(request(''), res);
+  assert.equal(res.code, 404);
+  assert.equal(res.headers['Cache-Control'], 'private, no-store');
+});
+
+
+test('unlisted visitors retain voice, contacts, and analytics without team editing privileges', async () => {
+  const { teamId } = await create('owner');
+  const board = await save(teamId);
+  await command('owner', 'listing', { teamId, boardId: board.id, revision: 1, operation: 'publish', visibility: 'unlisted' });
+  const { teamVoiceBinding } = require('./lib/team-voice');
+  const binding = await teamVoiceBinding(board.id, null, true);
+  assert.equal(binding.board.visibility, 'unlisted');
+  assert.equal(binding.internal, false);
+  await submitTeamContact.run({ data: { boardId: board.id, requestId: 'unlisted-contact', name: 'Visitor', email: 'visitor@example.com', message: 'A showing please', consent: true }, rawRequest: { ip: '127.0.0.1' } });
+  const event = await recordBoardAnalyticsEvent.run({
+    data: { boardId: board.id, eventId: 'event-unlisted-1234', visitorId: 'visitor-unlisted-1234', sessionId: 'session-unlisted-1234', eventType: 'board_view' },
+    rawRequest: { headers: { 'user-agent': 'Mozilla/5.0' }, ip: '127.0.0.1' },
+  });
+  assert.equal(event.accepted, true);
+  const report = await getTeamInsights.run({ auth: { uid: 'owner' }, data: { teamId, days: 30 } });
+  assert.equal(report.totals.views, 1);
+  assert.equal(report.totals.contacts, 1);
+  await command('owner', 'listing', { teamId, boardId: board.id, revision: 1, operation: 'unpublish' });
+  await assert.rejects(teamVoiceBinding(board.id, null, true), /not available/);
+});
+
+test('custom Unlisted aliases preserve visibility and stale events cannot restore public discovery', async () => {
+  const { setCustomPublicUrl } = require('./lib/custom-public-routes');
+  const { syncPublicCityBoardListing, syncPublicBoardSummary } = require('./lib/index');
+  await db.doc('users/owner').set({ pricingPlan: 'creator', subscriptionStatus: 'active' });
+  const boardRef = db.doc('boards/alias-unlisted');
+  await boardRef.set({ owner_user_id: 'owner', visibility: 'unlisted', title: 'Link only', atlas_id: 'city', editorial_status: 'published', city_listing_status: 'listed', cards: [] });
+  await setCustomPublicUrl.run({ auth: { uid: 'owner' }, data: { resourceType: 'board', resourceId: boardRef.id, slug: 'link-only-tour' } });
+  assert.equal((await boardRef.get()).data().visibility, 'unlisted');
+  assert.equal((await db.doc('public_board_routes/link-only-tour').get()).data().target_id, boardRef.id);
+  await db.doc('city_board_listings/city_alias-unlisted').set({ board_id: boardRef.id, atlas_id: 'city' });
+  await db.doc(`public_board_summaries/${boardRef.id}`).set({ visibility: 'public' });
+  const staleEvent = { params: { boardId: boardRef.id }, data: { before: { exists: false }, after: { exists: true, data: () => ({ visibility: 'public', title: 'Old public event' }) } } };
+  await syncPublicCityBoardListing.run(staleEvent);
+  await syncPublicBoardSummary.run(staleEvent);
+  assert.equal((await db.collection('city_board_listings').where('board_id', '==', boardRef.id).get()).empty, true);
+  assert.equal((await db.doc(`public_board_summaries/${boardRef.id}`).get()).exists, false);
+});
+
+
+test('the explicit Unlisted operation cannot publish a Public audience', async () => {
+  const { teamId } = await create('owner');
+  const board = await save(teamId);
+  const action = visibility => command('owner', 'listing', { teamId, boardId: board.id, revision: 1, operation: 'publishUnlisted', visibility });
+  await assert.rejects(action('public'), /Unlisted audience/);
+  assert.equal((await db.doc(`boards/${board.id}`).get()).exists, false);
+  await action('unlisted');
+  assert.equal((await db.doc(`boards/${board.id}`).get()).data().visibility, 'unlisted');
+  assert.equal((await db.doc(`public_team_listings/${board.id}`).get()).exists, false);
+});

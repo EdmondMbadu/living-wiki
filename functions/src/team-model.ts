@@ -200,6 +200,7 @@ export function publicTeamBoard(
   teamId: string,
   team: TeamRecord,
   now: string,
+  visibility: 'public' | 'unlisted' = 'public',
 ): TeamRecord {
   return {
     ...select(board, BOARD_FIELDS),
@@ -211,7 +212,7 @@ export function publicTeamBoard(
     owner_photo_url: teamUrl(team['logo_url']),
     owner_profile_icon: '',
     owner_profile_picture_type: 'image',
-    visibility: 'public',
+    visibility,
     cards: (Array.isArray(board['cards']) ? board['cards'] : [])
       .map((card: TeamRecord) => publicTeamCard(card))
       .filter(Boolean),
@@ -226,6 +227,9 @@ export function teamListingSummary(board: TeamRecord): TeamRecord {
     description: teamText(board['description'], 280),
     imageUrl: teamText(board['imageUrl'], 2000),
     status: board['team_status'] || 'draft',
+    publishedVisibility: board['team_status'] === 'published'
+      ? board['published_visibility'] === 'unlisted' ? 'unlisted' : 'public'
+      : 'private',
     representativeId: board['representative_id'],
     creatorId: board['created_by'],
     revision: board['team_revision'] || 1,

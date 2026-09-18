@@ -44,7 +44,7 @@ const result = spawnSync(
     'demo-living-wiki',
     '--only',
     'firestore',
-    'node --test --test-concurrency=1 tests/firestore/atlas-privacy.rules.test.mjs tests/firestore/board-save.rules.test.mjs tests/firestore/teams.rules.test.mjs tests/firestore/teams.integration.test.mjs',
+    'node --test --test-concurrency=1 tests/firestore/atlas-privacy.rules.test.mjs tests/firestore/board-save.rules.test.mjs tests/firestore/teams.rules.test.mjs tests/firestore/teams.integration.test.mjs functions/scripts/test-off-grids.integration.cjs',
   ],
   {
     cwd: process.cwd(),

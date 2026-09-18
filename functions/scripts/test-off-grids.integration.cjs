@@ -191,3 +191,24 @@ test('world map bounds include distant longitudes and bounded map results respec
   });
   assert.equal((await call('', 'map', 'directory', { bounds: { north: 85, south: -85, east: 180, west: -180 } })).items.some(s => s.id === 'world-gem'), false);
 });
+
+
+test('unlisted source Gems play through direct links and stay absent from directories, including during transitions', async () => {
+  const ref = db.doc('boards/unlisted-source');
+  await ref.set({ owner_user_id: 'owner', visibility: 'public', kind: 'off-grid', created_at_iso: '2025-01-01', cards: [{ id: 'c', title: 'Linked gem', locationLat: 1, locationLng: 1 }] });
+  await syncOffGridBoard(ref.id);
+  const id = sourceSpotId(ref.id, 'c');
+  await ref.update({ visibility: 'unlisted' });
+  // Direct access follows the canonical parent even before its projection updates.
+  assert.equal((await call('', 'detail', id)).title, 'Linked gem');
+  assert.equal((await call('', 'detail', id)).visibility, 'unlisted');
+  assert.equal(await effectivePublic((await db.doc('off_grid_spots/' + id).get()).data()), false);
+  await syncOffGridBoard(ref.id);
+  assert.equal((await db.doc('off_grid_spots/' + id).get()).data().visibility, 'unlisted');
+  assert.equal((await db.doc('public_off_grid_spots/' + id).get()).exists, false);
+  assert.equal((await call('', 'detail', id)).visibility, 'unlisted');
+  await ref.update({ visibility: 'private' });
+  await assert.rejects(call('', 'detail', id), /private|unavailable/);
+  await syncOffGridBoard(ref.id);
+  assert.equal((await db.doc('off_grid_spots/' + id).get()).data().visibility, 'private');
+});

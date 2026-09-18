@@ -1,3 +1,4 @@
+import { isBoardVisibility, type BoardVisibility } from '../board-visibility';
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { PlacePhotoDirective } from '../place-photo.directive';
 import { boardCoverPhotoUrl, stablePlacePhotoUrl } from '../place-photo';
@@ -116,7 +117,7 @@ interface MobileBoard {
   ownerPhotoUrl: string;
   ownerProfileIcon: string;
   ownerProfilePictureType: 'icon' | 'image' | null;
-  visibility: 'public' | 'private';
+  visibility: BoardVisibility;
   title: string;
   description: string;
   icon: string;
@@ -2167,7 +2168,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
 
     const rawCards = Array.isArray(data['cards']) ? data['cards'] : [];
     const kind = data['kind'] === 'walking-tour' || data['kind'] === 'driving-tour' ? data['kind'] : 'standard';
-    const visibility = data['visibility'] === 'private' ? 'private' : 'public';
+    const visibility = isBoardVisibility(data['visibility']) ? data['visibility'] : 'private';
     const profilePictureType = data['owner_profile_picture_type'] === 'image' || data['owner_profile_picture_type'] === 'icon'
       ? data['owner_profile_picture_type']
       : null;

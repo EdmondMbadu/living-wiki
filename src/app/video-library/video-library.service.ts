@@ -1,3 +1,4 @@
+import { isBoardVisibility, isLinkReadableVisibility, type BoardVisibility } from '../board-visibility';
 import { isPlatformBrowser } from '@angular/common';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { FirebaseError } from 'firebase/app';
@@ -39,7 +40,7 @@ type BoardVideoSummary = {
   route: string;
   updatedAt: string;
   posterUrl: string;
-  visibility: 'public' | 'private';
+  visibility: BoardVisibility;
   socialVideoUrl: string;
   socialVideoMimeType: string;
   socialVideoUpdatedAt: string;
@@ -318,7 +319,7 @@ export class VideoLibraryService {
       video_url: board.socialVideoUrl,
       storage_path: '',
       public_storage_path: '',
-      public_share_url: board.visibility === 'public' ? this.publicShareUrl(board.id, generatedAt) : '',
+      public_share_url: isLinkReadableVisibility(board.visibility) ? this.publicShareUrl(board.id, generatedAt) : '',
       mime_type: board.socialVideoMimeType || 'video/mp4',
       ratio: board.socialVideoRatio,
       duration_seconds: 0,
@@ -360,7 +361,7 @@ export class VideoLibraryService {
       video_url: board.trailerVideoUrl,
       storage_path: '',
       public_storage_path: '',
-      public_share_url: board.visibility === 'public' ? this.publicShareUrl(board.id, generatedAt, 'trailer') : '',
+      public_share_url: isLinkReadableVisibility(board.visibility) ? this.publicShareUrl(board.id, generatedAt, 'trailer') : '',
       mime_type: board.trailerVideoMimeType || 'video/mp4',
       ratio: board.trailerVideoRatio,
       duration_seconds: 0,
@@ -401,7 +402,7 @@ export class VideoLibraryService {
       route: `/boards/${encodeURIComponent(id)}`,
       updatedAt: this.stringValue(data['updated_at_iso']),
       posterUrl,
-      visibility: data['visibility'] === 'private' ? 'private' : 'public',
+      visibility: isBoardVisibility(data['visibility']) ? data['visibility'] : 'private',
       socialVideoUrl: this.stringValue(data['socialVideoUrl']),
       socialVideoMimeType: this.stringValue(data['socialVideoMimeType']),
       socialVideoUpdatedAt: this.stringValue(data['socialVideoUpdatedAt']),

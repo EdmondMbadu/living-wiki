@@ -30,7 +30,7 @@ service firebase.storage {
     }
     match /public-team-media/{teamId}/{boardId}/{fileName} {
       allow read: if hasBoardAdminAccess() || (
-        firestore.get(/databases/(default)/documents/boards/$(boardId)).data.visibility == 'public'
+        firestore.get(/databases/(default)/documents/boards/$(boardId)).data.visibility in ['public', 'unlisted']
         && firestore.get(/databases/(default)/documents/boards/$(boardId)).data.team_id == teamId);
       allow write: if false;
     }

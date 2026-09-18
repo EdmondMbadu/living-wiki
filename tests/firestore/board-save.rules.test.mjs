@@ -1166,3 +1166,68 @@ for (const kind of ['full', 'trailer']) {
     });
   }
 }
+
+
+test('Unlisted is readable by direct link but cannot be enumerated, while owners retain access', async () => {
+  const owner = testEnvironment.authenticatedContext(ownerUid).firestore();
+  const guest = testEnvironment.unauthenticatedContext().firestore();
+  const stranger = testEnvironment.authenticatedContext('stranger').firestore();
+  await assertSucceeds(setDoc(doc(owner, 'boards', 'unlisted-board'), personalWizardBoard({ id: 'unlisted-board', visibility: 'unlisted' })));
+  await assertSucceeds(setDoc(doc(owner, 'boards', 'public-board'), personalWizardBoard({ id: 'public-board' })));
+  for (const database of [guest, stranger]) {
+    await assertSucceeds(getDoc(doc(database, 'boards', 'unlisted-board')));
+    await assertFails(getDocs(query(collection(database, 'boards'), where('visibility', '==', 'unlisted'))));
+    await assertFails(getDocs(query(collection(database, 'boards'), where('visibility', 'in', ['public', 'unlisted']))));
+    const publicBoards = await assertSucceeds(getDocs(query(collection(database, 'boards'), where('visibility', '==', 'public'))));
+    assert.deepEqual(publicBoards.docs.map(d => d.id), ['public-board']);
+    await assertFails(updateDoc(doc(database, 'boards', 'unlisted-board'), { title: 'Changed' }));
+  }
+  const owned = await assertSucceeds(getDocs(query(collection(owner, 'boards'), where('owner_user_id', '==', ownerUid))));
+  assert.deepEqual(owned.docs.map(d => d.id).sort(), ['public-board', 'unlisted-board']);
+  const hidden = await assertSucceeds(getDocs(query(collection(owner, 'boards'),
+    where('owner_user_id', '==', ownerUid), where('visibility', 'in', ['private', 'unlisted']))));
+  assert.deepEqual(hidden.docs.map(d => d.id), ['unlisted-board']);
+});
+
+test('all visibility transitions preserve direct access and paid Private rules', async () => {
+  await testEnvironment.withSecurityRulesDisabled(async c => {
+    await setDoc(doc(c.firestore(), 'users', ownerUid), { role: 'member', pricingPlan: 'creator', subscriptionStatus: 'active' });
+  });
+  const owner = testEnvironment.authenticatedContext(ownerUid).firestore();
+  const guest = testEnvironment.unauthenticatedContext().firestore();
+  const reference = doc(owner, 'boards', 'transitions');
+  await assertSucceeds(setDoc(reference, personalWizardBoard({ id: 'transitions' })));
+  for (const from of ['public', 'unlisted', 'private']) {
+    for (const visibility of ['public', 'unlisted', 'private']) {
+      await assertSucceeds(updateDoc(reference, { visibility: from, updated_at_iso: new Date().toISOString(), server_updated_at: serverTimestamp() }));
+      await assertSucceeds(updateDoc(reference, { visibility, updated_at_iso: new Date().toISOString(), server_updated_at: serverTimestamp() }));
+      await assertSucceeds(getDoc(reference));
+      if (visibility === 'private') await assertFails(getDoc(doc(guest, 'boards', 'transitions')));
+      else await assertSucceeds(getDoc(doc(guest, 'boards', 'transitions')));
+    }
+  }
+});
+
+test('a free Photo Studio draft can be shared Unlisted without becoming Public', async () => {
+  const owner = testEnvironment.authenticatedContext(ownerUid).firestore();
+  const reference = doc(owner, 'boards', 'unlisted-photos');
+  await assertSucceeds(setDoc(reference, personalWizardBoard({ id: 'unlisted-photos', visibility: 'private', photoStoryBoard: true, photoStudioDraft: true })));
+  await assertSucceeds(updateDoc(reference, { visibility: 'unlisted', photoStudioDraft: false, updated_at_iso: new Date().toISOString(), server_updated_at: serverTimestamp() }));
+  const board = (await getDoc(reference)).data();
+  assert.equal(board.visibility, 'unlisted');
+  assert.equal(board.photoStudioDraft, false);
+  await assertSucceeds(setDoc(reference, { ...board, title: 'Updated unlisted story', server_updated_at: serverTimestamp() }));
+  await assertFails(updateDoc(reference, { visibility: 'private', server_updated_at: serverTimestamp() }));
+});
+
+
+test('legacy full saves cannot accidentally convert Unlisted to Public, while current saves and explicit changes work', async () => {
+  const owner = testEnvironment.authenticatedContext(ownerUid).firestore();
+  const reference = doc(owner, 'boards', 'old-client');
+  const board = personalWizardBoard({ id: 'old-client', visibility: 'unlisted' });
+  await assertSucceeds(setDoc(reference, board));
+  await assertFails(setDoc(reference, { ...board, visibility: 'public', title: 'Old client edit' }));
+  await assertSucceeds(setDoc(reference, { ...board, visibility: 'public', title: 'Current client edit', visibility_schema_version: 1 }));
+  await assertSucceeds(updateDoc(reference, { visibility: 'unlisted', updated_at_iso: new Date().toISOString(), server_updated_at: serverTimestamp() }));
+  await assertSucceeds(updateDoc(reference, { visibility: 'public', updated_at_iso: new Date().toISOString(), server_updated_at: serverTimestamp() }));
+});

@@ -312,9 +312,10 @@
                   [(ngModel)]="visibility"
                 /><span class="material-symbols-outlined" aria-hidden="true">public</span
                 ><span
-                  ><strong i18n>Public</strong
-                  ><small i18n
-                    >Share its photo, exact location and PinTalks with everyone.</small
+                  ><strong>{{ original()?.sourceRef ? 'Use board visibility' : 'Public' }}</strong
+                  ><small>{{ original()?.visibility === 'unlisted'
+                    ? 'Anyone with the source board link can view. Hidden from public discovery.'
+                    : 'Share its photo, exact location and PinTalks with everyone.' }}</small
                   ></span
                 ></label
               >

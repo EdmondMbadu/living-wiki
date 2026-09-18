@@ -1,3 +1,4 @@
+import { isLinkReadableVisibility, type BoardVisibility } from './board-visibility';
 import { isPlatformBrowser } from '@angular/common';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { logEvent } from 'firebase/analytics';
@@ -23,7 +24,7 @@ export type BoardInsights = {
     id: string;
     title: string;
     customSlug: string;
-    visibility: 'public' | 'private';
+    visibility: BoardVisibility;
   };
   range: { days: number; from: string; to: string };
   totals: {
@@ -132,12 +133,12 @@ export class BoardAnalyticsService {
     boardId: string;
     boardTitle: string;
     customSlug: string;
-    visibility: 'public' | 'private';
+    visibility: BoardVisibility;
     ownerUserId: string;
     currentUserId: string;
     requestedRouteKey: string;
   }): void {
-    if (!this.isBrowser || !this.functions || !input.boardId || input.visibility !== 'public') {
+    if (!this.isBrowser || !this.functions || !input.boardId || !isLinkReadableVisibility(input.visibility)) {
       this.stopBoardSession();
       return;
     }

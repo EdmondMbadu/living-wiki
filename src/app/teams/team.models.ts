@@ -92,6 +92,8 @@ export interface TeamListing {
   description: string;
   imageUrl: string;
   status: ListingStatus;
+  /** Visitor audience; the collaborative working copy always stays private. */
+  publishedVisibility?: 'public' | 'unlisted' | 'private';
   representativeId: string;
   creatorId: string;
   revision: number;

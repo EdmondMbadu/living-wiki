@@ -1,3 +1,5 @@
+import { isLinkReadableVisibility } from './board-visibility';
+import { removeHiddenBoardFromDiscovery } from './board-discovery';
 import { finalizeBoardWizardCopy, BOARD_COPY_VERSION } from './board-wizard-copy-quality';
 import { repairBoardWizardCopy } from './gemini';
 export { offGridCommand, offGridDirectory, offGridMedia, offGridShare, syncOffGridSpots } from './off-grids';
@@ -3633,8 +3635,8 @@ export const shareBoardByEmail = onCall(
       throw new HttpsError('not-found', 'That board is no longer available.');
     }
     const board = boardSnapshot.data() as Record<string, unknown>;
-    if (board.visibility !== 'public') {
-      throw new HttpsError('failed-precondition', 'Only public boards can be emailed.');
+    if (!isLinkReadableVisibility(board.visibility)) {
+      throw new HttpsError('failed-precondition', 'Choose Public or Unlisted before emailing this board.');
     }
     const boardRouteKey = publicBoardRouteKey(boardId, board.custom_slug);
 
@@ -7382,7 +7384,7 @@ export const translateBoard = onCall(
     const ownerUserId = stringOrEmpty(board['owner_user_id']);
     const isOwner = !!request.auth?.uid && request.auth.uid === ownerUserId;
     const isAdmin = request.auth?.token?.['admin'] === true;
-    if (board['visibility'] !== 'public' && !isOwner && !isAdmin) {
+    if (!isLinkReadableVisibility(board['visibility']) && !isOwner && !isAdmin) {
       throw new HttpsError('permission-denied', 'This board is private.');
     }
 
@@ -9312,7 +9314,7 @@ async function visitPlanBoardAndCard(
     throw new HttpsError('not-found', 'Board not found.');
   }
   const board: Record<string, unknown> = { id: snapshot.id, ...(snapshot.data() ?? {}) };
-  if (board.visibility !== 'public' && board.owner_user_id !== userId) {
+  if (!isLinkReadableVisibility(board.visibility) && board.owner_user_id !== userId) {
     throw new HttpsError('permission-denied', 'You do not have access to this board.');
   }
   const card = boardCardById(board.cards, cardId);
@@ -10575,7 +10577,7 @@ export const exportSpotifyBoardPlaylist = onCall(
     ]);
     if (!boardSnapshot.exists) throw new HttpsError('not-found', 'This music board could not be found.');
     const board = boardSnapshot.data() as Record<string, unknown>;
-    if (board.visibility !== 'public' && stringOrEmpty(board.owner_user_id) !== userId) {
+    if (!isLinkReadableVisibility(board.visibility) && stringOrEmpty(board.owner_user_id) !== userId) {
       throw new HttpsError('permission-denied', 'You do not have access to this music board.');
     }
     const connection = connectionSnapshot.data() as SpotifyConnectionRecord | undefined;
@@ -18950,7 +18952,7 @@ async function loadTalkingCardSummaryContext(params: {
     throw new HttpsError('not-found', 'This Talking Card board is no longer available.');
   }
   const board = boardSnapshot.data() as Record<string, unknown>;
-  const isPublic = board.visibility === 'public';
+  const isPublic = isLinkReadableVisibility(board.visibility);
   const isOwner = !!params.requesterUid && board.owner_user_id === params.requesterUid;
   if (!isPublic && !isOwner) {
     throw new HttpsError('permission-denied', 'You do not have access to this Talking Card board.');
@@ -19981,7 +19983,7 @@ export const submitBoardQuizAttempt = onCall(
     const board = boardSnapshot.data() ?? {};
     const ownerUserId = boardQuizString(board.owner_user_id, 160);
     const memberUserId = request.auth?.uid ?? '';
-    if (board.visibility !== 'public' && ownerUserId !== memberUserId) {
+    if (!isLinkReadableVisibility(board.visibility) && ownerUserId !== memberUserId) {
       throw new HttpsError('permission-denied', 'You do not have access to this quiz.');
     }
     const quiz = normalizeStoredBoardQuiz(board.learningQuiz);
@@ -20118,7 +20120,7 @@ export const getBoardQuizLeaderboard = onCall(
     }
     const board = boardSnapshot.data() ?? {};
     const ownerUserId = boardQuizString(board.owner_user_id, 160);
-    if (board.visibility !== 'public' && ownerUserId !== request.auth?.uid) {
+    if (!isLinkReadableVisibility(board.visibility) && ownerUserId !== request.auth?.uid) {
       throw new HttpsError('permission-denied', 'You do not have access to this leaderboard.');
     }
     const quiz = normalizeStoredBoardQuiz(board.learningQuiz);
@@ -20346,7 +20348,7 @@ export const toggleBoardLike = onCall(
         throw new HttpsError('not-found', 'Board not found.');
       }
       const board = boardSnapshot.data() ?? {};
-      const canAccess = board.visibility === 'public'
+      const canAccess = isLinkReadableVisibility(board.visibility)
         || (!!request.auth?.uid && board.owner_user_id === request.auth.uid);
       if (!canAccess) {
         throw new HttpsError('permission-denied', 'You do not have access to this board.');
@@ -21962,7 +21964,7 @@ export const synthesizeChatAnswerSpeech = onCall(
         }
         personalVoiceOwnerId = String(board['owner_user_id'] ?? '').trim();
         const isOwner = !!request.auth?.uid && request.auth.uid === personalVoiceOwnerId;
-        const canUsePublicNarration = board['visibility'] === 'public'
+        const canUsePublicNarration = isLinkReadableVisibility(board['visibility'])
           && board['stackNarratorVoiceId'] === requestedNarratorId
           && boardAllowsNarrationText(board, text);
         if (!personalVoiceOwnerId || (!isOwner && !canUsePublicNarration)) {
@@ -25080,36 +25082,19 @@ export const syncPublicCityBoardListing = onDocumentWritten(
     const boardId = textFromUnknown(event.params.boardId);
     if (!boardId || !event.data) return;
 
-    const before = event.data.before.exists
-      ? event.data.before.data() as Record<string, unknown>
-      : null;
-    const after = event.data.after.exists
-      ? event.data.after.data() as Record<string, unknown>
-      : null;
-    const beforeAtlasId = cityBoardAtlasId(before);
-    const afterAtlasId = cityBoardAtlasId(after);
-    const beforeQualifies = isPublicCityBoard(before);
-    const afterQualifies = isPublicCityBoard(after);
-    const batch = db.batch();
-    let hasMutation = false;
-
-    if (beforeQualifies && beforeAtlasId && (!afterQualifies || beforeAtlasId !== afterAtlasId)) {
-      batch.delete(db.collection('city_board_listings').doc(cityBoardListingId(beforeAtlasId, boardId)));
-      hasMutation = true;
-    }
-    if (afterQualifies && after && afterAtlasId) {
-      batch.set(
-        db.collection('city_board_listings').doc(cityBoardListingId(afterAtlasId, boardId)),
-        {
-          ...cityBoardListingPayload(boardId, after),
-          server_updated_at: FieldValue.serverTimestamp(),
-        },
-      );
-      hasMutation = true;
-    }
-    if (hasMutation) {
-      await batch.commit();
-    }
+    // Never republish an older event after the board becomes Unlisted or Private.
+    await db.runTransaction(async (tx) => {
+      const canonical = await tx.get(db.collection('boards').doc(boardId));
+      const previous = await tx.get(db.collection('city_board_listings').where('board_id', '==', boardId));
+      const board = canonical.data() as Record<string, unknown> | undefined;
+      const atlasId = cityBoardAtlasId(board);
+      const targetId = atlasId && isPublicCityBoard(board) ? cityBoardListingId(atlasId, boardId) : '';
+      for (const record of previous.docs) if (record.id !== targetId) tx.delete(record.ref);
+      if (targetId && board) tx.set(db.collection('city_board_listings').doc(targetId), {
+        ...cityBoardListingPayload(boardId, board),
+        server_updated_at: FieldValue.serverTimestamp(),
+      });
+    });
   },
 );
 
@@ -25119,10 +25104,13 @@ export const syncPublicBoardSummary = onDocumentWritten(
     document: 'boards/{boardId}',
     timeoutSeconds: 120,
     memory: '1GiB',
+    retry: true,
   },
   async (event) => {
     const boardId = textFromUnknown(event.params.boardId);
     if (!boardId || !event.data) return;
+
+    if (await removeHiddenBoardFromDiscovery(boardId)) return;
 
     const boardRef = db.collection('boards').doc(boardId);
     const summaryRef = db.collection('public_board_summaries').doc(boardId);
@@ -25146,7 +25134,9 @@ export const syncPublicBoardSummary = onDocumentWritten(
       currentCover: OptimizedBoardCover | null,
       sourceBoardUpdateMs: number,
     ): Promise<boolean> => db.runTransaction(async (transaction) => {
-      const currentSummary = await transaction.get(summaryRef);
+      const [currentSummary, canonical] = await transaction.getAll(summaryRef, boardRef);
+      if (canonical.data()?.visibility !== 'public' || canonical.data()?.parentCardId
+        || canonical.updateTime?.toMillis() !== sourceBoardUpdateMs) return false;
       const currentSummaryUpdateMs = Number(currentSummary.data()?.source_board_update_ms) || 0;
       if (currentSummaryUpdateMs > sourceBoardUpdateMs) return false;
       transaction.set(summaryRef, {

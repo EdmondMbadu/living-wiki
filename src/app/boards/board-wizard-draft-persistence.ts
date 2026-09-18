@@ -1,3 +1,4 @@
+import { isBoardVisibility, type BoardVisibility } from '../board-visibility';
 import {
   normalizeBoardWizardMediaMode,
   type BoardWizardMediaMode,
@@ -41,6 +42,7 @@ export const BOARD_WIZARD_DRAFT_STABLE_TOP_LEVEL_FIELDS = [
 ] as const;
 
 type PersistedWizardPreferences = {
+  visibility?: BoardVisibility;
   listing_photo_source?: ListingPhotoSource;
   listing_photos?: PersistedListingPhoto[];
   media_mode: BoardWizardMediaMode;
@@ -118,6 +120,7 @@ export function boardWizardDraftPayloadWithPreferences<
   payload: Record<string, unknown> & { result: TResult },
   mediaMode: BoardWizardMediaMode,
   preferences: {
+    visibility?: BoardVisibility;
     listingPhotoSource?: ListingPhotoSource;
     listingPhotos?: PersistedListingPhoto[];
     countMode?: BoardWizardCountMode;
@@ -151,6 +154,7 @@ export function boardWizardDraftPayloadWithPreferences<
           && typeof payload.result[BOARD_WIZARD_PREFERENCES_FIELD] === 'object'
           ? payload.result[BOARD_WIZARD_PREFERENCES_FIELD] as Record<string, unknown>
           : {}),
+        ...(preferences.visibility ? { visibility: preferences.visibility } : {}),
         media_mode: mediaMode,
         count_mode: preferences.countMode === 'fixed' ? 'fixed' : 'auto',
         narration_seconds_per_card: normalizeBoardNarrationSeconds(
@@ -288,4 +292,10 @@ function cleanPreferenceText(value: unknown, maxLength: number, collapseWhitespa
   if (typeof value !== 'string') return '';
   const text = collapseWhitespace ? value.replace(/\s+/g, ' ') : value.replace(/\r\n?/g, '\n');
   return text.trim().slice(0, maxLength);
+}
+
+export function boardWizardDraftVisibility(value: Record<string, unknown>): BoardVisibility {
+  const result = value['result'] as Record<string, unknown> | undefined;
+  const preferences = result?.[BOARD_WIZARD_PREFERENCES_FIELD] as Record<string, unknown> | undefined;
+  return isBoardVisibility(preferences?.['visibility']) ? preferences['visibility'] : 'public';
 }

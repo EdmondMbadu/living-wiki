@@ -20,7 +20,7 @@
     } @else if (!publicResource()) {
       <div class="custom-url-dialog__notice">
         <span class="material-symbols-outlined">visibility_off</span>
-        <span><strong>Make this {{ resourceLabel() }} public first.</strong><small>Custom URLs are public links and cannot point to private content.</small></span>
+        <span><strong>{{ resourceType() === 'board' ? 'Choose Public or Unlisted first.' : 'Make this collection public first.' }}</strong><small>Custom URLs cannot point to private content.</small></span>
       </div>
     } @else {
       <p>Choose the address people will use to open <strong>{{ resourceTitle() }}</strong>.</p>

@@ -139,7 +139,8 @@ export class OffGridEditorComponent {
     this.accessNote = spot.accessNote || '';
     this.photo.set(spot.coverUrl || '');
     this.clipCount.set(spot.clips?.length || 0);
-    this.visibility = spot.visibility;
+    // Linked unlisted Gems use their source board's audience when shared.
+    this.visibility = spot.visibility === 'unlisted' ? 'public' : spot.visibility;
     this.allowContributions = spot.allowContributions !== false;
     if (spot.location) {
       this.point.set(spot.location);
