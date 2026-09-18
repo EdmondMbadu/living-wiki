@@ -4,6 +4,7 @@ import { lookup } from 'node:dns/promises';
 import sharp from 'sharp';
 import { logger } from 'firebase-functions';
 import { db } from './firebase';
+import type { PreparedListingPhoto } from './board-wizard-listing-uploads';
 import {
   analyzeBoardWizardListingPhotos,
   generateBoardWizardListingStory,
@@ -219,6 +220,7 @@ export async function generateBoardWizardListingMarketingBatch(options: {
   narrationSecondsPerCard: number;
   marketing: BoardWizardListingMarketingOptions;
   listingIntent?: BoardWizardListingIntent;
+  preparedPhotos?: PreparedListingPhoto[];
 }): Promise<GeneratedBoardWizardBatch> {
   const extraction = personalizedListingExtraction(options.extraction, options.marketing);
   const listingIntent = normalizeBoardWizardListingIntent(options.listingIntent);
@@ -233,13 +235,13 @@ export async function generateBoardWizardListingMarketingBatch(options: {
     });
   }
 
-  const sceneCount = Math.max(1, Math.min(24, extraction.images.length, Math.round(options.count) || 12));
+  const sceneCount = Math.max(1, Math.min(24, extraction.photoSource === 'upload' ? 24 : extraction.images.length, Math.round(options.count) || 12));
   const startedAt = Date.now();
   let analyses: BoardWizardListingPhotoAnalysis[] = [];
   let aiScenes: BoardWizardListingStoryScene[] = [];
   const rejectionReasons: Record<string, number> = {};
   try {
-    analyses = await analyzeListingGallery(extraction);
+    analyses = await analyzeListingGallery(extraction, options.preparedPhotos);
     const usable = mergeWithFallbackAnalyses(extraction, analyses).filter((analysis) => !DISALLOWED_STORY_SCENES.has(analysis.sceneType));
     if (usable.length) {
       aiScenes = await cachedListingStoryPlan({
@@ -321,7 +323,10 @@ async function cachedListingStoryPlan(
   if (missing.length) {
     logger.info('Repairing listing card copy.', { planned: params.cardPlan?.length, missing: missing.map((card) => card.cardKey), cached });
     try {
-      accepted.push(...validate(await generateBoardWizardListingStory({ ...params, cardPlan: missing })));
+      const missingKeys = new Set(missing.map((card) => card.cardKey));
+      // A repair response must not replace or duplicate already accepted narration.
+      accepted.push(...validate(await generateBoardWizardListingStory({ ...params, cardPlan: missing }))
+        .filter((scene) => scene.cardKey && missingKeys.has(scene.cardKey as ListingGroupKey)));
     } catch (error) {
       logger.warn('Listing copy repair failed; using complete factual sentences.', { errorMessage: error instanceof Error ? error.message : String(error) });
     }
@@ -361,12 +366,15 @@ function normalizeCachedStoryScenes(value: unknown): BoardWizardListingStoryScen
   });
 }
 
-async function analyzeListingGallery(extraction: BoardWizardListingExtraction): Promise<BoardWizardListingPhotoAnalysis[]> {
+async function analyzeListingGallery(extraction: BoardWizardListingExtraction, uploadedPhotos?: PreparedListingPhoto[]): Promise<BoardWizardListingPhotoAnalysis[]> {
   const images = extraction.images.slice(0, MAX_ANALYZED_PHOTOS);
   const cached = new Map<number, BoardWizardListingPhotoAnalysis>();
   const missing: Array<{ image: BoardWizardListingImage; index: number; key: string }> = [];
   const refs = images.map((image, index) => {
-    const key = analysisCacheKey(image.url);
+    const uploaded = uploadedPhotos?.find((photo) => photo.index === index);
+    const key = uploaded
+      ? analysisCacheKey(`${uploaded.cacheScope}\n${uploaded.contentHash}`)
+      : analysisCacheKey(image.url);
     return { index, image, key, ref: db.collection('listing_photo_analysis').doc(key) };
   });
   if (refs.length) {
@@ -398,7 +406,8 @@ async function analyzeListingGallery(extraction: BoardWizardListingExtraction): 
     const group = missing.slice(start, start + 4);
     const results = await Promise.all(group.map(async (item) => {
       try {
-        const bytes = await downloadAndResizeListingImage(item.image.url);
+        const uploaded = uploadedPhotos?.find((photo) => photo.index === item.index);
+        const bytes = uploaded ? Buffer.from(uploaded.base64, 'base64') : await downloadAndResizeListingImage(item.image.url);
         return {
           index: item.index,
           key: item.key,
@@ -448,7 +457,7 @@ async function analyzeListingGallery(extraction: BoardWizardListingExtraction): 
     if (!analysis || !missing.some((entry) => entry.index === item.index)) return [];
     return [item.ref.set({
       ...analysis,
-      source_url: item.image.url,
+      source_url: item.image.evidence === 'user-upload' ? '' : item.image.url,
       version: PHOTO_ANALYSIS_VERSION,
       updated_at: new Date().toISOString(),
     }, { merge: true })];
@@ -520,13 +529,20 @@ function buildMarketingBatch(options: {
 }): GeneratedBoardWizardBatch {
   const extractedAt = new Date().toISOString();
   const gallery = options.extraction.images.map((image) => image.url).slice(0, BOARD_WIZARD_SOURCE_GALLERY_LIMIT);
+  const uploaded = options.extraction.photoSource === 'upload';
+  const imageSource = uploaded ? 'user-upload' as const : 'source-page' as const;
+  const imageTag = uploaded ? 'uploaded-image' : 'source-image';
   const groups = listingPhotoGroups(options.analyses)
     .filter((group) => group.analyses.some((analysis) => !!options.extraction.images[analysis.index]))
     .sort((left, right) => left.priority - right.priority);
   const plan = buildListingCopyPlan(options.analyses, options.maxCards);
   const sceneByKey = new Map(options.scenes.map((scene) => [scene.cardKey, scene]));
   const overviewAnalyses = plan[0].photoIndices.flatMap((index) => options.analyses.find((photo) => photo.index === index) || []);
-  const overviewUrls = listingAnalysisUrls(options.extraction, overviewAnalyses);
+  let overviewUrls = listingAnalysisUrls(options.extraction, overviewAnalyses);
+  if (options.extraction.preferredCoverUrl && gallery.includes(options.extraction.preferredCoverUrl)) {
+    overviewUrls = [options.extraction.preferredCoverUrl, ...overviewUrls.filter((url) => url !== options.extraction.preferredCoverUrl)]
+      .slice(0, LISTING_PRESENTATION_IMAGE_LIMIT);
+  }
   const overviewScene = sceneByKey.get('overview');
   const overviewNotes = finishListingCopy(overviewScene?.narration, listingOverviewNotes(options.extraction), options.secondsPerCard);
   const maxCards = Math.max(1, options.maxCards);
@@ -554,7 +570,7 @@ function buildMarketingBatch(options: {
     type: 'place',
     status: 'saved',
     rating: 5,
-    tags: ['listing', rentalTag, 'listing-story', 'listing-group', 'group-overview', 'source-image'],
+    tags: ['listing', rentalTag, 'listing-story', 'listing-group', 'group-overview', imageTag],
     image_query: `${options.extraction.listingName} property overview`.slice(0, 120),
     image_context: options.extraction.address || options.extraction.listingName,
     short_summary: (overviewScene?.subtitle || listingOverviewSubtitleForStory(options.extraction)).slice(0, 160),
@@ -563,7 +579,7 @@ function buildMarketingBatch(options: {
     // Preserve the complete exact gallery on the opening card for board browsing
     // and existing exports. Live View uses the explicit presentation subset.
     imageUrls: gallery,
-    imageSource: gallery.length ? 'source-page' : 'missing',
+    imageSource: gallery.length ? imageSource : 'missing',
     locationLat: options.extraction.latitude,
     locationLng: options.extraction.longitude,
     listingPresentation: {
@@ -586,14 +602,14 @@ function buildMarketingBatch(options: {
       type: 'note',
       status: 'saved',
       rating: 4,
-      tags: ['listing', rentalTag, 'listing-story', 'listing-group', `group-${group.key}`, 'source-image'],
+      tags: ['listing', rentalTag, 'listing-story', 'listing-group', `group-${group.key}`, imageTag],
       image_query: `${options.extraction.listingName} ${group.label}`.slice(0, 120),
-      image_context: group.reviewStatus === 'needs-review' ? 'Unclassified source listing photographs' : group.label,
+      image_context: group.reviewStatus === 'needs-review' ? 'Unclassified property photographs' : group.label,
       short_summary: narrationSummary(notes),
       rank: index + 2,
       imageUrl: urls[0],
       imageUrls: urls,
-      imageSource: urls.length ? 'source-page' : 'missing',
+      imageSource: urls.length ? imageSource : 'missing',
       listingPresentation: listingPresentation(group.key, urls, ordered, group.reviewStatus),
     };
   });
@@ -624,7 +640,7 @@ function buildMarketingBatch(options: {
       rank: 1,
       imageUrl: introImage,
       imageUrls: introImage ? [introImage] : [],
-      imageSource: introImage ? 'source-page' : 'missing',
+      imageSource: introImage ? imageSource : 'missing',
     });
   }
   cards.push(overview, ...groupCards);
@@ -646,7 +662,7 @@ function buildMarketingBatch(options: {
       rank: cards.length + 1,
       imageUrl: setupImage,
       imageUrls: setupImage ? [setupImage] : [],
-      imageSource: setupImage ? 'source-page' : 'missing',
+      imageSource: setupImage ? imageSource : 'missing',
     });
   }
   if (reserveNextStep) {
@@ -693,7 +709,7 @@ function buildMarketingBatch(options: {
       rank: cards.length + 1,
       imageUrl: nextStepImage,
       imageUrls: nextStepImage ? [nextStepImage] : [],
-      imageSource: nextStepImage ? 'source-page' : 'missing',
+      imageSource: nextStepImage ? imageSource : 'missing',
       listingPresentation: listingPresentation('next-step', nextStepImage ? [nextStepImage] : [], [], 'verified'),
     });
   }
@@ -798,7 +814,8 @@ function fallbackAnalysis(
 ): BoardWizardListingPhotoAnalysis {
   let imagePath = '';
   try { imagePath = new URL(image.url).pathname; } catch { imagePath = image.url; }
-  const text = `${image.alt} ${imagePath}`.toLowerCase();
+  // Uploaded file names and paths are never evidence of room identity.
+  const text = image.evidence === 'user-upload' ? '' : `${image.alt} ${imagePath}`.toLowerCase();
   const patterns: Array<[RegExp, string, string]> = [
     [/front|facade|exterior|building/, 'exterior', 'Exterior'],
     [/aerial|drone/, 'aerial', 'Aerial view'],

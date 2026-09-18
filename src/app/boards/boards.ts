@@ -13,6 +13,7 @@ import { loadBoardRouteRecord } from './board-route-record';
 import type { TeamMember } from '../teams/team.models';
 import { TeamContactComponent } from '../teams/team-contact';
 import { RealEstateWizardSourceComponent } from './real-estate-wizard-source';
+import { ListingPhotoSourceComponent, type ListingPhotoSource, type PersistedListingPhoto } from './listing-photo-source';
 import { teamError } from '../teams/team.models';
 import { httpsCallable, type Functions } from 'firebase/functions';
 import { getDownloadURL, ref as storageRef, uploadBytes, type FirebaseStorage } from 'firebase/storage';
@@ -134,6 +135,8 @@ import {
   boardWizardDraftCountMode,
   boardWizardDraftListingIntent,
   boardWizardDraftListingMarketing,
+  boardWizardDraftListingPhotoSource,
+  boardWizardDraftListingPhotos,
   boardWizardDraftMediaMode,
   boardWizardDraftNarrationSeconds,
   boardWizardDraftPayloadWithPreferences,
@@ -571,7 +574,7 @@ type BoardCard = {
   sku?: string;
   availability?: string;
   productCategory?: string;
-  imageSource?: 'source-page' | 'product-page' | 'search' | 'generated' | 'missing';
+  imageSource?: 'source-page' | 'product-page' | 'search' | 'generated' | 'missing' | 'user-upload';
   extractionConfidence?: number;
   extractedAt?: string;
   what3wordsAddress?: string;
@@ -920,7 +923,7 @@ type BoardWizardGeneratedCard = {
   sku?: string;
   availability?: string;
   productCategory?: string;
-  imageSource?: 'source-page' | 'product-page' | 'search' | 'generated' | 'missing';
+  imageSource?: 'source-page' | 'product-page' | 'search' | 'generated' | 'missing' | 'user-upload';
   extractionConfidence?: number;
   extractedAt?: string;
   what3wordsAddress?: string;
@@ -928,6 +931,8 @@ type BoardWizardGeneratedCard = {
 };
 
 type BoardWizardPhoto = {
+  storagePath?: string;
+  storedImageUrl?: string;
   id: string;
   sourceKey: string;
   name: string;
@@ -1009,6 +1014,8 @@ type BoardWizardPreviewCard = BoardWizardGeneratedCard & {
 type BoardWizardDraftSaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 type BoardWizardDraft = {
+  listingPhotoSource?: ListingPhotoSource;
+  listingPhotos?: PersistedListingPhoto[];
   id: string;
   ownerUserId: string;
   mode: BoardWizardMode;
@@ -1686,7 +1693,7 @@ type BoardLoadContext = {
 
 @Component({
   selector: 'app-boards',
-  imports: [ListingLiveClosingComponent, PlacePhotoDirective, RealEstateWizardSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
+  imports: [ListingLiveClosingComponent, PlacePhotoDirective, RealEstateWizardSourceComponent, ListingPhotoSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
   providers: [DocxExportService],
   templateUrl: './boards.html',
   styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './real-estate-wizard-modal.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
@@ -2241,6 +2248,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     { id: 'investor', label: 'Fact-forward', description: 'Emphasize verified practical property information.', icon: 'analytics' },
   ];
   readonly wizardPhotos = signal<BoardWizardPhoto[]>([]);
+  readonly wizardListingPhotoSource = signal<ListingPhotoSource>('url');
+  readonly wizardListingPhotoUploading = signal(false);
+  readonly wizardListingCoverImage = computed(() => this.wizardListingPhotoSource() === 'upload'
+    ? this.wizardPhotos()[0]?.imageUrl || '' : this.wizardListingPreview()?.imageUrl || '');
+  readonly wizardListingPhotoCount = computed(() => this.wizardListingPhotoSource() === 'upload'
+    ? this.wizardPhotos().length : this.wizardListingPreview()?.imageCount || 0);
   readonly wizardPhotosLoading = signal(false);
   readonly wizardPhotoError = signal<string | null>(null);
   readonly wizardPhotoStoryMode = signal<BoardPhotoStoryMode | null>(null);
@@ -3356,7 +3369,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return this.wizardPastedList().trim().length >= 2;
     }
     if (mode === 'url') {
-      return /^https?:\/\/\S+/i.test(this.wizardUrl().trim());
+      return /^https?:\/\/\S+/i.test(this.wizardUrl().trim())
+        && (!this.wizardIsTalkThruListing() || this.wizardListingPhotoSource() !== 'upload'
+          || (this.wizardPhotos().length > 0 && !this.wizardPhotosLoading() && !this.wizardListingPhotoUploading()));
     }
     if (mode === 'nearby-gems') {
       return this.nearbyGemManualLocation().trim().length >= 2 && !this.nearbyGemLocating();
@@ -4817,6 +4832,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.wizardListingContactPhone.set(draft.listingContactPhone);
     this.wizardListingAgency.set(draft.listingAgency);
     this.wizardListingShowContact.set(draft.listingShowContact);
+    this.wizardListingPhotoSource.set(draft.listingPhotoSource ?? 'url');
+    this.wizardPhotos.set((draft.listingPhotos ?? []).map((photo) => ({
+      ...photo, sourceKey: photo.storagePath, caption: '', analysisDataUrl: '',
+      storedImageUrl: this.teamContextId() ? `team-media:${photo.storagePath}` : photo.imageUrl,
+    })));
     this.wizardPrompt.set(draft.prompt);
     this.wizardPastedList.set(draft.pastedList);
     this.wizardUrl.set(draft.sourceUrl);
@@ -5045,7 +5065,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const current = this.wizardPhotos();
     const available = Math.max(0, 24 - current.length);
     if (!available) {
-      this.wizardPhotoError.set($localize`A photo board can hold up to 24 photos.`);
+      this.wizardPhotoError.set(this.wizardIsTalkThruListing() ? 'A TalkThru can use up to 24 uploaded photos.' : $localize`A photo board can hold up to 24 photos.`);
       return;
     }
 
@@ -5074,20 +5094,20 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.wizardPhotos.update((photos) => [...photos, ...imported].slice(0, 24));
-    this.wizardCount.set(Math.max(1, this.wizardPhotos().length));
+    if (!this.wizardIsTalkThruListing()) this.wizardCount.set(Math.max(1, this.wizardPhotos().length));
     this.wizardPhotosLoading.set(false);
     if (rejected.length) {
       this.wizardPhotoError.set(
         `${rejected.length} ${rejected.length === 1 ? $localize`photo was` : $localize`photos were`} skipped. ${rejected.slice(0, 2).join(' ')}`,
       );
     } else if (files.length > candidates.length) {
-      this.wizardPhotoError.set(`Added ${imported.length} photos. Photo boards can hold up to 24.`);
+      this.wizardPhotoError.set(`Added ${imported.length} photos. You can select up to 24 photos.`);
     }
   }
 
   removeWizardPhoto(photoId: string): void {
     this.wizardPhotos.update((photos) => photos.filter((photo) => photo.id !== photoId));
-    this.wizardCount.set(Math.max(1, this.wizardPhotos().length));
+    if (!this.wizardIsTalkThruListing()) this.wizardCount.set(Math.max(1, this.wizardPhotos().length));
     this.wizardPhotoError.set(null);
   }
 
@@ -5566,6 +5586,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private wizardListingValidationMessage(): string {
+    if (this.wizardListingPhotoSource() === 'upload') {
+      if (this.wizardPhotosLoading() || this.wizardListingPhotoUploading()) return 'Wait for your photos to finish preparing.';
+      if (!this.wizardPhotos().length) return 'Choose at least one property photo.';
+    }
     if (this.wizardEntryIntent() !== 'real-estate') return '';
     if (!this.wizardListingPropertyType().trim()) return 'Choose the property type.';
     if (!this.wizardListingContactName().trim()) return 'Enter your name so buyers know who is presenting the property.';
@@ -6078,6 +6102,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   wizardProductImageLabel(card: BoardWizardPreviewCard): string {
     switch (card.imageSource) {
+      case 'user-upload':
+        return 'Uploaded photo';
       case 'source-page':
         return 'Exact page image';
       case 'product-page':
@@ -19009,6 +19035,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       listingContactPhone: this.wizardListingContactPhone(),
       listingAgency: this.wizardListingAgency(),
       listingShowContact: this.wizardListingShowContact(),
+      listingPhotoSource: this.wizardListingPhotoSource(),
+      listingPhotos: this.storedWizardListingPhotos(),
       prompt: this.wizardPrompt(),
       pastedList: this.wizardPastedList(),
       sourceUrl: this.wizardUrl(),
@@ -19129,6 +19157,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         listingContactPhone: this.wizardListingContactPhone(),
         listingAgency: this.wizardListingAgency(),
         listingShowContact: this.wizardListingShowContact(),
+        listingPhotoSource: this.wizardListingPhotoSource(),
+        listingPhotos: this.storedWizardListingPhotos(),
         prompt: this.wizardPrompt(),
         pastedList: this.wizardPastedList(),
         sourceUrl: this.wizardUrl(),
@@ -19173,6 +19203,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         updated_at_iso: draft.updatedAt,
         server_updated_at: serverTimestamp(),
       }, draft.mediaMode, {
+        listingPhotoSource: draft.listingPhotoSource,
+        listingPhotos: draft.listingPhotos,
         countMode: draft.countMode,
         narrationSecondsPerCard: draft.narrationSecondsPerCard,
         listingIntent: draft.entryIntent,
@@ -19322,6 +19354,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         listingContactPhone: listingMarketing.contactPhone,
         listingAgency: listingMarketing.agency,
         listingShowContact: listingMarketing.showContact,
+        listingPhotoSource: boardWizardDraftListingPhotoSource(value),
+        listingPhotos: boardWizardDraftListingPhotos(value),
         prompt: this.stringValue(value['prompt'], '', 2000),
         pastedList: this.stringValue(value['pasted_list'], '', BOARD_WIZARD_PASTE_MAX_LENGTH),
         sourceUrl: this.stringValue(value['source_url'], '', 2000),
@@ -19348,6 +19382,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private resetBoardWizard(): void {
+    this.wizardListingPhotoSource.set('url');
+    this.wizardListingPhotoUploading.set(false);
     this.wizardImageEnrichmentRun += 1;
     this.wizardVideoEnrichmentRun += 1;
     const selectedBoard = this.selectedBoard();
@@ -19567,6 +19603,63 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     return `Create a specific, polished editorial image for "${card.title}". Use this context: ${card.subtitle}. ${card.notes} Show the actual subject, event, place, or moment rather than a generic symbol. No text or logos.`.replace(/\s+/g, ' ').trim().slice(0, 700);
   }
 
+  private storedWizardListingPhotos(): PersistedListingPhoto[] {
+    return this.wizardPhotos().flatMap((photo) => photo.storagePath && photo.storedImageUrl
+      ? [{ id: photo.id, name: photo.name, storagePath: photo.storagePath, imageUrl: photo.storedImageUrl }]
+      : []);
+  }
+
+  private async prepareWizardListingPhotos(): Promise<PersistedListingPhoto[]> {
+    if (!this.wizardIsTalkThruListing() || this.wizardListingPhotoSource() !== 'upload') return [];
+    const uid = this.authService.uid();
+    if (!uid) throw new Error('Sign in before uploading property photos.');
+    if (this.wizardPhotosLoading() || !this.wizardPhotos().length) throw new Error('Choose at least one property photo and wait for it to finish preparing.');
+    const draftId = this.wizardActiveDraftId() ?? this.createId();
+    this.wizardActiveDraftId.set(draftId);
+    const teamId = this.teamContextId();
+    const importRun = this.wizardPhotoImportRun;
+    const selected = [...this.wizardPhotos()];
+    const stillCurrent = () => uid === this.authService.uid() && teamId === this.teamContextId()
+      && draftId === this.wizardActiveDraftId() && importRun === this.wizardPhotoImportRun;
+    this.wizardListingPhotoUploading.set(true);
+    this.wizardPhotoError.set(null);
+    this.wizardLoadingTask.set({ message: 'Uploading your property photos', progress: 24 });
+    try {
+      for (let index = 0; index < selected.length; index++) {
+        const photo = selected[index];
+        if (!photo.storagePath) {
+          let storagePath: string;
+          let storedImageUrl: string;
+          if (teamId) {
+            storedImageUrl = await this.teams.storeMedia(teamId, draftId, photo.imageUrl);
+            storagePath = storedImageUrl.slice('team-media:'.length);
+          } else {
+            if (!this.storage) throw new Error('Photo storage is unavailable. Refresh and try again.');
+            const blob = await (await fetch(photo.imageUrl)).blob();
+            const versioned = await this.versionedImageStoragePath(`users/${uid}/boards/${draftId}/listing-photos/${photo.id}.jpg`, blob);
+            const reference = storageRef(this.storage, versioned.path);
+            await uploadBytes(reference, blob, { contentType: 'image/jpeg', cacheControl: 'public,max-age=31536000,immutable' });
+            storagePath = reference.fullPath;
+            storedImageUrl = await getDownloadURL(reference);
+          }
+          if (!stillCurrent()) throw new Error('The listing builder changed. Reopen it before generating.');
+          this.wizardPhotos.update((photos) => photos.map((item) => item.id === photo.id ? { ...item, storagePath, storedImageUrl } : item));
+        }
+        if (!stillCurrent()) throw new Error('The listing builder changed. Reopen it before generating.');
+        this.wizardLoadingTask.set({ message: `Uploading your property photos · ${index + 1} of ${selected.length}`, progress: 24 + 12 * (index + 1) / selected.length });
+      }
+      const stored = this.storedWizardListingPhotos();
+      if (stored.length !== selected.length) throw new Error('Some property photos could not be uploaded. Try again.');
+      this.wizardLoadingTask.set({ message: 'Identifying spaces and writing your property story', progress: 42 });
+      return stored;
+    } catch (error) {
+      if (stillCurrent()) this.wizardPhotoError.set(error instanceof Error ? error.message : 'Your photos could not be uploaded. Try again.');
+      throw error;
+    } finally {
+      if (stillCurrent()) this.wizardListingPhotoUploading.set(false);
+    }
+  }
+
   private async requestWizardBatch(refinement = ''): Promise<BoardWizardGeneratedBatch> {
     if (!this.functions) {
       throw new Error('Firebase Functions are not available in this browser session.');
@@ -19581,7 +19674,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const callable = httpsCallable<Record<string, unknown>, unknown>(this.functions, 'generateBoardWizardBatch', {
       timeout: 290_000,
     });
+    const listingPhotos = await this.prepareWizardListingPhotos();
+    const listingPhotoSource = this.wizardIsTalkThruListing() ? this.wizardListingPhotoSource() : 'url';
     const response = await callable({
+      listingPhotoSource,
+      listingPhotos: listingPhotos.map((photo) => ({ id: photo.id, storagePath: photo.storagePath })),
+      listingPhotoTeamId: this.teamContextId(),
+      listingPhotoDraftId: this.wizardActiveDraftId(),
       mode: this.wizardMode(),
       prompt,
       pastedList: this.wizardMode() === 'paste' ? this.wizardPastedList().trim() : '',
@@ -19634,7 +19733,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         tags: card.tags,
       })) ?? [],
     });
-    return this.normalizeWizardBatch(response.data);
+    if (listingPhotoSource === 'upload' && (!response.data || typeof response.data !== 'object'
+      || (response.data as Record<string, unknown>)['listingPhotoSource'] !== 'upload')) {
+      throw new Error('Photo uploads are temporarily unavailable. Your selected photos are preserved; please try again shortly.');
+    }
+    return this.normalizeWizardBatch(this.teamContextId() ? await this.teams.hydrateMedia(response.data) : response.data);
   }
 
   private wizardShouldDeferMediaEnrichment(): boolean {
@@ -22854,12 +22957,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   private isCommerceImageSource(
     value: unknown,
-  ): value is 'source-page' | 'product-page' | 'search' | 'generated' | 'missing' {
+  ): value is 'source-page' | 'product-page' | 'search' | 'generated' | 'missing' | 'user-upload' {
     return value === 'source-page'
       || value === 'product-page'
       || value === 'search'
       || value === 'generated'
-      || value === 'missing';
+      || value === 'missing'
+      || value === 'user-upload';
   }
 
   private isStackRatio(value: unknown): value is StackRatio {

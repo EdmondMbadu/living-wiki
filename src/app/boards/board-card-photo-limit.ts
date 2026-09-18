@@ -1,5 +1,6 @@
 export const MANUAL_CARD_PHOTO_LIMIT = 12;
 export const VERIFIED_URL_LISTING_GALLERY_LIMIT = 100;
+export const UPLOADED_LISTING_GALLERY_LIMIT = 24;
 
 export type CardPhotoLimitInput = {
   imageSource?: unknown;
@@ -22,6 +23,10 @@ export function isVerifiedUrlListingGallery(input: CardPhotoLimitInput): boolean
 }
 
 export function cardPhotoLimit(input: CardPhotoLimitInput): number {
+  if (input.imageSource === 'user-upload' && Array.isArray(input.tags)
+    && input.tags.includes('listing') && input.tags.includes('uploaded-image')) {
+    return UPLOADED_LISTING_GALLERY_LIMIT;
+  }
   return isVerifiedUrlListingGallery(input)
     ? VERIFIED_URL_LISTING_GALLERY_LIMIT
     : MANUAL_CARD_PHOTO_LIMIT;

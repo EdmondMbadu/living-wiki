@@ -1,0 +1,42 @@
+<fieldset class="photo-source">
+  <legend>Photos for your TalkThru</legend>
+  <div class="source-options">
+    <button type="button" [class.is-selected]="source() === 'url'" [attr.aria-pressed]="source() === 'url'" (click)="source.set('url')" [disabled]="loading()">
+      <span class="material-symbols-outlined" aria-hidden="true">link</span>
+      <span><strong>Use photos from listing URL</strong><small>Gather the available listing gallery.</small></span>
+    </button>
+    <button type="button" [class.is-selected]="source() === 'upload'" [attr.aria-pressed]="source() === 'upload'" (click)="source.set('upload')" [disabled]="loading()">
+      <span class="material-symbols-outlined" aria-hidden="true">add_photo_alternate</span>
+      <span><strong>Upload my photos</strong><small>Choose the photos used in your walkthrough.</small></span>
+    </button>
+  </div>
+  @if (source() === 'upload') {
+    <p class="help">We’ll use your photos instead of the listing gallery. AI will identify the spaces and write their stories. Property facts still come from the listing URL.</p>
+    <label class="upload-button" [class.is-disabled]="loading() || photos().length >= 24">
+      <span class="material-symbols-outlined" aria-hidden="true">upload</span>
+      {{ photos().length ? 'Add photos' : 'Choose photos' }}
+      <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" aria-label="Upload property photos" [disabled]="loading() || photos().length >= 24" (change)="selected.emit($event)" />
+    </label>
+    <p class="help">JPEG, PNG, WebP, or HEIC · Up to 24 photos · 25 MB per original photo</p>
+    @if (loading()) { <p role="status">Preparing your photos…</p> }
+    @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+    @if (photos().length) {
+      <p class="photo-count" aria-live="polite">{{ photos().length }} {{ photos().length === 1 ? 'photo selected' : 'photos selected' }} · The first photo is your cover.</p>
+      <div class="photo-grid">
+        @for (photo of photos(); track photo.id; let index = $index) {
+          <figure>
+            <img [src]="photo.imageUrl" [alt]="photo.name" />
+            @if (index === 0) { <span class="cover-label">Cover</span> }
+            <figcaption>
+              <span class="photo-name" [title]="photo.name">{{ photo.name }}</span>
+              <div class="photo-actions">
+                <button type="button" [disabled]="loading() || index === 0" [attr.aria-label]="'Use ' + photo.name + ' as cover'" (click)="coverChanged.emit(photo.id)">Use as cover</button>
+                <button type="button" [disabled]="loading()" [attr.aria-label]="'Remove ' + photo.name" (click)="removed.emit(photo.id)">Remove</button>
+              </div>
+            </figcaption>
+          </figure>
+        }
+      </div>
+    }
+  }
+</fieldset>

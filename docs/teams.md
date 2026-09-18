@@ -13,6 +13,9 @@ The workspace includes:
 - Branded hero, logo, description, website, public contact details, and configurable accent.
 - Listings, Members, and About sections; searchable listings with status/representative filters, list/grid views, and pagination.
 - Shared real-estate TalkThru creation through the existing board wizard and editor.
+- Listing photo-source choice: use the URL gallery or upload up to 24 photos, remove photos, and choose a cover. The URL remains required for property facts. Uploaded photos replace the scraped gallery and use the same room classification and grounded narration pipeline. Team photos remain in private `team-media` until explicit publication; draft preferences preserve their storage references and cover order. Failed uploads can retry without re-uploading successful files, and uncertain rooms remain marked for review.
+
+The listing-upload frontend requires updated `generateBoardWizardBatch` and `teamCommand` callables. Deploy both with `firebase deploy --only functions:generateBoardWizardBatch,functions:teamCommand --project living-atlas-7622a` before releasing the frontend. Existing Storage rules already cover these private team and owner-scoped personal uploads.
 - Representative assignment, separately selected shared voice, revision history, unpublished-change indicators, explicit publication, QR downloads, and team-owned video assets.
 - Accepted members, pending invitations, roles, public-profile opt-in, shared-voice consent, leaving/removing members, and owner transfer.
 - Views, unique engaged participants, chat sessions/messages, verified voice minutes, explicit contact requests, private conversations, and activity/notifications.

@@ -7,6 +7,7 @@ import {
   normalizeBoardNarrationSeconds,
 } from './board-narration-length';
 import type { BoardWizardCountMode } from './board-wizard-count-policy';
+import type { ListingPhotoSource, PersistedListingPhoto } from './listing-photo-source';
 
 export const BOARD_WIZARD_PREFERENCES_FIELD = 'wizard_preferences';
 
@@ -40,6 +41,8 @@ export const BOARD_WIZARD_DRAFT_STABLE_TOP_LEVEL_FIELDS = [
 ] as const;
 
 type PersistedWizardPreferences = {
+  listing_photo_source?: ListingPhotoSource;
+  listing_photos?: PersistedListingPhoto[];
   media_mode: BoardWizardMediaMode;
   count_mode: BoardWizardCountMode;
   narration_seconds_per_card: number;
@@ -115,6 +118,8 @@ export function boardWizardDraftPayloadWithPreferences<
   payload: Record<string, unknown> & { result: TResult },
   mediaMode: BoardWizardMediaMode,
   preferences: {
+    listingPhotoSource?: ListingPhotoSource;
+    listingPhotos?: PersistedListingPhoto[];
     countMode?: BoardWizardCountMode;
     narrationSecondsPerCard?: number;
     listingIntent?: unknown;
@@ -152,6 +157,10 @@ export function boardWizardDraftPayloadWithPreferences<
           preferences.narrationSecondsPerCard ?? DEFAULT_BOARD_NARRATION_SECONDS_PER_CARD,
         ),
         listing_intent: normalizePersistedListingIntent(preferences.listingIntent),
+        ...(preferences.listingPhotoSource ? {
+          listing_photo_source: preferences.listingPhotoSource,
+          listing_photos: normalizePersistedListingPhotos(preferences.listingPhotos),
+        } : {}),
         ...(preferences.listingMarketing ? {
           listing_marketing: normalizePersistedListingMarketing(preferences.listingMarketing),
         } : {}),
@@ -184,6 +193,29 @@ function boardWizardDraftPreferences(value: Record<string, unknown>): Record<str
     && typeof result[BOARD_WIZARD_PREFERENCES_FIELD] === 'object'
     ? result[BOARD_WIZARD_PREFERENCES_FIELD] as Record<string, unknown>
     : {};
+}
+
+export function boardWizardDraftListingPhotoSource(value: Record<string, unknown>): ListingPhotoSource {
+  return boardWizardDraftPreferences(value)['listing_photo_source'] === 'upload' ? 'upload' : 'url';
+}
+
+export function boardWizardDraftListingPhotos(value: Record<string, unknown>): PersistedListingPhoto[] {
+  return normalizePersistedListingPhotos(boardWizardDraftPreferences(value)['listing_photos']);
+}
+
+function normalizePersistedListingPhotos(value: unknown): PersistedListingPhoto[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  return value.slice(0, 24).flatMap((item): PersistedListingPhoto[] => {
+    if (!item || typeof item !== 'object') return [];
+    const photo = item as Record<string, unknown>;
+    if (typeof photo['id'] !== 'string' || !photo['id'] || seen.has(photo['id'])
+      || typeof photo['storagePath'] !== 'string' || !photo['storagePath']
+      || typeof photo['imageUrl'] !== 'string' || !/^(https?:|blob:|team-media:)/.test(photo['imageUrl'])) return [];
+    seen.add(photo['id']);
+    return [{ id: photo['id'], name: typeof photo['name'] === 'string' ? photo['name'].slice(0, 180) : 'Property photo',
+      imageUrl: photo['imageUrl'], storagePath: photo['storagePath'] }];
+  });
 }
 
 export function boardWizardDraftCountMode(value: Record<string, unknown>): BoardWizardCountMode {

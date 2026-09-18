@@ -25,7 +25,7 @@ export function boardWizardListingFurnishingsIncluded(extraction: BoardWizardLis
 export type BoardWizardListingImage = {
   url: string;
   alt: string;
-  evidence: 'embedded-gallery' | 'structured-data' | 'listing-gallery' | 'page-metadata';
+  evidence: 'embedded-gallery' | 'structured-data' | 'listing-gallery' | 'page-metadata' | 'user-upload';
 };
 
 export type BoardWizardListingUnit = {
@@ -61,6 +61,8 @@ export type BoardWizardRealEstateDetails = {
 };
 
 export type BoardWizardListingExtraction = {
+  photoSource?: 'url' | 'upload';
+  preferredCoverUrl?: string;
   kind: BoardWizardListingKind;
   sourceUrl: string;
   finalUrl: string;

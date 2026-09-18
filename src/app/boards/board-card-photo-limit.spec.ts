@@ -6,6 +6,12 @@ import {
 } from './board-card-photo-limit';
 
 describe('URL listing gallery photo limits', () => {
+  it('retains the entire uploaded listing gallery without treating it as URL-sourced', () => {
+    const input = { imageSource: 'user-upload', sourceUrl: 'https://example.com/listing', tags: ['listing', 'real-estate', 'uploaded-image'] };
+    expect(isVerifiedUrlListingGallery(input)).toBeFalse();
+    expect(cardPhotoLimit(input)).toBe(24);
+    expect(cardPhotoLimit({ imageSource: 'user-upload', tags: ['memory'] })).toBe(MANUAL_CARD_PHOTO_LIMIT);
+  });
   it('allows complete verified Airbnb and Zillow listing galleries', () => {
     const input = {
       imageSource: 'source-page',

@@ -587,7 +587,7 @@ export type GeneratedBoardWizardCard = {
   sku?: string;
   availability?: string;
   productCategory?: string;
-  imageSource?: 'source-page' | 'product-page' | 'search' | 'generated' | 'missing';
+  imageSource?: 'source-page' | 'product-page' | 'search' | 'generated' | 'missing' | 'user-upload';
   extractionConfidence?: number;
   extractedAt?: string;
   nearby?: {
@@ -2541,7 +2541,7 @@ function normalizeGeneratedBoardWizardImageSource(
   value: unknown,
 ): GeneratedBoardWizardCard['imageSource'] | undefined {
   return value === 'source-page' || value === 'product-page' || value === 'search'
-    || value === 'generated' || value === 'missing' ? value : undefined;
+    || value === 'generated' || value === 'missing' || value === 'user-upload' ? value : undefined;
 }
 
 function normalizeGeneratedBoardWizardConfidence(value: unknown): number | undefined {

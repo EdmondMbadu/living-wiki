@@ -4987,7 +4987,13 @@
                 [narrationStyle]="wizardNarrationStyle()" (narrationStyleChange)="wizardNarrationStyle.set($event)"
                 [narrationSeconds]="wizardNarrationSecondsPerCard()" (narrationSecondsChange)="setWizardNarrationSeconds($event)"
                 [cardCount]="wizardEffectiveCount()"
-              />
+              >
+                <app-listing-photo-source
+                  [source]="wizardListingPhotoSource()" (sourceChange)="wizardListingPhotoSource.set($event)"
+                  [photos]="wizardPhotos()" [loading]="wizardPhotosLoading() || wizardListingPhotoUploading()" [error]="wizardPhotoError()"
+                  (selected)="onWizardPhotosSelected($event)" (removed)="removeWizardPhoto($event)" (coverChanged)="makeWizardPhotoCover($event)"
+                />
+              </app-real-estate-wizard-source>
             } @else {
             @if (wizardMode() === 'describe') {
               <ol class="boards-wizard-steps" aria-label="Board creation progress">
@@ -5668,10 +5674,17 @@
                   />
                   @if (wizardIsTalkThruListing()) {
                     <small class="boards-wizard-real-estate-help">
-                      Paste a public {{ wizardIsRentalTalkThru() ? 'rental' : 'property' }} listing. LivingWiki will keep the source, listing details, photos, and attribution together.
+                      Paste a public {{ wizardIsRentalTalkThru() ? 'rental' : 'property' }} listing. LivingWiki will keep the property details and their source together.
                     </small>
                   }
                 </label>
+                @if (wizardIsTalkThruListing()) {
+                  <app-listing-photo-source
+                    [source]="wizardListingPhotoSource()" (sourceChange)="wizardListingPhotoSource.set($event)"
+                    [photos]="wizardPhotos()" [loading]="wizardPhotosLoading() || wizardListingPhotoUploading()" [error]="wizardPhotoError()"
+                    (selected)="onWizardPhotosSelected($event)" (removed)="removeWizardPhoto($event)" (coverChanged)="makeWizardPhotoCover($event)"
+                  />
+                }
                 @if (wizardEntryIntent() !== 'real-estate') {
                   <label>
                     <span>{{ wizardIsTalkThruListing() ? 'What should the TalkThru emphasize?' : 'Optional direction' }}</span>
@@ -6155,8 +6168,8 @@
                 </nav>
 
                 <section class="boards-listing-story-hero boards-listing-story-hero--personalize">
-                  @if (listing.imageUrl) {
-                    <img class="boards-listing-story-hero__image" [src]="listing.imageUrl" [alt]="listing.listingName" referrerpolicy="no-referrer" />
+                  @if (wizardListingCoverImage()) {
+                    <img class="boards-listing-story-hero__image" [src]="wizardListingCoverImage()" [alt]="listing.listingName" referrerpolicy="no-referrer" />
                   } @else {
                     <span class="boards-listing-story-hero__icon material-symbols-outlined">home_work</span>
                   }
@@ -6172,7 +6185,7 @@
                       @if (listing.mlsId) { <span>MLS# {{ listing.mlsId }}</span> }
                     </div>
                   </div>
-                  <div class="boards-listing-story-photo-count"><strong>{{ listing.imageCount || '—' }}</strong><small>source photos</small></div>
+                  <div class="boards-listing-story-photo-count"><strong>{{ wizardListingPhotoCount() || '—' }}</strong><small>{{ wizardListingPhotoSource() === 'upload' ? 'uploaded photos' : 'source photos' }}</small></div>
                 </section>
 
                 <div class="boards-listing-personalize-grid">

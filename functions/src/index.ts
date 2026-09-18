@@ -253,6 +253,7 @@ import {
   normalizeBoardWizardListingMarketingOptions,
   type BoardWizardListingPreview,
 } from './board-wizard-listing-marketing';
+import { loadUploadedListingPhotos, normalizeUploadedListingPhotos, type PreparedListingPhoto } from './board-wizard-listing-uploads';
 import {
   bestBoardWizardSrcsetUrl,
   extractBoardWizardPictureImages,
@@ -5469,6 +5470,10 @@ export const searchCityPlaces = onCall(
 );
 
 type BoardWizardCallableData = {
+  listingPhotoSource?: unknown;
+  listingPhotos?: unknown;
+  listingPhotoTeamId?: unknown;
+  listingPhotoDraftId?: unknown;
   mode?: unknown;
   prompt?: unknown;
   pastedList?: unknown;
@@ -7745,6 +7750,18 @@ export const generateBoardWizardBatch = onCall(
     const submittedUrl = stringOrEmpty(data.url).slice(0, 1000) || describedUrl;
     const url = submittedUrl ? safeBoardCardSourceUrl(submittedUrl) : '';
     const usesUrlSource = (mode === 'url' || !!describedUrl) && !!submittedUrl;
+    const listingPhotoSource = data.listingPhotoSource === 'upload' ? 'upload' : 'url';
+    const listingPhotoScope = {
+      userId,
+      teamId: stringOrEmpty(data.listingPhotoTeamId),
+      draftId: stringOrEmpty(data.listingPhotoDraftId),
+    };
+    if (listingPhotoSource === 'upload' && (!usesUrlSource || listingIntent === 'auto')) {
+      throw new HttpsError('invalid-argument', 'Provide a property listing URL before using uploaded listing photos.');
+    }
+    const uploadedListingPhotos = listingPhotoSource === 'upload'
+      ? normalizeUploadedListingPhotos(data.listingPhotos, listingPhotoScope)
+      : [];
     const generationMode: BoardWizardMode = usesUrlSource ? 'url' : mode;
     if (usesUrlSource && submittedUrl && !url) {
       throw new HttpsError('invalid-argument', 'Provide a public HTTP or HTTPS page URL.');
@@ -8092,6 +8109,22 @@ export const generateBoardWizardBatch = onCall(
       }
     }
 
+    let preparedListingPhotos: PreparedListingPhoto[] | undefined;
+    if (listingPhotoSource === 'upload') {
+      if (!listingExtraction || (listingExtraction.kind !== 'real-estate' && listingIntent !== 'rental')) {
+        throw new HttpsError('failed-precondition', 'The property details could not be verified from this URL. Your uploaded photos are preserved; check the listing link and try again.');
+      }
+      const uploaded = await loadUploadedListingPhotos(uploadedListingPhotos, listingPhotoScope);
+      listingExtraction = {
+        ...listingExtraction, images: uploaded.images, photoSource: 'upload',
+        preferredCoverUrl: uploaded.images[0].url,
+      };
+      preparedListingPhotos = uploaded.preparedPhotos;
+      articleManifest = null;
+      commerceExtraction = null;
+      accommodationExtraction = null;
+    }
+
     const effectivePrompt = [
       prompt,
       mapsTourContext,
@@ -8102,7 +8135,7 @@ export const generateBoardWizardBatch = onCall(
         ? `Detected shopping page with ${commerceExtraction.products.length} locally bound product records.`
         : '',
       listingExtraction
-        ? `Detected ${listingExtraction.kind} listing with ${listingExtraction.images.length} exact source photos.`
+        ? `Detected ${listingExtraction.kind} listing with ${listingExtraction.images.length} ${listingPhotoSource === 'upload' ? 'user-uploaded' : 'exact source'} photos.`
         : '',
       accommodationExtraction ? `Detected lodging listing: ${accommodationExtraction.listingName}` : '',
       urlExtraction?.context ? `URL extraction context:\n${urlExtraction.context}` : '',
@@ -8188,7 +8221,7 @@ export const generateBoardWizardBatch = onCall(
 
     const generationUsesNarrationPrompt = (!!listingExtraction
       && (listingExtraction.kind === 'real-estate' || listingIntent === 'rental')
-      && listingMarketing.enabled)
+      && (listingMarketing.enabled || listingPhotoSource === 'upload'))
       || (!commerceExtraction
       && !listingExtraction
       && !accommodationExtraction
@@ -8209,8 +8242,9 @@ export const generateBoardWizardBatch = onCall(
               count,
               narrationStyle,
               narrationSecondsPerCard,
-              marketing: listingMarketing,
+              marketing: listingPhotoSource === 'upload' ? { ...listingMarketing, enabled: true } : listingMarketing,
               listingIntent,
+              preparedPhotos: preparedListingPhotos,
             })
           : buildBoardWizardListingBatch({
               extraction: listingExtraction,
@@ -8446,10 +8480,11 @@ export const generateBoardWizardBatch = onCall(
       board_title: resultWithGenerationSummary.board.title,
       card_titles: resultWithGenerationSummary.cards.map((card) => card.title).slice(0, 100),
       source_report: resultWithGenerationSummary.sourceReport ?? null,
+      listing_photo_source: listingPhotoSource,
       created_at: FieldValue.serverTimestamp(),
     });
 
-    return resultWithGenerationSummary;
+    return { ...resultWithGenerationSummary, listingPhotoSource };
   },
 );
 
@@ -12033,7 +12068,7 @@ function buildBoardWizardSourceReport(
     if (card.imageSource !== 'source-page' && card.imageSource !== 'product-page') return [];
     return [card.imageUrl, ...(card.imageUrls ?? [])].filter((url): url is string => !!url);
   }));
-  const sourceImageCount = options.manifest?.items.filter((item) => !!item.imageUrl).length
+  const sourceImageCount = options.listing?.photoSource === 'upload' ? options.listing.images.length : options.manifest?.items.filter((item) => !!item.imageUrl).length
     ?? exactSourceImageUrls.size;
   const recovered = options.method !== 'page' || options.sourceBlocked;
   const listingExtracted = !!options.listing;
@@ -12051,7 +12086,9 @@ function buildBoardWizardSourceReport(
     : recovered
       ? productCards.length > 0 && missingImageCount === 0 ? 'recovered' : 'partial'
       : deterministicSourceCards.length > 0 ? 'exact' : 'partial';
-  const message = options.manifest
+  const message = options.listing?.photoSource === 'upload'
+    ? `Property facts read from the listing URL; ${sourceImageCount} uploaded photo${sourceImageCount === 1 ? '' : 's'} used for the walkthrough. Review any photos marked as unclassified before saving.`
+    : options.manifest
     ? `${matchedCardCount} of ${extractedItemCount} source item${extractedItemCount === 1 ? '' : 's'} matched in the generated preview${sourceImageCount ? `; ${sourceImageCount} source image${sourceImageCount === 1 ? '' : 's'} recovered` : ''}.`
     : options.method === 'grounded-search'
     ? productCards.length
@@ -15162,7 +15199,7 @@ function normalizeBoardWizardCurrentCard(value: unknown, defaultType: GeneratedB
     availability: stringOrEmpty(data.availability).slice(0, 100) || undefined,
     productCategory: stringOrEmpty(data.productCategory).slice(0, 100) || undefined,
     imageSource: data.imageSource === 'source-page' || data.imageSource === 'product-page'
-      || data.imageSource === 'search' || data.imageSource === 'generated' || data.imageSource === 'missing'
+      || data.imageSource === 'search' || data.imageSource === 'generated' || data.imageSource === 'missing' || data.imageSource === 'user-upload'
       ? data.imageSource
       : undefined,
     extractionConfidence: typeof data.extractionConfidence === 'number'

@@ -151,7 +151,7 @@ const BOARD_FIELDS =
     /\s+/,
   );
 const CARD_FIELDS =
-  `id title type subtitle notes imageUrl imageUrls imageAlt text url videoUrl videoId youtubeVideoId
+  `id title type subtitle notes imageUrl imageUrls imageSource imageAlt text url videoUrl videoId youtubeVideoId
   stackScript caption address location latitude longitude price currency sourceUrl productUrl merchant
   tags stickers createdAt updatedAt scope status rating contactDetails stackNarration listingPresentation
   shortSummary entityName entityType mediaKind audioPreviewUrl googleMapsUrl locationLat locationLng
