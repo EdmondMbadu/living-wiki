@@ -27,7 +27,12 @@ import {
   normalizeAtlasResponsePerspective,
   normalizeAtlasWikiType,
 } from './atlas-identity';
-import { BOARD_WIZARD_PASTE_MAX_LENGTH, parseNumberedBoardSource, type NumberedBoardSource } from './board-wizard-source';
+import {
+  BOARD_WIZARD_PASTE_MAX_LENGTH,
+  estimateNumberedBoardSourceNarrationSeconds,
+  parseNumberedBoardSource,
+  type NumberedBoardSource,
+} from './board-wizard-source';
 import {
   boardWizardImageEntityName,
   buildBoardWizardContextualImagePrompt,
@@ -7746,10 +7751,19 @@ export const generateBoardWizardBatch = onCall(
     const tourOptions = normalizeBoardWizardTourOptions(data.tourOptions, mode);
     const targetBoardId = stringOrEmpty(data.targetBoardId).slice(0, 140);
     const targetBoardTitle = stringOrEmpty(data.targetBoardTitle).slice(0, 120);
-    const prompt = stringOrEmpty(data.prompt).slice(0, 4000);
-    const pastedList = stringOrEmpty(data.pastedList).slice(0, BOARD_WIZARD_PASTE_MAX_LENGTH);
-    const describedUrl = mode === 'describe' ? firstHttpUrl(prompt) : '';
-    const submittedUrl = stringOrEmpty(data.url).slice(0, 1000) || describedUrl;
+    const prompt = stringOrEmpty(data.prompt).slice(0, BOARD_WIZARD_PASTE_MAX_LENGTH);
+    const submittedPastedList = stringOrEmpty(data.pastedList).slice(0, BOARD_WIZARD_PASTE_MAX_LENGTH);
+    // Long prose pasted into Describe is source material too. Keep the entire
+    // text available to Gemini instead of silently reducing it to the 4,000-
+    // character creative-prompt preview used by the model instructions.
+    const pastedList = submittedPastedList
+      || (mode === 'describe' && prompt.length > 4_000 ? prompt : '');
+    const numberedSourceText = mode === 'paste' ? submittedPastedList : mode === 'describe' ? prompt : '';
+    const numberedSource = parseNumberedBoardSource(numberedSourceText);
+    const describedUrl = mode === 'describe' && !numberedSource ? firstHttpUrl(prompt) : '';
+    const submittedUrl = numberedSource
+      ? ''
+      : stringOrEmpty(data.url).slice(0, 1000) || describedUrl;
     const url = submittedUrl ? safeBoardCardSourceUrl(submittedUrl) : '';
     const usesUrlSource = (mode === 'url' || !!describedUrl) && !!submittedUrl;
     const listingPhotoSource = data.listingPhotoSource === 'upload' ? 'upload' : 'url';
@@ -7771,7 +7785,6 @@ export const generateBoardWizardBatch = onCall(
     const submittedSourceManifest = url
       ? normalizeBoardWizardSourceManifest(data.sourceManifest, url)
       : null;
-    const numberedSource = mode === 'paste' ? parseNumberedBoardSource(pastedList) : null;
     const countResolution = resolveBoardWizardCount({
       text: [prompt, pastedList, targetBoardTitle].join(' '),
       submittedCount: data.count,
@@ -8186,8 +8199,14 @@ export const generateBoardWizardBatch = onCall(
     const generationCountPolicy: BoardWizardCountPolicy = numberedSource || articleManifest || mapsTourStopCount || photos.length
       ? 'source-exact'
       : countResolution.policy;
+    const inferredSourceNarrationSeconds = numberedSource
+      ? normalizeBoardNarrationSeconds(estimateNumberedBoardSourceNarrationSeconds(
+          numberedSource,
+          BOARD_NARRATION_WORDS_PER_SECOND,
+        ))
+      : 0;
     if (data.narrationLengthCustomized !== true) {
-      narrationSecondsPerCard = boardNarrationBudgetedSecondsPerCard(
+      narrationSecondsPerCard = inferredSourceNarrationSeconds || boardNarrationBudgetedSecondsPerCard(
         generationCount,
         narrationSecondsPerCard,
       );
@@ -8270,7 +8289,7 @@ export const generateBoardWizardBatch = onCall(
         : numberedSource
         ? await generateNumberedSourceWizardBatch({
             source: numberedSource,
-            pastedList,
+            pastedList: numberedSourceText,
             prompt: effectivePrompt || prompt,
             targetBoardTitle,
             defaultType,
@@ -8419,12 +8438,7 @@ export const generateBoardWizardBatch = onCall(
       cards: applyBoardWizardMediaMode(routeReadyResult.cards, mediaMode),
     };
     const sourceNarrationSecondsPerCard = numberedSource && data.narrationLengthCustomized !== true
-      ? normalizeBoardNarrationSeconds(
-          numberedSource.items.reduce(
-            (total, item) => total + (item.body.match(/\S+/g)?.length ?? 0),
-            0,
-          ) / numberedSource.items.length / BOARD_NARRATION_WORDS_PER_SECOND,
-        )
+      ? inferredSourceNarrationSeconds
       : narrationSecondsPerCard;
     const reportedNarrationSecondsPerCard = Math.max(
       narrationSecondsPerCard,

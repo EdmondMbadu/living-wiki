@@ -23,7 +23,10 @@ const {
   isBoardWizardCompleteSetRequest,
   resolveBoardWizardCount,
 } = require('../lib/board-wizard-count-policy.js');
-const { parseNumberedBoardSource } = require('../lib/board-wizard-source.js');
+const {
+  estimateNumberedBoardSourceNarrationSeconds,
+  parseNumberedBoardSource,
+} = require('../lib/board-wizard-source.js');
 
 assert.equal(isBoardWizardCompleteSetRequest('List all people who signed the US Constitution'), true);
 assert.equal(isBoardWizardCompleteSetRequest('Find all interesting places in America'), false);
@@ -63,6 +66,29 @@ const hundredScenes = parseNumberedBoardSource(Array.from({ length: 100 }, (_ite
   `Scene ${index + 1}\nNarration for scene ${index + 1}.`).join('\n\n'));
 assert.equal(hundredScenes.items.length, 100);
 assert.equal(hundredScenes.items[99].title, 'Scene 100');
+
+const courseNarration = Array.from({ length: 68 }, (_word, index) => `word${index + 1}`).join(' ');
+const condoCourse = parseNumberedBoardSource([
+  'Below are 30 narration blocks written for Helen-Ann, organized into six sets of five.',
+  'Each contains approximately 65–70 words, targeting 30 seconds at a conversational teaching pace.',
+  ...Array.from({ length: 30 }, (_item, index) => {
+    const rank = index + 1;
+    return [
+      index % 5 === 0 ? `SET ${Math.floor(index / 5) + 1} — COURSE SECTION` : '',
+      `${rank}. ${rank === 1 ? 'Welcome to Understanding the Condo' : `Condo lesson ${rank}`}`,
+      rank === 1 ? `Welcome to Understanding the Condo. ${courseNarration}` : courseNarration,
+      rank === 10 ? 'Instructor reference, not spoken: Review https://example.com/condo-law.' : '',
+    ].filter(Boolean).join('\n');
+  }),
+  'If you want, I can:',
+  '• Generate a scenario quiz based on this course.',
+].join('\n\n'));
+assert.equal(condoCourse.title, 'Understanding the Condo');
+assert.equal(condoCourse.items.length, 30);
+assert.doesNotMatch(condoCourse.items[4].body, /SET 2/);
+assert.doesNotMatch(condoCourse.items[9].body, /Instructor reference/);
+assert.doesNotMatch(condoCourse.items[29].body, /If you want/);
+assert.equal(Math.round(estimateNumberedBoardSourceNarrationSeconds(condoCourse)), 29);
 
 const score = (query, pageTitle, candidates) =>
   wikipediaPageTitleMatchScore(query, pageTitle, candidates);

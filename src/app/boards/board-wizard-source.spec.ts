@@ -1,6 +1,7 @@
 import {
   BOARD_WIZARD_PASTE_MAX_LENGTH,
   detectBoardWizardSourceUrl,
+  estimateNumberedBoardSourceNarrationSeconds,
   parseNumberedBoardSource,
 } from './board-wizard-source';
 
@@ -122,6 +123,39 @@ describe('board wizard pasted sources', () => {
     ].join('\n'));
 
     expect(parsed?.items[2].body).toBe('Closing narration.');
+  });
+
+  it('parses a full 30-card course script without narrating section labels or assistant commentary', () => {
+    const narration = Array.from({ length: 68 }, (_word, index) => `word${index + 1}`).join(' ');
+    const source = [
+      'Below are 30 narration blocks written for Helen-Ann, organized into six sets of five.',
+      'Each contains approximately 65–70 words, targeting 30 seconds at a conversational teaching pace.',
+      ...Array.from({ length: 30 }, (_item, index) => {
+        const rank = index + 1;
+        const lines = [
+          index % 5 === 0 ? `SET ${Math.floor(index / 5) + 1} — COURSE SECTION` : '',
+          `${rank}. ${rank === 1 ? 'Welcome to Understanding the Condo' : `Condo lesson ${rank}`}`,
+          rank === 1 ? `Hi, I'm Helen-Ann Lloyd. Welcome to Understanding the Condo. ${narration}` : narration,
+          rank === 10 ? 'Instructor reference, not spoken: Review https://example.com/condo-law.' : '',
+        ];
+        return lines.filter(Boolean).join('\n');
+      }),
+      'If you want, I can:',
+      '• Generate a scenario quiz based on this course.',
+    ].join('\n\n');
+
+    const parsed = parseNumberedBoardSource(source);
+
+    expect(source.length).toBeGreaterThan(2_000);
+    expect(source.length).toBeLessThan(BOARD_WIZARD_PASTE_MAX_LENGTH);
+    expect(parsed?.title).toBe('Understanding the Condo');
+    expect(parsed?.description).toBe('');
+    expect(parsed?.items.length).toBe(30);
+    expect(parsed?.items[4].body).not.toContain('SET 2');
+    expect(parsed?.items[9].body).not.toContain('Instructor reference');
+    expect(parsed?.items[29].body).not.toContain('If you want');
+    expect(Math.round(estimateNumberedBoardSourceNarrationSeconds(parsed))).toBe(29);
+    expect(detectBoardWizardSourceUrl('describe', source, '')).toBe('');
   });
 
   it('detects a source URL pasted inside a Describe it prompt', () => {

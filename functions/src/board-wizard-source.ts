@@ -19,6 +19,7 @@ export function parseNumberedBoardSource(value: string): NumberedBoardSource | n
   const preamble: string[] = [];
   const items: NumberedBoardSourceItem[] = [];
   let current: NumberedBoardSourceItem | null = null;
+  let genericPreamble = false;
 
   const finishCurrent = () => {
     if (!current) {
@@ -31,6 +32,13 @@ export function parseNumberedBoardSource(value: string): NumberedBoardSource | n
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
+    if (items.length && /^if you want(?:,?\s+i can)?\s*:/i.test(cleanSourceMarkdown(line))) {
+      finishCurrent();
+      break;
+    }
+    if (isSourceSectionHeading(line) || isNonNarratedSourceReference(line)) {
+      continue;
+    }
     const numberedMarker = line.match(/^(\d{1,3})[.)]\s+(.+)$/);
     const sceneMarker = line.match(/^(?:#{1,6}\s*)?scene\s+(\d{1,3})(?:\s*[:.)\-–—]\s*(.+))?$/i);
     const marker = numberedMarker ?? sceneMarker;
@@ -58,6 +66,7 @@ export function parseNumberedBoardSource(value: string): NumberedBoardSource | n
       }
     } else if (line) {
       preamble.push(line);
+      if (preamble.length === 1) genericPreamble = isGenericSourcePreamble(line);
     }
   }
   finishCurrent();
@@ -66,11 +75,44 @@ export function parseNumberedBoardSource(value: string): NumberedBoardSource | n
     return null;
   }
 
+  const preambleTitle = cleanSourceMarkdown(preamble[0] ?? '');
   return {
-    title: cleanSourceMarkdown(preamble[0] ?? ''),
-    description: cleanSourceMarkdown(preamble.slice(1).join(' ')),
+    title: genericPreamble ? inferNumberedSourceTitle(items) : preambleTitle,
+    description: genericPreamble ? '' : cleanSourceMarkdown(preamble.slice(1).join(' ')),
     items,
   };
+}
+
+export function estimateNumberedBoardSourceNarrationSeconds(
+  source: NumberedBoardSource | null,
+  wordsPerSecond = 2.35,
+): number {
+  if (!source?.items.length || !Number.isFinite(wordsPerSecond) || wordsPerSecond <= 0) return 0;
+  const wordCount = source.items.reduce(
+    (total, item) => total + (item.body.match(/\S+/g)?.length ?? 0),
+    0,
+  );
+  return wordCount / source.items.length / wordsPerSecond;
+}
+
+function isSourceSectionHeading(value: string): boolean {
+  const text = cleanSourceMarkdown(value);
+  return /^(?:set|section|module|part)\s+\d{1,3}\b(?:\s*[:\-–—].*)?$/i.test(text);
+}
+
+function isNonNarratedSourceReference(value: string): boolean {
+  return /^(?:instructor|editor|producer)\s+(?:reference|note),?\s+not spoken\s*:/i.test(cleanSourceMarkdown(value));
+}
+
+function isGenericSourcePreamble(value: string): boolean {
+  return /^(?:below|here (?:are|is)|the following|i(?:'ve| have))\b/i.test(cleanSourceMarkdown(value));
+}
+
+function inferNumberedSourceTitle(items: NumberedBoardSourceItem[]): string {
+  const first = items[0];
+  const headingMatch = first?.title.match(/^welcome to\s+(.+)$/i)?.[1];
+  const narrationMatch = first?.body.match(/\bwelcome to\s+([^.!?]{2,90})(?:[.!?]|$)/i)?.[1];
+  return cleanSourceMarkdown(headingMatch ?? narrationMatch ?? '');
 }
 
 function cleanSourceMarkdown(value: string): string {

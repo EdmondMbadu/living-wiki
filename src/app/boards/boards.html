@@ -5138,20 +5138,27 @@
                 <label class="boards-wizard-prompt">
                   <span>{{ wizardLockedTargetBoard() ? 'Describe the cards you want to add' : 'What should this board include?' }}</span>
                   <textarea
-                    rows="4"
-                    maxlength="2000"
+                    [attr.rows]="wizardNumberedSource() ? 12 : 4"
+                    [attr.maxlength]="wizardPasteMaxLength"
                     [placeholder]="wizardInputPlaceholder()"
                     [value]="wizardPrompt()"
-                    (input)="wizardPrompt.set($any($event.target).value)"
+                    (input)="updateWizardPrompt($any($event.target).value)"
                   ></textarea>
-                  @if (wizardDetectedSourceUrl()) {
+                  @if (wizardNumberedSource(); as numberedSource) {
+                    <small class="boards-wizard-paste-detected" aria-live="polite">
+                      <span class="material-symbols-outlined">format_list_numbered</span>
+                      Detected {{ numberedSource.items.length }} numbered sections. Each section will become one card, in order, with its full narration preserved.
+                    </small>
+                  } @else if (wizardDetectedSourceUrl()) {
                     <small class="boards-wizard-paste-detected" aria-live="polite">
                       <span class="material-symbols-outlined">link</span>
                       Source link detected. LivingWiki will read the page and show the extracted card names before building them.
                     </small>
                   }
                 </label>
-                <small class="boards-wizard-prompt__help">Include names, order, location, tone, or anything that matters.</small>
+                <small class="boards-wizard-prompt__help">
+                  Include names, order, location, tone, or anything that matters. You can also paste a full numbered script here; up to {{ wizardPasteMaxLength }} characters.
+                </small>
                 @if (!wizardLockedTargetBoard()) {
                   <div class="boards-wizard-prompt__examples" aria-label="Prompt examples">
                     <button type="button" (click)="wizardPrompt.set('A weekend in Cape May')">

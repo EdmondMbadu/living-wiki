@@ -107,6 +107,7 @@ import { cardsForPublishedExperience, cardsVisibleToBoardViewer } from './board-
 import {
   BOARD_WIZARD_PASTE_MAX_LENGTH,
   detectBoardWizardSourceUrl,
+  estimateNumberedBoardSourceNarrationSeconds,
   parseNumberedBoardSource,
 } from './board-wizard-source';
 import {
@@ -2192,13 +2193,15 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly wizardPrompt = signal('');
   readonly wizardPastedList = signal('');
   readonly wizardPasteMaxLength = BOARD_WIZARD_PASTE_MAX_LENGTH;
-  readonly wizardNumberedSource = computed(() => parseNumberedBoardSource(this.wizardPastedList()));
+  readonly wizardNumberedSource = computed(() => parseNumberedBoardSource(
+    this.wizardMode() === 'paste' ? this.wizardPastedList() : this.wizardMode() === 'describe' ? this.wizardPrompt() : '',
+  ));
   readonly wizardPastedWhat3WordsSource = computed(() => parseWhat3WordsBoardSource(this.wizardPastedList()));
-  readonly wizardDetectedPasteCount = computed(() =>
-    this.wizardPastedWhat3WordsSource()?.items.length
-      ?? this.wizardNumberedSource()?.items.length
-      ?? 0,
-  );
+  readonly wizardDetectedPasteCount = computed(() => {
+    const numberedCount = this.wizardNumberedSource()?.items.length ?? 0;
+    if (this.wizardMode() !== 'paste') return numberedCount;
+    return this.wizardPastedWhat3WordsSource()?.items.length ?? numberedCount;
+  });
   readonly wizardUrl = signal('');
   readonly wizardDetectedSourceUrl = computed(() => detectBoardWizardSourceUrl(
     this.wizardMode(),
@@ -5054,16 +5057,34 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   updateWizardPastedList(value: string): void {
     const pastedText = value.slice(0, BOARD_WIZARD_PASTE_MAX_LENGTH);
     this.wizardPastedList.set(pastedText);
-    const detectedCount = parseWhat3WordsBoardSource(pastedText)?.items.length
-      ?? parseNumberedBoardSource(pastedText)?.items.length
-      ?? 0;
-    if (detectedCount) {
-      this.setWizardCount(detectedCount, false);
+    const what3wordsCount = parseWhat3WordsBoardSource(pastedText)?.items.length ?? 0;
+    if (what3wordsCount) {
+      this.setWizardCount(what3wordsCount, false);
+    } else {
+      this.syncWizardNumberedSourceControls(parseNumberedBoardSource(pastedText));
+    }
+  }
+
+  updateWizardPrompt(value: string): void {
+    const prompt = value.slice(0, BOARD_WIZARD_PASTE_MAX_LENGTH);
+    this.wizardPrompt.set(prompt);
+    this.syncWizardNumberedSourceControls(parseNumberedBoardSource(prompt));
+  }
+
+  private syncWizardNumberedSourceControls(source: ReturnType<typeof parseNumberedBoardSource>): void {
+    if (!source) return;
+    this.setWizardCount(source.items.length, false);
+    if (!this.wizardNarrationLengthCustomized()) {
+      const sourceSeconds = estimateNumberedBoardSourceNarrationSeconds(source);
+      if (sourceSeconds > 0) {
+        this.wizardNarrationSecondsPerCard.set(normalizeBoardNarrationSeconds(sourceSeconds));
+      }
     }
   }
 
   inferWizardRequestedCount(): number | null {
-    const structuredCount = this.wizardMode() === 'paste' ? this.wizardDetectedPasteCount() : 0;
+    const structuredCount = this.wizardNumberedSource()?.items.length
+      ?? (this.wizardMode() === 'paste' ? this.wizardDetectedPasteCount() : 0);
     if (structuredCount) {
       return structuredCount;
     }
@@ -19472,7 +19493,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         listingShowContact: listingMarketing.showContact,
         listingPhotoSource: boardWizardDraftListingPhotoSource(value),
         listingPhotos: boardWizardDraftListingPhotos(value),
-        prompt: this.stringValue(value['prompt'], '', 2000),
+        prompt: this.stringValue(value['prompt'], '', BOARD_WIZARD_PASTE_MAX_LENGTH),
         pastedList: this.stringValue(value['pasted_list'], '', BOARD_WIZARD_PASTE_MAX_LENGTH),
         sourceUrl: this.stringValue(value['source_url'], '', 2000),
         offGridName: this.stringValue(value['off_grid_name'], '', 120),
