@@ -7064,80 +7064,91 @@
                   </span>
                 </div>
               } @else {
-                <div class="boards-wizard-savebar__left">
-                  @if (wizardActiveDraftId(); as activeDraftId) {
+                @if (!teamContextId() && wizardTargetBoardId() === 'new' && !isNewPhotoWizardBoard() && wizardMode() !== 'nearby-gems') {
+                  <section class="boards-wizard-savebar__visibility" aria-labelledby="board-wizard-visibility-title">
+                    <div class="boards-wizard-savebar__visibility-copy">
+                      <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+                      <span>
+                        <strong id="board-wizard-visibility-title">Board visibility</strong>
+                        <small>Only Public boards notify your friends.</small>
+                      </span>
+                    </div>
+                    <app-board-visibility-control [value]="wizardVisibility()" [disabled]="wizardSaving()"
+                      (valueChange)="setWizardVisibility($event)" />
+                  </section>
+                }
+                <div class="boards-wizard-savebar__actions">
+                  <div class="boards-wizard-savebar__left">
                     <button
                       type="button"
-                      class="boards-wizard-delete-action"
-                      [disabled]="wizardDraftDiscarding()"
-                      (click)="requestWizardDraftDiscard(activeDraftId)"
-                    >
-                      <span class="material-symbols-outlined" aria-hidden="true">delete</span>
-                      <span>Delete draft…</span>
-                    </button>
-                  }
+                      class="boards-ghost-action"
+                      [disabled]="wizardDraftDiscarding() || wizardImagesPreparing()"
+                      [title]="wizardImagesPreparing() ? 'Wait for images to finish, or choose Stop before going back.' : ''"
+                      (click)="backWizardStep()"
+                      i18n
+                    >Back</button>
+                    @if (wizardActiveDraftId(); as activeDraftId) {
+                      <button
+                        type="button"
+                        class="boards-wizard-delete-action"
+                        [disabled]="wizardDraftDiscarding()"
+                        (click)="requestWizardDraftDiscard(activeDraftId)"
+                      >
+                        <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                        <span>Delete draft…</span>
+                      </button>
+                    }
+                  </div>
+                  <span class="boards-wizard-savebar__status" aria-live="polite">
+                    @if (wizardImagesPreparing()) {
+                      <span class="material-symbols-outlined boards-wizard-progress-icon">progress_activity</span>
+                      <span><strong>{{ wizardImageProgressLabel() }}</strong> You can keep editing, and your draft keeps saving. Finish when the images are ready.</span>
+                    } @else {
+                      <span class="material-symbols-outlined">cloud_done</span>
+                      @if (wizardLockedTargetBoard() || wizardContributionBoard()) {
+                        <span>Closing keeps this draft. Saving adds the selected cards to the existing board.</span>
+                      } @else if (isNewPhotoWizardBoard()) {
+                        <span>Continue to the private Photo Story Studio. Nothing is published until you publish from Studio.</span>
+                      } @else if (wizardMode() === 'nearby-gems') {
+                        <span>Your starting location is not stored. Saving creates a private board that only you can open.</span>
+                      } @else if (teamContextId()) {
+                        <span>Save a private team draft. Choose visitor visibility in Board settings or Manage on the team page.</span>
+                      } @else {
+                        <span>Draft saved automatically. Closing keeps it here.</span>
+                      }
+                    }
+                  </span>
                   <button
                     type="button"
-                    class="boards-ghost-action"
-                    [disabled]="wizardDraftDiscarding() || wizardImagesPreparing()"
-                    [title]="wizardImagesPreparing() ? 'Wait for images to finish, or choose Stop before going back.' : ''"
-                    (click)="backWizardStep()"
-                    i18n
-                  >Back</button>
+                    class="boards-primary-action"
+                    [disabled]="!wizardSelectedCount() || wizardSaving() || wizardImagesPreparing() || wizardVideoLoadingCardIds().size > 0"
+                    [attr.aria-busy]="wizardImagesPreparing() || wizardVideoLoadingCardIds().size > 0 || wizardSaving()"
+                    [title]="wizardImagesPreparing() ? 'Publishing will unlock when image preparation finishes. Choose Stop to continue with the images already added.' : ''"
+                    (click)="isNewPhotoWizardBoard() ? continuePhotoPreviewToStudio() : saveWizardBatch()"
+                  >
+                    <span
+                      class="material-symbols-outlined"
+                      [class.boards-wizard-progress-icon]="wizardImagesPreparing()"
+                    >{{ wizardImagesPreparing() ? 'progress_activity' : isNewPhotoWizardBoard() ? 'arrow_forward' : 'save' }}</span>
+                    @if (wizardImagesPreparing()) {
+                      <span>{{ wizardImageProgressLabel() }}</span>
+                    } @else if (wizardVideoLoadingCardIds().size > 0) {
+                      <span i18n>Finding videos...</span>
+                    } @else if (wizardSaving()) {
+                      <span i18n>Saving...</span>
+                    } @else if (wizardContributionBoard()) {
+                      <span i18n>Add card to board</span>
+                    } @else if (wizardLockedTargetBoard()) {
+                      <span>Add {{ wizardSelectedCount() }} {{ wizardSelectedCount() === 1 ? 'card' : 'cards' }}</span>
+                    } @else if (isNewPhotoWizardBoard()) {
+                      <span>Continue to Studio</span>
+                    } @else if (wizardMode() === 'nearby-gems') {
+                      <span>Save private board</span>
+                    } @else {
+                      <span>{{ teamContextId() ? 'Save team draft' : wizardVisibility() === 'public' ? 'Save and publish' : wizardVisibility() === 'unlisted' ? 'Save unlisted board' : 'Save private board' }}</span>
+                    }
+                  </button>
                 </div>
-                <span class="boards-wizard-savebar__status" aria-live="polite">
-                  @if (wizardImagesPreparing()) {
-                    <span class="material-symbols-outlined boards-wizard-progress-icon">progress_activity</span>
-                    <span><strong>{{ wizardImageProgressLabel() }}</strong> You can keep editing, and your draft keeps saving. Finish when the images are ready.</span>
-                  } @else {
-                  <span class="material-symbols-outlined">cloud_done</span>
-                  @if (wizardLockedTargetBoard() || wizardContributionBoard()) {
-                    <span>Closing keeps this draft. Saving adds the selected cards to the existing board.</span>
-                  } @else if (isNewPhotoWizardBoard()) {
-                    <span>Continue to the private Photo Story Studio. Nothing is published until you publish from Studio.</span>
-                  } @else if (wizardMode() === 'nearby-gems') {
-                    <span>Your starting location is not stored. Saving creates a private board that only you can open.</span>
-                  } @else if (teamContextId()) {
-                    <span>Save a private team draft. Choose visitor visibility in Board settings or Manage on the team page.</span>
-                  } @else {
-                    <span>Closing keeps this draft. Saving creates the board with your selected visibility. Only Public boards notify your friends.</span>
-                  }
-                  }
-                </span>
-                @if (!teamContextId() && wizardTargetBoardId() === 'new' && !isNewPhotoWizardBoard() && wizardMode() !== 'nearby-gems') {
-                  <app-board-visibility-control [value]="wizardVisibility()" [disabled]="wizardSaving()"
-                    (valueChange)="setWizardVisibility($event)" />
-                }
-                <button
-                  type="button"
-                  class="boards-primary-action"
-                  [disabled]="!wizardSelectedCount() || wizardSaving() || wizardImagesPreparing() || wizardVideoLoadingCardIds().size > 0"
-                  [attr.aria-busy]="wizardImagesPreparing() || wizardVideoLoadingCardIds().size > 0 || wizardSaving()"
-                  [title]="wizardImagesPreparing() ? 'Publishing will unlock when image preparation finishes. Choose Stop to continue with the images already added.' : ''"
-                  (click)="isNewPhotoWizardBoard() ? continuePhotoPreviewToStudio() : saveWizardBatch()"
-                >
-                  <span
-                    class="material-symbols-outlined"
-                    [class.boards-wizard-progress-icon]="wizardImagesPreparing()"
-                  >{{ wizardImagesPreparing() ? 'progress_activity' : isNewPhotoWizardBoard() ? 'arrow_forward' : 'save' }}</span>
-                  @if (wizardImagesPreparing()) {
-                    <span>{{ wizardImageProgressLabel() }}</span>
-                  } @else if (wizardVideoLoadingCardIds().size > 0) {
-                    <span i18n>Finding videos...</span>
-                  } @else if (wizardSaving()) {
-                    <span i18n>Saving...</span>
-                  } @else if (wizardContributionBoard()) {
-                    <span i18n>Add card to board</span>
-                  } @else if (wizardLockedTargetBoard()) {
-                    <span>Add {{ wizardSelectedCount() }} {{ wizardSelectedCount() === 1 ? 'card' : 'cards' }}</span>
-                  } @else if (isNewPhotoWizardBoard()) {
-                    <span>Continue to Studio</span>
-                  } @else if (wizardMode() === 'nearby-gems') {
-                    <span>Save private board</span>
-                  } @else {
-                    <span>{{ teamContextId() ? 'Save team draft' : wizardVisibility() === 'public' ? 'Save and publish' : wizardVisibility() === 'unlisted' ? 'Save unlisted board' : 'Save private board' }}</span>
-                  }
-                </button>
               }
             </div>
             }
