@@ -39,6 +39,10 @@
           <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]" i18n>
             Signed-in users synced from Firebase Auth into the LivingWiki user profile collection.
           </p>
+          <a href="#talkthru-signups" class="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/40 bg-[var(--soft-fill)] px-4 py-2 text-sm font-bold text-[var(--accent)] hover:bg-[var(--soft-fill-strong)]">
+            <span class="material-symbols-outlined text-lg">record_voice_over</span>
+            TalkThru signups ↓
+          </a>
         </div>
         <div class="rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm">
           <p class="font-bold text-[var(--text)]">{{ currentUserName() }}</p>
@@ -72,6 +76,8 @@
         <p class="mt-1 text-xs font-bold text-[var(--muted)]" i18n>{{ verifiedBusinessCount() }} verified · {{ pendingBusinessCount() }} pending</p>
       </div>
     </section>
+
+    <app-talkthru-interests-admin />
 
     <section class="mt-6 overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-floating)]">
       <button type="button" class="flex w-full items-center justify-between gap-4 border-b border-[var(--line)] px-5 py-4 text-left" (click)="toggleUsers()" [attr.aria-expanded]="usersOpen()">
@@ -273,5 +279,6 @@
         }
       }
     </section>
+
   </main>
 </div>

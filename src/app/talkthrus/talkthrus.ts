@@ -32,6 +32,7 @@ export class TalkThrusComponent {
   listing = '';
   website = '';
   consent = false;
+  private submissionId: string | null = null;
 
   constructor() {
     inject(Meta).updateTag({ name: 'description', content: 'Turn real estate listing photos into a personal, narrated TalkThru. Your voice, your insights, and a more human connection with buyers.' });
@@ -42,8 +43,10 @@ export class TalkThrusComponent {
     this.error.set('');
     this.sending.set(true);
     try {
+      this.submissionId ??= globalThis.crypto?.randomUUID?.() ?? null;
       const submitInterest = httpsCallable(getFirebaseFunctions(), 'submitTalkThruInterest');
       await submitInterest({
+        submissionId: this.submissionId,
         role: this.role,
         name: this.name.trim(),
         email: this.email.trim(),

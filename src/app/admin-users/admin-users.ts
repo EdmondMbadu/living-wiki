@@ -11,6 +11,7 @@ import {
 import { getFirebaseFunctions } from '../firebase.client';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 import { AccountMenuComponent } from '../account-menu/account-menu';
+import { TalkThruInterestsAdminComponent } from './talkthru-interests-admin';
 
 interface AdminUserListItem {
   id: string;
@@ -34,7 +35,7 @@ type BusinessStatusFilter = 'all' | BusinessClaimStatus;
 
 @Component({
   selector: 'app-admin-users',
-  imports: [RouterLink, ThemeToggleComponent, DatePipe, AccountMenuComponent],
+  imports: [RouterLink, ThemeToggleComponent, DatePipe, AccountMenuComponent, TalkThruInterestsAdminComponent],
   templateUrl: './admin-users.html',
 })
 export class AdminUsersComponent implements OnInit {

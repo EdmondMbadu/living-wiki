@@ -3,7 +3,14 @@ import { removeHiddenBoardFromDiscovery } from './board-discovery';
 import { finalizeBoardWizardCopy, BOARD_COPY_VERSION } from './board-wizard-copy-quality';
 import { repairBoardWizardCopy } from './gemini';
 export { offGridCommand, offGridDirectory, offGridMedia, offGridShare, syncOffGridSpots } from './off-grids';
-export { submitTalkThruInterest } from './talkthru-interest';
+export {
+  submitTalkThruInterest,
+  listTalkThruInterests,
+  updateTalkThruInterest,
+  deleteTalkThruInterest,
+  sendTalkThruInterestEmails,
+  retryTalkThruInterestEmails,
+} from './talkthru-interest';
 import { resolveWords as resolveOffGridWords } from './off-grids/location';
 import { validCoordinates as validOffGridCoordinates } from './off-grids/model';
 import { offGridTalkDrop } from './off-grid-talk-drop';
