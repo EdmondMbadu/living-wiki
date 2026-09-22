@@ -167,6 +167,16 @@ test('private media denies anonymous access; authorized range playback works; un
     location: { lat: 0, lng: 0, source: 'map', confirmedAt: 'now' },
     visibility: 'public',
   });
+  const publicDetail = await call('owner', 'detail');
+  assert.equal(publicDetail.shareUrl, 'https://www.livingwiki.com/share/off-grid/media-gem');
+  assert.equal(new URL(publicDetail.coverUrl).origin, 'https://www.livingwiki.com');
+  assert.equal(new URL(publicDetail.coverUrl).pathname, '/media/off-grid');
+  const share = await fetch(base + '/share/off-grid/media-gem');
+  assert.equal(share.status, 200);
+  const html = await share.text();
+  assert.match(html, /https:\/\/www\.livingwiki\.com\/off-grids\/media-gem/);
+  assert.match(html, /https:\/\/www\.livingwiki\.com\/media\/off-grid/);
+  assert.doesNotMatch(html, /living-atlas/);
   const publicCover = base + '/?spot=media-gem&asset=cover';
   assert.equal((await fetch(publicCover)).status, 200);
   assert.equal((await fetch(publicCover)).status, 200); // Warm server byte cache.

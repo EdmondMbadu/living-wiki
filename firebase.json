@@ -34,6 +34,13 @@
     ],
     "rewrites": [
       {
+        "source": "/media/off-grid",
+        "function": {
+          "functionId": "offGridMedia",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/share/off-grid/**",
         "function": {
           "functionId": "offGridShare",

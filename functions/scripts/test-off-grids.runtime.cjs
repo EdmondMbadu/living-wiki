@@ -3,6 +3,13 @@ const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const { resolve } = require('node:path');
 const cwd = resolve(__dirname, '..');
+test('branded Off Grid media route is forwarded to the media function', () => {
+  const { hosting } = require('../../firebase.json');
+  assert.deepEqual(hosting.rewrites.find(rewrite => rewrite.source === '/media/off-grid'), {
+    source: '/media/off-grid',
+    function: { functionId: 'offGridMedia', region: 'us-central1' },
+  });
+});
 function run(target, code) {
   const child = spawnSync(process.execPath, ['-e', code], {cwd, encoding: 'utf8', env: {
     ...process.env, FUNCTION_TARGET: target, GCLOUD_PROJECT: 'demo-living-wiki',

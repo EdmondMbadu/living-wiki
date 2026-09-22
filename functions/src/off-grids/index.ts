@@ -18,6 +18,7 @@ import {
 import { resolveWords, wordsForPoint } from './location';
 import { cachedImage } from './image-cache';
 const region = 'us-central1';
+const publicAppUrl = 'https://www.livingwiki.com';
 const sourceReads = new Map<string, Promise<FirebaseFirestore.DocumentData | undefined>>();
 async function currentSource(boardId: string): Promise<FirebaseFirestore.DocumentData | undefined> {
   const pending = sourceReads.get(boardId);
@@ -151,7 +152,7 @@ export const offGridCommand = onCall(
             : '',
           featured: d.data().featured === true,
         })),
-        shareUrl: `https://${process.env.GCLOUD_PROJECT}.web.app/share/off-grid/${id}`,
+        shareUrl: `${publicAppUrl}/share/off-grid/${encodeURIComponent(id)}`,
       };
     }
     if (!uid) throw new HttpsError('unauthenticated', 'Sign in to mark or save a gem.');
@@ -465,7 +466,7 @@ export const offGridCommand = onCall(
   },
 );
 export function mediaBase(): string {
-  return `https://us-central1-${process.env.GCLOUD_PROJECT || 'living-atlas-7622a'}.cloudfunctions.net/offGridMedia`;
+  return `${publicAppUrl}/media/off-grid`;
 }
 export const offGridMedia = onRequest(
   { region, cors: true, timeoutSeconds: 120, memory: '512MiB' },
@@ -572,7 +573,7 @@ export const offGridShare = onRequest({ region }, async (req, res) => {
     }
     if (s.visibility === 'unlisted' || source?.visibility === 'unlisted')
       res.set('X-Robots-Tag', 'noindex, nofollow');
-    const url = `https://${process.env.GCLOUD_PROJECT}.web.app/off-grids/${id}`,
+    const url = `${publicAppUrl}/off-grids/${encodeURIComponent(id)}`,
       image = `${mediaBase()}?spot=${id}&asset=cover-large`,
       point = pointFrom(s.location)!;
     res
