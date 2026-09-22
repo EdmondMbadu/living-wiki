@@ -24,10 +24,19 @@ import {
 const projectId = 'demo-living-wiki';
 const ownerUid = 'board-owner';
 let testEnvironment;
+const voiceCatalog = JSON.parse(await readFile(new URL('../../functions/src/stack-narrator-voices.json', import.meta.url), 'utf8'));
+const firestoreRules = await readFile(new URL('../../firestore.rules', import.meta.url), 'utf8');
 const videoPersistenceSource = await readFile(new URL('../../src/app/boards/board-video-persistence.ts', import.meta.url), 'utf8');
 const { boardVideoMetadataPatch } = await import(`data:text/javascript;base64,${Buffer.from(ts.transpileModule(
   videoPersistenceSource, { compilerOptions: { module: ts.ModuleKind.ES2022 } },
 ).outputText).toString('base64')}`);
+
+test('Firestore accepts every narrator voice offered by the app', () => {
+  const match = firestoreRules.match(/function isValidStackNarratorVoiceId\(value\) \{\s*return value in \[([\s\S]*?)\]/);
+  assert.ok(match, 'narrator voice rule allowlist exists');
+  const allowed = [...match[1].matchAll(/'([^']+)'/g)].map((entry) => entry[1]);
+  assert.deepEqual(allowed.sort(), [...voiceCatalog.map((voice) => voice.id), 'personal-voice'].sort());
+});
 
 function personalWizardBoard(overrides = {}) {
   return {
@@ -351,6 +360,16 @@ test('board narrator accepts stable personal voice references and rejects malfor
     updated_at_iso: '2026-08-30T00:00:00.000Z',
     server_updated_at: serverTimestamp(),
   }));
+  await assertSucceeds(updateDoc(boardReference, {
+    stackNarratorVoiceId: 'ms-walker-southern',
+    updated_at_iso: '2026-08-30T00:00:30.000Z',
+    server_updated_at: serverTimestamp(),
+  }));
+  await assertSucceeds(setDoc(boardReference, personalWizardBoard({
+    id: 'personal-voice-board',
+    stackNarratorVoiceId: 'ms-walker-southern',
+    updated_at_iso: '2026-08-30T00:00:40.000Z',
+  })));
   await assertFails(updateDoc(boardReference, {
     stackNarratorVoiceId: 'personal-voice:invalid/voice',
     updated_at_iso: '2026-08-30T00:01:00.000Z',

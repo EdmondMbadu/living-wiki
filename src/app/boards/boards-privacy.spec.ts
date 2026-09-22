@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { BoardsComponent } from './boards';
+import { normalizeBoardPrivacy } from './board-photo-story';
 
 function teamPublicationHarness(): any {
   const component = harness();
@@ -49,6 +50,7 @@ function harness(): any {
     storage: {},
     firestore: null,
     boards: signal([]),
+    boardsSyncError: signal(null),
     boardTranslationActive: () => false,
     boardTranslationResult: () => null,
     stackVideoExporting: signal(false),
@@ -170,15 +172,15 @@ describe('board privacy and video creation', () => {
     expect(component.boardSettingsSaving()).toBeFalse();
   });
 
-  it('keeps an already-public photo draft public through reload and subsequent full saves', async () => {
+  it('keeps an already-public photo draft public through reload and normalization', () => {
     const component = harness();
     const board = savedBoard(component, { visibility: 'public' });
     expect(board.visibility).toBe('public');
     expect(board.photoStudioDraft).toBeFalse();
-    const persisted = await component.persistBoard({ ...board, photoStudioDraft: true });
+    const persisted = normalizeBoardPrivacy({ ...board, photoStudioDraft: true });
     expect(persisted.visibility).toBe('public');
     expect(persisted.photoStudioDraft).toBeFalse();
-    expect((await component.persistBoard(savedBoard(component))).visibility).toBe('private');
+    expect(normalizeBoardPrivacy(savedBoard(component)).visibility).toBe('private');
   });
 
   for (const videoKind of ['full', 'trailer'] as const) {
@@ -257,12 +259,12 @@ describe('board privacy and video creation', () => {
 
 
 describe('unlisted board access and sharing', () => {
-  it('preserves an unlisted photo story across loading and full saves', async () => {
+  it('preserves an unlisted photo story across loading and normalization', () => {
     const component = harness();
     const board = savedBoard(component, { visibility: 'unlisted' });
     expect(board.visibility).toBe('unlisted');
     expect(board.photoStudioDraft).toBeFalse();
-    const saved = await component.persistBoard({ ...board, photoStudioDraft: true });
+    const saved = normalizeBoardPrivacy({ ...board, photoStudioDraft: true });
     expect(saved.visibility).toBe('unlisted');
     expect(saved.photoStudioDraft).toBeFalse();
   });

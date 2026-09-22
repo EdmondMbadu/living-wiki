@@ -68,6 +68,7 @@ import {
 import { VideoLibraryService } from '../video-library/video-library.service';
 import type { VideoLibraryItem } from '../video-library/video-library.models';
 import { boardVideoMetadataPatch } from './board-video-persistence';
+import { BoardWriteQueue } from './board-write-queue';
 import { BoardPromoImageDialogComponent } from './board-promo-image-dialog';
 import { BackdropDismissDirective } from '../backdrop-dismiss.directive';
 import { TalkingCardEditorComponent } from '../talking-card-editor/talking-card-editor';
@@ -1897,6 +1898,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly shareTargets = SHARE_TARGETS;
 
   readonly boards = signal<Board[]>([]);
+  private boardWriteQueue?: BoardWriteQueue;
   readonly boardCollections = signal<BoardCollection[]>([]);
   readonly boardCollectionsLoading = signal(false);
   readonly boardCollectionsError = signal<string | null>(null);
@@ -6802,7 +6804,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           : await this.persistAndReplaceBoard(nextBoard);
       if (!saved) {
         if (!current.teamId) this.boards.update((boards) => boards.map((board) => board.id === current.id ? current : board));
-        this.boardSettingsError.set(current.teamId ? this.boardsSyncError() : 'These changes could not be saved. Please try again.');
+        this.boardSettingsError.set(this.boardsSyncError() || 'These changes could not be saved. Please try again.');
         return;
       }
 
@@ -14191,6 +14193,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       ...board,
       ...this.currentOwnerSnapshot(),
       id: this.createId(),
+      customSlug: '',
+      atlasId: '',
+      generatedForAtlasId: '',
+      likeCount: 0,
       sortOrder: this.nextBoardSortOrder(),
       forkedFromBoardId: board.id,
       forkedFromTitle: board.title,
@@ -17993,16 +17999,18 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, 'landscape'));
     this.stackPublishedVideoReady.set(false);
     void this.persistStackNarratorPreference(nextBoard).then((saved) => {
+      if (this.boards().find((item) => item.id === board.id)?.stackNarratorVoiceId !== voiceId) return;
       this.stackVoiceError.set(saved
         ? null
-        : 'The narrator changed here, but could not be saved. Check your connection and try Preview again.');
+        : `This voice has not synced. ${this.boardsSyncError() || 'Select it again to retry.'}`);
     });
   }
 
   private async persistStackNarratorPreference(board: Board): Promise<boolean> {
     const uid = this.authService.uid();
     if (!this.firestore || !uid) {
-      return true;
+      this.boardsSyncError.set('Board sync is not ready. Refresh and try again.');
+      return false;
     }
     if (board.ownerUserId !== uid) {
       this.boardsSyncError.set($localize`Only the board owner can save changes.`);
@@ -18010,16 +18018,16 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
 
     try {
-      await updateDoc(doc(this.firestore, 'boards', board.id), {
+      await this.queueBoardWrite(board.id, () => updateDoc(doc(this.firestore!, 'boards', board.id), {
         stackNarratorVoiceId: normalizeStackNarratorVoiceId(board.stackNarratorVoiceId),
         updated_at_iso: board.updatedAt,
         server_updated_at: serverTimestamp(),
-      });
+      }));
       this.boardsSyncError.set(null);
       return true;
     } catch (error) {
       console.error('Board narrator Firebase sync failed', error, { boardId: board.id });
-      this.boardsSyncError.set($localize`Saved on this browser, but Firebase sync failed.`);
+      this.boardsSyncError.set(this.boardSaveErrorMessage(error));
       return false;
     }
   }
@@ -22178,14 +22186,33 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     try {
       const persisted = await this.persistBoard(board);
-      this.boards.update((boards) => boards.map((item) => (item.id === persisted.id ? persisted : item)));
+      this.boards.update((boards) => boards.map((item) => {
+        if (item.id !== persisted.id) return item;
+        // A later edit may have happened while images or Firestore were saving.
+        // Its queued write will follow this one; do not put the older value back on screen.
+        return !board.teamId && item !== board && item.updatedAt >= board.updatedAt
+          ? item
+          : persisted;
+      }));
       this.boardsSyncError.set(null);
       return true;
     } catch (error) {
       console.error('Board Firebase sync failed', error, { boardId: board.id });
-      this.boardsSyncError.set(board.teamId ? teamError(error) : $localize`Saved on this browser, but Firebase sync failed.`);
+      this.boardsSyncError.set(board.teamId ? teamError(error) : this.boardSaveErrorMessage(error));
       return false;
     }
+  }
+
+  private boardSaveErrorMessage(error: unknown): string {
+    const code = error instanceof FirebaseError ? error.code :
+      error && typeof error === 'object' && 'code' in error ? String(error.code) : '';
+    if (code.endsWith('permission-denied')) return 'Firebase denied the save (permission-denied). Check board ownership, visibility, and content limits.';
+    if (code.endsWith('unauthenticated')) return 'Your session expired. Sign in again, then retry the save.';
+    if (code.endsWith('resource-exhausted')) return 'Firebase reached a size or quota limit. Reduce board content or try again later.';
+    if (code.endsWith('unavailable') || code.endsWith('deadline-exceeded')) return 'Could not reach Firebase. Check your connection and retry the save.';
+    if (code) return `Firebase save failed (${code}). Please retry or share this code with support.`;
+    if (error instanceof Error && error.message && !code) return error.message;
+    return 'Saved on this browser, but Firebase sync failed. Please retry.';
   }
 
   private isVisibilityOnlyBoardEdit(previous: Board, next: Board): boolean {
@@ -22216,24 +22243,25 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     const uid = this.authService.uid();
     if (!this.firestore || !uid) {
-      return true;
+      this.boardsSyncError.set('Board sync is not ready. Refresh and try again.');
+      return false;
     }
     const updatedAt = board.updatedAt || new Date().toISOString();
     const nextBoard = { ...board, ...normalizeBoardPrivacy(board), updatedAt };
     try {
       await this.assertBoardVisitorKnowledge(nextBoard);
-      await updateDoc(doc(this.firestore, 'boards', board.id), {
+      await this.queueBoardWrite(board.id, () => updateDoc(doc(this.firestore!, 'boards', board.id), {
         visibility: board.visibility,
         ...(isLinkReadableVisibility(nextBoard.visibility) ? { photoStudioDraft: false } : {}),
         updated_at_iso: updatedAt,
         server_updated_at: serverTimestamp(),
-      });
+      }));
       this.boards.update((boards) => boards.map((item) => item.id === board.id ? nextBoard : item));
       this.boardsSyncError.set(null);
       return true;
     } catch (error) {
       console.error('Board visibility Firebase sync failed', error, { boardId: board.id });
-      this.boardsSyncError.set($localize`Board save failed. Please try again.`);
+      this.boardsSyncError.set(this.boardSaveErrorMessage(error));
       return false;
     }
   }
@@ -22246,16 +22274,25 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     if (!this.firestore) throw new Error('Board sync is not ready. Refresh and try again.');
     const patch = boardVideoMetadataPatch(board, kind);
-    await updateDoc(doc(this.firestore, 'boards', board.id), {
+    await this.queueBoardWrite(board.id, () => updateDoc(doc(this.firestore!, 'boards', board.id), {
       ...patch,
       server_updated_at: serverTimestamp(),
-    });
+    }));
     // The board may have changed while rendering. Keep those edits in local state too.
     const current = this.boards().find((item) => item.id === board.id) ?? board;
     return { ...current, ...patch };
   }
 
   private async persistBoard(board: Board): Promise<Board> {
+    return this.queueBoardWrite(board.id, () => this.persistBoardUnqueued(board));
+  }
+
+  private queueBoardWrite<T>(boardId: string, write: () => Promise<T>): Promise<T> {
+    this.boardWriteQueue ??= new BoardWriteQueue();
+    return this.boardWriteQueue.run(boardId, write);
+  }
+
+  private async persistBoardUnqueued(board: Board): Promise<Board> {
     if (board.teamId || this.teamContextId()) {
       const teamId = board.teamId || this.teamContextId();
       const record = await this.teams.saveBoard(teamId, board.id, omitUndefinedDeep({ ...board, visibility: 'private' }) as Record<string, unknown>, board.teamRevision || 0);
@@ -22266,7 +22303,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const visibilitySafeBoard: Board = { ...board, ...normalizeBoardPrivacy(board) };
     const uid = this.authService.uid();
     if (!this.firestore || !uid) {
-      return visibilitySafeBoard;
+      throw new Error('Board sync is not ready. Refresh and try again.');
     }
     const { prepared, persistable } = await this.prepareBoardForFirestore(visibilitySafeBoard, uid);
     await setDoc(doc(this.firestore, 'boards', prepared.id), persistable);
