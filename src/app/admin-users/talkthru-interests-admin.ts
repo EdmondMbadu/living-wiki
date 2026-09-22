@@ -60,7 +60,7 @@ export class TalkThruInterestsAdminComponent implements OnInit {
   readonly busyId = signal<string | null>(null);
   readonly error = signal<string | null>(null);
   readonly nextCursor = signal<string | null>(null);
-  readonly open = signal(true);
+  readonly open = signal(false);
   readonly search = signal('');
   readonly scope = signal<ScopeFilter>('active');
   readonly statusFilter = signal<StatusFilter>('all');
@@ -107,6 +107,10 @@ export class TalkThruInterestsAdminComponent implements OnInit {
 
   toggleOpen(): void {
     this.open.update(value => !value);
+  }
+
+  expand(): void {
+    this.open.set(true);
   }
 
   private friendlyError(error: unknown): string {

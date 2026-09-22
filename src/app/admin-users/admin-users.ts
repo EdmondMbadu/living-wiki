@@ -1,5 +1,5 @@
 import { DatePipe, isPlatformBrowser } from '@angular/common';
-import { Component, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, PLATFORM_ID, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { httpsCallable } from 'firebase/functions';
 import { AuthService } from '../auth.service';
@@ -39,6 +39,7 @@ type BusinessStatusFilter = 'all' | BusinessClaimStatus;
   templateUrl: './admin-users.html',
 })
 export class AdminUsersComponent implements OnInit {
+  private readonly talkThruAdmin = viewChild(TalkThruInterestsAdminComponent);
   private readonly authService = inject(AuthService);
   private readonly businessClaimService = inject(BusinessClaimService);
   private readonly platformId = inject(PLATFORM_ID);
@@ -225,6 +226,10 @@ export class AdminUsersComponent implements OnInit {
 
   toggleUsers(): void {
     this.usersOpen.update((open) => !open);
+  }
+
+  openTalkThruSignups(): void {
+    this.talkThruAdmin()?.expand();
   }
 
   toggleBusinesses(): void {

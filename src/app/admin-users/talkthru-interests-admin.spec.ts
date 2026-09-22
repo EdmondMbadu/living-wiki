@@ -28,6 +28,12 @@ describe('TalkThruInterestsAdminComponent', () => {
     ]);
     fixture.detectChanges();
 
+    expect(fixture.componentInstance.open()).toBe(false);
+    expect(fixture.nativeElement.textContent).not.toContain('Active Agent');
+
+    fixture.componentInstance.expand();
+    fixture.detectChanges();
+
     expect(fixture.nativeElement.textContent).toContain('Active Agent');
     expect(fixture.nativeElement.textContent).not.toContain('Archived Agency');
 
