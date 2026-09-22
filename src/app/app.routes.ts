@@ -10,6 +10,7 @@ const loadLibraryComponent = () => import('./library/library').then((m) => m.Lib
 const loadWikiComponent = () => import('./wiki/wiki').then((m) => m.WikiComponent);
 
 export const routes: Routes = [
+  { path: 'talkthrus', loadComponent: () => import('./talkthrus/talkthrus').then(m => m.TalkThrusComponent), title: 'LivingWiki TalkThrus | Your listings. Your voice.' },
   { path: 'off-grids/new', loadComponent: () => import('./off-grids/off-grid-editor').then(m => m.OffGridEditorComponent), canActivate: [authGuard], title: 'Mark a gem | LivingWiki' },
   { path: 'off-grids/:spotId/edit', loadComponent: () => import('./off-grids/off-grid-editor').then(m => m.OffGridEditorComponent), canActivate: [authGuard], title: 'Edit gem | LivingWiki' },
   { path: 'off-grids/:spotId', loadComponent: () => import('./off-grids/off-grid-detail').then(m => m.OffGridDetailComponent), title: 'Off Grids | LivingWiki' },

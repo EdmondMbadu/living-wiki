@@ -1,0 +1,62 @@
+import { Component, inject, signal } from '@angular/core';
+import { Meta } from '@angular/platform-browser';
+import { FormsModule } from '@angular/forms';
+import { httpsCallable } from 'firebase/functions';
+import { getFirebaseFunctions } from '../firebase.client';
+
+const exampleUrl = 'https://www.livingwiki.com/share/board/00f3683f-229a-4fb6-8e28-2faf028ff1e0?v=2026-09-15T21%3A03%3A58.442Z&ui=en';
+
+const previews = [
+  { label: 'The property', image: '/assets/talkthrus/property.png', alt: 'Beach Holiday Condo TalkThru listing example', step: '01 / SET THE SCENE', heading: 'A home worth getting to know.', body: 'Bring the listing together in a visual story that buyers can explore at their own pace.' },
+  { label: 'The agent', image: '/assets/talkthrus/agent.png', alt: 'Chip Watson personal welcome card', step: '02 / MAKE IT PERSONAL', heading: 'Start with a familiar voice. Yours.', body: 'Introduce yourself and welcome buyers into the property. Give them a person to connect with from the very beginning.' },
+  { label: 'The narration', image: '/assets/talkthrus/voice.png', alt: 'TalkThru narration settings with style and length choices', step: '03 / TELL ITS STORY', heading: 'Add the details only you can.', body: 'Shape the narration around your insights, from the way a room feels to the features that deserve a closer look.' },
+] as const;
+
+@Component({
+  selector: 'app-talkthrus',
+  imports: [FormsModule],
+  templateUrl: './talkthrus.html',
+  styleUrl: './talkthrus.css',
+})
+export class TalkThrusComponent {
+  readonly exampleUrl = exampleUrl;
+  readonly previews = previews;
+  readonly selectedPreview = signal(0);
+  readonly sending = signal(false);
+  readonly submitted = signal(false);
+  readonly error = signal('');
+  role: 'agent' | 'agency' = 'agent';
+  name = '';
+  email = '';
+  agency = '';
+  listing = '';
+  website = '';
+  consent = false;
+
+  constructor() {
+    inject(Meta).updateTag({ name: 'description', content: 'Turn real estate listing photos into a personal, narrated TalkThru. Your voice, your insights, and a more human connection with buyers.' });
+  }
+
+  async submit(): Promise<void> {
+    if (this.sending()) return;
+    this.error.set('');
+    this.sending.set(true);
+    try {
+      const submitInterest = httpsCallable(getFirebaseFunctions(), 'submitTalkThruInterest');
+      await submitInterest({
+        role: this.role,
+        name: this.name.trim(),
+        email: this.email.trim(),
+        agency: this.agency.trim(),
+        listing: this.listing.trim(),
+        website: this.website,
+        consent: this.consent,
+      });
+      this.submitted.set(true);
+    } catch {
+      this.error.set('We couldn’t send your request. Please try again.');
+    } finally {
+      this.sending.set(false);
+    }
+  }
+}

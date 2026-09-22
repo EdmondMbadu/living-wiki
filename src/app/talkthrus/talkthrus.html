@@ -1,0 +1,96 @@
+<div class="talkthrus-page" id="top">
+  <a class="skip" href="/talkthrus#main">Skip to content</a>
+  <header class="topbar">
+    <a class="brand" href="/talkthrus#top" aria-label="LivingWiki TalkThrus home">
+      <svg class="sound-mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 10v3M6 6v11M10 3v18M14 8v7M18 5v13M22 10v3"/></svg>
+      <span><strong>LivingWiki</strong><small>TalkThrus for real estate</small></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="/talkthrus#experience">The experience</a>
+      <a href="/talkthrus#how">How it works</a>
+      <a href="/talkthrus#teams">For agencies</a>
+    </nav>
+    <a class="button dark top-cta" href="/talkthrus#signup">Get started <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-inner wrap">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-line"></span> Your expertise. Brought to life.</p>
+          <h1 id="hero-title">Every home has<br>a story.<br><em>Tell it in your voice.</em></h1>
+          <p class="intro">Turn your listing photos into a personal, narrated TalkThru. Your voice. Your local knowledge. The details that make a buyer feel at home.</p>
+          <div class="hero-actions">
+            <a class="button gold" [href]="exampleUrl" target="_blank" rel="noopener noreferrer">Experience a TalkThru <span aria-hidden="true">↗</span></a>
+            <a class="text-link" href="/talkthrus#signup">Bring your listing to life <span aria-hidden="true">↗</span></a>
+          </div>
+          <p class="hero-note"><span aria-hidden="true">▥</span><span>The technology brings it together.<br><strong>You make it personal.</strong></span></p>
+        </div>
+        <div class="hero-visual">
+          <p class="visual-caption">A listing. A story. A human connection.</p>
+          <div class="photo-window"><img src="/assets/talkthrus/banner.png" alt="A modern home glowing with warm evening light"></div>
+          <div class="portrait"><img src="/assets/talkthrus/agent.png" alt="TalkThru example: a personal welcome from agent Chip Watson"></div>
+          <div class="voice-card"><span class="round-icon" aria-hidden="true">♩</span><span><strong>Your voice is the difference.</strong><small>Let buyers hear the person behind the listing.</small></span></div>
+          <p class="visual-footnote">Actual TalkThru interface · illustrative property imagery</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="benefit-strip" aria-label="TalkThru benefits"><span>▧ &nbsp; Your listing photos</span><span>♩ &nbsp; Your personal narration</span><span>♧ &nbsp; A more human connection</span></div>
+
+    <section class="promise wrap" aria-labelledby="promise-title">
+      <p class="eyebrow green">The human advantage</p>
+      <h2 id="promise-title">Photos show the space.<br><em>You help buyers feel the possibility.</em></h2>
+      <div class="promise-copy"><p>A photo can show a sunlit kitchen. You can explain why it’s your favorite place in the home. TalkThrus bring your perspective into the listing, so buyers discover more than a collection of rooms.</p><p>In a market full of automated content, your experience, personality, and genuine enthusiasm give people something meaningful to connect with.</p></div>
+    </section>
+
+    <section class="experience" id="experience" aria-labelledby="experience-title">
+      <div class="wrap">
+        <div class="section-heading"><div><p class="eyebrow green">Take a closer look</p><h2 id="experience-title">Meet the TalkThru.</h2></div><p>A visual story guided by the person<br> who knows the property.</p></div>
+        <div class="preview-tabs" role="tablist" aria-label="TalkThru preview">
+          @for (preview of previews; track preview.label; let i = $index) {
+            <button type="button" role="tab" [attr.id]="'preview-tab-' + i" [attr.aria-selected]="selectedPreview() === i" [attr.aria-controls]="'preview-panel-' + i" [class.active]="selectedPreview() === i" (click)="selectedPreview.set(i)">{{ preview.label }}</button>
+          }
+        </div>
+        @for (preview of previews; track preview.label; let i = $index) {
+          @if (selectedPreview() === i) {
+            <div class="preview-panel" role="tabpanel" [attr.id]="'preview-panel-' + i" [attr.aria-labelledby]="'preview-tab-' + i">
+              <div class="preview-art"><img [src]="preview.image" [alt]="preview.alt"></div>
+              <div class="preview-copy"><p class="eyebrow green">{{ preview.step }}</p><h3>{{ preview.heading }}</h3><p>{{ preview.body }}</p><a class="inline-link" href="/talkthrus#signup">I’d like this for my listings <span aria-hidden="true">→</span></a><div class="preview-live"><strong>See it. Hear it. Explore it.</strong><a [href]="exampleUrl" target="_blank" rel="noopener noreferrer">Open the live TalkThru ↗</a><small>Opens the full experience on LivingWiki in a new tab.</small></div></div>
+            </div>
+          }
+        }
+      </div>
+    </section>
+
+    <section class="how wrap" id="how" aria-labelledby="how-title">
+      <div class="section-heading"><div><p class="eyebrow green">From listing to connection</p><h2 id="how-title">Your next listing.<br>Your next great story.</h2></div><p>A simple flow that puts your<br> expertise at the heart of the experience.</p></div>
+      <div class="steps"><article><div class="step-top"><span>01</span><span aria-hidden="true">↗</span></div><h3>Start with your listing.</h3><p>Bring in your property details and photos. Arrange them into a natural flow through the home.</p></article><article><div class="step-top"><span>02</span><span aria-hidden="true">♩</span></div><h3>Make it sound like you.</h3><p>Add your voice and personal insights. Highlight the moments, features, and details you’d point out in person.</p></article><article><div class="step-top"><span>03</span><span aria-hidden="true">↗</span></div><h3>Invite buyers inside.</h3><p>Share your TalkThru with prospective buyers and let your listing start a more personal conversation.</p></article></div>
+    </section>
+
+    <section class="teams" id="teams" aria-labelledby="teams-title"><div class="wrap"><p class="eyebrow">For agents &amp; agencies</p><div class="teams-heading"><h2 id="teams-title">A stronger presence.<br><em>A personal voice.</em></h2><p>Whether you’re building your own business or leading a team, let the people who know your listings best tell their stories.</p></div><div class="team-cards"><article><p class="eyebrow green">For the individual agent</p><h3>Make your expertise part of every listing.</h3><p>Give buyers a sense of who you are and what you see in the property, before the first conversation.</p><a href="/talkthrus#signup">Get started as an agent <span aria-hidden="true">→</span></a></article><article><p class="eyebrow green">For the agency</p><h3>Bring out every agent’s individual strengths.</h3><p>Introduce a more personal listing experience across your team while keeping each agent’s voice front and center.</p><a href="/talkthrus#signup">Explore TalkThrus for your team <span aria-hidden="true">→</span></a></article></div></div></section>
+
+    <section class="signup wrap" id="signup" aria-labelledby="signup-title">
+      <div class="signup-copy"><p class="eyebrow green">Let’s bring your listings to life</p><h2 id="signup-title">Your next listing<br>deserves <em>your voice.</em></h2><p>Sign up to get started with LivingWiki TalkThrus. Tell us a little about yourself so we can help you take the next step.</p><ul><li>For independent agents and agency teams</li><li>Start with a property you already know</li><li>Your insights stay at the center</li></ul></div>
+      <div class="signup-card">
+        @if (submitted()) {
+          <div class="thank-you" role="status"><span aria-hidden="true">✓</span><h3>Thanks for your interest.</h3><p>We’ve received your details and will follow up about your TalkThru.</p><a [href]="exampleUrl" target="_blank" rel="noopener noreferrer">Explore the example TalkThru ↗</a></div>
+        } @else {
+          <form (ngSubmit)="submit()" #signupForm="ngForm">
+            <h3>Let’s get you started.</h3><p class="form-sub">A more personal listing experience starts here.</p>
+            <fieldset><legend>I’m interested as</legend><div class="role-options"><label><input type="radio" name="role" value="agent" [(ngModel)]="role"> An agent</label><label><input type="radio" name="role" value="agency" [(ngModel)]="role"> An agency / team</label></div></fieldset>
+            <div class="form-grid"><label>Your name<input required autocomplete="name" maxlength="120" placeholder="Full name" name="name" [(ngModel)]="name"></label><label>Work email<input required type="email" autocomplete="email" maxlength="254" placeholder="you@agency.com" name="email" [(ngModel)]="email"></label></div>
+            <label>Agency or brokerage<input required autocomplete="organization" maxlength="160" placeholder="Your agency name" name="agency" [(ngModel)]="agency"></label>
+            <label>Listing link <span class="optional">(optional)</span><input type="url" maxlength="2000" placeholder="https://…" name="listing" [(ngModel)]="listing"></label>
+            <label class="honeypot" aria-hidden="true">Leave blank<input tabindex="-1" autocomplete="off" name="website" [(ngModel)]="website"></label>
+            <label class="consent"><input type="checkbox" required name="consent" [(ngModel)]="consent"> I agree to be contacted by LivingWiki about TalkThrus and this request.</label>
+            @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
+            <button class="button dark submit" type="submit" [disabled]="!signupForm.valid || sending()">{{ sending() ? 'Sending…' : 'Sign up for TalkThrus' }} <span aria-hidden="true">→</span></button>
+            <p class="form-note">We’ll use these details to respond to your interest. No payment is collected here.</p>
+          </form>
+        }
+      </div>
+    </section>
+  </main>
+  <footer><div class="wrap footer-inner"><a class="brand" href="/talkthrus#top"><svg class="sound-mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 10v3M6 6v11M10 3v18M14 8v7M18 5v13M22 10v3"/></svg><strong>LivingWiki</strong></a><p>Real properties. Real perspectives. Your voice.</p><small>© 2026 LivingWiki</small></div></footer>
+</div>
