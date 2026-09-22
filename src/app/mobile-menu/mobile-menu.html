@@ -14,8 +14,15 @@
 </button>
 
 @if (menuOpen()) {
-  <div class="workspace-mobile-veil" (click)="closeMenu()"></div>
-  <aside id="workspace-mobile-drawer" class="workspace-mobile-drawer" aria-label="LivingWiki menu" i18n-aria-label>
+  <dialog
+    #menuDialog
+    id="workspace-mobile-drawer"
+    class="workspace-mobile-drawer"
+    aria-label="LivingWiki menu"
+    i18n-aria-label
+    (cancel)="closeMenu()"
+    (click)="onDialogBackdropClick($event)"
+  >
     <header class="workspace-mobile-drawer__header">
       <a routerLink="/home" class="workspace-mobile-drawer__brand" (click)="closeMenu()">
         <img src="/assets/image/lucky-paper-crane.png" alt="" />
@@ -98,5 +105,5 @@
         }
       </footer>
     }
-  </aside>
+  </dialog>
 }

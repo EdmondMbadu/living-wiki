@@ -54,6 +54,7 @@ describe('MobileMenuComponent', () => {
     expect(labels).toEqual([
       'Home',
       'Discover',
+      'Off Grids',
       'My City Las Vegas',
       'My Boards',
       'My Songs',
@@ -65,6 +66,38 @@ describe('MobileMenuComponent', () => {
       'About',
       'More',
     ]);
+  });
+
+  it('opens the drawer in the browser top layer and closes it again', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const trigger = host.querySelector<HTMLButtonElement>('.workspace-menu-trigger');
+    trigger?.click();
+    fixture.detectChanges();
+
+    const dialog = host.querySelector<HTMLDialogElement>('.workspace-mobile-drawer');
+    expect(dialog?.matches(':modal')).toBeTrue();
+    expect(trigger?.getAttribute('aria-expanded')).toBe('true');
+
+    host.querySelector<HTMLButtonElement>('.workspace-mobile-drawer__close')?.click();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.menuOpen()).toBeFalse();
+    expect(host.querySelector('.workspace-mobile-drawer')).toBeNull();
+    expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('releases the modal when the desktop sidebar takes over', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    host.querySelector<HTMLButtonElement>('.workspace-menu-trigger')?.click();
+    fixture.detectChanges();
+    expect(host.querySelector<HTMLDialogElement>('.workspace-mobile-drawer')?.matches(':modal')).toBeTrue();
+
+    spyOnProperty(window, 'innerWidth', 'get').and.returnValue(1280);
+    fixture.componentInstance.onResize();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.menuOpen()).toBeFalse();
+    expect(host.querySelector('.workspace-mobile-drawer')).toBeNull();
   });
 
   it('closes the drawer and opens the shared More dialog', () => {

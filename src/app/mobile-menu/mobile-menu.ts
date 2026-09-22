@@ -1,4 +1,15 @@
-import { Component, ElementRef, HostListener, ViewChild, computed, inject, input, output, signal } from '@angular/core';
+import {
+  AfterViewChecked,
+  Component,
+  ElementRef,
+  HostListener,
+  ViewChild,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AtlasService } from '../atlas.service';
 import { AuthService } from '../auth.service';
@@ -14,8 +25,9 @@ import {
   styleUrl: './mobile-menu.css',
   host: { class: 'lg:hidden' },
 })
-export class MobileMenuComponent {
+export class MobileMenuComponent implements AfterViewChecked {
   @ViewChild('menuTrigger') private menuTrigger?: ElementRef<HTMLButtonElement>;
+  @ViewChild('menuDialog') private menuDialog?: ElementRef<HTMLDialogElement>;
   readonly activePage = input<string>('home');
   readonly publicSlug = input<string | null>(null);
   readonly hidePublicKnowledgeSurfaces = input<boolean>(false);
@@ -46,13 +58,37 @@ export class MobileMenuComponent {
   ];
 
   toggleMenu(): void {
-    this.menuOpen.update((open) => !open);
-    if (!this.menuOpen()) this.moreOpen.set(false);
+    if (this.menuOpen()) {
+      this.closeMenu();
+    } else {
+      this.menuOpen.set(true);
+    }
   }
 
   closeMenu(): void {
+    const dialog = this.menuDialog?.nativeElement;
+    if (dialog?.open) dialog.close();
     this.menuOpen.set(false);
     this.moreOpen.set(false);
+  }
+
+  ngAfterViewChecked(): void {
+    const dialog = this.menuDialog?.nativeElement;
+    if (this.menuOpen() && dialog && !dialog.open) dialog.showModal();
+  }
+
+  onDialogBackdropClick(event: MouseEvent): void {
+    const dialog = this.menuDialog?.nativeElement;
+    if (!dialog || event.target !== dialog) return;
+    const bounds = dialog.getBoundingClientRect();
+    if (
+      event.clientX < bounds.left ||
+      event.clientX > bounds.right ||
+      event.clientY < bounds.top ||
+      event.clientY > bounds.bottom
+    ) {
+      this.closeMenu();
+    }
   }
 
   openMore(): void {
@@ -92,5 +128,10 @@ export class MobileMenuComponent {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.closeMenu();
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (window.innerWidth >= 1024) this.closeMenu();
   }
 }

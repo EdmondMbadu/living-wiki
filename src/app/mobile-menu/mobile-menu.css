@@ -32,10 +32,7 @@
   outline-offset: 2px;
 }
 
-.workspace-mobile-veil {
-  position: fixed;
-  inset: 0;
-  z-index: 998;
+.workspace-mobile-drawer::backdrop {
   background: rgba(6, 26, 16, 0.56);
   backdrop-filter: blur(3px);
 }
@@ -43,11 +40,16 @@
 .workspace-mobile-drawer {
   position: fixed;
   inset: 0 auto 0 0;
-  z-index: 999;
+  box-sizing: border-box;
   display: flex;
   width: min(19.25rem, 88vw);
+  max-width: none;
+  height: 100dvh;
+  max-height: 100dvh;
   flex-direction: column;
+  margin: 0;
   overflow-y: auto;
+  border: 0;
   border-right: 1px solid var(--line);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--surface) 65%, transparent), transparent 42%),
@@ -56,6 +58,10 @@
   color: var(--text);
   padding: 1rem;
   animation: workspace-drawer-in 180ms ease-out;
+}
+
+.workspace-mobile-drawer:not([open]) {
+  display: none;
 }
 
 @keyframes workspace-drawer-in {
