@@ -68,6 +68,7 @@ import {
 import { VideoLibraryService } from '../video-library/video-library.service';
 import type { VideoLibraryItem } from '../video-library/video-library.models';
 import { boardVideoMetadataPatch } from './board-video-persistence';
+import { boardAudioPreferencePatch, boardStudioPatch, boardVoicePreferencePatch, type BoardStudioSaveKind } from './board-studio-persistence';
 import { BoardWriteQueue } from './board-write-queue';
 import { BoardPromoImageDialogComponent } from './board-promo-image-dialog';
 import { BackdropDismissDirective } from '../backdrop-dismiss.directive';
@@ -6751,6 +6752,17 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.redirectToPrivateBoardsPricing();
       return;
     }
+    const showCardNumbersChanged = this.boardShowsCardNumbers(current) !== draft.showCardNumbers;
+    const insideCardsDisplayChanged = this.boardInsideDisplay(current) !== draft.insideCardsDisplay;
+    const contentChanged = title !== current.title
+      || draft.description.trim() !== current.description
+      || showCardNumbersChanged || insideCardsDisplayChanged;
+    const teamAudienceChanged = !!current.teamId && this.canPublishTeamBoard(current)
+      && this.teamBoardVisitorVisibility(current) !== draft.visibility;
+    if (!contentChanged && visibility === current.visibility && !teamAudienceChanged) {
+      this.closeBoardSettings();
+      return;
+    }
     this.boardSettingsSaving.set(true);
     this.boardSettingsError.set(null);
     try {
@@ -6762,8 +6774,6 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const showCardNumbersChanged = this.boardShowsCardNumbers(current) !== draft.showCardNumbers;
-    const insideCardsDisplayChanged = this.boardInsideDisplay(current) !== draft.insideCardsDisplay;
     const now = new Date().toISOString();
     const nextBoard: Board = {
       ...current,
@@ -6772,12 +6782,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       visibility,
       showCardNumbers: draft.showCardNumbers,
       insideCardsDisplay: draft.insideCardsDisplay,
-      ...(showCardNumbersChanged ? {
-        socialVideoUrl: '',
-        socialVideoMimeType: '',
-        socialVideoUpdatedAt: '',
-        socialVideoRenderVersion: '',
-      } : {}),
+      ...(isLinkReadableVisibility(visibility) ? { photoStudioDraft: false } : {}),
+      ...(contentChanged ? invalidatedNarrationMedia() : {}),
       updatedAt: now,
     };
 
@@ -6787,12 +6793,6 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (insideCardsDisplayChanged) {
       this.activeAlongsideBoardIds.set(new Set());
     }
-    if (showCardNumbersChanged) {
-      this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(current.id, 'vertical'));
-      this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(current.id, 'landscape'));
-      this.stackPublishedVideoReady.set(false);
-    }
-
     try {
       const visibilityOnlyEdit = !showCardNumbersChanged
         && !insideCardsDisplayChanged
@@ -6801,11 +6801,19 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         ? await this.persistTeamBoardAudience(nextBoard, draft.visibility)
         : visibilityOnlyEdit
           ? await this.persistVisibilityAndReplaceBoard(nextBoard)
-          : await this.persistAndReplaceBoard(nextBoard);
+          : await this.persistAndReplaceBoard(nextBoard, 'settings');
       if (!saved) {
         if (!current.teamId) this.boards.update((boards) => boards.map((board) => board.id === current.id ? current : board));
         this.boardSettingsError.set(this.boardsSyncError() || 'These changes could not be saved. Please try again.');
         return;
+      }
+      if (contentChanged) {
+        this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(current.id, 'vertical'));
+        this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(current.id, 'landscape'));
+        this.publishedStackTrailerFiles.delete(this.stackPublishedFileKey(current.id, 'vertical'));
+        this.publishedStackTrailerFiles.delete(this.stackPublishedFileKey(current.id, 'landscape'));
+        this.stackPublishedVideoReady.set(false);
+        this.stackPublishedTrailerReady.set(false);
       }
 
       const linkedChildren = this.nestedBoardsUnder(current.id)
@@ -6820,9 +6828,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       if (linkedChildren.length) {
         const linkedById = new Map(linkedChildren.map((board) => [board.id, board]));
         this.boards.update((boards) => boards.map((board) => linkedById.get(board.id) ?? board));
-        const childSaveResults = await Promise.all(linkedChildren.map((board) => visibilityOnlyEdit
-          ? this.persistVisibilityAndReplaceBoard(board)
-          : this.persistAndReplaceBoard(board)));
+        const childSaveResults = await Promise.all(linkedChildren.map((board) => this.persistVisibilityAndReplaceBoard(board)));
         if (childSaveResults.some((result) => !result)) {
           this.boardSettingsError.set('The board was updated, but one of its boards inside could not be synced.');
           return;
@@ -7092,7 +7098,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           ...boards.map((candidate) => candidate.id === linkedParent.id ? linkedParent : candidate),
         ]);
         await this.persistAndReplaceBoard(board);
-        await this.persistAndReplaceBoard(linkedParent);
+        await this.persistAndReplaceBoard(linkedParent, 'cards');
       } else {
         this.boards.update((boards) => [board, ...boards]);
       }
@@ -7108,6 +7114,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           ? await this.persistVisibilityAndReplaceBoard(nextBoard)
           : await this.persistAndReplaceBoard(nextBoard);
       if (!saved) {
+        if (editingId && editingBoardForVisibility && !nextBoard.teamId) {
+          this.boards.update((boards) => boards.map((board) =>
+            board.id === editingId && board.updatedAt === now ? editingBoardForVisibility : board));
+        }
         this.boardDialogError.set(this.boardsSyncError() || 'These changes could not be saved. Please try again.');
         return;
       }
@@ -7124,9 +7134,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         if (linkedChildren.length) {
           const linkedById = new Map(linkedChildren.map((board) => [board.id, board]));
           this.boards.update((boards) => boards.map((board) => linkedById.get(board.id) ?? board));
-          await Promise.all(linkedChildren.map((board) => visibilityOnlyEdit
-            ? this.persistVisibilityAndReplaceBoard(board)
-            : this.persistAndReplaceBoard(board)));
+          const childSaveResults = await Promise.all(linkedChildren.map((board) => this.persistVisibilityAndReplaceBoard(board)));
+          if (childSaveResults.some((result) => !result)) {
+            this.boardDialogError.set('The board was updated, but one of its boards inside could not be synced. Please try again.');
+            return;
+          }
         }
       }
     }
@@ -7256,7 +7268,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         updatedAt: now,
       };
       this.boards.update((boards) => boards.map((candidate) => candidate.id === unlinkedParent.id ? unlinkedParent : candidate));
-      await this.persistAndReplaceBoard(unlinkedParent);
+      if (!await this.persistAndReplaceBoard(unlinkedParent, 'cards')) {
+        this.boards.update((boards) => boards.map((candidate) => candidate === unlinkedParent ? parentBoard : candidate));
+        return;
+      }
     }
 
     this.boards.update((boards) => boards.filter((item) => !boardIdsToDelete.has(item.id)));
@@ -7310,21 +7325,20 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const nextBoard: Board = {
       ...current,
       showCardNumbers,
-      // A previously rendered video contains the old presentation choice.
-      // Clear it so the next video is generated with the new board setting.
-      socialVideoUrl: '',
-      socialVideoMimeType: '',
-      socialVideoUpdatedAt: '',
-      socialVideoRenderVersion: '',
+      // The existing files remain published until a fresh render replaces them.
+      ...invalidatedNarrationMedia(),
       updatedAt: new Date().toISOString(),
     };
     this.boards.update((boards) => boards.map((candidate) => candidate.id === nextBoard.id ? nextBoard : candidate));
-    this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, 'vertical'));
-    this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, 'landscape'));
-    this.stackPublishedVideoReady.set(false);
     this.boardCardNumbersSavingId.set(board.id);
     try {
-      await this.persistAndReplaceBoard(nextBoard);
+      if (!await this.persistAndReplaceBoard(nextBoard, 'settings')) {
+        this.boards.update((boards) => boards.map((item) => item === nextBoard ? current : item));
+        return;
+      }
+      this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, 'vertical'));
+      this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, 'landscape'));
+      this.stackPublishedVideoReady.set(false);
     } finally {
       if (this.boardCardNumbersSavingId() === board.id) {
         this.boardCardNumbersSavingId.set(null);
@@ -7349,13 +7363,16 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const nextBoard: Board = {
       ...current,
       insideCardsDisplay: display,
+      ...invalidatedNarrationMedia(),
       updatedAt: new Date().toISOString(),
     };
     this.activeAlongsideBoardIds.set(new Set());
     this.boards.update((boards) => boards.map((candidate) => candidate.id === nextBoard.id ? nextBoard : candidate));
     this.boardInsideDisplaySavingId.set(board.id);
     try {
-      await this.persistAndReplaceBoard(nextBoard);
+      if (!await this.persistAndReplaceBoard(nextBoard, 'settings')) {
+        this.boards.update((boards) => boards.map((item) => item === nextBoard ? current : item));
+      }
     } finally {
       if (this.boardInsideDisplaySavingId() === board.id) {
         this.boardInsideDisplaySavingId.set(null);
@@ -7616,7 +7633,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private async persistTalkingCardAndFinish(nextBoard: Board): Promise<void> {
-    if (!await this.persistAndReplaceBoard(nextBoard)) {
+    if (!await this.persistAndReplaceBoard(nextBoard, 'cards')) {
       await this.failTalkingCardSave(
         nextBoard.teamId
           ? this.boardsSyncError() || 'Your Talking Card could not be saved. Check your team access and try again.'
@@ -7698,7 +7715,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.listingIntroSaving.set(true);
     this.listingIntroError.set(null);
     try {
-      const saved = await this.persistAndReplaceBoard(nextBoard);
+      const saved = await this.persistAndReplaceBoard(nextBoard, 'cards');
       if (!saved) {
         this.listingIntroError.set('Your introduction could not sync. Please try again.');
         return;
@@ -7955,7 +7972,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       if (!card) throw new Error('The card could not be prepared.');
       const cards = placement === 'start' ? [card, ...board.cards] : [...board.cards, card];
       const nextBoard = { ...board, cards, updatedAt: now };
-      const saved = await this.persistAndReplaceBoard(nextBoard);
+      const saved = await this.persistAndReplaceBoard(nextBoard, 'cards');
       if (!saved) throw new Error('The card could not be saved. Please try again.');
       this.specialCardEditorBoardId.set(null);
     } catch (error) {
@@ -8523,7 +8540,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.relatedCardSaving.set(true);
     try {
       this.boards.update((boards) => boards.map((item) => item.id === board.id ? nextBoard : item));
-      await this.persistAndReplaceBoard(nextBoard);
+      await this.persistAndReplaceBoard(nextBoard, 'cards');
       this.relatedCardEditingId.set(null);
       this.relatedCardDeleteCandidateId.set(null);
       this.relatedCardAiError.set(null);
@@ -8573,7 +8590,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     };
     this.relatedCardDeleteCandidateId.set(null);
     this.boards.update((boards) => boards.map((item) => item.id === board.id ? nextBoard : item));
-    await this.persistAndReplaceBoard(nextBoard);
+    await this.persistAndReplaceBoard(nextBoard, 'cards');
   }
 
   async moveRelatedCard(parentId: string, cardId: string, direction: -1 | 1, event?: Event): Promise<void> {
@@ -8599,7 +8616,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       updatedAt: now,
     };
     this.boards.update((boards) => boards.map((item) => item.id === board.id ? nextBoard : item));
-    await this.persistAndReplaceBoard(nextBoard);
+    await this.persistAndReplaceBoard(nextBoard, 'cards');
   }
 
   canMoveRelatedCard(parent: BoardCard, cardId: string, direction: -1 | 1): boolean {
@@ -9578,7 +9595,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     );
 
     if (nextBoard) {
-      const saved = await this.persistAndReplaceBoard(nextBoard);
+      const saved = await this.persistAndReplaceBoard(nextBoard, 'cards');
       if (!saved) {
         this.boards.update(items => items.map(item => item === nextBoard ? board : item));
         this.imageUploadError.set('The card could not be saved. Your changes are still here; please try again.');
@@ -9662,7 +9679,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         updatedAt: now,
       };
       this.boards.update((boards) => boards.map((candidate) => candidate.id === board.id ? nextBoard : candidate));
-      await this.persistAndReplaceBoard(nextBoard);
+      await this.persistAndReplaceBoard(nextBoard, 'cards');
       return;
     }
 
@@ -9683,7 +9700,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     nextCards.splice(sourceIndex + 1, 0, duplicate);
     const nextBoard: Board = { ...board, cards: nextCards, updatedAt: now };
     this.boards.update((boards) => boards.map((candidate) => candidate.id === board.id ? nextBoard : candidate));
-    await this.persistAndReplaceBoard(nextBoard);
+    await this.persistAndReplaceBoard(nextBoard, 'cards');
   }
 
   private duplicateCardWithBoardInside(card: BoardCard, now: string): BoardCard {
@@ -9740,7 +9757,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         updatedAt: now,
       };
       this.boards.update((boards) => boards.map((item) => item.id === board.id ? nextBoard : item));
-      void this.persistAndReplaceBoard(nextBoard);
+      void this.persistAndReplaceBoard(nextBoard, 'cards');
       return;
     }
 
@@ -9779,7 +9796,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         next.delete(candidate.card.id);
         return next;
       });
-      await this.persistAndReplaceBoard(nextBoard);
+      await this.persistAndReplaceBoard(nextBoard, 'cards');
       await this.deleteBoardInsideForCard(candidate.card);
     }
   }
@@ -10007,7 +10024,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
     this.boards.update((boards) => boards.map((item) => item.id === nextBoard.id ? nextBoard : item));
     this.clearCardReorderDrag();
-    await this.persistAndReplaceBoard(nextBoard);
+    await this.persistAndReplaceBoard(nextBoard, 'cards');
   }
 
   async moveTourStop(card: BoardCard, direction: -1 | 1, event?: Event): Promise<void> {
@@ -10377,7 +10394,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (!nextBoard.cards.length) {
       this.closeCardManageMode();
     }
-    void this.persistAndReplaceBoard(nextBoard);
+    void this.persistAndReplaceBoard(nextBoard, 'cards');
   }
 
   deleteGalleryCard(boardId: string, card: BoardCard, event?: Event): void {
@@ -11078,7 +11095,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       };
       this.boards.update((boards) => boards.map((item) => (item.id === nextBoard.id ? nextBoard : item)));
       if (this.canEditBoard(nextBoard)) {
-        await this.persistAndReplaceBoard(nextBoard);
+        await this.persistAndReplaceBoard(nextBoard, 'cards');
       }
     } catch (error) {
       console.warn('Spotify board enrichment failed', error, { boardId: board.id });
@@ -13041,7 +13058,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         ...board,
         cards: board.cards.map((candidate) => candidate.id === sourceCard.id ? replacementCard : candidate),
         updatedAt: now,
-      });
+      }, 'cards');
       this.cardVideoRepairNotice.set(saved
         ? 'A verified playable replacement is ready.'
         : 'A replacement was found, but it could not be saved. Please try again.');
@@ -15527,11 +15544,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         cards: board.cards.map((item) => item.id === currentCard.id
           ? { ...item, videoNarrationRevision: revision, updatedAt: now }
           : item),
-        socialVideoRenderVersion: '',
+        ...invalidatedNarrationMedia(),
         updatedAt: now,
       };
-      if (!await this.persistAndReplaceBoard(nextBoard)) {
-        throw new Error('The fresh narration could not be saved to this board.');
+      if (!await this.persistAndReplaceBoard(nextBoard, 'fresh-narration')) {
+        throw new Error(`The fresh narration could not be saved to this board. ${this.boardsSyncError() || ''}`.trim());
       }
       const savedCard = nextBoard.cards.find((item) => item.id === currentCard.id)!;
       const savedText = this.stackVideoNarrationText(savedCard);
@@ -15718,13 +15735,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       title,
       description: this.stackScriptBoardDescription().trim(),
       imageUrl: this.stackCoverImageDraft(),
-      socialVideoRenderVersion: '',
-      trailerVideoRenderVersion: '',
+      ...invalidatedNarrationMedia(),
       updatedAt: now,
     };
     try {
-      if (!await this.persistAndReplaceBoard(nextBoard)) {
-        throw new Error('The cover could not be synchronized.');
+      if (!await this.persistAndReplaceBoard(nextBoard, 'cover')) {
+        throw new Error(`The cover could not be synchronized. ${this.boardsSyncError() || ''}`.trim());
       }
       const savedBoard = this.boards().find((item) => item.id === nextBoard.id) ?? nextBoard;
       this.applyStackCoverState(savedBoard);
@@ -15834,11 +15850,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       socialVideoClosingCustomImageUrl: normalized.customImageUrl,
       socialVideoClosingDurationSeconds: normalized.durationSeconds,
       socialVideoRenderVersion: '',
+      socialLandscapeVideoRenderVersion: '',
       updatedAt: now,
     };
     try {
-      if (!await this.persistAndReplaceBoard(nextBoard)) {
-        throw new Error('The final screen could not be synchronized.');
+      if (!await this.persistAndReplaceBoard(nextBoard, 'final-screen')) {
+        throw new Error(`The final screen could not be synchronized. ${this.boardsSyncError() || ''}`.trim());
       }
       this.applyStackFinalScreenState(this.boards().find((item) => item.id === nextBoard.id) ?? nextBoard);
       this.setStackShareMessage('Final screen saved. Update the Full video to publish it.', false);
@@ -17970,19 +17987,61 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     ) {
       return;
     }
-    const nextBoard: Board = {
-      ...currentBoard,
-      socialVideoAudioTrackId: trackId,
-      socialVideoAudioVolume: volume,
-      updatedAt: new Date().toISOString(),
-    };
-    this.boards.update((boards) =>
-      boards.map((item) => item.id === nextBoard.id ? nextBoard : item),
-    );
-    this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, 'vertical'));
-    this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, 'landscape'));
-    this.stackPublishedVideoReady.set(false);
-    void this.persistAndReplaceBoard(nextBoard);
+    this.stackAudioError.set(null);
+    void this.persistStackAudioPreferences(currentBoard, trackId, volume).then((saved) => {
+      if (saved) {
+        this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, 'vertical'));
+        this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, 'landscape'));
+        this.publishedStackTrailerFiles.delete(this.stackPublishedFileKey(board.id, 'vertical'));
+        this.publishedStackTrailerFiles.delete(this.stackPublishedFileKey(board.id, 'landscape'));
+        this.stackPublishedVideoReady.set(false);
+        this.stackPublishedTrailerReady.set(false);
+      }
+      if (saved || this.stackAudioTrackId() !== trackId || this.stackAudioVolume() !== volume) return;
+      const persisted = this.boards().find((item) => item.id === board.id);
+      if (persisted) {
+        this.stackAudioTrackId.set(normalizeStackAudioTrackId(persisted.socialVideoAudioTrackId));
+        this.stackAudioVolume.set(normalizeStackAudioVolume(persisted.socialVideoAudioVolume));
+      }
+      this.stackAudioError.set(`Music did not save. ${this.boardsSyncError() || 'Choose it again to retry.'}`);
+    });
+  }
+
+  private async persistStackAudioPreferences(board: Board, trackId: string, volume: number): Promise<boolean> {
+    if (board.teamId || this.teamContextId()) {
+      return this.persistAndReplaceBoard({
+        ...board,
+        socialVideoAudioTrackId: trackId,
+        socialVideoAudioVolume: volume,
+        ...invalidatedNarrationMedia(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
+    const uid = this.authService.uid();
+    if (!this.firestore || !uid || board.ownerUserId !== uid) {
+      this.boardsSyncError.set('Board sync is not ready or you no longer own this board.');
+      return false;
+    }
+    const updatedAt = new Date().toISOString();
+    try {
+      await this.queueBoardWrite(board.id, () => updateDoc(doc(this.firestore!, 'boards', board.id), {
+        ...boardAudioPreferencePatch(trackId, volume, updatedAt),
+        server_updated_at: serverTimestamp(),
+      }));
+      this.boards.update((boards) => boards.map((item) => item.id === board.id ? {
+        ...item,
+        socialVideoAudioTrackId: trackId,
+        socialVideoAudioVolume: volume,
+        ...invalidatedNarrationMedia(),
+        updatedAt,
+      } : item));
+      this.boardsSyncError.set(null);
+      return true;
+    } catch (error) {
+      console.error('Board music Firebase sync failed', error, { boardId: board.id });
+      this.boardsSyncError.set(this.boardSaveErrorMessage(error));
+      return false;
+    }
   }
 
   private saveStackNarratorPreference(board: Board, force = false): void {
@@ -17993,19 +18052,24 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const nextBoard: Board = {
       ...currentBoard,
       stackNarratorVoiceId: voiceId,
+      ...invalidatedNarrationMedia(),
       updatedAt: new Date().toISOString(),
     };
-    this.boards.update((boards) =>
-      boards.map((item) => item.id === nextBoard.id ? nextBoard : item),
-    );
-    this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, 'vertical'));
-    this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, 'landscape'));
-    this.stackPublishedVideoReady.set(false);
     void this.persistStackNarratorPreference(nextBoard).then((saved) => {
-      if (this.boards().find((item) => item.id === board.id)?.stackNarratorVoiceId !== voiceId) return;
-      this.stackVoiceError.set(saved
-        ? null
-        : `This voice has not synced. ${this.boardsSyncError() || 'Select it again to retry.'}`);
+      if (saved) {
+        this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, 'vertical'));
+        this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, 'landscape'));
+        this.publishedStackTrailerFiles.delete(this.stackPublishedFileKey(board.id, 'vertical'));
+        this.publishedStackTrailerFiles.delete(this.stackPublishedFileKey(board.id, 'landscape'));
+        this.stackPublishedVideoReady.set(false);
+        this.stackPublishedTrailerReady.set(false);
+      }
+      if (this.stackNarratorVoiceId() !== voiceId) return;
+      if (!saved) {
+        const persisted = this.boards().find((item) => item.id === board.id);
+        if (persisted) this.stackNarratorVoiceId.set(normalizeStackNarratorVoiceId(persisted.stackNarratorVoiceId));
+      }
+      this.stackVoiceError.set(saved ? null : `This voice has not synced. ${this.boardsSyncError() || 'Select it again to retry.'}`);
     });
   }
 
@@ -18022,10 +18086,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
     try {
       await this.queueBoardWrite(board.id, () => updateDoc(doc(this.firestore!, 'boards', board.id), {
-        stackNarratorVoiceId: normalizeStackNarratorVoiceId(board.stackNarratorVoiceId),
-        updated_at_iso: board.updatedAt,
+        ...boardVoicePreferencePatch(normalizeStackNarratorVoiceId(board.stackNarratorVoiceId), board.updatedAt),
         server_updated_at: serverTimestamp(),
       }));
+      this.boards.update((boards) => boards.map((item) => item.id === board.id
+        ? { ...item, stackNarratorVoiceId: board.stackNarratorVoiceId,
+          ...invalidatedNarrationMedia(), updatedAt: board.updatedAt }
+        : item));
       this.boardsSyncError.set(null);
       return true;
     } catch (error) {
@@ -22182,13 +22249,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private async persistAndReplaceBoard(board: Board, kind: 'full' | 'script' = 'full'): Promise<boolean> {
+  private async persistAndReplaceBoard(board: Board, kind: 'full' | BoardStudioSaveKind = 'full'): Promise<boolean> {
     if (!this.canEditBoard(board)) {
       this.boardsSyncError.set($localize`Only the board owner can save changes.`);
       return false;
     }
     try {
-      const persisted = kind === 'script' ? await this.persistBoardScript(board) : await this.persistBoard(board);
+      const saveBoard = kind === 'cards' ? { ...board, ...invalidatedNarrationMedia() } : board;
+      const persisted = kind === 'full' ? await this.persistBoard(saveBoard) : await this.persistBoardStudio(saveBoard, kind);
       this.boards.update((boards) => boards.map((item) => {
         if (item.id !== persisted.id) return item;
         // A later edit may have happened while images or Firestore were saving.
@@ -22255,6 +22323,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       await this.assertBoardVisitorKnowledge(nextBoard);
       await this.queueBoardWrite(board.id, () => updateDoc(doc(this.firestore!, 'boards', board.id), {
         visibility: board.visibility,
+        ...(board.parentBoardId ? { parentBoardTitle: board.parentBoardTitle } : {}),
         ...(isLinkReadableVisibility(nextBoard.visibility) ? { photoStudioDraft: false } : {}),
         updated_at_iso: updatedAt,
         server_updated_at: serverTimestamp(),
@@ -22286,33 +22355,53 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     return { ...current, ...patch };
   }
 
-  private async persistBoardScript(board: Board): Promise<Board> {
+  private async persistBoardStudio(board: Board, kind: BoardStudioSaveKind): Promise<Board> {
     if (board.teamId || this.teamContextId()) return this.persistBoard(board);
     const uid = this.authService.uid();
     if (!uid || board.ownerUserId !== uid) {
-      throw new Error('Only the board owner can save a script.');
+      throw new Error('Only the board owner can save Studio changes.');
     }
     if (!this.firestore) throw new Error('Board sync is not ready. Refresh and try again.');
     return this.queueBoardWrite(board.id, async () => {
-      const { prepared, persistable } = await this.prepareBoardForFirestore(board, uid);
+      // A small edit should prepare only the fields it writes. Unrelated
+      // cover, logo, owner profile, and Talking Card work can fail separately.
+      if (kind === 'cards') await this.assertBoardVisitorKnowledge(board);
+      const prepared: Board = {
+        ...board,
+        ...(kind === 'script' || kind === 'cover' || kind === 'settings' ? {
+          description: boardDescriptionForFirestore(board.description),
+        } : {}),
+        ...(kind === 'script' || kind === 'cover' ? {
+          imageUrl: await this.persistImageIfNeeded(board.imageUrl, `users/${uid}/boards/${board.id}/cover.jpg`),
+        } : {}),
+        ...(kind === 'script' || kind === 'fresh-narration' || kind === 'cards' ? {
+          cards: await Promise.all(board.cards.map((card) => this.prepareBoardCardImagesForFirebase(card, uid, board.id))),
+        } : {}),
+        ...(kind === 'final-screen' ? {
+          socialVideoClosingCustomImageUrl: await this.persistImageIfNeeded(
+            board.socialVideoClosingCustomImageUrl, `users/${uid}/boards/${board.id}/social/final-screen.jpg`,
+          ),
+        } : {}),
+      };
       await updateDoc(doc(this.firestore!, 'boards', board.id), {
-        title: persistable['title'],
-        description: persistable['description'],
-        imageUrl: persistable['imageUrl'],
-        cards: persistable['cards'],
-        socialVideoRenderVersion: persistable['socialVideoRenderVersion'],
-        socialLandscapeVideoRenderVersion: persistable['socialLandscapeVideoRenderVersion'],
-        trailerVideoRenderVersion: persistable['trailerVideoRenderVersion'],
-        trailerLandscapeVideoRenderVersion: persistable['trailerLandscapeVideoRenderVersion'],
-        trailerVideoSourceFingerprint: persistable['trailerVideoSourceFingerprint'],
-        updated_at_iso: persistable['updated_at_iso'],
+        ...omitUndefinedDeep(boardStudioPatch({
+          ...(prepared as unknown as Record<string, unknown>),
+          updated_at_iso: prepared.updatedAt,
+        }, kind)),
         server_updated_at: serverTimestamp(),
       });
       return {
         ...board,
-        description: prepared.description,
-        imageUrl: prepared.imageUrl,
-        cards: prepared.cards,
+        ...(kind === 'script' || kind === 'cover' || kind === 'settings' ? {
+          description: prepared.description,
+        } : {}),
+        ...(kind === 'script' || kind === 'cover' ? {
+          imageUrl: prepared.imageUrl,
+        } : {}),
+        ...(kind === 'script' || kind === 'fresh-narration' || kind === 'cards' ? { cards: prepared.cards } : {}),
+        ...(kind === 'final-screen' ? {
+          socialVideoClosingCustomImageUrl: prepared.socialVideoClosingCustomImageUrl,
+        } : {}),
       };
     });
   }

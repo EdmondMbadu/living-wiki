@@ -30,6 +30,10 @@ const videoPersistenceSource = await readFile(new URL('../../src/app/boards/boar
 const { boardVideoMetadataPatch } = await import(`data:text/javascript;base64,${Buffer.from(ts.transpileModule(
   videoPersistenceSource, { compilerOptions: { module: ts.ModuleKind.ES2022 } },
 ).outputText).toString('base64')}`);
+const studioPersistenceSource = await readFile(new URL('../../src/app/boards/board-studio-persistence.ts', import.meta.url), 'utf8');
+const { boardStudioPatch, boardAudioPreferencePatch, boardVoicePreferencePatch } = await import(`data:text/javascript;base64,${Buffer.from(ts.transpileModule(
+  studioPersistenceSource, { compilerOptions: { module: ts.ModuleKind.ES2022 } },
+).outputText).toString('base64')}`);
 
 test('Firestore accepts every narrator voice offered by the app', () => {
   const match = firestoreRules.match(/function isValidStackNarratorVoiceId\(value\) \{\s*return value in \[([\s\S]*?)\]/);
@@ -392,6 +396,111 @@ test('owner can revise a 30-second script after video publication without replac
   ));
 });
 
+test('all small Studio saves work on a published board and preserve unrelated fields', async () => {
+  const boardId = 'published-studio-edits';
+  const ownerDatabase = testEnvironment.authenticatedContext(ownerUid).firestore();
+  const reference = doc(ownerDatabase, 'boards', boardId);
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'boards', boardId), personalWizardBoard({
+      id: boardId,
+      socialVideoUrl: 'https://example.com/full.mp4',
+      socialVideoMimeType: 'video/mp4',
+      socialVideoRenderVersion: 'stack-video-v14',
+      trailerVideoUrl: 'https://example.com/trailer.mp4',
+      trailerVideoMimeType: 'video/mp4',
+      trailerVideoRenderVersion: 'stack-trailer-v1',
+      trailerVideoScript: 'A published trailer script.',
+      legacy_board_field: 'preserve me',
+      cards: [{ id: 'case-1', title: 'The case', notes: 'Original narration.' }],
+      server_updated_at: new Date('2026-09-23T00:00:00.000Z'),
+    }));
+  });
+
+  const clearedVersions = {
+    socialVideoRenderVersion: '', socialLandscapeVideoRenderVersion: '',
+    trailerVideoRenderVersion: '', trailerLandscapeVideoRenderVersion: '',
+    trailerVideoSourceFingerprint: '',
+  };
+  const saveStep = async (name, patch) => {
+    try {
+      await assertSucceeds(updateDoc(reference, { ...patch, server_updated_at: serverTimestamp() }));
+    } catch (error) {
+      throw new Error(`${name}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+  const coverRecord = { ...(await getDoc(reference)).data(), ...clearedVersions,
+    title: 'Updated case board', description: 'Updated description', imageUrl: 'https://example.com/new-cover.jpg',
+    updated_at_iso: '2026-09-23T01:00:00.000Z' };
+  await saveStep('cover', boardStudioPatch(coverRecord, 'cover'));
+
+  const freshRecord = { ...coverRecord, cards: [{ id: 'case-1', title: 'The case', notes: 'Original narration.', videoNarrationRevision: 1 }],
+    updated_at_iso: '2026-09-23T02:00:00.000Z' };
+  await saveStep('fresh narration', boardStudioPatch(freshRecord, 'fresh-narration'));
+
+  const cardRecord = { ...freshRecord, cards: [
+    { id: 'case-1', title: 'The case', notes: 'Original narration.', videoNarrationRevision: 1 },
+    { id: 'case-2', title: 'Another case', notes: 'A new card.' },
+  ], updated_at_iso: '2026-09-23T02:30:00.000Z' };
+  await saveStep('card edit', boardStudioPatch(cardRecord, 'cards'));
+
+  const settingsRecord = { ...cardRecord, title: 'Cases with captions',
+    showCardNumbers: false, insideCardsDisplay: 'alongside', visibility: 'public',
+    photoStudioDraft: false, updated_at_iso: '2026-09-23T02:45:00.000Z' };
+  await saveStep('board settings', boardStudioPatch(settingsRecord, 'settings'));
+
+  const finalRecord = { ...settingsRecord, socialVideoClosingHeadline: 'Read the full board',
+    socialVideoClosingMessage: 'Continue exploring these cases.', socialVideoClosingShowQrCode: true,
+    socialVideoClosingImage: 'cover', socialVideoClosingCustomImageUrl: '', socialVideoClosingDurationSeconds: 3,
+    updated_at_iso: '2026-09-23T03:00:00.000Z' };
+  await saveStep('final screen', boardStudioPatch(finalRecord, 'final-screen'));
+
+  await saveStep('music preference', boardAudioPreferencePatch('none', 0.2, '2026-09-23T04:00:00.000Z'));
+  await saveStep('voice preference', boardVoicePreferencePatch('calm-documentary', '2026-09-23T05:00:00.000Z'));
+
+  const saved = (await assertSucceeds(getDoc(reference))).data();
+  assert.equal(saved.title, 'Cases with captions');
+  assert.equal(saved.cards[0].videoNarrationRevision, 1);
+  assert.equal(saved.cards[1].title, 'Another case');
+  assert.equal(saved.showCardNumbers, false);
+  assert.equal(saved.insideCardsDisplay, 'alongside');
+  assert.equal(saved.socialVideoClosingHeadline, 'Read the full board');
+  assert.equal(saved.socialVideoAudioTrackId, 'none');
+  assert.equal(saved.stackNarratorVoiceId, 'calm-documentary');
+  assert.equal(saved.socialVideoUrl, 'https://example.com/full.mp4');
+  assert.equal(saved.trailerVideoUrl, 'https://example.com/trailer.mp4');
+  assert.equal(saved.legacy_board_field, 'preserve me');
+
+  await assertFails(updateDoc(reference, {
+    ...boardAudioPreferencePatch('none', 0.2, '2026-09-23T06:00:00.000Z'),
+    socialVideoUrl: 'https://example.com/overwritten.mp4', server_updated_at: serverTimestamp(),
+  }));
+  await assertFails(updateDoc(reference, {
+    ...boardStudioPatch({ ...settingsRecord, visibility: 'private',
+      updated_at_iso: '2026-09-23T07:00:00.000Z' }, 'settings'),
+    server_updated_at: serverTimestamp(),
+  }));
+});
+
+test('board-inside title and visibility updates preserve legacy fields and videos', async () => {
+  const boardId = 'published-board-inside';
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'boards', boardId), personalWizardBoard({
+      id: boardId, parentBoardId: 'parent-board', parentBoardTitle: 'Old parent title',
+      socialVideoUrl: 'https://example.com/child-video.mp4', legacy_board_field: 'preserve me',
+    }));
+  });
+  const reference = doc(testEnvironment.authenticatedContext(ownerUid).firestore(), 'boards', boardId);
+  await assertSucceeds(updateDoc(reference, {
+    visibility: 'unlisted', parentBoardTitle: 'New parent title', photoStudioDraft: false,
+    updated_at_iso: '2026-09-23T08:00:00.000Z', server_updated_at: serverTimestamp(),
+  }));
+  const saved = (await getDoc(reference)).data();
+  assert.equal(saved.parentBoardTitle, 'New parent title');
+  assert.equal(saved.visibility, 'unlisted');
+  assert.equal(saved.socialVideoUrl, 'https://example.com/child-video.mp4');
+  assert.equal(saved.legacy_board_field, 'preserve me');
+});
+
 test('board narrator accepts stable personal voice references and rejects malformed references', async () => {
   await testEnvironment.withSecurityRulesDisabled(async (context) => {
     await setDoc(
@@ -417,6 +526,19 @@ test('board narrator accepts stable personal voice references and rejects malfor
     stackNarratorVoiceId: 'ms-walker-southern',
     updated_at_iso: '2026-08-30T00:00:40.000Z',
   })));
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    await updateDoc(doc(context.firestore(), 'boards', 'personal-voice-board'), {
+      socialVideoUrl: 'https://example.com/existing-voice-video.mp4',
+      socialVideoRenderVersion: 'old-voice-render',
+    });
+  });
+  await assertSucceeds(updateDoc(boardReference, {
+    ...boardVoicePreferencePatch('calm-documentary', '2026-08-30T00:00:50.000Z'),
+    server_updated_at: serverTimestamp(),
+  }));
+  const voiceSaved = (await getDoc(boardReference)).data();
+  assert.equal(voiceSaved.socialVideoRenderVersion, '');
+  assert.equal(voiceSaved.socialVideoUrl, 'https://example.com/existing-voice-video.mp4');
   await assertFails(updateDoc(boardReference, {
     stackNarratorVoiceId: 'personal-voice:invalid/voice',
     updated_at_iso: '2026-08-30T00:01:00.000Z',
