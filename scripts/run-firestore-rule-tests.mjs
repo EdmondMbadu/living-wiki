@@ -1,5 +1,8 @@
 import { delimiter, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { createServer } from 'node:net';
+import { tmpdir } from 'node:os';
 
 function javaMajor(javaExecutable, environment) {
   const result = spawnSync(javaExecutable, ['-version'], {
@@ -36,10 +39,36 @@ if (javaMajor(javaExecutable, environment) < 21) {
 const build = spawnSync('npm', ['--prefix', 'functions', 'run', 'build'], { stdio: 'inherit' });
 if (build.status !== 0) process.exit(build.status ?? 1);
 
+// Local development servers often occupy Firebase's default port 8080. Give
+// each test run its own emulator ports so this regression suite is runnable.
+const reservations = await Promise.all(Array.from({ length: 4 }, () => new Promise((resolve, reject) => {
+  const server = createServer();
+  server.once('error', reject);
+  server.listen(0, '127.0.0.1', () => resolve(server));
+})));
+const [firestorePort, websocketPort, hubPort, loggingPort] = reservations.map((server) => server.address().port);
+await Promise.all(reservations.map((server) => new Promise((resolve) => server.close(resolve))));
+const configDirectory = mkdtempSync(join(tmpdir(), 'livingwiki-firestore-tests-'));
+const configPath = join(configDirectory, 'firebase.json');
+writeFileSync(configPath, JSON.stringify({
+  firestore: {
+    rules: join(process.cwd(), 'firestore.rules'),
+    indexes: join(process.cwd(), 'firestore.indexes.json'),
+  },
+  emulators: {
+    firestore: { host: '127.0.0.1', port: firestorePort, websocketPort },
+    hub: { host: '127.0.0.1', port: hubPort },
+    logging: { host: '127.0.0.1', port: loggingPort },
+    ui: { enabled: false },
+  },
+}));
+
 const result = spawnSync(
   'firebase',
   [
     'emulators:exec',
+    '--config',
+    configPath,
     '--project',
     'demo-living-wiki',
     '--only',
@@ -53,4 +82,5 @@ const result = spawnSync(
   },
 );
 
+rmSync(configDirectory, { recursive: true, force: true });
 process.exit(result.status ?? 1);

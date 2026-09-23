@@ -972,18 +972,106 @@ service cloud.firestore {
           || request.resource.data.visibility != 'public'
           || request.resource.data.get('visibility_schema_version', 0) == 1;
       }
-      allow get: if resource.data.visibility in ['public', 'unlisted']
-        || (isSignedIn() && resource.data.owner_user_id == request.auth.uid)
-        || (resource.data.atlas_id is string && canAdminAtlasById(resource.data.atlas_id))
-        || isPlatformAdmin();
-      allow list: if resource.data.visibility == 'public'
-        || (isSignedIn() && resource.data.owner_user_id == request.auth.uid)
-        || isPlatformAdmin();
+      // Keep these checks aligned with the legacy Studio update below. New
+      // clients mark focused saves so they run before broader validators.
+      function validNonceStudioUpdate() {
+        return isSignedIn()
+        && personalBoardMutation()
+        && resource.data.owner_user_id == request.auth.uid
+        && (
+          (
+            request.resource.data.diff(resource.data).affectedKeys().hasAny([
+              'visibility', 'showCardNumbers', 'insideCardsDisplay', 'photoStudioDraft'
+            ])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'title', 'description', 'visibility', 'showCardNumbers',
+              'insideCardsDisplay', 'photoStudioDraft',
+              'socialVideoRenderVersion', 'socialLandscapeVideoRenderVersion',
+              'trailerVideoRenderVersion', 'trailerLandscapeVideoRenderVersion',
+              'trailerVideoSourceFingerprint', 'studioSaveNonce', 'updated_at_iso', 'server_updated_at'
+            ])
+            && request.resource.data.title is string
+            && request.resource.data.title.size() >= 1
+            && request.resource.data.title.size() <= 90
+            && request.resource.data.description is string
+            && request.resource.data.description.size() <= 240
+            && request.resource.data.visibility in ['public', 'unlisted', 'private']
+            && (
+              request.resource.data.visibility in ['public', 'unlisted']
+              || resource.data.kind == 'nearby-gems'
+              || isPlatformAdmin()
+              || hasActivePersonalWikiPlan()
+            )
+            && request.resource.data.get('showCardNumbers', true) is bool
+            && request.resource.data.get('insideCardsDisplay', 'nested') in ['nested', 'alongside']
+            && (
+              !request.resource.data.diff(resource.data).affectedKeys().hasAny(['photoStudioDraft'])
+              || request.resource.data.photoStudioDraft == false
+            )
+            && request.resource.data.socialVideoRenderVersion == ''
+            && request.resource.data.socialLandscapeVideoRenderVersion == ''
+            && request.resource.data.trailerVideoRenderVersion == ''
+            && request.resource.data.trailerLandscapeVideoRenderVersion == ''
+            && request.resource.data.trailerVideoSourceFingerprint == ''
+          )
+          ||
+          (
+            request.resource.data.diff(resource.data).affectedKeys().hasAny([
+              'socialVideoClosingHeadline', 'socialVideoClosingMessage',
+              'socialVideoClosingShowQrCode', 'socialVideoClosingImage',
+              'socialVideoClosingCustomImageUrl', 'socialVideoClosingDurationSeconds'
+            ])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'socialVideoClosingHeadline', 'socialVideoClosingMessage',
+              'socialVideoClosingShowQrCode', 'socialVideoClosingImage',
+              'socialVideoClosingCustomImageUrl', 'socialVideoClosingDurationSeconds',
+              'socialVideoRenderVersion', 'socialLandscapeVideoRenderVersion',
+              'studioSaveNonce', 'updated_at_iso', 'server_updated_at'
+            ])
+            && hasValidSocialVideoClosingScreen(request.resource.data)
+            && request.resource.data.socialVideoRenderVersion == ''
+            && request.resource.data.socialLandscapeVideoRenderVersion == ''
+          )
+          || (
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'title', 'description', 'imageUrl', 'cards',
+              'socialVideoRenderVersion', 'socialLandscapeVideoRenderVersion',
+              'trailerVideoRenderVersion', 'trailerLandscapeVideoRenderVersion',
+              'trailerVideoSourceFingerprint', 'studioSaveNonce', 'updated_at_iso', 'server_updated_at'
+            ])
+            && (
+              resource.data.visibility in ['public', 'unlisted']
+              || isPhotoStudioDraft(resource.data)
+              || isPlatformAdmin()
+              || hasActivePersonalWikiPlan()
+            )
+            && request.resource.data.title is string
+            && request.resource.data.title.size() >= 1
+            && request.resource.data.title.size() <= 90
+            && request.resource.data.description is string
+            && request.resource.data.description.size() <= 240
+            && request.resource.data.imageUrl is string
+            && request.resource.data.imageUrl.size() <= 2500
+            && request.resource.data.cards is list
+            && request.resource.data.cards.size() <= 200
+            && request.resource.data.socialVideoRenderVersion == ''
+            && request.resource.data.socialLandscapeVideoRenderVersion == ''
+            && request.resource.data.trailerVideoRenderVersion == ''
+            && request.resource.data.trailerLandscapeVideoRenderVersion == ''
+            && request.resource.data.trailerVideoSourceFingerprint == ''
+          )
+        )
+        && request.resource.data.updated_at_iso is string
+        && request.resource.data.server_updated_at == request.time;
+      }
 
-      // Voice, music, and visibility are intentionally small updates. In particular,
-      // changing privacy must not re-validate or rewrite every card on a
-      // historical board.
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+      function focusedBoardUpdate() {
+        let affectedKeys = request.resource.data.diff(resource.data).affectedKeys();
+        return (affectedKeys.hasAny(['studioSaveNonce'])
+        && request.resource.data.studioSaveNonce is string
+        && request.resource.data.studioSaveNonce.size() <= 80
+        && validNonceStudioUpdate())
+        || (affectedKeys.hasOnly([
           'stackNarratorVoiceId',
           'visibility',
           'photoStudioDraft',
@@ -1002,19 +1090,19 @@ service cloud.firestore {
         && personalBoardMutation()
         && resource.data.owner_user_id == request.auth.uid
         && (
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['photoStudioDraft'])
+          !affectedKeys.hasAny(['photoStudioDraft'])
           || (request.resource.data.photoStudioDraft == false && request.resource.data.visibility in ['public', 'unlisted'])
         )
         && (
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['parentBoardTitle'])
+          !affectedKeys.hasAny(['parentBoardTitle'])
           || (request.resource.data.parentBoardTitle is string && request.resource.data.parentBoardTitle.size() <= 90)
         )
         && (
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['stackNarratorVoiceId'])
+          !affectedKeys.hasAny(['stackNarratorVoiceId'])
           || isValidStackNarratorVoiceId(request.resource.data.stackNarratorVoiceId)
         )
         && (
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['visibility'])
+          !affectedKeys.hasAny(['visibility'])
           || (
             request.resource.data.visibility in ['public', 'unlisted', 'private']
             && (
@@ -1026,11 +1114,11 @@ service cloud.firestore {
           )
         )
         && (
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          !affectedKeys.hasAny([
             'socialVideoAudioTrackId', 'socialVideoAudioVolume'
           ])
           || (
-            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            affectedKeys.hasOnly([
               'socialVideoAudioTrackId', 'socialVideoAudioVolume',
               'socialVideoRenderVersion', 'socialLandscapeVideoRenderVersion',
               'trailerVideoRenderVersion', 'trailerLandscapeVideoRenderVersion',
@@ -1049,7 +1137,21 @@ service cloud.firestore {
           )
         )
         && request.resource.data.updated_at_iso is string
-        && request.resource.data.server_updated_at == request.time;
+        && request.resource.data.server_updated_at == request.time);
+      }
+
+      allow get: if resource.data.visibility in ['public', 'unlisted']
+        || (isSignedIn() && resource.data.owner_user_id == request.auth.uid)
+        || (resource.data.atlas_id is string && canAdminAtlasById(resource.data.atlas_id))
+        || isPlatformAdmin();
+      allow list: if resource.data.visibility == 'public'
+        || (isSignedIn() && resource.data.owner_user_id == request.auth.uid)
+        || isPlatformAdmin();
+
+      // Voice, music, and visibility are intentionally small updates. In particular,
+      // changing privacy must not re-validate or rewrite every card on a
+      // historical board.
+      allow update: if focusedBoardUpdate();
 
       // Personal board saves use a compact validator so they remain below
       // Firestore's 1,000-expression evaluation limit. City publishing fields
@@ -1402,7 +1504,6 @@ service cloud.firestore {
         && request.resource.data.socialVideoUrl is string
         && request.resource.data.socialVideoUrl.size() >= 1
         && request.resource.data.socialVideoUrl.size() <= 2500
-        && request.resource.data.socialVideoMimeType is string
         && request.resource.data.socialVideoMimeType.matches('video/.*')
         && request.resource.data.socialVideoMimeType.size() <= 120
         && request.resource.data.socialVideoUpdatedAt is string

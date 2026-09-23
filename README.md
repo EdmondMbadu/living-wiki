@@ -133,6 +133,16 @@ firebase login --reauth
 npm run deploy:hosting
 ```
 
+Board-save changes that update both `firestore.rules` and the web client must be
+deployed together:
+
+```bash
+npm run test:firestore-rules
+npm run deploy:board-saves
+```
+
+`deploy:hosting` updates only Hosting; it does not publish Firestore rules.
+
 ### Spotify playback
 
 The Spotify Developer app must allowlist this exact production redirect URI:

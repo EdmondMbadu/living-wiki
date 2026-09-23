@@ -396,6 +396,60 @@ test('owner can revise a 30-second script after video publication without replac
   ));
 });
 
+test('owner can save narration on a richly populated 30-card board', async () => {
+  // Sanitized shape of a real board that previously exhausted Firestore's
+  // 1,000-expression limit. No source narration or account data is retained.
+  const board = JSON.parse(await readFile(new URL('./fixtures/rich-board-shape.json', import.meta.url), 'utf8'));
+  const boardId = board.id;
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'boards', boardId), {
+      ...board, narrationSecondsPerCard: 30,
+      server_updated_at: new Date('2026-09-01T00:00:00.000Z'),
+    });
+  });
+  const editedCards = board.cards.map((card, index) => index === 0
+    ? { ...card, notes: 'Revised narration for card 1.' }
+    : card);
+  const scriptPatch = {
+    ...boardStudioPatch({ ...board, cards: editedCards,
+      socialVideoRenderVersion: '', socialLandscapeVideoRenderVersion: '',
+      trailerVideoRenderVersion: '', trailerLandscapeVideoRenderVersion: '',
+      trailerVideoSourceFingerprint: '',
+      updated_at_iso: '2026-09-23T09:00:00.000Z',
+    }, 'script'),
+    server_updated_at: serverTimestamp(),
+  };
+  await assertFails(updateDoc(doc(testEnvironment.authenticatedContext('another-user').firestore(), 'boards', boardId), scriptPatch));
+  const reference = doc(testEnvironment.authenticatedContext(ownerUid).firestore(), 'boards', boardId);
+  await assertFails(updateDoc(reference, { ...scriptPatch, socialVideoUrl: 'https://example.com/forged.mp4' }));
+  await assertFails(updateDoc(reference, { ...scriptPatch, owner_user_id: 'another-user' }));
+  await assertSucceeds(updateDoc(reference, scriptPatch));
+  const studioKinds = ['cover', 'fresh-narration', 'cards', 'settings', 'final-screen'];
+  for (const [index, kind] of studioKinds.entries()) {
+    await assertSucceeds(updateDoc(reference, {
+      ...boardStudioPatch({ ...board, cards: editedCards,
+        socialVideoRenderVersion: '', socialLandscapeVideoRenderVersion: '',
+        trailerVideoRenderVersion: '', trailerLandscapeVideoRenderVersion: '',
+        trailerVideoSourceFingerprint: '',
+        updated_at_iso: `2026-09-23T10:0${index}:00.000Z`,
+      }, kind),
+      server_updated_at: serverTimestamp(),
+    }));
+  }
+  await assertSucceeds(updateDoc(reference, {
+    ...boardVoicePreferencePatch('calm-documentary', '2026-09-23T10:00:00.000Z'),
+    server_updated_at: serverTimestamp(),
+  }));
+  await assertSucceeds(updateDoc(reference, {
+    ...boardAudioPreferencePatch('none', 0.2, '2026-09-23T11:00:00.000Z'),
+    server_updated_at: serverTimestamp(),
+  }));
+  const saved = (await getDoc(reference)).data();
+  assert.equal(saved.cards.length, 30);
+  assert.equal(saved.cards[0].notes, 'Revised narration for card 1.');
+  assert.equal(saved.narrationSecondsPerCard, 30);
+});
+
 test('all small Studio saves work on a published board and preserve unrelated fields', async () => {
   const boardId = 'published-studio-edits';
   const ownerDatabase = testEnvironment.authenticatedContext(ownerUid).firestore();
@@ -1338,6 +1392,9 @@ for (const kind of ['full', 'trailer']) {
       await assertFails(updateDoc(ownerRef, { ...update, [`${prefix}VideoUrl`]: 'https://example.test/changed.mp4', visibility: visibility === 'private' ? 'public' : 'private' }));
       await assertFails(updateDoc(ownerRef, { ...update, [`${prefix}VideoUrl`]: 123 }));
       await assertFails(updateDoc(ownerRef, { ...update, [`${prefix}VideoAudioVolume`]: 0.9 }));
+      if (kind === 'full') {
+        await assertFails(updateDoc(ownerRef, { ...update, socialVideoMimeType: 123 }));
+      }
 
       // Deleting from My Videos must also work with callable-written fields present.
       const clear = {

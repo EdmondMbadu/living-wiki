@@ -41,7 +41,10 @@ describe('board Studio persistence contracts', () => {
       expect(patch['socialVideoUrl']).toBeUndefined();
       expect(patch['legacy_board_field']).toBeUndefined();
       expect(patch['updated_at_iso']).toBe(record['updated_at_iso']);
+      expect(patch['studioSaveNonce']).toMatch(/^[0-9a-f-]{36}$/);
     }
+    expect(new Set([script, cover, fresh, cards, settings, finalScreen]
+      .map((patch) => patch['studioSaveNonce'])).size).toBe(6);
   });
 
   it('invalidates every video version when music changes without sending video URLs', () => {

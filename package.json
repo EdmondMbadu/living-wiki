@@ -16,6 +16,7 @@
     "ios:sync": "npx cap sync ios",
     "build:hosting": "npm run i18n:check && ng build --configuration production && node scripts/prepare-hosting-runtime-config.mjs && node scripts/check-board-performance.mjs",
     "deploy:hosting": "npm run build:hosting && firebase deploy --only hosting",
+    "deploy:board-saves": "npm run build:hosting && firebase deploy --only firestore:rules,hosting",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:firestore-rules": "node scripts/run-firestore-rule-tests.mjs",
