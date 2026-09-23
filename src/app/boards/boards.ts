@@ -15620,8 +15620,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       updatedAt: now,
     };
     try {
-      const saved = await this.persistAndReplaceBoard(nextBoard);
-      if (!saved) throw new Error('The script could not be synchronized. Your draft is still here.');
+      const saved = await this.persistAndReplaceBoard(nextBoard, 'script');
+      if (!saved) {
+        const reason = this.boardsSyncError();
+        throw new Error(`The script could not be synchronized. Your draft is still here.${reason ? ` ${reason}` : ''}`);
+      }
       for (const ratio of ['vertical', 'landscape'] as const) {
         this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(board.id, ratio));
         this.publishedStackTrailerFiles.delete(this.stackPublishedFileKey(board.id, ratio));
@@ -22179,13 +22182,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private async persistAndReplaceBoard(board: Board): Promise<boolean> {
+  private async persistAndReplaceBoard(board: Board, kind: 'full' | 'script' = 'full'): Promise<boolean> {
     if (!this.canEditBoard(board)) {
       this.boardsSyncError.set($localize`Only the board owner can save changes.`);
       return false;
     }
     try {
-      const persisted = await this.persistBoard(board);
+      const persisted = kind === 'script' ? await this.persistBoardScript(board) : await this.persistBoard(board);
       this.boards.update((boards) => boards.map((item) => {
         if (item.id !== persisted.id) return item;
         // A later edit may have happened while images or Firestore were saving.
@@ -22281,6 +22284,37 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     // The board may have changed while rendering. Keep those edits in local state too.
     const current = this.boards().find((item) => item.id === board.id) ?? board;
     return { ...current, ...patch };
+  }
+
+  private async persistBoardScript(board: Board): Promise<Board> {
+    if (board.teamId || this.teamContextId()) return this.persistBoard(board);
+    const uid = this.authService.uid();
+    if (!uid || board.ownerUserId !== uid) {
+      throw new Error('Only the board owner can save a script.');
+    }
+    if (!this.firestore) throw new Error('Board sync is not ready. Refresh and try again.');
+    return this.queueBoardWrite(board.id, async () => {
+      const { prepared, persistable } = await this.prepareBoardForFirestore(board, uid);
+      await updateDoc(doc(this.firestore!, 'boards', board.id), {
+        title: persistable['title'],
+        description: persistable['description'],
+        imageUrl: persistable['imageUrl'],
+        cards: persistable['cards'],
+        socialVideoRenderVersion: persistable['socialVideoRenderVersion'],
+        socialLandscapeVideoRenderVersion: persistable['socialLandscapeVideoRenderVersion'],
+        trailerVideoRenderVersion: persistable['trailerVideoRenderVersion'],
+        trailerLandscapeVideoRenderVersion: persistable['trailerLandscapeVideoRenderVersion'],
+        trailerVideoSourceFingerprint: persistable['trailerVideoSourceFingerprint'],
+        updated_at_iso: persistable['updated_at_iso'],
+        server_updated_at: serverTimestamp(),
+      });
+      return {
+        ...board,
+        description: prepared.description,
+        imageUrl: prepared.imageUrl,
+        cards: prepared.cards,
+      };
+    });
   }
 
   private async persistBoard(board: Board): Promise<Board> {

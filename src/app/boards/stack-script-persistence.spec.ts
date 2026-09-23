@@ -24,7 +24,7 @@ function harness(records: any[] = [{ id: 'room', title: 'Kitchen', notes: fullSc
     stackScriptLengthSourceNarrations: signal(Object.fromEntries(cards.map((card: any) => [card.id, card.stackNarrationSource || c.persistedStackCardNarrationText(card)]))),
     stackScriptShortening: signal(false), stackScriptShortenMenuOpen: signal(false),
     stackScriptShortenUndoNarrations: signal(null), stackScriptShortenNotice: signal(null),
-    stackScriptError: signal(null), stackScriptSaving: signal(false), stackCoverSaving: signal(false),
+    stackScriptError: signal(null), boardsSyncError: signal(null), stackScriptSaving: signal(false), stackCoverSaving: signal(false),
     stackScriptBoardTitle: signal('Home'), stackScriptBoardDescription: signal(''), stackCoverImageDraft: signal(''),
     stackScriptOriginalSnapshot: signal(''), stackScriptSavedAt: signal(''),
     publishedStackVideoFiles: new Map(), publishedStackTrailerFiles: new Map(),
@@ -55,6 +55,7 @@ describe('script adjustment persistence', () => {
     await c.shortenEntireStackScript(1);
     expect(c.stackScriptCardDrafts().room.narration).toBe('The kitchen opens to the dining room.');
     expect(await c.saveStackScript(c.stackBoard())).toBeTrue();
+    expect(c.persistAndReplaceBoard).toHaveBeenCalledWith(jasmine.any(Object), 'script');
     const saved = c.stackBoard();
     expect(saved.cards[0].stackNarrationSource).toBe(fullScript);
     expect(saved.cards[0].videoNarrationRevision).toBe(1);
@@ -112,8 +113,10 @@ describe('script adjustment persistence', () => {
     const c = harness();
     await c.shortenEntireStackScript(1);
     c.persistAndReplaceBoard.and.resolveTo(false);
+    c.boardsSyncError.set('Firebase denied the save (permission-denied).');
     expect(await c.saveStackScript(c.stackBoard())).toBeFalse();
     expect(c.stackScriptError()).toContain('draft is still here');
+    expect(c.stackScriptError()).toContain('permission-denied');
     expect(c.stackScriptLengthSourceNarrations().room).toBe(fullScript);
     expect(c.stackScriptSaving()).toBeFalse();
   });

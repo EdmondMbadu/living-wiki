@@ -345,6 +345,53 @@ test('board narration length accepts supported timing and rejects out-of-range v
   }
 });
 
+test('owner can revise a 30-second script after video publication without replacing video metadata', async () => {
+  const boardId = 'published-script-board';
+  const boardReference = doc(testEnvironment.authenticatedContext(ownerUid).firestore(), 'boards', boardId);
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'boards', boardId), personalWizardBoard({
+      id: boardId,
+      narrationSecondsPerCard: 30,
+      socialVideoUrl: 'https://example.com/full.mp4',
+      socialVideoMimeType: 'video/mp4',
+      socialVideoRenderVersion: 'stack-video-v14',
+      trailerVideoUrl: 'https://example.com/trailer.mp4',
+      trailerVideoMimeType: 'video/mp4',
+      trailerVideoRenderVersion: 'stack-trailer-v1',
+      trailerVideoScript: 'A published trailer script.',
+      trailerVideoSourceFingerprint: 'original-fingerprint',
+      legacy_board_field: 'preserve me',
+      cards: [{ id: 'case-1', title: 'The case', notes: 'Original narration.' }],
+      server_updated_at: new Date('2026-09-23T00:00:00.000Z'),
+    }));
+  });
+
+  const narration = 'A revised account of the case. '.repeat(30).trim();
+  const scriptPatch = {
+    cards: [{ id: 'case-1', title: 'The case', notes: narration }],
+    socialVideoRenderVersion: '',
+    socialLandscapeVideoRenderVersion: '',
+    trailerVideoRenderVersion: '',
+    trailerLandscapeVideoRenderVersion: '',
+    trailerVideoSourceFingerprint: '',
+    updated_at_iso: '2026-09-23T01:00:00.000Z',
+    server_updated_at: serverTimestamp(),
+  };
+  await assertSucceeds(updateDoc(boardReference, scriptPatch));
+  const saved = (await assertSucceeds(getDoc(boardReference))).data();
+  assert.equal(saved.cards[0].notes, narration);
+  assert.equal(saved.narrationSecondsPerCard, 30);
+  assert.equal(saved.socialVideoUrl, 'https://example.com/full.mp4');
+  assert.equal(saved.trailerVideoUrl, 'https://example.com/trailer.mp4');
+  assert.equal(saved.legacy_board_field, 'preserve me');
+
+  await assertFails(updateDoc(boardReference, { ...scriptPatch, socialVideoUrl: 'https://example.com/replaced.mp4' }));
+  await assertFails(updateDoc(
+    doc(testEnvironment.authenticatedContext('another-user').firestore(), 'boards', boardId),
+    scriptPatch,
+  ));
+});
+
 test('board narrator accepts stable personal voice references and rejects malformed references', async () => {
   await testEnvironment.withSecurityRulesDisabled(async (context) => {
     await setDoc(

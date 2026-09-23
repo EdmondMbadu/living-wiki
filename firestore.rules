@@ -1413,6 +1413,41 @@ service cloud.firestore {
         && request.resource.data.updated_at_iso is string
         && request.resource.data.server_updated_at == request.time;
 
+      // Script edits preserve published video URLs and all legacy board fields.
+      // The render versions are cleared so the next export uses the new words.
+      allow update: if isSignedIn()
+        && personalBoardMutation()
+        && resource.data.owner_user_id == request.auth.uid
+        && request.resource.data.owner_user_id == resource.data.owner_user_id
+        && (
+          resource.data.visibility in ['public', 'unlisted']
+          || isPhotoStudioDraft(resource.data)
+          || isPlatformAdmin()
+          || hasActivePersonalWikiPlan()
+        )
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'title', 'description', 'imageUrl', 'cards',
+          'socialVideoRenderVersion', 'socialLandscapeVideoRenderVersion',
+          'trailerVideoRenderVersion', 'trailerLandscapeVideoRenderVersion',
+          'trailerVideoSourceFingerprint', 'updated_at_iso', 'server_updated_at'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 1
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 240
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() <= 2500
+        && request.resource.data.cards is list
+        && request.resource.data.cards.size() <= 200
+        && request.resource.data.socialVideoRenderVersion == ''
+        && request.resource.data.socialLandscapeVideoRenderVersion == ''
+        && request.resource.data.trailerVideoRenderVersion == ''
+        && request.resource.data.trailerLandscapeVideoRenderVersion == ''
+        && request.resource.data.trailerVideoSourceFingerprint == ''
+        && request.resource.data.updated_at_iso is string
+        && request.resource.data.server_updated_at == request.time;
+
       allow create, update: if isSignedIn()
         && personalBoardMutation()
         && (
