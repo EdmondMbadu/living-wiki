@@ -1,17 +1,22 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, HostListener, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { httpsCallable } from 'firebase/functions';
+import { doc, getDoc } from 'firebase/firestore';
 import { AuthService } from '../auth.service';
-import { getFirebaseFunctions } from '../firebase.client';
+import { getFirebaseFirestore, getFirebaseFunctions } from '../firebase.client';
 import { WorkspaceNavigationService } from '../workspace-navigation/workspace-navigation';
+import { KiwiBoardRefreshService } from './kiwi-board-refresh.service';
 import kiwiVoices from '../../../functions/src/kiwi-voices.json';
 
 type KiwiMessage = { id: number; role: 'user' | 'assistant'; text: string };
-type KiwiProposal = { id: string; summary: string; details?: string[]; kind: string; cards?: string[]; visibility?: string; workspace: string };
+type KiwiCardDraft = { title: string; subtitle: string; notes: string; type: string };
+type KiwiBoardDraft = { kind: 'create_board'; title: string; description: string; tone: string; visibility: string; cards: KiwiCardDraft[] };
+type KiwiProposal = { id: string; summary: string; details?: string[]; kind: string; cards?: string[]; visibility?: string; workspace: string; draft?: KiwiBoardDraft };
 type KiwiTalkResponse = { reply: string; proposal?: KiwiProposal };
 type KiwiApplyResponse = { boardId: string; applied: boolean };
-type VoiceResult = { results: ArrayLike<ArrayLike<{ transcript: string }>> };
+type KiwiStreamEvent = { type: 'started' | 'draft'; draft?: KiwiBoardDraft };
+type VoiceResult = { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal?: boolean }> };
 type VoicePhase = 'idle' | 'listening' | 'thinking' | 'speaking' | 'review';
 type BrowserRecognition = {
   lang: string;
@@ -37,8 +42,11 @@ type RecognitionWindow = Window & {
 export class KiwiComponent {
   private readonly auth = inject(AuthService);
   private readonly navigation = inject(WorkspaceNavigationService);
+  private readonly boardRefresh = inject(KiwiBoardRefreshService);
+  private readonly router = inject(Router);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly functions = this.isBrowser ? getFirebaseFunctions() : null;
+  private readonly firestore = this.isBrowser ? getFirebaseFirestore() : null;
   private recognition: BrowserRecognition | null = null;
   private nextMessageId = 1;
   private loadedForUid = '';
@@ -48,10 +56,13 @@ export class KiwiComponent {
   private voiceTurnTimer: ReturnType<typeof setTimeout> | null = null;
   private voiceCommittedTranscript = '';
   private recognitionTranscript = '';
-  private creationPreviewTimer: ReturnType<typeof setInterval> | null = null;
   private audio: HTMLAudioElement | null = null;
   private audioUrl = '';
+  private speechAbort: AbortController | null = null;
+  private talkAbort: AbortController | null = null;
   private speechRequestId = 0;
+  private studioDirty = new Set<string>();
+  private streamSequence = 0;
 
   readonly open = signal(false);
   readonly name = signal('Kiwi');
@@ -76,9 +87,11 @@ export class KiwiComponent {
   readonly voicePhase = signal<VoicePhase>('idle');
   readonly voiceTranscript = signal('');
   readonly planningCreation = signal(false);
-  readonly previewCardCount = signal(0);
-  readonly savingCreation = signal(false);
-  readonly creationSaved = signal(false);
+  readonly boardAwaitingOpen = signal('');
+  readonly studioOpen = signal(false);
+  readonly studioDraft = signal<KiwiBoardDraft | null>(null);
+  readonly studioReady = signal(false);
+  readonly studioMessage = signal('');
   readonly signedIn = this.auth.isAuthenticated;
   readonly currentUrl = this.navigation.currentUrl;
   readonly scope = computed(() => {
@@ -126,11 +139,8 @@ export class KiwiComponent {
       const nextKey = `${teamId}:${boardId}`;
       if (nextKey === this.scopeKey) return;
       this.scopeKey = nextKey;
-      this.stopVoiceSession();
-      this.messages.set([]);
-      this.proposal.set(null);
-      this.resetCreationPreview();
-      this.error.set('');
+      // The voice connection lives at the app shell. Route changes update the
+      // action scope but must not end the conversation or discard its draft.
     });
     effect(() => {
       this.messages();
@@ -146,7 +156,7 @@ export class KiwiComponent {
   }
 
   @HostListener('window:keydown.escape')
-  onEscape(): void { if (this.settingsOpen()) this.closeSettings(); else if (this.open()) this.close(); }
+  onEscape(): void { if (this.settingsOpen()) this.closeSettings(); else if (this.studioOpen()) this.studioOpen.set(false); else if (this.open()) this.close(); }
 
   toggle(): void {
     if (this.open()) { this.close(); return; }
@@ -161,8 +171,11 @@ export class KiwiComponent {
   }
 
   close(): void {
+    this.talkAbort?.abort();
+    this.streamSequence++;
     this.stopVoiceSession();
-    this.resetCreationPreview();
+    this.planningCreation.set(false);
+    this.studioOpen.set(false);
     this.open.set(false);
     this.closeSettings();
     if (this.isBrowser) window.requestAnimationFrame(() => {
@@ -171,6 +184,16 @@ export class KiwiComponent {
   }
 
   setDraft(event: Event): void { this.draft.set((event.target as HTMLTextAreaElement).value); }
+  setStudioMessage(event: Event): void { this.studioMessage.set((event.target as HTMLInputElement).value); }
+  onStudioMessageKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') { event.preventDefault(); void this.sendStudioMessage(); }
+  }
+  async sendStudioMessage(): Promise<void> {
+    const message = this.studioMessage().trim();
+    if (!message || this.busy() || this.applying()) return;
+    this.studioMessage.set('');
+    await this.send(message);
+  }
   setMode(mode: 'voice' | 'chat'): void {
     if (mode === this.mode()) return;
     this.stopVoiceSession();
@@ -274,53 +297,156 @@ export class KiwiComponent {
     }
   }
 
+  private mergeStudioDraft(incoming: KiwiBoardDraft): void {
+    const previous = this.studioDraft();
+    const preserve = (key: string, oldValue: string, newValue: string) =>
+      this.studioDirty.has(key) ? oldValue : newValue;
+    const cards = this.studioDirty.has('cards') && previous ? previous.cards : incoming.cards.slice(0, 12).map((card, index) => {
+      const old = previous?.cards[index];
+      return {
+        title: preserve(`card.${index}.title`, old?.title || '', card.title),
+        subtitle: preserve(`card.${index}.subtitle`, old?.subtitle || '', card.subtitle),
+        notes: preserve(`card.${index}.notes`, old?.notes || '', card.notes),
+        type: preserve(`card.${index}.type`, old?.type || 'note', card.type),
+      };
+    });
+    this.studioDraft.set({ kind: 'create_board',
+      title: preserve('title', previous?.title || '', incoming.title),
+      description: preserve('description', previous?.description || '', incoming.description),
+      tone: preserve('tone', previous?.tone || 'teal', incoming.tone),
+      visibility: this.scope().teamId ? 'private'
+        : preserve('visibility', previous?.visibility || 'public', incoming.visibility),
+      cards });
+  }
+
+  setStudioField(field: 'title' | 'description' | 'tone' | 'visibility', event: Event): void {
+    const previous = this.studioDraft();
+    if (!previous) return;
+    const next = (event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value;
+    this.studioDirty.add(field);
+    this.studioDraft.set({ ...previous, [field]: next });
+  }
+
+  chooseStudioBoardType(event: Event): void {
+    const choice = (event.target as HTMLSelectElement).value;
+    if (choice !== 'wizard') return;
+    this.close();
+    this.proposal.set(null);
+    void this.router.navigateByUrl('/boards?create=choose');
+  }
+
+  setStudioCardField(index: number, field: keyof KiwiCardDraft, event: Event): void {
+    const previous = this.studioDraft();
+    if (!previous || !previous.cards[index]) return;
+    const next = (event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value;
+    this.studioDirty.add(`card.${index}.${field}`);
+    this.studioDraft.set({ ...previous, cards: previous.cards.map((card, cardIndex) =>
+      cardIndex === index ? { ...card, [field]: next } : card) });
+  }
+
+  addStudioCard(): void {
+    const previous = this.studioDraft();
+    if (!previous || previous.cards.length >= 12) return;
+    this.studioDraft.set({ ...previous, cards: [...previous.cards,
+      { title: 'New card', subtitle: '', notes: '', type: 'note' }] });
+    this.studioDirty.add('cards');
+  }
+
+  removeStudioCard(index: number): void {
+    const previous = this.studioDraft();
+    if (!previous) return;
+    this.studioDraft.set({ ...previous, cards: previous.cards.filter((_, cardIndex) => cardIndex !== index) });
+    this.studioDirty.add('cards');
+  }
+
   async send(prefill?: string, byVoice = false): Promise<void> {
     const text = (prefill || this.draft()).trim();
-    if (!text || this.busy() || !this.signedIn() || !this.functions) return;
+    if (!text || this.busy() || this.applying() || this.boardAwaitingOpen() || !this.signedIn() || !this.functions) return;
+    const controller = new AbortController();
+    this.talkAbort = controller;
+    const currentDraft = this.proposal()?.kind === 'create_board' ? this.studioDraft() : null;
+    const creating = /\b(create|make|build|design|draft)\b/i.test(text)
+      && /\b(board|menu|list|wiki)\b/i.test(text);
+    const sequence = ++this.streamSequence;
     const history = this.messages().slice(-8).map(({ role, text: content }) => ({ role, text: content }));
     this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
     this.draft.set('');
-    this.proposal.set(null);
-    this.resetCreationPreview();
-    this.planningCreation.set(/\b(create|make|build|design|draft)\b/i.test(text)
-      && /\b(board|menu|list|wiki)\b/i.test(text));
+    if (!currentDraft) {
+      this.proposal.set(null);
+      this.planningCreation.set(false);
+    }
+    this.planningCreation.set(creating || !!currentDraft);
+    if (creating && !currentDraft) {
+      this.boardAwaitingOpen.set('');
+      this.studioDirty.clear();
+      this.studioDraft.set({ kind: 'create_board', title: 'New board', description: '', tone: 'teal',
+        visibility: this.scope().teamId ? 'private' : 'public', cards: [] });
+      this.studioReady.set(false);
+      this.studioOpen.set(true);
+    }
     this.busy.set(true);
     if (byVoice) this.voicePhase.set('thinking');
     this.error.set('');
+    if (byVoice && (creating || currentDraft)) void this.speak(currentDraft
+      ? 'I’ll update the draft on your screen.' : 'I’ll start the board on your screen.');
     try {
       const callable = httpsCallable<{
         message: string; history: Array<{ role: string; text: string }>;
-        teamId: string; boardId: string;
-      }, KiwiTalkResponse>(this.functions, 'kiwiTalk');
-      const { data } = await callable({ message: text, history, teamId: this.scope().teamId, boardId: this.scope().boardId });
+        teamId: string; boardId: string; currentDraft?: KiwiBoardDraft;
+      }, KiwiTalkResponse, KiwiStreamEvent>(this.functions, 'kiwiTalk');
+      const { stream, data: finalData } = await callable.stream({ message: text, history,
+        teamId: this.scope().teamId, boardId: this.scope().boardId,
+        ...(currentDraft ? { currentDraft } : {}) }, { signal: controller.signal });
+      for await (const event of stream) {
+        if (sequence !== this.streamSequence) break;
+        if (event.type === 'draft' && event.draft) {
+          this.mergeStudioDraft(event.draft);
+          this.studioOpen.set(true);
+        }
+      }
+      const data = await finalData;
+      if (sequence !== this.streamSequence) return;
       this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: data.reply }]);
-      this.proposal.set(data.proposal || null);
-      if (data.proposal?.kind === 'create_board' && data.proposal.cards?.length) this.revealCreationPreview(data.proposal);
+      if (data.proposal) this.proposal.set(data.proposal);
+      else if (!currentDraft) this.proposal.set(null);
+      if (data.proposal?.kind === 'create_board' && data.proposal.draft) {
+        this.mergeStudioDraft(data.proposal.draft);
+        this.studioOpen.set(true);
+        this.studioReady.set(true);
+      } else if (creating && !currentDraft) {
+        this.studioReady.set(false);
+      }
       if (byVoice && this.voiceActive()) void this.speak(data.proposal
-        ? `${data.reply} Please review the proposed change on screen and tap Apply when you are ready.`
+        ? `${data.reply} Please review the draft on screen. You can keep talking or create it when you are ready.`
         : data.reply);
     } catch (error) {
+      if (sequence !== this.streamSequence || controller.signal.aborted) return;
       this.error.set(this.errorText(error, 'Kiwi could not answer. Please try again.'));
-      if (byVoice) this.stopVoiceSession();
+      if (byVoice && this.voiceActive()) this.scheduleListening();
     } finally {
+      if (this.talkAbort === controller) this.talkAbort = null;
       this.busy.set(false);
       this.planningCreation.set(false);
-      if (byVoice && this.voiceActive() && !this.speaking() && !this.proposal()) this.scheduleListening();
+      if (byVoice && this.voiceActive() && !this.speaking()) this.scheduleListening();
     }
   }
 
   async apply(): Promise<void> {
     const proposal = this.proposal();
     if (!proposal || this.applying() || !this.functions) return;
-    this.stopVoiceSession();
+    if (this.voiceTurnTimer) clearTimeout(this.voiceTurnTimer);
+    this.voiceTurnTimer = null;
+    this.voiceCommittedTranscript = '';
+    this.recognitionTranscript = '';
+    this.voiceTranscript.set('');
+    if (this.recognition) {
+      const recognition = this.recognition;
+      this.recognition = null;
+      recognition.stop();
+      this.listening.set(false);
+    }
     this.applying.set(true);
     const creatingBoard = proposal.kind === 'create_board';
-    if (creatingBoard) {
-      this.savingCreation.set(true);
-      this.creationSaved.set(false);
-      this.previewCardCount.set(proposal.cards?.length || 0);
-    }
-    const minimumReveal = creatingBoard ? new Promise<void>((resolve) => setTimeout(resolve, 900)) : null;
     this.error.set('');
     try {
       if (proposal.kind === 'email_board') {
@@ -330,28 +456,55 @@ export class KiwiComponent {
         this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: 'Email sent.' }]);
         return;
       }
-      const callable = httpsCallable<{ proposalId: string }, KiwiApplyResponse>(this.functions, 'kiwiApply');
-      const { data } = await callable({ proposalId: proposal.id });
-      if (minimumReveal) await minimumReveal;
-      if (creatingBoard) {
-        this.savingCreation.set(false);
-        this.creationSaved.set(true);
-      } else this.proposal.set(null);
-      this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: 'Saved. Opening your board now.' }]);
+      const draft = creatingBoard ? this.studioDraft() : null;
+      if (creatingBoard && (!draft || !draft.title.trim() || draft.cards.some((card) => !card.title.trim()))) {
+        this.error.set('Give the board and every card a title before creating it.');
+        return;
+      }
+      let boardId = this.boardAwaitingOpen();
+      if (!boardId) {
+        const callable = httpsCallable<{ proposalId: string; draft?: KiwiBoardDraft }, KiwiApplyResponse>(this.functions, 'kiwiApply');
+        const { data } = await callable({ proposalId: proposal.id, ...(draft ? { draft } : {}) });
+        boardId = data.boardId;
+        this.boardAwaitingOpen.set(boardId);
+      }
+      const readback = httpsCallable<{ boardId: string; teamId: string }, { boardId: string; title: string }>(this.functions, 'kiwiReadback');
+      await readback({ boardId, teamId: this.scope().teamId });
+      if (!this.scope().teamId && this.firestore) {
+        const snapshot = await getDoc(doc(this.firestore, 'boards', boardId));
+        if (!snapshot.exists() || snapshot.data()['owner_user_id'] !== this.auth.uid())
+          throw new Error('The board was saved, but it is not visible to your account yet. Try opening it again.');
+      }
       const path = this.scope().teamId
-        ? `/teams/${encodeURIComponent(this.scope().teamId)}/listings/${encodeURIComponent(data.boardId)}/edit`
-        : `/boards/${encodeURIComponent(data.boardId)}`;
-      if (creatingBoard) await new Promise<void>((resolve) => setTimeout(resolve, 450));
-      if (this.isBrowser) window.location.assign(path);
+        ? `/teams/${encodeURIComponent(this.scope().teamId)}/listings/${encodeURIComponent(boardId)}/edit`
+        : `/boards/${encodeURIComponent(boardId)}`;
+      this.boardRefresh.notify(boardId);
+      const opened = this.router.url.split('?')[0] === path ? true : await this.router.navigateByUrl(path);
+      if (!opened) throw new Error('The board was saved, but the editor could not open. Please try opening it from your boards.');
+      if (creatingBoard || proposal.kind === 'copy_board') await this.waitForBoardRendered(boardId);
+      this.boardAwaitingOpen.set('');
+      this.proposal.set(null);
+      this.studioOpen.set(false);
+      this.studioDraft.set(null);
+      const confirmation = creatingBoard || proposal.kind === 'copy_board'
+        ? 'Your board is created and open.' : 'Your changes are saved and the board is open.';
+      this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: confirmation }]);
+      if (this.voiceActive()) void this.speak(`${confirmation} What would you like to change or add?`);
     } catch (error) {
-      this.savingCreation.set(false);
       this.error.set(this.errorText(error, 'The change could not be saved. Ask Kiwi to review it again.'));
-    } finally { this.applying.set(false); }
+    } finally {
+      this.applying.set(false);
+      if (this.voiceActive() && !this.speaking()) this.scheduleListening();
+    }
   }
 
   dismissProposal(): void {
     this.proposal.set(null);
-    this.resetCreationPreview();
+    this.boardAwaitingOpen.set('');
+    this.studioOpen.set(false);
+    this.studioDraft.set(null);
+    this.studioDirty.clear();
+    this.planningCreation.set(false);
     if (this.voicePhase() === 'review') this.voicePhase.set('idle');
   }
 
@@ -375,12 +528,14 @@ export class KiwiComponent {
     recognition.continuous = true;
     recognition.onresult = (event) => {
       if (!this.voiceActive() || this.recognition !== recognition) return;
-      this.recognitionTranscript = Array.from(event.results)
+      const results = Array.from(event.results);
+      this.recognitionTranscript = results
         .map((result) => result[0]?.transcript?.trim() || '').filter(Boolean).join(' ');
       const transcript = [this.voiceCommittedTranscript, this.recognitionTranscript].filter(Boolean).join(' ').trim();
       if (!transcript) return;
       this.voiceTranscript.set(transcript);
-      this.scheduleVoiceTurn();
+      if (results[results.length - 1]?.isFinal) this.scheduleVoiceTurn(1100);
+      else if (this.voiceTurnTimer) { clearTimeout(this.voiceTurnTimer); this.voiceTurnTimer = null; }
     };
     recognition.onerror = (event) => {
       if (event.error === 'no-speech' || event.error === 'aborted') return;
@@ -396,6 +551,7 @@ export class KiwiComponent {
       if (this.recognitionTranscript) this.voiceCommittedTranscript =
         [this.voiceCommittedTranscript, this.recognitionTranscript].filter(Boolean).join(' ');
       this.recognitionTranscript = '';
+      if (this.voiceCommittedTranscript && !this.voiceTurnTimer && !this.busy()) this.scheduleVoiceTurn(1100);
       if (this.voiceActive() && !this.busy() && !this.speaking()) this.scheduleListening();
     };
     try {
@@ -416,17 +572,17 @@ export class KiwiComponent {
     }, 300);
   }
 
-  private scheduleVoiceTurn(): void {
+  private scheduleVoiceTurn(delayMs: number): void {
     if (this.voiceTurnTimer) clearTimeout(this.voiceTurnTimer);
     this.voiceTurnTimer = setTimeout(() => {
       this.voiceTurnTimer = null;
       this.finishVoiceTurn();
-    }, 2400);
+    }, delayMs);
   }
 
   finishVoiceTurn(): void {
     const transcript = this.voiceTranscript().trim();
-    if (!transcript || !this.voiceActive() || this.busy()) return;
+    if (!transcript || !this.voiceActive() || this.busy() || this.applying()) return;
     if (this.voiceTurnTimer) clearTimeout(this.voiceTurnTimer);
     this.voiceTurnTimer = null;
     if (this.recognitionRestartTimer) clearTimeout(this.recognitionRestartTimer);
@@ -439,6 +595,10 @@ export class KiwiComponent {
     this.voiceTranscript.set('');
     this.listening.set(false);
     this.voicePhase.set('thinking');
+    if (this.proposal() && /^(?:yes[, ]+)?(?:create|save|apply)(?: it| this board| the board| this change)(?: now)?[.!]?$/i.test(transcript)) {
+      void this.apply();
+      return;
+    }
     void this.send(transcript, true);
   }
 
@@ -469,29 +629,103 @@ export class KiwiComponent {
       this.releaseAudio();
       this.speaking.set(false);
       if (!this.voiceActive()) return;
-      if (this.proposal()) {
-        this.voiceActive.set(false);
-        this.voicePhase.set('review');
-      } else this.scheduleListening();
+      this.scheduleListening();
     };
     try {
-      const callable = httpsCallable<{ voiceId: string; text: string }, { audio: string }>(this.functions, 'kiwiSpeak');
-      const { data } = await callable({ voiceId: this.voiceId(), text });
-      if (requestId !== this.speechRequestId || !this.voiceActive()) return;
-      await this.playAudio(data.audio, requestId, finished, () => {
-        if (requestId !== this.speechRequestId) return;
-        this.stopVoiceSession();
-        this.error.set('Kiwi’s voice could not play. You can continue in Chat.');
-      });
+      if (typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported('audio/mpeg')) {
+        try { await this.playStreamedSpeech(text, requestId, finished); }
+        catch (streamError) {
+          if (requestId !== this.speechRequestId || !this.voiceActive()) return;
+          if (this.audio && this.audio.currentTime > 0) throw streamError;
+          this.releaseAudio();
+          await this.playCompleteSpeech(text, requestId, finished);
+        }
+      } else {
+        await this.playCompleteSpeech(text, requestId, finished);
+      }
     } catch (error) {
       if (requestId !== this.speechRequestId) return;
-      this.stopVoiceSession();
+      this.releaseAudio();
+      this.speaking.set(false);
       this.error.set(this.errorText(error, 'Kiwi could not speak. You can continue in Chat.'));
+      this.scheduleListening();
     }
+  }
+
+  private async playCompleteSpeech(text: string, requestId: number, finished: () => void): Promise<void> {
+    if (!this.functions) return;
+    const callable = httpsCallable<{ voiceId: string; text: string }, { audio: string }>(this.functions, 'kiwiSpeak');
+    const { data } = await callable({ voiceId: this.voiceId(), text });
+    if (requestId !== this.speechRequestId || !this.voiceActive()) return;
+    await this.playAudio(data.audio, requestId, finished, () => {
+      if (requestId !== this.speechRequestId) return;
+      this.releaseAudio();
+      this.speaking.set(false);
+      this.error.set('Kiwi’s voice could not play. You can continue talking or choose Chat.');
+      this.scheduleListening();
+    });
+  }
+
+  private async playStreamedSpeech(text: string, requestId: number, finished: () => void): Promise<void> {
+    if (!this.functions) return;
+    const controller = new AbortController();
+    this.speechAbort = controller;
+    const source = new MediaSource();
+    const url = URL.createObjectURL(source);
+    this.audioUrl = url;
+    const audio = new Audio(url);
+    this.audio = audio;
+    audio.onended = finished;
+    audio.onerror = () => {
+      if (requestId !== this.speechRequestId) return;
+      this.releaseAudio();
+      this.speaking.set(false);
+      this.error.set('Kiwi’s voice could not play. You can continue talking or choose Chat.');
+      this.scheduleListening();
+    };
+    const bufferReady = new Promise<SourceBuffer>((resolve, reject) => {
+      source.addEventListener('sourceopen', () => {
+        try { resolve(source.addSourceBuffer('audio/mpeg')); } catch (error) { reject(error); }
+      }, { once: true });
+      source.addEventListener('sourceclose', () => reject(new Error('Voice playback closed.')), { once: true });
+    });
+    audio.load();
+    const buffer = await bufferReady;
+    if (requestId !== this.speechRequestId) return;
+    const callable = httpsCallable<{ voiceId: string; text: string }, { contentType: string },
+      { type: 'audio'; data: string }>(this.functions, 'kiwiSpeakStream');
+    const { stream, data } = await callable.stream({ voiceId: this.voiceId(), text }, { signal: controller.signal });
+    let started = false;
+    for await (const chunk of stream) {
+      if (requestId !== this.speechRequestId || controller.signal.aborted) return;
+      if (chunk.type !== 'audio' || !chunk.data) continue;
+      const bytes = Uint8Array.from(atob(chunk.data), (character) => character.charCodeAt(0));
+      await new Promise<void>((resolve, reject) => {
+        const done = () => { buffer.removeEventListener('error', failed); resolve(); };
+        const failed = () => { buffer.removeEventListener('updateend', done); reject(new Error('Voice buffer failed.')); };
+        buffer.addEventListener('updateend', done, { once: true });
+        buffer.addEventListener('error', failed, { once: true });
+        try { buffer.appendBuffer(bytes); } catch (error) { failed(); reject(error); }
+      });
+      if (!started) {
+        started = true;
+        void audio.play().catch((error) => {
+          if (requestId !== this.speechRequestId) return;
+          this.error.set(this.errorText(error, 'Kiwi’s voice could not start.'));
+          this.releaseAudio();
+          this.speaking.set(false);
+          this.scheduleListening();
+        });
+      }
+    }
+    await data;
+    if (requestId === this.speechRequestId && source.readyState === 'open' && !buffer.updating) source.endOfStream();
   }
 
   stopSpeaking(): void {
     this.speechRequestId++;
+    this.speechAbort?.abort();
+    this.speechAbort = null;
     this.releaseAudio();
     this.previewingVoice.set('');
     this.speaking.set(false);
@@ -527,27 +761,23 @@ export class KiwiComponent {
     return message.includes(': ') ? message.slice(message.indexOf(': ') + 2) : message || fallback;
   }
 
-  private revealCreationPreview(proposal: KiwiProposal): void {
-    this.previewCardCount.set(0);
-    const count = proposal.cards?.length || 0;
-    if (!count) return;
-    this.creationPreviewTimer = setInterval(() => {
-      if (this.proposal()?.id !== proposal.id) { this.resetCreationPreview(); return; }
-      const next = Math.min(this.previewCardCount() + 1, count);
-      this.previewCardCount.set(next);
-      if (next === count && this.creationPreviewTimer) {
-        clearInterval(this.creationPreviewTimer);
-        this.creationPreviewTimer = null;
-      }
-    }, 260);
+  private waitForBoardRendered(boardId: string): Promise<void> {
+    if (!this.isBrowser) return Promise.resolve();
+    const selector = `.board-detail[data-board-id="${boardId}"]`;
+    if (document.querySelector(selector)) return Promise.resolve();
+    return new Promise<void>((resolve, reject) => {
+      const observer = new MutationObserver(() => {
+        if (!document.querySelector(selector)) return;
+        clearTimeout(timeout);
+        observer.disconnect();
+        resolve();
+      });
+      const timeout = setTimeout(() => {
+        observer.disconnect();
+        reject(new Error('The board was saved, but its editor did not appear. Use Open saved board to try again.'));
+      }, 12000);
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
   }
 
-  private resetCreationPreview(): void {
-    if (this.creationPreviewTimer) clearInterval(this.creationPreviewTimer);
-    this.creationPreviewTimer = null;
-    this.previewCardCount.set(0);
-    this.planningCreation.set(false);
-    this.savingCreation.set(false);
-    this.creationSaved.set(false);
-  }
 }

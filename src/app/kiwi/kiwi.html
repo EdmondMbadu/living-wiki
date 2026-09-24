@@ -7,7 +7,7 @@
 
   @if (open()) {
     <div class="kiwi-backdrop" (click)="close()" aria-hidden="true"></div>
-    <section id="kiwi-panel" class="kiwi-panel" role="dialog" aria-modal="true" [attr.aria-label]="name() + ' assistant'">
+    <section id="kiwi-panel" class="kiwi-panel" role="dialog" [attr.aria-modal]="studioOpen() ? 'false' : 'true'" [attr.aria-label]="name() + ' assistant'">
       <header class="kiwi-panel__header">
         <div class="kiwi-panel__identity">
           <img src="/assets/kiwi/mascot.png" alt="" aria-hidden="true" />
@@ -84,45 +84,21 @@
             <p class="kiwi-message" [class.kiwi-message--user]="message.role === 'user'">{{ message.text }}</p>
           }
           @if (busy()) { <p class="kiwi-thinking" role="status"><span></span><span></span><span></span> {{ name() }} is thinking…</p> }
-          @if (busy() && planningCreation()) {
-            <div class="kiwi-build kiwi-build--planning" role="status" aria-label="Kiwi is planning your board">
-              <div class="kiwi-build__eyebrow"><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span> Taking shape</div>
-              <div class="kiwi-build__skeleton kiwi-build__skeleton--title"></div>
-              <div class="kiwi-build__skeleton"></div><div class="kiwi-build__skeleton"></div><div class="kiwi-build__skeleton"></div>
-              <small>Kiwi is arranging your ideas…</small>
-            </div>
-          }
+          @if (busy() && planningCreation()) { <p class="kiwi-thinking" role="status">The board draft is filling in on your screen.</p> }
           @if (proposal(); as change) {
             <section class="kiwi-proposal" aria-label="Proposed change">
               <small>Review before saving · {{ change.workspace === 'team' ? 'Team draft' : 'Personal' }}</small>
               <strong>{{ change.summary }}</strong>
               @if (change.kind === 'create_board') {
-                <div class="kiwi-build" aria-label="Board preview">
-                  <div class="kiwi-build__eyebrow"><span class="material-symbols-outlined" aria-hidden="true">dashboard_customize</span>
-                    {{ creationSaved() ? 'Board ready' : savingCreation() ? 'Saving your board' : 'Your board is taking shape' }}
-                  </div>
-                  @if (change.cards?.length) {
-                    <div class="kiwi-build__cards">
-                      @for (card of change.cards; track $index) {
-                        @if ($index < previewCardCount()) {
-                          <div class="kiwi-build__card"><span class="material-symbols-outlined" aria-hidden="true">sticky_note_2</span><span>{{ card }}</span></div>
-                        } @else {
-                          <div class="kiwi-build__skeleton kiwi-build__skeleton--card" aria-hidden="true"></div>
-                        }
-                      }
-                    </div>
-                  } @else { <p class="kiwi-build__empty">A fresh board, ready for your first card.</p> }
-                  @if (savingCreation()) { <p class="kiwi-build__status" role="status">Saving this board to your workspace…</p> }
-                  @if (creationSaved()) { <p class="kiwi-build__status" role="status">Saved. Opening your board…</p> }
-                </div>
+                <button type="button" class="kiwi-open-studio" (click)="studioOpen.set(true)"><span class="material-symbols-outlined" aria-hidden="true">dashboard_customize</span> Open the live board draft</button>
               }
-              @if (change.details?.length) {
+              @if (change.kind !== 'create_board' && change.details?.length) {
                 <ul class="kiwi-proposal__details">
                   @for (detail of change.details; track $index) { <li>{{ detail }}</li> }
                 </ul>
               }
               <div class="kiwi-proposal__actions">
-                <button type="button" class="kiwi-primary" (click)="apply()" [disabled]="applying() || busy()">{{ applying() ? (change.kind === 'email_board' ? 'Sending…' : change.kind === 'create_board' ? 'Creating…' : 'Saving…') : (change.kind === 'email_board' ? 'Send email' : 'Apply change') }}</button>
+                @if (change.kind !== 'create_board') { <button type="button" class="kiwi-primary" (click)="apply()" [disabled]="applying() || busy()">{{ applying() ? (change.kind === 'email_board' ? 'Sending…' : 'Saving…') : (change.kind === 'email_board' ? 'Send email' : 'Apply change') }}</button> }
                 <button type="button" (click)="dismissProposal()">Dismiss</button>
               </div>
             </section>
@@ -175,5 +151,44 @@
         }
       }
     </section>
+    @if (studioOpen() && studioDraft(); as board) {
+      <section class="kiwi-studio" role="dialog" aria-modal="true" aria-labelledby="kiwi-studio-title">
+        <header class="kiwi-studio__header">
+          <div class="kiwi-studio__heading"><img src="/assets/kiwi/mascot.png" alt="" aria-hidden="true" /><div><small>{{ studioReady() ? 'READY TO REVIEW' : 'TAKING SHAPE' }}</small><h2 id="kiwi-studio-title">Your board draft</h2></div></div>
+          <button type="button" class="kiwi-icon-button" (click)="studioOpen.set(false)" aria-label="Close board draft"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
+        </header>
+        <div class="kiwi-studio__body">
+          <div class="kiwi-studio__intro"><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span><p>{{ studioReady() ? 'Review and edit anything before you create it.' : busy() ? 'Watch Kiwi fill this board in. You can edit it while it works.' : 'Kiwi needs more detail to finish this draft. Tell it what to add in the box below.' }}</p></div>
+          @if (boardAwaitingOpen()) { <p class="kiwi-studio__saved-notice" role="status">The board was saved. Kiwi is checking that it opens in your workspace.</p> }
+          <fieldset class="kiwi-studio__editing" [disabled]="!!boardAwaitingOpen()">
+          <div class="kiwi-studio__meta">
+            <label>Board title<input type="text" maxlength="90" [value]="board.title" (input)="setStudioField('title', $event)" /></label>
+            <label>Board type<select (change)="chooseStudioBoardType($event)"><option value="standard">Standard board</option><option value="wizard">Explore more board types…</option></select></label>
+            <label>Color<select [value]="board.tone" (change)="setStudioField('tone', $event)"><option value="teal">Teal</option><option value="coral">Coral</option><option value="yellow">Yellow</option><option value="green">Green</option><option value="blue">Blue</option><option value="sky">Sky</option><option value="purple">Purple</option></select></label>
+            <label>Who can see it<select [value]="board.visibility" [disabled]="!!scope().teamId" (change)="setStudioField('visibility', $event)"><option value="public">Public</option><option value="unlisted">Unlisted</option><option value="private">Private</option></select></label>
+          </div>
+          <label class="kiwi-studio__description">Description<textarea rows="2" maxlength="240" [value]="board.description" (input)="setStudioField('description', $event)"></textarea></label>
+          <div class="kiwi-studio__cards-heading"><h3>Cards <span>{{ board.cards.length }}</span></h3><button type="button" (click)="addStudioCard()" [disabled]="board.cards.length >= 12 || applying()"><span class="material-symbols-outlined" aria-hidden="true">add</span> Add card</button></div>
+          <div class="kiwi-studio__cards">
+            @for (card of board.cards; track $index; let index = $index) {
+              <article class="kiwi-studio-card">
+                <header><span class="kiwi-studio-card__number">{{ index + 1 }}</span><strong>{{ card.title || 'Untitled card' }}</strong><button type="button" (click)="removeStudioCard(index)" [attr.aria-label]="'Remove card ' + (index + 1)"><span class="material-symbols-outlined" aria-hidden="true">delete</span></button></header>
+                <div class="kiwi-studio-card__fields"><label>Title<input type="text" maxlength="120" [value]="card.title" (input)="setStudioCardField(index, 'title', $event)" /></label><label>Type<select [value]="card.type" (change)="setStudioCardField(index, 'type', $event)"><option value="note">Note</option><option value="food">Food</option><option value="place">Place</option><option value="memory">Memory</option><option value="idea">Idea</option><option value="shop">Shop</option></select></label></div>
+                <label>Subtitle<input type="text" maxlength="240" [value]="card.subtitle" (input)="setStudioCardField(index, 'subtitle', $event)" /></label>
+                <label>Details<textarea rows="3" maxlength="3000" [value]="card.notes" (input)="setStudioCardField(index, 'notes', $event)"></textarea></label>
+              </article>
+            } @empty { <div class="kiwi-studio__empty"><span class="material-symbols-outlined" aria-hidden="true">dashboard_customize</span><p>{{ studioReady() ? 'This board is ready for its first card.' : busy() ? 'Kiwi is preparing the first cards…' : 'Add a card here or ask Kiwi to fill the board.' }}</p></div> }
+          </div>
+          </fieldset>
+        </div>
+        <footer class="kiwi-studio__footer">
+          <div class="kiwi-studio__conversation">
+            <div class="kiwi-studio__voice"><button type="button" (click)="toggleVoiceSession()" [disabled]="!voiceAvailable || applying()" [attr.aria-label]="voiceActive() ? 'End Kiwi voice conversation' : 'Talk to Kiwi'"><span class="material-symbols-outlined" aria-hidden="true">{{ voiceActive() ? 'graphic_eq' : 'mic' }}</span></button><span>{{ voiceStatus() }}</span></div>
+            <div class="kiwi-studio__chat"><label class="sr-only" for="kiwi-studio-message">Ask Kiwi to change this draft</label><input id="kiwi-studio-message" type="text" maxlength="4000" placeholder="Ask Kiwi to change this draft…" [value]="studioMessage()" (input)="setStudioMessage($event)" (keydown)="onStudioMessageKeydown($event)" [disabled]="busy() || applying()" /><button type="button" (click)="sendStudioMessage()" [disabled]="!studioMessage().trim() || busy() || applying()" aria-label="Send draft change to Kiwi"><span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span></button></div>
+          </div>
+          <button type="button" class="kiwi-primary" (click)="apply()" [disabled]="!proposal() || !studioReady() || applying() || busy()">{{ applying() ? (boardAwaitingOpen() ? 'Opening…' : 'Creating…') : boardAwaitingOpen() ? 'Open saved board' : 'Create board' }}</button>
+        </footer>
+      </section>
+    }
   }
 }

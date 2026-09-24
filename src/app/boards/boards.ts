@@ -27,6 +27,7 @@ import { AuthService } from '../auth.service';
 import { BoardCollectionCreateComponent } from '../board-collection-create/board-collection-create';
 import { BoardCollectionListComponent } from '../board-collection-list/board-collection-list';
 import { BoardAnalyticsService } from '../board-analytics.service';
+import { KiwiBoardRefreshService } from '../kiwi/kiwi-board-refresh.service';
 import { BoardLikesService, boardLikeTargetKey, type BoardLikeMetric, type BoardLikeTarget } from '../board-likes.service';
 import { CustomPublicUrlDialogComponent } from '../custom-public-url-dialog/custom-public-url-dialog';
 import {
@@ -1717,6 +1718,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly boardCollectionsService = inject(BoardCollectionsService);
   private readonly boardAnalytics = inject(BoardAnalyticsService);
+  private readonly kiwiBoardRefresh = inject(KiwiBoardRefreshService);
   private readonly boardLikes = inject(BoardLikesService);
   private readonly googleMapsService = inject(GoogleMapsService);
   private readonly docxExportService = inject(DocxExportService);
@@ -3454,6 +3456,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     });
     this.loadBoardActionState();
     this.loadLocalBoards();
+    effect(() => {
+      const request = this.kiwiBoardRefresh.request();
+      if (request && this.selectedBoardId() === request.boardId) void this.reloadKiwiBoard(request.boardId);
+    });
     effect(() => {
       const count = this.wizardCountIntent().count ?? this.wizardCount();
       if (this.wizardNarrationLengthCustomized()) return;
@@ -22051,6 +22057,20 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (result?.collection === 'team_boards') this.adminTeamBoardIds.add(boardId);
     else this.adminTeamBoardIds.delete(boardId);
     return result ? this.boardFromRecord(boardId, result.record) : null;
+  }
+
+  private async reloadKiwiBoard(boardId: string): Promise<void> {
+    try {
+      const board = await this.loadBoardById(boardId);
+      if (!board || this.selectedBoardId() !== boardId) return;
+      this.boards.update((items) => {
+        const existing = items.findIndex((item) => item.id === board.id);
+        return existing < 0 ? [board, ...items]
+          : items.map((item, index) => index === existing ? board : item);
+      });
+    } catch {
+      this.boardsSyncError.set('Kiwi saved this board, but the latest version could not be loaded. Refresh to try again.');
+    }
   }
 
   private canonicalizeBoardPublicUrl(board: Board, requestedRouteKey: string): void {

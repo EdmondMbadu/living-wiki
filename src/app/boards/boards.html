@@ -1418,6 +1418,7 @@
         } @else {
         <section
           class="board-detail"
+          [attr.data-board-id]="board.id"
           [class.board-detail--song]="isSongBoard(board)"
           [class.board-detail--tour]="isTourBoard(board)"
           [class.board-detail--tour-studio]="tourStudioActive()"

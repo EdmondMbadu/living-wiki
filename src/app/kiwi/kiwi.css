@@ -118,6 +118,57 @@
 .kiwi-proposal__details li + li { margin-top: .25rem; }
 .kiwi-proposal__actions { display: flex; gap: .5rem; margin-top: .85rem; }
 .kiwi-proposal__actions > button:last-child { border: 1px solid #d2ded3; border-radius: .75rem; background: white; padding: .55rem .8rem; color: #46624d; cursor: pointer; }
+.kiwi-open-studio { display: inline-flex; align-items: center; gap: .45rem; width: 100%; margin-top: .75rem; padding: .7rem .8rem; border: 1px solid #a9d8b6; border-radius: .7rem; background: #fff; color: #176f43; font-weight: 750; cursor: pointer; }
+.kiwi-open-studio .material-symbols-outlined { font-size: 1.2rem; }
+.kiwi-studio { position: fixed; z-index: 1093; inset: 1.25rem 30rem 1.25rem 1.25rem; display: flex; flex-direction: column; min-width: 25rem; overflow: hidden; border: 1px solid #cbded0; border-radius: 1.4rem; background: #fffefa; color: #183629; box-shadow: 0 25px 90px rgba(8, 39, 24, .28); animation: kiwi-panel-in .22s ease-out; }
+.kiwi-studio__header, .kiwi-studio__footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .85rem 1.2rem; background: #fffefa; }
+.kiwi-studio__header { border-bottom: 1px solid #e2eae0; }
+.kiwi-studio__heading { display: flex; align-items: center; gap: .5rem; }
+.kiwi-studio__heading img { width: 3.5rem; height: 3.5rem; object-fit: contain; }
+.kiwi-studio__heading small { color: #288456; font-size: .63rem; font-weight: 850; letter-spacing: .12em; }
+.kiwi-studio__heading h2 { margin: .15rem 0 0; font: 700 1.45rem/1.1 Georgia, 'Times New Roman', serif; }
+.kiwi-studio__body { flex: 1; overflow: auto; padding: 1rem 1.2rem 1.5rem; }
+.kiwi-studio__editing { min-width: 0; margin: 0; padding: 0; border: 0; }
+.kiwi-studio__saved-notice { margin: 0 0 .75rem; padding: .6rem .75rem; border-radius: .7rem; background: #e9f5ec; color: #226e45; font-size: .82rem; font-weight: 750; }
+.kiwi-studio__intro { display: flex; align-items: center; gap: .6rem; margin: 0 0 1rem; padding: .6rem .75rem; border: 1px solid #d5ead8; border-radius: .75rem; background: #f2f9f0; color: #2b7950; }
+.kiwi-studio__intro .material-symbols-outlined { font-size: 1.3rem; }
+.kiwi-studio__intro p { margin: 0; font-size: .82rem; line-height: 1.35; }
+.kiwi-studio__meta { display: grid; grid-template-columns: minmax(12rem, 2fr) repeat(3, minmax(8rem, 1fr)); gap: .65rem; }
+.kiwi-studio label { display: grid; gap: .3rem; color: #355844; font-size: .72rem; font-weight: 800; }
+.kiwi-studio input, .kiwi-studio select, .kiwi-studio textarea { width: 100%; min-width: 0; padding: .55rem .65rem; border: 1px solid #c6d8c8; border-radius: .55rem; background: #fff; color: #1c3928; font: 500 .85rem/1.4 Arial, sans-serif; }
+.kiwi-studio input:focus-visible, .kiwi-studio select:focus-visible, .kiwi-studio textarea:focus-visible, .kiwi-studio button:focus-visible { outline: 3px solid #54b57c; outline-offset: 2px; }
+.kiwi-studio__description { margin-top: .7rem; }
+.kiwi-studio__description textarea { resize: vertical; }
+.kiwi-studio__cards-heading { display: flex; justify-content: space-between; align-items: center; margin: 1.1rem 0 .6rem; }
+.kiwi-studio__cards-heading h3 { margin: 0; font: 700 1.1rem/1.2 Georgia, 'Times New Roman', serif; }
+.kiwi-studio__cards-heading h3 span { display: inline-grid; place-items: center; width: 1.55rem; height: 1.55rem; margin-left: .2rem; border-radius: 50%; background: #e5f3e8; color: #237b4a; font: 800 .7rem Arial, sans-serif; }
+.kiwi-studio__cards-heading button { display: inline-flex; align-items: center; gap: .25rem; border: 0; background: transparent; color: #147247; font-weight: 800; cursor: pointer; }
+.kiwi-studio__cards-heading button:disabled { opacity: .5; cursor: default; }
+.kiwi-studio__cards-heading .material-symbols-outlined { font-size: 1.05rem; }
+.kiwi-studio__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); align-items: start; gap: .75rem; }
+.kiwi-studio-card { display: grid; gap: .65rem; padding: .8rem; border: 1px solid #d7e5d8; border-radius: .9rem; background: #fff; box-shadow: 0 3px 12px rgba(25, 70, 42, .04); animation: kiwi-card-reveal .28s ease-out both; }
+.kiwi-studio-card header { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.kiwi-studio-card header strong { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #254b33; font: 700 .88rem Arial, sans-serif; }
+.kiwi-studio-card header button { border: 0; background: transparent; color: #7d8e80; cursor: pointer; }
+.kiwi-studio-card header button .material-symbols-outlined { font-size: 1.08rem; }
+.kiwi-studio-card__number { display: grid; place-items: center; flex: none; width: 1.6rem; height: 1.6rem; border-radius: .45rem; background: #e9f5e9; color: #21804f; font-size: .75rem; font-weight: 800; }
+.kiwi-studio-card__fields { display: grid; grid-template-columns: minmax(0, 2fr) minmax(6rem, 1fr); gap: .5rem; }
+.kiwi-studio-card textarea { resize: vertical; }
+.kiwi-studio__empty { display: grid; place-items: center; min-height: 9rem; border: 1px dashed #bcd9c3; border-radius: .9rem; background: #f7fbf6; color: #679074; text-align: center; }
+.kiwi-studio__empty .material-symbols-outlined { font-size: 2rem; }
+.kiwi-studio__empty p { margin: -.3rem 0 0; font-size: .82rem; }
+.kiwi-studio__footer { border-top: 1px solid #e2eae0; }
+.kiwi-studio__conversation { display: flex; flex: 1; align-items: center; gap: .8rem; min-width: 0; }
+.kiwi-studio__voice { display: flex; align-items: center; gap: .55rem; color: #4b7157; font-size: .8rem; font-weight: 750; }
+.kiwi-studio__voice button { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border: 0; border-radius: 50%; background: #e8f5e9; color: #16804b; cursor: pointer; }
+.kiwi-studio__voice button:disabled { opacity: .5; cursor: default; }
+.kiwi-studio__voice span { white-space: nowrap; }
+.kiwi-studio__chat { display: flex; flex: 1; align-items: center; min-width: 0; max-width: 24rem; border: 1px solid #c6d8c8; border-radius: .7rem; background: white; }
+.kiwi-studio__chat input { flex: 1; width: auto; border: 0; background: transparent; }
+.kiwi-studio__chat button { display: grid; place-items: center; width: 2.3rem; height: 2.3rem; border: 0; border-radius: .55rem; background: #16804b; color: white; cursor: pointer; }
+.kiwi-studio__chat button:disabled { opacity: .45; cursor: default; }
+@media (max-width: 1150px) { .kiwi-studio { inset: .55rem; min-width: 0; } .kiwi-studio__meta { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .kiwi-studio { inset: 0; border: 0; border-radius: 0; padding-bottom: env(safe-area-inset-bottom); } .kiwi-studio__header, .kiwi-studio__footer { padding: .65rem .85rem; } .kiwi-studio__footer { align-items: stretch; flex-direction: column; } .kiwi-studio__conversation { width: 100%; } .kiwi-studio__voice > span { display: none; } .kiwi-studio__chat { max-width: none; } .kiwi-studio__body { padding: .75rem .85rem 1.2rem; } .kiwi-studio__meta { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kiwi-studio__meta label:first-child { grid-column: 1 / -1; } .kiwi-studio__cards { grid-template-columns: 1fr; } }
 .kiwi-error { margin: 0 .9rem .5rem; border-radius: .65rem; background: #fff0eb; color: #8a3425; padding: .65rem .75rem; font-size: .78rem; }
 .kiwi-settings-backdrop { position: absolute; inset: 0; z-index: 3; background: rgba(14, 42, 27, .42); backdrop-filter: blur(2px); }
 .kiwi-settings { position: absolute; z-index: 4; inset: auto .65rem .65rem; display: flex; flex-direction: column; max-height: calc(100% - 1.3rem); overflow: hidden; border: 1px solid #d7e7d8; border-radius: 1.25rem; background: #fffefb; box-shadow: 0 18px 52px rgba(12, 45, 25, .23); }

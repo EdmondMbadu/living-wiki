@@ -10,7 +10,7 @@ class FakeRecognition {
   lang = '';
   interimResults = false;
   continuous = false;
-  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null = null;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal?: boolean }> }) => void) | null = null;
   onerror: ((event: { error?: string }) => void) | null = null;
   onend: (() => void) | null = null;
   started = false;
@@ -116,36 +116,40 @@ describe('Kiwi conversation interface', () => {
       recognition.onresult?.({ results: [[{ transcript: 'Make a board' }]] });
       jasmine.clock().tick(1500);
       expect(send).not.toHaveBeenCalled();
-      recognition.onresult?.({ results: [[{ transcript: 'Make a board' }], [{ transcript: 'with tea and cake' }]] });
+      const first = Object.assign([{ transcript: 'Make a board' }], { isFinal: true });
+      const second = Object.assign([{ transcript: 'with tea and cake' }], { isFinal: true });
+      recognition.onresult?.({ results: [first, second] });
       fixture.detectChanges();
       expect(fixture.nativeElement.textContent).toContain('Make a board with tea and cake');
-      jasmine.clock().tick(2399);
+      jasmine.clock().tick(1099);
       expect(send).not.toHaveBeenCalled();
       jasmine.clock().tick(1);
       expect(send).toHaveBeenCalledOnceWith('Make a board with tea and cake', true);
     } finally { jasmine.clock().uninstall(); }
   });
 
-  it('reveals proposed board cards while the board takes shape', () => {
-    jasmine.clock().install();
-    try {
-      const fixture = TestBed.createComponent(KiwiComponent);
-      spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
-      fixture.componentInstance.toggle();
-      fixture.detectChanges();
-      const proposal = { id: 'draft-1', summary: 'Tea menu', kind: 'create_board', cards: ['Tea', 'Cake'], workspace: 'personal' };
-      fixture.componentInstance.proposal.set(proposal);
-      (fixture.componentInstance as any).revealCreationPreview(proposal);
-      fixture.detectChanges();
-      expect(fixture.nativeElement.querySelectorAll('.kiwi-build__card').length).toBe(0);
-      jasmine.clock().tick(260);
-      fixture.detectChanges();
-      expect(fixture.nativeElement.querySelectorAll('.kiwi-build__card').length).toBe(1);
-      expect(fixture.nativeElement.textContent).toContain('Tea');
-      jasmine.clock().tick(260);
-      fixture.detectChanges();
-      expect(fixture.nativeElement.querySelectorAll('.kiwi-build__card').length).toBe(2);
-      expect(fixture.nativeElement.textContent).toContain('Cake');
-    } finally { jasmine.clock().uninstall(); }
+  it('renders streamed cards and preserves a title the user edits while Kiwi continues', () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    const kiwi = fixture.componentInstance;
+    kiwi.toggle();
+    kiwi.studioOpen.set(true);
+    (kiwi as any).mergeStudioDraft({ kind: 'create_board', title: 'Tea menu', description: '',
+      tone: 'teal', visibility: 'public', cards: [{ title: 'Tea', subtitle: '', notes: '', type: 'food' }] });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.kiwi-studio-card').length).toBe(1);
+    const title = fixture.nativeElement.querySelector('.kiwi-studio input[type="text"]') as HTMLInputElement;
+    title.value = 'My tea menu';
+    title.dispatchEvent(new Event('input'));
+    (kiwi as any).mergeStudioDraft({ kind: 'create_board', title: 'AI tea menu', description: '',
+      tone: 'teal', visibility: 'public', cards: [
+        { title: 'Tea', subtitle: '', notes: '', type: 'food' },
+        { title: 'Cake', subtitle: '', notes: '', type: 'food' },
+      ] });
+    fixture.detectChanges();
+    expect(kiwi.studioDraft()?.title).toBe('My tea menu');
+    expect(fixture.nativeElement.querySelectorAll('.kiwi-studio-card').length).toBe(2);
+    expect(fixture.nativeElement.textContent).toContain('Cake');
+    expect(fixture.nativeElement.querySelector('#kiwi-studio-message')).not.toBeNull();
   });
 });
