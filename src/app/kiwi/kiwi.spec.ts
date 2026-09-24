@@ -99,4 +99,53 @@ describe('Kiwi conversation interface', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.kiwi-settings')).toBeNull();
   });
+
+  it('keeps listening through a pause and combines the full spoken request', () => {
+    jasmine.clock().install();
+    try {
+      const fixture = TestBed.createComponent(KiwiComponent);
+      spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+      const send = spyOn(fixture.componentInstance, 'send').and.resolveTo();
+      fixture.componentInstance.toggle();
+      fixture.detectChanges();
+      fixture.componentInstance.toggleVoiceSession();
+      const recognition = FakeRecognition.latest!;
+      expect(recognition.continuous).toBeTrue();
+      expect(recognition.interimResults).toBeTrue();
+
+      recognition.onresult?.({ results: [[{ transcript: 'Make a board' }]] });
+      jasmine.clock().tick(1500);
+      expect(send).not.toHaveBeenCalled();
+      recognition.onresult?.({ results: [[{ transcript: 'Make a board' }], [{ transcript: 'with tea and cake' }]] });
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain('Make a board with tea and cake');
+      jasmine.clock().tick(2399);
+      expect(send).not.toHaveBeenCalled();
+      jasmine.clock().tick(1);
+      expect(send).toHaveBeenCalledOnceWith('Make a board with tea and cake', true);
+    } finally { jasmine.clock().uninstall(); }
+  });
+
+  it('reveals proposed board cards while the board takes shape', () => {
+    jasmine.clock().install();
+    try {
+      const fixture = TestBed.createComponent(KiwiComponent);
+      spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+      fixture.componentInstance.toggle();
+      fixture.detectChanges();
+      const proposal = { id: 'draft-1', summary: 'Tea menu', kind: 'create_board', cards: ['Tea', 'Cake'], workspace: 'personal' };
+      fixture.componentInstance.proposal.set(proposal);
+      (fixture.componentInstance as any).revealCreationPreview(proposal);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelectorAll('.kiwi-build__card').length).toBe(0);
+      jasmine.clock().tick(260);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelectorAll('.kiwi-build__card').length).toBe(1);
+      expect(fixture.nativeElement.textContent).toContain('Tea');
+      jasmine.clock().tick(260);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelectorAll('.kiwi-build__card').length).toBe(2);
+      expect(fixture.nativeElement.textContent).toContain('Cake');
+    } finally { jasmine.clock().uninstall(); }
+  });
 });

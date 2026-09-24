@@ -61,6 +61,10 @@
                   <span class="material-symbols-outlined" aria-hidden="true">{{ voiceActive() ? 'call_end' : 'mic' }}</span>
                   {{ voiceActive() ? 'End conversation' : 'Start talking' }}
                 </button>
+                @if (voiceTranscript()) {
+                  <div class="kiwi-live-transcript" aria-label="What Kiwi heard">{{ voiceTranscript() }}</div>
+                  <button type="button" class="kiwi-finish-speaking" (click)="finishVoiceTurn()">I’m done speaking <span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span></button>
+                }
               } @else {
                 <p class="kiwi-voice-stage__unavailable">Voice is unavailable in this browser. Choose Chat to type to Kiwi.</p>
               }
@@ -80,17 +84,45 @@
             <p class="kiwi-message" [class.kiwi-message--user]="message.role === 'user'">{{ message.text }}</p>
           }
           @if (busy()) { <p class="kiwi-thinking" role="status"><span></span><span></span><span></span> {{ name() }} is thinking…</p> }
+          @if (busy() && planningCreation()) {
+            <div class="kiwi-build kiwi-build--planning" role="status" aria-label="Kiwi is planning your board">
+              <div class="kiwi-build__eyebrow"><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span> Taking shape</div>
+              <div class="kiwi-build__skeleton kiwi-build__skeleton--title"></div>
+              <div class="kiwi-build__skeleton"></div><div class="kiwi-build__skeleton"></div><div class="kiwi-build__skeleton"></div>
+              <small>Kiwi is arranging your ideas…</small>
+            </div>
+          }
           @if (proposal(); as change) {
             <section class="kiwi-proposal" aria-label="Proposed change">
               <small>Review before saving · {{ change.workspace === 'team' ? 'Team draft' : 'Personal' }}</small>
               <strong>{{ change.summary }}</strong>
+              @if (change.kind === 'create_board') {
+                <div class="kiwi-build" aria-label="Board preview">
+                  <div class="kiwi-build__eyebrow"><span class="material-symbols-outlined" aria-hidden="true">dashboard_customize</span>
+                    {{ creationSaved() ? 'Board ready' : savingCreation() ? 'Saving your board' : 'Your board is taking shape' }}
+                  </div>
+                  @if (change.cards?.length) {
+                    <div class="kiwi-build__cards">
+                      @for (card of change.cards; track $index) {
+                        @if ($index < previewCardCount()) {
+                          <div class="kiwi-build__card"><span class="material-symbols-outlined" aria-hidden="true">sticky_note_2</span><span>{{ card }}</span></div>
+                        } @else {
+                          <div class="kiwi-build__skeleton kiwi-build__skeleton--card" aria-hidden="true"></div>
+                        }
+                      }
+                    </div>
+                  } @else { <p class="kiwi-build__empty">A fresh board, ready for your first card.</p> }
+                  @if (savingCreation()) { <p class="kiwi-build__status" role="status">Saving this board to your workspace…</p> }
+                  @if (creationSaved()) { <p class="kiwi-build__status" role="status">Saved. Opening your board…</p> }
+                </div>
+              }
               @if (change.details?.length) {
                 <ul class="kiwi-proposal__details">
                   @for (detail of change.details; track $index) { <li>{{ detail }}</li> }
                 </ul>
               }
               <div class="kiwi-proposal__actions">
-                <button type="button" class="kiwi-primary" (click)="apply()" [disabled]="applying() || busy()">{{ applying() ? (change.kind === 'email_board' ? 'Sending…' : 'Saving…') : (change.kind === 'email_board' ? 'Send email' : 'Apply change') }}</button>
+                <button type="button" class="kiwi-primary" (click)="apply()" [disabled]="applying() || busy()">{{ applying() ? (change.kind === 'email_board' ? 'Sending…' : change.kind === 'create_board' ? 'Creating…' : 'Saving…') : (change.kind === 'email_board' ? 'Send email' : 'Apply change') }}</button>
                 <button type="button" (click)="dismissProposal()">Dismiss</button>
               </div>
             </section>

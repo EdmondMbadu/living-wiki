@@ -4,8 +4,9 @@ Kiwi is mounted in the app shell, so the launcher appears on desktop and mobile 
 
 ## Current abilities
 
-- Choose Talk or Chat. Talk is the primary mode: on browsers with Web Speech recognition, Kiwi listens for a turn, answers using ElevenLabs natural speech, and listens again until the user ends the conversation. Chat offers a text composer. Proposed writes pause voice mode for on-screen review. The edit button opens a modal to rename Kiwi and choose from four previewable voices.
+- Choose Talk or Chat. Talk is the primary mode: on browsers with Web Speech recognition, Kiwi collects interim and final transcript segments, waits for 2.4 seconds of quiet before sending the turn, and offers an explicit **I’m done speaking** control. Kiwi then answers using ElevenLabs natural speech and listens again until the user ends the conversation. Chat offers a text composer. Proposed writes pause voice mode for on-screen review. The edit button opens a modal to rename Kiwi and choose from four previewable voices.
 - Create a standard personal board or a private team draft with cards. The existing board wizard remains the path for specialized board types.
+- While preparing a board request, Kiwi shows a building state. When a board proposal arrives, its card titles appear one by one; after approval, the interface shows the save and completion state before opening the board. Firestore still saves the approved board atomically, so the animation represents the visible preview and save state rather than individual database writes.
 - Redesign an existing board, edit its title/description/tone, and add, edit, remove, or reorder cards.
 - Copy another person's public personal board into the signed-in user's account before editing it. This copies public text and HTTPS images, excluding author-only cards and private metadata.
 - Prepare an email of the user's own Public or Unlisted personal board to an explicit recipient. The recipient and board appear in the review panel. Sending uses the existing email template and rate limit and requires a verified sender. Private and team boards cannot be emailed.

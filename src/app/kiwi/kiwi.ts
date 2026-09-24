@@ -45,6 +45,10 @@ export class KiwiComponent {
   private loadingNameForUid = '';
   private scopeKey = '';
   private recognitionRestartTimer: ReturnType<typeof setTimeout> | null = null;
+  private voiceTurnTimer: ReturnType<typeof setTimeout> | null = null;
+  private voiceCommittedTranscript = '';
+  private recognitionTranscript = '';
+  private creationPreviewTimer: ReturnType<typeof setInterval> | null = null;
   private audio: HTMLAudioElement | null = null;
   private audioUrl = '';
   private speechRequestId = 0;
@@ -70,6 +74,11 @@ export class KiwiComponent {
   readonly mode = signal<'voice' | 'chat'>('voice');
   readonly voiceActive = signal(false);
   readonly voicePhase = signal<VoicePhase>('idle');
+  readonly voiceTranscript = signal('');
+  readonly planningCreation = signal(false);
+  readonly previewCardCount = signal(0);
+  readonly savingCreation = signal(false);
+  readonly creationSaved = signal(false);
   readonly signedIn = this.auth.isAuthenticated;
   readonly currentUrl = this.navigation.currentUrl;
   readonly scope = computed(() => {
@@ -120,6 +129,7 @@ export class KiwiComponent {
       this.stopVoiceSession();
       this.messages.set([]);
       this.proposal.set(null);
+      this.resetCreationPreview();
       this.error.set('');
     });
     effect(() => {
@@ -152,6 +162,7 @@ export class KiwiComponent {
 
   close(): void {
     this.stopVoiceSession();
+    this.resetCreationPreview();
     this.open.set(false);
     this.closeSettings();
     if (this.isBrowser) window.requestAnimationFrame(() => {
@@ -270,6 +281,9 @@ export class KiwiComponent {
     this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
     this.draft.set('');
     this.proposal.set(null);
+    this.resetCreationPreview();
+    this.planningCreation.set(/\b(create|make|build|design|draft)\b/i.test(text)
+      && /\b(board|menu|list|wiki)\b/i.test(text));
     this.busy.set(true);
     if (byVoice) this.voicePhase.set('thinking');
     this.error.set('');
@@ -281,6 +295,7 @@ export class KiwiComponent {
       const { data } = await callable({ message: text, history, teamId: this.scope().teamId, boardId: this.scope().boardId });
       this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: data.reply }]);
       this.proposal.set(data.proposal || null);
+      if (data.proposal?.kind === 'create_board' && data.proposal.cards?.length) this.revealCreationPreview(data.proposal);
       if (byVoice && this.voiceActive()) void this.speak(data.proposal
         ? `${data.reply} Please review the proposed change on screen and tap Apply when you are ready.`
         : data.reply);
@@ -289,6 +304,7 @@ export class KiwiComponent {
       if (byVoice) this.stopVoiceSession();
     } finally {
       this.busy.set(false);
+      this.planningCreation.set(false);
       if (byVoice && this.voiceActive() && !this.speaking() && !this.proposal()) this.scheduleListening();
     }
   }
@@ -298,6 +314,13 @@ export class KiwiComponent {
     if (!proposal || this.applying() || !this.functions) return;
     this.stopVoiceSession();
     this.applying.set(true);
+    const creatingBoard = proposal.kind === 'create_board';
+    if (creatingBoard) {
+      this.savingCreation.set(true);
+      this.creationSaved.set(false);
+      this.previewCardCount.set(proposal.cards?.length || 0);
+    }
+    const minimumReveal = creatingBoard ? new Promise<void>((resolve) => setTimeout(resolve, 900)) : null;
     this.error.set('');
     try {
       if (proposal.kind === 'email_board') {
@@ -309,19 +332,26 @@ export class KiwiComponent {
       }
       const callable = httpsCallable<{ proposalId: string }, KiwiApplyResponse>(this.functions, 'kiwiApply');
       const { data } = await callable({ proposalId: proposal.id });
-      this.proposal.set(null);
+      if (minimumReveal) await minimumReveal;
+      if (creatingBoard) {
+        this.savingCreation.set(false);
+        this.creationSaved.set(true);
+      } else this.proposal.set(null);
       this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: 'Saved. Opening your board now.' }]);
       const path = this.scope().teamId
         ? `/teams/${encodeURIComponent(this.scope().teamId)}/listings/${encodeURIComponent(data.boardId)}/edit`
         : `/boards/${encodeURIComponent(data.boardId)}`;
+      if (creatingBoard) await new Promise<void>((resolve) => setTimeout(resolve, 450));
       if (this.isBrowser) window.location.assign(path);
     } catch (error) {
+      this.savingCreation.set(false);
       this.error.set(this.errorText(error, 'The change could not be saved. Ask Kiwi to review it again.'));
     } finally { this.applying.set(false); }
   }
 
   dismissProposal(): void {
     this.proposal.set(null);
+    this.resetCreationPreview();
     if (this.voicePhase() === 'review') this.voicePhase.set('idle');
   }
 
@@ -339,20 +369,18 @@ export class KiwiComponent {
     const Recognition = browser.SpeechRecognition || browser.webkitSpeechRecognition;
     if (!Recognition) return;
     const recognition = new Recognition();
-    let heardSpeech = false;
     this.recognition = recognition;
     recognition.lang = document.documentElement.lang || 'en-US';
-    recognition.interimResults = false;
-    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.continuous = true;
     recognition.onresult = (event) => {
-      if (!this.voiceActive() || heardSpeech) return;
-      const transcript = event.results[0]?.[0]?.transcript?.trim();
+      if (!this.voiceActive() || this.recognition !== recognition) return;
+      this.recognitionTranscript = Array.from(event.results)
+        .map((result) => result[0]?.transcript?.trim() || '').filter(Boolean).join(' ');
+      const transcript = [this.voiceCommittedTranscript, this.recognitionTranscript].filter(Boolean).join(' ').trim();
       if (!transcript) return;
-      heardSpeech = true;
-      this.listening.set(false);
-      this.voicePhase.set('thinking');
-      recognition.stop();
-      void this.send(transcript, true);
+      this.voiceTranscript.set(transcript);
+      this.scheduleVoiceTurn();
     };
     recognition.onerror = (event) => {
       if (event.error === 'no-speech' || event.error === 'aborted') return;
@@ -365,7 +393,10 @@ export class KiwiComponent {
       if (this.recognition !== recognition) return;
       this.recognition = null;
       this.listening.set(false);
-      if (this.voiceActive() && !heardSpeech && !this.busy() && !this.speaking()) this.scheduleListening();
+      if (this.recognitionTranscript) this.voiceCommittedTranscript =
+        [this.voiceCommittedTranscript, this.recognitionTranscript].filter(Boolean).join(' ');
+      this.recognitionTranscript = '';
+      if (this.voiceActive() && !this.busy() && !this.speaking()) this.scheduleListening();
     };
     try {
       recognition.start();
@@ -385,13 +416,44 @@ export class KiwiComponent {
     }, 300);
   }
 
+  private scheduleVoiceTurn(): void {
+    if (this.voiceTurnTimer) clearTimeout(this.voiceTurnTimer);
+    this.voiceTurnTimer = setTimeout(() => {
+      this.voiceTurnTimer = null;
+      this.finishVoiceTurn();
+    }, 2400);
+  }
+
+  finishVoiceTurn(): void {
+    const transcript = this.voiceTranscript().trim();
+    if (!transcript || !this.voiceActive() || this.busy()) return;
+    if (this.voiceTurnTimer) clearTimeout(this.voiceTurnTimer);
+    this.voiceTurnTimer = null;
+    if (this.recognitionRestartTimer) clearTimeout(this.recognitionRestartTimer);
+    this.recognitionRestartTimer = null;
+    const recognition = this.recognition;
+    this.recognition = null;
+    recognition?.stop();
+    this.voiceCommittedTranscript = '';
+    this.recognitionTranscript = '';
+    this.voiceTranscript.set('');
+    this.listening.set(false);
+    this.voicePhase.set('thinking');
+    void this.send(transcript, true);
+  }
+
   stopVoiceSession(): void {
     this.voiceActive.set(false);
     this.voicePhase.set('idle');
     if (this.recognitionRestartTimer) clearTimeout(this.recognitionRestartTimer);
     this.recognitionRestartTimer = null;
+    if (this.voiceTurnTimer) clearTimeout(this.voiceTurnTimer);
+    this.voiceTurnTimer = null;
     this.recognition?.stop();
     this.recognition = null;
+    this.voiceCommittedTranscript = '';
+    this.recognitionTranscript = '';
+    this.voiceTranscript.set('');
     this.listening.set(false);
     this.stopSpeaking();
   }
@@ -463,5 +525,29 @@ export class KiwiComponent {
   private errorText(error: unknown, fallback: string): string {
     const message = error instanceof Error ? error.message : '';
     return message.includes(': ') ? message.slice(message.indexOf(': ') + 2) : message || fallback;
+  }
+
+  private revealCreationPreview(proposal: KiwiProposal): void {
+    this.previewCardCount.set(0);
+    const count = proposal.cards?.length || 0;
+    if (!count) return;
+    this.creationPreviewTimer = setInterval(() => {
+      if (this.proposal()?.id !== proposal.id) { this.resetCreationPreview(); return; }
+      const next = Math.min(this.previewCardCount() + 1, count);
+      this.previewCardCount.set(next);
+      if (next === count && this.creationPreviewTimer) {
+        clearInterval(this.creationPreviewTimer);
+        this.creationPreviewTimer = null;
+      }
+    }, 260);
+  }
+
+  private resetCreationPreview(): void {
+    if (this.creationPreviewTimer) clearInterval(this.creationPreviewTimer);
+    this.creationPreviewTimer = null;
+    this.previewCardCount.set(0);
+    this.planningCreation.set(false);
+    this.savingCreation.set(false);
+    this.creationSaved.set(false);
   }
 }
