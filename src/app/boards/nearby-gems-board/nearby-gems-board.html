@@ -7,7 +7,7 @@
       <span class="material-symbols-outlined">explore</span>
     </span>
     <div class="nearby-gems-board__intro">
-      <p>Nearby gems · {{ cards().length }} places</p>
+      <p i18n>Nearby gems · {{ cards().length }} places</p>
       <h1>
         {{ title() }}
         @if (visibility() === 'private') {
@@ -155,8 +155,8 @@
       @if (selectedStartCard(); as selected) {
         <div class="nearby-gems-board__nav-tray">
           <span class="nearby-gems-board__nav-icon material-symbols-outlined">near_me</span>
-          <span><strong>{{ selected.title }}</strong><small>Destination #{{ selectedStartRank() }} selected · choose any place to change it</small></span>
-          <a [href]="directionsUrl(selected)" target="_blank" rel="noopener" [attr.aria-label]="templateText.message13 + selectedStartRank() + ': ' + selected.title">
+          <span><strong>{{ selected.title }}</strong><small i18n>Destination #{{ selectedStartRank() }} selected · choose any place to change it</small></span>
+          <a [href]="directionsUrl(selected)" target="_blank" rel="noopener" [attr.aria-label]="templateText.message13 + selectedStartRank() + ': ' + selected.title" i18n>
             Start with #{{ selectedStartRank() }}
             <span class="material-symbols-outlined">arrow_forward</span>
           </a>

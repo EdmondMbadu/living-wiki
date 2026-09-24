@@ -51,8 +51,8 @@
       <section class="insights-kpis" aria-label="Board performance summary" i18n-aria-label>
         <article><span class="material-symbols-outlined">visibility</span><small i18n>Board views</small><strong>{{ report.totals.views | number }}</strong><p i18n>Successful visitor board loads</p></article>
         <article><span class="material-symbols-outlined">group</span><small i18n>Unique visitors</small><strong>{{ report.totals.uniqueVisitors | number }}</strong><p i18n>Daily unique browsers</p></article>
-        <article><span class="material-symbols-outlined">timer</span><small i18n>Engaged visits</small><strong>{{ report.totals.engagedVisits | number }}</strong><p>{{ engagementRate() | number:'1.0-1' }}% of views</p></article>
-        <article><span class="material-symbols-outlined">ads_click</span><small i18n>Outbound clicks</small><strong>{{ report.totals.outboundClicks | number }}</strong><p>{{ clickThroughRate() | number:'1.0-1' }}% click-through rate</p></article>
+        <article><span class="material-symbols-outlined">timer</span><small i18n>Engaged visits</small><strong>{{ report.totals.engagedVisits | number }}</strong><p i18n>{{ engagementRate() | number:'1.0-1' }}% of views</p></article>
+        <article><span class="material-symbols-outlined">ads_click</span><small i18n>Outbound clicks</small><strong>{{ report.totals.outboundClicks | number }}</strong><p i18n>{{ clickThroughRate() | number:'1.0-1' }}% click-through rate</p></article>
         <article><span class="material-symbols-outlined">touch_app</span><small i18n>Card opens</small><strong>{{ report.totals.cardOpens | number }}</strong><p i18n>Photos, videos, and deeper content</p></article>
         <article><span class="material-symbols-outlined">ios_share</span><small i18n>Shares</small><strong>{{ report.totals.shares + report.totals.customLinkCopies | number }}</strong><p i18n>Share and link-copy actions</p></article>
       </section>
@@ -83,7 +83,7 @@
                       <span class="insights-bar__tooltip" role="tooltip">
                         <small>{{ day.day | date:'EEEE, MMM d' }}</small>
                         <strong>{{ day.views | number }} {{ day.views === 1 ? templateText.message3 : templateText.message4 }}</strong>
-                        <span>{{ day.uniqueVisitors | number }} unique · {{ day.engagedVisits | number }} engaged</span>
+                        <span i18n>{{ day.uniqueVisitors | number }} unique · {{ day.engagedVisits | number }} engaged</span>
                       </span>
                       @if (showDailyLabel($index, report.daily.length)) { <small class="insights-bar__date">{{ day.day | date:'MMM d' }}</small> }
                     </button>
@@ -102,7 +102,7 @@
             <div class="source-list">
               @for (item of report.sources; track item.source) {
                 <div class="source-row">
-                  <span><strong>{{ sourceLabel(item.source) }}</strong><small>{{ item.views | number }} views · {{ sourceShare(item.views) | number:'1.0-0' }}%</small></span>
+                  <span><strong>{{ sourceLabel(item.source) }}</strong><small i18n>{{ item.views | number }} views · {{ sourceShare(item.views) | number:'1.0-0' }}%</small></span>
                   <i><b [style.width.%]="sourceBarWidth(item.views)"></b></i>
                 </div>
               }
@@ -140,7 +140,7 @@
               </div>
             </aside>
           </div>
-          <div class="campaign-results"><header><div><h3 i18n>Campaign results</h3><p i18n>Visits from links created here, ranked by tracked views.</p></div>@if (report.campaigns.length) { <strong>{{ trackedCampaignViews() | number }} tracked views</strong> }</header>@if (report.campaigns.length) { @for (item of report.campaigns; track item.campaign) { <div class="campaign-result"><span><strong>{{ campaignLabel(item.campaign) }}</strong><small>{{ item.views | number }} views · {{ campaignShare(item.views) | number:'1.0-0' }}%</small></span><i><b [style.width.%]="campaignBarWidth(item.views)"></b></i></div> } } @else { <div class="campaign-results__empty"><span class="material-symbols-outlined">conversion_path</span><p i18n>Your first tracked visit will appear here with its campaign name.</p></div> }</div>
+          <div class="campaign-results"><header><div><h3 i18n>Campaign results</h3><p i18n>Visits from links created here, ranked by tracked views.</p></div>@if (report.campaigns.length) { <strong i18n>{{ trackedCampaignViews() | number }} tracked views</strong> }</header>@if (report.campaigns.length) { @for (item of report.campaigns; track item.campaign) { <div class="campaign-result"><span><strong>{{ campaignLabel(item.campaign) }}</strong><small i18n>{{ item.views | number }} views · {{ campaignShare(item.views) | number:'1.0-0' }}%</small></span><i><b [style.width.%]="campaignBarWidth(item.views)"></b></i></div> } } @else { <div class="campaign-results__empty"><span class="material-symbols-outlined">conversion_path</span><p i18n>Your first tracked visit will appear here with its campaign name.</p></div> }</div>
         </article>
 
         <article class="insights-panel">
@@ -161,7 +161,7 @@
       <footer class="insights-footnote">
         <span i18n><span class="material-symbols-outlined">shield</span> Signed-in owner visits and recognized preview bots are excluded.</span>
         <span>{{ report.definitions.uniqueVisitors }}</span>
-        @if (report.lastUpdatedAt) { <span>Updated {{ report.lastUpdatedAt | date:'medium' }}</span> }
+        @if (report.lastUpdatedAt) { <span i18n>Updated {{ report.lastUpdatedAt | date:'medium' }}</span> }
       </footer>
     }
   </main>

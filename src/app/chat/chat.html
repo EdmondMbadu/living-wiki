@@ -934,7 +934,7 @@
                       </div>
                       @if (!cityBoardsLoading() && cityBoards().length > 0 && cityBoardsCollectionLink(); as collectionLink) {
                         <a class="city-board-shelf__view-all" [routerLink]="collectionLink">
-                          <span>View all {{ cityBoardsTotalLabel() }}</span>
+                          <span i18n>View all {{ cityBoardsTotalLabel() }}</span>
                           <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
                         </a>
                       }
@@ -989,7 +989,7 @@
                         <a class="city-board-shelf__collection-cta" [routerLink]="collectionLink">
                           <span class="city-board-shelf__collection-mark material-symbols-outlined" aria-hidden="true">view_carousel</span>
                           <span>
-                            <strong>Explore every {{ currentWikiName() }} board</strong>
+                            <strong i18n>Explore every {{ currentWikiName() }} board</strong>
                             <small>{{ isUniversityPage() ? templateText.message1 : templateText.message2 }}</small>
                           </span>
                           <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
@@ -1023,7 +1023,7 @@
                   <section class="chat-city-subscribe" [attr.aria-label]="isUniversityPage() ? templateText.message12 : templateText.message13">
                     <span class="chat-city-subscribe__mark material-symbols-outlined" aria-hidden="true">notifications_active</span>
                     <div class="chat-city-subscribe__copy">
-                      <strong>Stay close to {{ currentWikiName() }}</strong>
+                      <strong i18n>Stay close to {{ currentWikiName() }}</strong>
                       <span>{{ isUniversityPage() ? templateText.message3 : uiText('weeklyUpdates') }}</span>
                     </div>
                     <form class="chat-city-subscribe__form" (submit)="subscribeToUpdates($event)">
@@ -1203,7 +1203,7 @@
                             <section class="chat-research-state" aria-live="polite" aria-atomic="true">
                               <div class="chat-research-state__intro">
                                 <div>
-                                  <p class="chat-research-state__eyebrow">Researching {{ currentWikiName() || templateText.message4 }}</p>
+                                  <p class="chat-research-state__eyebrow" i18n>Researching {{ currentWikiName() || templateText.message4 }}</p>
                                   <h3>{{ currentThinkingLabel() }}…</h3>
                                   <p i18n>Gathering the clearest answer from trusted local and public sources.</p>
                                 </div>
@@ -1277,14 +1277,14 @@
                               <section class="chat-answer-board">
                                 <header class="chat-answer-board__header">
                                   <div class="chat-answer-board__copy">
-                                    <p class="chat-answer-board__eyebrow">Answer board · {{ guide.cards.length }} cards</p>
+                                    <p class="chat-answer-board__eyebrow" i18n>Answer board · {{ guide.cards.length }} cards</p>
                                     <h3>{{ guide.title || uiText('guidePicks') }}</h3>
                                     <p>{{ guide.summary || guideIntro(msg, guide) }}</p>
                                     <div class="chat-answer-board__meta">
                                       <span i18n>Updated now</span>
                                       <i aria-hidden="true"></i>
                                       @if (answerBoardSourceCount(msg, guide) > 0) {
-                                        <span>{{ answerBoardSourceCount(msg, guide) }} sources</span>
+                                        <span i18n>{{ answerBoardSourceCount(msg, guide) }} sources</span>
                                       } @else {
                                         <span i18n>Live public sources</span>
                                       }
@@ -1312,7 +1312,7 @@
                                     @if (answerBoardSourceCount(msg, guide) > 0) {
                                       <a [attr.href]="'#sources-' + msg.id">
                                         <span class="material-symbols-outlined">library_books</span>
-                                        <span>Sources {{ answerBoardSourceCount(msg, guide) }}</span>
+                                        <span i18n>Sources {{ answerBoardSourceCount(msg, guide) }}</span>
                                       </a>
                                     }
                                     @if (canCreateAnswerCard(msg)) {
@@ -1455,7 +1455,7 @@
                                     @if (answerBoardView(msg.id) === 'overview' && guide.cards.length > 3) {
                                       <button type="button" class="chat-answer-board__more" (click)="setAnswerBoardView(msg.id, 'cards')">
                                         <span class="material-symbols-outlined">add</span>
-                                        <strong>{{ guide.cards.length - 3 }} more cards</strong>
+                                        <strong i18n>{{ guide.cards.length - 3 }} more cards</strong>
                                         <span i18n>Explore the full answer board</span>
                                       </button>
                                     }

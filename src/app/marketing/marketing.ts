@@ -66,10 +66,10 @@ export class MarketingComponent implements OnInit {
   trustMarks = ['PHAROS_GENOMICS', 'QUANTUM_SYS', 'NEURO_LABS', 'VANTAGE_TECH'];
 
   securityPoints = [
-    'Private context isolation by default.',
-    'Explicit provenance for every generated insight.',
-    'SOC2 Type II compliance ready architecture.',
-    'Encrypted at rest and in transit.',
+    $localize`Private context isolation by default.`,
+    $localize`Explicit provenance for every generated insight.`,
+    $localize`SOC2 Type II compliance ready architecture.`,
+    $localize`Encrypted at rest and in transit.`,
   ];
 
   async ngOnInit(): Promise<void> {

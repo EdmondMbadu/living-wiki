@@ -123,6 +123,10 @@
     "source": "Keep player open",
     "file": "src/app/boards/boards.html"
   },
+  "1043811719977842845": {
+    "source": "Save favorite pages and source links",
+    "file": "src/app/pricing/pricing.ts"
+  },
   "1046212110799246459": {
     "source": "what3words places",
     "file": "src/app/boards/boards.ts"
@@ -263,6 +267,10 @@
     "source": "See them on the board",
     "file": "src/app/boards/boards.html"
   },
+  "1095698914133825042": {
+    "source": "Flexible pricing for additional seats",
+    "file": "src/app/pricing/pricing.ts"
+  },
   "1096284632044643231": {
     "source": "Sign in to respond to friend requests.",
     "file": "src/app/boards/boards.ts"
@@ -294,6 +302,10 @@
   "110877521158514796": {
     "source": "Add a concise story for this stop.",
     "file": "src/app/boards/boards.ts"
+  },
+  "1110278319933980882": {
+    "source": " {$INTERPOLATION}, {$INTERPOLATION_1} of {$INTERPOLATION_2} ",
+    "file": "src/app/boards/boards.html"
   },
   "1112337411579796862": {
     "source": "Can you beat my score?",
@@ -334,6 +346,10 @@
   "1118999875152579401": {
     "source": "Recovered your unfinished gem.",
     "file": "src/app/off-grids/off-grid-editor.ts"
+  },
+  "1119684373428815827": {
+    "source": "{$INTERPOLATION} · Focused",
+    "file": "src/app/boards/boards.html"
   },
   "1122157691364433792": {
     "source": "Turn your listing photos into a personal, narrated TalkThru. Your voice. Your local knowledge. The details that make a buyer feel at home.",
@@ -419,6 +435,10 @@
     "source": "Shared board contributions accept one place at a time. Keep one row here, or create the list on your own board.",
     "file": "src/app/boards/boards.html"
   },
+  "1151951925045045766": {
+    "source": " {$INTERPOLATION} cards · about {$INTERPOLATION_1} seconds and {$INTERPOLATION_2} words per card ",
+    "file": "src/app/boards/boards.html"
+  },
   "1153362258318924333": {
     "source": "Video search stopped. The remaining cards kept their images.",
     "file": "src/app/boards/boards.ts"
@@ -426,6 +446,10 @@
   "1156216101842472897": {
     "source": "Neighborhood context",
     "file": "src/app/chat/chat.html"
+  },
+  "1156645504368799174": {
+    "source": "Add the details only you can.",
+    "file": "src/app/talkthrus/talkthrus.ts"
   },
   "1156828345537801891": {
     "source": "Local markets",
@@ -511,9 +535,17 @@
     "source": "View Wiki",
     "file": "src/app/profile/profile.html"
   },
+  "1181444623588245539": {
+    "source": "Connections to nearby places, guides, and events",
+    "file": "src/app/business/business.ts"
+  },
   "1182705793282199411": {
     "source": " Backfill only cities missing population, or refresh all city population metadata from configured sources. ",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "1184367548337294746": {
+    "source": "Flexible plans for growing teams",
+    "file": "src/app/pricing/pricing.ts"
   },
   "1184475180656020255": {
     "source": "Private boards are available on paid plans.",
@@ -699,6 +731,10 @@
     "source": "Historian",
     "file": "src/app/boards/boards.ts"
   },
+  "124991802454941671": {
+    "source": "No voices match “{$INTERPOLATION}”.",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "1250680466969063058": {
     "source": "Learn what people are asking around your city so promotions, events, staffing, and inventory can follow actual demand.",
     "file": "src/app/business/business.ts"
@@ -863,6 +899,10 @@
     "source": "Preview",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "1297001172801365401": {
+    "source": "Reader",
+    "file": "src/app/pricing/pricing.ts"
+  },
   "1297305179672392177": {
     "source": " Finds a Wikimedia image for each location, validates the image response, uploads it to our storage, then saves it as the public cover. ",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -991,6 +1031,10 @@
     "source": "Board sync is not ready. Refresh and try again.",
     "file": "src/app/boards/boards.ts"
   },
+  "1342039955289279987": {
+    "source": "{$INTERPOLATION} cards",
+    "file": "src/app/boards/boards.html"
+  },
   "1342826649609889809": {
     "source": "Your businesses",
     "file": "src/app/business/business.html"
@@ -1082,6 +1126,10 @@
   "1381308436651796702": {
     "source": "No logo",
     "file": "src/app/atlas-landing/atlas-landing.html"
+  },
+  "1382216336131795955": {
+    "source": "Everything in Local Favorite",
+    "file": "src/app/business/business.ts"
   },
   "1383846292978832744": {
     "source": "collection",
@@ -1235,6 +1283,10 @@
     "source": "For example: emphasize the garden and keep answers relaxed.",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
+  "1423914440102746436": {
+    "source": "{$INTERPOLATION} quality warning(s)",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "1424874628298471845": {
     "source": "Generate editable preview",
     "file": "src/app/boards/boards.ts"
@@ -1271,6 +1323,10 @@
     "source": "Password",
     "file": "src/app/create-account/create-account.html"
   },
+  "1431815615889281257": {
+    "source": "Play all {$INTERPOLATION} songs",
+    "file": "src/app/boards/boards.html"
+  },
   "1432377855752241760": {
     "source": "or sign in with email",
     "file": "src/app/sign-in/sign-in.html"
@@ -1290,6 +1346,10 @@
   "1435568068430066376": {
     "source": "Make an independent copy first. Your copy keeps the cards and attribution, then you can create and share its video.",
     "file": "src/app/boards/boards.html"
+  },
+  "1437117973978028945": {
+    "source": "Invitations sent to {$INTERPOLATION} will appear here.",
+    "file": "src/app/notifications/notifications.html"
   },
   "1437716361546173370": {
     "source": "Vapi assistant ID",
@@ -1451,6 +1511,10 @@
     "source": "Chat copied",
     "file": "src/app/chat/chat.ts"
   },
+  "147286658122301166": {
+    "source": "Priority support and rollout planning",
+    "file": "src/app/pricing/pricing.ts"
+  },
   "1474638346154276948": {
     "source": "Directions to ",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.ts"
@@ -1595,6 +1659,10 @@
     "source": "Tour address",
     "file": "src/app/boards/boards.html"
   },
+  "1516625143639048438": {
+    "source": "{$INTERPOLATION} used in Live View",
+    "file": "src/app/boards/boards.html"
+  },
   "1516772816036256998": {
     "source": "3. Review generated pages",
     "file": "src/app/wiki-home/wiki-home.html"
@@ -1623,6 +1691,10 @@
     "source": "Loading contacts…",
     "file": "src/app/teams/teams.html"
   },
+  "1523933695581114488": {
+    "source": "AI output and product changes",
+    "file": "src/app/legal/legal.ts"
+  },
   "1526697022461205282": {
     "source": "Loading people…",
     "file": "src/app/boards/boards.html"
@@ -1630,6 +1702,10 @@
   "1526732036695638270": {
     "source": "Confirm this point",
     "file": "src/app/off-grids/off-grid-copy.ts"
+  },
+  "152674525139695155": {
+    "source": "Shape the narration around your insights, from the way a room feels to the features that deserve a closer look.",
+    "file": "src/app/talkthrus/talkthrus.ts"
   },
   "1528163516676561552": {
     "source": "Source Files",
@@ -1683,6 +1759,10 @@
     "source": "VC firms, fund sizes, portfolio companies, investment theses, and the funding landscape — a living Crunchbase alternative compiled from public data.",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "1536827004837181434": {
+    "source": "{$INTERPOLATION} · {$INTERPOLATION_1} cards",
+    "file": "src/app/boards/boards.html"
+  },
   "1537182753428979970": {
     "source": "Choose a JPG, PNG, WebP or HEIC photo under 10 MB.",
     "file": "src/app/off-grids/off-grid-editor.ts"
@@ -1702,6 +1782,10 @@
   "1541165441090835080": {
     "source": "Upload a cover photo",
     "file": "src/app/off-grids/off-grid-editor.html"
+  },
+  "1541569569426706066": {
+    "source": "Exclusive templates",
+    "file": "src/app/membership/membership.ts"
   },
   "1542410942837372796": {
     "source": "Train the business guide",
@@ -1730,6 +1814,14 @@
   "1546718957551491163": {
     "source": "Culture & Entertainment",
     "file": "src/app/public-wiki-catalog.ts"
+  },
+  "1547388672016902178": {
+    "source": "Invite friends, plan events, and build boards together.",
+    "file": "src/app/membership/membership.ts"
+  },
+  "15477153998307988": {
+    "source": "Done {$INTERPOLATION}",
+    "file": "src/app/admin-users/talkthru-interests-admin.html"
   },
   "1548129644093494406": {
     "source": "Memory",
@@ -1855,6 +1947,10 @@
     "source": "Heritage",
     "file": "src/app/business/business.ts"
   },
+  "1580099110601275759": {
+    "source": "This board uses the parent board’s {$INTERPOLATION} visibility.",
+    "file": "src/app/boards/boards.html"
+  },
   "1581817172310226389": {
     "source": "New related card",
     "file": "src/app/boards/boards.ts"
@@ -1906,6 +2002,10 @@
   "1595494273220778920": {
     "source": "Your name{$TAG_INPUT}",
     "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "1596315107318590975": {
+    "source": "{$INTERPOLATION} baths",
+    "file": "src/app/boards/boards.html"
   },
   "1597680822393816412": {
     "source": "Photos for this board",
@@ -2083,6 +2183,10 @@
     "source": "Golden Hour Square",
     "file": "src/app/boards/stack-audio.ts"
   },
+  "1664626626431615020": {
+    "source": "{$INTERPOLATION} scenes",
+    "file": "src/app/boards/boards.html"
+  },
   "1664811720083854077": {
     "source": " Save and add another ",
     "file": "src/app/boards/boards.html"
@@ -2106,6 +2210,10 @@
   "167406533841467180": {
     "source": "Resolved from the map location",
     "file": "src/app/boards/boards.html"
+  },
+  "167558248608399494": {
+    "source": "Neighborhood map placement",
+    "file": "src/app/business/business.ts"
   },
   "1678244099443135752": {
     "source": "Friendship views",
@@ -2299,6 +2407,10 @@
     "source": "More sharing options could not be opened.",
     "file": "src/app/boards/boards.ts"
   },
+  "1739953488662118514": {
+    "source": "Founding-member pricing",
+    "file": "src/app/membership/membership.ts"
+  },
   "1744587461905705029": {
     "source": "Loading your businesses...",
     "file": "src/app/business/business.html"
@@ -2318,6 +2430,10 @@
   "1747409528485527162": {
     "source": "Voice source",
     "file": "src/app/atlas-persona/atlas-persona.html"
+  },
+  "1748010659403127335": {
+    "source": "{$INTERPOLATION} board{$INTERPOLATION_1} · no AI, search, or Places calls occur during preflight.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
   "1750555739180809831": {
     "source": "Voice",
@@ -2435,8 +2551,16 @@
     "source": "Category",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "1808803521215323882": {
+    "source": "By accessing or using LivingWiki, you agree to use the product lawfully and responsibly. If you do not agree, do not use the service.",
+    "file": "src/app/legal/legal.ts"
+  },
   "1808833822201003514": {
     "source": "A hidden fun fact, favorite memory, or private-feeling note for the back of this board.",
+    "file": "src/app/boards/boards.html"
+  },
+  "1808983307157828553": {
+    "source": "{$START_BOLD_TEXT}{$INTERPOLATION}{$CLOSE_BOLD_TEXT} exact source photo{$INTERPOLATION_1}",
     "file": "src/app/boards/boards.html"
   },
   "1809285768561526163": {
@@ -2554,6 +2678,10 @@
   "185230855222868582": {
     "source": "universities",
     "file": "src/app/public-wikis/public-wikis.ts"
+  },
+  "1852334337984878786": {
+    "source": "Personal library across cities and topics",
+    "file": "src/app/pricing/pricing.ts"
   },
   "1852496029497655193": {
     "source": "Notifications, ",
@@ -2707,6 +2835,10 @@
     "source": "Existing",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
+  "1909019553168128852": {
+    "source": "Choose a voice and preview it before {$INTERPOLATION}.",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "1910188520386296224": {
     "source": "Failed to read university CSV.",
     "file": "src/app/atlas-manage/atlas-manage.ts"
@@ -2798,6 +2930,10 @@
   "1941826266604410300": {
     "source": "City sources",
     "file": "src/app/chat/chat.html"
+  },
+  "1942674716964798432": {
+    "source": "Images: {$INTERPOLATION}/{$INTERPOLATION_1}{$INTERPOLATION_2}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
   "1942764235305429174": {
     "source": "1 request every 1.1 seconds between articles.",
@@ -2987,6 +3123,10 @@
     "source": "Open menu",
     "file": "src/app/mobile-menu/mobile-menu.html"
   },
+  "2007323441879121120": {
+    "source": "{$INTERPOLATION} tracked views",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "2009013035635343658": {
     "source": "Speak naturally. Kiwi will answer out loud.",
     "file": "src/app/kiwi/kiwi.ts"
@@ -3062,6 +3202,14 @@
   "2027616025642565959": {
     "source": "{$TAG_INPUT} Let accepted LivingWiki friends submit PinTalks for my approval.",
     "file": "src/app/off-grids/off-grid-editor.html"
+  },
+  "2028635551900243687": {
+    "source": "Public atlas behavior",
+    "file": "src/app/legal/legal.ts"
+  },
+  "2030691719511514261": {
+    "source": "Go professional",
+    "file": "src/app/pricing/pricing.ts"
   },
   "2031158923353182856": {
     "source": "Landing preview",
@@ -3150,6 +3298,10 @@
   "2054757928486693473": {
     "source": "Loading city points…",
     "file": "src/app/dymaxion/dymaxion.html"
+  },
+  "2056962414724434036": {
+    "source": "{$INTERPOLATION} sec",
+    "file": "src/app/boards/boards.html"
   },
   "2057574872309338088": {
     "source": "Copy share link",
@@ -3250,6 +3402,10 @@
   "2104044817012426487": {
     "source": "Warm storyteller",
     "file": "src/app/boards/boards.ts"
+  },
+  "2107688472607679539": {
+    "source": " {$INTERPOLATION} invited you as a {$INTERPOLATION_1}. ",
+    "file": "src/app/notifications/notifications.html"
   },
   "2108395919768759480": {
     "source": "Bring out every agent’s individual strengths.",
@@ -3527,6 +3683,10 @@
     "source": "A public board requires a public avatar. Keep the board private if you do not want to publish this avatar.",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
+  "219825243880527209": {
+    "source": "Explore every {$INTERPOLATION} board",
+    "file": "src/app/chat/chat.html"
+  },
   "2198590276913934346": {
     "source": "Logo URL",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -3575,6 +3735,10 @@
     "source": "Joining...",
     "file": "src/app/chat/chat.ts"
   },
+  "2213648739644835017": {
+    "source": "We use your information to authenticate users, process uploaded materials, generate wiki pages, answer chat questions, show citations, and maintain atlas history.",
+    "file": "src/app/legal/legal.ts"
+  },
   "2214203867654616599": {
     "source": "Local search insights",
     "file": "src/app/business/business.ts"
@@ -3594,6 +3758,10 @@
   "2219074758364098707": {
     "source": "Recently updated",
     "file": "src/app/boards/boards.html"
+  },
+  "2219701001604230547": {
+    "source": "Eligible {$INTERPOLATION}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
   "2222861804662920161": {
     "source": "The 2026 U.S. Midterm Elections",
@@ -3859,6 +4027,10 @@
     "source": "Save team settings",
     "file": "src/app/teams/teams.ts"
   },
+  "2320562722758447930": {
+    "source": "{$INTERPOLATION} matching listings · Page {$INTERPOLATION_1} of {$INTERPOLATION_2}",
+    "file": "src/app/teams/teams.html"
+  },
   "2324193909761102998": {
     "source": "Video shared.",
     "file": "src/app/video-library/video-library.ts"
@@ -4015,9 +4187,17 @@
     "source": "{$START_TAG_SPAN}photo_library{$CLOSE_TAG_SPAN} Photo memories",
     "file": "src/app/boards/boards.html"
   },
+  "2359464479148142281": {
+    "source": "{$INTERPOLATION} per stop",
+    "file": "src/app/boards/boards.html"
+  },
   "2363304106411417130": {
     "source": "Paid feature",
     "file": "src/app/pricing/pricing.ts"
+  },
+  "2365137627379254281": {
+    "source": "{$INTERPOLATION} / card",
+    "file": "src/app/boards/real-estate-wizard-source.html"
   },
   "236800030259598677": {
     "source": "LivingWiki boards",
@@ -4083,6 +4263,10 @@
     "source": "notification needs",
     "file": "src/app/boards/boards.ts"
   },
+  "2387743210638297070": {
+    "source": "Create a reusable Personal Voice narrator",
+    "file": "src/app/pricing/pricing.ts"
+  },
   "2391298050084782128": {
     "source": "{$START_TAG_SPAN}refresh{$CLOSE_TAG_SPAN} Clear search ",
     "file": "src/app/wiki-home/wiki-home.html"
@@ -4142,6 +4326,10 @@
   "2402857739078144384": {
     "source": "Recommended: 8–12",
     "file": "src/app/boards/boards.html"
+  },
+  "2403502165007313092": {
+    "source": "{$START_TAG_SPAN}play_circle{$CLOSE_TAG_SPAN} PinTalk · {$INTERPOLATION}",
+    "file": "src/app/off-grids/off-grids.html"
   },
   "2405210227715570501": {
     "source": "Loading business admin page...",
@@ -4255,6 +4443,10 @@
     "source": "Source files",
     "file": "src/app/green-jobs/green-jobs.html"
   },
+  "2432538182373451602": {
+    "source": "Browse all {$INTERPOLATION}",
+    "file": "src/app/boards/boards.html"
+  },
   "2432667902120791389": {
     "source": "Personal Plus or Professional is required for new Wiki workspaces.",
     "file": "src/app/wiki-home/wiki-home.ts"
@@ -4349,7 +4541,7 @@
   },
   "2476720291978934849": {
     "source": "Back to {$INTERPOLATION}",
-    "file": "src/app/business-detail/business-edit.html"
+    "file": "src/app/boards/boards.html"
   },
   "2477074364911363345": {
     "source": " Upload a CSV, preview rows, skip duplicates, then create all valid city Wikis with internet answers enabled. ",
@@ -4374,6 +4566,10 @@
   "2488647889265560039": {
     "source": "Wiki Voice | LivingWiki",
     "file": "src/app/app.routes.ts"
+  },
+  "2489605785701562269": {
+    "source": "Retention and security",
+    "file": "src/app/legal/legal.ts"
   },
   "2490182077596846895": {
     "source": "Choose a photo",
@@ -4543,6 +4739,10 @@
     "source": "Fenceline sections",
     "file": "src/app/fence-line/fence-line.html"
   },
+  "2545220974971711861": {
+    "source": "{$INTERPOLATION}% click-through rate",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "2547019822509993435": {
     "source": "Top 500 podcasts mapped by genre, audience, ad rates, and influence — with the business model of podcasting analyzed through public data.",
     "file": "src/app/public-wiki-catalog.ts"
@@ -4663,6 +4863,10 @@
     "source": "Add coordinates to drop this city on the {$START_LINK}Dymaxion map{$CLOSE_LINK}. Leave blank to skip the map.",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "2590634594643370681": {
+    "source": "Higher AI-generation limits",
+    "file": "src/app/membership/membership.ts"
+  },
   "2592368582911584624": {
     "source": "Temperature",
     "file": "src/app/dymaxion/dymaxion.html"
@@ -4703,6 +4907,10 @@
     "source": "What should the TalkThru emphasize?",
     "file": "src/app/boards/boards.ts"
   },
+  "2599779649515089157": {
+    "source": "Uploading video… {$INTERPOLATION}%",
+    "file": "src/app/boards/talk-drop/talk-drop.html"
+  },
   "2600828268883663218": {
     "source": "Remove card ",
     "file": "src/app/kiwi/kiwi.ts"
@@ -4741,6 +4949,10 @@
   },
   "2607125757074003707": {
     "source": " Archive listing ",
+    "file": "src/app/teams/teams.html"
+  },
+  "2607355454768075674": {
+    "source": "{$INTERPOLATION} · {$INTERPOLATION_1} · Expires {$INTERPOLATION_2} {$START_TAG_SPAN}· {$INTERPOLATION_3}{$CLOSE_TAG_SPAN}",
     "file": "src/app/teams/teams.html"
   },
   "2607521888232731341": {
@@ -4810,6 +5022,10 @@
   "2624701521900289515": {
     "source": "Find nearby gems and create a board",
     "file": "src/app/public-wikis/public-wikis.html"
+  },
+  "2628097400808105456": {
+    "source": "Tag places using what3words and find spots most people miss.",
+    "file": "src/app/membership/membership.ts"
   },
   "2629899607767904728": {
     "source": "Photos show the space.{$LINE_BREAK}{$START_EMPHASISED_TEXT}You help buyers feel the possibility.{$CLOSE_EMPHASISED_TEXT}",
@@ -4906,6 +5122,10 @@
   "2656224699244633875": {
     "source": "No videos match that search.",
     "file": "src/app/video-library/video-library.html"
+  },
+  "2658599863895362792": {
+    "source": "No avatars match “{$INTERPOLATION}”.",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "2659625723096392929": {
     "source": "Create a full board inside this card",
@@ -5027,6 +5247,10 @@
     "source": "Preparing your photos…",
     "file": "src/app/boards/listing-photo-source.html"
   },
+  "2700965228994015813": {
+    "source": "{$START_BOLD_TEXT}{$INTERPOLATION}{$CLOSE_BOLD_TEXT} Stop {$INTERPOLATION} ",
+    "file": "src/app/boards/boards.html"
+  },
   "2702200797962830082": {
     "source": "Region",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -5147,6 +5371,10 @@
     "source": "Payment returned without a checkout session. Please contact support.",
     "file": "src/app/membership/membership.ts"
   },
+  "2741739817779405019": {
+    "source": "Nearby gems · {$INTERPOLATION} places",
+    "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
+  },
   "2742100746542955671": {
     "source": "Edit related card",
     "file": "src/app/boards/boards.ts"
@@ -5202,6 +5430,10 @@
   "2769657962320512257": {
     "source": "Featured guide placement",
     "file": "src/app/business/business.ts"
+  },
+  "2771157655870159022": {
+    "source": "LivingWiki™ is a product of Mind Palace Inc.",
+    "file": "src/app/legal/legal.ts"
   },
   "2772023564304193657": {
     "source": "Enter your password",
@@ -5314,6 +5546,10 @@
   "2817737674707432852": {
     "source": "Close share options",
     "file": "src/app/answer-card/answer-card.html"
+  },
+  "2819084582587016074": {
+    "source": "{$INTERPOLATION} per card",
+    "file": "src/app/boards/boards.html"
   },
   "281921754503402814": {
     "source": "Best for a spontaneous stroll",
@@ -5581,7 +5817,7 @@
   },
   "2918092695174222542": {
     "source": "City Sponsor",
-    "file": "src/app/business-claim/business-claim.ts"
+    "file": "src/app/business/business.ts"
   },
   "2918542475227099076": {
     "source": "Enter a valid email address so we can keep you updated.",
@@ -5622,6 +5858,10 @@
   "293344152000220895": {
     "source": "will be removed from My Videos. Its source board will not be deleted.",
     "file": "src/app/video-library/video-library.html"
+  },
+  "2938041935017490069": {
+    "source": "Up to 5 private LivingWiki spaces",
+    "file": "src/app/pricing/pricing.ts"
   },
   "2938200015710964923": {
     "source": "Upload my photos",
@@ -5787,6 +6027,10 @@
     "source": "Find the shared pattern",
     "file": "src/app/fence-line/fence-line.html"
   },
+  "2982134879952554272": {
+    "source": "Bring the listing together in a visual story that buyers can explore at their own pace.",
+    "file": "src/app/talkthrus/talkthrus.ts"
+  },
   "2983225615324261410": {
     "source": "Current article",
     "file": "src/app/web-scraper/web-scraper.html"
@@ -5883,6 +6127,10 @@
     "source": "Cover photo",
     "file": "src/app/teams/teams.html"
   },
+  "3005524494119284751": {
+    "source": "LivingWiki is an independent product of Mind Palace Inc. and is not affiliated with, endorsed by, or sponsored by the Wikimedia Foundation, Wikipedia, or any related Wikimedia project.",
+    "file": "src/app/legal/legal.ts"
+  },
   "3005804072839305205": {
     "source": "{$START_TAG_SPAN}upload_file{$CLOSE_TAG_SPAN}Upload CSV{$TAG_INPUT}",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -5963,6 +6211,10 @@
     "source": "Keep current position",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
+  "3030391593660800392": {
+    "source": "{$START_TAG_SPAN}where_to_vote{$CLOSE_TAG_SPAN} Recognized {$INTERPOLATION} {$INTERPOLATION_1}. Each card will keep its exact clickable three-word address. ",
+    "file": "src/app/boards/boards.html"
+  },
   "3033903988434708190": {
     "source": "Back note",
     "file": "src/app/boards/boards.html"
@@ -5993,7 +6245,7 @@
   },
   "3044142083883783523": {
     "source": "Updated {$INTERPOLATION}",
-    "file": "src/app/boards/boards.html"
+    "file": "src/app/board-insights/board-insights.html"
   },
   "3044779181567845642": {
     "source": "Shopping",
@@ -6050,6 +6302,10 @@
   "3072824547872369648": {
     "source": "Back to boards",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
+  },
+  "3072871189906092214": {
+    "source": "{$INTERPOLATION} words · ~{$INTERPOLATION_1}s",
+    "file": "src/app/boards/boards.html"
   },
   "3074954269246330305": {
     "source": "Outdoors",
@@ -6110,6 +6366,10 @@
   "3087472485471032808": {
     "source": "Write the words, choose the voice, then set the mood.",
     "file": "src/app/boards/boards.html"
+  },
+  "3088821265775127099": {
+    "source": "{$INTERPOLATION} new file(s) will be uploaded when you save.",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "3089079099029430989": {
     "source": "Delete song confirmation",
@@ -6191,6 +6451,14 @@
     "source": "Choose where a board created inside a card appears.",
     "file": "src/app/boards/boards.html"
   },
+  "3111388915707252308": {
+    "source": "Download {$INTERPOLATION}",
+    "file": "src/app/video-library/video-library.html"
+  },
+  "3113964465938109284": {
+    "source": "We do not sell personal information. We may disclose information when required by law, to enforce our terms, or to protect the product, users, or the public.",
+    "file": "src/app/legal/legal.ts"
+  },
   "3116364549879396501": {
     "source": "Loading branding…",
     "file": "src/app/boards/boards.html"
@@ -6210,6 +6478,10 @@
   "3122017215826850357": {
     "source": "Save a place you want to come back to.",
     "file": "src/app/off-grids/off-grid-copy.ts"
+  },
+  "3122457688505124547": {
+    "source": "Don’t Just Search. Let’s Go. | LivingWiki",
+    "file": "src/app/membership/membership.ts"
   },
   "3128911811072399567": {
     "source": " {$INTERPOLATION} ready/retry · {$INTERPOLATION_1} skipped/created ",
@@ -6234,6 +6506,10 @@
   "313742988556360267": {
     "source": "{$START_TAG_STRONG}Daily cron:{$CLOSE_TAG_STRONG} a scheduled backend refresh runs once per day and writes the Philly snapshot to Firestore.",
     "file": "src/app/green-jobs/green-jobs.html"
+  },
+  "3137940130132266059": {
+    "source": "Answer board · {$INTERPOLATION} cards",
+    "file": "src/app/chat/chat.html"
   },
   "3138002128206115248": {
     "source": "Air toxics percentile",
@@ -6274,6 +6550,10 @@
   "3146348002114324720": {
     "source": "Joining…",
     "file": "src/app/boards/boards.ts"
+  },
+  "3147591160602538496": {
+    "source": "{$INTERPOLATION} v{$INTERPOLATION_1} · rubric {$INTERPOLATION_2}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
   "314760025269930203": {
     "source": "Talking Card settings",
@@ -6323,9 +6603,17 @@
     "source": "URL preview",
     "file": "src/app/custom-public-url-dialog/custom-public-url-dialog.html"
   },
+  "316052551653227295": {
+    "source": "Embed YouTube clips, songs, photos & more to bring boards to life.",
+    "file": "src/app/membership/membership.ts"
+  },
   "3161045580446394854": {
     "source": "Your business claim draft is saved.",
     "file": "src/app/verify-email/verify-email.html"
+  },
+  "3163044740176820503": {
+    "source": "Get started",
+    "file": "src/app/business/business.ts"
   },
   "3163235982766660579": {
     "source": "source photos",
@@ -6491,6 +6779,10 @@
     "source": "Shown prominently in recap emails.",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
+  "321085498122133814": {
+    "source": "A short personal welcome before buyers explore {$INTERPOLATION}.",
+    "file": "src/app/boards/boards.html"
+  },
   "3211777905184690981": {
     "source": "AirNow zip code",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -6534,6 +6826,10 @@
   "3219134749683987359": {
     "source": "{$START_TAG_SPAN}chat_bubble{$CLOSE_TAG_SPAN}Text",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
+  "322080564957795096": {
+    "source": "LivingWiki answers are generated from available source material, public information, uploaded documents, verified local sources, and user-submitted updates, and may require human review.",
+    "file": "src/app/legal/legal.ts"
   },
   "3221511166288560984": {
     "source": "Why this belongs on the board.",
@@ -6582,6 +6878,10 @@
   "3239027757218784492": {
     "source": "Create and save a brand-new voice take for this card",
     "file": "src/app/boards/boards.html"
+  },
+  "3239672570257280201": {
+    "source": "Sponsor a neighborhood guide or topic hub",
+    "file": "src/app/business/business.ts"
   },
   "3242137040730618219": {
     "source": "Copy question",
@@ -6715,6 +7015,10 @@
     "source": "Poised, clear, with a British accent",
     "file": "src/app/kiwi/kiwi.ts"
   },
+  "328105443195156774": {
+    "source": "{$INTERPOLATION} stops",
+    "file": "src/app/boards/boards.html"
+  },
   "3281255116006489017": {
     "source": "{$START_TAG_SPAN}play_arrow{$CLOSE_TAG_SPAN} What is the LivingWiki platform? ",
     "file": "src/app/marketing/marketing.html"
@@ -6750,6 +7054,14 @@
   "3287571785619269404": {
     "source": "The Essex County incinerator burns much of New York City's trash in a dense immigrant neighborhood ringed by airport, port, and chemical plants.",
     "file": "src/app/fence-line/fence-line.ts"
+  },
+  "3288522513422252351": {
+    "source": "Small checkout display",
+    "file": "src/app/business/business.ts"
+  },
+  "3289007559123512700": {
+    "source": "Public topic page publishing",
+    "file": "src/app/pricing/pricing.ts"
   },
   "3290444718792575636": {
     "source": "My voice",
@@ -6806,6 +7118,10 @@
   "3308689142362134793": {
     "source": "The Immigration & Border Policy Wiki",
     "file": "src/app/public-wiki-catalog.ts"
+  },
+  "3313186549244980624": {
+    "source": " {$INTERPOLATION} cards · Created {$INTERPOLATION_1} ",
+    "file": "src/app/teams/teams.html"
   },
   "3313528406596871463": {
     "source": "Deutsch",
@@ -6963,6 +7279,14 @@
     "source": "Owner only",
     "file": "src/app/atlas-manage/atlas-manage.ts"
   },
+  "33608348982190344": {
+    "source": "Best for storefront glass",
+    "file": "src/app/business/business.ts"
+  },
+  "3360908936795618830": {
+    "source": "Distinct study environments with access rules verified.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
   "3361935502032632793": {
     "source": "A versatile glow that works beautifully with most boards.",
     "file": "src/app/boards/stack-audio.ts"
@@ -6970,6 +7294,10 @@
   "3362033469957869127": {
     "source": "Providers",
     "file": "src/app/admin-users/admin-users.html"
+  },
+  "336238807980151593": {
+    "source": "{$INTERPOLATION} valid rows",
+    "file": "src/app/atlas-manage/atlas-manage.html"
   },
   "3365072931347409104": {
     "source": "{$START_TAG_SPAN}chat_bubble{$CLOSE_TAG_SPAN} Message ",
@@ -7267,6 +7595,10 @@
     "source": " One created team per account. You can join other teams. ",
     "file": "src/app/account-menu/account-menu.html"
   },
+  "3453006371871045084": {
+    "source": "{$INTERPOLATION} · {$INTERPOLATION_1} verified cards",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "3455527764862126356": {
     "source": "No cards match that search.",
     "file": "src/app/boards/boards.html"
@@ -7355,6 +7687,10 @@
     "source": "Generated card image preview",
     "file": "src/app/boards/boards.html"
   },
+  "3480595797008536457": {
+    "source": "Documented school-specific rituals with disputed origins labeled.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
   "348145762152736042": {
     "source": "The property",
     "file": "src/app/talkthrus/talkthrus.ts"
@@ -7378,6 +7714,10 @@
   "3483240007042598139": {
     "source": "AI can make mistakes. Verify important information.",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
+  "3484473240362271233": {
+    "source": "Everything in Local",
+    "file": "src/app/business/business.ts"
   },
   "3484984238852181071": {
     "source": "AI",
@@ -7567,6 +7907,10 @@
     "source": "Return to LivingWiki and choose another public city.",
     "file": "src/app/city-board-collection/city-board-collection.ts"
   },
+  "3541916613728075164": {
+    "source": "Invitations for {$INTERPOLATION}. If you were invited at another address, switch accounts.",
+    "file": "src/app/teams/teams.html"
+  },
   "3542042671420335679": {
     "source": "No",
     "file": "src/app/profile/profile.ts"
@@ -7598,6 +7942,10 @@
   "3553017016049447977": {
     "source": "This email action is not supported in the app.",
     "file": "src/app/auth-action/auth-action.ts"
+  },
+  "3553296522614547893": {
+    "source": "SOC2 Type II compliance ready architecture.",
+    "file": "src/app/marketing/marketing.ts"
   },
   "3554243731326749008": {
     "source": "The Real Estate Market Wiki",
@@ -7706,6 +8054,10 @@
   "3582446438119590029": {
     "source": "Select up to 5",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
+  "3583615513920371620": {
+    "source": "We may use infrastructure, hosting, storage, authentication, analytics, and model providers to operate LivingWiki. Those providers may process data strictly to deliver the service on our behalf.",
+    "file": "src/app/legal/legal.ts"
   },
   "3583956776638615689": {
     "source": "Checkout was cancelled. You can pick a plan whenever you are ready.",
@@ -7915,6 +8267,10 @@
     "source": "Your boards",
     "file": "src/app/boards/boards.ts"
   },
+  "365329801397962519": {
+    "source": "{$START_TAG_SPAN}auto_awesome{$CLOSE_TAG_SPAN} Featured in {$INTERPOLATION} ",
+    "file": "src/app/city-board-collection/city-board-collection.html"
+  },
   "3655082891939518750": {
     "source": "Continue with Google",
     "file": "src/app/create-account/create-account.ts"
@@ -7922,6 +8278,10 @@
   "3655227227837305072": {
     "source": "Admin notes{$START_TAG_TEXTAREA}{$CLOSE_TAG_TEXTAREA}",
     "file": "src/app/admin-users/talkthru-interests-admin.html"
+  },
+  "365549744879005576": {
+    "source": "Upgrade personal",
+    "file": "src/app/pricing/pricing.ts"
   },
   "3655881289553210551": {
     "source": "Open saved board drafts",
@@ -7962,6 +8322,10 @@
   "3680676956196795841": {
     "source": "Copy quiz link",
     "file": "src/app/boards/boards.html"
+  },
+  "3680924658833882976": {
+    "source": "Change the filters or generate the first {$INTERPOLATION} board draft.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
   "3681097208430568152": {
     "source": "Default card type",
@@ -8026,6 +8390,10 @@
   "3701276374577758003": {
     "source": " Search across {$INTERPOLATION}, its metropolitan area, nearby cities, and suburbs. Google finds the address, then your review becomes part of this city wiki. ",
     "file": "src/app/city-places/city-places.html"
+  },
+  "3703255391482358148": {
+    "source": "Verified Local Favorite badge",
+    "file": "src/app/business/business.ts"
   },
   "3705728984588120913": {
     "source": "Kiwi, the LivingWiki assistant",
@@ -8163,6 +8531,10 @@
     "source": "Lines {$INTERPOLATION}-{$INTERPOLATION_1}",
     "file": "src/app/shared-chat/shared-chat.html"
   },
+  "3751897480238434251": {
+    "source": "Global catalog · 7 buckets × {$INTERPOLATION} {$INTERPOLATION_1}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "3752022757554431322": {
     "source": "LivingWiki place",
     "file": "src/app/boards/boards.ts"
@@ -8170,6 +8542,10 @@
   "3752749806811742048": {
     "source": "Save identity & personality",
     "file": "src/app/atlas-persona/atlas-persona.ts"
+  },
+  "3752844093994384159": {
+    "source": "Disclaimers and liability",
+    "file": "src/app/legal/legal.ts"
   },
   "3753585561172815876": {
     "source": "Sign in with the email address the invitation was sent to.",
@@ -8186,6 +8562,10 @@
   "3760890619817277502": {
     "source": "Remove video from ",
     "file": "src/app/boards/boards.ts"
+  },
+  "3762793435848716944": {
+    "source": "You are responsible for making sure you have the rights to upload, publish, and share the material you place into the service.",
+    "file": "src/app/legal/legal.ts"
   },
   "3763778808717091943": {
     "source": "Play all here",
@@ -8246,6 +8626,10 @@
   "3783913300558991064": {
     "source": "Start (seconds){$TAG_INPUT}",
     "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
+  "3784503893413914470": {
+    "source": "Events and promotions on your profile",
+    "file": "src/app/business/business.ts"
   },
   "3785866449817994309": {
     "source": "Only you can open it until you choose Make public in Board settings. Your starting location was not saved.",
@@ -8347,6 +8731,10 @@
     "source": "New Chat",
     "file": "src/app/chat/chat.ts"
   },
+  "3811595508308655926": {
+    "source": "An under-21-safe, evergreen sequence shared as cards.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
   "3813402917395999420": {
     "source": "{$TAG_IMG} Play Starfold City ",
     "file": "src/app/public-wikis/public-wikis.html"
@@ -8423,6 +8811,10 @@
     "source": "Kiwi voice could not start. Check microphone access and try again.",
     "file": "src/app/kiwi/kiwi.ts"
   },
+  "3841989706323728259": {
+    "source": "Not available",
+    "file": "src/app/profile/profile.ts"
+  },
   "3842288952522039732": {
     "source": "Only the board owner can edit this Talking Card.",
     "file": "src/app/boards/boards.ts"
@@ -8430,6 +8822,10 @@
   "3843495765114158756": {
     "source": "1 stop",
     "file": "src/app/chat/chat.ts"
+  },
+  "3845078135101348106": {
+    "source": "Open {$INTERPOLATION}",
+    "file": "src/app/public-wikis/public-wikis.html"
   },
   "3845152859531369645": {
     "source": "Lines",
@@ -8527,6 +8923,10 @@
     "source": "This intro card is no longer available.",
     "file": "src/app/boards/boards.ts"
   },
+  "3888247328343531910": {
+    "source": "Using the service",
+    "file": "src/app/legal/legal.ts"
+  },
   "3889355052598045321": {
     "source": "Number of cards",
     "file": "src/app/boards/boards.html"
@@ -8575,6 +8975,10 @@
     "source": "Open Philly Answer Card",
     "file": "src/app/shared-chat/shared-chat.html"
   },
+  "3906110511741159929": {
+    "source": "We store the content you upload or submit, including files, URLs, extracted text, generated wiki content, chat threads, and source citations tied to your atlas.",
+    "file": "src/app/legal/legal.ts"
+  },
   "390666931892570060": {
     "source": "A quick line people will see on the card",
     "file": "src/app/boards/boards.html"
@@ -8591,6 +8995,10 @@
     "source": "Delete draft…",
     "file": "src/app/boards/boards.html"
   },
+  "3910326530505852255": {
+    "source": "These terms are a practical starting point for using LivingWiki. They are intentionally concise for now and will be refined as the product matures.",
+    "file": "src/app/legal/legal.ts"
+  },
   "3910646306288819373": {
     "source": "Card numbers",
     "file": "src/app/boards/boards.html"
@@ -8606,6 +9014,10 @@
   "3915966149686975421": {
     "source": "Optional",
     "file": "src/app/boards/boards.html"
+  },
+  "3916041701653013318": {
+    "source": "Opening the listing builder for {$INTERPOLATION}…",
+    "file": "src/app/teams/teams.html"
   },
   "3916130933617238069": {
     "source": "Available images",
@@ -8711,6 +9123,10 @@
     "source": "How to add it{$START_TAG_SELECT}{$START_TAG_OPTION}Copy — keep my personal original{$CLOSE_TAG_OPTION}{$START_TAG_OPTION_1}Move — give ownership to the team{$CLOSE_TAG_OPTION}{$CLOSE_TAG_SELECT}",
     "file": "src/app/teams/teams.html"
   },
+  "3953103350407101805": {
+    "source": "{$START_BOLD_TEXT}{$INTERPOLATION}{$CLOSE_BOLD_TEXT} verified product{$INTERPOLATION_1}",
+    "file": "src/app/boards/boards.html"
+  },
   "3953998553981218910": {
     "source": "No businesses match this search or status filter.",
     "file": "src/app/admin-users/admin-users.html"
@@ -8803,6 +9219,10 @@
     "source": "Institution",
     "file": "src/app/public-wikis/public-wikis.ts"
   },
+  "3981868235706389547": {
+    "source": " {$INTERPOLATION} verified · {$INTERPOLATION_1} link-ready ",
+    "file": "src/app/boards/boards.html"
+  },
   "3981899387890553740": {
     "source": "Kiwi needs more detail to finish this draft. Tell it what to add in the box below.",
     "file": "src/app/kiwi/kiwi.ts"
@@ -8838,6 +9258,10 @@
   "3988695357691364512": {
     "source": "Board stickers",
     "file": "src/app/boards/boards.html"
+  },
+  "3991785467197894133": {
+    "source": "Monthly local-search insight summary",
+    "file": "src/app/business/business.ts"
   },
   "3991821799834383210": {
     "source": "Search university boards",
@@ -8886,6 +9310,10 @@
   "4005765937632931847": {
     "source": "Downloads the MP4 and opens the selected composer. Attach it for in-feed autoplay.",
     "file": "src/app/boards/boards.ts"
+  },
+  "4013681269990540326": {
+    "source": "Featured placement in a neighborhood guide",
+    "file": "src/app/business/business.ts"
   },
   "4013983053931205319": {
     "source": "All board types",
@@ -9023,6 +9451,10 @@
     "source": "Custom headline",
     "file": "src/app/boards/boards.html"
   },
+  "4068942737277865317": {
+    "source": "{$START_TAG_SPAN}auto_awesome{$CLOSE_TAG_SPAN} Create these {$INTERPOLATION} cards ",
+    "file": "src/app/boards/boards.html"
+  },
   "4071424234285464370": {
     "source": "Payment returned without a checkout session. Please try checkout again.",
     "file": "src/app/business-claim/business-claim.ts"
@@ -9147,6 +9579,10 @@
     "source": "Choose a convenient time to tour this property.",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
+  "410243422091157696": {
+    "source": "GPS accuracy ±{$INTERPOLATION} m. Adjust the pin if needed.",
+    "file": "src/app/off-grids/off-grid-editor.html"
+  },
   "4104141013290924022": {
     "source": "Recommended: 8–16",
     "file": "src/app/boards/boards.html"
@@ -9167,9 +9603,17 @@
     "source": "Cards per board",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
+  "4113245530083969001": {
+    "source": " All {$INTERPOLATION} {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
+    "file": "src/app/public-wikis/public-wikis.html"
+  },
   "4113265961462660636": {
     "source": "verified",
     "file": "src/app/business-detail/business-detail.ts"
+  },
+  "4113470845459774314": {
+    "source": "Basic visitor and question insights",
+    "file": "src/app/pricing/pricing.ts"
   },
   "4117205480758376358": {
     "source": "Only you can see this setup card",
@@ -9246,6 +9690,10 @@
   "4134262242877689961": {
     "source": " The world, undistorted. ",
     "file": "src/app/dymaxion/dymaxion.html"
+  },
+  "4135515308465324853": {
+    "source": "{$INTERPOLATION} file(s) selected",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "4136129438009397007": {
     "source": "Invalid",
@@ -9367,6 +9815,10 @@
     "source": "Search avatars by name…",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
+  "4174219392573992958": {
+    "source": "Turn cities, campuses, journeys, and curiosities into interactive worlds of places, stories, media, and unexpected discoveries.",
+    "file": "src/app/membership/membership.ts"
+  },
   "4176921571188245131": {
     "source": "Find a place",
     "file": "src/app/city-places/city-places.html"
@@ -9435,6 +9887,10 @@
     "source": "Sample QR badge for ",
     "file": "src/app/business/business.ts"
   },
+  "4192471012029777601": {
+    "source": "No {$INTERPOLATION} found",
+    "file": "src/app/public-wikis/public-wikis.html"
+  },
   "4192540490740519183": {
     "source": "No title",
     "file": "src/app/atlas-manage/atlas-manage.ts"
@@ -9483,6 +9939,10 @@
     "source": "Burger",
     "file": "src/app/business-badge-icons.ts"
   },
+  "4209925306096931014": {
+    "source": "Shared publishing and collaboration workflows",
+    "file": "src/app/pricing/pricing.ts"
+  },
   "4210252755256494022": {
     "source": "Make your expertise part of every listing.",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -9514,6 +9974,10 @@
   "4214870786982794523": {
     "source": "Save cover",
     "file": "src/app/boards/boards.ts"
+  },
+  "4215796496453020565": {
+    "source": "{$INTERPOLATION} views · {$INTERPOLATION_1}%",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "4215991549357490776": {
     "source": "My Videos | LivingWiki",
@@ -9771,6 +10235,10 @@
     "source": "Only Public boards notify your friends.",
     "file": "src/app/boards/boards.html"
   },
+  "4297496103809168566": {
+    "source": "{$INTERPOLATION} total",
+    "file": "src/app/teams/teams.html"
+  },
   "4298843972406017764": {
     "source": "Tour stop navigation",
     "file": "src/app/boards/boards.html"
@@ -9826,6 +10294,14 @@
   "4312183290449350804": {
     "source": "Send email",
     "file": "src/app/kiwi/kiwi.ts"
+  },
+  "4312610539720279422": {
+    "source": "Places with a concrete shared student use—not secrecy theater.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
+  "4313634156942187524": {
+    "source": "Teams & organizations",
+    "file": "src/app/pricing/pricing.ts"
   },
   "431524018496586400": {
     "source": "Close More menu",
@@ -9914,6 +10390,10 @@
   "4343618321340535351": {
     "source": "Couldn’t load boards. Please try again.",
     "file": "src/app/public-wikis/public-wikis.html"
+  },
+  "4346577303195277378": {
+    "source": " {$INTERPOLATION} {$INTERPOLATION_1} and {$INTERPOLATION_2} {$INTERPOLATION_3} exported to {$INTERPOLATION_4}. ",
+    "file": "src/app/boards/boards.html"
   },
   "4347714126505139135": {
     "source": "Sign in to LivingWiki first. Your Spotify password is always handled by Spotify.",
@@ -10019,6 +10499,14 @@
     "source": "Restore team",
     "file": "src/app/teams/teams.html"
   },
+  "4381374396976370253": {
+    "source": "~{$INTERPOLATION} words per card",
+    "file": "src/app/boards/boards.html"
+  },
+  "4382580897390353403": {
+    "source": "{$INTERPOLATION} skipped",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "4382896668786967342": {
     "source": "{$START_TAG_SPAN}restart_alt{$CLOSE_TAG_SPAN} Reset ",
     "file": "src/app/boards/boards.html"
@@ -10026,6 +10514,10 @@
   "4384935585062046247": {
     "source": "Snapshot status",
     "file": "src/app/city-pulse-admin/city-pulse-admin.html"
+  },
+  "4386618710844012350": {
+    "source": "To {$INTERPOLATION}",
+    "file": "src/app/boards/boards.html"
   },
   "4386977525322322103": {
     "source": "Additional QR code saved.",
@@ -10098,6 +10590,10 @@
   "4411804916643972918": {
     "source": " Refreshing Philly green jobs… ",
     "file": "src/app/green-jobs/green-jobs.html"
+  },
+  "4416215897351482429": {
+    "source": "Received {$INTERPOLATION}",
+    "file": "src/app/admin-users/talkthru-interests-admin.html"
   },
   "4416290763660062288": {
     "source": "",
@@ -10335,6 +10831,10 @@
     "source": "Counter card",
     "file": "src/app/business/business.ts"
   },
+  "4509922642254834628": {
+    "source": "We may suspend or terminate access if we reasonably believe your use creates security, legal, operational, or abuse risks.",
+    "file": "src/app/legal/legal.ts"
+  },
   "4510432308052618953": {
     "source": "Personal narrator",
     "file": "src/app/boards/boards.html"
@@ -10362,6 +10862,10 @@
   "4515054874938847912": {
     "source": "Map context",
     "file": "src/app/city-places/city-places.html"
+  },
+  "4515164898640999007": {
+    "source": "Professional plan",
+    "file": "src/app/pricing/pricing.ts"
   },
   "4515513161371717834": {
     "source": "Play again",
@@ -10431,6 +10935,10 @@
     "source": "Logo image",
     "file": "src/app/atlas-landing/atlas-landing.html"
   },
+  "4529149397106529332": {
+    "source": "Discovery and analytics dashboard",
+    "file": "src/app/business/business.ts"
+  },
   "4530759365063973502": {
     "source": "Make this space yours",
     "file": "src/app/teams/teams.html"
@@ -10499,6 +11007,10 @@
     "source": "City board",
     "file": "src/app/boards/boards.html"
   },
+  "4546256301304528964": {
+    "source": "Pinned by {$INTERPOLATION}",
+    "file": "src/app/off-grids/off-grid-detail.html"
+  },
   "4547120507621236039": {
     "source": "Real Estate VirtualTalkThru",
     "file": "src/app/boards/boards.html"
@@ -10535,6 +11047,10 @@
     "source": "Reach readers exploring Philadelphia civic data, green jobs, and local knowledge.",
     "file": "src/app/atlas-landing/atlas-landing.html"
   },
+  "4560535958566611225": {
+    "source": "Turn real estate listing photos into a personal, narrated TalkThru. Your voice, your insights, and a more human connection with buyers.",
+    "file": "src/app/talkthrus/talkthrus.ts"
+  },
   "4561710059554375491": {
     "source": "Spotify could not play this track.",
     "file": "src/app/spotify-playback.service.ts"
@@ -10555,6 +11071,10 @@
     "source": "A century of steel industry pollution and decades of disinvestment burden a majority-Black city built by heavy industry.",
     "file": "src/app/fence-line/fence-line.ts"
   },
+  "4567179193327756074": {
+    "source": " {$INTERPOLATION} {$INTERPOLATION_1} source picture{$INTERPOLATION_2} found. ",
+    "file": "src/app/boards/boards.html"
+  },
   "4568293355349183679": {
     "source": "Select card",
     "file": "src/app/boards/boards.ts"
@@ -10562,6 +11082,10 @@
   "4568998332883224453": {
     "source": " Detected {$INTERPOLATION} numbered items. The preview will keep one card per item in this order. ",
     "file": "src/app/boards/boards.html"
+  },
+  "4569186156947192131": {
+    "source": "{$INTERPOLATION} shown",
+    "file": "src/app/city-board-collection/city-board-collection.html"
   },
   "4569977374738300624": {
     "source": "{$START_TAG_SPAN}add{$CLOSE_TAG_SPAN} Add card ",
@@ -10626,6 +11150,10 @@
   "4585504902783689152": {
     "source": "Federal student loan data, repayment plans, forgiveness programs, default rates, and the economics of higher education in America.",
     "file": "src/app/public-wiki-catalog.ts"
+  },
+  "4587204508892116338": {
+    "source": " Paste a public {$INTERPOLATION} listing. LivingWiki will keep the property details and their source together. ",
+    "file": "src/app/boards/boards.html"
   },
   "4587737600969915636": {
     "source": "Queueing article URLs one by one and waiting for ingestion to finish.",
@@ -10759,6 +11287,10 @@
     "source": "Share its photo, exact location and PinTalks with everyone.",
     "file": "src/app/off-grids/off-grid-editor.ts"
   },
+  "4632914288342669590": {
+    "source": "Product ownership",
+    "file": "src/app/legal/legal.ts"
+  },
   "4633505197540468968": {
     "source": "Current wiki",
     "file": "src/app/landing/landing.html"
@@ -10766,6 +11298,10 @@
   "4635242517912627412": {
     "source": "LivingWiki™ is a product of Mind Palace Inc. LivingWiki is an independent product and is not affiliated with, endorsed by, or sponsored by the Wikimedia Foundation, Wikipedia, or any related Wikimedia project.",
     "file": "src/app/legal/legal.html"
+  },
+  "4635272992547248399": {
+    "source": "free to start",
+    "file": "src/app/pricing/pricing.ts"
   },
   "4635704663136718774": {
     "source": "Show original",
@@ -10783,6 +11319,10 @@
     "source": "Custom closing message",
     "file": "src/app/boards/boards.html"
   },
+  "4640326196701372596": {
+    "source": "{$START_TAG_SPAN}link_off{$CLOSE_TAG_SPAN} Remove from {$INTERPOLATION}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "4640491892187415612": {
     "source": "Updating the map and directions…",
     "file": "src/app/boards/boards.ts"
@@ -10795,6 +11335,10 @@
     "source": "AI will prepare a title and description for you.",
     "file": "src/app/boards/boards.html"
   },
+  "4646434052640946467": {
+    "source": "Start one personal LivingWiki draft",
+    "file": "src/app/pricing/pricing.ts"
+  },
   "4648079201550582996": {
     "source": "Shared thread",
     "file": "src/app/shared-chat/shared-chat.html"
@@ -10806,6 +11350,10 @@
   "4651164670190349032": {
     "source": "Major protocols, tokens, exchanges, regulatory actions, and the evolving crypto landscape — objective, data-driven, continuously updated.",
     "file": "src/app/public-wiki-catalog.ts"
+  },
+  "4651620452228270217": {
+    "source": "Stop {$INTERPOLATION}",
+    "file": "src/app/boards/boards.html"
   },
   "4655344072712860757": {
     "source": "Missing city",
@@ -10889,6 +11437,10 @@
   },
   "4684524528157246019": {
     "source": "Next picture",
+    "file": "src/app/boards/boards.html"
+  },
+  "4686130202898210866": {
+    "source": " Include names, order, location, tone, or anything that matters. You can also paste a full numbered script here; up to {$INTERPOLATION} characters. ",
     "file": "src/app/boards/boards.html"
   },
   "4686804012829313707": {
@@ -11015,6 +11567,10 @@
     "source": "Board views",
     "file": "src/app/board-insights/board-insights.html"
   },
+  "4717656030407325964": {
+    "source": "{$START_BOLD_TEXT}{$INTERPOLATION}{$CLOSE_BOLD_TEXT} still need{$INTERPOLATION_1} an image",
+    "file": "src/app/boards/boards.html"
+  },
   "471816275243265264": {
     "source": "Location",
     "file": "src/app/boards/boards.ts"
@@ -11094,6 +11650,10 @@
   "4745987606023884549": {
     "source": "Select ",
     "file": "src/app/boards/boards.ts"
+  },
+  "4747940509314227461": {
+    "source": "{$INTERPOLATION} of {$INTERPOLATION_1}",
+    "file": "src/app/boards/boards.html"
   },
   "4750027354914341877": {
     "source": "{$START_TAG_SPAN}edit{$CLOSE_TAG_SPAN} Edit board ",
@@ -11383,6 +11943,10 @@
     "source": "{$START_TAG_SPAN}record_voice_over{$CLOSE_TAG_SPAN} TalkThru signups ↓ ",
     "file": "src/app/admin-users/admin-users.html"
   },
+  "4830714789596897310": {
+    "source": "{$INTERPOLATION} live · {$INTERPOLATION_1} review",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "4831301992493393266": {
     "source": "Gathering your stories…",
     "file": "src/app/app.html"
@@ -11491,6 +12055,10 @@
     "source": "Private drafts",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
+  "4872152584708559196": {
+    "source": "Create free account",
+    "file": "src/app/pricing/pricing.ts"
+  },
   "4873149362496451858": {
     "source": "Last 7 days",
     "file": "src/app/teams/teams.html"
@@ -11510,6 +12078,10 @@
   "487781233169157136": {
     "source": "{$START_TAG_SPAN}{$CLOSE_TAG_SPAN} Open Now ",
     "file": "src/app/business-detail/business-detail.html"
+  },
+  "4879481810756733001": {
+    "source": "{$START_BOLD_TEXT}{$INTERPOLATION}{$CLOSE_BOLD_TEXT} source image{$INTERPOLATION_1}",
+    "file": "src/app/boards/boards.html"
   },
   "487961793779199735": {
     "source": "Create fresh city",
@@ -11574,6 +12146,10 @@
   "4905506779617934952": {
     "source": "My voices",
     "file": "src/app/boards/boards.html"
+  },
+  "4905798562247431262": {
+    "source": "per month",
+    "file": "src/app/business/business.ts"
   },
   "4906613932770446436": {
     "source": "Uploading photo…",
@@ -11650,6 +12226,10 @@
   "4939570346229724205": {
     "source": "Fresh city",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "4940907641547268065": {
+    "source": "If an atlas owner marks an atlas as public, visitors may be able to browse the atlas landing page, source files, wiki, and other public surfaces without signing in.",
+    "file": "src/app/legal/legal.ts"
   },
   "4941506466459140494": {
     "source": "Failed to remove subscriber.",
@@ -11975,6 +12555,10 @@
     "source": "Prompt examples",
     "file": "src/app/boards/boards.html"
   },
+  "505528384713967682": {
+    "source": "Introduce yourself and welcome buyers into the property. Give them a person to connect with from the very beginning.",
+    "file": "src/app/talkthrus/talkthrus.ts"
+  },
   "5056096073868119232": {
     "source": "Coke plants and Superfund",
     "file": "src/app/fence-line/fence-line.ts"
@@ -11982,6 +12566,10 @@
   "5057398222649551808": {
     "source": "Sign in to ask",
     "file": "src/app/wiki/wiki.html"
+  },
+  "5058259803479540414": {
+    "source": " {$INTERPOLATION} exact source images · {$INTERPOLATION_1} fallbacks · {$INTERPOLATION_2} missing ",
+    "file": "src/app/boards/boards.html"
   },
   "5058724274689127163": {
     "source": "Interactive network",
@@ -12119,9 +12707,17 @@
     "source": "Private and unlisted boards could not be loaded. Refresh and try again.",
     "file": "src/app/boards/boards.ts"
   },
+  "5106510708893142193": {
+    "source": "Export as beautiful cards or MP4 videos for social media in one click.",
+    "file": "src/app/membership/membership.ts"
+  },
   "5108938333454440103": {
     "source": "Listen with Spotify",
     "file": "src/app/spotify-player/spotify-player.html"
+  },
+  "5109478038700339624": {
+    "source": "Start with a familiar voice. Yours.",
+    "file": "src/app/talkthrus/talkthrus.ts"
   },
   "5109968828847980674": {
     "source": "Your name {$START_BOLD_TEXT}*{$CLOSE_BOLD_TEXT}",
@@ -12338,6 +12934,10 @@
   "5174965236139949227": {
     "source": "City pulse is not enabled yet",
     "file": "src/app/city-pulse-admin/city-pulse-admin.html"
+  },
+  "5175136637575623788": {
+    "source": "{$START_TAG_SPAN}progress_activity{$CLOSE_TAG_SPAN} Uploading {$INTERPOLATION}… ",
+    "file": "src/app/teams/teams.html"
   },
   "5176001824160948960": {
     "source": "LLM Knowledge Bases & the Karpathy Pattern",
@@ -12607,6 +13207,10 @@
     "source": "Access",
     "file": "src/app/city-places/city-places.html"
   },
+  "5279482532206560300": {
+    "source": "10 places locals deal each other, without “hidden gem” language.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
   "5279549142599930734": {
     "source": "generated",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
@@ -12682,6 +13286,10 @@
   "5294698514860791556": {
     "source": "Not a dead listing. A page with a pulse.",
     "file": "src/app/business/business.html"
+  },
+  "5298613573264542225": {
+    "source": "Sharing and service providers",
+    "file": "src/app/legal/legal.ts"
   },
   "5299120681803929684": {
     "source": "Shows your branding, published listings, and opted-in member profiles. Workspace analytics, drafts, invitations, and private contacts are never shown.",
@@ -12899,6 +13507,10 @@
     "source": "Finish quiz",
     "file": "src/app/answer-quiz/answer-quiz.ts"
   },
+  "5361339638616005062": {
+    "source": "{$INTERPOLATION} of {$INTERPOLATION_1} songs matched",
+    "file": "src/app/spotify-player/spotify-player.html"
+  },
   "5361439143040054915": {
     "source": "The avatar is answering you",
     "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
@@ -13019,6 +13631,10 @@
     "source": "Open source page",
     "file": "src/app/green-jobs/green-jobs.html"
   },
+  "5402963251231965741": {
+    "source": "Countertop or host stand",
+    "file": "src/app/business/business.ts"
+  },
   "5403423213824917813": {
     "source": "Golden Hour is selected for you. Preview a mood or choose a different soundtrack.",
     "file": "src/app/boards/boards.html"
@@ -13065,6 +13681,10 @@
   },
   "5428454702447505852": {
     "source": "Missing",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
+  "5428954358926724665": {
+    "source": "{$INTERPOLATION} lifecycle",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
   "543243826700074360": {
@@ -13135,6 +13755,10 @@
     "source": "Publish ",
     "file": "src/app/teams/teams.ts"
   },
+  "5452391238532283380": {
+    "source": "You keep ownership of the content you upload or submit. You give LivingWiki permission to host, process, transform, index, and display that content as needed to operate the product.",
+    "file": "src/app/legal/legal.ts"
+  },
   "5452623943061444909": {
     "source": "Loading your videos…",
     "file": "src/app/video-library/video-library.html"
@@ -13194,6 +13818,10 @@
   "5479133824073842793": {
     "source": "Configure",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "5480316940499091585": {
+    "source": "LivingWiki may generate summaries, wiki pages, citations, and chat answers using automated systems. Those outputs can be incomplete or incorrect and should be reviewed before being relied on.",
+    "file": "src/app/legal/legal.ts"
   },
   "5484150022905820858": {
     "source": " This wiki is unavailable or not public. ",
@@ -13262,6 +13890,10 @@
   "550195626538405809": {
     "source": "Team name",
     "file": "src/app/teams/teams.ts"
+  },
+  "5502264281765297809": {
+    "source": "{$INTERPOLATION} · ~{$INTERPOLATION_1} words",
+    "file": "src/app/boards/boards.html"
   },
   "5504221527309923362": {
     "source": "A historically Black community beside major Kanawha Valley chemical plants with a long record of leaks, explosions, and shelter-in-place orders.",
@@ -13383,6 +14015,10 @@
     "source": "Choose a story approach",
     "file": "src/app/boards/boards.html"
   },
+  "5539354544406307904": {
+    "source": "Social activities with no required admission or purchase.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
   "5541520805706976440": {
     "source": "{$START_TAG_SPAN}select_all{$CLOSE_TAG_SPAN} Select all ",
     "file": "src/app/boards/boards.html"
@@ -13422,6 +14058,10 @@
   "5553943823763070983": {
     "source": "Create your property guide",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
+  "5554182717725133784": {
+    "source": "{$INTERPOLATION} {$INTERPOLATION_1} · The first photo is your cover.",
+    "file": "src/app/boards/listing-photo-source.html"
   },
   "5554528553553249088": {
     "source": "Show password",
@@ -13555,6 +14195,10 @@
     "source": "Business & Finance",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "5587746565095744704": {
+    "source": "{$START_TAG_SPAN}library_books{$CLOSE_TAG_SPAN} {$INTERPOLATION} cards ",
+    "file": "src/app/boards/boards.html"
+  },
   "5588124767880538795": {
     "source": "Focused synthesis",
     "file": "src/app/boards/boards.ts"
@@ -13586,6 +14230,10 @@
   "5594509023207690963": {
     "source": "Friend request sent.",
     "file": "src/app/boards/boards.ts"
+  },
+  "5596014307827570537": {
+    "source": "We need to confirm {$INTERPOLATION} before granting access to a team.",
+    "file": "src/app/teams/teams.html"
   },
   "5596090881059033": {
     "source": "{$START_BOLD_TEXT}{$INTERPOLATION}{$CLOSE_BOLD_TEXT} curator",
@@ -13779,6 +14427,10 @@
     "source": "Images required",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
   },
+  "56628987033907252": {
+    "source": "Create narrated Stack videos with included voices",
+    "file": "src/app/pricing/pricing.ts"
+  },
   "566298320991927910": {
     "source": "Census state code",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -13822,6 +14474,10 @@
   "5671722170774629089": {
     "source": "Improve this card",
     "file": "src/app/boards/boards.ts"
+  },
+  "5672335501599848766": {
+    "source": "Atlas owners can remove documents and chats from their workspace where product controls allow it. Public visitors can stop using the service at any time.",
+    "file": "src/app/legal/legal.ts"
   },
   "5672342885880089752": {
     "source": "1 match",
@@ -13978,6 +14634,10 @@
   "5719314640232318086": {
     "source": "Play the complete board",
     "file": "src/app/boards/boards.html"
+  },
+  "5719385410092942823": {
+    "source": "Generator {$INTERPOLATION} · Rubric {$INTERPOLATION_1}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
   "5720973353435316451": {
     "source": "Off Grids",
@@ -14147,6 +14807,10 @@
     "source": "Your leaderboard position",
     "file": "src/app/boards/boards.html"
   },
+  "5768178672404162050": {
+    "source": "Last updated April 18, 2026",
+    "file": "src/app/legal/legal.ts"
+  },
   "577073740156948139": {
     "source": "Full song on Spotify",
     "file": "src/app/boards/boards.html"
@@ -14190,6 +14854,10 @@
   "5784900903685073968": {
     "source": "Update the public page, guide prompt, images, and QR badge assets for this business.",
     "file": "src/app/business-detail/business-edit.html"
+  },
+  "5785478326796342156": {
+    "source": "{$INTERPOLATION} seconds",
+    "file": "src/app/boards/real-estate-wizard-source.html"
   },
   "578558754309879180": {
     "source": "The Streaming Wars 2026",
@@ -14254,6 +14922,10 @@
   "5800187103306660757": {
     "source": "Password updated",
     "file": "src/app/auth-action/auth-action.ts"
+  },
+  "5801550010711717135": {
+    "source": "{$INTERPOLATION} card{$INTERPOLATION_1} still need an image.",
+    "file": "src/app/boards/boards.html"
   },
   "5804464620173552066": {
     "source": "No extra actions yet. The conversation button will remain the only visitor action.",
@@ -14330,6 +15002,10 @@
   "5829774500678544335": {
     "source": "LivingWiki for Business",
     "file": "src/app/business-detail/business-detail.html"
+  },
+  "582977846868529486": {
+    "source": "{$INTERPOLATION} · {$INTERPOLATION_1} going",
+    "file": "src/app/boards/boards.html"
   },
   "5830314630242453415": {
     "source": " Change ",
@@ -14467,6 +15143,10 @@
     "source": "Your email has been verified. You can continue to your workspace.",
     "file": "src/app/auth-action/auth-action.ts"
   },
+  "5873983653768179541": {
+    "source": "You may not use LivingWiki to violate the law, infringe intellectual property or privacy rights, distribute harmful material, interfere with the service, or attempt unauthorized access.",
+    "file": "src/app/legal/legal.ts"
+  },
   "5876509115002255508": {
     "source": "What matters now",
     "file": "src/app/chat/chat.ts"
@@ -14503,9 +15183,17 @@
     "source": "Create a public university Wiki",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "5888991946629101866": {
+    "source": "Document uploads and cited answers",
+    "file": "src/app/pricing/pricing.ts"
+  },
   "5891064527381218201": {
     "source": "Free",
     "file": "src/app/boards/boards.html"
+  },
+  "5892237504288881634": {
+    "source": "Build a rich, interactive board in under 5 minutes with our AI co-pilot.",
+    "file": "src/app/membership/membership.ts"
   },
   "5895528980500499411": {
     "source": "Business explainer",
@@ -14539,6 +15227,10 @@
     "source": "Show description",
     "file": "src/app/boards/board-promo-image-dialog.html"
   },
+  "5902737106179317592": {
+    "source": "03 / TELL ITS STORY",
+    "file": "src/app/talkthrus/talkthrus.ts"
+  },
   "5903517032352278387": {
     "source": "Tell the story in your own words.",
     "file": "src/app/off-grids/off-grid-editor.html"
@@ -14561,7 +15253,7 @@
   },
   "5911629878274755333": {
     "source": "{$INTERPOLATION} sources",
-    "file": "src/app/green-jobs/green-jobs.html"
+    "file": "src/app/chat/chat.html"
   },
   "5911873458974555112": {
     "source": "Make it easy to reach the right person",
@@ -14679,9 +15371,17 @@
     "source": "View only",
     "file": "src/app/library/library.html"
   },
+  "5948416609223500236": {
+    "source": "For public atlas pages, we also store public chat activity. Anonymous visitors are tracked with a browser-level anonymous identifier, and signed-in non-owners may have their name and email stored with the questions they ask.",
+    "file": "src/app/legal/legal.ts"
+  },
   "5948710033208032618": {
     "source": "— its LivingWiki opens from here —",
     "file": "src/app/dymaxion/dymaxion.html"
+  },
+  "5950547185940314690": {
+    "source": "{$INTERPOLATION} Stack · {$INTERPOLATION_1} estimated voice",
+    "file": "src/app/boards/boards.html"
   },
   "5950750145065580043": {
     "source": "{$START_BOLD_TEXT}{$INTERPOLATION}/{$INTERPOLATION_1}{$CLOSE_BOLD_TEXT} source items matched",
@@ -14694,6 +15394,10 @@
   "5953814899012559694": {
     "source": "Step 0{$INTERPOLATION}",
     "file": "src/app/marketing/marketing.html"
+  },
+  "5957995465199589102": {
+    "source": "We collect account information such as name, email address, authentication details, and basic profile metadata needed to operate the workspace.",
+    "file": "src/app/legal/legal.ts"
   },
   "5962319588931300494": {
     "source": "Contact ",
@@ -14805,7 +15509,7 @@
   },
   "5990667807137294486": {
     "source": "Local Favorite",
-    "file": "src/app/business-claim/business-claim.ts"
+    "file": "src/app/business/business.ts"
   },
   "5992904787075426387": {
     "source": "Open saved board",
@@ -14817,6 +15521,10 @@
   },
   "5995450479841616825": {
     "source": "Board-title search; Amazon's playlist API is closed beta",
+    "file": "src/app/boards/boards.html"
+  },
+  "5995925319904170567": {
+    "source": "{$START_TAG_SPAN}format_list_numbered{$CLOSE_TAG_SPAN} Detected {$INTERPOLATION} numbered sections. Each section will become one card, in order, with its full narration preserved. ",
     "file": "src/app/boards/boards.html"
   },
   "5996495554904159462": {
@@ -14987,6 +15695,10 @@
     "source": "Failed to save the persona prompt.",
     "file": "src/app/atlas-persona/atlas-persona.ts"
   },
+  "6044494397237187715": {
+    "source": "{$INTERPOLATION} {$INTERPOLATION_1} per card",
+    "file": "src/app/boards/boards.html"
+  },
   "6044705993130302016": {
     "source": "Edit board inside ",
     "file": "src/app/boards/boards.ts"
@@ -14995,12 +15707,20 @@
     "source": "Recent Wikis",
     "file": "src/app/wiki-home/wiki-home.html"
   },
+  "6048525527642471640": {
+    "source": "{$INTERPOLATION} unique · {$INTERPOLATION_1} engaged",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "6048852053110701325": {
     "source": "Let request decide",
     "file": "src/app/boards/boards.html"
   },
   "6048892649018070225": {
     "source": "Today",
+    "file": "src/app/boards/boards.html"
+  },
+  "6052137814623746757": {
+    "source": "This also deletes {$INTERPOLATION} board{$INTERPOLATION_1} nested inside its cards.",
     "file": "src/app/boards/boards.html"
   },
   "6054360360637042665": {
@@ -15090,6 +15810,10 @@
   "6093075988016169363": {
     "source": "Delete ",
     "file": "src/app/boards/boards.ts"
+  },
+  "6094149364796721784": {
+    "source": "A home worth getting to know.",
+    "file": "src/app/talkthrus/talkthrus.ts"
   },
   "609455275553830140": {
     "source": "Active only",
@@ -15182,6 +15906,10 @@
   "612123801795584234": {
     "source": "Now in Early Access",
     "file": "src/app/marketing/marketing.html"
+  },
+  "6123338514081631362": {
+    "source": "A first-day sequence, dealt as ten useful cards.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
   },
   "6123847569443166170": {
     "source": "Opening your team space…",
@@ -15431,6 +16159,10 @@
     "source": "Up to 10 documents per upload",
     "file": "src/app/business-claim/business-claim.html"
   },
+  "6198800499416559784": {
+    "source": "Acceptable use",
+    "file": "src/app/legal/legal.ts"
+  },
   "6198925600248791338": {
     "source": "Discover | LivingWiki",
     "file": "src/app/app.routes.ts"
@@ -15635,6 +16367,10 @@
     "source": "Replace",
     "file": "src/app/atlas-landing/atlas-landing.html"
   },
+  "6254556890674213213": {
+    "source": "If you make an atlas public, you are responsible for the materials and generated content exposed through that atlas.",
+    "file": "src/app/legal/legal.ts"
+  },
   "6255187107413641267": {
     "source": "Failed to load Vapi voice settings.",
     "file": "src/app/atlas-manage/atlas-manage.ts"
@@ -15650,6 +16386,10 @@
   "6259651459803393398": {
     "source": "Example: Cape May Facebook group",
     "file": "src/app/board-insights/board-insights.html"
+  },
+  "6262026728270924026": {
+    "source": "We retain information for as long as it is needed to provide the service, maintain workspace history, comply with legal obligations, and resolve disputes.",
+    "file": "src/app/legal/legal.ts"
   },
   "626261866099598539": {
     "source": "Balanced narration · Recommended",
@@ -15722,6 +16462,10 @@
   "6284442506490785579": {
     "source": "Useful links",
     "file": "src/app/chat/chat.ts"
+  },
+  "6286866689139359247": {
+    "source": "Team-wide activity · Excludes signed-in team members · Tracking since {$INTERPOLATION}",
+    "file": "src/app/teams/teams.html"
   },
   "62886330697884558": {
     "source": "This collection is ready for its first card.",
@@ -15883,6 +16627,10 @@
     "source": "Saved",
     "file": "src/app/boards/boards.ts"
   },
+  "6335133676320774600": {
+    "source": "{$INTERPOLATION}% of views",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "6335170224171015933": {
     "source": "Create one institution or upload a federal-data CSV. Unit ID is the durable identity; batches run safely in groups of 250 and skip duplicates.",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -15951,6 +16699,10 @@
     "source": "Add a visible signal that this is a real, community-relevant business worth checking before the usual generic results.",
     "file": "src/app/business/business.ts"
   },
+  "6364808224552454797": {
+    "source": " {$INTERPOLATION} · Ask a team admin for a new invitation if you still need access. ",
+    "file": "src/app/teams/teams.html"
+  },
   "6367751413467188072": {
     "source": "Market",
     "file": "src/app/business-claim/business-claim.html"
@@ -15986,6 +16738,10 @@
   "6381230596990321277": {
     "source": "Wiki subject",
     "file": "src/app/atlas-persona/atlas-persona.html"
+  },
+  "6384005974384003155": {
+    "source": "Snapshot {$INTERPOLATION}",
+    "file": "src/app/boards/boards.html"
   },
   "6384666188543760940": {
     "source": "Open jobs",
@@ -16111,6 +16867,10 @@
     "source": "e.g. Real estate advisor",
     "file": "src/app/teams/teams.html"
   },
+  "6416423308739334081": {
+    "source": "{$INTERPOLATION} review",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "6417939505348114753": {
     "source": "The run stopped after the current article completed.",
     "file": "src/app/web-scraper/web-scraper.ts"
@@ -16203,6 +16963,10 @@
     "source": "articles queued successfully",
     "file": "src/app/web-scraper/web-scraper.html"
   },
+  "6444683311122121098": {
+    "source": "{$INTERPOLATION} saved",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "6445545432528884548": {
     "source": "{$START_TAG_SPAN}content_copy{$CLOSE_TAG_SPAN} Copy",
     "file": "src/app/boards/boards.html"
@@ -16210,6 +16974,10 @@
   "6446110814135716315": {
     "source": "Your First 24 Hours in [City], Dealt as Cards",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
+  "6449242040584990151": {
+    "source": "Choose from {$INTERPOLATION} voices",
+    "file": "src/app/boards/boards.html"
   },
   "6452353119568306344": {
     "source": "Run state",
@@ -16387,6 +17155,10 @@
     "source": "The Open Source Software Atlas",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "6518735976299478568": {
+    "source": "Your private, reusable voice library · {$INTERPOLATION}",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "6520657827841534343": {
     "source": "Translate board content",
     "file": "src/app/boards/boards.html"
@@ -16539,6 +17311,10 @@
     "source": "Make this collection public first.",
     "file": "src/app/custom-public-url-dialog/custom-public-url-dialog.ts"
   },
+  "6556444319421068034": {
+    "source": "Select {$INTERPOLATION}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "6556985624398131463": {
     "source": "Turns this wiki into a city-aware landing page with live-style metrics.",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -16591,6 +17367,10 @@
     "source": " Open Google Maps {$START_TAG_SPAN}arrow_outward{$CLOSE_TAG_SPAN}",
     "file": "src/app/city-places/city-places.html"
   },
+  "6571435095051823528": {
+    "source": "per month, billed annually",
+    "file": "src/app/business/business.ts"
+  },
   "6571978727599560446": {
     "source": "Best Late-Night{$LINE_BREAK}Food Near{$LINE_BREAK}Campus",
     "file": "src/app/membership/membership.html"
@@ -16598,6 +17378,10 @@
   "6572297564733673785": {
     "source": " Annual {$START_TAG_SPAN} Save ~17% {$CLOSE_TAG_SPAN}",
     "file": "src/app/business/business.html"
+  },
+  "6573816479415118193": {
+    "source": "{$INTERPOLATION} members · Private workspace",
+    "file": "src/app/teams/teams.html"
   },
   "6576722040025303133": {
     "source": "Test drive",
@@ -16667,6 +17451,10 @@
     "source": "Features",
     "file": "src/app/marketing/marketing.ts"
   },
+  "6600301109682902994": {
+    "source": "livingwiki.com/team/{$INTERPOLATION}",
+    "file": "src/app/teams/teams.html"
+  },
   "6603000223840533819": {
     "source": "Current",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -16690,6 +17478,10 @@
   "6606208487666931272": {
     "source": "Sponsorship levels",
     "file": "src/app/business/business.html"
+  },
+  "660713999686523367": {
+    "source": "{$INTERPOLATION} more cards",
+    "file": "src/app/chat/chat.html"
   },
   "6607644892050042626": {
     "source": "Business deletion cancelled. The confirmation text did not match.",
@@ -16722,6 +17514,10 @@
   "6610895046922040673": {
     "source": "Optional finishing touches",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
+  "6611622072724831213": {
+    "source": "Generation score: {$INTERPOLATION}/100 · {$INTERPOLATION_1}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
   "6611678505144439084": {
     "source": "Show up in the neighborhood context where visitors are already exploring food, culture, jobs, events, and local guides.",
@@ -16815,6 +17611,10 @@
     "source": "Admin settings",
     "file": "src/app/wiki-home/wiki-home.html"
   },
+  "6641956962235428931": {
+    "source": "How we use information",
+    "file": "src/app/legal/legal.ts"
+  },
   "6642490651687261039": {
     "source": "Tip",
     "file": "src/app/chat/chat.ts"
@@ -16851,13 +17651,25 @@
     "source": "Try again",
     "file": "src/app/answer-quiz/answer-quiz.html"
   },
+  "6655835283104625100": {
+    "source": "{$INTERPOLATION} verified cards · {$INTERPOLATION_1}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "6656694949959399435": {
     "source": "Board visibility",
     "file": "src/app/boards/boards.html"
   },
+  "6657566320598819860": {
+    "source": " {$INTERPOLATION} · {$INTERPOLATION_1} sec {$START_BLOCK_IF} · Team preview {$CLOSE_BLOCK_IF}",
+    "file": "src/app/teams/teams.html"
+  },
   "6659120347384113820": {
     "source": "Manage existing Wikis.",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "665994025219426338": {
+    "source": "Verify {$INTERPOLATION}",
+    "file": "src/app/notifications/notifications.html"
   },
   "6661641133691486526": {
     "source": "MP4, MOV, or WebM · Under 100 MB. MP4 works on the widest range of devices.",
@@ -16890,6 +17702,10 @@
   "6675314400486618269": {
     "source": "Post the challenge",
     "file": "src/app/boards/boards.html"
+  },
+  "6676108788070973705": {
+    "source": "Claim your spot",
+    "file": "src/app/business/business.ts"
   },
   "6678643464940809287": {
     "source": "Generation targets",
@@ -17071,6 +17887,10 @@
     "source": "Your Private and Unlisted boards appear here. They stay off your public profile.",
     "file": "src/app/boards/boards.ts"
   },
+  "6744944836541271027": {
+    "source": "Talking Avatars available as an add-on",
+    "file": "src/app/pricing/pricing.ts"
+  },
   "6745392617347053225": {
     "source": "Wikimedia or official URL",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -17101,6 +17921,10 @@
   },
   "6752604898701886526": {
     "source": "Live view",
+    "file": "src/app/boards/boards.html"
+  },
+  "6752740689149627626": {
+    "source": "{$START_BOLD_TEXT}{$INTERPOLATION}{$CLOSE_BOLD_TEXT} exact image{$INTERPOLATION_1}",
     "file": "src/app/boards/boards.html"
   },
   "6753808875312633412": {
@@ -17190,6 +18014,10 @@
   "6801535761978393212": {
     "source": "Back to home",
     "file": "src/app/wiki/wiki.html"
+  },
+  "68016169243726942": {
+    "source": "TalkThru narration settings with style and length choices",
+    "file": "src/app/talkthrus/talkthrus.ts"
   },
   "6805156456364436734": {
     "source": "The first photo becomes the board cover.",
@@ -17315,6 +18143,10 @@
     "source": "Add scheduling or a special instruction",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
+  "6836618927731901211": {
+    "source": "Living business profile with story, photos, hours, and links",
+    "file": "src/app/business/business.ts"
+  },
   "6838222563817848303": {
     "source": "Recent debates",
     "file": "src/app/chat/chat.ts"
@@ -17383,6 +18215,10 @@
     "source": "One listing link. The details stay together.",
     "file": "src/app/boards/real-estate-wizard-source.html"
   },
+  "6862189383012317096": {
+    "source": "Follow public city and topic wikis",
+    "file": "src/app/pricing/pricing.ts"
+  },
   "6863618335977835993": {
     "source": "University Board Factory | LivingWiki",
     "file": "src/app/app.routes.ts"
@@ -17443,6 +18279,10 @@
     "source": "TikTok, Reels, Shorts",
     "file": "src/app/video-library/video-library.html"
   },
+  "6889149867121217674": {
+    "source": " Start with #{$INTERPOLATION} {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
+    "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
+  },
   "6891975322412577194": {
     "source": "Sample CSV",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -17494,6 +18334,10 @@
   "6904696978759841194": {
     "source": "Showing or scheduling link",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
+  "690498826795433995": {
+    "source": "{$INTERPOLATION} · View people",
+    "file": "src/app/boards/boards.html"
   },
   "6905296606860009890": {
     "source": "Email listing agent",
@@ -17655,6 +18499,10 @@
     "source": "Your next gem starts here",
     "file": "src/app/off-grids/off-grid-copy.ts"
   },
+  "6954124117232336074": {
+    "source": "{$START_TAG_SPAN}playlist_add_check_circle{$CLOSE_TAG_SPAN} Queue {$INTERPOLATION} missing boards ",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "6954514379064186260": {
     "source": "Voice needs attention",
     "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
@@ -17679,6 +18527,10 @@
     "source": "Cancel changes",
     "file": "src/app/atlas-persona/atlas-persona.html"
   },
+  "6963661913921980880": {
+    "source": "One neighborhood, one clean reason to care.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
   "6964795635479682977": {
     "source": "formats",
     "file": "src/app/video-library/video-library.ts"
@@ -17698,6 +18550,10 @@
   "6969549795556350502": {
     "source": "QR code card",
     "file": "src/app/boards/card-creation.ts"
+  },
+  "6971627415107967026": {
+    "source": "We use reasonable administrative, technical, and organizational safeguards, but no online system can guarantee absolute security.",
+    "file": "src/app/legal/legal.ts"
   },
   "6972326745518583874": {
     "source": "Polished and restrained, grounded in visible details.",
@@ -17831,6 +18687,10 @@
     "source": "Delete",
     "file": "src/app/atlas-manage/atlas-manage.ts"
   },
+  "7022220028693147811": {
+    "source": "Latest job {$INTERPOLATION}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "70247719450316174": {
     "source": "I confirm this recording contains only my own voice.",
     "file": "src/app/boards/boards.html"
@@ -17931,6 +18791,10 @@
     "source": "© 2026 Mind Palace Inc. LivingWiki™. All rights reserved.",
     "file": "src/app/business/business.html"
   },
+  "7046593205322931921": {
+    "source": "Created {$INTERPOLATION} · {$INTERPOLATION_1} cards",
+    "file": "src/app/teams/teams.html"
+  },
   "7046682610560834138": {
     "source": "Choose when you’re going first.",
     "file": "src/app/boards/boards.ts"
@@ -17938,6 +18802,10 @@
   "7046850086124797303": {
     "source": "Add a cover title before saving.",
     "file": "src/app/boards/boards.ts"
+  },
+  "7051177342601224426": {
+    "source": "~{$INTERPOLATION} words per stop",
+    "file": "src/app/boards/boards.html"
   },
   "7051535332948231705": {
     "source": " Refresh official city metrics, inspect the stored snapshot, and validate what the public landing page will render. ",
@@ -18015,9 +18883,17 @@
     "source": "AI Wiki Wizard",
     "file": "src/app/membership/membership.ts"
   },
+  "7072823105002215393": {
+    "source": "MLS# {$INTERPOLATION}",
+    "file": "src/app/boards/boards.html"
+  },
   "7073286584947304114": {
     "source": "What Kiwi heard",
     "file": "src/app/kiwi/kiwi.html"
+  },
+  "7073446703871720208": {
+    "source": "{$START_TAG_SPAN}play_circle{$CLOSE_TAG_SPAN} {$INTERPOLATION} PinTalk{$INTERPOLATION_1} ready",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "7074484242679979882": {
     "source": "Add scheduling or other useful links without changing the conversation.",
@@ -18027,6 +18903,10 @@
     "source": "Local draft found for this name and city.",
     "file": "src/app/business-claim/business-claim.html"
   },
+  "7079945978731260896": {
+    "source": " You’re signed in as {$INTERPOLATION}. Switch to the account this invitation was sent to. ",
+    "file": "src/app/teams/teams.html"
+  },
   "7084009720055916740": {
     "source": "Searching Wikimedia Commons...",
     "file": "src/app/boards/boards.ts"
@@ -18034,6 +18914,10 @@
   "708478611039634042": {
     "source": "Guide and admin contact",
     "file": "src/app/business-detail/business-edit.html"
+  },
+  "7086927641932219828": {
+    "source": "All eligible {$INTERPOLATION}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
   "7087250153844702386": {
     "source": "How would you like to explore?",
@@ -18075,6 +18959,10 @@
     "source": "Could not discard this draft. Please try again.",
     "file": "src/app/boards/boards.ts"
   },
+  "7105094143478666959": {
+    "source": "Create walking tours, road trips & day plans that are easy to share.",
+    "file": "src/app/membership/membership.ts"
+  },
   "7105490533744744390": {
     "source": "Invitation declined",
     "file": "src/app/teams/teams.ts"
@@ -18091,6 +18979,10 @@
     "source": "Subscribe to weekly updates",
     "file": "src/app/chat/chat.ts"
   },
+  "7113069771835054275": {
+    "source": "Sources {$INTERPOLATION}",
+    "file": "src/app/chat/chat.html"
+  },
   "7116092483395956625": {
     "source": "Avatar preview",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -18106,6 +18998,10 @@
   "7119466532064939023": {
     "source": "University Board Factory",
     "file": "src/app/admin-users/admin-users.html"
+  },
+  "7120070233402299142": {
+    "source": "Founding-business launch badge",
+    "file": "src/app/business/business.ts"
   },
   "7122661321319980206": {
     "source": "Reading document",
@@ -18351,6 +19247,10 @@
     "source": "what3words place",
     "file": "src/app/boards/boards.ts"
   },
+  "7201646471583974266": {
+    "source": " {$INTERPOLATION} estimated voice {$START_BLOCK_IF} · {$INTERPOLATION_1} missing {$CLOSE_BLOCK_IF}",
+    "file": "src/app/boards/boards.html"
+  },
   "7204676341315786201": {
     "source": "accept",
     "file": "src/app/boards/boards.ts"
@@ -18467,6 +19367,10 @@
     "source": " editable stops map",
     "file": "src/app/boards/boards.ts"
   },
+  "7227178748914067688": {
+    "source": "{$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}/{$INTERPOLATION_1} complete",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "7230571620429432681": {
     "source": "Use the public chat for real-time answers about neighborhoods, food, history, routes, and local details.",
     "file": "src/app/chat/chat.ts"
@@ -18499,9 +19403,17 @@
     "source": "Preview unavailable",
     "file": "src/app/boards/board-promo-image-dialog.html"
   },
+  "7239911120487566088": {
+    "source": "Add {$INTERPOLATION} {$INTERPOLATION_1}",
+    "file": "src/app/boards/boards.html"
+  },
   "7240363299307575105": {
     "source": "Spotify could not create this playlist.",
     "file": "src/app/spotify-playback.service.ts"
+  },
+  "7246435269238158783": {
+    "source": "Public atlases and chats",
+    "file": "src/app/legal/legal.ts"
   },
   "724768127591825886": {
     "source": "Hazardous waste landfill",
@@ -18599,6 +19511,10 @@
     "source": "Campaign results",
     "file": "src/app/board-insights/board-insights.html"
   },
+  "7292689756891306359": {
+    "source": "{$START_TAG_SPAN}photo_library{$CLOSE_TAG_SPAN} {$INTERPOLATION} photos ",
+    "file": "src/app/boards/boards.html"
+  },
   "7294634055242110420": {
     "source": "{$START_TAG_SPAN}photo_library{$CLOSE_TAG_SPAN} Your photos ",
     "file": "src/app/boards/boards.html"
@@ -18654,6 +19570,10 @@
   "7307617403046327210": {
     "source": "Display mode",
     "file": "src/app/off-grids/off-grids.html"
+  },
+  "7307761973301223153": {
+    "source": "Review the {$INTERPOLATION} card names found on {$INTERPOLATION_1}",
+    "file": "src/app/boards/boards.html"
   },
   "7308079970653299916": {
     "source": "Private & unlisted boards",
@@ -18759,6 +19679,10 @@
     "source": " {$INTERPOLATION} total ",
     "file": "src/app/wiki/wiki.html"
   },
+  "7337531051130504561": {
+    "source": "{$START_TAG_SPAN}account_tree{$CLOSE_TAG_SPAN} Explore {$INTERPOLATION} {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
+    "file": "src/app/boards/boards.html"
+  },
   "7343188891595299137": {
     "source": " Ask about hours, menu, services, directions, language support, and local recommendations. ",
     "file": "src/app/business-detail/business-detail.html"
@@ -18790,6 +19714,10 @@
   "7353418278710724482": {
     "source": "Avatar source",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
+  "7353894751529899446": {
+    "source": "{$INTERPOLATION} songs",
+    "file": "src/app/spotify-player/spotify-player.html"
   },
   "7356421520475651260": {
     "source": "Could not load this city.",
@@ -18830,6 +19758,10 @@
   "7365517136074263312": {
     "source": "QR code",
     "file": "src/app/boards/boards.html"
+  },
+  "7366694613586595216": {
+    "source": "LivingWiki is provided on an as-is and as-available basis without warranties of any kind, to the fullest extent permitted by law.",
+    "file": "src/app/legal/legal.ts"
   },
   "7366879854446681438": {
     "source": "communities",
@@ -19019,6 +19951,10 @@
     "source": "Close learning",
     "file": "src/app/boards/boards.html"
   },
+  "7440347382465295082": {
+    "source": "Line {$INTERPOLATION}: {$INTERPOLATION_1}",
+    "file": "src/app/boards/boards.html"
+  },
   "7440752053822933102": {
     "source": " Personality saved. New conversations will use it. ",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -19037,6 +19973,10 @@
   },
   "7444976732511668808": {
     "source": "{$START_TAG_SPAN}grid_on{$CLOSE_TAG_SPAN} Boards ",
+    "file": "src/app/boards/boards.html"
+  },
+  "7447652123016023050": {
+    "source": " LivingWiki looks at the actual pictures and drafts one editable card per photo. {$INTERPOLATION} ",
     "file": "src/app/boards/boards.html"
   },
   "7449077888770192398": {
@@ -19167,9 +20107,17 @@
     "source": "Solar, wind, geothermal, and battery storage installations globally — capacity, growth rates, policy incentives, and cost curves compiled from public energy data.",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "7485355812267749219": {
+    "source": "View {$INTERPOLATION} listing ↗",
+    "file": "src/app/teams/teams.html"
+  },
   "7487033125507660215": {
     "source": "Card editor sections",
     "file": "src/app/boards/boards.html"
+  },
+  "7488656595626033011": {
+    "source": "Checked {$INTERPOLATION} UTC",
+    "file": "src/app/teams/teams.html"
   },
   "7492447622198255926": {
     "source": "Load more signups",
@@ -19351,6 +20299,10 @@
     "source": "LivingWiki of every tariff, trade restriction, and retaliatory measure in the current global trade environment — what's taxed, who's affected, and what it costs.",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "7556598480315767493": {
+    "source": "More seats",
+    "file": "src/app/pricing/pricing.ts"
+  },
   "7557056742671672272": {
     "source": "Editable preview",
     "file": "src/app/boards/boards.html"
@@ -19479,6 +20431,10 @@
     "source": " This creates the first version of the business guide. Paid plans can add tone control and company documents below so the AI answers with more precision. ",
     "file": "src/app/business-claim/business-claim.html"
   },
+  "7606360793381137619": {
+    "source": "Your original system link will continue to work. If you rename this URL later, previously shared custom links will still open this {$INTERPOLATION}.",
+    "file": "src/app/custom-public-url-dialog/custom-public-url-dialog.html"
+  },
   "7606672167560356784": {
     "source": "Sending…",
     "file": "src/app/boards/boards.ts"
@@ -19507,6 +20463,10 @@
     "source": "Unmute microphone",
     "file": "src/app/chat/chat.ts"
   },
+  "7613230708816137121": {
+    "source": "Your content",
+    "file": "src/app/legal/legal.ts"
+  },
   "7614019480958666088": {
     "source": "Public LivingWiki boards",
     "file": "src/app/boards/boards.ts"
@@ -19534,6 +20494,10 @@
   "7622018836309553451": {
     "source": "{$START_TAG_SPAN}edit_square{$CLOSE_TAG_SPAN} Edit cover ",
     "file": "src/app/boards/boards.html"
+  },
+  "7622315029120157362": {
+    "source": "Custom landing page summary and media",
+    "file": "src/app/pricing/pricing.ts"
   },
   "7622912412217495482": {
     "source": "Lead with the setting, living spaces, amenities, or guest experience",
@@ -19726,6 +20690,10 @@
   "7681355186409290154": {
     "source": "If left blank, LivingWiki creates a short invitation using the contact details above.",
     "file": "src/app/boards/boards.html"
+  },
+  "7681577896482892928": {
+    "source": "Generate {$INTERPOLATION} boards without losing editorial control.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
   "7684107634181305975": {
     "source": "Conversation voice",
@@ -19927,13 +20895,25 @@
     "source": "Add a conversational guide anywhere in this board’s flow.",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
+  "7752395603519084394": {
+    "source": "{$INTERPOLATION} times",
+    "file": "src/app/boards/boards.html"
+  },
   "7754701867165913575": {
     "source": "Subtitle {$START_SMALL_TEXT}Optional caption shown with this photo.{$CLOSE_SMALL_TEXT}",
     "file": "src/app/boards/boards.html"
   },
+  "7754785233210243286": {
+    "source": "Public visitors may be allowed to ask questions against a public atlas. Those interactions may be logged and associated with anonymous identifiers or signed-in visitor account details.",
+    "file": "src/app/legal/legal.ts"
+  },
   "7754820011467516468": {
     "source": "Search your wikis...",
     "file": "src/app/wiki-home/wiki-home.html"
+  },
+  "7754872258230658186": {
+    "source": "Stay close to {$INTERPOLATION}",
+    "file": "src/app/chat/chat.html"
   },
   "7759407990218937384": {
     "source": "Search cities, universities, neighborhoods, and public LivingWiki pages...",
@@ -19979,6 +20959,14 @@
     "source": "Team invitations | LivingWiki",
     "file": "src/app/app.routes.ts"
   },
+  "7773040951408235765": {
+    "source": "Featured-member opportunities",
+    "file": "src/app/membership/membership.ts"
+  },
+  "7773228237062049265": {
+    "source": "{$START_TAG_SPAN}auto_awesome{$CLOSE_TAG_SPAN}Build {$INTERPOLATION}-scene TalkThru",
+    "file": "src/app/boards/boards.html"
+  },
   "7773349424234472468": {
     "source": "No university board generation has completed yet.",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
@@ -20002,6 +20990,10 @@
   "7777088129513181521": {
     "source": "39.9500, -75.1600 or ///three.word.address",
     "file": "src/app/off-grids/off-grid-editor.html"
+  },
+  "7778139731092749039": {
+    "source": "Personal Plus",
+    "file": "src/app/pricing/pricing.ts"
   },
   "7779692585004936221": {
     "source": "Exporting will not save or change the board.",
@@ -20067,6 +21059,10 @@
     "source": "Realty company",
     "file": "src/app/boards/boards.html"
   },
+  "7803116561544290231": {
+    "source": "Estimated TalkThru: {$INTERPOLATION}",
+    "file": "src/app/boards/real-estate-wizard-source.html"
+  },
   "7803717130877350304": {
     "source": "Fold through the towers. Snag the stars. Open the arcade in its own play space.",
     "file": "src/app/public-wikis/public-wikis.html"
@@ -20098,6 +21094,14 @@
   "7811259705257919591": {
     "source": "You’re all caught up",
     "file": "src/app/teams/teams.html"
+  },
+  "7811638740066224896": {
+    "source": "{$INTERPOLATION} selected · up to {$INTERPOLATION_1}",
+    "file": "src/app/board-collection-create/board-collection-create.html"
+  },
+  "7812348472489945481": {
+    "source": "Chip Watson personal welcome card",
+    "file": "src/app/talkthrus/talkthrus.ts"
   },
   "7813846944360361065": {
     "source": "Submit {$INTERPOLATION} for review.",
@@ -20174,6 +21178,10 @@
   "7840431309244577834": {
     "source": "Searching places and looking for a photo.",
     "file": "src/app/boards/boards.ts"
+  },
+  "7841157802205255106": {
+    "source": "All {$INTERPOLATION}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
   "7841237137284744976": {
     "source": "Search by name, accent, or style. Previewing does not change your selection.",
@@ -20419,6 +21427,10 @@
     "source": "Private · reusable across your boards",
     "file": "src/app/boards/boards.html"
   },
+  "7913201566480026380": {
+    "source": "Showing all {$INTERPOLATION} voices",
+    "file": "src/app/boards/boards.html"
+  },
   "7915240468040963387": {
     "source": "Posts and organization pages",
     "file": "src/app/board-insights/board-insights.ts"
@@ -20467,9 +21479,17 @@
     "source": "People open the interactive, card-by-card board experience.",
     "file": "src/app/boards/boards.html"
   },
+  "7926157664039525441": {
+    "source": "Researching {$INTERPOLATION}",
+    "file": "src/app/chat/chat.html"
+  },
   "7927472835190696021": {
     "source": "Hidden Coffee Shops{$LINE_BREAK}You’ll Love",
     "file": "src/app/membership/membership.html"
+  },
+  "7928685066543883860": {
+    "source": "We may revise this policy as the product evolves. When we do, we will update the text on this page and change the effective date above.",
+    "file": "src/app/legal/legal.ts"
   },
   "7928808024226173812": {
     "source": "{$START_TAG_SPAN}event{$CLOSE_TAG_SPAN} June 30, 2026: Philadelphia waste contracts expire. ",
@@ -20723,6 +21743,10 @@
     "source": "Assistant replies excluded",
     "file": "src/app/teams/teams.html"
   },
+  "8019699898036357515": {
+    "source": "{$INTERPOLATION} · Expansive",
+    "file": "src/app/boards/boards.html"
+  },
   "8020402390620783618": {
     "source": "Education",
     "file": "src/app/business-badge-icons.ts"
@@ -20730,6 +21754,10 @@
   "80223253477061756": {
     "source": "Choose a preview frame",
     "file": "src/app/boards/boards.html"
+  },
+  "8024880718038273882": {
+    "source": "No {$INTERPOLATION} match this search.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
   "8025899844026015559": {
     "source": "Tell the story behind the place, keep hours and links current, and give people a richer page than a static directory listing.",
@@ -20750,6 +21778,10 @@
   "8033554938470547157": {
     "source": "Mapped area",
     "file": "src/app/public-wikis/public-wikis.ts"
+  },
+  "8034031687231475193": {
+    "source": "Delete this gem{$INTERPOLATION}?",
+    "file": "src/app/off-grids/off-grid-editor.html"
   },
   "8034245002645846080": {
     "source": " We couldn’t check team creation availability. Please try again. No team has been created. ",
@@ -20811,6 +21843,10 @@
     "source": "Archive Star",
     "file": "src/app/profile/profile-icons.ts"
   },
+  "8052027350685684430": {
+    "source": " Invited as a {$INTERPOLATION} · Expires {$INTERPOLATION_1} ",
+    "file": "src/app/teams/teams.html"
+  },
   "8052377117994699396": {
     "source": "No matching documents",
     "file": "src/app/library/library.html"
@@ -20871,9 +21907,17 @@
     "source": "Message",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
+  "8067642081522564878": {
+    "source": "Beach Holiday Condo TalkThru listing example",
+    "file": "src/app/talkthrus/talkthrus.ts"
+  },
   "8070084528136607468": {
     "source": "Interested in this home?",
     "file": "src/app/boards/listing-live-closing.html"
+  },
+  "8071099640601408059": {
+    "source": "01 / SET THE SCENE",
+    "file": "src/app/talkthrus/talkthrus.ts"
   },
   "8080927873099716124": {
     "source": "Generate ordered stops, guide scripts, a route, and wayfinder cards.",
@@ -20971,6 +22015,10 @@
     "source": "Business guide prompt",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "8107027844348539664": {
+    "source": "Compact entrance sticker",
+    "file": "src/app/business/business.ts"
+  },
   "8109625938940233084": {
     "source": "Loading current temperature",
     "file": "src/app/public-wikis/public-wikis.ts"
@@ -21051,6 +22099,10 @@
     "source": "{$START_TAG_SPAN}travel_explore{$CLOSE_TAG_SPAN} Map ",
     "file": "src/app/public-wikis/public-wikis.html"
   },
+  "8125638404488693351": {
+    "source": "{$INTERPOLATION} published · including trash",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "8127381744374630228": {
     "source": "Pretzel",
     "file": "src/app/business/business.ts"
@@ -21106,6 +22158,10 @@
   "8137947427091475260": {
     "source": "Automate missing covers",
     "file": "src/app/atlas-manage/atlas-manage.ts"
+  },
+  "8138530546264553815": {
+    "source": "Private context isolation by default.",
+    "file": "src/app/marketing/marketing.ts"
   },
   "8139419344538156471": {
     "source": "Keep draft",
@@ -21311,6 +22367,10 @@
     "source": "Upload a video",
     "file": "src/app/off-grids/pin-talk-recorder.html"
   },
+  "8215474626269755307": {
+    "source": "Food as a way to understand the place—not a ranking.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
   "8218838315276535589": {
     "source": "Search listings or agents",
     "file": "src/app/teams/teams.html"
@@ -21366,6 +22426,10 @@
   "8246034578178454702": {
     "source": "Use board visibility",
     "file": "src/app/off-grids/off-grid-editor.ts"
+  },
+  "8246192577285463438": {
+    "source": "Walking tours are currently created in personal boards. Team workspaces can create property listings here.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "8249375635168744613": {
     "source": "Identity & perspective",
@@ -21471,6 +22535,10 @@
     "source": "Made with",
     "file": "src/app/boards/boards.html"
   },
+  "8280235172074930789": {
+    "source": "Citywide sponsor placement",
+    "file": "src/app/business/business.ts"
+  },
   "8280690953751117430": {
     "source": "Close related cards",
     "file": "src/app/boards/boards.html"
@@ -21514,6 +22582,10 @@
   "8299084918032655967": {
     "source": "Your access to this team has ended. Your personal boards are unchanged.",
     "file": "src/app/teams/teams.ts"
+  },
+  "8299226739345629008": {
+    "source": "Destination #{$INTERPOLATION} selected · choose any place to change it",
+    "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
   },
   "8299256837141947935": {
     "source": "The recording duration could not be read. Try an MP3, WAV, M4A, OGG, or WebM file.",
@@ -21571,6 +22643,10 @@
     "source": "Alongside cards",
     "file": "src/app/boards/boards.html"
   },
+  "8321812088863551042": {
+    "source": "You are responsible for your account, your atlas settings, and the activity that occurs under your credentials.",
+    "file": "src/app/legal/legal.ts"
+  },
   "8323027781252893267": {
     "source": "{$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN} Card back ",
     "file": "src/app/boards/boards.html"
@@ -21627,6 +22703,10 @@
     "source": " No personal real estate TalkThrus were found. Create a new team TalkThru instead. ",
     "file": "src/app/teams/teams.html"
   },
+  "8347769521121628535": {
+    "source": "Public {$INTERPOLATION} wikis",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "8347941075839754092": {
     "source": "Choose a plan",
     "file": "src/app/boards/boards.html"
@@ -21675,6 +22755,10 @@
     "source": "Make knowledge personal",
     "file": "src/app/auth-story-panel/auth-story-panel.html"
   },
+  "8359782993557646618": {
+    "source": "LivingWiki helps people upload documents, build atlas pages, and chat with knowledge derived from those materials. This page explains, in plain language, what information the product currently handles and why.",
+    "file": "src/app/legal/legal.ts"
+  },
   "8361732972302624132": {
     "source": "No usable pictures were found. Try a more specific search.",
     "file": "src/app/boards/boards.ts"
@@ -21691,9 +22775,21 @@
     "source": "{$START_TAG_SPAN}add_location_alt{$CLOSE_TAG_SPAN} Add a place ",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
   },
+  "8367465366104766320": {
+    "source": "View all {$INTERPOLATION}",
+    "file": "src/app/chat/chat.html"
+  },
   "8368814891875142171": {
     "source": "es",
     "file": "src/app/public-wikis/public-wikis.ts"
+  },
+  "8372563878248042826": {
+    "source": "{$INTERPOLATION} beds",
+    "file": "src/app/boards/boards.html"
+  },
+  "8375118869010551263": {
+    "source": "Source library and update workflow",
+    "file": "src/app/pricing/pricing.ts"
   },
   "8375173448043848874": {
     "source": "This collection may have moved, or it is no longer public.",
@@ -21735,6 +22831,10 @@
     "source": "Rate limiting before the next queue",
     "file": "src/app/web-scraper/web-scraper.ts"
   },
+  "8387246875193622856": {
+    "source": "What we collect",
+    "file": "src/app/legal/legal.ts"
+  },
   "8387544779816049583": {
     "source": "Every Senate, House, and Governor race — candidates, polling, fundraising, issues, and district-level data compiled from public election sources.",
     "file": "src/app/public-wiki-catalog.ts"
@@ -21758,6 +22858,10 @@
   "8392368134390075521": {
     "source": "Private · Only you can see this board",
     "file": "src/app/boards/boards.html"
+  },
+  "8394368372463463863": {
+    "source": "Expires {$INTERPOLATION} · Personal work stays private",
+    "file": "src/app/notifications/notifications.html"
   },
   "8396464908757909108": {
     "source": "{$START_TAG_SPAN}link{$CLOSE_TAG_SPAN} Set custom URL ",
@@ -21943,6 +23047,10 @@
     "source": "Could not upload the photo.",
     "file": "src/app/off-grids/off-grid-editor.ts"
   },
+  "8457620506726410849": {
+    "source": "We also use operational logs and product telemetry to debug failures, improve reliability, prevent abuse, and understand how the product is being used.",
+    "file": "src/app/legal/legal.ts"
+  },
   "8459445525340884775": {
     "source": "Remove question",
     "file": "src/app/boards/boards.html"
@@ -21962,6 +23070,14 @@
   "8467030743011765157": {
     "source": "New Board",
     "file": "src/app/boards/boards.html"
+  },
+  "846819047970520110": {
+    "source": "source: {$INTERPOLATION}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
+  "8469013301996679240": {
+    "source": "Plus {$INTERPOLATION} more rows.",
+    "file": "src/app/atlas-manage/atlas-manage.html"
   },
   "8469031325712912850": {
     "source": "Every funded AI startup by vertical — valuations, investors, revenue estimates, competitive landscapes, and founder backgrounds. The living PitchBook of AI.",
@@ -21990,6 +23106,10 @@
   "8475628499088702825": {
     "source": "One created team per account. You can join other teams.",
     "file": "src/app/teams/teams.ts"
+  },
+  "8477321212441891886": {
+    "source": "Only voices shared with this team are available. {$INTERPOLATION}",
+    "file": "src/app/boards/boards.html"
   },
   "8478558928135903684": {
     "source": "Direct Connection",
@@ -22107,9 +23227,17 @@
     "source": "Priority support",
     "file": "src/app/membership/membership.html"
   },
+  "852367507393252285": {
+    "source": "10 city-specific things that make little sense anywhere else.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
   "8524857934048858719": {
     "source": "Show more ({count})",
     "file": "src/app/chat/chat.ts"
+  },
+  "8525213662266893834": {
+    "source": "Contact us",
+    "file": "src/app/pricing/pricing.ts"
   },
   "8525724985034226069": {
     "source": "Start with your listing.",
@@ -22199,6 +23327,10 @@
     "source": "Send an invite above to get started.",
     "file": "src/app/boards/boards.ts"
   },
+  "8553866038395053223": {
+    "source": "10 things locals genuinely do for free.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
   "8554176005024123267": {
     "source": "Create a LivingWiki",
     "file": "src/app/public-wikis/public-wikis.html"
@@ -22238,6 +23370,10 @@
   "8569440084300321057": {
     "source": "Uploading now",
     "file": "src/app/library/library.ts"
+  },
+  "8569576629701027707": {
+    "source": "Under-21-safe late-night destinations with current evidence.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
   },
   "8569814378547466507": {
     "source": "Estimating...",
@@ -22335,6 +23471,10 @@
     "source": "Review status",
     "file": "src/app/admin-users/admin-users.html"
   },
+  "8612909747947713404": {
+    "source": "Maximum 5 {$INTERPOLATION}",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "8614972415153844429": {
     "source": "Private · available to your agents and boards",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -22369,6 +23509,10 @@
   },
   "8634190498731735152": {
     "source": "Discard changes",
+    "file": "src/app/boards/boards.html"
+  },
+  "8636653720347727364": {
+    "source": "{$INTERPOLATION} cards from {$INTERPOLATION_1}",
     "file": "src/app/boards/boards.html"
   },
   "8636788863437512740": {
@@ -22434,6 +23578,10 @@
   "8658093114807873362": {
     "source": "Friend",
     "file": "src/app/public-wikis/public-wikis.ts"
+  },
+  "866005390364718574": {
+    "source": "02 / MAKE IT PERSONAL",
+    "file": "src/app/talkthrus/talkthrus.ts"
   },
   "8663654851415695862": {
     "source": "Posting…",
@@ -22523,6 +23671,10 @@
     "source": "Lead the viewer naturally from one space to the next.",
     "file": "src/app/boards/boards.ts"
   },
+  "869539408647714894": {
+    "source": "Get answers about {$INTERPOLATION} by text or voice.",
+    "file": "src/app/boards/boards.html"
+  },
   "8695448432910720179": {
     "source": "Select a voice or preview it first",
     "file": "src/app/boards/boards.html"
@@ -22542,6 +23694,10 @@
   "8699429647938596937": {
     "source": "See views, referrals, clicks, and tracked campaigns.",
     "file": "src/app/custom-public-url-dialog/custom-public-url-dialog.html"
+  },
+  "8699909522912786759": {
+    "source": "Dedicated local partner support",
+    "file": "src/app/business/business.ts"
   },
   "8700121026680200191": {
     "source": "Clear",
@@ -22647,6 +23803,10 @@
     "source": "Card form",
     "file": "src/app/boards/boards.html"
   },
+  "8735132582758168115": {
+    "source": "Explicit provenance for every generated insight.",
+    "file": "src/app/marketing/marketing.ts"
+  },
   "8737839845379914072": {
     "source": "Anchor a city wiki with maximum visibility and deeper insight.",
     "file": "src/app/business/business.ts"
@@ -22669,6 +23829,10 @@
   },
   "8740488573971210973": {
     "source": "{$INTERPOLATION} of {$INTERPOLATION_1} selected",
+    "file": "src/app/boards/boards.html"
+  },
+  "8742013288300788116": {
+    "source": "Cards added to {$INTERPOLATION}",
     "file": "src/app/boards/boards.html"
   },
   "8742691292405314610": {
@@ -22757,7 +23921,7 @@
   },
   "8777876005321924624": {
     "source": "Contact {$INTERPOLATION}",
-    "file": "src/app/boards/listing-live-closing.html"
+    "file": "src/app/boards/boards.html"
   },
   "87794999272632427": {
     "source": "Could not disconnect Spotify.",
@@ -22811,6 +23975,10 @@
     "source": "Facebook",
     "file": "src/app/answer-card/answer-card.html"
   },
+  "8791607968404663592": {
+    "source": "Campus-adjacent streets and micro-districts, not generic neighborhoods.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
   "8792313431628841732": {
     "source": "Create your own version",
     "file": "src/app/boards/boards.html"
@@ -22862,6 +24030,10 @@
   "880635411284636094": {
     "source": "Rental scenes",
     "file": "src/app/boards/boards.html"
+  },
+  "8809902939714878222": {
+    "source": "{$INTERPOLATION} boards",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
   "8810199292992116287": {
     "source": " Your account already has a created team. You can still join other teams by invitation. ",
@@ -22983,6 +24155,10 @@
     "source": "LivingWiki menu",
     "file": "src/app/mobile-menu/mobile-menu.html"
   },
+  "8839524692578383318": {
+    "source": "{$INTERPOLATION} failed",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
   "8840963461883188815": {
     "source": "Stories saved",
     "file": "src/app/boards/boards.ts"
@@ -23010,6 +24186,10 @@
   "8845562639208533730": {
     "source": "Only Happens Here: 10 Things That Make No Sense Anywhere Else",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
+  "8847767541224176967": {
+    "source": "Guided onboarding for your team",
+    "file": "src/app/pricing/pricing.ts"
   },
   "8848099176682139793": {
     "source": "Public video link copied.",
@@ -23163,6 +24343,10 @@
     "source": "Standard video narration is included free",
     "file": "src/app/pricing/pricing.ts"
   },
+  "8904229641264030782": {
+    "source": "Standard setup support",
+    "file": "src/app/business/business.ts"
+  },
   "8905995985388209337": {
     "source": "Accept",
     "file": "src/app/boards/boards.html"
@@ -23275,6 +24459,10 @@
     "source": "Public page unpublished",
     "file": "src/app/teams/teams.html"
   },
+  "8926782726920219244": {
+    "source": "{$INTERPOLATION} cards · ~{$INTERPOLATION_1} words per card",
+    "file": "src/app/boards/real-estate-wizard-source.html"
+  },
   "8927847276499957890": {
     "source": "No source documents are attached yet, so answers use internet context and current public sources.",
     "file": "src/app/chat/chat.ts"
@@ -23295,6 +24483,10 @@
     "source": "Unlisted: anyone with this link can view and forward it. It does not appear in public discovery.",
     "file": "src/app/teams/teams.html"
   },
+  "8932306453539137298": {
+    "source": "To the fullest extent permitted by law, we are not liable for indirect, incidental, special, consequential, or punitive damages, or for loss of data, profits, or business arising from use of the service.",
+    "file": "src/app/legal/legal.ts"
+  },
   "8933329832416037471": {
     "source": "No Wikis connected yet.",
     "file": "src/app/profile/profile.html"
@@ -23306,6 +24498,10 @@
   "893501284794956936": {
     "source": "Your starting location is not stored. Saving creates a private board that only you can open.",
     "file": "src/app/boards/boards.html"
+  },
+  "8936553554811594955": {
+    "source": "{$INTERPOLATION} pending",
+    "file": "src/app/notifications/notifications.html"
   },
   "8936574255868961822": {
     "source": " library.",
@@ -23727,6 +24923,10 @@
     "source": "Verified near ",
     "file": "src/app/boards/boards.ts"
   },
+  "9049366986248242853": {
+    "source": "{$INTERPOLATION} export {$INTERPOLATION_1}",
+    "file": "src/app/boards/boards.html"
+  },
   "9049584649597936430": {
     "source": "Full narration",
     "file": "src/app/boards/boards.html"
@@ -23746,6 +24946,10 @@
   "9052373889948540834": {
     "source": "From the Answer",
     "file": "src/app/answer-card/answer-card.html"
+  },
+  "9053986821199463396": {
+    "source": "{$INTERPOLATION} new · {$INTERPOLATION_1} active · {$INTERPOLATION_2} archived (loaded)",
+    "file": "src/app/admin-users/talkthru-interests-admin.html"
   },
   "9054497901110845106": {
     "source": "Rate limit",
@@ -23785,6 +24989,10 @@
   },
   "9069056898410144297": {
     "source": "Members use their account name. Guests can choose a name after finishing.",
+    "file": "src/app/boards/boards.html"
+  },
+  "9069241622762976118": {
+    "source": " {$INTERPOLATION} stops {$START_BLOCK_IF} · {$INTERPOLATION_1} {$CLOSE_BLOCK_IF}{$START_BLOCK_IF_1} · {$INTERPOLATION_2} {$CLOSE_BLOCK_IF}",
     "file": "src/app/boards/boards.html"
   },
   "9070768663485888935": {
@@ -23887,6 +25095,14 @@
     "source": "Wiki",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "9110925056496707410": {
+    "source": "Your choices",
+    "file": "src/app/legal/legal.ts"
+  },
+  "9111194009950286597": {
+    "source": "We may change, improve, limit, or discontinue features at any time, including public atlas behavior, storage limits, or usage controls.",
+    "file": "src/app/legal/legal.ts"
+  },
   "9115458698382595773": {
     "source": "Only the board owner can set its custom URL.",
     "file": "src/app/boards/boards.ts"
@@ -23902,6 +25118,10 @@
   "9118928885179196531": {
     "source": "Public URL",
     "file": "src/app/shared-chat/shared-chat.html"
+  },
+  "9119337851054231131": {
+    "source": "{$INTERPOLATION} created · {$INTERPOLATION_1} skipped · {$INTERPOLATION_2} failed",
+    "file": "src/app/atlas-manage/atlas-manage.html"
   },
   "9122674476747675182": {
     "source": "Your exact square could not be found. Please try again.",
@@ -23946,6 +25166,10 @@
   "9139280231181462": {
     "source": "city",
     "file": "src/app/atlas-persona/atlas-persona.ts"
+  },
+  "9139929300053330470": {
+    "source": "10 places to sit for hours, framed through observed behavior.",
+    "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
   },
   "9141428845535098964": {
     "source": "More gardens and local history, fewer food stops…",
@@ -24067,6 +25291,10 @@
     "source": "Use a strong image on every card. No videos are added automatically.",
     "file": "src/app/boards/boards.ts"
   },
+  "9186421191542462490": {
+    "source": " {$INTERPOLATION} photos · {$INTERPOLATION_1} used in Live View {$START_BLOCK_IF} · Needs review {$CLOSE_BLOCK_IF}",
+    "file": "src/app/boards/boards.html"
+  },
   "9187580480258537751": {
     "source": "“Answer in the first person, grounded in the historical record.”",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -24078,6 +25306,10 @@
   "9188397733808972472": {
     "source": "Census-tract health outcomes connecting pollution exposure to people.",
     "file": "src/app/fence-line/fence-line.html"
+  },
+  "9189941157088284658": {
+    "source": "Public chats are visible to the service operators and may later be visible to the relevant atlas owner inside the product. Owners should only publish atlases they are comfortable exposing in read-only form.",
+    "file": "src/app/legal/legal.ts"
   },
   "9190181608762045146": {
     "source": "{$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG} live",
@@ -24319,6 +25551,14 @@
     "source": "{$START_TAG_SPAN}photo_library{$CLOSE_TAG_SPAN} Photos & memories",
     "file": "src/app/boards/boards.html"
   },
+  "965332976194199064": {
+    "source": "Share {$INTERPOLATION}",
+    "file": "src/app/video-library/video-library.html"
+  },
+  "965658665551565977": {
+    "source": "{$INTERPOLATION}% image coverage",
+    "file": "src/app/boards/boards.html"
+  },
   "967028822522182738": {
     "source": "Personal Plus, Creator, or platform admin access is required for fresh city, template, and bulk Wiki creation.",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -24374,6 +25614,10 @@
   "988839528622692965": {
     "source": "Shown to visitors after they join. Keep blank until the phone experience is ready.",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "990607633277692258": {
+    "source": "Encrypted at rest and in transit.",
+    "file": "src/app/marketing/marketing.ts"
   },
   "99319995922500877": {
     "source": " Choose a different time ",

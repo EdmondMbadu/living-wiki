@@ -21,7 +21,7 @@
     @if (loading()) { <p role="status" i18n>Preparing your photos…</p> }
     @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
     @if (photos().length) {
-      <p class="photo-count" aria-live="polite">{{ photos().length }} {{ photos().length === 1 ? templateText.message3 : templateText.message4 }} · The first photo is your cover.</p>
+      <p class="photo-count" aria-live="polite" i18n>{{ photos().length }} {{ photos().length === 1 ? templateText.message3 : templateText.message4 }} · The first photo is your cover.</p>
       <div class="photo-grid">
         @for (photo of photos(); track photo.id; let index = $index) {
           <figure>

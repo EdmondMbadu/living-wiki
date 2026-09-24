@@ -27,7 +27,7 @@
     <section class="hero-panel">
       <div>
         <p class="eyebrow" i18n>Controlled generation · private by default</p>
-        <h1>Generate {{ targetSingular }} boards without losing editorial control.</h1>
+        <h1 i18n>Generate {{ targetSingular }} boards without losing editorial control.</h1>
         <p class="hero-copy">
           @if (isUniversityFactory()) {
             Every task uses source-backed campus and town research, runs through the local Codex worker, and produces a scored private draft.
@@ -43,7 +43,7 @@
         <div>
           <strong>{{ currentUserName() }}</strong>
           <small>{{ currentUserEmail() }}</small>
-          <small>Generator {{ dashboard()?.generatorVersion || '—' }} · Rubric {{ dashboard()?.rubricVersion || '—' }}</small>
+          <small i18n>Generator {{ dashboard()?.generatorVersion || '—' }} · Rubric {{ dashboard()?.rubricVersion || '—' }}</small>
         </div>
       </div>
     </section>
@@ -70,9 +70,9 @@
       </div>
     } @else {
       <section class="summary-grid">
-        <article><small>Eligible {{ targetPlural }}</small><strong>{{ cities().length }}</strong><span>Public {{ targetSingular }} wikis</span></article>
+        <article><small i18n>Eligible {{ targetPlural }}</small><strong>{{ cities().length }}</strong><span i18n>Public {{ targetSingular }} wikis</span></article>
         <article><small i18n>Selected now</small><strong>{{ selectedCount() }}</strong><span i18n>Generation targets</span></article>
-        <article><small i18n>Stored boards</small><strong>{{ boards().length }}</strong><span>{{ publishedBoardCount() }} published · including trash</span></article>
+        <article><small i18n>Stored boards</small><strong>{{ boards().length }}</strong><span i18n>{{ publishedBoardCount() }} published · including trash</span></article>
         <article><small i18n>Needs review</small><strong>{{ needsReviewCount() }}</strong><span i18n>Private drafts</span></article>
       </section>
 
@@ -93,7 +93,7 @@
         <section class="catalog-panel" aria-labelledby="catalog-heading">
           <div class="catalog-panel__intro">
             <div>
-              <p class="eyebrow">Global catalog · 7 buckets × {{ catalogStatus.targetCount ?? catalogStatus.cityCount }} {{ targetPlural }}</p>
+              <p class="eyebrow" i18n>Global catalog · 7 buckets × {{ catalogStatus.targetCount ?? catalogStatus.cityCount }} {{ targetPlural }}</p>
               <h2 id="catalog-heading" i18n>One matrix. No blind regeneration.</h2>
               <p i18n>
                 The reconciler keeps every existing board, queues only unsuppressed gaps,
@@ -117,7 +117,7 @@
           <div class="catalog-buckets">
             @for (bucket of catalogStatus.buckets; track bucket.id) {
               <article>
-                <div><strong>{{ bucketLabel(bucket.id) }}</strong><small>{{ bucket.publishedCount }} live · {{ bucket.reviewCount }} review</small></div>
+                <div><strong>{{ bucketLabel(bucket.id) }}</strong><small i18n>{{ bucket.publishedCount }} live · {{ bucket.reviewCount }} review</small></div>
                 <span [class.catalog-bucket--complete]="bucket.missingCount === 0 && bucket.invalidCount === 0">
                   {{ bucket.missingCount ? bucket.missingCount + templateText.message1 : bucket.invalidCount ? bucket.invalidCount + templateText.message2 : templateText.message26 }}
                 </span>
@@ -159,7 +159,7 @@
                 class="button button--primary"
                 [disabled]="reconcilingCatalog() || !catalogAccepted() || !(plan.readyCount ?? 0) || !!activeJob()"
                 (click)="startCatalogReconciliation()"
-              >
+               i18n>
                 <span class="material-symbols-outlined">playlist_add_check_circle</span>
                 Queue {{ plan.readyCount ?? 0 }} missing boards
               </button>
@@ -203,7 +203,7 @@
             <div>
               <small i18n>First board preview</small>
               <strong>{{ boardTitlePreview() }}</strong>
-              <span>{{ template().count }} verified cards · {{ template().cardTitleMode === 'subject' ? templateText.message11 : templateText.message12 }}</span>
+              <span i18n>{{ template().count }} verified cards · {{ template().cardTitleMode === 'subject' ? templateText.message11 : templateText.message12 }}</span>
             </div>
           </div>
 
@@ -255,18 +255,18 @@
           <div class="selection-heading">
             <div>
               <p class="eyebrow" i18n>Step 2</p>
-              <h2>Select {{ targetPlural }}</h2>
+              <h2 i18n>Select {{ targetPlural }}</h2>
             </div>
             <strong>{{ citySelectionSummary() }}</strong>
           </div>
           <div class="run-mode" role="group" aria-label="Generation scope" i18n-aria-label>
             <button type="button" [class.run-mode__button--active]="runMode() === 'test'" (click)="setRunMode('test')">
               <span class="material-symbols-outlined">science</span>
-              <span><strong i18n>Test drive</strong><small>Maximum 5 {{ targetPlural }}</small></span>
+              <span><strong i18n>Test drive</strong><small i18n>Maximum 5 {{ targetPlural }}</small></span>
             </button>
             <button type="button" [class.run-mode__button--active]="runMode() === 'production'" (click)="setRunMode('production')">
               <span class="material-symbols-outlined">public</span>
-              <span><strong i18n>Production run</strong><small>All eligible {{ targetPlural }}</small></span>
+              <span><strong i18n>Production run</strong><small i18n>All eligible {{ targetPlural }}</small></span>
             </button>
           </div>
           <div class="city-toolbar">
@@ -285,7 +285,7 @@
                 <span><strong>{{ city.name }}</strong><small>{{ city.region || city.countryCode || templateText.message13 }}</small></span>
               </label>
             } @empty {
-              <p class="empty-copy">No {{ targetPlural }} match this search.</p>
+              <p class="empty-copy" i18n>No {{ targetPlural }} match this search.</p>
             }
           </div>
           @if (selectedCities().length) {
@@ -302,7 +302,7 @@
             <div>
               <p class="eyebrow" i18n>Step 3</p>
               <h2 i18n>Preflight, then start</h2>
-              <p>{{ selectedCount() }} board{{ selectedCount() === 1 ? '' : templateText.message27 }} · no AI, search, or Places calls occur during preflight.</p>
+              <p i18n>{{ selectedCount() }} board{{ selectedCount() === 1 ? '' : templateText.message27 }} · no AI, search, or Places calls occur during preflight.</p>
             </div>
             <button type="button" class="button button--secondary" [disabled]="running() || selectedCount() === 0" (click)="runPreflight()">
               <span class="material-symbols-outlined">fact_check</span>
@@ -343,10 +343,10 @@
                 </div>
                 <div class="progress-track"><span [style.width.%]="jobProgress(job)"></span></div>
                 <div class="job-counts">
-                  <span><strong>{{ job.completed_count }}</strong>/{{ job.total_count }} complete</span>
-                  <span>{{ job.success_count }} review</span>
-                  <span>{{ job.failed_count }} failed</span>
-                  <span>{{ job.skipped_count }} skipped</span>
+                  <span i18n><strong>{{ job.completed_count }}</strong>/{{ job.total_count }} complete</span>
+                  <span i18n>{{ job.success_count }} review</span>
+                  <span i18n>{{ job.failed_count }} failed</span>
+                  <span i18n>{{ job.skipped_count }} skipped</span>
                 </div>
                 @if (job.status === 'running') {
                   <button type="button" class="button button--danger-quiet" [disabled]="running()" (click)="cancelJob(job)" i18n>
@@ -360,7 +360,7 @@
           </div>
 
           @if (items().length) {
-            <div class="item-heading"><h3>Latest job {{ targetPlural }}</h3><span>{{ items().length }}</span></div>
+            <div class="item-heading"><h3 i18n>Latest job {{ targetPlural }}</h3><span>{{ items().length }}</span></div>
             <div class="item-list">
               @for (item of items(); track trackItem($index, item)) {
                 <article class="item-row">
@@ -369,7 +369,7 @@
                     <strong>{{ item.city_name }}</strong>
                     <small>{{ item.region_name || item.error_message || jobStatusLabel(item.status) }}</small>
                     @if (item.generation_score !== null && item.generation_score !== undefined) {
-                      <small>Generation score: {{ item.generation_score }}/100 · {{ item.generation_grade || '—' }}</small>
+                      <small i18n>Generation score: {{ item.generation_score }}/100 · {{ item.generation_grade || '—' }}</small>
                     }
                   </div>
                   <span [class]="itemStatusClass(item.status)">{{ jobStatusLabel(item.status) }}</span>
@@ -388,12 +388,12 @@
       <section class="panel board-management">
         <div class="panel-heading board-heading">
           <div>
-            <p class="eyebrow">{{ factoryTitle }} lifecycle</p>
+            <p class="eyebrow" i18n>{{ factoryTitle }} lifecycle</p>
             <h2 i18n>Review, publish, remove, restore, or delete</h2>
             <p i18n>Listing and source approval are intentionally separate.</p>
           </div>
           <div class="board-heading-actions">
-            <span class="result-count">{{ filteredBoards().length }} boards</span>
+            <span class="result-count" i18n>{{ filteredBoards().length }} boards</span>
             <button
               type="button"
               class="button button--primary publish-all-button"
@@ -412,7 +412,7 @@
             <input type="search" [placeholder]="templateText.message37 + targetSingular + templateText.message38" [ngModel]="boardSearch()" (ngModelChange)="boardSearch.set($event)" />
           </label>
           <select [attr.aria-label]="templateText.message39 + targetSingular" [ngModel]="selectedBoardCity()" (ngModelChange)="selectedBoardCity.set($event)">
-            <option value="all">All {{ targetPlural }}</option>
+            <option value="all" i18n>All {{ targetPlural }}</option>
             @for (city of cities(); track trackCity($index, city)) { <option [value]="city.id">{{ city.name }}</option> }
           </select>
           <select aria-label="Filter boards by status" [ngModel]="selectedBoardStatus()" (ngModelChange)="selectedBoardStatus.set($event)" i18n-aria-label>
@@ -431,23 +431,23 @@
                 <span class="board-icon"><span class="material-symbols-outlined">dashboard_customize</span></span>
                 <div>
                   <a [routerLink]="['/boards', board.id]">{{ board.title }}</a>
-                  <small>{{ cityLabel(board) }} · {{ board.card_count }} verified cards</small>
-                  <small>{{ board.template_id }} v{{ board.template_version }} · rubric {{ board.rubric_version }}</small>
+                  <small i18n>{{ cityLabel(board) }} · {{ board.card_count }} verified cards</small>
+                  <small i18n>{{ board.template_id }} v{{ board.template_version }} · rubric {{ board.rubric_version }}</small>
                 </div>
               </div>
               <div class="board-statuses">
                 <span [class]="boardStatusClass(board)">{{ board.deleted_at ? templateText.message28 : jobStatusLabel(board.editorial_status) }}</span>
                 <span class="status">{{ targetSingular }}: {{ jobStatusLabel(board.city_listing_status) }}</span>
-                <span class="status">source: {{ jobStatusLabel(board.source_status) }}</span>
+                <span class="status" i18n>source: {{ jobStatusLabel(board.source_status) }}</span>
               </div>
               <div class="quality-block">
                 <strong>{{ board.validation_summary?.verified_count ?? board.card_count }}/{{ board.validation_summary?.requested_count ?? board.card_count }}</strong>
                 <span>{{ isUniversityFactory() ? templateText.message20 : templateText.message21 }}</span>
                 @if (isUniversityFactory()) {
-                  <small [class.score--weak]="board.validation_summary?.all_have_images !== true">Images: {{ board.validation_summary?.image_count ?? 0 }}/{{ board.card_count }}{{ board.validation_summary?.all_have_images === true ? templateText.message22 : templateText.message23 }}</small>
+                  <small [class.score--weak]="board.validation_summary?.all_have_images !== true" i18n>Images: {{ board.validation_summary?.image_count ?? 0 }}/{{ board.card_count }}{{ board.validation_summary?.all_have_images === true ? templateText.message22 : templateText.message23 }}</small>
                 }
                 <small [class]="generationScoreClass(board)">{{ generationScoreLabel(board) }}</small>
-                @if (board.quality_warnings.length) { <small>{{ board.quality_warnings.length }} quality warning(s)</small> }
+                @if (board.quality_warnings.length) { <small i18n>{{ board.quality_warnings.length }} quality warning(s)</small> }
               </div>
               <div class="board-actions">
                 @if (universityBoardLibraryLink(board); as libraryLink) {
@@ -462,7 +462,7 @@
                     <button type="button" class="button button--primary" [disabled]="publishingAll() || busyBoardId() === board.id || !isBoardPublishable(board)" (click)="manage(board, 'publish')"><span class="material-symbols-outlined">{{ isBoardPublishable(board) ? 'publish' : 'image' }}</span> {{ isBoardPublishable(board) ? templateText.message24 : templateText.message25 }}</button>
                   }
                   @if (board.city_listing_status === 'listed') {
-                    <button type="button" class="button button--secondary" [disabled]="publishingAll() || busyBoardId() === board.id" (click)="manage(board, 'remove_from_city')"><span class="material-symbols-outlined">link_off</span> Remove from {{ targetSingular }}</button>
+                    <button type="button" class="button button--secondary" [disabled]="publishingAll() || busyBoardId() === board.id" (click)="manage(board, 'remove_from_city')" i18n><span class="material-symbols-outlined">link_off</span> Remove from {{ targetSingular }}</button>
                   }
                   @if (board.source_status === 'approved') {
                     <button type="button" class="button button--ghost" [disabled]="publishingAll() || busyBoardId() === board.id" (click)="manage(board, 'exclude_source')" i18n><span class="material-symbols-outlined">block</span> Exclude source</button>
@@ -474,7 +474,7 @@
               </div>
             </article>
           } @empty {
-            <div class="empty-state"><span class="material-symbols-outlined">inventory_2</span><strong i18n>No boards in this view</strong><p>Change the filters or generate the first {{ targetSingular }} board draft.</p></div>
+            <div class="empty-state"><span class="material-symbols-outlined">inventory_2</span><strong i18n>No boards in this view</strong><p i18n>Change the filters or generate the first {{ targetSingular }} board draft.</p></div>
           }
         </div>
       </section>

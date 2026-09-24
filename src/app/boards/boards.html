@@ -115,7 +115,7 @@
                           </span>
                           <div class="listing-contact-live__heading">
                             <h4>{{ card.tags.includes('real-estate') || card.tags.includes('listing-contact') ? templateText.message1 : templateText.message2 }}</h4>
-                            <p>Contact {{ contact.name || (card.tags.includes('real-estate') ? 'the listing agent' : 'the person behind this board') }}</p>
+                            <p i18n>Contact {{ contact.name || (card.tags.includes('real-estate') ? 'the listing agent' : 'the person behind this board') }}</p>
                           </div>
                           @if (contact.agency) {
                             <span class="listing-contact-live__agency">{{ contact.agency }}</span>
@@ -263,7 +263,7 @@
                         <nav class="stack-card-photo-nav" [attr.aria-label]="templateText.message369 + card.title">
                           <span class="stack-card-photo-nav__label">
                             <strong>{{ stackListingGroupLabel(card) }}</strong>
-                            <small>{{ stackCardPhotoPosition() }} used in Live View</small>
+                            <small i18n>{{ stackCardPhotoPosition() }} used in Live View</small>
                           </span>
                           <span class="stack-card-photo-nav__dots">
                             @for (imageUrl of presentationImages; track imageUrl; let photoIndex = $index) {
@@ -337,7 +337,7 @@
                       <img class="stack-closing__crane" src="/assets/image/lucky-paper-crane.png" alt="" aria-hidden="true" />
                       <span class="stack-closing__eyebrow" i18n>Board complete</span>
                       <h4 i18n>Keep exploring</h4>
-                      <p>{{ stackSelectedCount() }} cards from {{ board.title }}</p>
+                      <p i18n>{{ stackSelectedCount() }} cards from {{ board.title }}</p>
                     </div>
 
                     <div class="stack-closing__actions">
@@ -956,7 +956,7 @@
                   </span>
                   <span class="board-draft-card__copy">
                     <strong>{{ draft.result.board.title }}</strong>
-                    <small>{{ draft.result.cards.length }} cards · {{ wizardDraftUpdatedLabel(draft) }}</small>
+                    <small i18n>{{ draft.result.cards.length }} cards · {{ wizardDraftUpdatedLabel(draft) }}</small>
                     <span i18n>Resume editing</span>
                   </span>
                 </button>
@@ -1126,11 +1126,11 @@
                         {{ board.description || board.backNote || templateText.message36 }}
                       </span>
                       <span class="board-square__footer-meta">
-                        <small>
+                        <small i18n>
                           <span class="material-symbols-outlined" aria-hidden="true">library_books</span>
                           {{ boardCardCount(board) }} cards
                         </small>
-                        <small>Updated {{ boardUpdatedLabel(board) }}</small>
+                        <small i18n>Updated {{ boardUpdatedLabel(board) }}</small>
                       </span>
                     </span>
                   </button>
@@ -1476,7 +1476,7 @@
           <nav class="board-editorial-back" aria-label="Board navigation" i18n-aria-label>
             <button type="button" (click)="closeBoardDetail()">
               <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
-              <span>Back to {{ board.parentCardId ? (board.parentCardTitle || 'parent card') : (tripsPage() ? 'trips' : songsPage() ? 'songs' : 'boards') }}</span>
+              <span i18n>Back to {{ board.parentCardId ? (board.parentCardTitle || 'parent card') : (tripsPage() ? 'trips' : songsPage() ? 'songs' : 'boards') }}</span>
             </button>
             @if (board.parentCardId) {
               <button type="button" class="board-editorial-back__parent" (click)="openParentBoard(board, $event)">
@@ -1531,7 +1531,7 @@
                 </span>
                 <span i18n>Curated by <strong>{{ ownerName(board) }}</strong></span>
                 <i aria-hidden="true"></i>
-                <span>Updated {{ board.cards.length ? boardUpdatedLabel(board) : templateText.message341 }}</span>
+                <span i18n>Updated {{ board.cards.length ? boardUpdatedLabel(board) : templateText.message341 }}</span>
               </div>
 
               @if (boardCustomUrl(board); as customUrl) {
@@ -2339,7 +2339,7 @@
                     <aside class="tour-studio__sequence" aria-label="Tour stop order" i18n-aria-label>
                       <header class="tour-studio__sequence-head">
                         <span>
-                          <strong>{{ selectedBoardTourCards().length }} stops</strong>
+                          <strong i18n>{{ selectedBoardTourCards().length }} stops</strong>
                           <small i18n>Drag to reorder</small>
                         </span>
                         <span class="material-symbols-outlined" aria-hidden="true">sort</span>
@@ -2506,7 +2506,7 @@
                       @if (selectedTourCard(); as card) {
                         <header class="tour-studio__inspector-head">
                           <span>
-                            <small>Stop {{ card.tour?.sequence }}</small>
+                            <small i18n>Stop {{ card.tour?.sequence }}</small>
                             <strong>{{ tourStopPositionLabel() }}</strong>
                           </span>
                           <span class="tour-studio__inspector-nav">
@@ -2584,7 +2584,7 @@
                             <div class="tour-studio__wayfinder">
                               <span class="material-symbols-outlined">{{ tourModeIcon(board) }}</span>
                               <span>
-                                <strong>To {{ nextCard.title }}</strong>
+                                <strong i18n>To {{ nextCard.title }}</strong>
                                 <small>{{ leg.durationText }} · {{ leg.distanceText }}</small>
                                 <p>{{ leg.instruction }}</p>
                               </span>
@@ -2630,7 +2630,7 @@
                   <footer class="tour-studio__footer">
                     <span class="tour-studio__health">
                       <span class="material-symbols-outlined">verified_user</span>
-                      <strong>
+                      <strong i18n>
                         {{ selectedBoardTourCards().length }} stops
                         @if (board.tourMeta?.totalDurationText) { · {{ board.tourMeta?.totalDurationText }} }
                         @if (board.tourMeta?.totalDistanceText) { · {{ board.tourMeta?.totalDistanceText }} }
@@ -2658,7 +2658,7 @@
                         <span class="material-symbols-outlined">{{ tourModeIcon(board) }}</span>
                         <span>
                           <small>{{ tourModeText(board) }}</small>
-                          <strong>{{ selectedBoardTourCards().length }} stops</strong>
+                          <strong i18n>{{ selectedBoardTourCards().length }} stops</strong>
                         </span>
                       </span>
                       <span class="tour-experience__map-actions">
@@ -2700,7 +2700,7 @@
                           }
                         </div>
                         <div class="tour-experience__story-body">
-                          <span class="tour-experience__story-kicker">
+                          <span class="tour-experience__story-kicker" i18n>
                             <b>{{ card.tour?.sequence }}</b>
                             Stop {{ card.tour?.sequence }}
                           </span>
@@ -2723,7 +2723,7 @@
                             </a>
                           </div>
                           @if (hasBoardInside(card) || relatedCardCount(card) > 0) {
-                            <button type="button" class="tour-experience__inside" (click)="openBoardInside(card, $event)">
+                            <button type="button" class="tour-experience__inside" (click)="openBoardInside(card, $event)" i18n>
                               <span class="material-symbols-outlined">account_tree</span>
                               Explore {{ boardInsideTitle(card) }}
                               <span class="material-symbols-outlined">arrow_forward</span>
@@ -3003,7 +3003,7 @@
                   <section class="music-services" aria-label="Play the complete board" i18n-aria-label>
                     <button type="button" class="music-services__trigger" [attr.aria-expanded]="musicServicesOpen()" aria-controls="music-services-panel" (click)="musicServicesOpen.set(!musicServicesOpen())">
                       <span class="material-symbols-outlined">queue_music</span>
-                      <span><strong>Play all {{ songCards(board).length }} songs</strong><small i18n>Choose where you listen</small></span>
+                      <span><strong i18n>Play all {{ songCards(board).length }} songs</strong><small i18n>Choose where you listen</small></span>
                       <span class="material-symbols-outlined">{{ musicServicesOpen() ? 'expand_less' : 'expand_more' }}</span>
                     </button>
                     @if (musicServicesOpen()) {
@@ -3277,7 +3277,7 @@
                         (click)="openAlongsideInnerBoard(board, card, $event)"
                       >
                         <span class="material-symbols-outlined">account_tree</span>
-                        <span>Inside {{ alongsideInnerCardParentTitle(board, card) }}</span>
+                        <span i18n>Inside {{ alongsideInnerCardParentTitle(board, card) }}</span>
                       </button>
                       <button
                         type="button"
@@ -3576,7 +3576,7 @@
                         @if (listingContactDetails(card); as contact) {
                           <div class="listing-contact-board">
                             <span class="listing-contact-board__eyebrow">{{ card.tags.includes('real-estate') || card.tags.includes('listing-contact') ? templateText.message105 : templateText.message2 }}</span>
-                            <strong>Contact {{ contact.name || (card.tags.includes('real-estate') ? 'the listing agent' : 'the person behind this board') }}</strong>
+                            <strong i18n>Contact {{ contact.name || (card.tags.includes('real-estate') ? 'the listing agent' : 'the person behind this board') }}</strong>
                             @if (contact.agency) { <small>{{ contact.agency }}</small> }
                             @if (contact.phoneHref || contact.emailHref) {
                               <div class="listing-contact-board__actions">
@@ -3604,7 +3604,7 @@
                               Virtual agent · Ready to answer
                             </span>
                             <strong>{{ talkingCardQuestionLabel(card) }}</strong>
-                            <p>Get answers about {{ card.tags.includes('listing-agent-guide') ? templateText.message106 : templateText.message107 }} by text or voice.</p>
+                            <p i18n>Get answers about {{ card.tags.includes('listing-agent-guide') ? templateText.message106 : templateText.message107 }} by text or voice.</p>
                           </div>
                           <button
                             type="button"
@@ -4812,7 +4812,7 @@
                 <span class="material-symbols-outlined">history</span>
                 <div>
                   <strong i18n>Continue your latest draft</strong>
-                  <small>{{ recentDraft.result.board.title }} · {{ recentDraft.result.cards.length }} cards</small>
+                  <small i18n>{{ recentDraft.result.board.title }} · {{ recentDraft.result.cards.length }} cards</small>
                 </div>
                 <button type="button" class="boards-primary-action" (click)="resumeWizardDraft(recentDraft)" i18n>Resume draft</button>
               </div>
@@ -4914,14 +4914,14 @@
                   <span class="material-symbols-outlined" aria-hidden="true">swipe</span>
                   Swipe or use arrows
                 </span>
-                <span class="sr-only" aria-live="polite">
+                <span class="sr-only" aria-live="polite" i18n>
                   {{ wizardActiveDoorway().label }}, {{ wizardActiveDoorwayIndex() + 1 }} of {{ wizardDoorwayModes().length }}
                 </span>
               </div>
 
               <div class="boards-doorway__rail-head">
                 <strong i18n>All board types</strong>
-                <small>{{ wizardActiveDoorwayIndex() + 1 }} of {{ wizardDoorwayModes().length }}</small>
+                <small i18n>{{ wizardActiveDoorwayIndex() + 1 }} of {{ wizardDoorwayModes().length }}</small>
               </div>
               <div class="boards-doorway__rail" role="group" aria-label="All board types" i18n-aria-label>
                 @for (mode of wizardDoorwayModes(); track mode.id) {
@@ -5028,9 +5028,9 @@
                       (input)="setNearbyGemCount($any($event.target).valueAsNumber)"
                      i18n-aria-label/>
                     <div class="nearby-gems-wizard__count-scale" aria-hidden="true">
-                      <span>{{ nearbyGemMinCards }} · Focused</span>
+                      <span i18n>{{ nearbyGemMinCards }} · Focused</span>
                       <span i18n>8 · Balanced</span>
-                      <span>{{ nearbyGemMaxCards }} · Expansive</span>
+                      <span i18n>{{ nearbyGemMaxCards }} · Expansive</span>
                     </div>
                   </div>
 
@@ -5118,7 +5118,7 @@
                     (input)="updateWizardPrompt($any($event.target).value)"
                   ></textarea>
                   @if (wizardNumberedSource(); as numberedSource) {
-                    <small class="boards-wizard-paste-detected" aria-live="polite">
+                    <small class="boards-wizard-paste-detected" aria-live="polite" i18n>
                       <span class="material-symbols-outlined">format_list_numbered</span>
                       Detected {{ numberedSource.items.length }} numbered sections. Each section will become one card, in order, with its full narration preserved.
                     </small>
@@ -5129,7 +5129,7 @@
                     </small>
                   }
                 </label>
-                <small class="boards-wizard-prompt__help">
+                <small class="boards-wizard-prompt__help" i18n>
                   Include names, order, location, tone, or anything that matters. You can also paste a full numbered script here; up to {{ wizardPasteMaxLength }} characters.
                 </small>
                 @if (!wizardLockedTargetBoard()) {
@@ -5159,7 +5159,7 @@
                     (input)="updateWizardPastedList($any($event.target).value)"
                   ></textarea>
                   @if (wizardPastedWhat3WordsSource(); as what3wordsSource) {
-                    <small class="boards-wizard-paste-detected boards-wizard-paste-detected--what3words" aria-live="polite">
+                    <small class="boards-wizard-paste-detected boards-wizard-paste-detected--what3words" aria-live="polite" i18n>
                       <span class="material-symbols-outlined">where_to_vote</span>
                       Recognized {{ what3wordsSource.items.length }}
                       {{ what3wordsSource.items.length === 1 ? templateText.message125 : templateText.message126 }}.
@@ -5188,7 +5188,7 @@
                       <strong>
                         {{ wizardPhotos().length ? wizardPhotos().length + (wizardPhotos().length === 1 ? ' photo ready' : ' photos ready') : templateText.message129 }}
                       </strong>
-                      <small>
+                      <small i18n>
                         LivingWiki looks at the actual pictures and drafts one editable card per photo.
                         {{ wizardTargetBoardId() === 'new' ? templateText.message130 : templateText.message131 }}
                       </small>
@@ -5434,7 +5434,7 @@
                             {{ source.items.length }}
                             {{ source.items.length === 1 ? templateText.message145 : templateText.message146 }}
                           </strong>
-                          <small>
+                          <small i18n>
                             {{ wizardOffGridVerifiedCount() }} verified ·
                             {{ source.items.length - wizardOffGridVerifiedCount() }} link-ready
                           </small>
@@ -5496,7 +5496,7 @@
                             {{ source.issues.length === 1 ? templateText.message149 : templateText.message150 }}
                           </strong>
                           @for (issue of source.issues; track issue.sourceLine + '-' + issue.message) {
-                            <small>Line {{ issue.sourceLine }}: {{ issue.message }}</small>
+                            <small i18n>Line {{ issue.sourceLine }}: {{ issue.message }}</small>
                           }
                         </div>
                       }
@@ -5655,7 +5655,7 @@
                     (input)="wizardUrl.set($any($event.target).value)"
                   />
                   @if (wizardIsTalkThruListing()) {
-                    <small class="boards-wizard-real-estate-help">
+                    <small class="boards-wizard-real-estate-help" i18n>
                       Paste a public {{ wizardIsRentalTalkThru() ? templateText.message344 : templateText.message345 }} listing. LivingWiki will keep the property details and their source together.
                     </small>
                   }
@@ -5946,7 +5946,7 @@
                       </span>
                       <span>
                         <strong>{{ preset.label }}</strong>
-                        <small>{{ preset.seconds < 60 ? preset.seconds + templateText.message160 : templateText.message161 }} · ~{{ preset.seconds === 5 ? 12 : preset.seconds === 30 ? 71 : 423 }} words</small>
+                        <small i18n>{{ preset.seconds < 60 ? preset.seconds + templateText.message160 : templateText.message161 }} · ~{{ preset.seconds === 5 ? 12 : preset.seconds === 30 ? 71 : 423 }} words</small>
                         <em>{{ preset.description }}</em>
                       </span>
                       @if (wizardNarrationSecondsPerCard() === preset.seconds) {
@@ -5958,7 +5958,7 @@
                 <div class="boards-wizard-length__custom">
                   <label>
                     <span i18n>Custom length</span>
-                    <strong>{{ wizardNarrationSecondsPerCard() < 60 ? wizardNarrationSecondsPerCard() + templateText.message162 : (wizardNarrationSecondsPerCard() / 60) + templateText.message163 }} per card</strong>
+                    <strong i18n>{{ wizardNarrationSecondsPerCard() < 60 ? wizardNarrationSecondsPerCard() + templateText.message162 : (wizardNarrationSecondsPerCard() / 60) + templateText.message163 }} per card</strong>
                   </label>
                   <input
                     type="range"
@@ -5968,7 +5968,7 @@
                     [value]="wizardNarrationSecondsPerCard()"
                     (input)="setWizardNarrationSeconds($any($event.target).value)"
                   />
-                  <span>~{{ wizardNarrationWordsPerCard() }} words per card</span>
+                  <span i18n>~{{ wizardNarrationWordsPerCard() }} words per card</span>
                 </div>
                 <div class="boards-wizard-length__summary" [class.boards-wizard-length__summary--long]="wizardNarrationTotalSeconds() > 1200">
                   <span class="material-symbols-outlined">schedule</span>
@@ -6001,7 +6001,7 @@
                       </span>
                       <span>
                         <strong>{{ preset.label }}</strong>
-                        <small>{{ preset.seconds < 60 ? preset.seconds + templateText.message160 : templateText.message161 }} · ~{{ preset.seconds === 5 ? 12 : preset.seconds === 30 ? 71 : 423 }} words</small>
+                        <small i18n>{{ preset.seconds < 60 ? preset.seconds + templateText.message160 : templateText.message161 }} · ~{{ preset.seconds === 5 ? 12 : preset.seconds === 30 ? 71 : 423 }} words</small>
                         <em>{{ preset.description }}</em>
                       </span>
                       @if (wizardNarrationSecondsPerCard() === preset.seconds) {
@@ -6013,7 +6013,7 @@
                 <div class="boards-wizard-length__custom">
                   <label>
                     <span i18n>Custom length</span>
-                    <strong>{{ wizardNarrationSecondsPerCard() < 60 ? wizardNarrationSecondsPerCard() + templateText.message162 : (wizardNarrationSecondsPerCard() / 60) + templateText.message163 }} per stop</strong>
+                    <strong i18n>{{ wizardNarrationSecondsPerCard() < 60 ? wizardNarrationSecondsPerCard() + templateText.message162 : (wizardNarrationSecondsPerCard() / 60) + templateText.message163 }} per stop</strong>
                   </label>
                   <input
                     type="range"
@@ -6023,7 +6023,7 @@
                     [value]="wizardNarrationSecondsPerCard()"
                     (input)="setWizardNarrationSeconds($any($event.target).value)"
                   />
-                  <span>~{{ wizardNarrationWordsPerCard() }} words per stop</span>
+                  <span i18n>~{{ wizardNarrationWordsPerCard() }} words per stop</span>
                 </div>
                 <div class="boards-wizard-length__summary" [class.boards-wizard-length__summary--long]="wizardNarrationTotalSeconds() > 1200">
                   <span class="material-symbols-outlined">schedule</span>
@@ -6099,8 +6099,8 @@
               <section class="boards-wizard__intro">
                 <span class="material-symbols-outlined">fact_check</span>
                 <div>
-                  <strong>Review the {{ source.items.length }} card names found on {{ source.siteName || templateText.message172 }}</strong>
-                  <small>
+                  <strong i18n>Review the {{ source.items.length }} card names found on {{ source.siteName || templateText.message172 }}</strong>
+                  <small i18n>
                     {{ wizardSourceReviewExact() ? templateText.message173 : templateText.message174 }}
                     {{ wizardSourceImageCount() }} source picture{{ wizardSourceImageCount() === 1 ? '' : templateText.message347 }} found.
                   </small>
@@ -6130,7 +6130,7 @@
                   <span class="material-symbols-outlined">refresh</span>
                   Re-read page
                 </button>
-                <button type="button" class="boards-primary-action" (click)="confirmWizardSourceReview()">
+                <button type="button" class="boards-primary-action" (click)="confirmWizardSourceReview()" i18n>
                   <span class="material-symbols-outlined">auto_awesome</span>
                   Create these {{ source.items.length }} cards
                 </button>
@@ -6161,10 +6161,10 @@
                     @if (listing.address && listing.address !== listing.listingName) { <p>{{ listing.address }}</p> }
                     <div class="boards-listing-story-facts">
                       @if (listing.price) { <strong>{{ listing.price }}</strong> }
-                      @if (listing.bedrooms) { <span>{{ listing.bedrooms }} beds</span> }
-                      @if (listing.bathrooms) { <span>{{ listing.bathrooms }} baths</span> }
+                      @if (listing.bedrooms) { <span i18n>{{ listing.bedrooms }} beds</span> }
+                      @if (listing.bathrooms) { <span i18n>{{ listing.bathrooms }} baths</span> }
                       @if (listing.status) { <span>{{ listing.status }}</span> }
-                      @if (listing.mlsId) { <span>MLS# {{ listing.mlsId }}</span> }
+                      @if (listing.mlsId) { <span i18n>MLS# {{ listing.mlsId }}</span> }
                     </div>
                   </div>
                   <div class="boards-listing-story-photo-count"><strong>{{ wizardListingPhotoCount() || '—' }}</strong><small>{{ wizardListingPhotoSource() === 'upload' ? templateText.message175 : templateText.message176 }}</small></div>
@@ -6258,7 +6258,7 @@
                         <div class="boards-listing-story-control-label"><strong id="listing-story-scenes-label" i18n>Property scenes</strong><small i18n>Recommended: 8–12</small></div>
                         <div class="boards-listing-story-stepper">
                           <button type="button" aria-label="Use one fewer property scene" [disabled]="wizardCount() <= wizardListingSceneMin" (click)="setWizardListingSceneCount(wizardCount() - 1)" i18n-aria-label><span class="material-symbols-outlined">remove</span></button>
-                          <output aria-live="polite">{{ wizardCount() }} scenes</output>
+                          <output aria-live="polite" i18n>{{ wizardCount() }} scenes</output>
                           <button type="button" aria-label="Use one more property scene" [disabled]="wizardCount() >= wizardListingSceneMax" (click)="setWizardListingSceneCount(wizardCount() + 1)" i18n-aria-label><span class="material-symbols-outlined">add</span></button>
                         </div>
                         <small class="boards-listing-story-helper" i18n>The Intro and closing cards are added automatically.</small>
@@ -6283,15 +6283,15 @@
               } @else {
                 <section class="boards-listing-story-hero">
                   <span class="boards-listing-story-hero__icon material-symbols-outlined">auto_stories</span>
-                  <div><small i18n>Rental listing detected</small><h4>{{ listing.listingName }}</h4>@if (listing.address && listing.address !== listing.listingName) { <p>{{ listing.address }}</p> }<div class="boards-listing-story-facts">@if (listing.price) { <strong>{{ listing.price }}</strong> }@if (listing.bedrooms) { <span>{{ listing.bedrooms }} beds</span> }@if (listing.bathrooms) { <span>{{ listing.bathrooms }} baths</span> }@if (listing.propertyType) { <span>{{ listing.propertyType }}</span> }</div></div>
+                  <div><small i18n>Rental listing detected</small><h4>{{ listing.listingName }}</h4>@if (listing.address && listing.address !== listing.listingName) { <p>{{ listing.address }}</p> }<div class="boards-listing-story-facts">@if (listing.price) { <strong>{{ listing.price }}</strong> }@if (listing.bedrooms) { <span i18n>{{ listing.bedrooms }} beds</span> }@if (listing.bathrooms) { <span i18n>{{ listing.bathrooms }} baths</span> }@if (listing.propertyType) { <span>{{ listing.propertyType }}</span> }</div></div>
                   <div class="boards-listing-story-photo-count"><strong>{{ listing.imageCount || '—' }}</strong><small i18n>source photos</small></div>
                 </section>
                 <section><span class="boards-wizard-label" i18n>Choose a story approach</span><div class="boards-listing-story-styles" role="radiogroup" aria-label="Listing story approach" i18n-aria-label>@for (style of wizardListingMarketingStyles; track style.id) { <button type="button" class="boards-listing-story-style" role="radio" [attr.aria-checked]="wizardListingMarketingStyle() === style.id" [class.boards-listing-story-style--active]="wizardListingMarketingStyle() === style.id" (click)="wizardListingMarketingStyle.set(style.id)"><span class="boards-listing-story-style__radio" aria-hidden="true"></span><span class="boards-listing-story-style__icon material-symbols-outlined">{{ style.icon }}</span><span class="boards-listing-story-style__copy"><strong>{{ style.label }}</strong><small>{{ style.description }}</small></span></button> }</div></section>
                 <div class="boards-listing-story-controls">
-                  <section class="boards-listing-story-control-panel"><div class="boards-listing-story-control-label"><strong i18n>Rental scenes</strong><small i18n>Recommended: 8–12</small></div><div class="boards-listing-story-stepper"><button type="button" aria-label="Use one fewer scene" [disabled]="wizardCount() <= wizardListingSceneMin" (click)="setWizardListingSceneCount(wizardCount() - 1)" i18n-aria-label><span class="material-symbols-outlined">remove</span></button><output>{{ wizardCount() }} scenes</output><button type="button" aria-label="Use one more scene" [disabled]="wizardCount() >= wizardListingSceneMax" (click)="setWizardListingSceneCount(wizardCount() + 1)" i18n-aria-label><span class="material-symbols-outlined">add</span></button></div></section>
+                  <section class="boards-listing-story-control-panel"><div class="boards-listing-story-control-label"><strong i18n>Rental scenes</strong><small i18n>Recommended: 8–12</small></div><div class="boards-listing-story-stepper"><button type="button" aria-label="Use one fewer scene" [disabled]="wizardCount() <= wizardListingSceneMin" (click)="setWizardListingSceneCount(wizardCount() - 1)" i18n-aria-label><span class="material-symbols-outlined">remove</span></button><output i18n>{{ wizardCount() }} scenes</output><button type="button" aria-label="Use one more scene" [disabled]="wizardCount() >= wizardListingSceneMax" (click)="setWizardListingSceneCount(wizardCount() + 1)" i18n-aria-label><span class="material-symbols-outlined">add</span></button></div></section>
                   <label class="boards-listing-story-control-panel boards-listing-story-direction"><span class="boards-listing-story-control-label"><strong i18n>What should the story emphasize?</strong><small i18n>Optional</small></span><textarea rows="3" maxlength="500" [value]="wizardListingMarketingDirection()" (input)="wizardListingMarketingDirection.set($any($event.target).value)"></textarea></label>
                 </div>
-                <div class="boards-form__actions"><button type="button" class="boards-ghost-action" (click)="backWizardStep()" i18n>Back</button><button type="button" class="boards-primary-action" (click)="confirmWizardListingStory()"><span class="material-symbols-outlined">auto_awesome</span>Build {{ wizardCount() }}-scene TalkThru</button></div>
+                <div class="boards-form__actions"><button type="button" class="boards-ghost-action" (click)="backWizardStep()" i18n>Back</button><button type="button" class="boards-primary-action" (click)="confirmWizardListingStory()" i18n><span class="material-symbols-outlined">auto_awesome</span>Build {{ wizardCount() }}-scene TalkThru</button></div>
               }
             </div>
           }
@@ -6313,7 +6313,7 @@
                 <span class="material-symbols-outlined">{{ generation.completeSet ? 'verified' : 'schedule' }}</span>
                 <span>
                   <strong>{{ generation.message }}</strong>
-                  <small>
+                  <small i18n>
                     {{ generation.resolvedCount }} cards · about {{ generation.narrationSecondsPerCard }} seconds and {{ generation.targetWordsPerCard }} words per card
                   </small>
                 </span>
@@ -6325,7 +6325,7 @@
                 <span class="material-symbols-outlined">fact_check</span>
                 <div>
                   <strong i18n>Shopping page detected · {{ wizardProductCount() }} products</strong>
-                  <small>
+                  <small i18n>
                     {{ wizardExactProductImageCount() }} exact source images ·
                     {{ wizardFallbackProductImageCount() }} fallbacks ·
                     {{ wizardMissingProductImageCount() }} missing
@@ -6415,21 +6415,21 @@
                         }
                       </span>
                       @if (report.productCount) {
-                        <span><b>{{ report.productCount }}</b> verified product{{ report.productCount === 1 ? '' : templateText.message347 }}</span>
-                        <span><b>{{ report.exactImageCount }}</b> exact image{{ report.exactImageCount === 1 ? '' : templateText.message347 }}</span>
+                        <span i18n><b>{{ report.productCount }}</b> verified product{{ report.productCount === 1 ? '' : templateText.message347 }}</span>
+                        <span i18n><b>{{ report.exactImageCount }}</b> exact image{{ report.exactImageCount === 1 ? '' : templateText.message347 }}</span>
                         @if (report.missingImageCount) {
-                          <span><b>{{ report.missingImageCount }}</b> still need{{ report.missingImageCount === 1 ? templateText.message347 : '' }} an image</span>
+                          <span i18n><b>{{ report.missingImageCount }}</b> still need{{ report.missingImageCount === 1 ? templateText.message347 : '' }} an image</span>
                         }
                       }
                       @if (report.extractedItemCount) {
                         <span i18n><b>{{ report.matchedCardCount }}/{{ report.extractedItemCount }}</b> source items matched</span>
-                        <span><b>{{ report.sourceImageCount }}</b> source image{{ report.sourceImageCount === 1 ? '' : templateText.message347 }}</span>
+                        <span i18n><b>{{ report.sourceImageCount }}</b> source image{{ report.sourceImageCount === 1 ? '' : templateText.message347 }}</span>
                       }
                       @if (report.sourceImageCount && !report.extractedItemCount && !report.productCount) {
-                        <span><b>{{ report.sourceImageCount }}</b> exact source photo{{ report.sourceImageCount === 1 ? '' : templateText.message347 }}</span>
+                        <span i18n><b>{{ report.sourceImageCount }}</b> exact source photo{{ report.sourceImageCount === 1 ? '' : templateText.message347 }}</span>
                       }
                       @if (report.snapshotDate) {
-                        <span>Snapshot {{ report.snapshotDate }}</span>
+                        <span i18n>Snapshot {{ report.snapshotDate }}</span>
                       }
                     </div>
                   </div>
@@ -6840,7 +6840,7 @@
                         @if ((card.imageUrls?.length ?? 0) > 1) {
                           <span
                             style="position: absolute; top: 0.55rem; right: 0.55rem; display: inline-flex; align-items: center; gap: 0.25rem; border-radius: 999px; background: rgba(31, 41, 55, 0.86); padding: 0.3rem 0.48rem; color: #fff; font-size: 0.64rem; font-weight: 950;"
-                          >
+                           i18n>
                             <span class="material-symbols-outlined">photo_library</span>
                             {{ card.imageUrls?.length }} photos
                           </span>
@@ -6961,9 +6961,9 @@
                   } @else {
                   <h4>{{ wizardMode() === 'nearby-gems' ? templateText.message188 : templateText.message189 }}</h4>
                   <p class="boards-wizard-refine__quality">
-                    <strong>{{ wizardImageCoveragePercent() }}% image coverage</strong>
+                    <strong i18n>{{ wizardImageCoveragePercent() }}% image coverage</strong>
                     @if (wizardMissingImageCount()) {
-                      <span>{{ wizardMissingImageCount() }} card{{ wizardMissingImageCount() === 1 ? '' : templateText.message347 }} still need an image.</span>
+                      <span i18n>{{ wizardMissingImageCount() }} card{{ wizardMissingImageCount() === 1 ? '' : templateText.message347 }} still need an image.</span>
                     } @else {
                       <span i18n>Every card has an image.</span>
                     }
@@ -7112,7 +7112,7 @@
                     } @else if (wizardContributionBoard()) {
                       <span i18n>Add card to board</span>
                     } @else if (wizardLockedTargetBoard()) {
-                      <span>Add {{ wizardSelectedCount() }} {{ wizardSelectedCount() === 1 ? templateText.message342 : templateText.message343 }}</span>
+                      <span i18n>Add {{ wizardSelectedCount() }} {{ wizardSelectedCount() === 1 ? templateText.message342 : templateText.message343 }}</span>
                     } @else if (isNewPhotoWizardBoard()) {
                       <span i18n>Continue to Studio</span>
                     } @else if (wizardMode() === 'nearby-gems') {
@@ -7134,7 +7134,7 @@
               <p i18n>It is live on the shared board now. Everyone viewing this board will receive the new location.</p>
               <button type="button" class="boards-primary-action" (click)="closeBoardWizard()" i18n>See it on the board</button>
             } @else if (wizardLockedTargetBoard(); as lockedBoard) {
-              <h4>Cards added to {{ lockedBoard.title }}</h4>
+              <h4 i18n>Cards added to {{ lockedBoard.title }}</h4>
               <p i18n>Your selected cards were added without replacing the cards already there.</p>
               <button type="button" class="boards-primary-action" (click)="closeBoardWizard()" i18n>See them on the board</button>
             } @else if (wizardMode() === 'nearby-gems') {
@@ -7241,8 +7241,8 @@
                   }
                 </span>
                 <span class="stack-card-manager__summary-copy">
-                  <strong>{{ stackSelectedCount() }} of {{ board.cards.length }} selected</strong>
-                  <small>{{ stackFormatLabel() }} Stack · {{ stackScriptDurationLabel() }} estimated voice</small>
+                  <strong i18n>{{ stackSelectedCount() }} of {{ board.cards.length }} selected</strong>
+                  <small i18n>{{ stackFormatLabel() }} Stack · {{ stackScriptDurationLabel() }} estimated voice</small>
                 </span>
                 <span class="stack-card-manager__manage" i18n>
                   <span class="material-symbols-outlined">grid_view</span>
@@ -7405,7 +7405,7 @@
                       <header class="stack-script-toolbar">
                         <div>
                           <h4 i18n>Narration</h4>
-                          <p>
+                          <p i18n>
                             {{ stackScriptDurationLabel() }} estimated voice
                             @if (stackScriptMissingCount()) { · {{ stackScriptMissingCount() }} missing }
                           </p>
@@ -7432,7 +7432,7 @@
                                 @for (sentenceCount of [1, 2, 3]; track sentenceCount) {
                                   <button type="button" role="menuitem" (click)="shortenEntireStackScript(sentenceCount, $event)">
                                     <span>
-                                      <strong>{{ sentenceCount }} {{ sentenceCount === 1 ? templateText.message350 : templateText.message351 }} per card</strong>
+                                      <strong i18n>{{ sentenceCount }} {{ sentenceCount === 1 ? templateText.message350 : templateText.message351 }} per card</strong>
                                       <small>{{ sentenceCount === 1 ? templateText.message215 : sentenceCount === 2 ? templateText.message216 : templateText.message217 }}</small>
                                     </span>
                                     <em>{{ stackScriptShortenEstimateLabel(sentenceCount) }}</em>
@@ -7511,7 +7511,7 @@
                                 <strong>{{ stackScriptTitle(card) }}</strong>
                                 <small>{{ stackScriptNarration(card) || templateText.message222 }}</small>
                                 @if (card.listingPresentation; as listingPresentation) {
-                                  <small class="stack-script-card__photo-plan">
+                                  <small class="stack-script-card__photo-plan" i18n>
                                     {{ listingPresentation.sourcePhotoCount }} photos · {{ stackCardPresentationImages(card).length }} used in Live View
                                     @if (listingPresentation.reviewStatus === 'needs-review') { · Needs review }
                                   </small>
@@ -7544,7 +7544,7 @@
                                   <textarea rows="5" maxlength="3000" [value]="stackScriptNarration(card)" (input)="updateStackScriptCard(card.id, 'narration', $any($event.target).value)"></textarea>
                                 </label>
                                 <div class="stack-script-card__actions">
-                                  <span>{{ stackScriptCardWordCount(card) }} words · ~{{ stackScriptCardEstimatedSeconds(card) }}s</span>
+                                  <span i18n>{{ stackScriptCardWordCount(card) }} words · ~{{ stackScriptCardEstimatedSeconds(card) }}s</span>
                                   <button type="button" [disabled]="stackScriptPreviewLoadingCardId() === card.id || stackScriptRegeneratingCardId() === card.id" (click)="previewStackScriptCard(card, $event)" i18n>
                                     <span class="material-symbols-outlined">{{ stackScriptPreviewLoadingCardId() === card.id ? 'progress_activity' : 'play_arrow' }}</span>
                                     Preview
@@ -7661,7 +7661,7 @@
                               }
                             </select>
                           </label>
-                          <p>Only voices shared with this team are available. {{ stackStudioDirty() ? templateText.message234 : templateText.message235 }}</p>
+                          <p i18n>Only voices shared with this team are available. {{ stackStudioDirty() ? templateText.message234 : templateText.message235 }}</p>
                         </section>
                       }
                       @if (stackVideoNarrationEnabled() && !board.teamId) {
@@ -7814,7 +7814,7 @@
                           </div>
                           <button type="button" class="stack-voice-browse" (click)="openStackVoiceLibrary()">
                             <span class="material-symbols-outlined">manage_search</span>
-                            <span>Browse all {{ stackNarratorVoices.length }}</span>
+                            <span i18n>Browse all {{ stackNarratorVoices.length }}</span>
                           </button>
                         </header>
 
@@ -7886,7 +7886,7 @@
                             <header class="stack-voice-library__head">
                               <div>
                                 <span i18n>Included with narration</span>
-                                <h4 id="stack-voice-library-title">Choose from {{ stackNarratorVoices.length }} voices</h4>
+                                <h4 id="stack-voice-library-title" i18n>Choose from {{ stackNarratorVoices.length }} voices</h4>
                                 <p i18n>Search by name, accent, or style. Previewing does not change your selection.</p>
                               </div>
                               <button type="button" aria-label="Close voice library" (click)="closeStackVoiceLibrary()" i18n-aria-label>
@@ -7968,7 +7968,7 @@
                                   }
                                 </div>
                                 <footer class="stack-voice-library__more">
-                                  <span>Showing all {{ stackFilteredNarratorVoices().length }} voices</span>
+                                  <span i18n>Showing all {{ stackFilteredNarratorVoices().length }} voices</span>
                                 </footer>
                               } @else {
                                 <div class="stack-voice-library__empty">
@@ -8396,7 +8396,7 @@
                         }
                       </div>
                       <label class="stack-preview-editor__duration">
-                        <span><strong i18n>On-screen time</strong><output>{{ stackFinalScreenDurationSeconds() }} sec</output></span>
+                        <span><strong i18n>On-screen time</strong><output i18n>{{ stackFinalScreenDurationSeconds() }} sec</output></span>
                         <input type="range" min="2" max="6" step="0.5" [value]="stackFinalScreenDurationSeconds()" (input)="setStackFinalScreenDuration(+$any($event.target).value)" />
                       </label>
                       @if (stackFinalScreenError()) {
@@ -8492,14 +8492,14 @@
               <span class="stack-doc-export-success__icon material-symbols-outlined">task_alt</span>
               <div>
                 <h4 i18n>Your DOCX has downloaded</h4>
-                <p>
+                <p i18n>
                   {{ result.exportedCardCount }} {{ result.exportedCardCount === 1 ? templateText.message342 : templateText.message343 }}
                   and {{ result.exportedImageCount }} {{ result.exportedImageCount === 1 ? templateText.message354 : templateText.message355 }} exported to {{ result.fileName }}.
                 </p>
               </div>
               @if (result.warnings.length) {
                 <details class="stack-doc-export-warnings">
-                  <summary>{{ result.warnings.length }} export {{ result.warnings.length === 1 ? templateText.message356 : templateText.message357 }}</summary>
+                  <summary i18n>{{ result.warnings.length }} export {{ result.warnings.length === 1 ? templateText.message356 : templateText.message357 }}</summary>
                   <ul>
                     @for (warning of result.warnings; track warning) { <li>{{ warning }}</li> }
                   </ul>
@@ -8755,7 +8755,7 @@
                         <small class="stack-final-screen__image-help" i18n>JPG, PNG, or WebP up to 10 MB. The image is cropped to fill the video.</small>
                       </fieldset>
                       <label class="stack-final-screen__duration">
-                        <span><strong i18n>Duration</strong><output>{{ stackFinalScreenDurationSeconds() }} sec</output></span>
+                        <span><strong i18n>Duration</strong><output i18n>{{ stackFinalScreenDurationSeconds() }} sec</output></span>
                         <input type="range" min="2" max="6" step="0.5" [value]="stackFinalScreenDurationSeconds()" (input)="setStackFinalScreenDuration(+$any($event.target).value)" />
                       </label>
                       @if (stackFinalScreenError()) {
@@ -8886,7 +8886,7 @@
                   <span i18n>A fast 15–30 second teaser with every selected card, one continuous hook, silent-friendly captions, and a clear invitation to explore.</span>
                   <div class="stack-trailer-promise" aria-label="Trailer format" i18n-aria-label>
                     <span><span class="material-symbols-outlined">timer</span><strong i18n>15–30 sec</strong><small i18n>Built for attention</small></span>
-                    <span><span class="material-symbols-outlined">view_carousel</span><strong>{{ stackSelectedCards().length }} cards</strong><small i18n>Every card appears</small></span>
+                    <span><span class="material-symbols-outlined">view_carousel</span><strong i18n>{{ stackSelectedCards().length }} cards</strong><small i18n>Every card appears</small></span>
                     <span><span class="material-symbols-outlined">subtitles</span><strong i18n>Captions</strong><small i18n>Works without sound</small></span>
                   </div>
                   @if (canEditBoard(board)) {
@@ -9164,7 +9164,7 @@
             Delete this board and its {{ board.cards.length }} card{{ board.cards.length === 1 ? '' : templateText.message347 }}?
           </p>
           @if (nestedBoardCount(board) > 0) {
-            <p><strong>This also deletes {{ nestedBoardCount(board) }} board{{ nestedBoardCount(board) === 1 ? '' : templateText.message347 }} nested inside its cards.</strong></p>
+            <p><strong i18n>This also deletes {{ nestedBoardCount(board) }} board{{ nestedBoardCount(board) === 1 ? '' : templateText.message347 }} nested inside its cards.</strong></p>
           }
         </div>
         <div class="boards-form__actions">
@@ -9532,7 +9532,7 @@
                 </div>
                 <span class="material-symbols-outlined" style="color: var(--accent); font-size: 1.7rem; font-variation-settings: 'FILL' 1;">account_tree</span>
               </div>
-              <small>This board uses the parent board’s {{ boardDraft().visibility }} visibility.</small>
+              <small i18n>This board uses the parent board’s {{ boardDraft().visibility }} visibility.</small>
             </section>
           } @else {
           <section class="boards-sticker-panel" aria-label="Board visibility" i18n-aria-label>
@@ -9795,7 +9795,7 @@
             <div>
               <p i18n>Opening card</p>
               <h3 id="listing-intro-editor-title" i18n>Set up your introduction</h3>
-              <small id="listing-intro-editor-description">A short personal welcome before buyers explore {{ introBoard.title }}.</small>
+              <small id="listing-intro-editor-description" i18n>A short personal welcome before buyers explore {{ introBoard.title }}.</small>
             </div>
             <button type="button" class="boards-icon-button" aria-label="Close intro setup" [disabled]="listingIntroSaving()" (click)="closeListingIntroCardSetup($event)" i18n-aria-label>
               <span class="material-symbols-outlined">close</span>
@@ -9980,7 +9980,7 @@
           <div>
             @if (relatedCardEditorParent(); as collectionParent) {
               <p>{{ relatedCardEditingId() ? templateText.message48 : templateText.message307 }}</p>
-              <h3>Inside {{ collectionParent.title }}</h3>
+              <h3 i18n>Inside {{ collectionParent.title }}</h3>
             } @else {
               <p>{{ editingCardId() ? (isSongCardForm() ? 'Edit song' : editingListingContactCard() ? 'Edit Contact Card' : 'Edit card') : (isSongCardForm() ? 'New song' : 'New card') }}</p>
               <h3>{{ selectedBoardTitle() }}</h3>
@@ -11184,7 +11184,7 @@
                     <strong i18n>Who would you like to join?</strong>
                   </span>
                   @if (visitPlanOpenPlans().length > 1) {
-                    <em>{{ visitPlanOpenPlans().length }} times</em>
+                    <em i18n>{{ visitPlanOpenPlans().length }} times</em>
                   }
                 </header>
                 <div class="go-there-plan-options">
@@ -11201,7 +11201,7 @@
                       </span>
                       <span>
                         <strong>{{ visitPlanTimeLabel(plan) }}</strong>
-                        <small>{{ plan.organizerName }} · {{ plan.acceptedCount + 1 }} going</small>
+                        <small i18n>{{ plan.organizerName }} · {{ plan.acceptedCount + 1 }} going</small>
                       </span>
                     </button>
                   }
@@ -11316,7 +11316,7 @@
                 <span class="material-symbols-outlined">group</span>
                 <span>
                   <strong>{{ visitPlanPeopleLabel(currentPlan) }}</strong>
-                  <small>{{ visitPlanTimeLabel(currentPlan) }} · View people</small>
+                  <small i18n>{{ visitPlanTimeLabel(currentPlan) }} · View people</small>
                 </span>
                 <span class="material-symbols-outlined">
                   {{ visitPlanAttendeesExpanded() ? 'expand_less' : 'expand_more' }}

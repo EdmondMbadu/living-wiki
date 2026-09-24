@@ -30,7 +30,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
     id: 'global-dishes-explain',
     version: '1.0',
     label: $localize`10 Dishes That Explain [City]`,
-    promise: 'Food as a way to understand the place—not a ranking.',
+    promise: $localize`Food as a way to understand the place—not a ranking.`,
     icon: 'restaurant',
     titlePattern: '{count} Dishes That Explain {city}',
     searchQuery: 'local food restaurant signature dishes regional cuisine',
@@ -42,7 +42,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
     id: 'global-guidebooks-miss',
     version: '1.0',
     label: $localize`What the Guidebooks Miss: 10 Places Locals Deal Each Other`,
-    promise: '10 places locals deal each other, without “hidden gem” language.',
+    promise: $localize`10 places locals deal each other, without “hidden gem” language.`,
     icon: 'style',
     titlePattern: 'What the Guidebooks Miss: {count} Places Locals Deal Each Other',
     searchQuery: 'locally loved independent places community favorites',
@@ -54,7 +54,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
     id: 'global-zero-dollars',
     version: '1.0',
     label: $localize`Zero Dollars: 10 Things Locals Do for Free`,
-    promise: '10 things locals genuinely do for free.',
+    promise: $localize`10 things locals genuinely do for free.`,
     icon: 'money_off',
     titlePattern: 'Zero Dollars: {count} Things Locals Do for Free',
     searchQuery: 'free attractions parks public spaces activities',
@@ -66,7 +66,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
     id: 'global-where-locals-linger',
     version: '1.0',
     label: $localize`Where Locals Linger: 10 Places to Sit for Hours`,
-    promise: '10 places to sit for hours, framed through observed behavior.',
+    promise: $localize`10 places to sit for hours, framed through observed behavior.`,
     icon: 'weekend',
     titlePattern: 'Where Locals Linger: {count} Places to Sit for Hours',
     searchQuery: 'cafes libraries parks plazas third places',
@@ -78,7 +78,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
     id: 'global-neighborhoods-one-reason',
     version: '1.0',
     label: $localize`10 Neighborhoods, One Reason Each`,
-    promise: 'One neighborhood, one clean reason to care.',
+    promise: $localize`One neighborhood, one clean reason to care.`,
     icon: 'location_city',
     titlePattern: '{count} Neighborhoods, One Reason Each',
     searchQuery: 'neighborhoods districts local areas',
@@ -90,7 +90,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
     id: 'global-only-happens-here',
     version: '1.0',
     label: $localize`Only Happens Here: 10 Things That Make No Sense Anywhere Else`,
-    promise: '10 city-specific things that make little sense anywhere else.',
+    promise: $localize`10 city-specific things that make little sense anywhere else.`,
     icon: 'fingerprint',
     titlePattern: 'Only Happens Here: {count} Things That Make No Sense Anywhere Else',
     searchQuery: 'unique local landmarks traditions institutions',
@@ -102,7 +102,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
     id: 'global-first-24-hours',
     version: '1.0',
     label: $localize`Your First 24 Hours in [City], Dealt as Cards`,
-    promise: 'A first-day sequence, dealt as ten useful cards.',
+    promise: $localize`A first-day sequence, dealt as ten useful cards.`,
     icon: 'schedule',
     titlePattern: 'Your First 24 Hours in {city}, Dealt as Cards',
     searchQuery: 'essential local food culture landmarks first visit',
@@ -125,7 +125,7 @@ const DEFAULT_TEMPLATE: BulkBoardTemplateInput = {
 const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
   {
     id: 'college-late-night-runs', version: '1.0', label: $localize`10 Late-Night Runs That Explain [School]`,
-    promise: 'Under-21-safe late-night destinations with current evidence.', icon: 'nightlife',
+    promise: $localize`Under-21-safe late-night destinations with current evidence.`, icon: 'nightlife',
     titlePattern: '{count} Late-Night Runs That Explain {school}',
     searchQuery: 'late night dining students campus dining late hours restaurants near campus',
     editorialBrief: 'Build an under-21-safe late-night ritual board. Verify late availability and the campus connection from direct sources. Do not invent student habits, signature orders, popularity, or current hours. Bars and 21+-only venues are prohibited.',
@@ -133,7 +133,7 @@ const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
   },
   {
     id: 'college-campus-tour-skips', version: '1.0', label: $localize`What the Campus Tour Skips`,
-    promise: 'Places with a concrete shared student use—not secrecy theater.', icon: 'style',
+    promise: $localize`Places with a concrete shared student use—not secrecy theater.`, icon: 'style',
     titlePattern: 'What the Campus Tour Skips: {count} Places Students Share With Each Other',
     searchQuery: 'student favorite campus places campus map student spaces student newspaper',
     editorialBrief: 'Choose campus-specific places with a concrete shared use supported by official or credible student sources. Never claim secrecy, universal popularity, or unrestricted access.',
@@ -141,7 +141,7 @@ const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
   },
   {
     id: 'college-zero-dollar-hangs', version: '1.0', label: $localize`Zero Dollars: 10 Hangs That Cost Nothing`,
-    promise: 'Social activities with no required admission or purchase.', icon: 'money_off',
+    promise: $localize`Social activities with no required admission or purchase.`, icon: 'money_off',
     titlePattern: 'Zero Dollars: {count} Hangs That Cost Nothing',
     searchQuery: 'free student activities campus free public places near campus',
     editorialBrief: 'Every card must describe a social activity requiring no admission and no purchase. Distinguish public access from student-only access and avoid temporary promotions.',
@@ -149,7 +149,7 @@ const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
   },
   {
     id: 'college-study-spots', version: '1.0', label: $localize`Claimed by 9am: 10 Study Spots`,
-    promise: 'Distinct study environments with access rules verified.', icon: 'menu_book',
+    promise: $localize`Distinct study environments with access rules verified.`, icon: 'menu_book',
     titlePattern: 'Claimed by 9am: {count} Study Spots Worth Showing Up Early For',
     searchQuery: 'campus study spaces library study rooms students quiet study',
     editorialBrief: 'Choose ten distinct study environments. Verify access and reservation constraints and explain the physical study affordance. Do not assert crowding without evidence.',
@@ -157,7 +157,7 @@ const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
   },
   {
     id: 'college-blocks-off-campus', version: '1.0', label: $localize`10 Blocks Off Campus, One Reason Each`,
-    promise: 'Campus-adjacent streets and micro-districts, not generic neighborhoods.', icon: 'location_city',
+    promise: $localize`Campus-adjacent streets and micro-districts, not generic neighborhoods.`, icon: 'location_city',
     titlePattern: '{count} Blocks Off Campus, One Reason Each',
     searchQuery: 'off campus streets student district campus adjacent commercial corridors',
     editorialBrief: 'Use real streets, blocks, corridors, or micro-districts in this campus orbit. Give one sourced reason each. Avoid broad city neighborhoods, safety claims, and stereotypes.',
@@ -165,7 +165,7 @@ const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
   },
   {
     id: 'college-only-happens-here', version: '1.0', label: $localize`Only Happens Here: 10 Traditions`,
-    promise: 'Documented school-specific rituals with disputed origins labeled.', icon: 'fingerprint',
+    promise: $localize`Documented school-specific rituals with disputed origins labeled.`, icon: 'fingerprint',
     titlePattern: 'Only Happens Here: {count} Traditions That Make No Sense Anywhere Else',
     searchQuery: 'university traditions alumni campus rituals student newspaper history',
     editorialBrief: 'Choose documented school-specific traditions or rituals. Prefer official archives, alumni sources, and credible student publications. Label disputed or discontinued practices and reject unsafe behavior.',
@@ -173,7 +173,7 @@ const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
   },
   {
     id: 'college-first-weekend', version: '1.0', label: $localize`Your First Weekend at [School]`,
-    promise: 'An under-21-safe, evergreen sequence shared as cards.', icon: 'schedule',
+    promise: $localize`An under-21-safe, evergreen sequence shared as cards.`, icon: 'schedule',
     titlePattern: 'Your First Weekend at {school}, Shared as Cards',
     searchQuery: 'new student orientation campus guide weekend near campus students',
     editorialBrief: 'Build a plausible under-21-safe first-weekend sequence. Use evergreen places or recurring behaviors. Be conservative about hours, access, and travel time.',
@@ -276,7 +276,7 @@ export class BulkBoardAdminComponent implements OnInit, OnDestroy {
   ).length);
   readonly selectedCount = computed(() => this.selectedCityIds().size);
   readonly bucketPresets = this.factoryKind === 'university' ? UNIVERSITY_BUCKET_PRESETS : GLOBAL_BUCKET_PRESETS;
-  readonly factoryTitle = this.factoryKind === 'university' ? 'University Board Factory' : 'City Board Factory';
+  readonly factoryTitle = this.factoryKind === 'university' ? $localize`University Board Factory` : $localize`City Board Factory`;
   readonly targetSingular = this.factoryKind === 'university' ? 'university' : 'city';
   readonly targetPlural = this.factoryKind === 'university' ? 'universities' : 'cities';
   readonly cityById = computed(() => new Map(this.cities().map((city) => [city.id, city])));

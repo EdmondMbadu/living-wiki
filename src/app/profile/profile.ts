@@ -288,11 +288,11 @@ export class ProfileComponent {
 
   private formatDate(value: string | null): string {
     if (!value) {
-      return 'Not available';
+      return $localize`Not available`;
     }
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) {
-      return 'Not available';
+      return $localize`Not available`;
     }
     return new Intl.DateTimeFormat(undefined, {
       month: 'short',

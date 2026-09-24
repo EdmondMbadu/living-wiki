@@ -7,9 +7,9 @@ import { getFirebaseFunctions } from '../firebase.client';
 const exampleUrl = 'https://www.livingwiki.com/share/board/00f3683f-229a-4fb6-8e28-2faf028ff1e0?v=2026-09-15T21%3A03%3A58.442Z&ui=en';
 
 const previews = [
-  { label: $localize`The property`, image: '/assets/talkthrus/property.png', alt: 'Beach Holiday Condo TalkThru listing example', step: '01 / SET THE SCENE', heading: 'A home worth getting to know.', body: 'Bring the listing together in a visual story that buyers can explore at their own pace.' },
-  { label: $localize`The agent`, image: '/assets/talkthrus/agent.png', alt: 'Chip Watson personal welcome card', step: '02 / MAKE IT PERSONAL', heading: 'Start with a familiar voice. Yours.', body: 'Introduce yourself and welcome buyers into the property. Give them a person to connect with from the very beginning.' },
-  { label: $localize`The narration`, image: '/assets/talkthrus/voice.png', alt: 'TalkThru narration settings with style and length choices', step: '03 / TELL ITS STORY', heading: 'Add the details only you can.', body: 'Shape the narration around your insights, from the way a room feels to the features that deserve a closer look.' },
+  { label: $localize`The property`, image: '/assets/talkthrus/property.png', alt: $localize`Beach Holiday Condo TalkThru listing example`, step: $localize`01 / SET THE SCENE`, heading: $localize`A home worth getting to know.`, body: $localize`Bring the listing together in a visual story that buyers can explore at their own pace.` },
+  { label: $localize`The agent`, image: '/assets/talkthrus/agent.png', alt: $localize`Chip Watson personal welcome card`, step: $localize`02 / MAKE IT PERSONAL`, heading: $localize`Start with a familiar voice. Yours.`, body: $localize`Introduce yourself and welcome buyers into the property. Give them a person to connect with from the very beginning.` },
+  { label: $localize`The narration`, image: '/assets/talkthrus/voice.png', alt: $localize`TalkThru narration settings with style and length choices`, step: $localize`03 / TELL ITS STORY`, heading: $localize`Add the details only you can.`, body: $localize`Shape the narration around your insights, from the way a room feels to the features that deserve a closer look.` },
 ] as const;
 
 @Component({
@@ -39,7 +39,7 @@ export class TalkThrusComponent {
   private submissionId: string | null = null;
 
   constructor() {
-    inject(Meta).updateTag({ name: 'description', content: 'Turn real estate listing photos into a personal, narrated TalkThru. Your voice, your insights, and a more human connection with buyers.' });
+    inject(Meta).updateTag({ name: 'description', content: $localize`Turn real estate listing photos into a personal, narrated TalkThru. Your voice, your insights, and a more human connection with buyers.` });
   }
 
   async submit(): Promise<void> {

@@ -2,7 +2,7 @@
   <button type="button" class="flex w-full items-center justify-between gap-4 border-b border-[var(--line)] px-5 py-4 text-left" (click)="toggleOpen()" [attr.aria-expanded]="open()">
     <span>
       <span class="block text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]" i18n>TalkThru signups</span>
-      <span class="mt-1 block text-sm font-semibold text-[var(--muted)]">{{ newCount() }} new · {{ activeCount() }} active · {{ archivedCount() }} archived (loaded)</span>
+      <span class="mt-1 block text-sm font-semibold text-[var(--muted)]" i18n>{{ newCount() }} new · {{ activeCount() }} active · {{ archivedCount() }} archived (loaded)</span>
     </span>
     <span class="material-symbols-outlined text-[var(--muted)]">{{ open() ? 'expand_less' : 'expand_more' }}</span>
   </button>
@@ -50,8 +50,8 @@
                 <p class="mt-1 text-sm text-[var(--muted)]">{{ item.agency }}</p>
               </div>
               <div class="text-left text-xs text-[var(--muted)] sm:text-right">
-                <p>Received {{ item.createdAt ? (item.createdAt | date:'medium') : templateText.message8 }}</p>
-                @if (item.doneAt) { <p class="mt-1">Done {{ item.doneAt | date:'mediumDate' }}</p> }
+                <p i18n>Received {{ item.createdAt ? (item.createdAt | date:'medium') : templateText.message8 }}</p>
+                @if (item.doneAt) { <p class="mt-1" i18n>Done {{ item.doneAt | date:'mediumDate' }}</p> }
               </div>
             </div>
 

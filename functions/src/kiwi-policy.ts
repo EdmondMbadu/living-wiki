@@ -158,7 +158,7 @@ export function normalizeKiwiAction(value: unknown): KiwiAction | null {
 }
 
 export function kiwiActionSummary(action: KiwiAction, boardTitle?: string, locale = 'en'): string {
-  const board = boardTitle || 'the board';
+  const board = boardTitle || (locale === 'pt-BR' ? 'o quadro' : 'the board');
   if (locale === 'pt-BR') {
     const visibility = action.kind === 'create_board'
       ? { public: 'público', unlisted: 'não listado', private: 'privado' }[action.visibility] : '';
@@ -192,16 +192,25 @@ export function kiwiActionDetails(action: KiwiAction, board?: RecordValue | null
   const existingCard = 'cardId' in action && Array.isArray(board?.['cards'])
     ? board['cards'].find((item: unknown) => object(item)?.['id'] === action.cardId) as RecordValue | undefined
     : undefined;
+  const localizedValue = (key: string, input: unknown) => {
+    if (locale !== 'pt-BR') return String(input);
+    const labels: Record<string, Record<string, string>> = {
+      tone: { teal: 'verde-azulado', coral: 'coral', yellow: 'amarelo', green: 'verde', blue: 'azul', sky: 'azul-claro', purple: 'roxo' },
+      visibility: { public: 'público', unlisted: 'não listado', private: 'privado' },
+      type: { place: 'lugar', food: 'comida', memory: 'lembrança', idea: 'ideia', shop: 'loja', note: 'nota' },
+    };
+    return labels[key]?.[String(input)] ?? String(input);
+  };
   const fields = (source: RecordValue, keys: readonly string[]) => keys
     .filter((key) => Object.hasOwn(source, key))
     .map((key) => `${locale === 'pt-BR'
       ? ({ title: 'Título', description: 'Descrição', tone: 'Cor', subtitle: 'Subtítulo', notes: 'Texto', type: 'Tipo' }[key] ?? key)
-      : key === 'notes' ? 'Text' : key[0].toUpperCase() + key.slice(1)}: ${String(source[key])}`);
+      : key === 'notes' ? 'Text' : key[0].toUpperCase() + key.slice(1)}: ${localizedValue(key, source[key])}`);
   if (locale === 'pt-BR') {
     switch (action.kind) {
       case 'create_board': return [
         `Título: ${action.title}`, `Descrição: ${action.description || '(nenhuma)'}`,
-        `Cor: ${action.tone}`, `Visibilidade: ${action.visibility}`,
+        `Cor: ${localizedValue('tone', action.tone)}`, `Visibilidade: ${localizedValue('visibility', action.visibility)}`,
         ...action.cards.map((card, index) => `${index + 1}. ${card.title}${card.subtitle ? ` — ${card.subtitle}` : ''}${card.notes ? `\n${card.notes}` : ''}`),
       ];
       case 'copy_board': return ['Copiar textos públicos e imagens para um novo quadro na sua conta.'];

@@ -131,7 +131,7 @@
                   }
                   @if (point.accuracy) {
                     <small
-                      >GPS accuracy ±{{ point.accuracy.toFixed(0) }} m. Adjust the pin if
+                       i18n>GPS accuracy ±{{ point.accuracy.toFixed(0) }} m. Adjust the pin if
                       needed.</small
                     >
                   }
@@ -285,7 +285,7 @@
                 }
                 @if (clipCount()) {
                   <span class="ready-count"
-                    ><span class="material-symbols-outlined" aria-hidden="true">play_circle</span>
+                     i18n><span class="material-symbols-outlined" aria-hidden="true">play_circle</span>
                     {{ clipCount() }} PinTalk{{ clipCount() > 1 ? templateText.message7 : '' }} ready</span
                   >
                 }
@@ -404,7 +404,7 @@
                 Delete gem
               </button>
             } @else {
-              <p>Delete this gem{{ original()?.sourceRef ? templateText.message6 : '' }}?</p>
+              <p i18n>Delete this gem{{ original()?.sourceRef ? templateText.message6 : '' }}?</p>
               <button type="button" class="danger" [disabled]="saving()" (click)="deleteGem()" i18n>
                 Delete gem</button
               ><button type="button" class="text-button" (click)="deleteConfirm.set(false)" i18n>

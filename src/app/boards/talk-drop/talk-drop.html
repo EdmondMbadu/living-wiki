@@ -23,7 +23,7 @@
   @if (editable()) {
     @if (progress() !== null) {
       <div class="talk-drop__progress" role="status" aria-live="polite">
-        <progress max="100" [value]="progress()"></progress><span>Uploading video… {{ progress() }}%</span>
+        <progress max="100" [value]="progress()"></progress><span i18n>Uploading video… {{ progress() }}%</span>
         <button type="button" (click)="cancelUpload()" i18n>Cancel upload</button>
       </div>
     } @else {

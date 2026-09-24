@@ -996,7 +996,7 @@ export class KiwiComponent {
       }
       this.conversation = conversation;
       const { teamId, boardId } = this.scope();
-      conversation.sendContextualUpdate(`The user is in ${teamId ? 'team workspace ' + teamId : 'their personal workspace'}${boardId ? ', viewing board ' + boardId : ''}. The user calls you ${this.name()}. Use kiwi_request for board/card operations and kiwi_apply only after explicit approval.`,
+      conversation.sendContextualUpdate(`The user is in ${teamId ? 'team workspace ' + teamId : 'their personal workspace'}${boardId ? ', viewing board ' + boardId : ''}. The user calls you ${this.name()}. Use kiwi_request for board/card operations and kiwi_apply only after explicit approval.${this.localeId === 'pt-BR' ? ' Speak to the user in natural Brazilian Portuguese. Keep tool names and structured identifiers in English.' : ''}`,
         { contextId: 'kiwi-current-workspace' });
     } catch (error) {
       if (attempt !== this.voiceAttempt) return;
@@ -1054,6 +1054,7 @@ export class KiwiComponent {
   }
 
   private errorText(error: unknown, fallback: string): string {
+    if (this.localeId === 'pt-BR') return fallback;
     const message = error instanceof Error ? error.message : '';
     return message.includes(': ') ? message.slice(message.indexOf(': ') + 2) : message || fallback;
   }

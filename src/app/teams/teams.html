@@ -206,7 +206,7 @@
                         : templateText.message12
                 }}
               </h2>
-              <p>
+              <p i18n>
                 {{ preview.teamName }} · Ask a team admin for a new invitation if you still need
                 access.
               </p>
@@ -221,7 +221,7 @@
           ) {
             <section class="panel state-panel" role="alert">
               <h2 i18n>This invitation is for a different email address</h2>
-              <p>
+              <p i18n>
                 You’re signed in as {{ auth.email() }}. Switch to the account this invitation was
                 sent to.
               </p>
@@ -253,7 +253,7 @@
         } @else if (!auth.emailVerified()) {
           <section class="panel state-panel">
             <h2 i18n>Verify your email first</h2>
-            <p>We need to confirm {{ auth.email() }} before granting access to a team.</p>
+            <p i18n>We need to confirm {{ auth.email() }} before granting access to a team.</p>
             <a class="button" routerLink="/verify-email" [queryParams]="signinReturn()"
                i18n>Verify email</a
             >
@@ -272,8 +272,8 @@
           </section>
         } @else {
           <p class="field-help">
-            Invitations for {{ auth.email() }}. If you were invited at another address, switch
-            accounts.
+            <span i18n>Invitations for {{ auth.email() }}. If you were invited at another address, switch
+            accounts.</span>
             <button
               type="button"
               class="text-button"
@@ -295,7 +295,7 @@
                   @if (invite.id === focusedInvitationId()) {
                     <span class="eyebrow" i18n>The invitation you opened</span>
                   }
-                  <p>
+                  <p i18n>
                     Invited as a {{ invite.role }} · Expires
                     {{ invite.expiresAt | date: 'MMM d, y' }}
                   </p>
@@ -376,7 +376,7 @@
                 }}
               </p>
               @if (!isPublic()) {
-                <small class="team-size">{{ members().length }} members · Private workspace</small>
+                <small class="team-size" i18n>{{ members().length }} members · Private workspace</small>
               }
             </div>
             @if (!isPublic()) {
@@ -562,14 +562,14 @@
                   <span>{{ reportError() }}</span>
                 } @else {
                   <span
-                    >Team-wide activity · Excludes signed-in team members · Tracking since
+                     i18n>Team-wide activity · Excludes signed-in team members · Tracking since
                     {{
                       report()?.trackingSince || currentTeam()?.tracking_since
                         | date: 'MMM d, y' : 'UTC'
                     }}</span
                   >
                   @if (reportCheckedAt()) {
-                    <span>Checked {{ reportCheckedAt() | date: 'HH:mm:ss' : 'UTC' }} UTC</span>
+                    <span i18n>Checked {{ reportCheckedAt() | date: 'HH:mm:ss' : 'UTC' }} UTC</span>
                   }
                 }
                 @if (listings().length && !publishedCount()) {
@@ -624,7 +624,7 @@
               <div class="listings-toolbar">
                 <div class="section-title">
                   <h2 i18n>Team listings</h2>
-                  <span>{{ listings().length }} total</span>
+                  <span i18n>{{ listings().length }} total</span>
                   @if (currentTeam()?.status === 'active') {
                     <button class="button button--quiet" (click)="showModal('import')" i18n>
                       <span class="material-symbols-outlined">add_to_photos</span> Add existing
@@ -732,7 +732,7 @@
                                 ><strong>{{ listing.title }}</strong
                                 ><span>{{ listing.description }}</span
                                 ><small
-                                  >Created {{ listing.createdAt | date: 'MMM d, y' }} ·
+                                   i18n>Created {{ listing.createdAt | date: 'MMM d, y' }} ·
                                   {{ listing.cardCount }} cards</small
                                 ></span
                               ></a
@@ -833,7 +833,7 @@
                 </div>
                 <footer class="pagination">
                   <span
-                    >{{ filtered().length }} matching listings · Page
+                     i18n>{{ filtered().length }} matching listings · Page
                     {{ page() > pageCount() ? pageCount() : page() }} of {{ pageCount() }}</span
                   >
                   <div class="actions">
@@ -1002,7 +1002,7 @@
                   <div>
                     <strong>{{ invite.email }}</strong
                     ><small
-                      >{{ invite.role }} · {{ invite.status }} · Expires
+                       i18n>{{ invite.role }} · {{ invite.status }} · Expires
                       {{ invite.expiresAt | date: 'MMM d' }}
                       <span
                         [class.warning-text]="
@@ -1101,7 +1101,7 @@
       @if (listingWizardError()) {
         <p role="alert">{{ listingWizardError() }}</p>
       } @else {
-        <p role="status">Opening the listing builder for {{ currentTeam()?.name }}…</p>
+        <p role="status" i18n>Opening the listing builder for {{ currentTeam()?.name }}…</p>
       }
       <button type="button" class="button" (click)="closeListingWizard()" i18n>Back to team</button>
     </section>
@@ -1325,7 +1325,7 @@
               </div>
             </div>
             @if (brandingUpload()) {
-              <p class="brand-upload-status" role="status">
+              <p class="brand-upload-status" role="status" i18n>
                 <span class="material-symbols-outlined spin">progress_activity</span>
                 Uploading {{ brandingUpload() === 'hero' ? templateText.message60 : templateText.message83 }}…
               </p>
@@ -1416,7 +1416,7 @@
                 ></span
               ></label
             >
-            <p class="field-help">livingwiki.com/team/{{ currentTeam()?.slug }}</p>
+            <p class="field-help" i18n>livingwiki.com/team/{{ currentTeam()?.slug }}</p>
             @if (modalError()) {
               <div #settingsSaveError class="feedback feedback--error" role="alert" tabindex="-1">
                 {{ modalError() }}
@@ -1580,7 +1580,7 @@
           </section>
         }
       } @else if (modal() === 'listing' && selectedListing(); as listing) {
-        <p class="field-help">
+        <p class="field-help" i18n>
           {{ listing.cardCount }} cards · Created {{ listing.createdAt | date: 'MMM d, y' }}
         </p>
         <div class="listing-detail-summary">
@@ -1607,7 +1607,7 @@
           >
           @if (listing.status === 'published') {
             <a class="button" [routerLink]="publicPath(listing)" target="_blank" rel="noopener"
-              >View {{ listing.publishedVisibility === 'unlisted' ? templateText.message84 : templateText.message85 }} listing ↗</a
+               i18n>View {{ listing.publishedVisibility === 'unlisted' ? templateText.message84 : templateText.message85 }} listing ↗</a
             >
           }
           @if (
@@ -1789,7 +1789,7 @@
             }
             @for (conversation of conversations(); track conversation.id) {
               <details class="contact-entry">
-                <summary>
+                <summary i18n>
                   {{ conversation.startedAt | date: 'MMM d, y, h:mm a' }} ·
                   {{ conversation.durationSeconds | number: '1.0-0' }} sec
                   @if (conversation.internal) {

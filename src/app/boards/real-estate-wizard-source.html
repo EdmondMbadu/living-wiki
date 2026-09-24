@@ -75,7 +75,7 @@
           />
           <span
             ><strong>{{ preset.label }}</strong
-            ><small>{{ durationLabel(preset.seconds) }} / card</small></span
+            ><small i18n>{{ durationLabel(preset.seconds) }} / card</small></span
           >
         </label>
       }
@@ -87,7 +87,7 @@
     </summary>
     <div class="custom-duration-controls">
       <label for="property-narration-duration" i18n>Seconds per card</label>
-      <output for="property-narration-duration">{{ narrationSeconds() }} seconds</output>
+      <output for="property-narration-duration" i18n>{{ narrationSeconds() }} seconds</output>
       <input
         id="property-narration-duration"
         name="propertyNarrationSeconds"
@@ -104,8 +104,8 @@
   <div class="duration-estimate" role="status">
     <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
     <div>
-      <strong>Estimated TalkThru: {{ totalDuration() }}</strong>
-      <span>{{ cardCount() }} cards · ~{{ wordsPerCard() }} words per card</span>
+      <strong i18n>Estimated TalkThru: {{ totalDuration() }}</strong>
+      <span i18n>{{ cardCount() }} cards · ~{{ wordsPerCard() }} words per card</span>
     </div>
   </div>
   <p class="field-help estimate-note" i18n>

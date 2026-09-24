@@ -262,8 +262,8 @@
       </div>
       <video [src]="videoVariant(video, selectedPlayerRatio())?.videoUrl" [poster]="video.posterUrl" playsinline controls autoplay preload="metadata"></video>
       <footer>
-        <button type="button" (click)="share(video, selectedPlayerRatio())"><span class="material-symbols-outlined">ios_share</span><span>Share {{ selectedPlayerRatio() === 'landscape' ? templateText.message13 : templateText.message14 }}</span></button>
-        <button type="button" (click)="download(video, selectedPlayerRatio())"><span class="material-symbols-outlined">download</span><span>Download {{ selectedPlayerRatio() === 'landscape' ? templateText.message13 : templateText.message14 }}</span></button>
+        <button type="button" (click)="share(video, selectedPlayerRatio())"><span class="material-symbols-outlined">ios_share</span><span i18n>Share {{ selectedPlayerRatio() === 'landscape' ? templateText.message13 : templateText.message14 }}</span></button>
+        <button type="button" (click)="download(video, selectedPlayerRatio())"><span class="material-symbols-outlined">download</span><span i18n>Download {{ selectedPlayerRatio() === 'landscape' ? templateText.message13 : templateText.message14 }}</span></button>
         @if (video.landscapeVariant) {
           <button type="button" (click)="downloadBoth(video)"><span class="material-symbols-outlined">download_for_offline</span><span i18n>Download both</span></button>
         }

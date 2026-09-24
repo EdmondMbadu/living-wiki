@@ -95,7 +95,7 @@
             [attr.aria-label]="mobileDirectoryIsUniversities() ? templateText.message26 : templateText.message27"
           >
             <span class="mobile-directory-browse-label" i18n>Browse</span>
-            <span class="mobile-directory-browse-value">
+            <span class="mobile-directory-browse-value" i18n>
               All {{ mobileDirectoryIsUniversities() ? templateText.message20 : templateText.message21 }}
               <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
             </span>
@@ -158,7 +158,7 @@
               } @else {
                 <div class="mobile-directory-suggestions-empty">
                   <span class="material-symbols-outlined">search_off</span>
-                  <span>No {{ mobileDirectoryIsUniversities() ? templateText.message20 : templateText.message21 }} found</span>
+                  <span i18n>No {{ mobileDirectoryIsUniversities() ? templateText.message20 : templateText.message21 }} found</span>
                   <button type="button" (click)="openHomeDirectory()" i18n>View all</button>
                 </div>
               }
@@ -172,7 +172,7 @@
             <a [routerLink]="preferenceLink" class="mobile-talk-action">
               <span class="material-symbols-outlined">graphic_eq</span>
               <span>
-                <b>Open {{ mobileDirectoryPreferenceName() }}</b>
+                <b i18n>Open {{ mobileDirectoryPreferenceName() }}</b>
               </span>
             </a>
             <a

@@ -30,11 +30,27 @@ function isProductBrand(element) {
   return text === 'LivingWiki' || ((element.name === 'b' || element.name === 'span') && text === 'Living');
 }
 
+function hasMarkedDescendant(element) {
+  const pending = [...element.children];
+  while (pending.length) {
+    const child = pending.pop();
+    if (child instanceof TmplAstElement) {
+      if (/(?:^|\s)i18n(?:=|\s|\/?>)/.test(child.startSourceSpan.toString())) return true;
+      pending.push(...child.children);
+    } else if (Array.isArray(child?.children)) {
+      pending.push(...child.children);
+    }
+  }
+  return false;
+}
+
 function directMessage(element) {
-  if (isMaterialIcon(element) || isProductBrand(element) || ['script', 'style', 'code', 'pre'].includes(element.name)) return false;
+  if (isMaterialIcon(element) || isProductBrand(element) || hasMarkedDescendant(element) || ['script', 'style', 'code', 'pre'].includes(element.name)) return false;
   return element.children.some((child) => {
     if (child instanceof TmplAstText) return hasWords(child.value);
-    if (child instanceof TmplAstBoundText) return false;
+    if (child instanceof TmplAstBoundText) {
+      return (child.value.ast.strings ?? []).some((part) => hasWords(part));
+    }
     return false;
   });
 }
@@ -98,6 +114,10 @@ for (const file of await htmlFiles(appRoot)) {
 
   const insertions = [];
   collectInsertions(parsed.nodes, insertions);
+  if (process.argv.includes('--dry-run')) {
+    if (insertions.length) console.log(`${file}: ${insertions.length} markers`);
+    continue;
+  }
   if (!insertions.length && source === original) continue;
 
   let updated = source;

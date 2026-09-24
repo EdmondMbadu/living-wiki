@@ -3,6 +3,7 @@ const { test } = require('node:test');
 const {
   normalizeKiwiAction, kiwiApplyBoardAction, kiwiCanReadPersonalBoard,
   kiwiCanEditPersonalBoard, kiwiCanCopyBoard, kiwiCanEditTeamBoard, kiwiCardImageUrl,
+  kiwiActionSummary, kiwiActionDetails,
 } = require('../lib/kiwi-policy');
 
 test('personal reads, edits, and copies follow separate permission boundaries', () => {
@@ -24,6 +25,16 @@ test('team board edits require matching team and active draft status', () => {
   assert.equal(kiwiCanEditTeamBoard('team-a', board), true);
   assert.equal(kiwiCanEditTeamBoard('team-b', board), false);
   assert.equal(kiwiCanEditTeamBoard('team-a', { ...board, team_status: 'archived' }), false);
+});
+
+test('Kiwi proposals use Brazilian Portuguese when requested', () => {
+  const action = normalizeKiwiAction({ kind: 'create_board', title: 'Meu bairro', visibility: 'public',
+    cards: [{ title: 'Praça central', notes: 'Um lugar para passear' }] });
+  assert.ok(action && action.kind === 'create_board');
+  assert.equal(kiwiActionSummary(action, action.title, 'pt-BR'),
+    'Criar o quadro público “Meu bairro” com 1 cartão');
+  assert.deepEqual(kiwiActionDetails(action, null, 'pt-BR').slice(0, 4),
+    ['Título: Meu bairro', 'Descrição: (nenhuma)', 'Cor: verde-azulado', 'Visibilidade: público']);
 });
 
 test('model output is restricted to named board and card fields', () => {

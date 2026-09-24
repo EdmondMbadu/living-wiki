@@ -20,7 +20,7 @@
       @if (spotify.notice()) { <p class="spotify-connect__notice" role="status">{{ spotify.notice() }}</p> }
       @if (spotify.error()) { <p class="spotify-connect__error" role="alert">{{ spotify.error() }}</p> }
       @if (spotify.playlistExport(); as playlist) {
-        <div class="spotify-connect__result"><span class="material-symbols-outlined">playlist_add_check</span><span><strong i18n>Full playlist ready</strong><small>{{ playlist.matchedCount }} of {{ playlist.totalCount }} songs matched</small></span></div>
+        <div class="spotify-connect__result"><span class="material-symbols-outlined">playlist_add_check</span><span><strong i18n>Full playlist ready</strong><small i18n>{{ playlist.matchedCount }} of {{ playlist.totalCount }} songs matched</small></span></div>
         <a class="spotify-connect__primary" [href]="playlist.playlistUrl" target="_blank" rel="noopener"><span class="material-symbols-outlined">open_in_new</span><span i18n>Open playlist in Spotify</span></a>
       }
       <footer i18n><span class="material-symbols-outlined">lock</span>OAuth only—LivingWiki never receives your Spotify password.</footer>
@@ -95,7 +95,7 @@
         <section class="spotify-official-dock__queue" aria-label="Songs in this queue" i18n-aria-label>
           <header>
             <strong i18n>Up next</strong>
-            <span>{{ spotify.embeddedQueue().length }} songs</span>
+            <span i18n>{{ spotify.embeddedQueue().length }} songs</span>
           </header>
           <div>
             @for (queuedTrack of spotify.embeddedQueue(); track $index; let index = $index) {

@@ -122,10 +122,10 @@ export class BusinessComponent {
   ];
 
   readonly decalSizes: DecalSize[] = [
-    { id: 'window', label: $localize`Window cling 8×10"`, detail: 'Best for storefront glass' },
-    { id: 'door', label: $localize`Door decal 5×7"`, detail: 'Compact entrance sticker' },
-    { id: 'tent', label: $localize`Table tent 4×6"`, detail: 'Countertop or host stand' },
-    { id: 'card', label: $localize`Counter card`, detail: 'Small checkout display' },
+    { id: 'window', label: $localize`Window cling 8×10"`, detail: $localize`Best for storefront glass` },
+    { id: 'door', label: $localize`Door decal 5×7"`, detail: $localize`Compact entrance sticker` },
+    { id: 'tent', label: $localize`Table tent 4×6"`, detail: $localize`Countertop or host stand` },
+    { id: 'card', label: $localize`Counter card`, detail: $localize`Small checkout display` },
   ];
 
   readonly businessCategories = [
@@ -202,47 +202,47 @@ export class BusinessComponent {
 
   readonly plans: BusinessPlan[] = [
     {
-      name: 'Local',
+      name: $localize`Local`,
       description: $localize`Get on the map and start being found around your neighborhood.`,
       monthlyPrice: 25,
       annualMonthlyPrice: 20,
-      cta: 'Get started',
+      cta: $localize`Get started`,
       features: [
-        'Living business profile with story, photos, hours, and links',
-        'Neighborhood map placement',
-        'Connections to nearby places, guides, and events',
-        'Standard setup support',
+        $localize`Living business profile with story, photos, hours, and links`,
+        $localize`Neighborhood map placement`,
+        $localize`Connections to nearby places, guides, and events`,
+        $localize`Standard setup support`,
       ],
     },
     {
-      name: 'Local Favorite',
+      name: $localize`Local Favorite`,
       description: $localize`Stand out, build trust, and understand what nearby people want.`,
       monthlyPrice: 65,
       annualMonthlyPrice: 54,
       featured: true,
-      cta: 'Claim your spot',
+      cta: $localize`Claim your spot`,
       features: [
-        'Everything in Local',
-        'Verified Local Favorite badge',
-        'Featured placement in a neighborhood guide',
-        'Monthly local-search insight summary',
-        'Events and promotions on your profile',
-        'Priority support',
+        $localize`Everything in Local`,
+        $localize`Verified Local Favorite badge`,
+        $localize`Featured placement in a neighborhood guide`,
+        $localize`Monthly local-search insight summary`,
+        $localize`Events and promotions on your profile`,
+        $localize`Priority support`,
       ],
     },
     {
-      name: 'City Sponsor',
+      name: $localize`City Sponsor`,
       description: $localize`Anchor a city wiki with maximum visibility and deeper insight.`,
       monthlyPrice: 180,
       annualMonthlyPrice: 150,
-      cta: 'Start a conversation',
+      cta: $localize`Start a conversation`,
       features: [
-        'Everything in Local Favorite',
-        'Citywide sponsor placement',
-        'Discovery and analytics dashboard',
-        'Sponsor a neighborhood guide or topic hub',
-        'Founding-business launch badge',
-        'Dedicated local partner support',
+        $localize`Everything in Local Favorite`,
+        $localize`Citywide sponsor placement`,
+        $localize`Discovery and analytics dashboard`,
+        $localize`Sponsor a neighborhood guide or topic hub`,
+        $localize`Founding-business launch badge`,
+        $localize`Dedicated local partner support`,
       ],
     },
   ];
@@ -252,7 +252,7 @@ export class BusinessComponent {
     return this.plans.map((plan) => ({
       ...plan,
       price: annual ? plan.annualMonthlyPrice : plan.monthlyPrice,
-      cadence: annual ? 'per month, billed annually' : 'per month',
+      cadence: annual ? $localize`per month, billed annually` : $localize`per month`,
       showStrike: annual && plan.annualMonthlyPrice < plan.monthlyPrice,
     }));
   });

@@ -56,72 +56,72 @@ export class PricingComponent implements OnInit {
   readonly plans: PricingPlan[] = [
     {
       id: 'reader',
-      name: 'Reader',
+      name: $localize`Reader`,
       description: $localize`Follow public LivingWiki pages and keep a lightweight local knowledge home.`,
       monthlyPrice: 0,
       annualMonthlyPrice: 0,
       icon: 'explore',
-      cta: 'Create free account',
+      cta: $localize`Create free account`,
       route: '/create-account',
       features: [
-        'Follow public city and topic wikis',
-        'Save favorite pages and source links',
-        'Create narrated Stack videos with included voices',
-        'Start one personal LivingWiki draft',
+        $localize`Follow public city and topic wikis`,
+        $localize`Save favorite pages and source links`,
+        $localize`Create narrated Stack videos with included voices`,
+        $localize`Start one personal LivingWiki draft`,
       ],
     },
     {
       id: 'personal_plus',
-      name: 'Personal Plus',
+      name: $localize`Personal Plus`,
       description: $localize`Build private source-aware wikis for trips, research, family projects, or local obsessions.`,
       monthlyPrice: 12,
       annualMonthlyPrice: 10,
       featured: true,
       icon: 'auto_awesome',
-      cta: 'Upgrade personal',
+      cta: $localize`Upgrade personal`,
       route: '/create-account',
       features: [
-        'Up to 5 private LivingWiki spaces',
-        'Document uploads and cited answers',
-        'Personal library across cities and topics',
-        'Create a reusable Personal Voice narrator',
+        $localize`Up to 5 private LivingWiki spaces`,
+        $localize`Document uploads and cited answers`,
+        $localize`Personal library across cities and topics`,
+        $localize`Create a reusable Personal Voice narrator`,
       ],
     },
     {
       id: 'creator',
-      name: 'Professional',
-      eyebrow: 'Professional plan',
+      name: $localize`Professional`,
+      eyebrow: $localize`Professional plan`,
       description: $localize`Publish polished LivingWiki pages for your work, community, classes, collections, or public projects.`,
       monthlyPrice: 29,
       annualMonthlyPrice: 24,
       icon: 'campaign',
-      cta: 'Go professional',
+      cta: $localize`Go professional`,
       route: '/landing',
       features: [
-        'Public topic page publishing',
-        'Custom landing page summary and media',
-        'Source library and update workflow',
-        'Basic visitor and question insights',
-        'Create a reusable Personal Voice narrator',
-        'Talking Avatars available as an add-on',
+        $localize`Public topic page publishing`,
+        $localize`Custom landing page summary and media`,
+        $localize`Source library and update workflow`,
+        $localize`Basic visitor and question insights`,
+        $localize`Create a reusable Personal Voice narrator`,
+        $localize`Talking Avatars available as an add-on`,
       ],
     },
     {
       id: 'teams',
-      name: 'Teams & organizations',
-      eyebrow: 'More seats',
+      name: $localize`Teams & organizations`,
+      eyebrow: $localize`More seats`,
       description: $localize`Bring LivingWiki to a team, classroom, newsroom, nonprofit, or organization with a plan shaped around your needs.`,
       monthlyPrice: 0,
       annualMonthlyPrice: 0,
       contact: true,
       icon: 'groups',
-      cta: 'Contact us',
+      cta: $localize`Contact us`,
       route: 'mailto:jim.walker@mindpalace.com?subject=LivingWiki%20team%20plan',
       features: [
-        'Flexible pricing for additional seats',
-        'Shared publishing and collaboration workflows',
-        'Guided onboarding for your team',
-        'Priority support and rollout planning',
+        $localize`Flexible pricing for additional seats`,
+        $localize`Shared publishing and collaboration workflows`,
+        $localize`Guided onboarding for your team`,
+        $localize`Priority support and rollout planning`,
       ],
     },
   ];
@@ -179,12 +179,12 @@ export class PricingComponent implements OnInit {
         ...plan,
         price: annual ? plan.annualMonthlyPrice : plan.monthlyPrice,
         cadence: plan.contact
-          ? 'Flexible plans for growing teams'
+          ? $localize`Flexible plans for growing teams`
           : plan.monthlyPrice === 0
-            ? 'free to start'
+            ? $localize`free to start`
             : annual
-              ? 'per month, billed annually'
-              : 'per month',
+              ? $localize`per month, billed annually`
+              : $localize`per month`,
         showStrike: !plan.contact && annual && plan.annualMonthlyPrice < plan.monthlyPrice,
       }));
   });

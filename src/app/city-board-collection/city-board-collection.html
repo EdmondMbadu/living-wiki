@@ -140,7 +140,7 @@
             </div>
             <div class="collection-spotlight__wash" aria-hidden="true"></div>
             <div class="collection-spotlight__content">
-              <span class="collection-spotlight__label">
+              <span class="collection-spotlight__label" i18n>
                 <span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span>
                 Featured in {{ featuredContextLabel() }}
               </span>
@@ -298,7 +298,7 @@
               <span class="collection-kicker" i18n>Browse the library</span>
               <h2>{{ resultsHeading() }}</h2>
             </div>
-            <span>{{ filteredBoards().length }} shown</span>
+            <span i18n>{{ filteredBoards().length }} shown</span>
           </header>
           @if (filteredBoards().length) {
             <div class="collection-all__grid">

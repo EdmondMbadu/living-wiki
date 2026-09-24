@@ -57,12 +57,12 @@
         <section aria-labelledby="invitation-heading">
           <div class="section-heading">
             <h2 id="invitation-heading" i18n>Needs your response</h2>
-            <span>{{ teams.invitations().length }} pending</span>
+            <span i18n>{{ teams.invitations().length }} pending</span>
           </div>
           @if (!auth.emailVerified()) {
             <div class="empty">
               <h3 i18n>Verify your email to see invitations</h3>
-              <a routerLink="/verify-email" [queryParams]="{ redirectTo: '/notifications' }"
+              <a routerLink="/verify-email" [queryParams]="{ redirectTo: '/notifications' }" i18n
                 >Verify {{ auth.email() }}</a
               >
             </div>
@@ -75,11 +75,11 @@
                 <div class="invitation-copy">
                   <span class="status" i18n>TEAM INVITATION</span>
                   <h3>{{ invite.teamName }}</h3>
-                  <p>
+                  <p i18n>
                     {{ invite.inviterName || templateText.message3 }} invited you as a {{ invite.role }}.
                   </p>
                   <small
-                    >Expires {{ invite.expiresAt | date: 'MMM d, y' }} · Personal work stays
+                     i18n>Expires {{ invite.expiresAt | date: 'MMM d, y' }} · Personal work stays
                     private</small
                   >
                 </div>
@@ -95,7 +95,7 @@
                 <div class="empty">
                   <span class="material-symbols-outlined" aria-hidden="true">mark_email_read</span>
                   <h3 i18n>No pending invitations</h3>
-                  <p>Invitations sent to {{ auth.email() }} will appear here.</p>
+                  <p i18n>Invitations sent to {{ auth.email() }} will appear here.</p>
                 </div>
               }
             }
