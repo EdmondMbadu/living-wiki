@@ -9298,14 +9298,16 @@ export const searchBoardCardImages = onCall(
     }
     const worldCupEventTitle = buildWorldCupTeamWikipediaTitle(query, query);
     const searchQueries = buildBoardCardImageSearchQueries(query);
-    const [eventImageUrl, searchSettled] = await Promise.all([
+    const [eventImageUrl, webImageUrl, searchSettled] = await Promise.all([
       worldCupEventTitle ? findReferenceImageForBoardWizard(worldCupEventTitle) : Promise.resolve(''),
+      request.data?.includeWeb === true && !worldCupEventTitle
+        ? findBoardWizardReferenceWebImage(query, apiKey) : Promise.resolve(''),
       Promise.allSettled(searchQueries.map((searchQuery) => findWikimediaCommonsImagesForBoardCard(searchQuery, 8))),
     ]);
     const successfulSearches = searchSettled.filter(
       (result): result is PromiseFulfilledResult<Array<Omit<BoardCardImageSearchResult, 'token'>>> => result.status === 'fulfilled',
     );
-    if (!successfulSearches.length) {
+    if (!successfulSearches.length && !webImageUrl && !eventImageUrl) {
       throw new HttpsError('unavailable', 'Photo search is temporarily unavailable.');
     }
     const searchedImages = successfulSearches
@@ -9321,12 +9323,16 @@ export const searchBoardCardImages = onCall(
           title: `${worldCupEventTitle} event photo`,
         }]
       : [];
-    const results = [...eventResult, ...commonsResults]
+    const safeWebImageUrl = safeBoardCardRemoteImageUrl(webImageUrl);
+    const webResult: Omit<BoardCardImageSearchResult, 'token'>[] = safeWebImageUrl
+      ? [{ imageUrl: safeWebImageUrl, thumbnailUrl: safeWebImageUrl, sourceUrl: safeWebImageUrl,
+          sourceLabel: 'Web image', title: query }] : [];
+    const results = [...eventResult, ...webResult, ...commonsResults]
       .filter((result, index, all) => all.findIndex((candidate) => candidate.imageUrl === result.imageUrl) === index)
       .slice(0, 8);
     return {
       query,
-      provider: 'Wikimedia Commons',
+      provider: webResult.length ? 'Web + Wikimedia Commons' : 'Wikimedia Commons',
       results: results.map((result): BoardCardImageSearchResult => ({
         ...result,
         token: boardCardImageSearchToken(userId, query, result, apiKey),

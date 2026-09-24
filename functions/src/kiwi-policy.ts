@@ -4,6 +4,8 @@ export type KiwiCardDraft = {
   subtitle: string;
   notes: string;
   type: 'place' | 'food' | 'memory' | 'idea' | 'shop' | 'note';
+  imageUrl?: string;
+  imageSource?: 'search' | 'generated';
 };
 
 export type KiwiAction =
@@ -63,13 +65,32 @@ function cardDraft(value: unknown): KiwiCardDraft | null {
   const title = text(card['title'], 120);
   if (!title) return null;
   const requestedType = text(card['type'], 20);
+  const imageUrl = kiwiCardImageUrl(card['imageUrl']);
   return {
     title,
     subtitle: text(card['subtitle'], 240),
     notes: text(card['notes'], 3000),
     type: cardTypes.includes(requestedType as KiwiCardDraft['type'])
       ? requestedType as KiwiCardDraft['type'] : 'note',
+    ...(imageUrl ? { imageUrl, imageSource: card['imageSource'] === 'generated' ? 'generated' as const : 'search' as const } : {}),
   };
+}
+
+/** Accept only remote images that the signed-in user could use in the board editor. */
+export function kiwiCardImageUrl(input: unknown): string {
+  const raw = text(input, 2000);
+  if (!raw) return '';
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+    if (url.protocol !== 'https:' || url.username || url.password
+      || ['localhost', '0.0.0.0', '::1', 'metadata.google.internal'].includes(host)
+      || host.endsWith('.internal') || host.endsWith('.local')
+      || /^(?:127\.|10\.|192\.168\.|169\.254\.)/.test(host)
+      || /^172\.(?:1[6-9]|2\d|3[01])\./.test(host)
+      || /\.(?:svg|tiff?|gif)(?:$|\?)/i.test(url.pathname)) return '';
+    return url.toString();
+  } catch { return ''; }
 }
 
 export function normalizeKiwiAction(value: unknown): KiwiAction | null {

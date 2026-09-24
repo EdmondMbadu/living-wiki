@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const {
   normalizeKiwiAction, kiwiApplyBoardAction, kiwiCanReadPersonalBoard,
-  kiwiCanEditPersonalBoard, kiwiCanCopyBoard, kiwiCanEditTeamBoard,
+  kiwiCanEditPersonalBoard, kiwiCanCopyBoard, kiwiCanEditTeamBoard, kiwiCardImageUrl,
 } = require('../lib/kiwi-policy');
 
 test('personal reads, edits, and copies follow separate permission boundaries', () => {
@@ -37,6 +37,21 @@ test('model output is restricted to named board and card fields', () => {
   assert.deepEqual(normalizeKiwiAction({ kind: 'email_board', boardId: 'board-1', email: 'FRIEND@example.com', visibility: 'private' }),
     { kind: 'email_board', boardId: 'board-1', email: 'friend@example.com' });
   assert.equal(normalizeKiwiAction({ kind: 'email_board', boardId: 'board-1', email: 'invalid email' }), null);
+});
+
+test('Kiwi accepts remote card photos and rejects local or unsafe URLs', () => {
+  const photo = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Tea.jpg/1400px-Tea.jpg';
+  assert.equal(kiwiCardImageUrl(photo), photo);
+  assert.equal(kiwiCardImageUrl('https://example.com/tea.jpg'), 'https://example.com/tea.jpg');
+  assert.equal(kiwiCardImageUrl('https://localhost/tea.jpg'), '');
+  assert.equal(kiwiCardImageUrl('https://192.168.1.2/tea.jpg'), '');
+  assert.equal(kiwiCardImageUrl('http://upload.wikimedia.org/wikipedia/commons/Tea.jpg'), '');
+  const action = normalizeKiwiAction({ kind: 'create_board', title: 'Tea', visibility: 'public',
+    cards: [{ title: 'Green tea', imageUrl: photo, imageSource: 'generated' }, { title: 'Black tea', imageUrl: 'http://example.com/image.jpg' }] });
+  assert.ok(action && action.kind === 'create_board');
+  assert.equal(action.cards[0].imageUrl, photo);
+  assert.equal(action.cards[0].imageSource, 'generated');
+  assert.equal(action.cards[1].imageUrl, undefined);
 });
 
 test('card edits preserve unrelated content and invalidate derived board video', () => {

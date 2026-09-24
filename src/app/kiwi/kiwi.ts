@@ -3,20 +3,22 @@ import { Component, HostListener, PLATFORM_ID, computed, effect, inject, signal 
 import { Router, RouterLink } from '@angular/router';
 import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc } from 'firebase/firestore';
+import { getDownloadURL, ref as storageRef, uploadBytes } from 'firebase/storage';
 import { AuthService } from '../auth.service';
-import { getFirebaseFirestore, getFirebaseFunctions } from '../firebase.client';
+import { getFirebaseFirestore, getFirebaseFunctions, getFirebaseStorage } from '../firebase.client';
 import type { VoiceConversation } from '@elevenlabs/client';
 import { WorkspaceNavigationService } from '../workspace-navigation/workspace-navigation';
 import { KiwiBoardRefreshService } from './kiwi-board-refresh.service';
 import kiwiVoices from '../../../functions/src/kiwi-voices.json';
 
 type KiwiMessage = { id: number; role: 'user' | 'assistant'; text: string };
-type KiwiCardDraft = { title: string; subtitle: string; notes: string; type: string };
+type KiwiCardDraft = { title: string; subtitle: string; notes: string; type: string; imageUrl?: string; imageSource?: 'search' | 'generated' };
 type KiwiBoardDraft = { kind: 'create_board'; title: string; description: string; tone: string; visibility: string; cards: KiwiCardDraft[] };
 type KiwiProposal = { id: string; summary: string; details?: string[]; kind: string; cards?: string[]; visibility?: string; workspace: string; draft?: KiwiBoardDraft };
 type KiwiTalkResponse = { reply: string; proposal?: KiwiProposal };
 type KiwiApplyResponse = { boardId: string; applied: boolean };
 type KiwiStreamEvent = { type: 'started' | 'draft'; draft?: KiwiBoardDraft };
+type KiwiImageResult = { imageUrl: string; thumbnailUrl: string; sourceUrl: string; sourceLabel: string; title: string };
 type VoicePhase = 'idle' | 'listening' | 'thinking' | 'speaking' | 'review';
 
 @Component({
@@ -33,6 +35,7 @@ export class KiwiComponent {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly functions = this.isBrowser ? getFirebaseFunctions() : null;
   private readonly firestore = this.isBrowser ? getFirebaseFirestore() : null;
+  private readonly storage = this.isBrowser ? getFirebaseStorage() : null;
   private conversation: VoiceConversation | null = null;
   private voiceAttempt = 0;
   private queuedVoiceRequest = '';
@@ -49,6 +52,7 @@ export class KiwiComponent {
   private speechRequestId = 0;
   private studioDirty = new Set<string>();
   private streamSequence = 0;
+  private imageRun = 0;
 
   readonly open = signal(false);
   readonly name = signal('Kiwi');
@@ -76,7 +80,13 @@ export class KiwiComponent {
   readonly boardAwaitingOpen = signal('');
   readonly studioOpen = signal(false);
   readonly studioDraft = signal<KiwiBoardDraft | null>(null);
+  readonly studioHasImage = computed(() => !!this.studioDraft()?.cards.some((card) => !!card.imageUrl));
   readonly studioReady = signal(false);
+  readonly imageLoading = signal(false);
+  readonly imageNotice = signal('');
+  readonly imageChoices = signal<Record<number, KiwiImageResult[]>>({});
+  readonly imageChoosing = signal<number | null>(null);
+  readonly imageGenerating = signal<number | null>(null);
   readonly studioMessage = signal('');
   readonly signedIn = this.auth.isAuthenticated;
   readonly currentUrl = this.navigation.currentUrl;
@@ -304,6 +314,8 @@ export class KiwiComponent {
         subtitle: preserve(`card.${index}.subtitle`, old?.subtitle || '', card.subtitle),
         notes: preserve(`card.${index}.notes`, old?.notes || '', card.notes),
         type: preserve(`card.${index}.type`, old?.type || 'note', card.type),
+        imageUrl: old?.title === card.title ? old.imageUrl || card.imageUrl || '' : card.imageUrl || '',
+        imageSource: old?.title === card.title ? old.imageSource || card.imageSource : card.imageSource,
       };
     });
     this.studioDraft.set({ kind: 'create_board',
@@ -325,10 +337,152 @@ export class KiwiComponent {
 
   chooseStudioBoardType(event: Event): void {
     const choice = (event.target as HTMLSelectElement).value;
-    if (choice !== 'wizard') return;
-    this.close();
+    if (choice === 'describe') return;
+    void this.openBoardWizard(choice);
+  }
+
+  private async openBoardWizard(choice: string): Promise<void> {
+    const create = choice === 'real-estate' ? choice : 'choose';
+    this.studioOpen.set(false);
+    this.open.set(false);
     this.proposal.set(null);
-    void this.router.navigateByUrl('/boards?create=choose');
+    this.studioDraft.set(null);
+    this.imageRun++;
+    this.imageLoading.set(false);
+    this.conversation?.sendContextualUpdate(
+      `The ${create === 'real-estate' ? 'real estate listing' : 'board'} wizard is opening. Ask the user to enter the source details there.`,
+      { contextId: 'kiwi-last-action' });
+    const destination = this.scope().teamId
+      ? `/teams/${encodeURIComponent(this.scope().teamId)}/create-listing`
+      : '/boards?create=choose';
+    await this.router.navigateByUrl(destination);
+  }
+
+  private imageQuery(board: KiwiBoardDraft, card: KiwiCardDraft): string {
+    return [card.title, board.title, card.subtitle].filter(Boolean).join(' ').slice(0, 180);
+  }
+
+  private async findCardImages(index: number, revealChoices: boolean): Promise<KiwiImageResult[]> {
+    const board = this.studioDraft();
+    const card = board?.cards[index];
+    if (!board || !card || !this.functions) return [];
+    const callable = httpsCallable<{ query: string; includeWeb: boolean }, { results: KiwiImageResult[] }>(this.functions, 'searchBoardCardImages');
+    const queries = [
+      [card.title, card.subtitle].filter(Boolean).join(' '),
+      this.imageQuery(board, card),
+    ].filter((query, queryIndex, all) => query.length >= 2 && all.indexOf(query) === queryIndex);
+    let results: KiwiImageResult[] = [];
+    for (const query of queries) {
+      const { data } = await callable({ query, includeWeb: true });
+      results = data.results.filter((result) => {
+      try {
+        const url = new URL(result.imageUrl);
+        const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+        return url.protocol === 'https:' && !url.username && !url.password
+          && !['localhost', '0.0.0.0', '::1', 'metadata.google.internal'].includes(host)
+          && !host.endsWith('.internal') && !host.endsWith('.local')
+          && !/^(?:127\.|10\.|192\.168\.|169\.254\.)/.test(host)
+          && !/^172\.(?:1[6-9]|2\d|3[01])\./.test(host)
+          && !/\.(?:svg|tiff?|gif)$/i.test(url.pathname);
+      } catch { return false; }
+      });
+      if (results.length) break;
+    }
+    if (revealChoices) this.imageChoices.update((choices) => ({ ...choices, [index]: results }));
+    return results;
+  }
+
+  private async enrichStudioImages(): Promise<void> {
+    const board = this.studioDraft();
+    if (!board?.cards.length) { this.studioReady.set(false); return; }
+    const run = ++this.imageRun;
+    this.imageLoading.set(true);
+    this.imageNotice.set('Finding photos for your cards…');
+    const indexes = board.cards.map((card, index) => card.imageUrl ? -1 : index).filter((index) => index >= 0);
+    const usedImages = new Set(board.cards.map((card) => card.imageUrl).filter(Boolean));
+    // Keep the image search load bounded while photos arrive one card at a time.
+    for (let start = 0; start < indexes.length; start += 3) {
+      await Promise.all(indexes.slice(start, start + 3).map(async (index) => {
+        try {
+          const results = await this.findCardImages(index, false);
+          if (run !== this.imageRun || !results.length) return;
+          const chosen = results.find((result) => !usedImages.has(result.imageUrl)) || results[0];
+          usedImages.add(chosen.imageUrl);
+          const current = this.studioDraft();
+          if (current?.cards[index]?.title === board.cards[index]?.title && !current.cards[index].imageUrl) this.studioDraft.set({ ...current,
+            cards: current.cards.map((card, cardIndex) => cardIndex === index
+              ? { ...card, imageUrl: chosen.imageUrl, imageSource: 'search' } : card) });
+        } catch { /* The user can search for a different photo on this card. */ }
+      }));
+      if (run !== this.imageRun) return;
+    }
+    const missingIndexes = this.studioDraft()?.cards.map((card, index) => card.imageUrl ? -1 : index)
+      .filter((index) => index >= 0).slice(0, 6) || [];
+    if (missingIndexes.length) this.imageNotice.set('Creating original images for cards without a matching photo…');
+    for (let start = 0; start < missingIndexes.length; start += 2) {
+      await Promise.all(missingIndexes.slice(start, start + 2).map(async (index) => {
+        try { await this.createStudioIllustration(index, run); }
+        catch { /* Keep the draft and let the user retry an illustration. */ }
+      }));
+      if (run !== this.imageRun) return;
+      this.imageNotice.set(`Images added to ${this.studioDraft()?.cards.filter((card) => card.imageUrl).length || 0} of ${board.cards.length} cards…`);
+    }
+    if (run !== this.imageRun) return;
+    const missing = this.studioDraft()?.cards.filter((card) => !card.imageUrl).length || 0;
+    this.imageNotice.set(missing ? `${missing} card${missing === 1 ? '' : 's'} still need an image. Find a photo or generate an illustration.` : 'Images added. Review your board before creating it.');
+    this.imageLoading.set(false);
+    this.studioReady.set(true);
+    if (this.conversation) this.conversation.sendContextualUpdate(
+      missing ? `${missing} card photos still need attention. Ask the user to review the board draft.`
+        : 'Card photos are added to the board draft. Ask the user to review and approve it before saving.',
+      { contextId: 'kiwi-image-progress' });
+  }
+
+  private async createStudioIllustration(index: number, run: number): Promise<boolean> {
+    const current = this.studioDraft();
+    const card = current?.cards[index];
+    if (!current || !card || card.imageUrl || !this.functions) return false;
+    const callable = httpsCallable<Record<string, string>, { imageDataUrl: string }>(
+      this.functions, 'generateBoardCardImage', { timeout: 130_000 });
+    const { data } = await callable({ cardTitle: card.title, cardSubtitle: card.subtitle,
+      cardNotes: card.notes, boardTitle: current.title, boardDescription: current.description });
+    if (run !== this.imageRun || !/^data:image\/(?:png|jpeg|webp);base64,/i.test(data.imageDataUrl)) return false;
+    const latest = this.studioDraft();
+    if (latest?.cards[index]?.title !== card.title || latest.cards[index].imageUrl) return false;
+    this.studioDraft.set({ ...latest, cards: latest.cards.map((item, cardIndex) => cardIndex === index
+      ? { ...item, imageUrl: data.imageDataUrl, imageSource: 'generated' } : item) });
+    return true;
+  }
+
+  async generateStudioCardImage(index: number): Promise<void> {
+    if (this.imageGenerating() !== null) return;
+    this.imageGenerating.set(index);
+    this.imageNotice.set('Creating an original illustration…');
+    try {
+      const created = await this.createStudioIllustration(index, this.imageRun);
+      this.imageNotice.set(created ? 'Illustration added. Review it before creating the board.'
+        : 'The illustration was not added. Try again.');
+    } catch { this.imageNotice.set('Image generation is unavailable right now. Try again later.'); }
+    finally { this.imageGenerating.set(null); }
+  }
+
+  async searchStudioCardImage(index: number): Promise<void> {
+    this.imageChoosing.set(index);
+    this.imageNotice.set('Finding photo choices…');
+    try {
+      const results = await this.findCardImages(index, true);
+      this.imageNotice.set(results.length ? 'Choose a photo below.' : 'No matching photos found. Generate an illustration or try a more specific title.');
+    } catch { this.imageNotice.set('Photo search is unavailable right now. Try again shortly.'); }
+    finally { this.imageChoosing.set(null); }
+  }
+
+  chooseStudioCardImage(index: number, imageUrl: string): void {
+    const board = this.studioDraft();
+    if (!board || !this.imageChoices()[index]?.some((result) => result.imageUrl === imageUrl)) return;
+    this.studioDraft.set({ ...board, cards: board.cards.map((card, cardIndex) => cardIndex === index
+      ? { ...card, imageUrl, imageSource: 'search' } : card) });
+    this.imageChoices.update((choices) => ({ ...choices, [index]: [] }));
+    this.imageNotice.set('Photo selected.');
   }
 
   setStudioCardField(index: number, field: keyof KiwiCardDraft, event: Event): void {
@@ -362,11 +516,34 @@ export class KiwiComponent {
       if (fromVoiceTool) this.queuedVoiceRequest = text;
       return;
     }
+    const creating = /\b(create|make|build|design|draft)\b/i.test(text)
+      && /\b(board|menu|list|wiki|listing|tour)\b/i.test(text);
+    if (creating && /\b(real estate|property listing|home listing|rental property|sell my (?:home|house)|listing board)\b/i.test(text)) {
+      if (!fromVoiceTool) this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
+      this.draft.set('');
+      await this.openBoardWizard('real-estate');
+      return;
+    }
+    if (creating && /\bwalking tour\b/i.test(text)) {
+      if (this.scope().teamId) {
+        const reply = 'Walking tours are currently created in personal boards. Team workspaces can create property listings here.';
+        if (!fromVoiceTool) this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
+        this.draft.set('');
+        this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: reply }]);
+        this.conversation?.sendContextualUpdate(reply, { contextId: 'kiwi-last-action' });
+        return;
+      }
+      if (!fromVoiceTool) this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
+      this.draft.set('');
+      await this.openBoardWizard('choose');
+      return;
+    }
     const controller = new AbortController();
     this.talkAbort = controller;
     const currentDraft = this.proposal()?.kind === 'create_board' ? this.studioDraft() : null;
-    const creating = /\b(create|make|build|design|draft)\b/i.test(text)
-      && /\b(board|menu|list|wiki)\b/i.test(text);
+    const modelDraft = currentDraft ? { ...currentDraft, cards: currentDraft.cards.map((card) =>
+      ({ ...card, imageUrl: '', imageSource: undefined })) } : null;
+    if (currentDraft) { this.imageRun++; this.imageLoading.set(false); }
     const canStartCreation = creating && (!!this.scope().teamId || /\b(public|unlisted|private)\b/i.test(text));
     const sequence = ++this.streamSequence;
     const history = this.messages().slice(-8).map(({ role, text: content }) => ({ role, text: content }));
@@ -378,6 +555,9 @@ export class KiwiComponent {
     }
     this.planningCreation.set(canStartCreation || !!currentDraft);
     if (canStartCreation && !currentDraft) {
+      this.imageRun++;
+      this.imageNotice.set('');
+      this.imageChoices.set({});
       this.boardAwaitingOpen.set('');
       this.studioDirty.clear();
       this.studioDraft.set({ kind: 'create_board', title: 'New board', description: '', tone: 'teal',
@@ -395,7 +575,7 @@ export class KiwiComponent {
       }, KiwiTalkResponse, KiwiStreamEvent>(this.functions, 'kiwiTalk');
       const { stream, data: finalData } = await callable.stream({ message: text, history,
         teamId: this.scope().teamId, boardId: this.scope().boardId,
-        ...(currentDraft ? { currentDraft } : {}) }, { signal: controller.signal });
+        ...(modelDraft ? { currentDraft: modelDraft } : {}) }, { signal: controller.signal });
       for await (const event of stream) {
         if (sequence !== this.streamSequence) break;
         if (event.type === 'draft' && event.draft) {
@@ -414,9 +594,11 @@ export class KiwiComponent {
       if (data.proposal?.kind === 'create_board' && data.proposal.draft) {
         this.mergeStudioDraft(data.proposal.draft);
         this.studioOpen.set(true);
-        this.studioReady.set(true);
+        void this.enrichStudioImages();
       } else if (creating && !currentDraft) {
         this.studioReady.set(false);
+        this.studioOpen.set(false);
+        this.studioDraft.set(null);
       }
       if (fromVoiceTool && this.conversation) this.conversation.sendContextualUpdate(
         data.proposal
@@ -441,6 +623,10 @@ export class KiwiComponent {
   async apply(): Promise<void> {
     const proposal = this.proposal();
     if (!proposal || this.applying() || !this.functions) return;
+    if (proposal.kind === 'create_board' && this.imageLoading()) {
+      this.error.set('Kiwi is still adding photos. Wait until the board draft is ready.');
+      return;
+    }
     this.voiceTranscript.set('');
     this.applying.set(true);
     const creatingBoard = proposal.kind === 'create_board';
@@ -453,13 +639,21 @@ export class KiwiComponent {
         this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: 'Email sent.' }]);
         return;
       }
-      const draft = creatingBoard ? this.studioDraft() : null;
-      if (creatingBoard && (!draft || !draft.title.trim() || draft.cards.some((card) => !card.title.trim()))) {
-        this.error.set('Give the board and every card a title before creating it.');
+      let draft = creatingBoard ? this.studioDraft() : null;
+      if (creatingBoard && (!draft || !draft.title.trim() || !draft.cards.length || draft.cards.some((card) => !card.title.trim()))) {
+        this.error.set('Give the board and at least one card a title before creating it.');
+        return;
+      }
+      if (creatingBoard && !draft?.cards.some((card) => !!card.imageUrl)) {
+        this.error.set('Add at least one image before creating this board.');
         return;
       }
       let boardId = this.boardAwaitingOpen();
       if (!boardId) {
+        if (draft) {
+          draft = await this.persistStudioImages(draft, proposal.id);
+          this.studioDraft.set(draft);
+        }
         const callable = httpsCallable<{ proposalId: string; draft?: KiwiBoardDraft }, KiwiApplyResponse>(this.functions, 'kiwiApply');
         const { data } = await callable({ proposalId: proposal.id, ...(draft ? { draft } : {}) });
         boardId = data.boardId;
@@ -495,7 +689,28 @@ export class KiwiComponent {
     }
   }
 
+  private async persistStudioImages(draft: KiwiBoardDraft, proposalId: string): Promise<KiwiBoardDraft> {
+    const uid = this.auth.uid();
+    if (!uid || !this.storage) throw new Error('Sign in again before saving board images.');
+    const cards = await Promise.all(draft.cards.map(async (card, index) => {
+      const dataUrl = card.imageUrl || '';
+      if (!dataUrl.startsWith('data:')) return card;
+      const type = dataUrl.match(/^data:image\/(png|jpeg|webp);base64,/i)?.[1]?.toLowerCase();
+      if (!type) throw new Error('One generated image was invalid. Try generating it again.');
+      const blob = await (await fetch(dataUrl)).blob();
+      if (!blob.size || blob.size > 10 * 1024 * 1024)
+        throw new Error('One generated image was too large to save. Choose another image.');
+      const extension = type === 'jpeg' ? 'jpg' : type;
+      const reference = storageRef(this.storage!, `users/${uid}/boards/kiwi-drafts/${proposalId}/${index}.${extension}`);
+      await uploadBytes(reference, blob, { contentType: blob.type, cacheControl: 'public,max-age=31536000,immutable' });
+      return { ...card, imageUrl: await getDownloadURL(reference), imageSource: 'generated' as const };
+    }));
+    return { ...draft, cards };
+  }
+
   dismissProposal(): void {
+    this.imageRun++;
+    this.imageLoading.set(false);
     this.proposal.set(null);
     this.boardAwaitingOpen.set('');
     this.studioOpen.set(false);
@@ -533,15 +748,21 @@ export class KiwiComponent {
           kiwi_request: (parameters: { request?: string }) => {
             const request = String(parameters?.request || '').trim().slice(0, 4000);
             if (!request) return 'Please ask what the user wants to change.';
+            if (/^(?:please\s+)?(?:create|make|build)(?:\s+me)?\s+(?:a\s+|an\s+)?(?:new\s+)?(?:(?:public|private|unlisted)\s+)?board(?:\s+please)?[.!?]?$/i.test(request))
+              return 'Ask what the board should contain. Describe it is the default; Real Estate listing and More board types are other choices.';
             const creating = /\b(create|make|build|design|draft)\b/i.test(request)
-              && /\b(board|menu|list|wiki)\b/i.test(request);
-            if (creating && !this.scope().teamId && !/\b(public|unlisted|private)\b/i.test(request))
+              && /\b(board|menu|list|wiki|listing|tour)\b/i.test(request);
+            const specialized = /\b(real estate|property listing|home listing|rental property|sell my (?:home|house)|listing board|walking tour)\b/i.test(request);
+            if (creating && !specialized && !this.scope().teamId && !/\b(public|unlisted|private)\b/i.test(request))
               return 'Ask the user whether this new board should be Public, Unlisted, or Private before starting the draft.';
             void this.send(request, true);
             return 'The request is being prepared on screen. The user will review it before it is saved.';
           },
           kiwi_apply: () => {
             if (this.busy()) return 'The proposal is still being prepared. Ask the user to approve after it appears.';
+            if (this.imageLoading()) return 'The board photos are still arriving. Ask the user to review and approve after they appear.';
+            if (this.proposal()?.kind === 'create_board' && !this.studioHasImage())
+              return 'The board needs at least one image. Ask the user to choose a photo or wait for an illustration.';
             if (!this.proposal()) return 'There is no ready proposal to save. Ask the user what to make or change.';
             if (this.voiceUserSequence <= this.proposalReadyVoiceSequence
               || !/\b(yes|yeah|yep|go ahead|do it|create|save|apply|send|publish)\b/i.test(this.voiceTranscript()))

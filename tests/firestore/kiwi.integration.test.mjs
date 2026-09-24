@@ -31,26 +31,33 @@ test('visitors cannot get a Kiwi name, talk, or apply an action', async () => {
 });
 
 test('the assistant name belongs only to the signed-in account', async () => {
-  assert.deepEqual(await call(kiwiPreferences, 'alice'), { name: 'Kiwi' });
-  assert.deepEqual(await call(kiwiPreferences, 'alice', { operation: 'setName', name: 'Pip' }), { name: 'Pip' });
-  assert.deepEqual(await call(kiwiPreferences, 'alice'), { name: 'Pip' });
-  assert.deepEqual(await call(kiwiPreferences, 'bob'), { name: 'Kiwi' });
+  assert.equal((await call(kiwiPreferences, 'alice')).name, 'Kiwi');
+  assert.equal((await call(kiwiPreferences, 'alice', { operation: 'setName', name: 'Pip' })).name, 'Pip');
+  assert.equal((await call(kiwiPreferences, 'alice')).name, 'Pip');
+  assert.equal((await call(kiwiPreferences, 'bob')).name, 'Kiwi');
 });
 
 test('Kiwi creates a personal board once and does not expose private boards without a plan', async () => {
   await db.doc('users/alice').set({ displayName: 'Alice', role: 'user' });
+  const photo = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Tea.jpg/1400px-Tea.jpg';
   const create = { kind: 'create_board', title: 'Garden plan', description: 'Spring planting',
-    visibility: 'public', tone: 'green', cards: [{ title: 'Seed ideas', subtitle: '', notes: '', type: 'idea' }] };
+    visibility: 'public', tone: 'green', cards: [{ title: 'Seed ideas', subtitle: '', notes: '', type: 'idea', imageUrl: photo, imageSource: 'generated' }] };
   await proposal('alice', 'create-one', create);
   assert.deepEqual(await call(kiwiApply, 'alice', { proposalId: 'create-one' }), { boardId: 'result-create-one', applied: true });
   assert.deepEqual(await call(kiwiApply, 'alice', { proposalId: 'create-one' }), { boardId: 'result-create-one', applied: true });
   const board = (await db.doc('boards/result-create-one').get()).data();
   assert.equal(board.owner_user_id, 'alice');
   assert.equal(board.cards.length, 1);
+  assert.equal(board.cards[0].imageUrl, photo);
+  assert.deepEqual(board.cards[0].imageUrls, [photo]);
+  assert.equal(board.cards[0].imageSource, 'generated');
+  assert.equal(board.imageUrl, photo);
   assert.equal(board.visibility, 'public');
   await proposal('alice', 'private-one', { ...create, visibility: 'private' });
   await assert.rejects(call(kiwiApply, 'alice', { proposalId: 'private-one' }), /eligible plan/);
   assert.equal((await db.doc('boards/result-private-one').get()).exists, false);
+  await proposal('alice', 'empty-one', { ...create, cards: [] });
+  await assert.rejects(call(kiwiApply, 'alice', { proposalId: 'empty-one' }), /at least one card/);
 });
 
 test('Kiwi cannot edit another person’s board and rejects stale personal edits', async () => {

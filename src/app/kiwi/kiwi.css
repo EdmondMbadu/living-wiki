@@ -152,6 +152,17 @@
 .kiwi-studio-card header button { border: 0; background: transparent; color: #7d8e80; cursor: pointer; }
 .kiwi-studio-card header button .material-symbols-outlined { font-size: 1.08rem; }
 .kiwi-studio-card__number { display: grid; place-items: center; flex: none; width: 1.6rem; height: 1.6rem; border-radius: .45rem; background: #e9f5e9; color: #21804f; font-size: .75rem; font-weight: 800; }
+.kiwi-studio__image-notice { margin: .75rem 0 0; color: #356e4b; font-size: .82rem; font-weight: 700; }
+.kiwi-studio-card__photo { display: grid; place-items: center; overflow: hidden; min-height: 8rem; border-radius: .65rem; background: #eef4ef; color: #688b72; font-size: .78rem; }
+.kiwi-studio-card__photo img { width: 100%; height: 9rem; object-fit: cover; }
+.kiwi-studio-card__image-label { color: #6c7f70; font-size: .68rem; font-weight: 700; }
+.kiwi-studio-card__photo .material-symbols-outlined { font-size: 2rem; }
+.kiwi-studio-card__find { justify-self: start; border: 0; padding: 0; background: transparent; color: #147247; font-weight: 800; cursor: pointer; }
+.kiwi-studio-card__find:disabled { opacity: .5; cursor: default; }
+.kiwi-studio-card__choices { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .35rem; }
+.kiwi-studio-card__choices button { overflow: hidden; border: 1px solid #d7e5d8; border-radius: .4rem; padding: 0; background: #fff; cursor: pointer; }
+.kiwi-studio-card__choices img { width: 100%; height: 3.8rem; object-fit: cover; }
+.kiwi-studio-card__choices small { display: block; overflow: hidden; padding: .2rem; color: #58745f; font-size: .55rem; text-overflow: ellipsis; white-space: nowrap; }
 .kiwi-studio-card__fields { display: grid; grid-template-columns: minmax(0, 2fr) minmax(6rem, 1fr); gap: .5rem; }
 .kiwi-studio-card textarea { resize: vertical; }
 .kiwi-studio__empty { display: grid; place-items: center; min-height: 9rem; border: 1px dashed #bcd9c3; border-radius: .9rem; background: #f7fbf6; color: #679074; text-align: center; }

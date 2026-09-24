@@ -1,29 +1,12 @@
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { WorkspaceNavigationService } from '../workspace-navigation/workspace-navigation';
 import { KiwiComponent } from './kiwi';
 
-class FakeRecognition {
-  static latest: FakeRecognition | null = null;
-  lang = '';
-  interimResults = false;
-  continuous = false;
-  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal?: boolean }> }) => void) | null = null;
-  onerror: ((event: { error?: string }) => void) | null = null;
-  onend: (() => void) | null = null;
-  started = false;
-  constructor() { FakeRecognition.latest = this; }
-  start(): void { this.started = true; }
-  stop(): void { this.started = false; this.onend?.(); }
-}
-
 describe('Kiwi conversation interface', () => {
-  const originalRecognition = (window as any).SpeechRecognition;
-
   beforeEach(async () => {
-    (window as any).SpeechRecognition = FakeRecognition;
     window.__LIVING_ATLAS_CONFIG__ = { firebase: {
       apiKey: 'test-key', appId: 'test-app', projectId: 'demo-kiwi', authDomain: 'demo-kiwi.firebaseapp.com',
     } };
@@ -37,8 +20,6 @@ describe('Kiwi conversation interface', () => {
   });
 
   afterEach(() => {
-    (window as any).SpeechRecognition = originalRecognition;
-    FakeRecognition.latest = null;
     TestBed.resetTestingModule();
   });
 
@@ -62,30 +43,31 @@ describe('Kiwi conversation interface', () => {
   it('starts and ends a voice conversation from the prominent control', () => {
     const fixture = TestBed.createComponent(KiwiComponent);
     spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    spyOn<any>(fixture.componentInstance, 'startVoiceSession').and.resolveTo();
     fixture.componentInstance.toggle();
     fixture.detectChanges();
     fixture.componentInstance.toggleVoiceSession();
     fixture.detectChanges();
-    expect(FakeRecognition.latest?.started).toBeTrue();
-    expect(fixture.componentInstance.voiceStatus()).toBe('Listening…');
+    expect(fixture.componentInstance.voiceActive()).toBeTrue();
+    expect(fixture.componentInstance.voiceStatus()).toBe('Connecting to Kiwi…');
     expect(fixture.nativeElement.textContent).toContain('End conversation');
 
     fixture.componentInstance.toggleVoiceSession();
     fixture.detectChanges();
     expect(fixture.componentInstance.voiceActive()).toBeFalse();
-    expect(FakeRecognition.latest?.started).toBeFalse();
+    expect(fixture.componentInstance.voiceStatus()).toBe('Talk with Kiwi');
   });
 
   it('opens name and voice settings, previews voice choices, and stops an active conversation', () => {
     const fixture = TestBed.createComponent(KiwiComponent);
     spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    spyOn<any>(fixture.componentInstance, 'startVoiceSession').and.resolveTo();
     fixture.componentInstance.toggle();
     fixture.componentInstance.toggleVoiceSession();
     fixture.componentInstance.beginRename();
     fixture.detectChanges();
 
     expect(fixture.componentInstance.voiceActive()).toBeFalse();
-    expect(FakeRecognition.latest?.started).toBeFalse();
     expect(fixture.nativeElement.querySelector('.kiwi-settings[role="dialog"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelectorAll('input[name="kiwi-voice"]').length).toBe(4);
     expect(fixture.nativeElement.textContent).toContain('Name & voice');
@@ -100,32 +82,17 @@ describe('Kiwi conversation interface', () => {
     expect(fixture.nativeElement.querySelector('.kiwi-settings')).toBeNull();
   });
 
-  it('keeps listening through a pause and combines the full spoken request', () => {
-    jasmine.clock().install();
-    try {
-      const fixture = TestBed.createComponent(KiwiComponent);
-      spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
-      const send = spyOn(fixture.componentInstance, 'send').and.resolveTo();
-      fixture.componentInstance.toggle();
-      fixture.detectChanges();
-      fixture.componentInstance.toggleVoiceSession();
-      const recognition = FakeRecognition.latest!;
-      expect(recognition.continuous).toBeTrue();
-      expect(recognition.interimResults).toBeTrue();
-
-      recognition.onresult?.({ results: [[{ transcript: 'Make a board' }]] });
-      jasmine.clock().tick(1500);
-      expect(send).not.toHaveBeenCalled();
-      const first = Object.assign([{ transcript: 'Make a board' }], { isFinal: true });
-      const second = Object.assign([{ transcript: 'with tea and cake' }], { isFinal: true });
-      recognition.onresult?.({ results: [first, second] });
-      fixture.detectChanges();
-      expect(fixture.nativeElement.textContent).toContain('Make a board with tea and cake');
-      jasmine.clock().tick(1099);
-      expect(send).not.toHaveBeenCalled();
-      jasmine.clock().tick(1);
-      expect(send).toHaveBeenCalledOnceWith('Make a board with tea and cake', true);
-    } finally { jasmine.clock().uninstall(); }
+  it('opens the property wizard without ending an active voice conversation', async () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    spyOn<any>(fixture.componentInstance, 'startVoiceSession').and.resolveTo();
+    const navigate = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    const kiwi = fixture.componentInstance;
+    kiwi.toggle();
+    kiwi.toggleVoiceSession();
+    await kiwi.send('Create a real estate listing board', true);
+    expect(navigate).toHaveBeenCalledWith('/boards?create=choose');
+    expect(kiwi.voiceActive()).toBeTrue();
   });
 
   it('renders streamed cards and preserves a title the user edits while Kiwi continues', () => {
@@ -151,5 +118,42 @@ describe('Kiwi conversation interface', () => {
     expect(fixture.nativeElement.querySelectorAll('.kiwi-studio-card').length).toBe(2);
     expect(fixture.nativeElement.textContent).toContain('Cake');
     expect(fixture.nativeElement.querySelector('#kiwi-studio-message')).not.toBeNull();
+  });
+
+  it('shows Describe it first and previews a photo on the card before creation', () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    const kiwi = fixture.componentInstance;
+    kiwi.toggle();
+    kiwi.studioOpen.set(true);
+    (kiwi as any).mergeStudioDraft({ kind: 'create_board', title: 'Tea places', description: '',
+      tone: 'teal', visibility: 'public', cards: [{ title: 'Tea room', subtitle: '', notes: '', type: 'place',
+        imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Tea.jpg' }] });
+    fixture.detectChanges();
+    const type = fixture.nativeElement.querySelector('.kiwi-studio__meta select') as HTMLSelectElement;
+    expect(type.options[0].textContent).toContain('Describe it');
+    expect(Array.from(type.options).some((option) => option.textContent?.includes('Real estate'))).toBeTrue();
+    expect(fixture.nativeElement.querySelector('.kiwi-studio-card__photo img')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.kiwi-studio-card__find').textContent).toContain('Change photo');
+  });
+
+  it('requires an image in the draft before enabling Create board', () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    const kiwi = fixture.componentInstance;
+    kiwi.toggle();
+    kiwi.studioOpen.set(true);
+    kiwi.studioReady.set(true);
+    kiwi.proposal.set({ id: 'proposal', summary: 'Create', kind: 'create_board', workspace: 'personal' });
+    (kiwi as any).mergeStudioDraft({ kind: 'create_board', title: 'Tea', description: '', tone: 'teal',
+      visibility: 'public', cards: [{ title: 'Matcha', subtitle: '', notes: '', type: 'food' }] });
+    fixture.detectChanges();
+    expect((fixture.nativeElement.querySelector('.kiwi-studio__footer > .kiwi-primary') as HTMLButtonElement).disabled).toBeTrue();
+    (kiwi as any).mergeStudioDraft({ kind: 'create_board', title: 'Tea', description: '', tone: 'teal',
+      visibility: 'public', cards: [{ title: 'Matcha', subtitle: '', notes: '', type: 'food',
+        imageUrl: 'data:image/png;base64,aGVsbG8=', imageSource: 'generated' }] });
+    fixture.detectChanges();
+    expect((fixture.nativeElement.querySelector('.kiwi-studio__footer > .kiwi-primary') as HTMLButtonElement).disabled).toBeFalse();
+    expect(fixture.nativeElement.textContent).toContain('AI illustration');
   });
 });
