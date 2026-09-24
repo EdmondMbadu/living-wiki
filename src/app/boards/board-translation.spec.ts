@@ -1,5 +1,6 @@
 import {
   applyBoardTranslation,
+  isBoardTranslationLanguage,
   normalizeBoardTranslationResult,
 } from './board-translation';
 
@@ -54,5 +55,16 @@ describe('board translation overlay', () => {
     });
 
     expect(result?.segments).toEqual([{ key: 'board.title', text: '場所' }]);
+  });
+
+  it('accepts Brazilian Portuguese board translations', () => {
+    expect(isBoardTranslationLanguage('pt')).toBeTrue();
+    expect(normalizeBoardTranslationResult({
+      boardId: 'board-1',
+      targetLanguage: 'pt',
+      sourceLanguage: 'en',
+      fingerprint: 'fingerprint',
+      segments: [{ key: 'board.title', text: 'Lugares' }],
+    })?.segments).toEqual([{ key: 'board.title', text: 'Lugares' }]);
   });
 });

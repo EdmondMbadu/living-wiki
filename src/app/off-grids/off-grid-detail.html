@@ -195,7 +195,7 @@
                         <strong
                           >{{ clip.featured ? copy.featuredPinTalk : copy.pintalk
                           }}{{
-                            clip.duration ? ' · ' + clip.duration.toFixed(0) + 's' : ''
+                            clip.duration ? ' · ' + clip.duration.toFixed(0) + templateText.message1 : ''
                           }}</strong
                         ><span>{{
                           clip.approval === 'pending' ? copy.awaitingApproval : clip.contributorName

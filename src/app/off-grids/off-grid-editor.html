@@ -235,7 +235,7 @@
                 <p i18n>Tell the story in your own words.</p>
               </div>
               <span class="ready-count">{{
-                clipCount() ? clipCount() + ' ready' : copy.recordOrUpload
+                clipCount() ? clipCount() + templateText.message1 : copy.recordOrUpload
               }}</span>
             </div>
             @if (!composer()) {
@@ -286,7 +286,7 @@
                 @if (clipCount()) {
                   <span class="ready-count"
                     ><span class="material-symbols-outlined" aria-hidden="true">play_circle</span>
-                    {{ clipCount() }} PinTalk{{ clipCount() > 1 ? 's' : '' }} ready</span
+                    {{ clipCount() }} PinTalk{{ clipCount() > 1 ? templateText.message7 : '' }} ready</span
                   >
                 }
               </div>
@@ -312,10 +312,10 @@
                   [(ngModel)]="visibility"
                 /><span class="material-symbols-outlined" aria-hidden="true">public</span
                 ><span
-                  ><strong>{{ original()?.sourceRef ? 'Use board visibility' : 'Public' }}</strong
+                  ><strong>{{ original()?.sourceRef ? templateText.message2 : templateText.message3 }}</strong
                   ><small>{{ original()?.visibility === 'unlisted'
-                    ? 'Anyone with the source board link can view. Hidden from public discovery.'
-                    : 'Share its photo, exact location and PinTalks with everyone.' }}</small
+                    ? templateText.message4
+                    : templateText.message5 }}</small
                   ></span
                 ></label
               >
@@ -404,7 +404,7 @@
                 Delete gem
               </button>
             } @else {
-              <p>Delete this gem{{ original()?.sourceRef ? ' and its source board card' : '' }}?</p>
+              <p>Delete this gem{{ original()?.sourceRef ? templateText.message6 : '' }}?</p>
               <button type="button" class="danger" [disabled]="saving()" (click)="deleteGem()" i18n>
                 Delete gem</button
               ><button type="button" class="text-button" (click)="deleteConfirm.set(false)" i18n>

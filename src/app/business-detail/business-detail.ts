@@ -83,6 +83,20 @@ const BUSINESS_LANGUAGES: BusinessLanguage[] = [
   styleUrl: './business-detail.css',
 })
 export class BusinessDetailComponent {
+  readonly templateText = {
+    message1: $localize`The business page could not be found.`,
+    message2: $localize`Local guide`,
+    message3: $localize`Business contact available after approval`,
+    message4: $localize`Visible to business admins`,
+    message5: $localize`Public contact is not published yet`,
+    message6: $localize`Copied`,
+    message7: $localize`Copy link`,
+    message8: $localize` logo`,
+    message9: $localize` cover image`,
+    message10: $localize`QR badge for `,
+    message11: $localize` QR code`,
+    message12: $localize` profile image`,
+  };
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly title = inject(Title);

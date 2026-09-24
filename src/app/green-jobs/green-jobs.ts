@@ -21,6 +21,16 @@ import {
   styleUrl: './green-jobs.css',
 })
 export class GreenJobsComponent {
+  readonly templateText = {
+    message1: $localize`Refreshing…`,
+    message2: $localize`Refresh now`,
+    message3: $localize`Apply`,
+    message4: $localize`Open`,
+    message5: $localize`item`,
+    message6: $localize`items`,
+    message7: $localize`Collapse`,
+    message8: $localize`Expand`,
+  };
   private readonly localeId = inject(LOCALE_ID);
   private readonly atlasService = inject(AtlasService);
   private readonly authService = inject(AuthService);

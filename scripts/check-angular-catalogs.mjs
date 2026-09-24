@@ -6,6 +6,7 @@ const source = JSON.parse(await readFile(`${localeRoot}messages.json`, 'utf8'));
 const targets = [
   ['fr', 'messages.fr.json'],
   ['ja', 'messages.ja.json'],
+  ['pt-BR', 'messages.pt-BR.json'],
 ];
 const placeholderPattern = /\{\$[^}]+\}|\{[A-Za-z][A-Za-z0-9_]*\}/g;
 

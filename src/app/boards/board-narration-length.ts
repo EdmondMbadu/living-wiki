@@ -12,9 +12,9 @@ export type BoardNarrationLengthPreset = {
 };
 
 export const BOARD_NARRATION_LENGTH_PRESETS: readonly BoardNarrationLengthPreset[] = [
-  { seconds: 5, label: 'Quick', description: 'One crisp sentence' },
-  { seconds: DEFAULT_BOARD_NARRATION_SECONDS_PER_CARD, label: 'Standard', description: 'A useful short story' },
-  { seconds: MAX_BOARD_NARRATION_SECONDS_PER_CARD, label: 'Deep dive', description: 'Rich detail and context' },
+  { seconds: 5, label: $localize`Quick`, description: $localize`One crisp sentence` },
+  { seconds: DEFAULT_BOARD_NARRATION_SECONDS_PER_CARD, label: $localize`Standard`, description: $localize`A useful short story` },
+  { seconds: MAX_BOARD_NARRATION_SECONDS_PER_CARD, label: $localize`Deep dive`, description: $localize`Rich detail and context` },
 ] as const;
 
 export function normalizeBoardNarrationSeconds(value: unknown): number {

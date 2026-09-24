@@ -8,6 +8,10 @@ import { TalkDropUploadService, TalkDropUpload } from './talk-drop-upload.servic
   styleUrl: './talk-drop.css',
 })
 export class TalkDropComponent implements OnDestroy {
+  readonly templateText = {
+    message1: $localize`Replace video`,
+    message2: $localize`Upload a video`,
+  };
   readonly video = input<TalkDropVideo | null>(null);
   readonly poster = input('');
   readonly editable = input(false);
@@ -39,7 +43,7 @@ export class TalkDropComponent implements OnDestroy {
       const video = await this.upload.result;
       if (run === this.run) this.videoChange.emit(video);
     } catch (error) {
-      if (run === this.run) this.error.set(error instanceof Error ? error.message : 'Video upload failed. Try again.');
+      if (run === this.run) this.error.set(error instanceof Error ? error.message : $localize`Video upload failed. Try again.`);
     } finally {
       if (run === this.run) {
         this.upload = null;

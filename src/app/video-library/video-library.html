@@ -7,7 +7,7 @@
         <div class="video-library-topbar__brand">
           <app-mobile-menu activePage="videos"></app-mobile-menu>
           <a routerLink="/home" aria-label="LivingWiki home" i18n-aria-label>
-            <img src="/assets/image/livingwiki-brand.svg" alt="LivingWiki" />
+            <img src="/assets/image/livingwiki-brand.svg" alt="LivingWiki"  i18n-alt/>
           </a>
         </div>
         <div class="video-library-topbar__title">
@@ -29,7 +29,7 @@
             <div class="video-library-hero__body">
               <p class="video-library-eyebrow" i18n>Video library</p>
               <h1 i18n>My Videos</h1>
-              <p>
+              <p i18n>
                 Every finished video is saved in phone and landscape sizes. Regenerating replaces the previous versions without creating duplicates.
               </p>
               <div class="video-library-hero__stats" aria-label="Video library summary" i18n-aria-label>
@@ -111,7 +111,7 @@
                 @for (item of displayedItems(); track item.id) {
                   <article class="video-library-card" [class.video-library-card--stale]="item.sourceAvailable && !isCurrent(item)">
                     <div class="video-library-visual">
-                      <button type="button" class="video-library-poster" (click)="play(item)" [attr.aria-label]="'Play ' + item.sourceTitle">
+                      <button type="button" class="video-library-poster" (click)="play(item)" [attr.aria-label]="templateText.message15 + item.sourceTitle">
                         @if (item.posterUrl) {
                           <img [src]="item.posterUrl" [alt]="item.sourceTitle" loading="lazy" />
                         } @else {
@@ -142,16 +142,16 @@
                     <div class="video-library-card__body">
                       <div class="video-library-card__heading">
                         <div class="min-w-0">
-                          <small class="video-library-kind">{{ item.videoKind === 'trailer' ? 'Board Trailer' : 'Full video' }}</small>
+                          <small class="video-library-kind">{{ item.videoKind === 'trailer' ? templateText.message1 : templateText.message2 }}</small>
                           <h3>{{ item.sourceTitle }}</h3>
                           <p><span i18n>Rendered</span> {{ updatedLabel(item) }}</p>
                         </div>
                       </div>
 
                       <div class="video-library-meta">
-                        <span><span class="material-symbols-outlined">aspect_ratio</span>{{ formatCount(item) }} {{ formatCount(item) === 1 ? 'format' : 'formats' }}</span>
+                        <span><span class="material-symbols-outlined">aspect_ratio</span>{{ formatCount(item) }} {{ formatCount(item) === 1 ? templateText.message11 : templateText.message12 }}</span>
                         <i aria-hidden="true"></i>
-                        <span><span class="material-symbols-outlined">{{ item.narrationEnabled ? 'record_voice_over' : 'music_note' }}</span>{{ item.narrationEnabled ? 'Narrated' : 'No narration' }}</span>
+                        <span><span class="material-symbols-outlined">{{ item.narrationEnabled ? 'record_voice_over' : 'music_note' }}</span>{{ item.narrationEnabled ? templateText.message3 : templateText.message4 }}</span>
                       </div>
 
                       @if (item.sourceAvailable && !isCurrent(item)) {
@@ -167,19 +167,19 @@
                           <span class="material-symbols-outlined">play_arrow</span><span i18n>Play video</span>
                         </button>
                         <button type="button" (click)="share(item)" [disabled]="sharingId() === item.id">
-                          <span class="material-symbols-outlined">ios_share</span><span>{{ sharingId() === item.id ? 'Preparing…' : 'Share' }}</span>
+                          <span class="material-symbols-outlined">ios_share</span><span>{{ sharingId() === item.id ? templateText.message5 : templateText.message6 }}</span>
                         </button>
                         <details class="video-library-download">
                           <summary><span class="material-symbols-outlined">download</span><span i18n>Download</span><span class="material-symbols-outlined">expand_more</span></summary>
                           <div class="video-library-download__panel">
                             <button type="button" (click)="download(item, 'vertical')">
-                              <span class="material-symbols-outlined">stay_current_portrait</span><span><strong>Phone · 9:16</strong><small>TikTok, Reels, Shorts</small></span>
+                              <span class="material-symbols-outlined">stay_current_portrait</span><span><strong i18n>Phone · 9:16</strong><small i18n>TikTok, Reels, Shorts</small></span>
                             </button>
                             <button type="button" [disabled]="!item.landscapeVariant" (click)="download(item, 'landscape')">
-                              <span class="material-symbols-outlined">desktop_windows</span><span><strong>Landscape · 16:9</strong><small>{{ item.landscapeVariant ? 'YouTube, LinkedIn, Desktop' : 'Create this version from the board' }}</small></span>
+                              <span class="material-symbols-outlined">desktop_windows</span><span><strong i18n>Landscape · 16:9</strong><small>{{ item.landscapeVariant ? templateText.message7 : templateText.message8 }}</small></span>
                             </button>
                             @if (item.landscapeVariant) {
-                              <button type="button" class="video-library-download__both" (click)="downloadBoth(item)"><span class="material-symbols-outlined">download_for_offline</span><span><strong>Download both</strong></span></button>
+                              <button type="button" class="video-library-download__both" (click)="downloadBoth(item)"><span class="material-symbols-outlined">download_for_offline</span><span><strong i18n>Download both</strong></span></button>
                             }
                           </div>
                         </details>
@@ -230,7 +230,7 @@
               </section>
               @if (hasMoreItems()) {
                 <div class="video-library-pagination" role="status" aria-live="polite">
-                  <button type="button" (click)="showMoreItems()">
+                  <button type="button" (click)="showMoreItems()" i18n>
                     <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
                     Load 10 more
                   </button>
@@ -250,22 +250,22 @@
       <header>
         <div class="min-w-0">
           <strong>{{ video.sourceTitle }}</strong>
-          <small>{{ formatCount(video) }} {{ formatCount(video) === 1 ? 'format' : 'formats' }} · {{ updatedLabel(video) }}</small>
+          <small>{{ formatCount(video) }} {{ formatCount(video) === 1 ? templateText.message11 : templateText.message12 }} · {{ updatedLabel(video) }}</small>
         </div>
         <button type="button" (click)="closePlayer()" aria-label="Close video" i18n-aria-label>
           <span class="material-symbols-outlined">close</span>
         </button>
       </header>
-      <div class="video-library-player__formats" role="group" aria-label="Choose video size">
-        <button type="button" [class.video-library-player__format--active]="selectedPlayerRatio() === 'vertical'" (click)="selectPlayerRatio('vertical')"><span class="material-symbols-outlined">stay_current_portrait</span>Phone · 9:16</button>
-        <button type="button" [disabled]="!video.landscapeVariant" [class.video-library-player__format--active]="selectedPlayerRatio() === 'landscape'" (click)="selectPlayerRatio('landscape')"><span class="material-symbols-outlined">desktop_windows</span>Landscape · 16:9</button>
+      <div class="video-library-player__formats" role="group" aria-label="Choose video size" i18n-aria-label>
+        <button type="button" [class.video-library-player__format--active]="selectedPlayerRatio() === 'vertical'" (click)="selectPlayerRatio('vertical')" i18n><span class="material-symbols-outlined">stay_current_portrait</span>Phone · 9:16</button>
+        <button type="button" [disabled]="!video.landscapeVariant" [class.video-library-player__format--active]="selectedPlayerRatio() === 'landscape'" (click)="selectPlayerRatio('landscape')" i18n><span class="material-symbols-outlined">desktop_windows</span>Landscape · 16:9</button>
       </div>
       <video [src]="videoVariant(video, selectedPlayerRatio())?.videoUrl" [poster]="video.posterUrl" playsinline controls autoplay preload="metadata"></video>
       <footer>
-        <button type="button" (click)="share(video, selectedPlayerRatio())"><span class="material-symbols-outlined">ios_share</span><span>Share {{ selectedPlayerRatio() === 'landscape' ? 'landscape' : 'phone' }}</span></button>
-        <button type="button" (click)="download(video, selectedPlayerRatio())"><span class="material-symbols-outlined">download</span><span>Download {{ selectedPlayerRatio() === 'landscape' ? 'landscape' : 'phone' }}</span></button>
+        <button type="button" (click)="share(video, selectedPlayerRatio())"><span class="material-symbols-outlined">ios_share</span><span>Share {{ selectedPlayerRatio() === 'landscape' ? templateText.message13 : templateText.message14 }}</span></button>
+        <button type="button" (click)="download(video, selectedPlayerRatio())"><span class="material-symbols-outlined">download</span><span>Download {{ selectedPlayerRatio() === 'landscape' ? templateText.message13 : templateText.message14 }}</span></button>
         @if (video.landscapeVariant) {
-          <button type="button" (click)="downloadBoth(video)"><span class="material-symbols-outlined">download_for_offline</span><span>Download both</span></button>
+          <button type="button" (click)="downloadBoth(video)"><span class="material-symbols-outlined">download_for_offline</span><span i18n>Download both</span></button>
         }
         @if (video.publicShareUrl) {
           <button type="button" (click)="copyPublicLink(video)"><span class="material-symbols-outlined">content_copy</span><span i18n>Copy public link</span></button>
@@ -291,7 +291,7 @@
         <button type="button" class="ghost-btn !px-4 !py-2.5 text-sm" [disabled]="!!deletingId()" (click)="closeDelete()" i18n>Keep video</button>
         <button type="button" class="video-library-confirm__delete" [disabled]="!!deletingId()" (click)="confirmDelete()">
           <span class="material-symbols-outlined">delete</span>
-          <span>{{ deletingId() ? 'Deleting…' : 'Delete video' }}</span>
+          <span>{{ deletingId() ? templateText.message9 : templateText.message10 }}</span>
         </button>
       </div>
     </section>

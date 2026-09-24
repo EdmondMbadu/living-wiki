@@ -39,6 +39,27 @@ interface SharePageModal {
   styleUrl: '../chat/chat.css',
 })
 export class SharedChatComponent {
+  readonly templateText = {
+    message1: $localize`Copied`,
+    message2: $localize`Copy chat`,
+    message3: $localize`Making card`,
+    message4: $localize`Share guide`,
+    message5: $localize`Guide picks`,
+    message6: $localize`Saved`,
+    message7: $localize`Save`,
+    message8: $localize`Sharing...`,
+    message9: $localize`Share`,
+    message10: $localize`Making card...`,
+    message11: $localize`Share the full guide card`,
+    message12: $localize`Copy URL`,
+    message13: $localize`s`,
+    message14: $localize`Copied question`,
+    message15: $localize`Copy question`,
+    message16: $localize`Making Philly Answer Card`,
+    message17: $localize`Make Philly Answer Card`,
+    message18: $localize`Copied answer`,
+    message19: $localize`Copy answer`,
+  };
   private readonly localeId = inject(LOCALE_ID);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);

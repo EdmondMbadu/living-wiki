@@ -53,6 +53,16 @@ interface InterestDraft {
   templateUrl: './talkthru-interests-admin.html',
 })
 export class TalkThruInterestsAdminComponent implements OnInit {
+  readonly templateText = {
+    message1: $localize`All statuses`,
+    message2: $localize`Agency / team`,
+    message3: $localize`Agent`,
+    message4: $localize`Restore`,
+    message5: $localize`Archive`,
+    message6: $localize`Loading...`,
+    message7: $localize`Load more signups`,
+    message8: $localize`recently`,
+  };
   private readonly platformId = inject(PLATFORM_ID);
   readonly interests = signal<TalkThruInterestRecord[]>([]);
   readonly loading = signal(true);

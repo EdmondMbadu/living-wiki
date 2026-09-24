@@ -12,16 +12,16 @@
         @if (isSignedIn()) {
           <app-mobile-menu activePage="home"></app-mobile-menu>
         }
-        <a routerLink="/" class="collection-nav__brand" aria-label="LivingWiki home">
-          <img src="/assets/image/livingwiki-brand.svg" alt="LivingWiki" />
+        <a routerLink="/" class="collection-nav__brand" aria-label="LivingWiki home" i18n-aria-label>
+          <img src="/assets/image/livingwiki-brand.svg" alt="LivingWiki"  i18n-alt/>
         </a>
       </div>
       <div class="collection-nav__actions">
         @if (canManageCollection()) {
           <button type="button" class="collection-nav__custom-url" (click)="openCustomUrlDialog()">
             <span class="material-symbols-outlined" aria-hidden="true">link</span>
-            <span>Set custom URL</span>
-            @if (!customUrlEligible()) { <small>Plus</small> }
+            <span i18n>Set custom URL</span>
+            @if (!customUrlEligible()) { <small i18n>Plus</small> }
           </button>
         }
         @if (collectionAvailable()) {
@@ -37,7 +37,7 @@
 
   <div class="collection-shell">
     @if (atlasLoading()) {
-      <section class="collection-loading" aria-busy="true" aria-label="Loading boards">
+      <section class="collection-loading" aria-busy="true" aria-label="Loading boards" i18n-aria-label>
         <span class="collection-loading__line collection-loading__line--short"></span>
         <span class="collection-loading__line collection-loading__line--title"></span>
         <span class="collection-loading__line collection-loading__line--copy"></span>
@@ -56,12 +56,12 @@
         <p>{{ collectionUnavailableCopy() }}</p>
         <a [routerLink]="isUserCollection ? parentLink() : '/wikis'" class="collection-primary-action">
           <span class="material-symbols-outlined" aria-hidden="true">{{ isUserCollection ? 'person' : 'public' }}</span>
-          {{ isUserCollection ? 'Back to boards profile' : 'Browse public Wikis' }}
+          {{ isUserCollection ? templateText.message1 : templateText.message2 }}
         </a>
       </section>
     } @else {
       <section class="collection-intro">
-        <nav class="collection-breadcrumb" aria-label="Breadcrumb">
+        <nav class="collection-breadcrumb" aria-label="Breadcrumb" i18n-aria-label>
           <a [routerLink]="parentLink()">{{ parentName() }}</a>
           <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
           <span aria-current="page">{{ breadcrumbCurrent() }}</span>
@@ -90,7 +90,7 @@
       </section>
 
       @if (boardsLoading()) {
-        <section class="collection-loading collection-loading--boards" aria-busy="true" aria-label="Loading boards">
+        <section class="collection-loading collection-loading--boards" aria-busy="true" aria-label="Loading boards" i18n-aria-label>
           <span class="collection-loading__hero"></span>
           <div class="collection-loading__cards">
             @for (item of [1, 2, 3, 4]; track item) { <span></span> }
@@ -100,9 +100,9 @@
         <section class="collection-state collection-state--compact">
           <span class="collection-state__icon material-symbols-outlined" aria-hidden="true">cloud_off</span>
           <h2>{{ boardsError() }}</h2>
-          <p>{{ isUserCollection ? 'The boards profile is still available.' : 'Your ' + (isUniversity() ? 'university' : 'city') + ' Wiki is still available.' }}</p>
+          <p>{{ isUserCollection ? templateText.message3 : templateText.message4 + (isUniversity() ? 'university' : 'city') + templateText.message5 }}</p>
           <div class="collection-state__actions">
-            <button type="button" class="collection-primary-action" (click)="retry()">
+            <button type="button" class="collection-primary-action" (click)="retry()" i18n>
               <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
               Try again
             </button>
@@ -112,12 +112,12 @@
       } @else if (boards().length === 0) {
         <section class="collection-state collection-state--empty">
           <span class="collection-state__icon material-symbols-outlined" aria-hidden="true">space_dashboard</span>
-          <span class="collection-state__eyebrow">A collection in the making</span>
-          <h2>{{ isUserCollection ? 'This collection has no public boards right now.' : 'There are no published boards for ' + cityName() + ' yet.' }}</h2>
-          <p>{{ isUserCollection ? 'A selected board may have been removed or made private.' : 'The ' + (isUniversity() ? 'university' : 'city') + ' Wiki is ready now. Ask it a question while its first collections are being curated.' }}</p>
+          <span class="collection-state__eyebrow" i18n>A collection in the making</span>
+          <h2>{{ isUserCollection ? templateText.message6 : templateText.message7 + cityName() + templateText.message8 }}</h2>
+          <p>{{ isUserCollection ? templateText.message9 : templateText.message10 + (isUniversity() ? 'university' : 'city') + templateText.message11 }}</p>
           <a [routerLink]="parentLink()" class="collection-primary-action">
             <span class="material-symbols-outlined" aria-hidden="true">{{ isUserCollection ? 'arrow_back' : 'forum' }}</span>
-            {{ isUserCollection ? 'Back to boards profile' : 'Ask ' + cityName() }}
+            {{ isUserCollection ? templateText.message1 : templateText.message12 + cityName() }}
           </a>
         </section>
       } @else {
@@ -155,7 +155,7 @@
                 <span>{{ featured.publisherName }}</span>
               </div>
               <div class="collection-spotlight__actions">
-                <a [routerLink]="['/boards', featured.id]" class="collection-spotlight__primary">
+                <a [routerLink]="['/boards', featured.id]" class="collection-spotlight__primary" i18n>
                   <span class="material-symbols-outlined" aria-hidden="true">dashboard_customize</span>
                   Explore board
                 </a>
@@ -163,7 +163,7 @@
                   [href]="'/boards/' + featured.id + '?view=stack&autoplay=1'"
                   class="collection-spotlight__secondary"
                   (click)="openLiveView(featured, $event)"
-                >
+                 i18n>
                   <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
                   Live view
                 </a>
@@ -171,14 +171,14 @@
             </div>
 
             @if (featuredBoards().length > 1) {
-              <div class="collection-spotlight__picker" role="tablist" aria-label="Choose a featured board">
+              <div class="collection-spotlight__picker" role="tablist" aria-label="Choose a featured board" i18n-aria-label>
                 @for (board of featuredBoards(); track board.id; let boardIndex = $index) {
                   <button
                     type="button"
                     role="tab"
                     [class.active]="featured.id === board.id"
                     [attr.aria-selected]="featured.id === board.id"
-                    [attr.aria-label]="'Feature ' + board.title"
+                    [attr.aria-label]="templateText.message16 + board.title"
                     (click)="selectFeatured(board)"
                   >
                     <span class="collection-spotlight__picker-progress" aria-hidden="true">
@@ -198,19 +198,19 @@
                   </button>
                 }
               </div>
-              <button type="button" class="collection-spotlight__nav collection-spotlight__nav--back" aria-label="Previous featured board" (click)="moveFeatured(-1)">
+              <button type="button" class="collection-spotlight__nav collection-spotlight__nav--back" aria-label="Previous featured board" (click)="moveFeatured(-1)" i18n-aria-label>
                 <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
               </button>
-              <button type="button" class="collection-spotlight__nav collection-spotlight__nav--forward" aria-label="Next featured board" (click)="moveFeatured(1)">
+              <button type="button" class="collection-spotlight__nav collection-spotlight__nav--forward" aria-label="Next featured board" (click)="moveFeatured(1)" i18n-aria-label>
                 <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
               </button>
             }
           </section>
         }
 
-        <section class="collection-tools" aria-label="Browse boards">
-          <div class="collection-filters" role="group" aria-label="Filter boards by topic">
-            <button type="button" [class.active]="activeFilter() === 'all'" (click)="selectFilter('all')">
+        <section class="collection-tools" aria-label="Browse boards" i18n-aria-label>
+          <div class="collection-filters" role="group" aria-label="Filter boards by topic" i18n-aria-label>
+            <button type="button" [class.active]="activeFilter() === 'all'" (click)="selectFilter('all')" i18n>
               All <span>{{ boards().length }}</span>
             </button>
             @for (category of availableCategories(); track category.id) {
@@ -230,7 +230,7 @@
               (input)="onSearch($event)"
             />
             @if (searchQuery()) {
-              <button type="button" aria-label="Clear board search" (click)="clearSearch()">
+              <button type="button" aria-label="Clear board search" (click)="clearSearch()" i18n-aria-label>
                 <span class="material-symbols-outlined" aria-hidden="true">close</span>
               </button>
             }
@@ -249,7 +249,7 @@
                       <p>{{ row.category.description }}</p>
                     </span>
                   </div>
-                  <button type="button" (click)="selectFilter(row.category.id)">
+                  <button type="button" (click)="selectFilter(row.category.id)" i18n>
                     View all <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
                   </button>
                 </header>
@@ -277,12 +277,12 @@
                     }
                   </div>
                   @if (railCanGoBack(row.category.id)) {
-                    <button type="button" class="collection-rail-arrow collection-rail-arrow--back" [attr.aria-label]="'Previous ' + row.category.label + ' boards'" (click)="moveRail(row.category.id, -1)">
+                    <button type="button" class="collection-rail-arrow collection-rail-arrow--back" [attr.aria-label]="templateText.message17 + row.category.label + templateText.message18" (click)="moveRail(row.category.id, -1)">
                       <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
                     </button>
                   }
                   @if (railCanGoForward(row.category.id)) {
-                    <button type="button" class="collection-rail-arrow collection-rail-arrow--forward" [attr.aria-label]="'More ' + row.category.label + ' boards'" (click)="moveRail(row.category.id, 1)">
+                    <button type="button" class="collection-rail-arrow collection-rail-arrow--forward" [attr.aria-label]="templateText.message19 + row.category.label + templateText.message18" (click)="moveRail(row.category.id, 1)">
                       <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
                     </button>
                   }
@@ -295,7 +295,7 @@
         <section id="city-board-results" class="collection-all" tabindex="-1">
           <header class="collection-all__header">
             <div>
-              <span class="collection-kicker">Browse the library</span>
+              <span class="collection-kicker" i18n>Browse the library</span>
               <h2>{{ resultsHeading() }}</h2>
             </div>
             <span>{{ filteredBoards().length }} shown</span>
@@ -324,9 +324,9 @@
           } @else {
             <div class="collection-no-results">
               <span class="material-symbols-outlined" aria-hidden="true">search_off</span>
-              <h3>No matching boards</h3>
-              <p>{{ isUserCollection ? 'Try another word or return to the complete collection.' : 'Try another word or return to the complete ' + cityName() + ' library.' }}</p>
-              <button type="button" (click)="clearSearch(); selectFilter('all')">Show every board</button>
+              <h3 i18n>No matching boards</h3>
+              <p>{{ isUserCollection ? templateText.message13 : templateText.message14 + cityName() + templateText.message15 }}</p>
+              <button type="button" (click)="clearSearch(); selectFilter('all')" i18n>Show every board</button>
             </div>
           }
         </section>

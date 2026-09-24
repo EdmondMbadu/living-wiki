@@ -174,7 +174,7 @@
                   [style.left.%]="community.x"
                   [style.top.%]="community.y"
                   (click)="selectCommunity(community.id)"
-                  [attr.aria-label]="'Select ' + community.name"
+                  [attr.aria-label]="templateText.message1 + community.name"
                 >
                   <span class="material-symbols-outlined" aria-hidden="true">{{ categoryIcon(community.category) }}</span>
                 </button>

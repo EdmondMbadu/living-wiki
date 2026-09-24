@@ -68,7 +68,7 @@
               (click)="refresh(true)"
             >
               <span class="material-symbols-outlined text-[14px]" [class.green-jobs-admin__refresh--spinning]="isRefreshing() || isLoading()">refresh</span>
-              <span>{{ isRefreshing() || isLoading() ? 'Refreshing…' : 'Refresh now' }}</span>
+              <span>{{ isRefreshing() || isLoading() ? templateText.message1 : templateText.message2 }}</span>
             </button>
           </section>
         }
@@ -207,7 +207,7 @@
                               rel="noreferrer noopener"
                               class="green-jobs-card__cta"
                             >
-                              {{ listing.bucket === 'jobs' ? 'Apply' : 'Open' }}
+                              {{ listing.bucket === 'jobs' ? templateText.message3 : templateText.message4 }}
                               <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M3 3h6v6"/>
                                 <path d="M3 9l6-6"/>
@@ -218,7 +218,7 @@
                               class="green-jobs-card__toggle"
                               (click)="toggleExpanded(listing.id)"
                               [attr.aria-expanded]="isExpanded(listing)"
-                              [attr.aria-label]="isExpanded(listing) ? 'Collapse' : 'Expand'"
+                              [attr.aria-label]="isExpanded(listing) ? templateText.message7 : templateText.message8"
                             >
                               <svg
                                 class="h-3.5 w-3.5 transition-transform"
@@ -299,7 +299,7 @@
                     </div>
                     <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
                       <span class="font-bold text-[var(--text)]">{{ source.itemCount }}</span>
-                      <span>{{ source.itemCount === 1 ? 'item' : 'items' }}</span>
+                      <span>{{ source.itemCount === 1 ? templateText.message5 : templateText.message6 }}</span>
                       <span class="opacity-50">•</span>
                       <span class="capitalize">{{ source.bucket }}</span>
                     </div>

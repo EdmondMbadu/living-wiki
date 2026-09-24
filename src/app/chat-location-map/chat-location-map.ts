@@ -14,6 +14,9 @@ type MapController = {
   styleUrl: './chat-location-map.css',
 })
 export class ChatLocationMapComponent implements OnChanges {
+  readonly templateText = {
+    message1: $localize`s`,
+  };
   private readonly googleMapsService = inject(GoogleMapsService);
   private renderId = 0;
   private renderScheduled = false;

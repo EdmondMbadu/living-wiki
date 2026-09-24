@@ -44,7 +44,8 @@ function localizeLiteral(value) {
 }
 
 function isDisplayName(name) {
-  return /(Label|Title|Description|Placeholder|Message|Hint|Caption|Tagline|Text|Copy|Error)$/i.test(name);
+  return !/Context$/i.test(name)
+    && /(Label|Title|Description|Placeholder|Message|Hint|Caption|Tagline|Text|Copy|Error)$/i.test(name);
 }
 
 for (const file of await typescriptFiles(appRoot)) {
@@ -64,6 +65,19 @@ for (const file of await typescriptFiles(appRoot)) {
   }
 
   function addLiteralsWithin(node) {
+    if (ts.isBinaryExpression(node) && [
+      ts.SyntaxKind.EqualsEqualsToken,
+      ts.SyntaxKind.EqualsEqualsEqualsToken,
+      ts.SyntaxKind.ExclamationEqualsToken,
+      ts.SyntaxKind.ExclamationEqualsEqualsToken,
+    ].includes(node.operatorToken.kind)) return;
+    if (ts.isElementAccessExpression(node)) return;
+    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)
+      && ['includes', 'startsWith', 'endsWith', 'get', 'has'].includes(node.expression.name.text)) return;
+    if (ts.isPropertyAssignment(node)) {
+      if (displayProperties.has(propertyName(node, sourceFile))) addLiteralsWithin(node.initializer);
+      return;
+    }
     if (ts.isStringLiteral(node)) {
       addLiteral(node);
       return;

@@ -10,6 +10,10 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
   templateUrl: './forgot-password.html',
 })
 export class ForgotPasswordComponent {
+  readonly templateText = {
+    message1: $localize`Sending...`,
+    message2: $localize`Send Reset Link`,
+  };
   private readonly formBuilder = inject(NonNullableFormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);

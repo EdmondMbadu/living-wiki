@@ -55,6 +55,14 @@ const EMBEDDING_COST_PER_MILLION_TOKENS = 0.02;
   templateUrl: './web-scraper.html',
 })
 export class WebScraperComponent {
+  readonly templateText = {
+    message1: $localize`Discovering...`,
+    message2: $localize`Discover Articles`,
+    message3: $localize`the supplied domain`,
+    message4: $localize`Cancelling...`,
+    message5: $localize`Cancel`,
+    message6: $localize`s`,
+  };
   private readonly atlasService = inject(AtlasService);
   private readonly documentsService = inject(DocumentsService);
   private readonly discoveryPageBatchSize = 500;

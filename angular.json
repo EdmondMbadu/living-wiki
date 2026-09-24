@@ -22,6 +22,10 @@
           "ja": {
             "translation": "src/locale/messages.ja.json",
             "subPath": "ja"
+          },
+          "pt-BR": {
+            "translation": "src/locale/messages.pt-BR.json",
+            "subPath": "pt"
           }
         }
       },
@@ -88,6 +92,11 @@
               "localize": [
                 "ja"
               ]
+            },
+            "pt": {
+              "localize": [
+                "pt-BR"
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -106,6 +115,9 @@
             },
             "ja": {
               "buildTarget": "living-atlast:build:development,ja"
+            },
+            "pt": {
+              "buildTarget": "living-atlast:build:development,pt"
             }
           },
           "defaultConfiguration": "development"

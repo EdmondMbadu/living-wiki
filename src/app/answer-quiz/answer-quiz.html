@@ -58,7 +58,7 @@
           </div>
           @if (isSignedIn()) {
             <button type="button" class="quiz-primary" [disabled]="isSubmitting()" (click)="submitScore()">
-              {{ isSubmitting() ? 'Saving...' : 'Save to leaderboard' }}
+              {{ isSubmitting() ? templateText.message1 : templateText.message2 }}
             </button>
           } @else {
             <a class="quiz-primary" routerLink="/sign-in" [queryParams]="{ redirectTo: signInRedirect() }" i18n>Sign in to save score</a>
@@ -117,7 +117,7 @@
           <div class="quiz-footer-actions">
             @if (!grade()) {
               <button type="button" class="quiz-primary" [disabled]="!canFinish() || isGrading()" (click)="finishQuiz()">
-                {{ isGrading() ? 'Checking...' : answeredCount() === quiz.questions.length ? 'Finish quiz' : answeredCount() + '/' + quiz.questions.length + ' answered' }}
+                {{ isGrading() ? templateText.message3 : answeredCount() === quiz.questions.length ? templateText.message4 : answeredCount() + '/' + quiz.questions.length + templateText.message5 }}
               </button>
             } @else {
               <button type="button" class="quiz-secondary" (click)="resetAttempt()" i18n>Try again</button>
@@ -148,7 +148,7 @@
                   </span>
                   <span class="quiz-leaderboard__player">
                     <strong>{{ entry.displayName }}</strong>
-                    <small>{{ entry.rank === 1 ? 'Current champion' : formatTime(entry.elapsedMs) }}</small>
+                    <small>{{ entry.rank === 1 ? templateText.message6 : formatTime(entry.elapsedMs) }}</small>
                   </span>
                   <em>{{ entry.score }}/{{ entry.total }}</em>
                 </li>
@@ -235,7 +235,7 @@
 
             <div class="quiz-share-link">
               <span>{{ shareUrl() }}</span>
-              <button type="button" (click)="copyLink()">{{ copied() ? 'Copied' : 'Copy' }}</button>
+              <button type="button" (click)="copyLink()">{{ copied() ? templateText.message7 : templateText.message8 }}</button>
             </div>
 
             @if (shareFeedback()) {

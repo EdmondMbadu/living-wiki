@@ -127,12 +127,12 @@
             <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--accent)] text-[var(--accent-contrast)] shadow-[0_14px_30px_rgba(59,175,98,0.20)]">
               <span class="material-symbols-outlined text-[1.6rem]">{{ canCreateWikis() ? 'add' : 'upgrade' }}</span>
             </span>
-            <span class="mt-5 text-xl font-black tracking-tight">{{ canCreateWikis() ? 'Create Wiki' : 'Upgrade to create Wikis' }}</span>
+            <span class="mt-5 text-xl font-black tracking-tight">{{ canCreateWikis() ? templateText.message1 : templateText.message2 }}</span>
             <span class="mt-2 max-w-64 text-sm leading-6 text-[var(--muted)]">
-              {{ canCreateWikis() ? 'Name a focused workspace, then add documents to grow its knowledge base.' : 'Personal Plus or Professional is required for new Wiki workspaces.' }}
+              {{ canCreateWikis() ? templateText.message3 : templateText.message4 }}
             </span>
             <span class="mt-auto inline-flex items-center gap-2 text-sm font-bold text-[var(--accent)]">
-              <span>{{ canCreateWikis() ? 'Start a blank Wiki' : 'View pricing' }}</span>
+              <span>{{ canCreateWikis() ? templateText.message5 : templateText.message6 }}</span>
               <span class="material-symbols-outlined text-base transition-transform group-hover:translate-x-0.5">arrow_forward</span>
             </span>
           </button>
@@ -145,7 +145,7 @@
                 @if (atlas.hero_url) {
                   <img
                     [src]="atlas.hero_url"
-                    [alt]="displayName(atlas) + ' cover image'"
+                    [alt]="displayName(atlas) + templateText.message10"
                     loading="lazy"
                     class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                   />
@@ -156,7 +156,7 @@
                 } @else if (atlas.logo_url) {
                   <div class="absolute inset-0 flex items-center justify-center bg-[var(--soft-fill)]">
                     <div class="flex h-24 w-24 items-center justify-center overflow-hidden rounded-[1.75rem] border border-[var(--line-strong)] bg-[var(--surface)] p-4 shadow-[var(--shadow-floating)]">
-                      <img [src]="atlas.logo_url" [alt]="displayName(atlas) + ' logo'" loading="lazy" class="h-full w-full object-contain" />
+                      <img [src]="atlas.logo_url" [alt]="displayName(atlas) + templateText.message11" loading="lazy" class="h-full w-full object-contain" />
                     </div>
                   </div>
                 } @else {
@@ -201,9 +201,9 @@
               <div class="flex flex-1 flex-col p-5">
                 <p class="line-clamp-2 min-h-12 text-sm leading-6 text-[var(--muted)]">
                   @if (isSharedAdmin(atlas)) {
-                    {{ atlas.description || 'You have admin access to this Wiki settings page.' }}
+                    {{ atlas.description || templateText.message7 }}
                   } @else {
-                    {{ atlas.description || 'Add source files and LivingWiki will compile pages, citations, and chat answers.' }}
+                    {{ atlas.description || templateText.message8 }}
                   }
                 </p>
 
@@ -324,7 +324,7 @@
         <div class="mt-5 flex justify-end gap-2">
           <button type="button" class="ghost-btn !px-4 !py-2.5 text-sm" (click)="closeCreate()" i18n>Cancel</button>
           <button type="submit" class="primary-btn !px-4 !py-2.5 text-sm" [disabled]="isCreating() || !createName().trim()">
-            {{ isCreating() ? 'Creating...' : 'Create Wiki' }}
+            {{ isCreating() ? templateText.message9 : templateText.message1 }}
           </button>
         </div>
       </form>

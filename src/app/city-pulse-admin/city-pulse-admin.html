@@ -55,7 +55,7 @@
               [disabled]="isRefreshing()"
               (click)="refresh()"
             >
-              {{ isRefreshing() ? 'Refreshing…' : 'Refresh official metrics' }}
+              {{ isRefreshing() ? templateText.message1 : templateText.message2 }}
             </button>
             <a [routerLink]="['/atlas', routeSlug() ?? '']" class="inline-flex items-center rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-2.5 text-sm font-bold text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]" i18n>
               Preview landing page
@@ -88,15 +88,15 @@
           <div class="mt-4 space-y-3 text-sm">
             <div>
               <div class="font-semibold text-[var(--text)]" i18n>Timezone</div>
-              <div class="text-[var(--muted)]">{{ atlas()?.city_config?.timezone || 'Not set' }}</div>
+              <div class="text-[var(--muted)]">{{ atlas()?.city_config?.timezone || templateText.message3 }}</div>
             </div>
             <div>
               <div class="font-semibold text-[var(--text)]" i18n>Census state code</div>
-              <div class="text-[var(--muted)]">{{ atlas()?.city_config?.census_state_code || 'Not set' }}</div>
+              <div class="text-[var(--muted)]">{{ atlas()?.city_config?.census_state_code || templateText.message3 }}</div>
             </div>
             <div>
               <div class="font-semibold text-[var(--text)]" i18n>Census place code</div>
-              <div class="text-[var(--muted)]">{{ atlas()?.city_config?.census_place_code || 'Not set' }}</div>
+              <div class="text-[var(--muted)]">{{ atlas()?.city_config?.census_place_code || templateText.message3 }}</div>
             </div>
             <div>
               <div class="font-semibold text-[var(--text)]" i18n>Manual metrics</div>

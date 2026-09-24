@@ -11,7 +11,7 @@ const MAX_SLUG_LENGTH = 60;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const RESERVED_SLUGS = new Set([
   'admin', 'api', 'boards', 'collections', 'create', 'edit', 'fr', 'friends', 'go',
-  'ja', 'new', 'share', 'sign-in', 'songs', 'trips', 'u', 'upload',
+  'ja', 'new', 'pt', 'share', 'sign-in', 'songs', 'trips', 'u', 'upload',
 ]);
 
 export function normalizeCustomPublicRouteSlug(value: unknown): string {

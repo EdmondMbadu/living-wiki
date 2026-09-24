@@ -70,9 +70,19 @@ for (const file of await sourceFiles(appRoot, '.ts')) {
     if (
       ts.isTaggedTemplateExpression(node) &&
       node.tag.getText(sourceFile) === '$localize' &&
-      ts.isNoSubstitutionTemplateLiteral(node.template)
+      (ts.isNoSubstitutionTemplateLiteral(node.template) || ts.isTemplateExpression(node.template))
     ) {
-      const text = node.template.text;
+      let text;
+      if (ts.isNoSubstitutionTemplateLiteral(node.template)) {
+        text = node.template.text;
+      } else {
+        text = node.template.head.text;
+        for (const [index, span] of node.template.templateSpans.entries()) {
+          const placeholder = /^:([^:]+):/.exec(span.literal.text);
+          const name = placeholder?.[1] ?? `PH_${index + 1}`;
+          text += `{$${name}}${span.literal.text.slice(placeholder?.[0].length ?? 0)}`;
+        }
+      }
       const id = computeMsgId(text, '');
       if (!messages.has(id)) messages.set(id, { source: text, file: relative(workspaceRoot, file) });
     }

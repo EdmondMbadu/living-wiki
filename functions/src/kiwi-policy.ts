@@ -157,8 +157,24 @@ export function normalizeKiwiAction(value: unknown): KiwiAction | null {
   return null;
 }
 
-export function kiwiActionSummary(action: KiwiAction, boardTitle?: string): string {
+export function kiwiActionSummary(action: KiwiAction, boardTitle?: string, locale = 'en'): string {
   const board = boardTitle || 'the board';
+  if (locale === 'pt-BR') {
+    const visibility = action.kind === 'create_board'
+      ? { public: 'público', unlisted: 'não listado', private: 'privado' }[action.visibility] : '';
+    const cards = (count: number) => `${count} ${count === 1 ? 'cartão' : 'cartões'}`;
+    switch (action.kind) {
+      case 'create_board': return `Criar o quadro ${visibility} “${action.title}” com ${cards(action.cards.length)}`;
+      case 'copy_board': return `Criar sua cópia pública de “${board}”`;
+      case 'email_board': return `Enviar “${board}” por e-mail para ${action.email}`;
+      case 'update_board': return `Atualizar “${board}”${action.title ? ` para “${action.title}”` : ''}`;
+      case 'design_board': return `Editar “${board}” e adicionar ${cards(action.cards.length)}`;
+      case 'add_card': return `Adicionar “${action.card.title}” a “${board}”`;
+      case 'update_card': return `Editar um cartão de “${board}”`;
+      case 'remove_card': return `Remover um cartão de “${board}”`;
+      case 'reorder_card': return `Mover um cartão para a posição ${action.position} em “${board}”`;
+    }
+  }
   switch (action.kind) {
     case 'create_board': return `Create ${action.visibility} board “${action.title}” with ${action.cards.length} cards`;
     case 'copy_board': return `Make your own public copy of “${board}”`;
@@ -172,13 +188,33 @@ export function kiwiActionSummary(action: KiwiAction, boardTitle?: string): stri
   }
 }
 
-export function kiwiActionDetails(action: KiwiAction, board?: RecordValue | null): string[] {
+export function kiwiActionDetails(action: KiwiAction, board?: RecordValue | null, locale = 'en'): string[] {
   const existingCard = 'cardId' in action && Array.isArray(board?.['cards'])
     ? board['cards'].find((item: unknown) => object(item)?.['id'] === action.cardId) as RecordValue | undefined
     : undefined;
   const fields = (source: RecordValue, keys: readonly string[]) => keys
     .filter((key) => Object.hasOwn(source, key))
-    .map((key) => `${key === 'notes' ? 'Text' : key[0].toUpperCase() + key.slice(1)}: ${String(source[key])}`);
+    .map((key) => `${locale === 'pt-BR'
+      ? ({ title: 'Título', description: 'Descrição', tone: 'Cor', subtitle: 'Subtítulo', notes: 'Texto', type: 'Tipo' }[key] ?? key)
+      : key === 'notes' ? 'Text' : key[0].toUpperCase() + key.slice(1)}: ${String(source[key])}`);
+  if (locale === 'pt-BR') {
+    switch (action.kind) {
+      case 'create_board': return [
+        `Título: ${action.title}`, `Descrição: ${action.description || '(nenhuma)'}`,
+        `Cor: ${action.tone}`, `Visibilidade: ${action.visibility}`,
+        ...action.cards.map((card, index) => `${index + 1}. ${card.title}${card.subtitle ? ` — ${card.subtitle}` : ''}${card.notes ? `\n${card.notes}` : ''}`),
+      ];
+      case 'copy_board': return ['Copiar textos públicos e imagens para um novo quadro na sua conta.'];
+      case 'email_board': return [`Destinatário: ${action.email}`, `Quadro: ${String(board?.['title'] || action.boardId)}`];
+      case 'update_board': return fields(action, ['title', 'description', 'tone']);
+      case 'design_board': return [...fields(action, ['title', 'description', 'tone']),
+        ...action.cards.map((card, index) => `${index + 1}. ${card.title}${card.subtitle ? ` — ${card.subtitle}` : ''}${card.notes ? `\n${card.notes}` : ''}`)];
+      case 'add_card': return fields(action.card, ['title', 'subtitle', 'notes', 'type']);
+      case 'update_card': return [`Cartão: ${String(existingCard?.['title'] || action.cardId)}`, ...fields(action, ['title', 'subtitle', 'notes', 'type'])];
+      case 'remove_card': return [`Remover: ${String(existingCard?.['title'] || action.cardId)}`];
+      case 'reorder_card': return [`Mover: ${String(existingCard?.['title'] || action.cardId)}`, `Posição: ${action.position}`];
+    }
+  }
   switch (action.kind) {
     case 'create_board': return [
       `Title: ${action.title}`, `Description: ${action.description || '(none)'}`,

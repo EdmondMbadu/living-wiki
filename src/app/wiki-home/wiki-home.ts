@@ -22,6 +22,19 @@ import { AccountMenuComponent } from '../account-menu/account-menu';
   templateUrl: './wiki-home.html',
 })
 export class WikiHomeComponent {
+  readonly templateText = {
+    message1: $localize`Create Wiki`,
+    message2: $localize`Upgrade to create Wikis`,
+    message3: $localize`Name a focused workspace, then add documents to grow its knowledge base.`,
+    message4: $localize`Personal Plus or Professional is required for new Wiki workspaces.`,
+    message5: $localize`Start a blank Wiki`,
+    message6: $localize`View pricing`,
+    message7: $localize`You have admin access to this Wiki settings page.`,
+    message8: $localize`Add source files and LivingWiki will compile pages, citations, and chat answers.`,
+    message9: $localize`Creating...`,
+    message10: $localize` cover image`,
+    message11: $localize` logo`,
+  };
   private readonly localeId = inject(LOCALE_ID);
   private readonly atlasService = inject(AtlasService);
   private readonly authService = inject(AuthService);

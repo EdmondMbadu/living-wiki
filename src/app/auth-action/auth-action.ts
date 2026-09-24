@@ -14,6 +14,10 @@ type AuthActionState = 'processing' | 'ready' | 'success' | 'error';
   templateUrl: './auth-action.html',
 })
 export class AuthActionComponent {
+  readonly templateText = {
+    message1: $localize`Saving...`,
+    message2: $localize`Save new password`,
+  };
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);

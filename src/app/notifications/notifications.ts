@@ -24,6 +24,11 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
   styleUrl: './notifications.css',
 })
 export class NotificationsComponent {
+  readonly templateText = {
+    message1: $localize`Saving…`,
+    message2: $localize`Mark updates as read`,
+    message3: $localize`A team admin`,
+  };
   readonly teams = inject(TeamsService);
   readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -64,7 +69,7 @@ export class NotificationsComponent {
     try {
       await this.teams.markNotificationRead(item.id);
       if (!this.teams.hasAccess(item.teamId)) {
-        this.error.set('This update is saved, but you no longer have access to that team.');
+        this.error.set($localize`This update is saved, but you no longer have access to that team.`);
         return;
       }
       await this.router.navigate(['/teams', item.teamId], {

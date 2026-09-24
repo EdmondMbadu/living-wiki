@@ -13,11 +13,11 @@
           <i></i><i></i><i></i>
         </span>
         <span class="board-collection-card__body">
-          <small>Board collection</small>
+          <small i18n>Board collection</small>
           <strong>{{ collectionItem.title }}</strong>
-          <span>{{ collectionItem.description || 'A curated set of LivingWiki boards.' }}</span>
+          <span>{{ collectionItem.description || templateText.message1 }}</span>
           <em>
-            {{ collectionItem.boardIds.length }} {{ collectionItem.boardIds.length === 1 ? 'board' : 'boards' }}
+            {{ collectionItem.boardIds.length }} {{ collectionItem.boardIds.length === 1 ? templateText.message5 : templateText.message6 }}
             <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
           </em>
         </span>
@@ -25,10 +25,10 @@
     } @empty {
       <div class="board-collections-empty">
         <span class="material-symbols-outlined">collections_bookmark</span>
-        <h2>{{ error() ? 'Collections are unavailable.' : searching() ? 'No collections match that search.' : 'No collections yet.' }}</h2>
+        <h2>{{ error() ? templateText.message2 : searching() ? templateText.message3 : templateText.message4 }}</h2>
         <p>{{ error() || (canCreate() ? 'Select a set of public boards and turn them into a shareable collection.' : 'This curator has not published a board collection yet.') }}</p>
         @if (!error() && !searching() && canCreate()) {
-          <button type="button" (click)="createRequested.emit()">
+          <button type="button" (click)="createRequested.emit()" i18n>
             <span class="material-symbols-outlined">add</span>
             Create collection
           </button>

@@ -15,19 +15,19 @@
           @else { <span class="material-symbols-outlined">record_voice_over</span> }
           <i aria-hidden="true"></i>
         </div>
-        <div><span>Talking Card</span><h2 id="talking-chat-title">{{ avatarName() }}</h2><p>{{ cardSubtitle() }}</p></div>
+        <div><span i18n>Talking Card</span><h2 id="talking-chat-title">{{ avatarName() }}</h2><p>{{ cardSubtitle() }}</p></div>
       </div>
       @if (showContactActions()) {
-        <nav class="talking-chat__contact" [attr.aria-label]="contactName() ? 'Contact ' + contactName() : 'Contact listing agent'">
+        <nav class="talking-chat__contact" [attr.aria-label]="contactName() ? templateText.message15 + contactName() : templateText.message16">
           @if (contactPhoneHref()) {
-            <a [href]="contactPhoneHref()" aria-label="Call listing agent"><span class="material-symbols-outlined" aria-hidden="true">call</span><span>Call</span></a>
+            <a [href]="contactPhoneHref()" aria-label="Call listing agent" i18n-aria-label><span class="material-symbols-outlined" aria-hidden="true">call</span><span i18n>Call</span></a>
           }
           @if (contactEmailHref()) {
-            <a [href]="contactEmailHref()" aria-label="Email listing agent"><span class="material-symbols-outlined" aria-hidden="true">mail</span><span>Email</span></a>
+            <a [href]="contactEmailHref()" aria-label="Email listing agent" i18n-aria-label><span class="material-symbols-outlined" aria-hidden="true">mail</span><span i18n>Email</span></a>
           }
           @for (action of actions(); track action.id) {
             @if (action.kind === 'schedule') {
-              <a [href]="action.url" target="_blank" rel="noopener noreferrer" aria-label="Schedule a showing"><span class="material-symbols-outlined" aria-hidden="true">calendar_month</span><span>Schedule</span></a>
+              <a [href]="action.url" target="_blank" rel="noopener noreferrer" aria-label="Schedule a showing" i18n-aria-label><span class="material-symbols-outlined" aria-hidden="true">calendar_month</span><span i18n>Schedule</span></a>
             }
           }
         </nav>
@@ -36,7 +36,7 @@
         type="button"
         class="talking-chat__close"
         [disabled]="recapSending()"
-        [attr.aria-label]="conversationStage() === 'conversation' ? 'Close conversation' : 'Close recap'"
+        [attr.aria-label]="conversationStage() === 'conversation' ? templateText.message17 : templateText.message18"
         (click)="close()"
       ><span class="material-symbols-outlined">close</span></button>
     </header>
@@ -45,14 +45,14 @@
       <div class="talking-chat__recap" aria-live="polite">
         <div class="talking-chat__recap-intro">
           <span class="talking-chat__recap-icon material-symbols-outlined" aria-hidden="true">mark_email_read</span>
-          <p class="talking-chat__recap-eyebrow">Conversation recap</p>
-          <h3>{{ completionReason() === 'interrupted' ? 'Your conversation ended unexpectedly' : 'Keep what you talked about' }}</h3>
+          <p class="talking-chat__recap-eyebrow" i18n>Conversation recap</p>
+          <h3>{{ completionReason() === 'interrupted' ? templateText.message1 : templateText.message2 }}</h3>
           <p>
             {{ completionReason() === 'interrupted'
-              ? 'The call stopped, but your conversation is safe and can still be summarized.'
+              ? templateText.message3
               : hasListingContact()
-                ? 'Send yourself the property details, photos, agent contact information, and conversation highlights.'
-                : 'Send yourself a clear recap before you return to ' + (boardTitle() || 'the board') + '.' }}
+                ? templateText.message4
+                : templateText.message5 + (boardTitle() || 'the board') + '.' }}
           </p>
         </div>
 
@@ -62,7 +62,7 @@
         </div>
 
         <form class="talking-chat__recap-form" (submit)="sendRecap($event)">
-          <label for="talking-card-recap-email">{{ isSignedIn() ? 'Send to' : 'Email address' }}</label>
+          <label for="talking-card-recap-email">{{ isSignedIn() ? templateText.message6 : templateText.message7 }}</label>
           <div class="talking-chat__recap-email-row">
             <input
               id="talking-card-recap-email"
@@ -73,7 +73,7 @@
               [disabled]="recapSending()"
               (input)="onRecapEmailInput($event)"
               required
-            />
+             i18n-placeholder/>
             <button type="submit" class="talking-chat__recap-send" [disabled]="recapSending() || !recapEmail().trim()">
               @if (recapSending()) {
                 <span class="material-symbols-outlined talking-chat__spin" aria-hidden="true">progress_activity</span>
@@ -85,7 +85,7 @@
             </button>
           </div>
           @if (!isSignedIn()) {
-            <p class="talking-chat__recap-privacy">
+            <p class="talking-chat__recap-privacy" i18n>
               <span class="material-symbols-outlined" aria-hidden="true">lock</span>
               We’ll use this email only to send this recap. No account is required.
             </p>
@@ -95,17 +95,17 @@
           }
         </form>
 
-        <button type="button" class="talking-chat__recap-skip" [disabled]="recapSending()" (click)="dismissRecap()">Not now</button>
+        <button type="button" class="talking-chat__recap-skip" [disabled]="recapSending()" (click)="dismissRecap()" i18n>Not now</button>
       </div>
     } @else if (conversationStage() === 'sent') {
       <div class="talking-chat__recap talking-chat__recap--sent" aria-live="polite">
         <span class="talking-chat__recap-success material-symbols-outlined" aria-hidden="true">check_circle</span>
-        <p class="talking-chat__recap-eyebrow">Recap sent</p>
-        <h3>It’s on the way</h3>
+        <p class="talking-chat__recap-eyebrow" i18n>Recap sent</p>
+        <h3 i18n>It’s on the way</h3>
         <p class="talking-chat__recap-sent-copy">
           {{ hasListingContact()
-            ? 'We sent the property details, agent contact information, and conversation recap to'
-            : 'We sent the conversation summary and transcript to' }}
+            ? templateText.message8
+            : templateText.message9 }}
           <strong>{{ recapSentTo() }}</strong>.
         </p>
         @for (action of actions(); track action.id) {
@@ -119,13 +119,13 @@
         }
         <div class="talking-chat__recap-links">
           @if (recapAnswerCardUrl()) {
-            <a [href]="recapAnswerCardUrl()" target="_blank" rel="noopener">
+            <a [href]="recapAnswerCardUrl()" target="_blank" rel="noopener" i18n>
               <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
               Open recap card
             </a>
           }
           @if (recapBoardUrl()) {
-            <a class="is-secondary" [href]="recapBoardUrl()">
+            <a class="is-secondary" [href]="recapBoardUrl()" i18n>
               <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
               Return to board
             </a>
@@ -139,10 +139,10 @@
             }
           }
         </div>
-        <button type="button" class="talking-chat__recap-done" (click)="dismissRecap()">Done</button>
+        <button type="button" class="talking-chat__recap-done" (click)="dismissRecap()" i18n>Done</button>
       </div>
     } @else {
-      <div class="talking-chat__mode-switch" role="tablist" aria-label="Conversation mode">
+      <div class="talking-chat__mode-switch" role="tablist" aria-label="Conversation mode" i18n-aria-label>
         <button
           type="button"
           role="tab"
@@ -150,7 +150,7 @@
           [class.is-active]="conversationMode() === 'voice'"
           [disabled]="loadingAtlas() || unavailable()"
           (click)="setConversationMode('voice')"
-        ><span class="material-symbols-outlined" aria-hidden="true">graphic_eq</span>Voice</button>
+         i18n><span class="material-symbols-outlined" aria-hidden="true">graphic_eq</span>Voice</button>
         <button
           type="button"
           role="tab"
@@ -158,15 +158,15 @@
           [class.is-active]="conversationMode() === 'text'"
           [disabled]="loadingAtlas() || unavailable()"
           (click)="setConversationMode('text')"
-        ><span class="material-symbols-outlined" aria-hidden="true">chat_bubble</span>Text</button>
+         i18n><span class="material-symbols-outlined" aria-hidden="true">chat_bubble</span>Text</button>
       </div>
 
       @if (loadingAtlas()) {
-      <div class="talking-chat__state"><span class="material-symbols-outlined talking-chat__spin">progress_activity</span><p>Preparing the conversation…</p></div>
+      <div class="talking-chat__state"><span class="material-symbols-outlined talking-chat__spin">progress_activity</span><p i18n>Preparing the conversation…</p></div>
       } @else if (unavailable()) {
-        <div class="talking-chat__state"><span class="material-symbols-outlined">lock</span><h3>This avatar is unavailable</h3><p>It may be private, unpublished, or no longer exist. The card remains visible, but conversation is disabled.</p></div>
+        <div class="talking-chat__state"><span class="material-symbols-outlined">lock</span><h3 i18n>This avatar is unavailable</h3><p i18n>It may be private, unpublished, or no longer exist. The card remains visible, but conversation is disabled.</p></div>
       } @else if (conversationMode() === 'voice') {
-        <div class="talking-chat__voice-experience" role="tabpanel" aria-label="Voice conversation">
+        <div class="talking-chat__voice-experience" role="tabpanel" aria-label="Voice conversation" i18n-aria-label>
         <div class="talking-chat__voice-stage">
           <div
             class="talking-chat__presence"
@@ -204,47 +204,47 @@
 
           <div class="talking-chat__call-actions">
             @if (voiceStatus() === 'connected') {
-              <button type="button" class="talking-chat__round-control" [attr.aria-label]="voiceMuted() ? 'Unmute microphone' : 'Mute microphone'" (click)="toggleMute()">
+              <button type="button" class="talking-chat__round-control" [attr.aria-label]="voiceMuted() ? templateText.message19 : templateText.message20" (click)="toggleMute()">
                 <span class="material-symbols-outlined">{{ voiceMuted() ? 'mic_off' : 'mic' }}</span>
               </button>
-              <button type="button" class="talking-chat__end-call" (click)="finishConversation('ended')"><span class="material-symbols-outlined">call_end</span>End</button>
+              <button type="button" class="talking-chat__end-call" (click)="finishConversation('ended')" i18n><span class="material-symbols-outlined">call_end</span>End</button>
             } @else if (voiceStatus() !== 'connecting') {
-              <button type="button" class="talking-chat__retry-voice" (click)="startVoice()"><span class="material-symbols-outlined">mic</span>{{ voiceStatus() === 'error' ? 'Try voice again' : 'Start voice' }}</button>
+              <button type="button" class="talking-chat__retry-voice" (click)="startVoice()"><span class="material-symbols-outlined">mic</span>{{ voiceStatus() === 'error' ? templateText.message10 : templateText.message11 }}</button>
             }
           </div>
         </div>
 
         <div class="talking-chat__transcript" aria-live="polite">
-          <div class="talking-chat__transcript-head"><span>Live transcript</span><span>{{ voiceMode() === 'speaking' ? 'AI speaking' : 'Listening for you' }}</span></div>
+          <div class="talking-chat__transcript-head"><span i18n>Live transcript</span><span>{{ voiceMode() === 'speaking' ? templateText.message12 : templateText.message13 }}</span></div>
           @for (message of messages(); track message.id) {
             <article class="talking-chat__transcript-line" [class.is-user]="message.role === 'user'">
-              <span>{{ message.role === 'user' ? 'You' : avatarName() }}</span><p>{{ message.text }}</p>
+              <span>{{ message.role === 'user' ? templateText.message14 : avatarName() }}</span><p>{{ message.text }}</p>
             </article>
           } @empty {
-            <p class="talking-chat__transcript-empty">Your spoken conversation will appear here.</p>
+            <p class="talking-chat__transcript-empty" i18n>Your spoken conversation will appear here.</p>
           }
         </div>
 
         <form class="talking-chat__voice-composer" (submit)="$event.preventDefault(); submitVoiceText()">
-          <input type="text" maxlength="2000" autocomplete="off" aria-label="Type during voice conversation" placeholder="Type a message…" [ngModel]="draft()" (ngModelChange)="draft.set($event)" name="voiceMessage" />
-          <button type="submit" [disabled]="voiceStatus() !== 'connected' || !draft().trim()" aria-label="Send message"><span class="material-symbols-outlined">arrow_upward</span></button>
+          <input type="text" maxlength="2000" autocomplete="off" aria-label="Type during voice conversation" placeholder="Type a message…" [ngModel]="draft()" (ngModelChange)="draft.set($event)" name="voiceMessage"  i18n-aria-label i18n-placeholder/>
+          <button type="submit" [disabled]="voiceStatus() !== 'connected' || !draft().trim()" aria-label="Send message" i18n-aria-label><span class="material-symbols-outlined">arrow_upward</span></button>
         </form>
-        <p class="talking-chat__disclaimer">AI can make mistakes. Verify important information.</p>
+        <p class="talking-chat__disclaimer" i18n>AI can make mistakes. Verify important information.</p>
         </div>
       } @else {
-        <div class="talking-chat__text-experience" role="tabpanel" aria-label="Text conversation">
+        <div class="talking-chat__text-experience" role="tabpanel" aria-label="Text conversation" i18n-aria-label>
         <div class="talking-chat__messages" aria-live="polite">
           @for (message of messages(); track message.id) {
             <div class="talking-chat__message" [class.is-user]="message.role === 'user'">
-              <span>{{ message.role === 'user' ? 'You' : avatarName() }}</span><p>{{ message.text }}</p>
+              <span>{{ message.role === 'user' ? templateText.message14 : avatarName() }}</span><p>{{ message.text }}</p>
             </div>
           }
-          @if (submitting()) { <div class="talking-chat__typing" aria-label="Avatar is answering"><i></i><i></i><i></i></div> }
+          @if (submitting()) { <div class="talking-chat__typing" aria-label="Avatar is answering" i18n-aria-label><i></i><i></i><i></i></div> }
         </div>
 
         @if (showStarters()) {
-          <div class="talking-chat__starters" aria-label="Suggested questions">
-            <span>Try asking</span>
+          <div class="talking-chat__starters" aria-label="Suggested questions" i18n-aria-label>
+            <span i18n>Try asking</span>
             <div>
               @for (question of starters(); track question) {
                 <button type="button" [disabled]="submitting()" (click)="askStarter(question)">{{ question }}</button>
@@ -255,10 +255,10 @@
 
         @if (errorMessage()) { <p class="talking-chat__error" role="alert">{{ errorMessage() }}</p> }
         <form class="talking-chat__composer" (submit)="$event.preventDefault(); send()">
-          <textarea rows="2" maxlength="2000" aria-label="Message" placeholder="Ask a question…" [ngModel]="draft()" (ngModelChange)="draft.set($event)" name="message"></textarea>
-          <button type="submit" [disabled]="!draft().trim() || submitting()" aria-label="Send message"><span class="material-symbols-outlined">arrow_upward</span></button>
+          <textarea rows="2" maxlength="2000" aria-label="Message" placeholder="Ask a question…" [ngModel]="draft()" (ngModelChange)="draft.set($event)" name="message" i18n-aria-label i18n-placeholder></textarea>
+          <button type="submit" [disabled]="!draft().trim() || submitting()" aria-label="Send message" i18n-aria-label><span class="material-symbols-outlined">arrow_upward</span></button>
         </form>
-        <p class="talking-chat__disclaimer">AI can make mistakes. Verify important information.</p>
+        <p class="talking-chat__disclaimer" i18n>AI can make mistakes. Verify important information.</p>
         </div>
       }
     }

@@ -65,7 +65,7 @@
                 <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent)] text-[11px] text-[var(--accent-contrast)]">1</span>
                 <span class="min-w-0">
                   <span class="block" i18n>Personality</span>
-                  <span class="block text-[10px] font-medium text-[var(--muted)]">{{ personalityReady() ? 'Ready' : 'Default' }}</span>
+                  <span class="block text-[10px] font-medium text-[var(--muted)]">{{ personalityReady() ? templateText.message1 : templateText.message2 }}</span>
                 </span>
               </button>
               <button
@@ -81,7 +81,7 @@
                 <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent)] text-[11px] text-[var(--accent-contrast)]">2</span>
                 <span class="min-w-0">
                   <span class="block" i18n>Spoken voice</span>
-                  <span class="block truncate text-[10px] font-medium text-[var(--muted)]">{{ spokenVoiceReady() ? 'Custom' : 'Default' }}</span>
+                  <span class="block truncate text-[10px] font-medium text-[var(--muted)]">{{ spokenVoiceReady() ? templateText.message3 : templateText.message2 }}</span>
                 </span>
               </button>
             </div>
@@ -158,7 +158,7 @@
                   <div class="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3">
                     <div class="flex flex-wrap items-center gap-2">
                       <span class="rounded-full bg-[var(--accent)] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--accent-contrast)]">
-                        {{ effectivePerspective() === 'first_person' ? 'First person' : 'Third person' }}
+                        {{ effectivePerspective() === 'first_person' ? templateText.message4 : templateText.message5 }}
                       </span>
                       @if (perspectiveDraft() === 'auto') {
                         <span class="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]" i18n>Automatic default</span>
@@ -204,7 +204,7 @@
 
                 <div class="mt-4 flex flex-wrap gap-2">
                   <button type="button" class="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-bold text-[var(--accent-contrast)] disabled:cursor-not-allowed disabled:opacity-40" [disabled]="saving() || !hasChanges() || overStorageLimit()" (click)="save()">
-                    {{ saving() ? 'Saving…' : 'Save identity & personality' }}
+                    {{ saving() ? templateText.message6 : templateText.message7 }}
                   </button>
                   <button type="button" class="rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-5 py-2.5 text-sm font-semibold disabled:opacity-40" [disabled]="saving() || !hasChanges()" (click)="revertToSaved()" i18n>Revert changes</button>
                   @if (hasCustomPrompt()) {
@@ -252,7 +252,7 @@
                   <button type="button" role="tab" [attr.aria-selected]="voiceMode() === 'catalog'" (click)="setVoiceMode('catalog')" class="rounded-xl px-4 py-3 text-sm font-bold transition" [class.bg-[var(--surface)]]="voiceMode() === 'catalog'" [class.shadow-sm]="voiceMode() === 'catalog'" [class.text-[var(--muted)]]="voiceMode() !== 'catalog'" i18n>Voice library</button>
                   <button type="button" role="tab" [attr.aria-selected]="voiceMode() === 'design'" (click)="setVoiceMode('design')" class="rounded-xl px-4 py-3 text-sm font-bold transition" [class.bg-[var(--surface)]]="voiceMode() === 'design'" [class.shadow-sm]="voiceMode() === 'design'" [class.text-[var(--muted)]]="voiceMode() !== 'design'" i18n>Design new</button>
                   @if (speechVoiceConfig()?.source === 'personal') {
-                    <button type="button" role="tab" [attr.aria-selected]="voiceMode() === 'saved'" (click)="setVoiceMode('saved')" class="rounded-xl px-4 py-3 text-sm font-bold transition" [class.bg-[var(--surface)]]="voiceMode() === 'saved'" [class.shadow-sm]="voiceMode() === 'saved'" [class.text-[var(--muted)]]="voiceMode() !== 'saved'">Current</button>
+                    <button type="button" role="tab" [attr.aria-selected]="voiceMode() === 'saved'" (click)="setVoiceMode('saved')" class="rounded-xl px-4 py-3 text-sm font-bold transition" [class.bg-[var(--surface)]]="voiceMode() === 'saved'" [class.shadow-sm]="voiceMode() === 'saved'" [class.text-[var(--muted)]]="voiceMode() !== 'saved'" i18n>Current</button>
                   }
                 </div>
 
@@ -281,7 +281,7 @@
                             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--soft-fill)] text-[var(--accent)]"><span class="material-symbols-outlined">{{ voice.icon }}</span></span>
                             <span class="min-w-0 flex-1"><span class="block truncate text-sm font-black">{{ voice.name }}</span><span class="mt-0.5 block truncate text-xs text-[var(--muted)]">{{ voice.presentation }} · {{ voice.accent }} · {{ voice.style }}</span></span>
                           </button>
-                          <button type="button" (click)="previewCatalogVoice(voice)" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)]" [attr.aria-label]="'Preview ' + voice.name">
+                          <button type="button" (click)="previewCatalogVoice(voice)" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)]" [attr.aria-label]="templateText.message13 + voice.name">
                             <span class="material-symbols-outlined text-[1.15rem]">{{ voicePlayingKey() === 'catalog:' + voice.id ? 'stop_circle' : voicePreviewLoadingKey() === 'catalog:' + voice.id ? 'progress_activity' : 'play_arrow' }}</span>
                           </button>
                         </div>
@@ -294,9 +294,9 @@
                   <div class="mt-5 rounded-2xl border border-[var(--accent)] bg-[var(--soft-fill)] p-5 sm:flex sm:items-center sm:justify-between">
                     <div class="flex items-center gap-4">
                       <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--accent)]"><span class="material-symbols-outlined">spatial_audio_off</span></span>
-                      <div><p class="font-black">{{ speechVoiceConfig()?.name || 'My voice' }}</p><p class="mt-1 text-xs text-[var(--muted)]">Personal voice selected in the Talking Card or Stack Studio.</p></div>
+                      <div><p class="font-black">{{ speechVoiceConfig()?.name || templateText.message8 }}</p><p class="mt-1 text-xs text-[var(--muted)]" i18n>Personal voice selected in the Talking Card or Stack Studio.</p></div>
                     </div>
-                    <button type="button" (click)="previewSavedVoice()" [disabled]="!!voicePreviewLoadingKey()" class="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-sm font-bold disabled:opacity-40 sm:mt-0">
+                    <button type="button" (click)="previewSavedVoice()" [disabled]="!!voicePreviewLoadingKey()" class="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-sm font-bold disabled:opacity-40 sm:mt-0" i18n>
                       <span class="material-symbols-outlined text-[1.1rem]">{{ voicePlayingKey() === 'saved' ? 'stop_circle' : voicePreviewLoadingKey() === 'saved' ? 'progress_activity' : 'play_circle' }}</span>Preview
                     </button>
                   </div>
@@ -316,7 +316,7 @@
                     </label>
                     <button type="button" (click)="generateVoicePreviews()" [disabled]="!canGenerateVoices()" class="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-black text-[var(--accent-contrast)] disabled:cursor-not-allowed disabled:opacity-40">
                       <span class="material-symbols-outlined text-[1.1rem]">{{ voiceGenerating() ? 'progress_activity' : 'auto_awesome' }}</span>
-                      <span>{{ voiceGenerating() ? 'Creating three previews…' : 'Generate three voices' }}</span>
+                      <span>{{ voiceGenerating() ? templateText.message9 : templateText.message10 }}</span>
                     </button>
                     <p class="mt-2 text-[11px] leading-5 text-[var(--muted)]" i18n>Previews are temporary. Select one and save it to add the voice to this wiki.</p>
                   </div>
@@ -346,7 +346,7 @@
                   <div class="mt-4 rounded-2xl border border-[var(--accent)]/30 bg-[var(--soft-fill)] px-4 py-3 text-sm text-[var(--accent)]">{{ spokenSavedMessage() }}</div>
                 }
                 <div class="mt-5 flex flex-wrap items-center gap-2 border-t border-[var(--line)] pt-5">
-                  <button type="button" (click)="saveSpokenVoice()" [disabled]="!canSaveSpokenVoice()" class="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-black text-[var(--accent-contrast)] disabled:cursor-not-allowed disabled:opacity-40">{{ voiceSaving() ? 'Saving voice…' : 'Save spoken voice' }}</button>
+                  <button type="button" (click)="saveSpokenVoice()" [disabled]="!canSaveSpokenVoice()" class="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-black text-[var(--accent-contrast)] disabled:cursor-not-allowed disabled:opacity-40">{{ voiceSaving() ? templateText.message11 : templateText.message12 }}</button>
                   <button type="button" (click)="cancelSpokenChanges()" [disabled]="voiceSaving()" class="rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-5 py-2.5 text-sm font-semibold disabled:opacity-40" i18n>Cancel changes</button>
                 </div>
               </div>

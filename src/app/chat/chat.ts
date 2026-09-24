@@ -422,6 +422,21 @@ const VOICE_LANGUAGES: VoiceLanguageOption[] = [
   styleUrl: './chat.css',
 })
 export class ChatComponent implements AfterViewChecked, OnDestroy {
+  readonly templateText = {
+    message1: $localize`Browse all campus and college-town collections`,
+    message2: $localize`Browse featured collections and topics`,
+    message3: $localize`Official news and useful updates, without the brochure copy.`,
+    message4: $localize`your LivingWiki`,
+    message5: $localize`LivingWiki`,
+    message6: $localize`Saving…`,
+    message7: $localize`Save board`,
+    message8: $localize`Facts about `,
+    message9: $localize`Topics for `,
+    message10: $localize`University facts`,
+    message11: $localize`City context stickers`,
+    message12: $localize`University updates`,
+    message13: $localize`City updates`,
+  };
   private readonly localeId = inject(LOCALE_ID);
   private readonly authService = inject(AuthService);
   private readonly atlasService = inject(AtlasService);

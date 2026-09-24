@@ -20,6 +20,7 @@ const RESERVED_CUSTOM_PUBLIC_URLS = new Set([
   'friends',
   'go',
   'ja',
+  'pt',
   'new',
   'share',
   'sign-in',

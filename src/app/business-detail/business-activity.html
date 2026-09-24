@@ -32,7 +32,7 @@
       <section class="mx-4 my-8 max-w-7xl rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-8 shadow-[var(--shadow-floating)] sm:mx-6 lg:mx-auto">
         <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]" i18n>Business admin</p>
         <h1 class="mt-3 text-3xl font-black tracking-tight" i18n>This business page is not available yet.</h1>
-        <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{{ loadError() || 'The business page could not be found.' }}</p>
+        <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{{ loadError() || templateText.message1 }}</p>
         <a routerLink="/business/claim" class="mt-6 inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-black text-[var(--accent-contrast)]">
           <span class="material-symbols-outlined text-[1rem]">add_business</span>
           <span i18n>Claim a business</span>
@@ -86,7 +86,7 @@
               </div>
               <a [routerLink]="chatPath()" [queryParams]="chatQueryParams()" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[var(--accent)] px-5 py-3 text-sm font-black text-[var(--accent-contrast)]">
                 <span class="material-symbols-outlined text-[1rem]">{{ activity() === 'voice' ? 'graphic_eq' : 'open_in_new' }}</span>
-                <span>{{ activity() === 'voice' ? 'Test voice guide' : 'Open live guide' }}</span>
+                <span>{{ activity() === 'voice' ? templateText.message2 : templateText.message3 }}</span>
               </a>
             </div>
 
@@ -121,8 +121,8 @@
               </article>
               <article class="rounded-2xl border border-[var(--line)] bg-[var(--soft-fill)] p-4">
                 <span class="material-symbols-outlined text-[var(--accent)]">{{ activity() === 'voice' ? 'play_circle' : 'chat_bubble' }}</span>
-                <h3 class="mt-3 text-sm font-black">{{ activity() === 'voice' ? 'Playback' : 'Conversation' }}</h3>
-                <p class="mt-2 text-xs leading-5 text-[var(--muted)]">{{ activity() === 'voice' ? 'Audio controls and transcripts.' : 'Full thread messages and replies.' }}</p>
+                <h3 class="mt-3 text-sm font-black">{{ activity() === 'voice' ? templateText.message4 : templateText.message5 }}</h3>
+                <p class="mt-2 text-xs leading-5 text-[var(--muted)]">{{ activity() === 'voice' ? templateText.message6 : templateText.message7 }}</p>
               </article>
             </div>
 

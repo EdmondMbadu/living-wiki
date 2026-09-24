@@ -100,7 +100,7 @@
             <a [routerLink]="wiki.link || ['/atlas', wiki.slug]" class="group overflow-hidden rounded-[2rem] border border-white/10 bg-[var(--surface)] transition-transform duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/35 hover:shadow-[0_20px_50px_-20px_rgba(0,0,0,0.55)]">
               @if (wiki.heroUrl) {
                 <div class="relative aspect-[16/9] overflow-hidden bg-black">
-                  <img [src]="wiki.heroUrl" [alt]="wiki.title + ' cover image'" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" loading="lazy" />
+                  <img [src]="wiki.heroUrl" [alt]="wiki.title + templateText.message1" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" loading="lazy" />
                   <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
                   @if (wiki.logoUrl) {
                     <div class="absolute bottom-4 left-4 flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/20 bg-black/45 p-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.35)] backdrop-blur-md">
@@ -120,7 +120,7 @@
               } @else if (wiki.logoUrl) {
                 <div class="relative flex aspect-[16/9] items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(59,175,98,0.22),_transparent_58%),linear-gradient(135deg,_rgba(7,17,11,0.96),_rgba(19,52,32,0.72))]">
                   <div class="flex h-24 w-24 items-center justify-center overflow-hidden rounded-[1.75rem] border border-white/15 bg-black/20 p-4 shadow-[0_16px_30px_rgba(0,0,0,0.28)] backdrop-blur-sm">
-                    <img [src]="wiki.logoUrl" [alt]="wiki.title + ' logo'" class="h-full w-full object-contain" loading="lazy" />
+                    <img [src]="wiki.logoUrl" [alt]="wiki.title + templateText.message2" class="h-full w-full object-contain" loading="lazy" />
                   </div>
                 </div>
               } @else {

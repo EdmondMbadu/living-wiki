@@ -10,6 +10,15 @@ export type PersistedListingPhoto = ListingPhotoPreview & { storagePath: string 
   styleUrl: './listing-photo-source.css',
 })
 export class ListingPhotoSourceComponent {
+  readonly templateText = {
+    message1: $localize`Add photos`,
+    message2: $localize`Choose photos`,
+    message3: $localize`photo selected`,
+    message4: $localize`photos selected`,
+    message5: $localize`Use `,
+    message6: $localize` as cover`,
+    message7: $localize`Remove `,
+  };
   readonly source = model<ListingPhotoSource>('url');
   readonly photos = input<readonly ListingPhotoPreview[]>([]);
   readonly loading = input(false);

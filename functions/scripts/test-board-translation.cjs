@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const {
   detectBoardSourceLanguage,
   extractBoardTranslationSource,
+  isBoardTranslationLanguage,
   normalizeTranslatedBoardSegments,
 } = require('../lib/board-translation.js');
 
@@ -84,5 +85,10 @@ assert.equal(
   'fr',
 );
 assert.equal(detectBoardSourceLanguage('A walk through the city with local stories.'), 'en');
+assert.equal(
+  detectBoardSourceLanguage('Você pode conhecer os bairros da cidade e também descobrir sua história.'),
+  'pt',
+);
+assert.equal(isBoardTranslationLanguage('pt'), true);
 
 console.log('Board translation extraction and validation tests passed.');

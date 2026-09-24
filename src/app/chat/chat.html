@@ -726,7 +726,7 @@
                         <p class="chat-city-landing-hero__tagline">{{ landingHeroTagline() }}</p>
 
                         @if (cityHeroFacts().length) {
-                          <div class="chat-city-landing-hero__facts" [attr.aria-label]="'Facts about ' + currentWikiName()">
+                          <div class="chat-city-landing-hero__facts" [attr.aria-label]="templateText.message8 + currentWikiName()">
                             @for (fact of cityHeroFacts(); track fact.id) {
                               <span>
                                 <span class="material-symbols-outlined" aria-hidden="true">{{ fact.icon }}</span>
@@ -737,7 +737,7 @@
                         }
 
                         @if (chatCityMoodStickers().length) {
-                          <div class="chat-city-landing-hero__topics" [attr.aria-label]="'Topics for ' + currentWikiName()">
+                          <div class="chat-city-landing-hero__topics" [attr.aria-label]="templateText.message9 + currentWikiName()">
                             @for (topic of chatCityMoodStickers(); track topic.label) {
                               <span>{{ topic.label }}</span>
                             }
@@ -766,7 +766,7 @@
                   </div>
 
                   @if (chatCityStickers().length || chatCityMoodStickers().length) {
-                    <div class="chat-city-sticker-row" [attr.aria-label]="isUniversityPage() ? 'University facts' : 'City context stickers'">
+                    <div class="chat-city-sticker-row" [attr.aria-label]="isUniversityPage() ? templateText.message10 : templateText.message11">
                       @for (sticker of chatCityStickers(); track sticker.id) {
                         <span class="chat-city-sticker chat-sticker-palette--{{ sticker.palette }}">
                           <span class="chat-city-sticker__icon material-symbols-outlined">{{ sticker.icon }}</span>
@@ -941,14 +941,14 @@
                     </header>
 
                     @if (isCityLandingPage()) {
-                      <nav class="city-board-shelf__tabs" aria-label="City discovery">
+                      <nav class="city-board-shelf__tabs" aria-label="City discovery" i18n-aria-label>
                         <span class="city-board-shelf__tab city-board-shelf__tab--active" i18n>Boards</span>
                         <a class="city-board-shelf__tab" [routerLink]="placesLink()" i18n>Places</a>
                       </nav>
                     }
 
                     @if (cityBoardsLoading()) {
-                      <div class="city-board-grid" aria-busy="true" aria-label="Loading boards">
+                      <div class="city-board-grid" aria-busy="true" aria-label="Loading boards" i18n-aria-label>
                         @for (item of [1, 2, 3, 4]; track item) {
                           <div class="city-board-card city-board-card--skeleton" aria-hidden="true">
                             <span class="city-board-card__skeleton-media"></span>
@@ -990,7 +990,7 @@
                           <span class="city-board-shelf__collection-mark material-symbols-outlined" aria-hidden="true">view_carousel</span>
                           <span>
                             <strong>Explore every {{ currentWikiName() }} board</strong>
-                            <small>{{ isUniversityPage() ? 'Browse all campus and college-town collections' : 'Browse featured collections and topics' }}</small>
+                            <small>{{ isUniversityPage() ? templateText.message1 : templateText.message2 }}</small>
                           </span>
                           <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
                         </a>
@@ -1020,11 +1020,11 @@
                 }
 
                 @if (canSubscribeToCurrentWiki() && !businessPageContext()) {
-                  <section class="chat-city-subscribe" [attr.aria-label]="isUniversityPage() ? 'University updates' : 'City updates'">
+                  <section class="chat-city-subscribe" [attr.aria-label]="isUniversityPage() ? templateText.message12 : templateText.message13">
                     <span class="chat-city-subscribe__mark material-symbols-outlined" aria-hidden="true">notifications_active</span>
                     <div class="chat-city-subscribe__copy">
                       <strong>Stay close to {{ currentWikiName() }}</strong>
-                      <span>{{ isUniversityPage() ? 'Official news and useful updates, without the brochure copy.' : uiText('weeklyUpdates') }}</span>
+                      <span>{{ isUniversityPage() ? templateText.message3 : uiText('weeklyUpdates') }}</span>
                     </div>
                     <form class="chat-city-subscribe__form" (submit)="subscribeToUpdates($event)">
                       <label class="sr-only" for="city-subscribe-email">{{ uiText('emailAddress') }}</label>
@@ -1077,7 +1077,7 @@
                   @if (msg.role === 'user') {
                     <div class="chat-conversation-question">
                       <div class="chat-user-bubble chat-message-actions">
-                        <p class="chat-user-bubble__eyebrow">You asked</p>
+                        <p class="chat-user-bubble__eyebrow" i18n>You asked</p>
                         <div class="chat-user-bubble__text">{{ msg.text }}</div>
                         <div class="chat-user-bubble__footer">
                           @if (canShowCityVoiceCarousel()) {
@@ -1159,7 +1159,7 @@
                             @if (!msg.pending) {
                               <span class="assistant-message__source-status">
                                 <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
-                                <span>Answered with live public sources</span>
+                                <span i18n>Answered with live public sources</span>
                               </span>
                             }
                             <div class="ml-auto flex items-center gap-2">
@@ -1203,36 +1203,36 @@
                             <section class="chat-research-state" aria-live="polite" aria-atomic="true">
                               <div class="chat-research-state__intro">
                                 <div>
-                                  <p class="chat-research-state__eyebrow">Researching {{ currentWikiName() || 'your LivingWiki' }}</p>
+                                  <p class="chat-research-state__eyebrow">Researching {{ currentWikiName() || templateText.message4 }}</p>
                                   <h3>{{ currentThinkingLabel() }}…</h3>
-                                  <p>Gathering the clearest answer from trusted local and public sources.</p>
+                                  <p i18n>Gathering the clearest answer from trusted local and public sources.</p>
                                 </div>
                                 <span class="chat-research-state__pulse" aria-hidden="true"></span>
                               </div>
 
-                              <ol class="chat-research-progress" aria-label="Answer progress">
+                              <ol class="chat-research-progress" aria-label="Answer progress" i18n-aria-label>
                                 <li [class.is-active]="thinkingStage() === 0" [class.is-complete]="thinkingStage() > 0">
                                   <span>
                                     @if (thinkingStage() > 0) { <span class="material-symbols-outlined">check</span> } @else { 1 }
                                   </span>
-                                  <strong>Understanding your question</strong>
+                                  <strong i18n>Understanding your question</strong>
                                 </li>
                                 <li [class.is-active]="thinkingStage() === 1" [class.is-complete]="thinkingStage() > 1">
                                   <span>
                                     @if (thinkingStage() > 1) { <span class="material-symbols-outlined">check</span> } @else { 2 }
                                   </span>
-                                  <strong>Checking local sources</strong>
+                                  <strong i18n>Checking local sources</strong>
                                 </li>
                                 <li [class.is-active]="thinkingStage() === 2">
                                   <span>3</span>
-                                  <strong>Building your answer board</strong>
+                                  <strong i18n>Building your answer board</strong>
                                 </li>
                               </ol>
 
                               <div class="chat-research-state__sources" aria-hidden="true">
-                                <span><span class="material-symbols-outlined">query_stats</span><span>Public data</span></span>
-                                <span><span class="material-symbols-outlined">location_city</span><span>City sources</span></span>
-                                <span><span class="material-symbols-outlined">map</span><span>Neighborhood context</span></span>
+                                <span><span class="material-symbols-outlined">query_stats</span><span i18n>Public data</span></span>
+                                <span><span class="material-symbols-outlined">location_city</span><span i18n>City sources</span></span>
+                                <span><span class="material-symbols-outlined">map</span><span i18n>Neighborhood context</span></span>
                               </div>
 
                               <div class="chat-research-preview" aria-hidden="true">
@@ -1281,15 +1281,15 @@
                                     <h3>{{ guide.title || uiText('guidePicks') }}</h3>
                                     <p>{{ guide.summary || guideIntro(msg, guide) }}</p>
                                     <div class="chat-answer-board__meta">
-                                      <span>Updated now</span>
+                                      <span i18n>Updated now</span>
                                       <i aria-hidden="true"></i>
                                       @if (answerBoardSourceCount(msg, guide) > 0) {
                                         <span>{{ answerBoardSourceCount(msg, guide) }} sources</span>
                                       } @else {
-                                        <span>Live public sources</span>
+                                        <span i18n>Live public sources</span>
                                       }
                                       <i aria-hidden="true"></i>
-                                      <span>{{ currentWikiName() || 'LivingWiki' }}</span>
+                                      <span>{{ currentWikiName() || templateText.message5 }}</span>
                                     </div>
                                   </div>
 
@@ -1322,7 +1322,7 @@
                                         (click)="shareGuideCardForMessage(msg, $event)"
                                       >
                                         <span class="material-symbols-outlined">ios_share</span>
-                                        <span>Share</span>
+                                        <span i18n>Share</span>
                                       </button>
                                       <button
                                         type="button"
@@ -1331,15 +1331,15 @@
                                         (click)="createAnswerCardForMessage(msg, $event)"
                                       >
                                         <span class="material-symbols-outlined">bookmark</span>
-                                        <span>{{ creatingAnswerCardId() === msg.id ? 'Saving…' : 'Save board' }}</span>
+                                        <span>{{ creatingAnswerCardId() === msg.id ? templateText.message6 : templateText.message7 }}</span>
                                       </button>
                                     }
                                   </div>
                                 </header>
 
                                 <div class="chat-answer-board__toolbar">
-                                  <strong>Explore the answer</strong>
-                                  <div role="tablist" aria-label="Answer board view">
+                                  <strong i18n>Explore the answer</strong>
+                                  <div role="tablist" aria-label="Answer board view" i18n-aria-label>
                                     <button
                                       type="button"
                                       role="tab"
@@ -1347,7 +1347,7 @@
                                       [class.is-active]="answerBoardView(msg.id) === 'overview'"
                                       (click)="setAnswerBoardView(msg.id, 'overview')"
                                     >
-                                      <span class="material-symbols-outlined">dashboard</span><span>Overview</span>
+                                      <span class="material-symbols-outlined">dashboard</span><span i18n>Overview</span>
                                     </button>
                                     <button
                                       type="button"
@@ -1356,7 +1356,7 @@
                                       [class.is-active]="answerBoardView(msg.id) === 'cards'"
                                       (click)="setAnswerBoardView(msg.id, 'cards')"
                                     >
-                                      <span class="material-symbols-outlined">view_agenda</span><span>Cards</span>
+                                      <span class="material-symbols-outlined">view_agenda</span><span i18n>Cards</span>
                                     </button>
                                     <button
                                       type="button"
@@ -1365,7 +1365,7 @@
                                       [class.is-active]="answerBoardView(msg.id) === 'map'"
                                       (click)="setAnswerBoardView(msg.id, 'map')"
                                     >
-                                      <span class="material-symbols-outlined">map</span><span>Map</span>
+                                      <span class="material-symbols-outlined">map</span><span i18n>Map</span>
                                     </button>
                                   </div>
                                 </div>
@@ -1428,7 +1428,7 @@
 
                                           <div class="chat-answer-card__footer">
                                             <a [href]="travelCardMapUrl(card)" target="_blank" rel="noopener noreferrer" [attr.aria-label]="uiText('map')">
-                                              <span class="material-symbols-outlined">map</span><span>Map</span>
+                                              <span class="material-symbols-outlined">map</span><span i18n>Map</span>
                                             </a>
                                             <button
                                               type="button"
@@ -1440,11 +1440,11 @@
                                             </button>
                                             @if (travelCardSourceUrl(card); as sourceUrl) {
                                               <a class="chat-answer-card__open" [href]="sourceUrl" target="_blank" rel="noopener noreferrer" [attr.aria-label]="uiText('article')">
-                                                <span>Open</span><span class="material-symbols-outlined">arrow_outward</span>
+                                                <span i18n>Open</span><span class="material-symbols-outlined">arrow_outward</span>
                                               </a>
                                             } @else {
                                               <a class="chat-answer-card__open" [href]="travelCardMapUrl(card)" target="_blank" rel="noopener noreferrer" [attr.aria-label]="uiText('map')">
-                                                <span>Open</span><span class="material-symbols-outlined">arrow_outward</span>
+                                                <span i18n>Open</span><span class="material-symbols-outlined">arrow_outward</span>
                                               </a>
                                             }
                                           </div>
@@ -1456,7 +1456,7 @@
                                       <button type="button" class="chat-answer-board__more" (click)="setAnswerBoardView(msg.id, 'cards')">
                                         <span class="material-symbols-outlined">add</span>
                                         <strong>{{ guide.cards.length - 3 }} more cards</strong>
-                                        <span>Explore the full answer board</span>
+                                        <span i18n>Explore the full answer board</span>
                                       </button>
                                     }
                                   </div>
@@ -1490,9 +1490,9 @@
                                     <header class="chat-full-notes__header">
                                       <img [src]="assistantAvatarUrl()" [alt]="assistantAvatarAlt()" />
                                       <div class="chat-full-notes__heading">
-                                        <span>Full notes</span>
+                                        <span i18n>Full notes</span>
                                         <h4>{{ guide.title || uiText('fullNotes') }}</h4>
-                                        <p>{{ answerReadingTime(msg) }} min read <i aria-hidden="true"></i> Updated now</p>
+                                        <p i18n>{{ answerReadingTime(msg) }} min read <i aria-hidden="true"></i> Updated now</p>
                                       </div>
                                       <div class="chat-full-notes__header-actions">
                                         <button
@@ -1507,7 +1507,7 @@
                                         </button>
                                         <button type="button" (click)="collapseFullNotes($event)">
                                           <span class="material-symbols-outlined">expand_less</span>
-                                          <span>Collapse notes</span>
+                                          <span i18n>Collapse notes</span>
                                         </button>
                                       </div>
                                     </header>
@@ -1538,7 +1538,7 @@
                                         </button>
                                       }
                                       <button type="button" (click)="collapseFullNotes($event)">
-                                        <span class="material-symbols-outlined">expand_less</span><span>Collapse notes</span>
+                                        <span class="material-symbols-outlined">expand_less</span><span i18n>Collapse notes</span>
                                       </button>
                                     </footer>
                                   </section>

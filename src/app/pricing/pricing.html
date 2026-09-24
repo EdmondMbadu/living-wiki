@@ -99,7 +99,7 @@
                     <span class="pricing-card__mark" aria-hidden="true"></span>
                     <div class="min-w-0">
                       <p class="pricing-card__eyebrow">
-                        {{ plan.eyebrow || 'Personal plan' }}
+                        {{ plan.eyebrow || templateText.message1 }}
                       </p>
                       <h3 class="pricing-card__title">{{ plan.name }}</h3>
                     </div>
@@ -148,7 +148,7 @@
                       [disabled]="checkoutLoading() !== null"
                       (click)="startPersonalCheckout(plan)"
                     >
-                      {{ checkoutLoading() === checkoutKey(plan) ? 'Starting checkout...' : plan.cta }}
+                      {{ checkoutLoading() === checkoutKey(plan) ? templateText.message2 : plan.cta }}
                       <span class="pricing-card__arrow" aria-hidden="true"></span>
                     </button>
                   } @else if (plan.contact) {

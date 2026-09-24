@@ -33,6 +33,23 @@ const VIDEO_LIBRARY_PAGE_SIZE = DEFAULT_INCREMENTAL_PAGE_SIZE;
   styleUrl: './video-library.css',
 })
 export class VideoLibraryComponent {
+  readonly templateText = {
+    message1: $localize`Board Trailer`,
+    message2: $localize`Full video`,
+    message3: $localize`Narrated`,
+    message4: $localize`No narration`,
+    message5: $localize`Preparing…`,
+    message6: $localize`Share`,
+    message7: $localize`YouTube, LinkedIn, Desktop`,
+    message8: $localize`Create this version from the board`,
+    message9: $localize`Deleting…`,
+    message10: $localize`Delete video`,
+    message11: $localize`format`,
+    message12: $localize`formats`,
+    message13: $localize`landscape`,
+    message14: $localize`phone`,
+    message15: $localize`Play `,
+  };
   private readonly videoLibrary = inject(VideoLibraryService);
   private readonly router = inject(Router);
   private readonly localeId = inject(LOCALE_ID);
@@ -83,7 +100,7 @@ export class VideoLibraryComponent {
       this.items.set(await this.videoLibrary.loadItems());
     } catch (error) {
       console.error('Video library load failed', error);
-      this.error.set('My Videos could not be loaded. Check your connection and try again.');
+      this.error.set($localize`My Videos could not be loaded. Check your connection and try again.`);
     } finally {
       this.loading.set(false);
     }
@@ -152,21 +169,21 @@ export class VideoLibraryComponent {
       });
       if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
         await navigator.share({ title: item.sourceTitle, files: [file] });
-        this.message.set('Video shared.');
+        this.message.set($localize`Video shared.`);
         return;
       }
       if (item.publicShareUrl && navigator.share) {
         await navigator.share({ title: item.sourceTitle, url: this.publicShareUrlForVariant(item, ratio) });
-        this.message.set('Video link shared.');
+        this.message.set($localize`Video link shared.`);
         return;
       }
       this.downloadFile(file);
-      this.message.set('Video downloaded. Attach it in the app where you want to share it.');
+      this.message.set($localize`Video downloaded. Attach it in the app where you want to share it.`);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
-        this.message.set('Share cancelled.');
+        this.message.set($localize`Share cancelled.`);
       } else {
-        this.message.set(error instanceof Error ? error.message : 'The video could not be shared.');
+        this.message.set(error instanceof Error ? error.message : $localize`The video could not be shared.`);
       }
     } finally {
       this.sharingId.set(null);
@@ -177,7 +194,7 @@ export class VideoLibraryComponent {
     this.message.set(null);
     const variant = this.videoVariant(item, ratio);
     if (!variant) {
-      this.message.set('That video size is not available yet. Regenerate the video to create it.');
+      this.message.set($localize`That video size is not available yet. Regenerate the video to create it.`);
       return;
     }
     try {
@@ -188,9 +205,9 @@ export class VideoLibraryComponent {
       this.downloadFile(new File([blob], this.videoFileName(item, ratio, extension), {
         type: variant.mimeType || blob.type || `video/${extension}`,
       }));
-      this.message.set(`${ratio === 'landscape' ? 'Landscape' : 'Phone'} video downloaded.`);
+      this.message.set(`${ratio === 'landscape' ? $localize`Landscape` : $localize`Phone`} video downloaded.`);
     } catch (error) {
-      this.message.set(error instanceof Error ? error.message : 'The video could not be downloaded.');
+      this.message.set(error instanceof Error ? error.message : $localize`The video could not be downloaded.`);
     }
   }
 
@@ -218,15 +235,15 @@ export class VideoLibraryComponent {
       this.downloadFile(new File([landscapeBlob], this.videoFileName(item, 'landscape', landscapeExtension), {
         type: item.landscapeVariant.mimeType || landscapeBlob.type || `video/${landscapeExtension}`,
       }));
-      this.message.set('Phone and Landscape videos downloaded.');
+      this.message.set($localize`Phone and Landscape videos downloaded.`);
     } catch (error) {
-      this.message.set(error instanceof Error ? error.message : 'The videos could not be downloaded.');
+      this.message.set(error instanceof Error ? error.message : $localize`The videos could not be downloaded.`);
     }
   }
 
   async copyPublicLink(item: VideoLibraryItem): Promise<void> {
     if (!item.publicShareUrl) {
-      this.message.set('Publish this video from Board Studio to create a public video link.');
+      this.message.set($localize`Publish this video from Board Studio to create a public video link.`);
       return;
     }
     try {
@@ -243,9 +260,9 @@ export class VideoLibraryComponent {
         textArea.remove();
         if (!copied) throw new Error('Copy was blocked.');
       }
-      this.message.set('Public video link copied.');
+      this.message.set($localize`Public video link copied.`);
     } catch {
-      this.message.set('The link could not be copied. Select the address and copy it manually.');
+      this.message.set($localize`The link could not be copied. Select the address and copy it manually.`);
     }
   }
 
@@ -267,9 +284,9 @@ export class VideoLibraryComponent {
       this.items.update((items) => items.filter((candidate) => candidate.id !== item.id));
       if (this.selectedVideo()?.id === item.id) this.selectedVideo.set(null);
       this.deleteCandidate.set(null);
-      this.message.set('Video deleted from My Videos.');
+      this.message.set($localize`Video deleted from My Videos.`);
     } catch (error) {
-      this.message.set(error instanceof Error ? error.message : 'The video could not be deleted.');
+      this.message.set(error instanceof Error ? error.message : $localize`The video could not be deleted.`);
     } finally {
       this.deletingId.set(null);
     }

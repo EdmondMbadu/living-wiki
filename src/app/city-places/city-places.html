@@ -182,7 +182,7 @@
                       class="rounded-full p-1.5 transition hover:bg-[var(--accent)]/10"
                       [style.color]="starColor(star)"
                       (click)="setPlaceReviewRating(star)"
-                      [attr.aria-label]="'Rate ' + star + ' stars'"
+                      [attr.aria-label]="templateText.message6 + star + templateText.message7"
                     >
                       <span
                         class="material-symbols-outlined text-[1.35rem]"
@@ -458,7 +458,7 @@
                       <article class="rounded-3xl border border-[var(--line)] bg-[var(--soft-fill)] p-4">
                         <div class="flex items-start justify-between gap-3">
                           <div>
-                            <p class="text-sm font-semibold text-[var(--text)]">{{ review.reviewerName || 'Local reviewer' }}</p>
+                            <p class="text-sm font-semibold text-[var(--text)]">{{ review.reviewerName || templateText.message1 }}</p>
                             <p class="mt-1 text-xs font-medium text-[var(--muted)]">{{ formatReviewDate(review.createdAt) }}</p>
                           </div>
                           <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--accent)]/12 px-2.5 py-1 text-xs font-semibold text-[var(--accent)]">
@@ -492,7 +492,7 @@
                     <iframe
                       class="absolute inset-0 h-full w-full"
                       [src]="detailMapEmbedUrl()"
-                      [title]="detailPlace.name + ' map'"
+                      [title]="detailPlace.name + templateText.message8"
                       loading="lazy"
                       referrerpolicy="no-referrer-when-downgrade"
                     ></iframe>
@@ -516,10 +516,10 @@
             <div class="flex items-center justify-between gap-4 border-b border-[var(--line)] px-5 py-4">
               <div class="min-w-0">
                 <p class="text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
-                  {{ selectedDetailPlace() ? 'Invite local reviews' : 'Share this city board' }}
+                  {{ selectedDetailPlace() ? templateText.message2 : templateText.message3 }}
                 </p>
                 <h3 id="place-share-title" class="mt-1 truncate text-lg font-semibold tracking-[-0.02em] text-[var(--text)]">
-                  {{ selectedDetailPlace()?.name || cityName() + ' places' }}
+                  {{ selectedDetailPlace()?.name || cityName() + templateText.message4 }}
                 </h3>
               </div>
               <button
@@ -540,7 +540,7 @@
                   </span>
                   <div class="min-w-0">
                     <p class="text-sm font-semibold text-[var(--text)]">{{ cityName() }}</p>
-                    <p class="mt-1 text-xs font-medium text-[var(--muted)]">{{ country() || 'Local city board' }}</p>
+                    <p class="mt-1 text-xs font-medium text-[var(--muted)]">{{ country() || templateText.message5 }}</p>
                   </div>
                 </div>
                 <p class="mt-4 text-[0.95rem] font-medium leading-6 text-[var(--text)]">

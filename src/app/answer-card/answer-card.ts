@@ -16,6 +16,16 @@ import { getPublicAppUrl } from '../firebase.config';
   styleUrl: './answer-card.css',
 })
 export class AnswerCardComponent {
+  readonly templateText = {
+    message1: $localize`Making quiz...`,
+    message2: $localize`Make quiz`,
+    message3: $localize`Copied`,
+    message4: $localize`Copy link`,
+    message5: $localize`Copy`,
+    message6: $localize`s`,
+    message7: $localize`Unlike this answer card`,
+    message8: $localize`Like this answer card`,
+  };
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly answerCardService = inject(AnswerCardService);

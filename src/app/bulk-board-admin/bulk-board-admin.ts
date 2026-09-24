@@ -29,7 +29,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
   {
     id: 'global-dishes-explain',
     version: '1.0',
-    label: '10 Dishes That Explain [City]',
+    label: $localize`10 Dishes That Explain [City]`,
     promise: 'Food as a way to understand the place—not a ranking.',
     icon: 'restaurant',
     titlePattern: '{count} Dishes That Explain {city}',
@@ -41,7 +41,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
   {
     id: 'global-guidebooks-miss',
     version: '1.0',
-    label: 'What the Guidebooks Miss: 10 Places Locals Deal Each Other',
+    label: $localize`What the Guidebooks Miss: 10 Places Locals Deal Each Other`,
     promise: '10 places locals deal each other, without “hidden gem” language.',
     icon: 'style',
     titlePattern: 'What the Guidebooks Miss: {count} Places Locals Deal Each Other',
@@ -53,7 +53,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
   {
     id: 'global-zero-dollars',
     version: '1.0',
-    label: 'Zero Dollars: 10 Things Locals Do for Free',
+    label: $localize`Zero Dollars: 10 Things Locals Do for Free`,
     promise: '10 things locals genuinely do for free.',
     icon: 'money_off',
     titlePattern: 'Zero Dollars: {count} Things Locals Do for Free',
@@ -65,7 +65,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
   {
     id: 'global-where-locals-linger',
     version: '1.0',
-    label: 'Where Locals Linger: 10 Places to Sit for Hours',
+    label: $localize`Where Locals Linger: 10 Places to Sit for Hours`,
     promise: '10 places to sit for hours, framed through observed behavior.',
     icon: 'weekend',
     titlePattern: 'Where Locals Linger: {count} Places to Sit for Hours',
@@ -77,7 +77,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
   {
     id: 'global-neighborhoods-one-reason',
     version: '1.0',
-    label: '10 Neighborhoods, One Reason Each',
+    label: $localize`10 Neighborhoods, One Reason Each`,
     promise: 'One neighborhood, one clean reason to care.',
     icon: 'location_city',
     titlePattern: '{count} Neighborhoods, One Reason Each',
@@ -89,7 +89,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
   {
     id: 'global-only-happens-here',
     version: '1.0',
-    label: 'Only Happens Here: 10 Things That Make No Sense Anywhere Else',
+    label: $localize`Only Happens Here: 10 Things That Make No Sense Anywhere Else`,
     promise: '10 city-specific things that make little sense anywhere else.',
     icon: 'fingerprint',
     titlePattern: 'Only Happens Here: {count} Things That Make No Sense Anywhere Else',
@@ -101,7 +101,7 @@ const GLOBAL_BUCKET_PRESETS: GlobalBucketPreset[] = [
   {
     id: 'global-first-24-hours',
     version: '1.0',
-    label: 'Your First 24 Hours in [City], Dealt as Cards',
+    label: $localize`Your First 24 Hours in [City], Dealt as Cards`,
     promise: 'A first-day sequence, dealt as ten useful cards.',
     icon: 'schedule',
     titlePattern: 'Your First 24 Hours in {city}, Dealt as Cards',
@@ -124,7 +124,7 @@ const DEFAULT_TEMPLATE: BulkBoardTemplateInput = {
 
 const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
   {
-    id: 'college-late-night-runs', version: '1.0', label: '10 Late-Night Runs That Explain [School]',
+    id: 'college-late-night-runs', version: '1.0', label: $localize`10 Late-Night Runs That Explain [School]`,
     promise: 'Under-21-safe late-night destinations with current evidence.', icon: 'nightlife',
     titlePattern: '{count} Late-Night Runs That Explain {school}',
     searchQuery: 'late night dining students campus dining late hours restaurants near campus',
@@ -132,7 +132,7 @@ const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
     count: 10, cardTitleMode: 'subject',
   },
   {
-    id: 'college-campus-tour-skips', version: '1.0', label: 'What the Campus Tour Skips',
+    id: 'college-campus-tour-skips', version: '1.0', label: $localize`What the Campus Tour Skips`,
     promise: 'Places with a concrete shared student use—not secrecy theater.', icon: 'style',
     titlePattern: 'What the Campus Tour Skips: {count} Places Students Share With Each Other',
     searchQuery: 'student favorite campus places campus map student spaces student newspaper',
@@ -140,7 +140,7 @@ const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
     count: 10, cardTitleMode: 'place',
   },
   {
-    id: 'college-zero-dollar-hangs', version: '1.0', label: 'Zero Dollars: 10 Hangs That Cost Nothing',
+    id: 'college-zero-dollar-hangs', version: '1.0', label: $localize`Zero Dollars: 10 Hangs That Cost Nothing`,
     promise: 'Social activities with no required admission or purchase.', icon: 'money_off',
     titlePattern: 'Zero Dollars: {count} Hangs That Cost Nothing',
     searchQuery: 'free student activities campus free public places near campus',
@@ -148,7 +148,7 @@ const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
     count: 10, cardTitleMode: 'subject',
   },
   {
-    id: 'college-study-spots', version: '1.0', label: 'Claimed by 9am: 10 Study Spots',
+    id: 'college-study-spots', version: '1.0', label: $localize`Claimed by 9am: 10 Study Spots`,
     promise: 'Distinct study environments with access rules verified.', icon: 'menu_book',
     titlePattern: 'Claimed by 9am: {count} Study Spots Worth Showing Up Early For',
     searchQuery: 'campus study spaces library study rooms students quiet study',
@@ -156,7 +156,7 @@ const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
     count: 10, cardTitleMode: 'place',
   },
   {
-    id: 'college-blocks-off-campus', version: '1.0', label: '10 Blocks Off Campus, One Reason Each',
+    id: 'college-blocks-off-campus', version: '1.0', label: $localize`10 Blocks Off Campus, One Reason Each`,
     promise: 'Campus-adjacent streets and micro-districts, not generic neighborhoods.', icon: 'location_city',
     titlePattern: '{count} Blocks Off Campus, One Reason Each',
     searchQuery: 'off campus streets student district campus adjacent commercial corridors',
@@ -164,7 +164,7 @@ const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
     count: 10, cardTitleMode: 'place',
   },
   {
-    id: 'college-only-happens-here', version: '1.0', label: 'Only Happens Here: 10 Traditions',
+    id: 'college-only-happens-here', version: '1.0', label: $localize`Only Happens Here: 10 Traditions`,
     promise: 'Documented school-specific rituals with disputed origins labeled.', icon: 'fingerprint',
     titlePattern: 'Only Happens Here: {count} Traditions That Make No Sense Anywhere Else',
     searchQuery: 'university traditions alumni campus rituals student newspaper history',
@@ -172,7 +172,7 @@ const UNIVERSITY_BUCKET_PRESETS: GlobalBucketPreset[] = [
     count: 10, cardTitleMode: 'subject',
   },
   {
-    id: 'college-first-weekend', version: '1.0', label: 'Your First Weekend at [School]',
+    id: 'college-first-weekend', version: '1.0', label: $localize`Your First Weekend at [School]`,
     promise: 'An under-21-safe, evergreen sequence shared as cards.', icon: 'schedule',
     titlePattern: 'Your First Weekend at {school}, Shared as Cards',
     searchQuery: 'new student orientation campus guide weekend near campus students',
@@ -190,6 +190,47 @@ const DEFAULT_UNIVERSITY_TEMPLATE: BulkBoardTemplateInput = UNIVERSITY_BUCKET_PR
   styleUrl: './bulk-board-admin.css',
 })
 export class BulkBoardAdminComponent implements OnInit, OnDestroy {
+  readonly templateText = {
+    message1: $localize` missing`,
+    message2: $localize` invalid`,
+    message3: $localize`A job is already active`,
+    message4: $localize`Audit missing boards`,
+    message5: $localize`Codex local`,
+    message6: $localize`Cached first`,
+    message7: $localize`resumable checkpoints`,
+    message8: $localize`no repeated discovery`,
+    message9: $localize`I understand these jobs use the locally authenticated Codex worker, store a 0–100 quality score, and remain private for review.`,
+    message10: $localize`I understand new boards use Google Places and one grounded Gemini writing pass, then remain private for review.`,
+    message11: $localize`subject-first titles`,
+    message12: $localize`place-first titles`,
+    message13: $localize`Region not set`,
+    message14: $localize`Checking…`,
+    message15: $localize`Run preflight`,
+    message16: $localize`A generation job is already active`,
+    message17: $localize` job`,
+    message18: $localize`Publishing…`,
+    message19: $localize`Publish all ready (`,
+    message20: $localize`subjects verified`,
+    message21: $localize`places verified`,
+    message22: $localize` validated`,
+    message23: $localize` · awaiting enrichment`,
+    message24: $localize`Publish`,
+    message25: $localize`Images required`,
+    message26: $localize`complete`,
+    message27: $localize`s`,
+    message28: $localize`trash`,
+    message29: $localize`Search universities or towns…`,
+    message30: $localize`Search cities or regions…`,
+    message31: $localize`Generation `,
+    message32: $localize`Selected test `,
+    message33: $localize`Remove `,
+    message34: $localize`Retry failed `,
+    message35: $localize`Publish all `,
+    message36: $localize` ready boards currently shown`,
+    message37: $localize`Search board, `,
+    message38: $localize`, or template…`,
+    message39: $localize`Filter boards by `,
+  };
   private readonly service = inject(BulkBoardAdminService);
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
@@ -245,7 +286,7 @@ export class BulkBoardAdminComponent implements OnInit, OnDestroy {
   readonly citySelectionSummary = computed(() => this.runMode() === 'test'
     ? `${this.selectedCount()} of 5 selected`
     : `${this.selectedCount()} selected`);
-  readonly selectShownLabel = computed(() => this.runMode() === 'test' ? 'Select up to 5' : 'Select shown');
+  readonly selectShownLabel = computed(() => this.runMode() === 'test' ? $localize`Select up to 5` : $localize`Select shown`);
   readonly startGenerationLabel = computed(() => this.runMode() === 'test'
     ? `Start ${this.selectedCount()}-${this.targetSingular} test drive`
     : `Start ${this.selectedCount()}-${this.targetSingular} production run`);
@@ -419,7 +460,7 @@ export class BulkBoardAdminComponent implements OnInit, OnDestroy {
     const preflight = this.preflight();
     if (!preflight || !this.preflightAccepted()) return;
     if (this.activeJob()) {
-      this.error.set('Wait for or cancel the active generation job before starting another.');
+      this.error.set($localize`Wait for or cancel the active generation job before starting another.`);
       return;
     }
     this.running.set(true);

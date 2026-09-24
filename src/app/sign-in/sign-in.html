@@ -62,7 +62,7 @@
             <label class="auth-label" for="sign-in-password" i18n>Password</label>
             <div class="auth-field__control">
               <input id="sign-in-password" [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" class="auth-input" placeholder="Enter your password" required [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid" i18n-placeholder/>
-              <button type="button" class="auth-field__toggle" [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'" [attr.title]="showPassword() ? 'Hide password' : 'Show password'" (click)="togglePasswordVisibility()">
+              <button type="button" class="auth-field__toggle" [attr.aria-label]="showPassword() ? templateText.message1 : templateText.message2" [attr.title]="showPassword() ? templateText.message1 : templateText.message2" (click)="togglePasswordVisibility()">
                 <span class="material-symbols-outlined text-xl">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
               </button>
             </div>

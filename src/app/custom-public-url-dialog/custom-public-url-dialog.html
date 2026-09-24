@@ -3,10 +3,10 @@
     <header>
       <span class="custom-url-dialog__icon material-symbols-outlined" aria-hidden="true">link</span>
       <span>
-        <small>Share with a memorable link</small>
-        <h2 id="custom-url-title">Set custom URL</h2>
+        <small i18n>Share with a memorable link</small>
+        <h2 id="custom-url-title" i18n>Set custom URL</h2>
       </span>
-      <button type="button" class="custom-url-dialog__close" aria-label="Close custom URL dialog" [disabled]="saving()" (click)="close()">
+      <button type="button" class="custom-url-dialog__close" aria-label="Close custom URL dialog" [disabled]="saving()" (click)="close()" i18n-aria-label>
         <span class="material-symbols-outlined">close</span>
       </button>
     </header>
@@ -14,37 +14,37 @@
     @if (!eligible()) {
       <div class="custom-url-dialog__notice custom-url-dialog__notice--upgrade">
         <span class="material-symbols-outlined">workspace_premium</span>
-        <span><strong>Custom URLs are a paid feature.</strong><small>Your existing link will keep working. Upgrade to choose a memorable one.</small></span>
+        <span><strong i18n>Custom URLs are a paid feature.</strong><small i18n>Your existing link will keep working. Upgrade to choose a memorable one.</small></span>
       </div>
-      <a routerLink="/pricing" class="custom-url-dialog__upgrade">View membership options</a>
+      <a routerLink="/pricing" class="custom-url-dialog__upgrade" i18n>View membership options</a>
     } @else if (!publicResource()) {
       <div class="custom-url-dialog__notice">
         <span class="material-symbols-outlined">visibility_off</span>
-        <span><strong>{{ resourceType() === 'board' ? 'Choose Public or Unlisted first.' : 'Make this collection public first.' }}</strong><small>Custom URLs cannot point to private content.</small></span>
+        <span><strong>{{ resourceType() === 'board' ? templateText.message1 : templateText.message2 }}</strong><small i18n>Custom URLs cannot point to private content.</small></span>
       </div>
     } @else {
-      <p>Choose the address people will use to open <strong>{{ resourceTitle() }}</strong>.</p>
+      <p i18n>Choose the address people will use to open <strong>{{ resourceTitle() }}</strong>.</p>
       @if (activeSlug()) {
         <div class="custom-url-dialog__current">
           <span>
-            <small>Current custom link</small>
+            <small i18n>Current custom link</small>
             <strong>{{ prefix() }}{{ activeSlug() }}</strong>
           </span>
           <button type="button" (click)="copyCurrentUrl()">
             <span class="material-symbols-outlined" aria-hidden="true">{{ copyState() === 'copied' ? 'check' : 'content_copy' }}</span>
-            {{ copyState() === 'copied' ? 'Copied' : 'Copy link' }}
+            {{ copyState() === 'copied' ? templateText.message3 : templateText.message4 }}
           </button>
         </div>
       }
       @if (insightsPath()) {
         <a class="custom-url-dialog__insights" [routerLink]="insightsPath()" (click)="close()">
           <span class="material-symbols-outlined">monitoring</span>
-          <span><strong>View board insights</strong><small>See views, referrals, clicks, and tracked campaigns.</small></span>
+          <span><strong i18n>View board insights</strong><small i18n>See views, referrals, clicks, and tracked campaigns.</small></span>
           <span class="material-symbols-outlined">arrow_forward</span>
         </a>
       }
       <label class="custom-url-field">
-        <span>{{ currentSlug() ? 'Change custom address' : 'Custom address' }}</span>
+        <span>{{ currentSlug() ? templateText.message5 : templateText.message6 }}</span>
         <span class="custom-url-field__control">
           <span>{{ prefix() }}</span>
           <input
@@ -64,7 +64,7 @@
       </label>
       @if (!validationError()) {
         <div class="custom-url-dialog__preview">
-          <small>URL preview</small>
+          <small i18n>URL preview</small>
           <span>{{ prefix() }}{{ normalizedSlug() }}</span>
         </div>
       }
@@ -72,11 +72,11 @@
         @if (validationError()) {
           <span class="is-error"><span class="material-symbols-outlined">error</span>{{ validationError() }}</span>
         } @else if (availability() === 'checking') {
-          <span><span class="material-symbols-outlined custom-url-spin">progress_activity</span>Checking availability…</span>
+          <span i18n><span class="material-symbols-outlined custom-url-spin">progress_activity</span>Checking availability…</span>
         } @else if (availability() === 'taken') {
-          <span class="is-error"><span class="material-symbols-outlined">cancel</span>That address is already taken.</span>
+          <span class="is-error" i18n><span class="material-symbols-outlined">cancel</span>That address is already taken.</span>
         } @else if (availability() === 'available') {
-          <span class="is-available"><span class="material-symbols-outlined">check_circle</span>This address is available.</span>
+          <span class="is-available" i18n><span class="material-symbols-outlined">check_circle</span>This address is available.</span>
         }
       </div>
       <div class="custom-url-dialog__assurance">
@@ -86,18 +86,18 @@
       @if (savedResult()) {
         <div class="custom-url-dialog__success">
           <span class="material-symbols-outlined">celebration</span>
-          <span><strong>Your custom URL is ready.</strong><small>Use the Copy link button above to share it.</small></span>
+          <span><strong i18n>Your custom URL is ready.</strong><small i18n>Use the Copy link button above to share it.</small></span>
         </div>
       }
       @if (error()) {
         <p class="custom-url-dialog__error" role="status">{{ error() }}</p>
       }
       <footer>
-        <button type="button" class="custom-url-dialog__cancel" [disabled]="saving()" (click)="close()">{{ savedResult() ? 'Done' : 'Cancel' }}</button>
+        <button type="button" class="custom-url-dialog__cancel" [disabled]="saving()" (click)="close()">{{ savedResult() ? templateText.message7 : templateText.message8 }}</button>
         @if (!savedResult()) {
           <button type="button" class="custom-url-dialog__save" [disabled]="!canSave()" (click)="save()">
             <span class="material-symbols-outlined">{{ saving() ? 'progress_activity' : 'link' }}</span>
-            {{ saving() ? 'Saving…' : currentSlug() ? 'Update URL' : 'Set URL' }}
+            {{ saving() ? templateText.message9 : currentSlug() ? templateText.message10 : templateText.message11 }}
           </button>
         }
       </footer>

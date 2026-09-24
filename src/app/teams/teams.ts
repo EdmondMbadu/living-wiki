@@ -66,6 +66,95 @@ import {
   styleUrl: './teams.css',
 })
 export class TeamsComponent {
+  readonly templateText = {
+    message1: $localize`Creating your team…`,
+    message2: $localize`Create team`,
+    message3: $localize`As a platform admin, you can create multiple teams.`,
+    message4: $localize`One created team per account. You can join other teams.`,
+    message5: $localize`Team admin`,
+    message6: $localize`Team member`,
+    message7: $localize`Archived`,
+    message8: $localize`Private workspace`,
+    message9: $localize`Invitation already accepted`,
+    message10: $localize`This invitation has expired`,
+    message11: $localize`Invitation declined`,
+    message12: $localize`This invitation is no longer available`,
+    message13: $localize`You’re invited to `,
+    message14: $localize`Sign in to review your invitations`,
+    message15: $localize`Change cover photo`,
+    message16: $localize`Add a cover photo`,
+    message17: $localize`Real estate listings and virtual tours, brought together.`,
+    message18: $localize`Meet the team`,
+    message19: $localize`Members`,
+    message20: $localize`Refreshing…`,
+    message21: $localize`Retry analytics`,
+    message22: $localize`Refresh analytics`,
+    message23: $localize`Less detail`,
+    message24: $localize`Participants & chats`,
+    message25: $localize`Voice unavailable · select another`,
+    message26: $localize`Unlisted`,
+    message27: $localize`Public`,
+    message28: $localize` min`,
+    message29: $localize`No listings match these filters`,
+    message30: $localize`Your first team listing starts here`,
+    message31: $localize`Try another search, status, or team member.`,
+    message32: $localize`Create a real estate TalkThru. Everyone on the team can help refine its cards before it goes public.`,
+    message33: $localize`Meet our team`,
+    message34: $localize`Team members`,
+    message35: $localize`Local expertise. Personal attention.`,
+    message36: $localize`Everyone here can access and collaborate on the team’s listings.`,
+    message37: $localize`Owner · Admin`,
+    message38: $localize`Admin`,
+    message39: $localize`Member`,
+    message40: $localize`No voice shared`,
+    message41: $localize`Visible on public page`,
+    message42: $localize`Private team profile`,
+    message43: $localize`Edit my team profile`,
+    message44: $localize`Manage member`,
+    message45: $localize`The team hasn’t added a description yet.`,
+    message46: $localize`Add an existing listing`,
+    message47: $localize`Team settings`,
+    message48: $localize`Invite your team`,
+    message49: $localize`Share this listing`,
+    message50: $localize`Your voice, your choice`,
+    message51: $localize`The listing leaves My Boards. Its existing link becomes unavailable until the team publishes it again.`,
+    message52: $localize`A separate team-owned copy gets a new link. Your original stays unchanged.`,
+    message53: $localize`Adding listing…`,
+    message54: $localize`Copy to team`,
+    message55: $localize`Move to team`,
+    message56: $localize`Replace logo`,
+    message57: $localize`Choose logo`,
+    message58: $localize`Replace cover photo`,
+    message59: $localize`Choose cover photo`,
+    message60: $localize`cover photo`,
+    message61: $localize`Uploading photo…`,
+    message62: $localize`Saving…`,
+    message63: $localize`Save team settings`,
+    message64: $localize`Sending invitations…`,
+    message65: $localize`Send invitations`,
+    message66: $localize`Save profile`,
+    message67: $localize`Make member`,
+    message68: $localize`Make team admin`,
+    message69: $localize`Make private`,
+    message70: $localize`Publish `,
+    message71: $localize` version`,
+    message72: $localize`Publish changes`,
+    message73: $localize`Share unlisted listing`,
+    message74: $localize`Publish listing`,
+    message75: $localize`Mark contacted`,
+    message76: $localize`Contacted · mark new`,
+    message77: $localize`Loading conversations…`,
+    message78: $localize`View conversations`,
+    message79: $localize`Visitor`,
+    message80: $localize`Assistant`,
+    message81: $localize`member`,
+    message82: $localize`members`,
+    message83: $localize`logo`,
+    message84: $localize`unlisted`,
+    message85: $localize`public`,
+    message86: $localize`Manage `,
+    message87: $localize`Team name`,
+  };
   readonly auth = inject(AuthService);
   readonly teams = inject(TeamsService);
   private readonly voices = inject(PersonalVoiceService);
@@ -208,16 +297,16 @@ export class TeamsComponent {
   });
   readonly activityPeriodLabel = computed(() =>
     this.reportLoading()
-      ? 'Loading activity…'
+      ? $localize`Loading activity…`
       : this.reportError()
-        ? 'Activity unavailable'
+        ? $localize`Activity unavailable`
         : `Last ${this.days()} days · UTC`,
   );
   readonly voicePeriodLabel = computed(() =>
     this.report()?.totals.voiceSeconds == null
       ? this.reportLoading() || this.reportError()
         ? this.activityPeriodLabel()
-        : 'Not tracked yet'
+        : $localize`Not tracked yet`
       : this.activityPeriodLabel(),
   );
   readonly pendingInvitations = computed(
@@ -376,7 +465,7 @@ export class TeamsComponent {
               this.contacts.set([]);
               this.conversations.set([]);
               this.error.set(
-                'Your access to this team has ended. Your personal boards are unchanged.',
+                $localize`Your access to this team has ended. Your personal boards are unchanged.`,
               );
             },
           );
@@ -449,7 +538,7 @@ export class TeamsComponent {
     } catch {
       if (isCurrent())
         this.reportError.set(
-          'Analytics are temporarily unavailable. No activity has been assumed.',
+          $localize`Analytics are temporarily unavailable. No activity has been assumed.`,
         );
     } finally {
       if (isCurrent()) this.reportLoading.set(false);
@@ -769,7 +858,7 @@ export class TeamsComponent {
     if (this.busy()) return;
     if (!this.settingsBaseline || this.settingsRevision === undefined) {
       this.modalError.set(
-        'This settings form is out of date. Close and reopen Team settings before saving. Your existing saved team details have not changed.',
+        $localize`This settings form is out of date. Close and reopen Team settings before saving. Your existing saved team details have not changed.`,
       );
       return;
     }
@@ -787,7 +876,7 @@ export class TeamsComponent {
     }
     if (typeof changes['name'] === 'string' && changes['name'].length < 2) {
       this.modalError.set(
-        'Use at least two characters for a new team name, or leave it blank to keep the current name.',
+        $localize`Use at least two characters for a new team name, or leave it blank to keep the current name.`,
       );
       return;
     }
@@ -799,7 +888,7 @@ export class TeamsComponent {
         changes['website'] = url.href;
       } catch {
         this.modalError.set(
-          'Enter a valid HTTPS website address, or leave Website blank to remove it.',
+          $localize`Enter a valid HTTPS website address, or leave Website blank to remove it.`,
         );
         return;
       }
@@ -808,7 +897,7 @@ export class TeamsComponent {
       changes['contactEmail'] &&
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(changes['contactEmail'] as string)
     ) {
-      this.modalError.set('Enter a valid business email address, or leave it blank to remove it.');
+      this.modalError.set($localize`Enter a valid business email address, or leave it blank to remove it.`);
       return;
     }
     if (!Object.keys(changes).length) {
@@ -846,7 +935,7 @@ export class TeamsComponent {
       else input.click();
     } catch {
       this.modalError.set(
-        'Your browser could not open the file picker. Try the photo button again, or reload this page.',
+        $localize`Your browser could not open the file picker. Try the photo button again, or reload this page.`,
       );
     }
   }
@@ -1017,7 +1106,7 @@ export class TeamsComponent {
     try {
       this.qrUrl.set(publicBoardQrImageUrl(listing.id));
     } catch {
-      this.modalError.set('The QR code could not be created. Please try again.');
+      this.modalError.set($localize`The QR code could not be created. Please try again.`);
     }
   }
   async copyLink(listing: TeamListing): Promise<void> {
@@ -1025,7 +1114,7 @@ export class TeamsComponent {
       await navigator.clipboard.writeText(this.publicShareUrl(listing));
       this.notice.set('Listing link copied.');
     } catch {
-      this.modalError.set('Could not copy automatically. Use the View listing link.');
+      this.modalError.set($localize`Could not copy automatically. Use the View listing link.`);
     }
   }
   signinReturn(): Record<string, string> {

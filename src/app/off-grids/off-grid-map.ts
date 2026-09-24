@@ -182,7 +182,7 @@ export class OffGridMapComponent implements AfterViewInit {
       this.render();
     } catch {
       this.error.set(
-        'The map is unavailable. You can still enter coordinates and open directions.',
+        $localize`The map is unavailable. You can still enter coordinates and open directions.`,
       );
     } finally {
       this.loading.set(false);

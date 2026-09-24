@@ -38,6 +38,10 @@ type PricingPlan = {
   styleUrl: './pricing.css',
 })
 export class PricingComponent implements OnInit {
+  readonly templateText = {
+    message1: $localize`Personal plan`,
+    message2: $localize`Starting checkout...`,
+  };
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);

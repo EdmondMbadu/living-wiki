@@ -17,6 +17,19 @@ import {
   styleUrl: './custom-public-url-dialog.css',
 })
 export class CustomPublicUrlDialogComponent implements OnInit, AfterViewInit, OnDestroy {
+  readonly templateText = {
+    message1: $localize`Choose Public or Unlisted first.`,
+    message2: $localize`Make this collection public first.`,
+    message3: $localize`Copied`,
+    message4: $localize`Copy link`,
+    message5: $localize`Change custom address`,
+    message6: $localize`Custom address`,
+    message7: $localize`Done`,
+    message8: $localize`Cancel`,
+    message9: $localize`Saving…`,
+    message10: $localize`Update URL`,
+    message11: $localize`Set URL`,
+  };
   private readonly customUrls = inject(CustomPublicUrlService);
   private availabilityTimer: ReturnType<typeof setTimeout> | null = null;
   private availabilityRun = 0;
@@ -42,7 +55,7 @@ export class CustomPublicUrlDialogComponent implements OnInit, AfterViewInit, On
   readonly savedResult = signal<SetCustomPublicUrlResult | null>(null);
   readonly normalizedSlug = computed(() => normalizeCustomPublicUrlSlug(this.value()));
   readonly validationError = computed(() => customPublicUrlSlugError(this.normalizedSlug()));
-  readonly resourceLabel = computed(() => this.resourceType() === 'board' ? 'board' : 'collection');
+  readonly resourceLabel = computed(() => this.resourceType() === 'board' ? $localize`board` : $localize`collection`);
   readonly prefix = computed(() => this.resourceType() === 'board' ? 'livingwiki.com/boards/' : 'livingwiki.com/collections/');
   readonly previewPath = computed(() => customPublicUrlPath(this.resourceType(), this.normalizedSlug()));
   readonly activeSlug = computed(() => this.savedResult()?.slug || normalizeCustomPublicUrlSlug(this.currentSlug()));
@@ -132,7 +145,7 @@ export class CustomPublicUrlDialogComponent implements OnInit, AfterViewInit, On
         this.error.set(null);
       } else {
         this.copyState.set('failed');
-        this.error.set('Copy was blocked. Select the link shown above and copy it manually.');
+        this.error.set($localize`Copy was blocked. Select the link shown above and copy it manually.`);
       }
     }
   }
@@ -153,7 +166,7 @@ export class CustomPublicUrlDialogComponent implements OnInit, AfterViewInit, On
         .catch(() => {
           if (run === this.availabilityRun) {
             this.availability.set('idle');
-            this.error.set('Availability could not be checked. Try again.');
+            this.error.set($localize`Availability could not be checked. Try again.`);
           }
         });
     }, 220);

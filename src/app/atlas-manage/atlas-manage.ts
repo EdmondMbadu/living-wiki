@@ -208,6 +208,66 @@ function parseOptionalPositiveNumber(value: string): number | null {
   templateUrl: './atlas-manage.html',
 })
 export class AtlasManageComponent {
+  readonly templateText = {
+    message1: $localize`Loading businesses...`,
+    message2: $localize` businesses connected to this account.`,
+    message3: $localize`Business`,
+    message4: $localize`No location detail yet`,
+    message5: $localize`Copied`,
+    message6: $localize`Copy link`,
+    message7: $localize`Close editor`,
+    message8: $localize`Edit business`,
+    message9: $localize`Not set`,
+    message10: $localize`No admin email`,
+    message11: $localize`No guide prompt saved yet.`,
+    message12: $localize`Saving...`,
+    message13: $localize`Save business changes`,
+    message14: $localize`Creating…`,
+    message15: $localize`Create university`,
+    message16: $localize`Importing…`,
+    message17: $localize`Create all universities`,
+    message18: $localize`Not run yet`,
+    message19: $localize`Refresh progress`,
+    message20: $localize`Backfill progress`,
+    message21: $localize`Creating...`,
+    message22: $localize`Create fresh city`,
+    message23: $localize`Upgrade required`,
+    message24: $localize`Create valid rows`,
+    message25: $localize`Missing city`,
+    message26: $localize`No title`,
+    message27: $localize`No description`,
+    message28: $localize`America/New_York`,
+    message29: $localize`Retry available`,
+    message30: $localize`Adding covers...`,
+    message31: $localize`Automate missing covers`,
+    message32: $localize`Adding...`,
+    message33: $localize`Add cover`,
+    message34: $localize`Save`,
+    message35: $localize`Hide details`,
+    message36: $localize`Details`,
+    message37: $localize`Deleting...`,
+    message38: $localize`Delete`,
+    message39: $localize`Edit voice`,
+    message40: $localize`Set voice`,
+    message41: $localize`Save Vapi settings`,
+    message42: $localize`Copy URL`,
+    message43: $localize`Save text settings`,
+    message44: $localize`Uploading`,
+    message45: $localize`Upload`,
+    message46: $localize`Save chat guide`,
+    message47: $localize`Save email settings`,
+    message48: $localize`Generating...`,
+    message49: $localize`Send test email`,
+    message50: $localize` shared admin`,
+    message51: $localize`Owner only`,
+    message52: $localize`Add admin`,
+    message53: $localize`Removing...`,
+    message54: $localize`Remove`,
+    message55: $localize`Edit city pulse`,
+    message56: $localize`Set up city pulse`,
+    message57: $localize`Save city pulse`,
+    message58: $localize`Delete empty Wiki`,
+  };
   private readonly atlasService = inject(AtlasService);
   private readonly authService = inject(AuthService);
   private readonly businessClaimService = inject(BusinessClaimService);
@@ -1369,12 +1429,12 @@ export class AtlasManageComponent {
     event.preventDefault();
     const draft = this.universityDraft();
     if (!draft.unit_id.trim() || !draft.official_name.trim() || !draft.city.trim() || !draft.state.trim()) {
-      this.universityBulkError.set('Unit ID, official name, city, and state are required.');
+      this.universityBulkError.set($localize`Unit ID, official name, city, and state are required.`);
       return;
     }
     const enrollment = parseOptionalPositiveInteger(draft.undergraduate_enrollment);
     if (Number.isNaN(enrollment)) {
-      this.universityBulkError.set('Enrollment must be a positive number.');
+      this.universityBulkError.set($localize`Enrollment must be a positive number.`);
       return;
     }
     this.creatingUniversities.set(true);
@@ -1404,7 +1464,7 @@ export class AtlasManageComponent {
         this.universityDraft.set({ unit_id: '', official_name: '', city: '', state: '', website: '', control: 'Unknown', undergraduate_enrollment: '', hero_url: '', logo_url: '', description: '' });
       }
     } catch (error) {
-      this.universityBulkError.set(error instanceof Error ? error.message : 'Failed to create university Wiki.');
+      this.universityBulkError.set(error instanceof Error ? error.message : $localize`Failed to create university Wiki.`);
     } finally {
       this.creatingUniversities.set(false);
     }
@@ -1475,7 +1535,7 @@ export class AtlasManageComponent {
     } catch (error) {
       this.universityBulkRows.set([]);
       this.universityBulkFileName.set(null);
-      this.universityBulkError.set(error instanceof Error ? error.message : 'Failed to read university CSV.');
+      this.universityBulkError.set(error instanceof Error ? error.message : $localize`Failed to read university CSV.`);
     }
   }
 
@@ -1499,7 +1559,7 @@ export class AtlasManageComponent {
       const progress = this.universityBulkProgress();
       this.universityCreationMessage.set(`University import finished: ${progress?.created ?? 0} created, ${progress?.skipped ?? 0} skipped, ${progress?.failed ?? 0} failed.`);
     } catch (error) {
-      this.universityBulkError.set(error instanceof Error ? error.message : 'University import failed. The completed batches are safe; retry to skip duplicates.');
+      this.universityBulkError.set(error instanceof Error ? error.message : $localize`University import failed. The completed batches are safe; retry to skip duplicates.`);
     } finally {
       this.creatingUniversities.set(false);
     }

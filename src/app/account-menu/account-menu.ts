@@ -10,6 +10,15 @@ import { profileIconByCode, profileIconForSeed } from '../profile/profile-icons'
   templateUrl: './account-menu.html',
 })
 export class AccountMenuComponent {
+  readonly templateText = {
+    message1: $localize`Signing out...`,
+    message2: $localize`Sign out`,
+    message3: $localize`Notifications, `,
+    message4: $localize` need your attention`,
+    message5: $localize`Notifications unavailable. Open to retry.`,
+    message6: $localize`Notifications`,
+    message7: $localize` profile photo`,
+  };
   readonly teams = inject(TeamsService);
   private readonly authService = inject(AuthService);
   private readonly elementRef = inject(ElementRef);

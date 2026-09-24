@@ -7,9 +7,9 @@ import { getFirebaseFunctions } from '../firebase.client';
 const exampleUrl = 'https://www.livingwiki.com/share/board/00f3683f-229a-4fb6-8e28-2faf028ff1e0?v=2026-09-15T21%3A03%3A58.442Z&ui=en';
 
 const previews = [
-  { label: 'The property', image: '/assets/talkthrus/property.png', alt: 'Beach Holiday Condo TalkThru listing example', step: '01 / SET THE SCENE', heading: 'A home worth getting to know.', body: 'Bring the listing together in a visual story that buyers can explore at their own pace.' },
-  { label: 'The agent', image: '/assets/talkthrus/agent.png', alt: 'Chip Watson personal welcome card', step: '02 / MAKE IT PERSONAL', heading: 'Start with a familiar voice. Yours.', body: 'Introduce yourself and welcome buyers into the property. Give them a person to connect with from the very beginning.' },
-  { label: 'The narration', image: '/assets/talkthrus/voice.png', alt: 'TalkThru narration settings with style and length choices', step: '03 / TELL ITS STORY', heading: 'Add the details only you can.', body: 'Shape the narration around your insights, from the way a room feels to the features that deserve a closer look.' },
+  { label: $localize`The property`, image: '/assets/talkthrus/property.png', alt: 'Beach Holiday Condo TalkThru listing example', step: '01 / SET THE SCENE', heading: 'A home worth getting to know.', body: 'Bring the listing together in a visual story that buyers can explore at their own pace.' },
+  { label: $localize`The agent`, image: '/assets/talkthrus/agent.png', alt: 'Chip Watson personal welcome card', step: '02 / MAKE IT PERSONAL', heading: 'Start with a familiar voice. Yours.', body: 'Introduce yourself and welcome buyers into the property. Give them a person to connect with from the very beginning.' },
+  { label: $localize`The narration`, image: '/assets/talkthrus/voice.png', alt: 'TalkThru narration settings with style and length choices', step: '03 / TELL ITS STORY', heading: 'Add the details only you can.', body: 'Shape the narration around your insights, from the way a room feels to the features that deserve a closer look.' },
 ] as const;
 
 @Component({
@@ -19,6 +19,10 @@ const previews = [
   styleUrl: './talkthrus.css',
 })
 export class TalkThrusComponent {
+  readonly templateText = {
+    message1: $localize`Sending…`,
+    message2: $localize`Sign up for TalkThrus`,
+  };
   readonly exampleUrl = exampleUrl;
   readonly previews = previews;
   readonly selectedPreview = signal(0);
@@ -57,7 +61,7 @@ export class TalkThrusComponent {
       });
       this.submitted.set(true);
     } catch {
-      this.error.set('We couldn’t send your request. Please try again.');
+      this.error.set($localize`We couldn’t send your request. Please try again.`);
     } finally {
       this.sending.set(false);
     }

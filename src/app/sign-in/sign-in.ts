@@ -12,6 +12,10 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
   styleUrl: '../auth-page.css',
 })
 export class SignInComponent {
+  readonly templateText = {
+    message1: $localize`Hide password`,
+    message2: $localize`Show password`,
+  };
   private readonly formBuilder = inject(NonNullableFormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);

@@ -24,7 +24,7 @@
     @if (isHomeRoute()) {
     <main class="mobile-home-main">
       <p class="mobile-tagline">
-        <span>Find what </span><em>lights you up.</em>
+        <span i18n>Find what </span><em i18n>lights you up.</em>
       </p>
 
       <section id="mobile-city" class="mobile-city-block mobile-city-block--top">
@@ -32,9 +32,9 @@
           @if (mobileDirectoryPreference(); as selectedWiki) {
             <span class="mobile-selected-city-picture">
               @if (mobileDirectoryIsUniversities() && selectedWiki.logoUrl) {
-                <img class="mobile-selected-city-picture__logo" [src]="selectedWiki.logoUrl" [alt]="cityDisplayName(selectedWiki) + ' logo'" />
+                <img class="mobile-selected-city-picture__logo" [src]="selectedWiki.logoUrl" [alt]="cityDisplayName(selectedWiki) + templateText.message24" />
               } @else if (selectedWiki.heroUrl) {
-                <img [src]="selectedWiki.heroUrl" [alt]="cityDisplayName(selectedWiki) + ' image'" />
+                <img [src]="selectedWiki.heroUrl" [alt]="cityDisplayName(selectedWiki) + templateText.message25" />
               } @else {
                 <span>{{ initialsFor(cityDisplayName(selectedWiki)) }}</span>
               }
@@ -45,7 +45,7 @@
             </span>
           }
           <div class="mobile-city-identity">
-            <span class="mobile-city-label">Your place</span>
+            <span class="mobile-city-label" i18n>Your place</span>
             <div class="mobile-city-identity__line">
               <button
                 type="button"
@@ -56,10 +56,10 @@
                 <span>{{ mobileDirectoryPreferenceName() }}</span>
               </button>
               <button type="button" class="mobile-city-change" (click)="beginChangingHomeDirectoryPreference()">
-                {{ mobileDirectoryPreference() ? 'Change' : 'Choose' }}
+                {{ mobileDirectoryPreference() ? templateText.message1 : templateText.message2 }}
               </button>
               @if (mobileDirectoryIsUniversities() && mobileDirectoryPreference()) {
-                <button type="button" class="mobile-city-clear" (click)="clearHomeDirectoryPreference()">Clear</button>
+                <button type="button" class="mobile-city-clear" (click)="clearHomeDirectoryPreference()" i18n>Clear</button>
               }
             </div>
           </div>
@@ -67,7 +67,7 @@
 
         <div class="mobile-city-command-row">
         <div class="mobile-directory-tools">
-          <div class="mobile-directory-switch" role="group" aria-label="Browse cities or universities">
+          <div class="mobile-directory-switch" role="group" aria-label="Browse cities or universities" i18n-aria-label>
             <button
               type="button"
               [class.active]="!mobileDirectoryIsUniversities()"
@@ -75,7 +75,7 @@
               (click)="setHomeDirectoryCategory('Cities')"
             >
               <span class="material-symbols-outlined">location_city</span>
-              <span>Cities</span>
+              <span i18n>Cities</span>
             </button>
             <button
               type="button"
@@ -84,7 +84,7 @@
               (click)="setHomeDirectoryCategory('Universities')"
             >
               <span class="material-symbols-outlined">school</span>
-              <span>Universities</span>
+              <span i18n>Universities</span>
             </button>
           </div>
 
@@ -92,11 +92,11 @@
             type="button"
             class="mobile-all-cities-link"
             (click)="openHomeDirectory()"
-            [attr.aria-label]="mobileDirectoryIsUniversities() ? 'Browse all universities' : 'Browse all cities'"
+            [attr.aria-label]="mobileDirectoryIsUniversities() ? templateText.message26 : templateText.message27"
           >
-            <span class="mobile-directory-browse-label">Browse</span>
+            <span class="mobile-directory-browse-label" i18n>Browse</span>
             <span class="mobile-directory-browse-value">
-              All {{ mobileDirectoryIsUniversities() ? 'universities' : 'cities' }}
+              All {{ mobileDirectoryIsUniversities() ? templateText.message20 : templateText.message21 }}
               <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
             </span>
           </button>
@@ -149,7 +149,7 @@
                       <b>{{ cityDisplayName(suggestion) }}</b>
                       <small>{{ directorySuggestionMeta(suggestion) }}</small>
                     </span>
-                    <span class="mobile-directory-suggestion-action">
+                    <span class="mobile-directory-suggestion-action" i18n>
                       Make mine
                       <span class="material-symbols-outlined">arrow_forward</span>
                     </span>
@@ -158,8 +158,8 @@
               } @else {
                 <div class="mobile-directory-suggestions-empty">
                   <span class="material-symbols-outlined">search_off</span>
-                  <span>No {{ mobileDirectoryIsUniversities() ? 'universities' : 'cities' }} found</span>
-                  <button type="button" (click)="openHomeDirectory()">View all</button>
+                  <span>No {{ mobileDirectoryIsUniversities() ? templateText.message20 : templateText.message21 }} found</span>
+                  <button type="button" (click)="openHomeDirectory()" i18n>View all</button>
                 </div>
               }
             </div>
@@ -180,16 +180,16 @@
               [queryParams]="{ create: 'gems' }"
               class="mobile-nearby-gems-action"
               aria-label="Find nearby gems and create a board"
-            >
+             i18n-aria-label>
               <span class="material-symbols-outlined" aria-hidden="true">explore_nearby</span>
-              <span>Nearby gems</span>
+              <span i18n>Nearby gems</span>
             </a>
           } @else {
             <button type="button" class="mobile-talk-action mobile-talk-action--empty" (click)="beginChangingHomeDirectoryPreference()">
               <span class="material-symbols-outlined">school</span>
               <span>
-                <b>Choose your university</b>
-                <small>Search by name, city, or state</small>
+                <b i18n>Choose your university</b>
+                <small i18n>Search by name, city, or state</small>
               </span>
             </button>
           }
@@ -204,7 +204,7 @@
             <p i18n>Discover</p>
             <h2 i18n>Boards from around LivingWiki</h2>
           </div>
-          <a routerLink="/discover" class="mobile-rail-view-all">View all</a>
+          <a routerLink="/discover" class="mobile-rail-view-all" i18n>View all</a>
         </div>
         <div class="mobile-card-rail">
         <div class="mobile-card-row" data-home-rail="discover" (scroll)="onHomeRailScroll('discover', $event)">
@@ -239,7 +239,7 @@
             class="mobile-rail-arrow mobile-rail-arrow--back"
             aria-label="Previous boards"
             (click)="moveDiscoverRail(-1)"
-          >
+           i18n-aria-label>
             <span class="material-symbols-outlined">chevron_left</span>
           </button>
         }
@@ -251,7 +251,7 @@
             [class.loading]="mobileDiscoverLoadingMore()"
             [disabled]="mobileDiscoverLoadingMore()"
             (click)="moveDiscoverRail(1)"
-          >
+           i18n-aria-label>
             <span class="material-symbols-outlined">{{ mobileDiscoverLoadingMore() ? 'progress_activity' : 'chevron_right' }}</span>
           </button>
         }
@@ -260,11 +260,11 @@
 
       <section
         class="mobile-row-section mobile-featured-cities"
-        [attr.aria-label]="mobileDirectoryIsUniversities() ? 'Universities' : 'Cities'"
+        [attr.aria-label]="mobileDirectoryIsUniversities() ? templateText.message28 : templateText.message29"
       >
         <div class="mobile-rail-heading">
-          <h2>{{ mobileDirectoryIsUniversities() ? 'Universities' : 'Cities' }}</h2>
-          <button type="button" class="mobile-rail-view-all" (click)="openHomeDirectory()">View all</button>
+          <h2>{{ mobileDirectoryIsUniversities() ? templateText.message3 : templateText.message4 }}</h2>
+          <button type="button" class="mobile-rail-view-all" (click)="openHomeDirectory()" i18n>View all</button>
         </div>
         <div class="mobile-card-rail">
         <div class="mobile-card-row" data-home-rail="directory" (scroll)="onHomeRailScroll('directory', $event)">
@@ -314,12 +314,12 @@
           }
         </div>
         @if (homeRailCanGoBack('directory')) {
-          <button type="button" class="mobile-rail-arrow mobile-rail-arrow--back" aria-label="Previous places" (click)="moveDirectoryRail(-1)">
+          <button type="button" class="mobile-rail-arrow mobile-rail-arrow--back" aria-label="Previous places" (click)="moveDirectoryRail(-1)" i18n-aria-label>
             <span class="material-symbols-outlined">chevron_left</span>
           </button>
         }
         @if (homeRailCanGoForward('directory', hasMoreMobileFeaturedWikis(), mobileFeaturedWikis().length + 1)) {
-          <button type="button" class="mobile-rail-arrow mobile-rail-arrow--forward" aria-label="More places" (click)="moveDirectoryRail(1)">
+          <button type="button" class="mobile-rail-arrow mobile-rail-arrow--forward" aria-label="More places" (click)="moveDirectoryRail(1)" i18n-aria-label>
             <span class="material-symbols-outlined">chevron_right</span>
           </button>
         }
@@ -331,7 +331,7 @@
           <div class="mobile-rail-heading">
             <h2>{{ section.label }}</h2>
             @if (mobileSectionViewAllLink(section); as viewAllLink) {
-              <a [routerLink]="viewAllLink" class="mobile-rail-view-all">View all</a>
+              <a [routerLink]="viewAllLink" class="mobile-rail-view-all" i18n>View all</a>
             }
           </div>
           <div class="mobile-card-rail">
@@ -369,7 +369,7 @@
             <button
               type="button"
               class="mobile-rail-arrow mobile-rail-arrow--back"
-              [attr.aria-label]="'Previous ' + section.label"
+              [attr.aria-label]="templateText.message30 + section.label"
               (click)="moveSectionRail(section, -1)"
             >
               <span class="material-symbols-outlined">chevron_left</span>
@@ -379,7 +379,7 @@
             <button
               type="button"
               class="mobile-rail-arrow mobile-rail-arrow--forward"
-              [attr.aria-label]="'More ' + section.label"
+              [attr.aria-label]="templateText.message31 + section.label"
               [class.loading]="isMobileSectionLoading(section)"
               [disabled]="isMobileSectionLoading(section)"
               (click)="moveSectionRail(section, 1)"
@@ -390,18 +390,18 @@
           </div>
         </section>
         @if (section.id === 'videos') {
-          <section id="mobile-properties" class="mobile-discover-section" aria-label="Properties">
+          <section id="mobile-properties" class="mobile-discover-section" aria-label="Properties" i18n-aria-label>
             <div class="mobile-discover-head">
               <span class="material-symbols-outlined">real_estate_agent</span>
               <div>
-                <p>Properties</p>
-                <h2>Homes and places from around LivingWiki</h2>
+                <p i18n>Properties</p>
+                <h2 i18n>Homes and places from around LivingWiki</h2>
               </div>
-              <a routerLink="/properties" class="mobile-rail-view-all">View all</a>
+              <a routerLink="/properties" class="mobile-rail-view-all" i18n>View all</a>
             </div>
             <div class="mobile-card-rail">
             <div class="mobile-card-row" data-home-rail="properties" (scroll)="onHomeRailScroll('properties', $event)">
-              <a routerLink="/properties" class="mobile-icon-tile" aria-label="Explore properties">
+              <a routerLink="/properties" class="mobile-icon-tile" aria-label="Explore properties" i18n-aria-label>
                 <span class="material-symbols-outlined mobile-section-icon">real_estate_agent</span>
                 <span class="mobile-plus">+</span>
               </a>
@@ -423,7 +423,7 @@
                   </a>
                 }
               } @else {
-                <div class="mobile-discover-empty">No properties yet.</div>
+                <div class="mobile-discover-empty" i18n>No properties yet.</div>
               }
             </div>
             @if (homeRailCanGoBack('properties')) {
@@ -432,7 +432,7 @@
                 class="mobile-rail-arrow mobile-rail-arrow--back"
                 aria-label="Previous properties"
                 (click)="movePropertyRail(-1)"
-              >
+               i18n-aria-label>
                 <span class="material-symbols-outlined">chevron_left</span>
               </button>
             }
@@ -444,7 +444,7 @@
                 [class.loading]="mobileDiscoverLoadingMore()"
                 [disabled]="mobileDiscoverLoadingMore()"
                 (click)="movePropertyRail(1)"
-              >
+               i18n-aria-label>
                 <span class="material-symbols-outlined">{{ mobileDiscoverLoadingMore() ? 'progress_activity' : 'chevron_right' }}</span>
               </button>
             }
@@ -483,7 +483,7 @@
     <main class="mobile-home-main mobile-discover-page">
       <section
         class="mobile-discover-section mobile-discover-section--page"
-        [attr.aria-label]="isPropertiesRoute() ? 'Explore properties' : 'Explore more boards'"
+        [attr.aria-label]="isPropertiesRoute() ? templateText.message32 : templateText.message33"
       >
         <div class="mobile-discover-page-hero">
           <a routerLink="/home" class="mobile-discover-back" i18n>
@@ -497,16 +497,16 @@
           }
           <span class="mobile-plus">+</span>
           <div>
-            <h1>{{ isPropertiesRoute() ? 'Explore properties' : 'Explore more' }}</h1>
+            <h1>{{ isPropertiesRoute() ? templateText.message5 : templateText.message6 }}</h1>
           </div>
         </div>
 
         <div
           class="mobile-discover-search"
           role="search"
-          [attr.aria-label]="isPropertiesRoute() ? 'Search properties' : 'Search public boards'"
+          [attr.aria-label]="isPropertiesRoute() ? templateText.message34 : templateText.message35"
         >
-          <label class="sr-only" for="discover-board-search">{{ isPropertiesRoute() ? 'Search properties' : 'Search public boards' }}</label>
+          <label class="sr-only" for="discover-board-search">{{ isPropertiesRoute() ? templateText.message7 : templateText.message8 }}</label>
           <div class="mobile-discover-search__field">
             <span class="material-symbols-outlined" aria-hidden="true">search</span>
             <input
@@ -516,7 +516,7 @@
               spellcheck="false"
               [ngModel]="discoverSearchTerm()"
               (ngModelChange)="onDiscoverSearchInput($event)"
-              [placeholder]="isPropertiesRoute() ? 'Search addresses, places, agents, or features…' : 'Search titles, places, creators, or topics…'"
+              [placeholder]="isPropertiesRoute() ? templateText.message36 : templateText.message37"
             />
             @if (discoverSearchTerm()) {
               <button
@@ -533,12 +533,12 @@
             <div class="mobile-discover-search__status" aria-live="polite">
               <span>
                 {{ mobileDiscoverFilteredBoards().length }}
-                {{ mobileDiscoverFilteredBoards().length === 1 ? 'match' : 'matches' }}{{
-                  mobileDiscoverHasMore() ? ' so far' : ''
+                {{ mobileDiscoverFilteredBoards().length === 1 ? templateText.message22 : templateText.message23 }}{{
+                  mobileDiscoverHasMore() ? templateText.message9 : ''
                 }}
               </span>
               @if (mobileDiscoverLoadingMore()) {
-                <span class="mobile-discover-search__progress">
+                <span class="mobile-discover-search__progress" i18n>
                   <span class="material-symbols-outlined" aria-hidden="true">progress_activity</span>
                   Searching more boards…
                 </span>
@@ -590,7 +590,7 @@
               </article>
             }
           } @else if (mobileDiscoverError()) {
-            <div class="mobile-discover-empty">Couldn’t load boards. Please try again.</div>
+            <div class="mobile-discover-empty" i18n>Couldn’t load boards. Please try again.</div>
           } @else if (discoverSearchQuery()) {
             <div class="mobile-discover-empty mobile-discover-empty--search">
               <span
@@ -600,18 +600,18 @@
               >
                 {{ mobileDiscoverLoadingMore() ? 'progress_activity' : 'search_off' }}
               </span>
-              <strong>{{ mobileDiscoverLoadingMore() ? 'Searching more boards…' : 'No matching boards' }}</strong>
+              <strong>{{ mobileDiscoverLoadingMore() ? templateText.message10 : templateText.message11 }}</strong>
               @if (!mobileDiscoverLoadingMore()) {
-                <span>{{ isPropertiesRoute() ? 'Try an address, place, agent, or property feature.' : 'Try a title, place, creator, card, or topic.' }}</span>
-                <button type="button" (click)="clearDiscoverSearch()">Clear search</button>
+                <span>{{ isPropertiesRoute() ? templateText.message12 : templateText.message13 }}</span>
+                <button type="button" (click)="clearDiscoverSearch()" i18n>Clear search</button>
               }
             </div>
           } @else {
-            <div class="mobile-discover-empty">{{ isPropertiesRoute() ? 'No properties yet.' : 'No boards yet.' }}</div>
+            <div class="mobile-discover-empty">{{ isPropertiesRoute() ? templateText.message14 : templateText.message15 }}</div>
           }
         </div>
         @if (mobileDiscoverError()) {
-          <button type="button" (click)="retryMobileDiscoverBoards()">Try again</button>
+          <button type="button" (click)="retryMobileDiscoverBoards()" i18n>Try again</button>
         }
         @if (hasMoreMobileDiscoverBoards()) {
           <div
@@ -647,18 +647,18 @@
         </span>
       </a>
 
-      <div class="public-editorial-nav__links" aria-label="Primary navigation">
-        <a href="#public-directory">Explore</a>
-        <a routerLink="/dymaxion">Map</a>
-        <a routerLink="/business">For business</a>
-        <a routerLink="/pricing">Pricing</a>
+      <div class="public-editorial-nav__links" aria-label="Primary navigation" i18n-aria-label>
+        <a href="#public-directory" i18n>Explore</a>
+        <a routerLink="/dymaxion" i18n>Map</a>
+        <a routerLink="/business" i18n>For business</a>
+        <a routerLink="/pricing" i18n>Pricing</a>
       </div>
 
       <div class="public-editorial-nav__actions">
         <app-language-switcher></app-language-switcher>
         <app-theme-toggle></app-theme-toggle>
         <app-account-menu></app-account-menu>
-        <a routerLink="/create-account" class="public-editorial-nav__create">Create a LivingWiki</a>
+        <a routerLink="/create-account" class="public-editorial-nav__create" i18n>Create a LivingWiki</a>
       </div>
     </div>
   </nav>
@@ -667,21 +667,21 @@
     <section class="public-landing-hero">
       <div class="public-landing-hero__inner">
         <div class="public-landing-hero__copy">
-          <p class="public-landing-eyebrow">Public knowledge, made living</p>
-          <h1>Find what<br />lights you up.</h1>
-          <p class="public-landing-hero__lede">
+          <p class="public-landing-eyebrow" i18n>Public knowledge, made living</p>
+          <h1 i18n>Find what<br />lights you up.</h1>
+          <p class="public-landing-hero__lede" i18n>
             Ask a city. Explore a campus. Discover the boards people make about the places and ideas they know.
           </p>
           <div class="public-landing-hero__actions">
-            <a href="#public-directory" class="public-landing-primary-cta">Explore LivingWiki</a>
+            <a href="#public-directory" class="public-landing-primary-cta" i18n>Explore LivingWiki</a>
             <button type="button" (click)="openProductVideo()" class="public-landing-video-cta">
               <span class="material-symbols-outlined">play_arrow</span>
-              <span>See how it works</span>
+              <span i18n>See how it works</span>
             </button>
           </div>
         </div>
 
-        <div class="public-landing-collage" aria-label="Featured LivingWiki pages">
+        <div class="public-landing-collage" aria-label="Featured LivingWiki pages" i18n-aria-label>
           @if (landingSpotlightWikis()[0]; as spotlight) {
             <a [routerLink]="spotlight.link || '/chat'" class="public-landing-collage__primary">
               <img [src]="spotlight.heroUrl" [alt]="displayWikiTitle(spotlight)" />
@@ -706,7 +706,7 @@
           } @else {
             <div class="public-landing-collage__secondary public-landing-collage__secondary--bottom public-landing-collage__placeholder"></div>
           }
-          <div class="public-landing-collage__count">
+          <div class="public-landing-collage__count" i18n>
             <span class="material-symbols-outlined">groups</span>
             <strong>{{ liveCount() }}</strong> public LivingWiki pages
           </div>
@@ -720,7 +720,7 @@
               [ngModel]="searchTerm()"
               (ngModelChange)="onSearchInput($event)"
               placeholder="Search cities, universities, neighborhoods, and public LivingWiki pages..."
-            />
+             i18n-placeholder/>
             @if (searchTerm()) {
               <button type="button" (click)="onSearchInput('')" aria-label="Clear search" i18n-aria-label>
                 <span class="material-symbols-outlined">close</span>
@@ -739,7 +739,7 @@
                 </button>
               }
             </div>
-            <p><strong>{{ liveCount() }}</strong> live</p>
+            <p i18n><strong>{{ liveCount() }}</strong> live</p>
           </div>
         </div>
       </div>
@@ -794,12 +794,12 @@
 
         <div class="public-directory__header">
           <div class="public-directory__title">
-            <p>Explore LivingWiki</p>
+            <p i18n>Explore LivingWiki</p>
             <h2>{{ activeCategoryTitle() }}</h2>
           </div>
           <div class="public-directory__controls">
             @if (activeCategory() === 'Cities') {
-              <div class="public-directory__sorts" aria-label="Sort city LivingWiki pages">
+              <div class="public-directory__sorts" aria-label="Sort city LivingWiki pages" i18n-aria-label>
                 @for (sort of sortOptions(); track sort.value) {
                   <button
                     type="button"
@@ -853,7 +853,7 @@
                   <div class="relative aspect-[2/1] w-full overflow-hidden bg-black">
                     <img
                       [src]="wiki.heroUrl"
-                      [alt]="displayWikiTitle(wiki) + ' cover image'"
+                      [alt]="displayWikiTitle(wiki) + templateText.message38"
                       loading="lazy"
                       class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]"
                     />
@@ -884,7 +884,7 @@
                     <div class="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-black/20 p-4 shadow-[0_16px_30px_rgba(0,0,0,0.28)] backdrop-blur-sm">
                       <img
                         [src]="wiki.logoUrl"
-                        [alt]="displayWikiTitle(wiki) + ' logo'"
+                        [alt]="displayWikiTitle(wiki) + templateText.message24"
                         loading="lazy"
                         class="h-full w-full object-contain"
                       />
@@ -906,7 +906,7 @@
                 @if (isDensitySort()) {
                   <div class="public-wiki-metric-band border-y border-white/15 px-5 py-3 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]" [style.background]="densityBandBackground(wiki)">
                     <div class="flex items-center justify-between gap-4">
-                      <span class="flex min-w-0 items-center gap-2 text-3xl font-black leading-none tracking-normal drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)] sm:text-4xl" [attr.aria-label]="densityLabel(wiki) ? densityLabel(wiki) + ' people per square kilometer' : null">
+                      <span class="flex min-w-0 items-center gap-2 text-3xl font-black leading-none tracking-normal drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)] sm:text-4xl" [attr.aria-label]="densityLabel(wiki) ? densityLabel(wiki) + templateText.message39 : null">
                         <span class="truncate">{{ densityHeroLabel(wiki) }}</span>
                         @if (densityLabel(wiki)) {
                           <span class="density-unit-badge" aria-hidden="true">
@@ -991,7 +991,7 @@
                           <span class="city-attribute-sticker__text">
                             <span class="city-attribute-sticker__label">{{ attribute.label }}</span>
                             <span class="city-attribute-sticker__value">{{ attribute.value }}</span>
-                            <span class="city-attribute-sticker__caption" [attr.aria-label]="attribute.captionIcon ? 'People per square kilometer' : null">
+                            <span class="city-attribute-sticker__caption" [attr.aria-label]="attribute.captionIcon ? templateText.message40 : null">
                               @if (attribute.captionIcon) {
                                 <span class="city-attribute-sticker__caption-icon material-symbols-outlined" aria-hidden="true">{{ attribute.captionIcon }}</span>
                               }
@@ -1014,19 +1014,19 @@
                     <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
                       <span class="rounded-xl border border-[var(--line)] bg-[var(--soft-fill)] px-3 py-2">
                         <b class="block text-[var(--text)]">{{ wiki.universityCity }}, {{ wiki.universityState }}</b>
-                        <small class="text-[var(--muted)]">Campus</small>
+                        <small class="text-[var(--muted)]" i18n>Campus</small>
                       </span>
                       <span class="rounded-xl border border-[var(--line)] bg-[var(--soft-fill)] px-3 py-2">
-                        <b class="block text-[var(--text)]">{{ wiki.undergraduateEnrollment ? (wiki.undergraduateEnrollment | number) : 'Not reported' }}</b>
-                        <small class="text-[var(--muted)]">Undergraduates</small>
+                        <b class="block text-[var(--text)]">{{ wiki.undergraduateEnrollment ? (wiki.undergraduateEnrollment | number) : templateText.message16 }}</b>
+                        <small class="text-[var(--muted)]" i18n>Undergraduates</small>
                       </span>
                       <span class="rounded-xl border border-[var(--line)] bg-[var(--soft-fill)] px-3 py-2">
-                        <b class="block text-[var(--text)]">{{ wiki.universityControl || 'Institution' }}</b>
-                        <small class="text-[var(--muted)]">Control</small>
+                        <b class="block text-[var(--text)]">{{ wiki.universityControl || templateText.message17 }}</b>
+                        <small class="text-[var(--muted)]" i18n>Control</small>
                       </span>
                       <span class="rounded-xl border border-[var(--line)] bg-[var(--soft-fill)] px-3 py-2">
-                        <b class="block text-[var(--text)]">{{ wiki.completionRate !== null && wiki.completionRate !== undefined ? ((wiki.completionRate * 100) | number:'1.0-0') + '%' : 'Not reported' }}</b>
-                        <small class="text-[var(--muted)]">Completion</small>
+                        <b class="block text-[var(--text)]">{{ wiki.completionRate !== null && wiki.completionRate !== undefined ? ((wiki.completionRate * 100) | number:'1.0-0') + '%' : templateText.message16 }}</b>
+                        <small class="text-[var(--muted)]" i18n>Completion</small>
                       </span>
                     </div>
                   }
@@ -1051,7 +1051,7 @@
           >
             <span class="material-symbols-outlined">progress_activity</span>
             <span>
-              {{ publicWikiAutoLoading() ? 'Loading the next 10…' : 'More LivingWiki pages load as you scroll' }}
+              {{ publicWikiAutoLoading() ? templateText.message18 : templateText.message19 }}
             </span>
           </div>
         }

@@ -2,7 +2,7 @@
   type="button"
   class="workspace-sidebar__toggle theme-switcher__button"
   [class.workspace-sidebar__toggle--collapsed]="navigation.sidebarCollapsed()"
-  [attr.aria-label]="navigation.sidebarCollapsed() ? 'Open sidebar' : 'Close sidebar'"
+  [attr.aria-label]="navigation.sidebarCollapsed() ? templateText.message1 : templateText.message2"
   (click)="toggleSidebar()"
 >
   <span class="material-symbols-outlined">menu</span>

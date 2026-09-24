@@ -4,7 +4,7 @@
       <span class="chat-map-glyph chat-map-glyph--map" aria-hidden="true"></span>
       <p class="text-xs font-black uppercase tracking-[0.18em] text-[var(--muted)]">{{ mapTitle }}</p>
     </div>
-    <p class="text-[11px] font-bold text-[var(--muted)]" i18n>{{ displayLocations().length }} place{{ displayLocations().length === 1 ? '' : 's' }}</p>
+    <p class="text-[11px] font-bold text-[var(--muted)]" i18n>{{ displayLocations().length }} place{{ displayLocations().length === 1 ? '' : templateText.message1 }}</p>
   </div>
 
   <div class="chat-map-layout">

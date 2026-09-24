@@ -70,7 +70,7 @@
           <h3 i18n>Account</h3>
           <button type="button" class="workspace-dialog__signout" [disabled]="signingOut()" (click)="signOut()">
             <span class="material-symbols-outlined">logout</span>
-            <span>{{ signingOut() ? 'Signing out...' : 'Sign out' }}</span>
+            <span>{{ signingOut() ? templateText.message1 : templateText.message2 }}</span>
           </button>
         </section>
       </div>

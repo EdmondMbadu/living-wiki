@@ -3,52 +3,52 @@
   <div class="notification-shell">
     <header class="notification-topbar">
       <app-mobile-menu activePage="notifications" /><a routerLink="/home" class="wordmark"
-        >Living<span>Wiki</span></a
+        >Living<span i18n>Wiki</span></a
       >
       <div class="topbar-actions"><app-theme-toggle /><app-account-menu /></div>
     </header>
     <main>
       <div class="page-heading">
         <div>
-          <p class="eyebrow">YOUR INBOX</p>
-          <h1>Notifications</h1>
-          <p>Team invitations and updates, all in one place.</p>
+          <p class="eyebrow" i18n>YOUR INBOX</p>
+          <h1 i18n>Notifications</h1>
+          <p i18n>Team invitations and updates, all in one place.</p>
         </div>
         <button
           class="button"
           (click)="markAllRead()"
           [disabled]="busy() || !teams.unreadUpdates().length"
         >
-          {{ busy() ? 'Saving…' : 'Mark updates as read' }}
+          {{ busy() ? templateText.message1 : templateText.message2 }}
         </button>
       </div>
-      <nav class="filters" aria-label="Filter notifications">
+      <nav class="filters" aria-label="Filter notifications" i18n-aria-label>
         <a
           routerLink="/notifications"
           [class.selected]="filter() === 'all'"
           [attr.aria-current]="filter() === 'all' ? 'page' : null"
-          >All <span>{{ teams.attentionCount() }}</span></a
+           i18n>All <span>{{ teams.attentionCount() }}</span></a
         >
         <a
           routerLink="/notifications"
           [queryParams]="{ filter: 'invitations' }"
           [class.selected]="filter() === 'invitations'"
           [attr.aria-current]="filter() === 'invitations' ? 'page' : null"
-          >Invitations <span>{{ teams.invitations().length }}</span></a
+           i18n>Invitations <span>{{ teams.invitations().length }}</span></a
         >
         <a
           routerLink="/notifications"
           [queryParams]="{ filter: 'updates' }"
           [class.selected]="filter() === 'updates'"
           [attr.aria-current]="filter() === 'updates' ? 'page' : null"
-          >Updates</a
+           i18n>Updates</a
         >
       </nav>
       @if (error()) {
         <div class="error" role="alert">{{ error() }}</div>
       }
       @if (teams.notificationsState() === 'error' || teams.invitationsState() === 'error') {
-        <div class="error" role="alert">
+        <div class="error" role="alert" i18n>
           Some notifications couldn’t be refreshed. The items below may be out of date.
           <button (click)="teams.retryNotificationConnection()">Try again</button>
         </div>
@@ -56,27 +56,27 @@
       @if (filter() !== 'updates') {
         <section aria-labelledby="invitation-heading">
           <div class="section-heading">
-            <h2 id="invitation-heading">Needs your response</h2>
+            <h2 id="invitation-heading" i18n>Needs your response</h2>
             <span>{{ teams.invitations().length }} pending</span>
           </div>
           @if (!auth.emailVerified()) {
             <div class="empty">
-              <h3>Verify your email to see invitations</h3>
+              <h3 i18n>Verify your email to see invitations</h3>
               <a routerLink="/verify-email" [queryParams]="{ redirectTo: '/notifications' }"
                 >Verify {{ auth.email() }}</a
               >
             </div>
           } @else if (teams.invitationsState() === 'loading' && !teams.invitations().length) {
-            <p class="empty" role="status">Checking your invitations…</p>
+            <p class="empty" role="status" i18n>Checking your invitations…</p>
           } @else {
             @for (invite of teams.invitations(); track invite.id) {
               <article class="invitation-card">
                 <span class="team-initials">{{ initials(invite.teamName) }}</span>
                 <div class="invitation-copy">
-                  <span class="status">TEAM INVITATION</span>
+                  <span class="status" i18n>TEAM INVITATION</span>
                   <h3>{{ invite.teamName }}</h3>
                   <p>
-                    {{ invite.inviterName || 'A team admin' }} invited you as a {{ invite.role }}.
+                    {{ invite.inviterName || templateText.message3 }} invited you as a {{ invite.role }}.
                   </p>
                   <small
                     >Expires {{ invite.expiresAt | date: 'MMM d, y' }} · Personal work stays
@@ -87,14 +87,14 @@
                   class="button primary"
                   routerLink="/teams/invitations"
                   [queryParams]="{ invite: invite.id }"
-                  >Review invitation <span aria-hidden="true">→</span></a
+                   i18n>Review invitation <span aria-hidden="true">→</span></a
                 >
               </article>
             } @empty {
               @if (teams.invitationsState() === 'ready') {
                 <div class="empty">
                   <span class="material-symbols-outlined" aria-hidden="true">mark_email_read</span>
-                  <h3>No pending invitations</h3>
+                  <h3 i18n>No pending invitations</h3>
                   <p>Invitations sent to {{ auth.email() }} will appear here.</p>
                 </div>
               }
@@ -105,8 +105,8 @@
       @if (filter() !== 'invitations') {
         <section aria-labelledby="updates-heading">
           <div class="section-heading">
-            <h2 id="updates-heading">Team updates</h2>
-            <span>Recent history + all unread</span>
+            <h2 id="updates-heading" i18n>Team updates</h2>
+            <span i18n>Recent history + all unread</span>
           </div>
           @for (item of updates(); track item.id) {
             <button class="update" [class.unread]="!item.read" (click)="openUpdate(item)">
@@ -118,18 +118,18 @@
                 ><small>{{ item.createdAt | date: 'MMM d, h:mm a' }}</small></span
               >
               @if (!item.read) {
-                <span class="unread-dot" aria-label="Unread"></span>
+                <span class="unread-dot" aria-label="Unread" i18n-aria-label></span>
               }
               <span aria-hidden="true">→</span>
             </button>
           } @empty {
             @if (teams.notificationsState() === 'ready') {
               <div class="empty">
-                <h3>You’re up to date</h3>
-                <p>Membership changes and important team updates will appear here.</p>
+                <h3 i18n>You’re up to date</h3>
+                <p i18n>Membership changes and important team updates will appear here.</p>
               </div>
             } @else if (teams.notificationsState() !== 'error') {
-              <p class="empty" role="status">Loading updates…</p>
+              <p class="empty" role="status" i18n>Loading updates…</p>
             }
           }
         </section>

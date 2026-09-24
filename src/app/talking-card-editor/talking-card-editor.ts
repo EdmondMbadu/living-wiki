@@ -41,6 +41,67 @@ type EditorSection = 'card' | 'knowledge' | 'voice' | 'actions';
   styleUrl: './talking-card-editor.css',
 })
 export class TalkingCardEditorComponent implements OnDestroy, OnInit {
+  readonly templateText = {
+    message1: $localize`Edit Talking Card & avatar`,
+    message2: $localize`Create your property guide`,
+    message3: $localize`Add a Talking Card`,
+    message4: $localize`Deep-edit the card, avatar prompt, documents, voice, and visitor actions.`,
+    message5: $localize`Visitors can ask about this home, hear from you, and contact you when they’re ready.`,
+    message6: $localize`Add a conversational guide anywhere in this board’s flow.`,
+    message7: $localize`Replace profile photo`,
+    message8: $localize`Add profile photo`,
+    message9: $localize`Your voice`,
+    message10: $localize`Selected`,
+    message11: $localize`Stop`,
+    message12: $localize`Preview`,
+    message13: $localize`Done`,
+    message14: $localize`Change`,
+    message15: $localize`Replace portrait`,
+    message16: $localize`Add portrait`,
+    message17: $localize`Public library`,
+    message18: $localize`Conversational guide`,
+    message19: $localize`adding the card`,
+    message20: $localize`Loading…`,
+    message21: $localize`Create my voice`,
+    message22: $localize`Add voice`,
+    message23: $localize`Upgrade`,
+    message24: $localize`Deleting…`,
+    message25: $localize`Delete`,
+    message26: $localize`Replace this voice`,
+    message27: $localize`Create a voice`,
+    message28: $localize`Stop recording`,
+    message29: $localize`Record my voice`,
+    message30: $localize`Uploading… `,
+    message31: $localize`Creating your voice…`,
+    message32: $localize`Create this voice`,
+    message33: $localize` matching voices`,
+    message34: $localize`All `,
+    message35: $localize` voices`,
+    message36: $localize`Changing the voice updates this avatar anywhere it speaks.`,
+    message37: $localize`This voice will be saved to the new avatar and used in live conversations.`,
+    message38: $localize`Scheduling`,
+    message39: $localize`Additional link`,
+    message40: $localize`Shown prominently in recap emails.`,
+    message41: $localize`Shown with the Talking Card actions.`,
+    message42: $localize`Saving…`,
+    message43: $localize`Save changes`,
+    message44: $localize`Create my Talking Card`,
+    message45: $localize`Add Talking Card`,
+    message46: $localize`saving`,
+    message47: $localize` profile photo`,
+    message48: $localize`Remove `,
+    message49: $localize`Stop default voice preview`,
+    message50: $localize`Preview default voice`,
+    message51: $localize`Stop saved voice preview`,
+    message52: $localize`Preview saved voice`,
+    message53: $localize`Search `,
+    message54: $localize` voices by name, accent, or style…`,
+    message55: $localize`Stop `,
+    message56: $localize` preview`,
+    message57: $localize`Preview `,
+    message58: $localize`Choose a time to continue the conversation.`,
+    message59: $localize`Optional context for visitors`,
+  };
   private readonly atlasService = inject(AtlasService);
   private readonly documentsService = inject(DocumentsService);
   private readonly talkingCardKnowledgeService = inject(TalkingCardKnowledgeService);
@@ -64,7 +125,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   private realEstatePromptBase = '';
 
   readonly boardId = input('');
-  readonly boardTitle = input('Board');
+  readonly boardTitle = input($localize`Board`);
   readonly boardVisibility = input<'private' | 'public' | 'unlisted'>('private');
   readonly editingCard = input<TalkingCardEditorValue | null>(null);
   readonly prefill = input<TalkingCardEditorPrefill | null>(null);
@@ -78,8 +139,8 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   readonly name = signal('');
   readonly role = signal('');
   readonly personaPrompt = signal('');
-  readonly openingMessage = signal('Hi! I’m here to help. What would you like to know?');
-  readonly ctaLabel = signal('Talk to me');
+  readonly openingMessage = signal($localize`Hi! I’m here to help. What would you like to know?`);
+  readonly ctaLabel = signal($localize`Talk to me`);
   readonly placement = signal<'start' | 'end' | 'keep'>('end');
   readonly catalogVoiceId = signal('');
   readonly personalVoiceId = signal('');
@@ -161,8 +222,8 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     });
   });
   readonly savedVoiceLabel = computed(() => this.initialVoiceConfig()?.source === 'designed'
-    ? this.initialVoiceConfig()?.name || 'Custom designed voice'
-    : 'Current saved voice');
+    ? this.initialVoiceConfig()?.name || $localize`Custom designed voice`
+    : $localize`Current saved voice`);
   readonly filteredAvailableAtlases = computed(() => {
     const query = this.avatarSearch().trim().toLocaleLowerCase();
     if (!query) return [];
@@ -198,8 +259,8 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   readonly scheduleAction = computed(() => this.actions().find((action) => action.kind === 'schedule') ?? null);
   readonly actionFormMessage = computed(() => {
     for (const action of this.actions()) {
-      if (!action.label.trim()) return 'Give each action a button label.';
-      if (!normalizeTalkingCardActionUrl(action.url)) return 'Each action needs a secure public HTTPS link.';
+      if (!action.label.trim()) return $localize`Give each action a button label.`;
+      if (!normalizeTalkingCardActionUrl(action.url)) return $localize`Each action needs a secure public HTTPS link.`;
     }
     return null;
   });
@@ -313,7 +374,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       kind,
       label: kind === 'schedule' ? 'Schedule a meeting' : 'Open link',
       url: '',
-      ...(kind === 'schedule' ? { description: 'Choose a time to continue the conversation.' } : {}),
+      ...(kind === 'schedule' ? { description: $localize`Choose a time to continue the conversation.` } : {}),
     }]);
   }
 
@@ -331,7 +392,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   testAction(action: TalkingCardAction): void {
     const url = normalizeTalkingCardActionUrl(action.url);
     if (!url) {
-      this.actionValidationMessage.set('Enter a secure public HTTPS link before testing it.');
+      this.actionValidationMessage.set($localize`Enter a secure public HTTPS link before testing it.`);
       return;
     }
     if (typeof window !== 'undefined') window.open(url, '_blank', 'noopener,noreferrer');
@@ -346,7 +407,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       await this.documentsService.deleteDocument(document.id);
       this.existingDocuments.update((documents) => documents.filter((item) => item.id !== document.id));
     } catch (error) {
-      this.errorMessage.set(error instanceof Error ? error.message : 'That knowledge document could not be removed.');
+      this.errorMessage.set(error instanceof Error ? error.message : $localize`That knowledge document could not be removed.`);
     } finally {
       this.documentDeletingId.set(null);
     }
@@ -360,8 +421,8 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     this.name.set(card.title);
     this.role.set(card.subtitle);
     this.imagePreviewUrl.set(card.imageUrl);
-    this.openingMessage.set(card.conversation.openingMessage || 'Hi! I’m here to help. What would you like to know?');
-    this.ctaLabel.set(card.conversation.ctaLabel?.trim() || 'Talk to me');
+    this.openingMessage.set(card.conversation.openingMessage || $localize`Hi! I’m here to help. What would you like to know?`);
+    this.ctaLabel.set(card.conversation.ctaLabel?.trim() || $localize`Talk to me`);
     this.actions.set(normalizeTalkingCardActions(card.conversation.actions));
     this.placement.set(card.placement);
     try {
@@ -374,7 +435,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       if (this.atlasService.canAdminAtlas(atlas)) await this.loadExistingVoiceConfig(atlas.id);
       if (this.atlasService.isAtlasOwner(atlas)) await this.loadExistingDocuments(atlas.id);
     } catch (error) {
-      this.errorMessage.set(error instanceof Error ? error.message : 'The Talking Card could not be loaded for editing.');
+      this.errorMessage.set(error instanceof Error ? error.message : $localize`The Talking Card could not be loaded for editing.`);
     }
   }
 
@@ -383,7 +444,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     try {
       this.existingDocuments.set(await this.talkingCardKnowledgeService.listOwnedAtlasDocuments(atlasId));
     } catch (error) {
-      this.errorMessage.set(error instanceof Error ? error.message : 'Knowledge documents could not be loaded.');
+      this.errorMessage.set(error instanceof Error ? error.message : $localize`Knowledge documents could not be loaded.`);
     } finally {
       this.documentsLoading.set(false);
     }
@@ -398,11 +459,11 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      this.errorMessage.set('Choose an image file for the avatar.');
+      this.errorMessage.set($localize`Choose an image file for the avatar.`);
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      this.errorMessage.set('Avatar images must be under 10 MB.');
+      this.errorMessage.set($localize`Avatar images must be under 10 MB.`);
       return;
     }
     const run = ++this.imageProcessingRun;
@@ -420,7 +481,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       if (run !== this.imageProcessingRun) return;
       this.errorMessage.set(error instanceof Error && error.message.trim()
         ? error.message
-        : 'That avatar image could not be prepared.');
+        : $localize`That avatar image could not be prepared.`);
       (event.target as HTMLInputElement).value = '';
     } finally {
       if (run === this.imageProcessingRun) this.imageProcessing.set(false);
@@ -549,9 +610,9 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     const schedule: TalkingCardAction = {
       id: existing?.id || 'listing-showing-schedule',
       kind: 'schedule',
-      label: 'Schedule a showing',
+      label: $localize`Schedule a showing`,
       url,
-      description: 'Choose a convenient time to tour this property.',
+      description: $localize`Choose a convenient time to tour this property.`,
     };
     this.actions.update((actions) => existing
       ? actions.map((action) => action.id === existing.id ? schedule : action)
@@ -605,7 +666,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       audio.onerror = () => {
         if (this.previewAudio !== audio) return;
         this.stopVoicePreview();
-        this.voiceErrorMessage.set('That voice preview could not be played.');
+        this.voiceErrorMessage.set($localize`That voice preview could not be played.`);
       };
       this.previewAudio = audio;
       await audio.play();
@@ -617,7 +678,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
         this.stopVoicePreview();
         this.voiceErrorMessage.set(error instanceof Error && error.message.trim()
           ? error.message
-          : 'That voice preview could not be played.');
+          : $localize`That voice preview could not be played.`);
       }
     } finally {
       if (run === this.previewRun) this.voicePreviewLoadingKey.set(null);
@@ -675,7 +736,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   async startPersonalVoiceRecording(): Promise<void> {
     if (this.personalVoiceRecording() || this.personalVoiceCreating()) return;
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-      this.voiceErrorMessage.set('Voice recording is not supported in this browser. Upload an audio file instead.');
+      this.voiceErrorMessage.set($localize`Voice recording is not supported in this browser. Upload an audio file instead.`);
       return;
     }
     this.voiceErrorMessage.set(null);
@@ -701,7 +762,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
         if (chunk.data.size) this.personalVoiceRecordingChunks.push(chunk.data);
       };
       recorder.onerror = () => {
-        this.voiceErrorMessage.set('The recording stopped unexpectedly. Please try again.');
+        this.voiceErrorMessage.set($localize`The recording stopped unexpectedly. Please try again.`);
         this.stopPersonalVoiceRecording(true);
       };
       recorder.onstop = () => {
@@ -725,7 +786,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       }, 500);
     } catch {
       this.cleanupPersonalVoiceRecorder();
-      this.voiceErrorMessage.set('Microphone access was not available. Allow access or upload an audio file.');
+      this.voiceErrorMessage.set($localize`Microphone access was not available. Allow access or upload an audio file.`);
     }
   }
 
@@ -749,11 +810,11 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     const file = this.personalVoiceFile();
     const durationSeconds = this.personalVoiceDurationSeconds();
     if (!file || durationSeconds < 20 || durationSeconds > 180) {
-      this.voiceErrorMessage.set('Choose a clear recording between 20 seconds and 3 minutes.');
+      this.voiceErrorMessage.set($localize`Choose a clear recording between 20 seconds and 3 minutes.`);
       return;
     }
     if (!this.personalVoiceOwnVoiceConfirmed() || !this.personalVoiceConsentConfirmed()) {
-      this.voiceErrorMessage.set('Confirm this is your voice and consent to creating the reusable voice.');
+      this.voiceErrorMessage.set($localize`Confirm this is your voice and consent to creating the reusable voice.`);
       return;
     }
     this.personalVoiceCreating.set(true);
@@ -776,7 +837,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       this.personalVoiceFile.set(null);
       this.personalVoiceDurationSeconds.set(0);
     } catch (error) {
-      this.voiceErrorMessage.set(this.personalVoiceErrorMessage(error, 'Your voice could not be created.'));
+      this.voiceErrorMessage.set(this.personalVoiceErrorMessage(error, $localize`Your voice could not be created.`));
     } finally {
       this.personalVoiceCreating.set(false);
       this.personalVoiceUploadProgress.set(null);
@@ -791,7 +852,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     try {
       this.applyPersonalVoiceLibrary(await this.personalVoiceService.renameVoice(voice.id, name));
     } catch (error) {
-      this.voiceErrorMessage.set(this.personalVoiceErrorMessage(error, 'The voice name could not be updated.'));
+      this.voiceErrorMessage.set(this.personalVoiceErrorMessage(error, $localize`The voice name could not be updated.`));
     }
   }
 
@@ -806,7 +867,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       if (this.personalVoiceId() === voice.id) this.selectDefaultVoice();
       if (this.personalVoiceSetupVoiceId() === voice.id) this.closePersonalVoiceSetup();
     } catch (error) {
-      this.voiceErrorMessage.set(this.personalVoiceErrorMessage(error, 'Your voice could not be deleted.'));
+      this.voiceErrorMessage.set(this.personalVoiceErrorMessage(error, $localize`Your voice could not be deleted.`));
     } finally {
       this.personalVoiceDeletingId.set(null);
     }
@@ -1277,7 +1338,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     try {
       this.applyPersonalVoiceLibrary(await this.personalVoiceService.loadLibrary());
     } catch (error) {
-      this.voiceErrorMessage.set(this.personalVoiceErrorMessage(error, 'Your voice library could not be loaded.'));
+      this.voiceErrorMessage.set(this.personalVoiceErrorMessage(error, $localize`Your voice library could not be loaded.`));
     } finally {
       this.personalVoiceLoading.set(false);
     }
@@ -1316,13 +1377,13 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     try {
       const duration = knownDuration ?? await this.audioFileDuration(file);
       if (!Number.isFinite(duration) || duration < 20 || duration > 180) {
-        this.voiceErrorMessage.set('Use 20 seconds to 3 minutes of clear speech. Around 60–90 seconds works best.');
+        this.voiceErrorMessage.set($localize`Use 20 seconds to 3 minutes of clear speech. Around 60–90 seconds works best.`);
         return;
       }
       this.personalVoiceFile.set(file);
       this.personalVoiceDurationSeconds.set(duration);
     } catch {
-      this.voiceErrorMessage.set('The recording duration could not be read. Try an MP3, WAV, M4A, OGG, or WebM file.');
+      this.voiceErrorMessage.set($localize`The recording duration could not be read. Try an MP3, WAV, M4A, OGG, or WebM file.`);
     }
   }
 
@@ -1415,7 +1476,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       this.personalVoiceId.set('');
       this.voiceErrorMessage.set(error instanceof Error && error.message.trim()
         ? error.message
-        : 'The saved conversation voice could not be loaded.');
+        : $localize`The saved conversation voice could not be loaded.`);
     } finally {
       if (this.selectedAtlasId() === atlasId) this.voiceConfigLoading.set(false);
     }

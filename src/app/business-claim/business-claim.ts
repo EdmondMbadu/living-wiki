@@ -85,6 +85,31 @@ type StoredClaimDraft = {
   styleUrl: './business-claim.css',
 })
 export class BusinessClaimComponent {
+  readonly templateText = {
+    message1: $localize`City wiki`,
+    message2: $localize`Less icons`,
+    message3: $localize`More icons`,
+    message4: $localize`Paid features on`,
+    message5: $localize`Checkout required`,
+    message6: $localize`Free preview`,
+    message7: $localize`200+ conversation minutes after checkout`,
+    message8: $localize`15 call minutes included`,
+    message9: $localize`Tone, documents, and conversation details are enabled.`,
+    message10: $localize`Secure checkout unlocks tone, documents, and conversation details.`,
+    message11: $localize`Select Local or above to unlock tone and documents.`,
+    message12: $localize`Starting checkout...`,
+    message13: $localize`Pay `,
+    message14: $localize` and continue`,
+    message15: $localize`Create account to continue`,
+    message16: $localize`Upload business documents`,
+    message17: $localize`Create account to upload`,
+    message18: $localize`Pay and unlock document upload`,
+    message19: $localize`Select paid plan to upload`,
+    message20: $localize`Copied`,
+    message21: $localize`Copy link`,
+    message22: $localize`Live badge icon preview for `,
+    message23: $localize`QR badge preview for `,
+  };
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly atlasService = inject(AtlasService);

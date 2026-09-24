@@ -18,6 +18,15 @@ type BusinessActivityKind = 'voice' | 'chat';
   templateUrl: './business-activity.html',
 })
 export class BusinessActivityComponent {
+  readonly templateText = {
+    message1: $localize`The business page could not be found.`,
+    message2: $localize`Test voice guide`,
+    message3: $localize`Open live guide`,
+    message4: $localize`Playback`,
+    message5: $localize`Conversation`,
+    message6: $localize`Audio controls and transcripts.`,
+    message7: $localize`Full thread messages and replies.`,
+  };
   private readonly route = inject(ActivatedRoute);
   private readonly title = inject(Title);
   readonly authService = inject(AuthService);

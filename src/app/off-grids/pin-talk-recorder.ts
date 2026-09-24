@@ -35,7 +35,7 @@ export class PinTalkRecorderComponent {
   readonly processing = signal(false);
   readonly progress = signal(0);
   readonly muted = signal(false);
-  caption = '';
+  caption = $localize``;
   trimStart = 0;
   trimEnd = 0;
   private file: File | Blob | null = null;
@@ -70,7 +70,7 @@ export class PinTalkRecorderComponent {
     this.error.set('');
     if (!this.supported()) {
       this.error.set(
-        'This browser cannot record here. Use your phone camera or upload a video below.',
+        $localize`This browser cannot record here. Use your phone camera or upload a video below.`,
       );
       return;
     }
@@ -101,8 +101,8 @@ export class PinTalkRecorderComponent {
       this.camera.set(false);
       this.error.set(
         error instanceof DOMException && error.name === 'NotAllowedError'
-          ? 'Camera or microphone permission was denied. Allow access in your browser, or upload an existing video.'
-          : 'Could not open the camera. Try uploading a video instead.',
+          ? $localize`Camera or microphone permission was denied. Allow access in your browser, or upload an existing video.`
+          : $localize`Could not open the camera. Try uploading a video instead.`,
       );
     }
   }
@@ -260,7 +260,7 @@ export class PinTalkRecorderComponent {
       this.completed.emit();
     } catch (error) {
       this.error.set(
-        error instanceof Error ? error.message : 'Could not add the PinTalk. Please retry.',
+        error instanceof Error ? error.message : $localize`Could not add the PinTalk. Please retry.`,
       );
     } finally {
       this.uploading.set(false);

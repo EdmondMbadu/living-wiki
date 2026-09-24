@@ -11,10 +11,10 @@
     <header class="board-promo-dialog__header">
       <span class="board-promo-dialog__mark material-symbols-outlined" aria-hidden="true">campaign</span>
       <span>
-        <small>Ready to share anywhere</small>
-        <h2 id="board-promo-title">Board promo image</h2>
+        <small i18n>Ready to share anywhere</small>
+        <h2 id="board-promo-title" i18n>Board promo image</h2>
       </span>
-      <button #closeButton type="button" aria-label="Close promo image dialog" (click)="close()">
+      <button #closeButton type="button" aria-label="Close promo image dialog" (click)="close()" i18n-aria-label>
         <span class="material-symbols-outlined" aria-hidden="true">close</span>
       </button>
     </header>
@@ -23,27 +23,27 @@
       <section class="board-promo-preview" [attr.aria-busy]="rendering()">
         <div class="board-promo-preview__frame">
           @if (previewUrl()) {
-            <img [src]="previewUrl()" [alt]="'Promo image preview for ' + title()" />
+            <img [src]="previewUrl()" [alt]="templateText.message3 + title()" />
           } @else if (!rendering()) {
             <div class="board-promo-preview__empty">
               <span class="material-symbols-outlined" aria-hidden="true">image_not_supported</span>
-              <strong>Preview unavailable</strong>
-              <small>The board remains unchanged.</small>
+              <strong i18n>Preview unavailable</strong>
+              <small i18n>The board remains unchanged.</small>
             </div>
           }
           @if (rendering()) {
             <div class="board-promo-preview__loading" role="status">
               <span class="material-symbols-outlined" aria-hidden="true">progress_activity</span>
-              <strong>Rendering your promo image…</strong>
-              <small>Loading the cover and preparing a scannable QR code.</small>
+              <strong i18n>Rendering your promo image…</strong>
+              <small i18n>Loading the cover and preparing a scannable QR code.</small>
             </div>
           }
         </div>
         <div class="board-promo-preview__caption">
           <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
           <span>
-            <strong>Download preview</strong>
-            <small>This is the exact 1200 × 630 composition, exported at 2× resolution.</small>
+            <strong i18n>Download preview</strong>
+            <small i18n>This is the exact 1200 × 630 composition, exported at 2× resolution.</small>
           </span>
         </div>
       </section>
@@ -52,13 +52,13 @@
         <div class="board-promo-options__intro">
           <span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span>
           <span>
-            <strong>Promote this board</strong>
-            <small>A clean image with no viewer controls—ready for social posts, email, slides, or print.</small>
+            <strong i18n>Promote this board</strong>
+            <small i18n>A clean image with no viewer controls—ready for social posts, email, slides, or print.</small>
           </span>
         </div>
 
         <fieldset [disabled]="rendering()">
-          <legend>Included in the image</legend>
+          <legend i18n>Included in the image</legend>
           <label>
             <input
               type="checkbox"
@@ -67,8 +67,8 @@
             />
             <span class="board-promo-options__toggle" aria-hidden="true"><i></i></span>
             <span>
-              <strong>Show QR code</strong>
-              <small>Opens this exact board view using its public link.</small>
+              <strong i18n>Show QR code</strong>
+              <small i18n>Opens this exact board view using its public link.</small>
             </span>
           </label>
           <label>
@@ -79,18 +79,18 @@
             />
             <span class="board-promo-options__toggle" aria-hidden="true"><i></i></span>
             <span>
-              <strong>Show description</strong>
-              <small>Includes a short introduction beneath the board title.</small>
+              <strong i18n>Show description</strong>
+              <small i18n>Includes a short introduction beneath the board title.</small>
             </span>
           </label>
         </fieldset>
 
         <div class="board-promo-options__details">
-          <span><small>Format</small><strong>PNG</strong></span>
-          <span><small>Resolution</small><strong>2400 × 1260</strong></span>
+          <span><small i18n>Format</small><strong i18n>PNG</strong></span>
+          <span><small i18n>Resolution</small><strong>2400 × 1260</strong></span>
         </div>
 
-        <p class="board-promo-options__privacy">
+        <p class="board-promo-options__privacy" i18n>
           <span class="material-symbols-outlined" aria-hidden="true">public</span>
           Only information already visible on this public board is included.
         </p>
@@ -104,12 +104,12 @@
       </span>
       <span class="board-promo-dialog__actions">
         @if (error()) {
-          <button type="button" class="board-promo-dialog__secondary" (click)="retry()">
+          <button type="button" class="board-promo-dialog__secondary" (click)="retry()" i18n>
             <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
             Try again
           </button>
         } @else {
-          <button type="button" class="board-promo-dialog__secondary" (click)="close()">Cancel</button>
+          <button type="button" class="board-promo-dialog__secondary" (click)="close()" i18n>Cancel</button>
         }
         <button
           type="button"
@@ -118,7 +118,7 @@
           (click)="download()"
         >
           <span class="material-symbols-outlined" aria-hidden="true">download</span>
-          {{ rendering() ? 'Preparing…' : 'Download PNG' }}
+          {{ rendering() ? templateText.message1 : templateText.message2 }}
         </button>
       </span>
     </footer>

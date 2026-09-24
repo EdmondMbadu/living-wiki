@@ -31,7 +31,7 @@
       <section class="mx-4 my-8 max-w-7xl rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-8 shadow-[var(--shadow-floating)] sm:mx-6 lg:mx-auto">
         <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]" i18n>Business admin</p>
         <h1 class="mt-3 text-3xl font-black tracking-tight" i18n>This account cannot edit {{ businessName() }}.</h1>
-        <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{{ loadError() || 'Only the account that claimed this business can edit the page.' }}</p>
+        <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{{ loadError() || templateText.message1 }}</p>
       </section>
     } @else {
       <div class="flex min-h-[calc(100vh-5rem)] flex-col md:flex-row">
@@ -59,7 +59,7 @@
             </div>
             <button type="button" (click)="save()" [disabled]="saving()" class="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-black text-[var(--accent-contrast)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
               <span class="material-symbols-outlined text-[1rem]">save</span>
-              <span>{{ saving() ? 'Saving...' : 'Save changes' }}</span>
+              <span>{{ saving() ? templateText.message2 : templateText.message3 }}</span>
             </button>
           </div>
 
@@ -105,7 +105,7 @@
                     </div>
                     <label class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-2 text-xs font-black text-[var(--text)]">
                       <span class="material-symbols-outlined text-[1rem]">upload</span>
-                      <span>{{ imageUploading('logo') ? 'Uploading...' : 'Upload logo' }}</span>
+                      <span>{{ imageUploading('logo') ? templateText.message4 : templateText.message5 }}</span>
                       <input type="file" accept="image/*" class="sr-only" [disabled]="imageUploading('logo')" (change)="uploadImage('logo', 'logo_url', $event)" />
                     </label>
                   </div>
@@ -120,7 +120,7 @@
                     </div>
                     <label class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-2 text-xs font-black text-[var(--text)]">
                       <span class="material-symbols-outlined text-[1rem]">upload</span>
-                      <span>{{ imageUploading('profile') ? 'Uploading...' : 'Upload profile' }}</span>
+                      <span>{{ imageUploading('profile') ? templateText.message4 : templateText.message6 }}</span>
                       <input type="file" accept="image/*" class="sr-only" [disabled]="imageUploading('profile')" (change)="uploadImage('profile', 'profile_image_url', $event)" />
                     </label>
                   </div>
@@ -135,7 +135,7 @@
                     </div>
                     <label class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-2 text-xs font-black text-[var(--text)]">
                       <span class="material-symbols-outlined text-[1rem]">upload</span>
-                      <span>{{ imageUploading('cover') ? 'Uploading...' : 'Upload cover' }}</span>
+                      <span>{{ imageUploading('cover') ? templateText.message4 : templateText.message7 }}</span>
                       <input type="file" accept="image/*" class="sr-only" [disabled]="imageUploading('cover')" (change)="uploadImage('cover', 'cover_image_url', $event)" />
                     </label>
                   </div>
@@ -197,7 +197,7 @@
                   [attr.aria-expanded]="showAllBadgeIcons()"
                 >
                   <span class="material-symbols-outlined text-base">{{ showAllBadgeIcons() ? 'expand_less' : 'add' }}</span>
-                  <span>{{ showAllBadgeIcons() ? 'Less icons' : 'More icons' }}</span>
+                  <span>{{ showAllBadgeIcons() ? templateText.message8 : templateText.message9 }}</span>
                   @if (!showAllBadgeIcons() && hiddenSelectedIconCount() > 0) {
                     <span class="rounded-full bg-[var(--accent)]/10 px-2 py-0.5 text-[10px] font-black text-[var(--accent)]" i18n>{{ hiddenSelectedIconCount() }} selected</span>
                   }
@@ -286,7 +286,7 @@
                   </div>
                   <div class="min-w-0">
                     <p class="truncate font-black">{{ businessName() }}</p>
-                    <p class="truncate text-xs text-[var(--muted)]">{{ draft().category || 'Local business' }} · {{ cityName() }}</p>
+                    <p class="truncate text-xs text-[var(--muted)]">{{ draft().category || templateText.message10 }} · {{ cityName() }}</p>
                   </div>
                 </div>
               </div>
@@ -328,12 +328,12 @@
               <p class="mt-1 text-sm leading-6 text-[var(--muted)]">{{ additionalQrLabel() }}</p>
               <p class="mt-2 break-all rounded-2xl border border-[var(--line)] bg-[var(--soft-fill)] px-3 py-2 text-xs font-bold text-[var(--muted)]">{{ additionalQrUrl() }}</p>
               <div class="mt-4 overflow-hidden rounded-3xl border border-[var(--line)] bg-white p-4">
-                <img [src]="additionalQrSvgHref()" [alt]="additionalQrLabel() + ' QR preview'" class="aspect-square w-full object-contain" />
+                <img [src]="additionalQrSvgHref()" [alt]="additionalQrLabel() + templateText.message12" class="aspect-square w-full object-contain" />
               </div>
               <div class="mt-4 grid gap-2">
                 <button type="button" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--accent)] px-4 py-3 text-sm font-black text-[var(--accent-contrast)] disabled:cursor-not-allowed disabled:opacity-50" [disabled]="saving()" (click)="saveAdditionalQr()">
                   <span class="material-symbols-outlined text-[1rem]">save</span>
-                  <span>{{ saving() ? 'Saving...' : 'Save QR code' }}</span>
+                  <span>{{ saving() ? templateText.message2 : templateText.message11 }}</span>
                 </button>
                 <a [href]="additionalQrUrl()" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--accent)]/35 bg-[var(--soft-fill)] px-4 py-3 text-sm font-black text-[var(--accent)]">
                   <span class="material-symbols-outlined text-[1rem]">open_in_new</span>

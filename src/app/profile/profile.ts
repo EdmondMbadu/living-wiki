@@ -35,6 +35,18 @@ type ProfileTab = 'account' | 'wikis' | 'business' | 'links';
   styleUrl: './profile.css',
 })
 export class ProfileComponent {
+  readonly templateText = {
+    message1: $localize`Saving...`,
+    message2: $localize`Upload image`,
+    message3: $localize`Yes`,
+    message4: $localize`No`,
+    message5: $localize`Business`,
+    message6: $localize`Business profile connected to this account.`,
+    message7: $localize`Selected`,
+    message8: $localize`Tap to choose`,
+    message9: $localize` profile photo`,
+    message10: $localize` image`,
+  };
   private readonly authService = inject(AuthService);
   private readonly atlasService = inject(AtlasService);
   private readonly businessClaimService = inject(BusinessClaimService);

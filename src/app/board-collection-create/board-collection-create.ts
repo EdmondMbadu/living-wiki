@@ -15,6 +15,12 @@ import {
   styleUrl: './board-collection-create.css',
 })
 export class BoardCollectionCreateComponent implements AfterViewInit {
+  readonly templateText = {
+    message1: $localize`No boards match that search.`,
+    message2: $localize`Publish a board before creating a collection.`,
+    message3: $localize`card`,
+    message4: $localize`cards`,
+  };
   private readonly collectionsService = inject(BoardCollectionsService);
   @ViewChild('titleInput') private titleInput?: ElementRef<HTMLInputElement>;
 
@@ -112,7 +118,7 @@ export class BoardCollectionCreateComponent implements AfterViewInit {
       };
       this.created.emit(await this.collectionsService.create(input));
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'The collection could not be created.');
+      this.error.set(error instanceof Error ? error.message : $localize`The collection could not be created.`);
     } finally {
       this.saving.set(false);
     }

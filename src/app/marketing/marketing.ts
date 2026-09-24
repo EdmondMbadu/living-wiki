@@ -19,6 +19,10 @@ import { GraphAnimationComponent } from './atlas-animation/graph-animation';
   templateUrl: './marketing.html',
 })
 export class MarketingComponent implements OnInit {
+  readonly templateText = {
+    message1: $localize` cover image`,
+    message2: $localize` logo`,
+  };
   private readonly atlasService = inject(AtlasService);
 
   navItems = [

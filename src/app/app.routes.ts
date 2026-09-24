@@ -10,19 +10,19 @@ const loadLibraryComponent = () => import('./library/library').then((m) => m.Lib
 const loadWikiComponent = () => import('./wiki/wiki').then((m) => m.WikiComponent);
 
 export const routes: Routes = [
-  { path: 'talkthrus', loadComponent: () => import('./talkthrus/talkthrus').then(m => m.TalkThrusComponent), title: 'LivingWiki TalkThrus | Your listings. Your voice.' },
-  { path: 'off-grids/new', loadComponent: () => import('./off-grids/off-grid-editor').then(m => m.OffGridEditorComponent), canActivate: [authGuard], title: 'Mark a gem | LivingWiki' },
-  { path: 'off-grids/:spotId/edit', loadComponent: () => import('./off-grids/off-grid-editor').then(m => m.OffGridEditorComponent), canActivate: [authGuard], title: 'Edit gem | LivingWiki' },
-  { path: 'off-grids/:spotId', loadComponent: () => import('./off-grids/off-grid-detail').then(m => m.OffGridDetailComponent), title: 'Off Grids | LivingWiki' },
-  { path: 'off-grids', loadComponent: () => import('./off-grids/off-grids').then(m => m.OffGridsComponent), title: 'Off Grids | LivingWiki' },
-  { path: 'notifications', loadComponent: () => import('./notifications/notifications').then(m => m.NotificationsComponent), canActivate: [authGuard], title: 'Notifications | LivingWiki' },
-  { path: 'teams/new', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), canActivate: [authGuard], title: 'Create team | LivingWiki' },
-  { path: 'teams/invitations', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), title: 'Team invitations | LivingWiki' },
-  { path: 'teams/:teamId/create-listing', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), canActivate: [authGuard], title: 'New team TalkThru | LivingWiki' },
-  { path: 'teams/:teamId/listings/:boardId/edit', loadComponent: loadBoardsComponent, canActivate: [authGuard], title: 'Edit team listing | LivingWiki' },
-  { path: 'teams/:teamId', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), canActivate: [authGuard], title: 'Team workspace | LivingWiki' },
-  { path: 'teams', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), canActivate: [authGuard], title: 'My teams | LivingWiki' },
-  { path: 'team/:slug', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), title: 'Real estate team | LivingWiki' },
+  { path: 'talkthrus', loadComponent: () => import('./talkthrus/talkthrus').then(m => m.TalkThrusComponent), title: $localize`LivingWiki TalkThrus | Your listings. Your voice.` },
+  { path: 'off-grids/new', loadComponent: () => import('./off-grids/off-grid-editor').then(m => m.OffGridEditorComponent), canActivate: [authGuard], title: $localize`Mark a gem | LivingWiki` },
+  { path: 'off-grids/:spotId/edit', loadComponent: () => import('./off-grids/off-grid-editor').then(m => m.OffGridEditorComponent), canActivate: [authGuard], title: $localize`Edit gem | LivingWiki` },
+  { path: 'off-grids/:spotId', loadComponent: () => import('./off-grids/off-grid-detail').then(m => m.OffGridDetailComponent), title: $localize`Off Grids | LivingWiki` },
+  { path: 'off-grids', loadComponent: () => import('./off-grids/off-grids').then(m => m.OffGridsComponent), title: $localize`Off Grids | LivingWiki` },
+  { path: 'notifications', loadComponent: () => import('./notifications/notifications').then(m => m.NotificationsComponent), canActivate: [authGuard], title: $localize`Notifications | LivingWiki` },
+  { path: 'teams/new', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), canActivate: [authGuard], title: $localize`Create team | LivingWiki` },
+  { path: 'teams/invitations', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), title: $localize`Team invitations | LivingWiki` },
+  { path: 'teams/:teamId/create-listing', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), canActivate: [authGuard], title: $localize`New team TalkThru | LivingWiki` },
+  { path: 'teams/:teamId/listings/:boardId/edit', loadComponent: loadBoardsComponent, canActivate: [authGuard], title: $localize`Edit team listing | LivingWiki` },
+  { path: 'teams/:teamId', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), canActivate: [authGuard], title: $localize`Team workspace | LivingWiki` },
+  { path: 'teams', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), canActivate: [authGuard], title: $localize`My teams | LivingWiki` },
+  { path: 'team/:slug', loadComponent: () => import('./teams/teams').then(m => m.TeamsComponent), title: $localize`Real estate team | LivingWiki` },
   { path: '', component: PublicWikisComponent, title: $localize`Public Wikis | LivingWiki` },
   { path: 'all-cities', component: PublicWikisComponent, title: $localize`All Cities | LivingWiki`, data: { directoryPage: true } },
   {
@@ -33,7 +33,7 @@ export const routes: Routes = [
   {
     path: 'membership',
     loadComponent: () => import('./membership/membership').then((m) => m.MembershipComponent),
-    title: 'Membership | LivingWiki',
+    title: $localize`Membership | LivingWiki`,
   },
   {
     path: 'landing',
@@ -88,8 +88,8 @@ export const routes: Routes = [
     title: $localize`The Fenceline Network | LivingWiki`,
   },
   { path: 'home', component: PublicWikisComponent, title: $localize`Home | LivingWiki`, canActivate: [authGuard], data: { signedInHome: true } },
-  { path: 'discover', component: PublicWikisComponent, title: 'Discover | LivingWiki', canActivate: [authGuard], data: { discoverPage: true } },
-  { path: 'properties', component: PublicWikisComponent, title: 'Properties | LivingWiki', canActivate: [authGuard], data: { propertiesPage: true } },
+  { path: 'discover', component: PublicWikisComponent, title: $localize`Discover | LivingWiki`, canActivate: [authGuard], data: { discoverPage: true } },
+  { path: 'properties', component: PublicWikisComponent, title: $localize`Properties | LivingWiki`, canActivate: [authGuard], data: { propertiesPage: true } },
   {
     path: 'trove',
     loadComponent: () => import('./trove/trove').then((m) => m.TroveComponent),
@@ -137,19 +137,19 @@ export const routes: Routes = [
   {
     path: 'boards/u/:ownerKey/collections/:slug',
     loadComponent: () => import('./city-board-collection/city-board-collection').then((m) => m.CityBoardCollectionComponent),
-    title: 'Board Collection | LivingWiki',
+    title: $localize`Board Collection | LivingWiki`,
     data: { userCollection: true },
   },
   {
     path: 'collections/:slug',
     loadComponent: () => import('./city-board-collection/city-board-collection').then((m) => m.CityBoardCollectionComponent),
-    title: 'Board Collection | LivingWiki',
+    title: $localize`Board Collection | LivingWiki`,
     data: { userCollection: true, customCollection: true },
   },
   {
     path: 'manage/boards/:boardId/insights',
     loadComponent: () => import('./board-insights/board-insights').then((m) => m.BoardInsightsComponent),
-    title: 'Board Insights | LivingWiki',
+    title: $localize`Board Insights | LivingWiki`,
     canActivate: [authGuard],
   },
   {
@@ -192,7 +192,7 @@ export const routes: Routes = [
   {
     path: 'chat/:slug/boards',
     loadComponent: () => import('./city-board-collection/city-board-collection').then((m) => m.CityBoardCollectionComponent),
-    title: 'Boards | LivingWiki',
+    title: $localize`Boards | LivingWiki`,
   },
   { path: 'chat/:slug', loadComponent: loadChatComponent, title: $localize`Chat | LivingWiki` },
   { path: 'chat', loadComponent: loadChatComponent, title: $localize`Chat | LivingWiki`, canActivate: [authGuard] },
@@ -228,14 +228,14 @@ export const routes: Routes = [
   {
     path: 'admin/city-board-factory',
     loadComponent: () => import('./bulk-board-admin/bulk-board-admin').then((m) => m.BulkBoardAdminComponent),
-    title: 'City Board Factory | LivingWiki',
+    title: $localize`City Board Factory | LivingWiki`,
     canActivate: [adminGuard],
     data: { factoryKind: 'city' },
   },
   {
     path: 'admin/university-board-factory',
     loadComponent: () => import('./bulk-board-admin/bulk-board-admin').then((m) => m.BulkBoardAdminComponent),
-    title: 'University Board Factory | LivingWiki',
+    title: $localize`University Board Factory | LivingWiki`,
     canActivate: [adminGuard],
     data: { factoryKind: 'university' },
   },

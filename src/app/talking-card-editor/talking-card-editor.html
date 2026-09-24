@@ -3,10 +3,10 @@
     <header class="talking-editor__header">
       <div>
         <span class="talking-editor__eyebrow">{{ boardTitle() }}</span>
-        <h2 id="talking-editor-title">{{ isEditing() ? 'Edit Talking Card & avatar' : isRealEstateSetup() ? 'Create your property guide' : 'Add a Talking Card' }}</h2>
-        <p>{{ isEditing() ? 'Deep-edit the card, avatar prompt, documents, voice, and visitor actions.' : isRealEstateSetup() ? 'Visitors can ask about this home, hear from you, and contact you when they’re ready.' : 'Add a conversational guide anywhere in this board’s flow.' }}</p>
+        <h2 id="talking-editor-title">{{ isEditing() ? templateText.message1 : isRealEstateSetup() ? templateText.message2 : templateText.message3 }}</h2>
+        <p>{{ isEditing() ? templateText.message4 : isRealEstateSetup() ? templateText.message5 : templateText.message6 }}</p>
       </div>
-      <button type="button" class="talking-editor__icon" aria-label="Close Talking Card editor" [disabled]="saving()" (click)="close()">
+      <button type="button" class="talking-editor__icon" aria-label="Close Talking Card editor" [disabled]="saving()" (click)="close()" i18n-aria-label>
         <span class="material-symbols-outlined">close</span>
       </button>
     </header>
@@ -14,18 +14,18 @@
     @if (isEditing()) {
       <div class="talking-editor__scope-note">
         <span class="material-symbols-outlined">info</span>
-        <span><strong>Card details and links</strong> affect this board. <strong>Prompt, knowledge, and voice</strong> affect this avatar wherever it speaks.</span>
+        <span i18n><strong>Card details and links</strong> affect this board. <strong>Prompt, knowledge, and voice</strong> affect this avatar wherever it speaks.</span>
       </div>
-      <div class="talking-editor__tabs talking-editor__tabs--sections" role="tablist" aria-label="Talking Card settings">
-        <button type="button" role="tab" [attr.aria-selected]="editorSection() === 'card'" [class.is-active]="editorSection() === 'card'" (click)="setEditorSection('card')">Card</button>
-        <button type="button" role="tab" [attr.aria-selected]="editorSection() === 'knowledge'" [class.is-active]="editorSection() === 'knowledge'" (click)="setEditorSection('knowledge')">Prompt & documents</button>
-        <button type="button" role="tab" [attr.aria-selected]="editorSection() === 'voice'" [class.is-active]="editorSection() === 'voice'" (click)="setEditorSection('voice')">Voice</button>
-        <button type="button" role="tab" [attr.aria-selected]="editorSection() === 'actions'" [class.is-active]="editorSection() === 'actions'" (click)="setEditorSection('actions')">Actions</button>
+      <div class="talking-editor__tabs talking-editor__tabs--sections" role="tablist" aria-label="Talking Card settings" i18n-aria-label>
+        <button type="button" role="tab" [attr.aria-selected]="editorSection() === 'card'" [class.is-active]="editorSection() === 'card'" (click)="setEditorSection('card')" i18n>Card</button>
+        <button type="button" role="tab" [attr.aria-selected]="editorSection() === 'knowledge'" [class.is-active]="editorSection() === 'knowledge'" (click)="setEditorSection('knowledge')" i18n>Prompt & documents</button>
+        <button type="button" role="tab" [attr.aria-selected]="editorSection() === 'voice'" [class.is-active]="editorSection() === 'voice'" (click)="setEditorSection('voice')" i18n>Voice</button>
+        <button type="button" role="tab" [attr.aria-selected]="editorSection() === 'actions'" [class.is-active]="editorSection() === 'actions'" (click)="setEditorSection('actions')" i18n>Actions</button>
       </div>
     } @else if (!isRealEstateSetup()) {
-      <div class="talking-editor__tabs" role="tablist" aria-label="Avatar source">
-        <button type="button" role="tab" [attr.aria-selected]="mode() === 'existing'" [class.is-active]="mode() === 'existing'" (click)="setMode('existing')">Use existing avatar</button>
-        <button type="button" role="tab" [attr.aria-selected]="mode() === 'new'" [class.is-active]="mode() === 'new'" (click)="setMode('new')">Create a new avatar</button>
+      <div class="talking-editor__tabs" role="tablist" aria-label="Avatar source" i18n-aria-label>
+        <button type="button" role="tab" [attr.aria-selected]="mode() === 'existing'" [class.is-active]="mode() === 'existing'" (click)="setMode('existing')" i18n>Use existing avatar</button>
+        <button type="button" role="tab" [attr.aria-selected]="mode() === 'new'" [class.is-active]="mode() === 'new'" (click)="setMode('new')" i18n>Create a new avatar</button>
       </div>
     }
 
@@ -33,95 +33,95 @@
       @if (needsPublication() && (mode() === 'new' || selectedAtlas())) {
         <label class="talking-editor__check">
           <input id="talking-avatar-publication" type="checkbox" [ngModel]="publishAvatar()" (ngModelChange)="publishAvatar.set($event)" />
-          <span>Make this avatar public. Visitors can chat with its persona and knowledge and find it in the public directory.</span>
+          <span i18n>Make this avatar public. Visitors can chat with its persona and knowledge and find it in the public directory.</span>
         </label>
-        <p class="talking-editor__notice">A public board requires a public avatar. Keep the board private if you do not want to publish this avatar.</p>
+        <p class="talking-editor__notice" i18n>A public board requires a public avatar. Keep the board private if you do not want to publish this avatar.</p>
       }
       @if (isRealEstateSetup()) {
         <section class="talking-editor__real-estate" aria-labelledby="real-estate-agent-profile-heading">
           <div class="talking-editor__real-estate-assurance">
             <span class="material-symbols-outlined">verified_user</span>
-            <span><strong>Prepared for real estate</strong><small>Your guide is concise, property-aware, transparent about uncertainty, and careful not to invent listing details.</small></span>
+            <span><strong i18n>Prepared for real estate</strong><small i18n>Your guide is concise, property-aware, transparent about uncertainty, and careful not to invent listing details.</small></span>
           </div>
 
           <section class="talking-editor__real-estate-panel">
             <header>
-              <span><small>1</small><strong id="real-estate-agent-profile-heading">Your agent profile</strong></span>
-              @if (mode() === 'existing') { <em>Reusable profile</em> }
+              <span><small>1</small><strong id="real-estate-agent-profile-heading" i18n>Your agent profile</strong></span>
+              @if (mode() === 'existing') { <em i18n>Reusable profile</em> }
             </header>
             <div class="talking-editor__real-estate-identity">
               <div class="talking-editor__real-estate-portrait">
-                @if (imagePreviewUrl()) { <img [src]="imagePreviewUrl()" [alt]="name() + ' profile photo'" /> }
+                @if (imagePreviewUrl()) { <img [src]="imagePreviewUrl()" [alt]="name() + templateText.message47" /> }
                 @else { <span>{{ realEstateInitials() }}</span> }
               </div>
               <div class="talking-editor__real-estate-fields">
                 <div class="talking-editor__grid">
-                  <label><span>Agent name *</span><input maxlength="120" [ngModel]="name()" (ngModelChange)="name.set($event); updateRealEstateAdditionalGuidance(realEstateAdditionalGuidance())" /></label>
-                  <label><span>Agency or role</span><input maxlength="240" [ngModel]="role()" (ngModelChange)="role.set($event); updateRealEstateAdditionalGuidance(realEstateAdditionalGuidance())" placeholder="Listing agent" /></label>
+                  <label><span i18n>Agent name *</span><input maxlength="120" [ngModel]="name()" (ngModelChange)="name.set($event); updateRealEstateAdditionalGuidance(realEstateAdditionalGuidance())" /></label>
+                  <label><span i18n>Agency or role</span><input maxlength="240" [ngModel]="role()" (ngModelChange)="role.set($event); updateRealEstateAdditionalGuidance(realEstateAdditionalGuidance())" placeholder="Listing agent"  i18n-placeholder/></label>
                 </div>
                 <label class="talking-editor__portrait-button">
                   <span class="material-symbols-outlined">add_photo_alternate</span>
-                  {{ imagePreviewUrl() ? 'Replace profile photo' : 'Add profile photo' }}
+                  {{ imagePreviewUrl() ? templateText.message7 : templateText.message8 }}
                   <input type="file" accept="image/*" [disabled]="imageProcessing()" (change)="onImageSelected($event)" />
                 </label>
-                @if (imageProcessing()) { <small><span class="material-symbols-outlined talking-editor__spin">progress_activity</span> Preparing your profile photo…</small> }
+                @if (imageProcessing()) { <small i18n><span class="material-symbols-outlined talking-editor__spin">progress_activity</span> Preparing your profile photo…</small> }
               </div>
             </div>
             @if (prefill(); as listing) {
               @if (listing.contactPhone || listing.contactEmail) {
                 <div class="talking-editor__real-estate-contact">
                   <span class="material-symbols-outlined">contact_phone</span>
-                  <span><strong>Contact details already connected</strong><small>{{ realEstateContactSummary() }}</small></span>
+                  <span><strong i18n>Contact details already connected</strong><small>{{ realEstateContactSummary() }}</small></span>
                 </div>
               }
             }
           </section>
 
           <section class="talking-editor__real-estate-panel">
-            <header><span><small>2</small><strong>Welcome visitors</strong></span><em>Ready to use</em></header>
-            <label><span>Opening message *</span><textarea rows="3" maxlength="500" [ngModel]="openingMessage()" (ngModelChange)="openingMessage.set($event)"></textarea></label>
-            <small>This is the first thing visitors hear or read when they open the Talking Card.</small>
+            <header><span><small>2</small><strong i18n>Welcome visitors</strong></span><em i18n>Ready to use</em></header>
+            <label><span i18n>Opening message *</span><textarea rows="3" maxlength="500" [ngModel]="openingMessage()" (ngModelChange)="openingMessage.set($event)"></textarea></label>
+            <small i18n>This is the first thing visitors hear or read when they open the Talking Card.</small>
           </section>
 
           <section class="talking-editor__real-estate-panel">
-            <header><span><small>3</small><strong>Conversation voice</strong></span><em>{{ voiceChoice() === 'personal' ? 'Your voice' : 'Selected' }}</em></header>
+            <header><span><small>3</small><strong i18n>Conversation voice</strong></span><em>{{ voiceChoice() === 'personal' ? templateText.message9 : templateText.message10 }}</em></header>
             <div class="talking-editor__real-estate-voice">
               <span class="material-symbols-outlined">graphic_eq</span>
               <span><strong>{{ realEstateVoiceLabel() }}</strong><small>{{ realEstateVoiceDescription() }}</small></span>
               <button type="button" [disabled]="voiceConfigLoading() || personalVoiceLoading()" (click)="previewRealEstateVoice()">
                 <span class="material-symbols-outlined">{{ voicePreviewPlayingKey() ? 'stop' : 'play_arrow' }}</span>
-                {{ voicePreviewPlayingKey() ? 'Stop' : 'Preview' }}
+                {{ voicePreviewPlayingKey() ? templateText.message11 : templateText.message12 }}
               </button>
-              <button type="button" (click)="toggleRealEstateVoiceOptions()">{{ realEstateVoiceOptionsOpen() ? 'Done' : 'Change' }}</button>
+              <button type="button" (click)="toggleRealEstateVoiceOptions()">{{ realEstateVoiceOptionsOpen() ? templateText.message13 : templateText.message14 }}</button>
             </div>
             @if (voiceChoice() === 'personal') {
-              <small>Your private voice remains in your library; visitors only hear it when this guide speaks.</small>
+              <small i18n>Your private voice remains in your library; visitors only hear it when this guide speaks.</small>
             }
           </section>
 
           <details class="talking-editor__real-estate-optional">
-            <summary><span class="material-symbols-outlined">tune</span><span><strong>Optional finishing touches</strong><small>Add scheduling or a special instruction</small></span><span class="material-symbols-outlined">expand_more</span></summary>
+            <summary><span class="material-symbols-outlined">tune</span><span><strong i18n>Optional finishing touches</strong><small i18n>Add scheduling or a special instruction</small></span><span class="material-symbols-outlined">expand_more</span></summary>
             <div>
-              <label><span>Showing or scheduling link</span><input type="url" maxlength="2000" inputmode="url" placeholder="https://calendly.com/your-name" [ngModel]="realEstateScheduleUrl()" (ngModelChange)="updateRealEstateScheduleUrl($event)" /><small>Optional. A secure HTTPS link will appear as “Schedule a showing.”</small></label>
+              <label><span i18n>Showing or scheduling link</span><input type="url" maxlength="2000" inputmode="url" placeholder="https://calendly.com/your-name" [ngModel]="realEstateScheduleUrl()" (ngModelChange)="updateRealEstateScheduleUrl($event)"  i18n-placeholder/><small i18n>Optional. A secure HTTPS link will appear as “Schedule a showing.”</small></label>
               @if (actionFormMessage()) { <small class="talking-editor__field-warning"><span class="material-symbols-outlined">info</span>{{ actionFormMessage() }}</small> }
-              <label><span>Anything else your guide should emphasize or avoid?</span><textarea rows="3" maxlength="600" placeholder="For example: emphasize the garden and keep answers relaxed." [ngModel]="realEstateAdditionalGuidance()" (ngModelChange)="updateRealEstateAdditionalGuidance($event)"></textarea><small>Property facts still come from this board, so this profile can be reused safely on other listings.</small></label>
+              <label><span i18n>Anything else your guide should emphasize or avoid?</span><textarea rows="3" maxlength="600" placeholder="For example: emphasize the garden and keep answers relaxed." [ngModel]="realEstateAdditionalGuidance()" (ngModelChange)="updateRealEstateAdditionalGuidance($event)" i18n-placeholder></textarea><small i18n>Property facts still come from this board, so this profile can be reused safely on other listings.</small></label>
             </div>
           </details>
 
           <div class="talking-editor__real-estate-ready">
             <span class="material-symbols-outlined">visibility</span>
-            <span><strong>Guide visibility</strong><small>Your avatar stays private unless you explicitly choose to publish it for a public board.</small></span>
+            <span><strong i18n>Guide visibility</strong><small i18n>Your avatar stays private unless you explicitly choose to publish it for a public board.</small></span>
           </div>
         </section>
       } @else if (isEditing() && editorSection() === 'card') {
         <section class="talking-editor__edit-section" aria-labelledby="talking-editor-card-heading">
           <header class="talking-editor__section-heading">
             <span class="material-symbols-outlined">badge</span>
-            <span><strong id="talking-editor-card-heading">Card details</strong><small>How this guide appears and greets visitors on this board.</small></span>
+            <span><strong id="talking-editor-card-heading" i18n>Card details</strong><small i18n>How this guide appears and greets visitors on this board.</small></span>
           </header>
           <div class="talking-editor__grid">
-            <label><span>Display name *</span><input maxlength="120" [ngModel]="name()" (ngModelChange)="name.set($event)" /></label>
-            <label><span>Role or subtitle</span><input maxlength="240" [ngModel]="role()" (ngModelChange)="role.set($event)" /></label>
+            <label><span i18n>Display name *</span><input maxlength="120" [ngModel]="name()" (ngModelChange)="name.set($event)" /></label>
+            <label><span i18n>Role or subtitle</span><input maxlength="240" [ngModel]="role()" (ngModelChange)="role.set($event)" /></label>
           </div>
           <div class="talking-editor__portrait-editor">
             <div class="talking-editor__avatar-image">
@@ -130,22 +130,22 @@
             </div>
             <label class="talking-editor__portrait-button">
               <span class="material-symbols-outlined">add_photo_alternate</span>
-              {{ imagePreviewUrl() ? 'Replace portrait' : 'Add portrait' }}
+              {{ imagePreviewUrl() ? templateText.message15 : templateText.message16 }}
               <input type="file" accept="image/*" [disabled]="imageProcessing()" (change)="onImageSelected($event)" />
             </label>
-            @if (imageProcessing()) { <small><span class="material-symbols-outlined talking-editor__spin">progress_activity</span> Optimizing portrait…</small> }
+            @if (imageProcessing()) { <small i18n><span class="material-symbols-outlined talking-editor__spin">progress_activity</span> Optimizing portrait…</small> }
           </div>
-          <label><span>Opening message *</span><textarea rows="3" maxlength="500" [ngModel]="openingMessage()" (ngModelChange)="openingMessage.set($event)"></textarea></label>
-          <label><span>Card position</span><select [ngModel]="placement()" (ngModelChange)="placement.set($event)"><option value="keep">Keep current position</option><option value="start">Move to beginning</option><option value="end">Move to end</option></select></label>
+          <label><span i18n>Opening message *</span><textarea rows="3" maxlength="500" [ngModel]="openingMessage()" (ngModelChange)="openingMessage.set($event)"></textarea></label>
+          <label><span i18n>Card position</span><select [ngModel]="placement()" (ngModelChange)="placement.set($event)"><option value="keep" i18n>Keep current position</option><option value="start" i18n>Move to beginning</option><option value="end" i18n>Move to end</option></select></label>
           @if (selectedAtlasEditable()) {
-            <small class="talking-editor__shared-note"><span class="material-symbols-outlined">hub</span>Name, role, and portrait also update the shared avatar profile.</small>
+            <small class="talking-editor__shared-note" i18n><span class="material-symbols-outlined">hub</span>Name, role, and portrait also update the shared avatar profile.</small>
           } @else {
-            <small class="talking-editor__shared-note"><span class="material-symbols-outlined">lock</span>The linked public avatar remains unchanged; these presentation edits apply only to this card.</small>
+            <small class="talking-editor__shared-note" i18n><span class="material-symbols-outlined">lock</span>The linked public avatar remains unchanged; these presentation edits apply only to this card.</small>
           }
         </section>
       } @else if (!isEditing() && mode() === 'existing') {
         <div class="talking-editor__avatar-search">
-          <label for="talking-avatar-search"><span>Conversational avatar</span></label>
+          <label for="talking-avatar-search"><span i18n>Conversational avatar</span></label>
           <div class="talking-editor__search-field">
             <span class="material-symbols-outlined" aria-hidden="true">search</span>
             <input
@@ -157,14 +157,14 @@
               (ngModelChange)="onAvatarSearchChange($event)"
               [attr.aria-expanded]="!!avatarSearch().trim()"
               aria-controls="talking-avatar-results"
-            />
+             i18n-placeholder/>
             @if (avatarSearch()) {
-              <button type="button" aria-label="Clear avatar search" (click)="onAvatarSearchChange('')"><span class="material-symbols-outlined">close</span></button>
+              <button type="button" aria-label="Clear avatar search" (click)="onAvatarSearchChange('')" i18n-aria-label><span class="material-symbols-outlined">close</span></button>
             }
           </div>
 
           @if (avatarSearch().trim()) {
-            <div id="talking-avatar-results" class="talking-editor__search-results" role="listbox" aria-label="Matching conversational avatars">
+            <div id="talking-avatar-results" class="talking-editor__search-results" role="listbox" aria-label="Matching conversational avatars" i18n-aria-label>
               @for (atlas of filteredAvailableAtlases(); track atlas.id) {
                 <button
                   type="button"
@@ -185,11 +185,11 @@
                     <small>{{ atlas.chat_guide?.label || atlas.description || atlas.name }}</small>
                   </span>
                   <span class="talking-editor__visibility" [class.is-public]="atlas.is_public">
-                    {{ isEditableAtlas(atlas) ? (atlas.is_public ? 'Your public avatar' : 'Your private avatar') : 'Public library' }}
+                    {{ isEditableAtlas(atlas) ? (atlas.is_public ? 'Your public avatar' : 'Your private avatar') : templateText.message17 }}
                   </span>
                 </button>
               } @empty {
-                @if (publicAtlasesLoading()) { <p>Searching the public avatar library…</p> }
+                @if (publicAtlasesLoading()) { <p i18n>Searching the public avatar library…</p> }
                 @else { <p>No avatars match “{{ avatarSearch().trim() }}”.</p> }
               }
             </div>
@@ -201,7 +201,7 @@
           }
         </div>
         @if (!availableAtlases().length && !publicAtlasesLoading()) {
-          <p class="talking-editor__notice">You do not have an avatar yet. Choose “Create a new avatar” to make one here.</p>
+          <p class="talking-editor__notice" i18n>You do not have an avatar yet. Choose “Create a new avatar” to make one here.</p>
         }
         @if (selectedAtlas(); as avatar) {
           <div class="talking-editor__avatar-summary">
@@ -209,26 +209,26 @@
               @if (imagePreviewUrl()) { <img [src]="imagePreviewUrl()" [alt]="name()" /> }
               @else { <span class="material-symbols-outlined">record_voice_over</span> }
             </div>
-            <div><strong>{{ name() }}</strong><span>{{ role() || 'Conversational guide' }}</span><small>Selected avatar</small></div>
+            <div><strong>{{ name() }}</strong><span>{{ role() || templateText.message18 }}</span><small i18n>Selected avatar</small></div>
           </div>
           @if (!selectedAtlasEditable()) {
-            <p class="talking-editor__notice"><span class="material-symbols-outlined" aria-hidden="true">public</span> This public avatar keeps the persona and voice chosen by its creator.</p>
+            <p class="talking-editor__notice" i18n><span class="material-symbols-outlined" aria-hidden="true">public</span> This public avatar keeps the persona and voice chosen by its creator.</p>
           }
         }
       } @else if (!isEditing()) {
         <div class="talking-editor__grid">
-          <label><span>Name *</span><input maxlength="120" [ngModel]="name()" (ngModelChange)="name.set($event)" placeholder="Maya Chen" /></label>
-          <label><span>Role or subtitle</span><input maxlength="240" [ngModel]="role()" (ngModelChange)="role.set($event)" placeholder="Listing specialist" /></label>
+          <label><span i18n>Name *</span><input maxlength="120" [ngModel]="name()" (ngModelChange)="name.set($event)" placeholder="Maya Chen"  i18n-placeholder/></label>
+          <label><span i18n>Role or subtitle</span><input maxlength="240" [ngModel]="role()" (ngModelChange)="role.set($event)" placeholder="Listing specialist"  i18n-placeholder/></label>
         </div>
-        <label><span>Avatar image</span><input type="file" accept="image/*" [disabled]="imageProcessing()" (change)="onImageSelected($event)" /></label>
-        @if (imageProcessing()) { <small><span class="material-symbols-outlined talking-editor__spin" aria-hidden="true">progress_activity</span> Optimizing portrait for a faster, safer upload…</small> }
-        @if (imagePreviewUrl()) { <img class="talking-editor__preview" [src]="imagePreviewUrl()" alt="Avatar preview" /> }
+        <label><span i18n>Avatar image</span><input type="file" accept="image/*" [disabled]="imageProcessing()" (change)="onImageSelected($event)" /></label>
+        @if (imageProcessing()) { <small i18n><span class="material-symbols-outlined talking-editor__spin" aria-hidden="true">progress_activity</span> Optimizing portrait for a faster, safer upload…</small> }
+        @if (imagePreviewUrl()) { <img class="talking-editor__preview" [src]="imagePreviewUrl()" alt="Avatar preview"  i18n-alt/> }
         <label>
-          <span>System prompt *</span>
-          <textarea rows="7" maxlength="40000" [ngModel]="personaPrompt()" (ngModelChange)="personaPrompt.set($event)" placeholder="You are Maya. Speak in the first person. Answer from the supplied documents, be candid about uncertainty, and never invent property facts."></textarea>
-          <small>This becomes the avatar’s first-person persona. It is stored on the avatar, never copied into the board.</small>
+          <span i18n>System prompt *</span>
+          <textarea rows="7" maxlength="40000" [ngModel]="personaPrompt()" (ngModelChange)="personaPrompt.set($event)" placeholder="You are Maya. Speak in the first person. Answer from the supplied documents, be candid about uncertainty, and never invent property facts." i18n-placeholder></textarea>
+          <small i18n>This becomes the avatar’s first-person persona. It is stored on the avatar, never copied into the board.</small>
         </label>
-        <label><span>Knowledge documents (up to 10)</span><input type="file" multiple (change)="onDocumentsSelected($event)" /></label>
+        <label><span i18n>Knowledge documents (up to 10)</span><input type="file" multiple (change)="onDocumentsSelected($event)" /></label>
         @if (documentFiles().length) { <small>{{ documentFiles().length }} file(s) selected</small> }
       }
 
@@ -236,39 +236,39 @@
         <section class="talking-editor__edit-section" aria-labelledby="talking-editor-knowledge-heading">
           <header class="talking-editor__section-heading">
             <span class="material-symbols-outlined">library_books</span>
-            <span><strong id="talking-editor-knowledge-heading">Avatar prompt & documents</strong><small>Shared by every Talking Card that uses this avatar.</small></span>
+            <span><strong id="talking-editor-knowledge-heading" i18n>Avatar prompt & documents</strong><small i18n>Shared by every Talking Card that uses this avatar.</small></span>
           </header>
           @if (selectedAtlasEditable()) {
             <label>
-              <span>System prompt *</span>
-              <textarea rows="8" maxlength="40000" [ngModel]="personaPrompt()" (ngModelChange)="personaPrompt.set($event)" placeholder="Describe who this avatar is, how it should answer, and what it must never invent."></textarea>
-              <small>Grounding, citations, and safety rules still remain automatic.</small>
+              <span i18n>System prompt *</span>
+              <textarea rows="8" maxlength="40000" [ngModel]="personaPrompt()" (ngModelChange)="personaPrompt.set($event)" placeholder="Describe who this avatar is, how it should answer, and what it must never invent." i18n-placeholder></textarea>
+              <small i18n>Grounding, citations, and safety rules still remain automatic.</small>
             </label>
           } @else {
-            <p class="talking-editor__notice"><span class="material-symbols-outlined">lock</span>The avatar creator manages its system prompt and knowledge.</p>
+            <p class="talking-editor__notice" i18n><span class="material-symbols-outlined">lock</span>The avatar creator manages its system prompt and knowledge.</p>
           }
 
           @if (selectedAtlasOwned()) {
             <div class="talking-editor__documents">
-              <header><span><strong>Knowledge documents</strong><small>Add up to 10 files at a time.</small></span><span>{{ existingDocuments().length }} saved</span></header>
+              <header><span><strong i18n>Knowledge documents</strong><small i18n>Add up to 10 files at a time.</small></span><span>{{ existingDocuments().length }} saved</span></header>
               @if (documentsLoading()) {
-                <p class="talking-editor__document-empty"><span class="material-symbols-outlined talking-editor__spin">progress_activity</span>Loading knowledge…</p>
+                <p class="talking-editor__document-empty" i18n><span class="material-symbols-outlined talking-editor__spin">progress_activity</span>Loading knowledge…</p>
               } @else {
                 @for (document of existingDocuments(); track document.id) {
                   <article>
                     <span class="material-symbols-outlined">{{ document.source_type === 'url' ? 'link' : 'description' }}</span>
                     <span><strong>{{ document.title || document.filename }}</strong><small>{{ document.status }}</small></span>
-                    <button type="button" [disabled]="!!documentDeletingId()" [attr.aria-label]="'Remove ' + (document.title || document.filename)" (click)="deleteKnowledgeDocument(document)"><span class="material-symbols-outlined">delete</span></button>
+                    <button type="button" [disabled]="!!documentDeletingId()" [attr.aria-label]="templateText.message48 + (document.title || document.filename)" (click)="deleteKnowledgeDocument(document)"><span class="material-symbols-outlined">delete</span></button>
                   </article>
                 } @empty {
-                  <p class="talking-editor__document-empty">No knowledge documents have been added yet.</p>
+                  <p class="talking-editor__document-empty" i18n>No knowledge documents have been added yet.</p>
                 }
               }
-              <label class="talking-editor__document-add"><span class="material-symbols-outlined">upload_file</span><span>Add documents</span><input type="file" multiple (change)="onDocumentsSelected($event)" /></label>
+              <label class="talking-editor__document-add"><span class="material-symbols-outlined">upload_file</span><span i18n>Add documents</span><input type="file" multiple (change)="onDocumentsSelected($event)" /></label>
               @if (documentFiles().length) { <small>{{ documentFiles().length }} new file(s) will be uploaded when you save.</small> }
             </div>
           } @else if (selectedAtlasEditable()) {
-            <p class="talking-editor__notice"><span class="material-symbols-outlined">admin_panel_settings</span>Only the avatar owner can add or remove source documents. Avatar admins can still update the system prompt and voice.</p>
+            <p class="talking-editor__notice" i18n><span class="material-symbols-outlined">admin_panel_settings</span>Only the avatar owner can add or remove source documents. Avatar admins can still update the system prompt and voice.</p>
           }
         </section>
       }
@@ -278,126 +278,126 @@
           <header>
             <div>
               <span class="material-symbols-outlined" aria-hidden="true">graphic_eq</span>
-              <span><strong id="talking-editor-voice-title">Conversation voice</strong><small>Choose a voice and preview it before {{ isEditing() ? 'saving' : 'adding the card' }}.</small></span>
+              <span><strong id="talking-editor-voice-title" i18n>Conversation voice</strong><small>Choose a voice and preview it before {{ isEditing() ? templateText.message46 : templateText.message19 }}.</small></span>
             </div>
-            @if (voiceConfigLoading()) { <span class="talking-editor__voice-loading"><span class="material-symbols-outlined talking-editor__spin">progress_activity</span>Loading saved voice…</span> }
+            @if (voiceConfigLoading()) { <span class="talking-editor__voice-loading" i18n><span class="material-symbols-outlined talking-editor__spin">progress_activity</span>Loading saved voice…</span> }
           </header>
 
           @if (!voiceConfigLoading()) {
             <div class="talking-editor__voice-option" [class.is-selected]="voiceChoice() === 'default'">
               <button type="button" class="talking-editor__voice-select" (click)="selectDefaultVoice()">
                 <span class="talking-editor__voice-icon material-symbols-outlined">record_voice_over</span>
-                <span><strong>Default conversation voice</strong><small>Clear, neutral LivingWiki voice</small></span>
+                <span><strong i18n>Default conversation voice</strong><small i18n>Clear, neutral LivingWiki voice</small></span>
                 <span class="material-symbols-outlined">{{ voiceChoice() === 'default' ? 'check_circle' : 'radio_button_unchecked' }}</span>
               </button>
               <button
                 type="button"
                 class="talking-editor__voice-preview"
                 [disabled]="!!voicePreviewLoadingKey() && voicePreviewLoadingKey() !== 'default'"
-                [attr.aria-label]="voicePreviewPlayingKey() === 'default' ? 'Stop default voice preview' : 'Preview default voice'"
+                [attr.aria-label]="voicePreviewPlayingKey() === 'default' ? templateText.message49 : templateText.message50"
                 (click)="toggleVoicePreview('default')"
-              ><span class="material-symbols-outlined" [class.talking-editor__spin]="voicePreviewLoadingKey() === 'default'">{{ voicePreviewLoadingKey() === 'default' ? 'progress_activity' : voicePreviewPlayingKey() === 'default' ? 'stop' : 'play_arrow' }}</span><span>{{ voicePreviewLoadingKey() === 'default' ? 'Loading…' : voicePreviewPlayingKey() === 'default' ? 'Stop' : 'Preview' }}</span></button>
+              ><span class="material-symbols-outlined" [class.talking-editor__spin]="voicePreviewLoadingKey() === 'default'">{{ voicePreviewLoadingKey() === 'default' ? 'progress_activity' : voicePreviewPlayingKey() === 'default' ? 'stop' : 'play_arrow' }}</span><span>{{ voicePreviewLoadingKey() === 'default' ? templateText.message20 : voicePreviewPlayingKey() === 'default' ? templateText.message11 : templateText.message12 }}</span></button>
             </div>
 
             @if (initialVoiceConfig()?.source === 'designed') {
               <div class="talking-editor__voice-option" [class.is-selected]="voiceChoice() === 'saved'">
                 <button type="button" class="talking-editor__voice-select" (click)="keepSavedVoice()">
                   <span class="talking-editor__voice-icon material-symbols-outlined">auto_awesome</span>
-                  <span><strong>{{ savedVoiceLabel() }}</strong><small>Custom voice already saved to this avatar</small></span>
+                  <span><strong>{{ savedVoiceLabel() }}</strong><small i18n>Custom voice already saved to this avatar</small></span>
                   <span class="material-symbols-outlined">{{ voiceChoice() === 'saved' ? 'check_circle' : 'radio_button_unchecked' }}</span>
                 </button>
                 <button
                   type="button"
                   class="talking-editor__voice-preview"
                   [disabled]="!!voicePreviewLoadingKey() && voicePreviewLoadingKey() !== 'saved'"
-                  [attr.aria-label]="voicePreviewPlayingKey() === 'saved' ? 'Stop saved voice preview' : 'Preview saved voice'"
+                  [attr.aria-label]="voicePreviewPlayingKey() === 'saved' ? templateText.message51 : templateText.message52"
                   (click)="toggleVoicePreview('saved')"
-                ><span class="material-symbols-outlined" [class.talking-editor__spin]="voicePreviewLoadingKey() === 'saved'">{{ voicePreviewLoadingKey() === 'saved' ? 'progress_activity' : voicePreviewPlayingKey() === 'saved' ? 'stop' : 'play_arrow' }}</span><span>{{ voicePreviewLoadingKey() === 'saved' ? 'Loading…' : voicePreviewPlayingKey() === 'saved' ? 'Stop' : 'Preview' }}</span></button>
+                ><span class="material-symbols-outlined" [class.talking-editor__spin]="voicePreviewLoadingKey() === 'saved'">{{ voicePreviewLoadingKey() === 'saved' ? 'progress_activity' : voicePreviewPlayingKey() === 'saved' ? 'stop' : 'play_arrow' }}</span><span>{{ voicePreviewLoadingKey() === 'saved' ? templateText.message20 : voicePreviewPlayingKey() === 'saved' ? templateText.message11 : templateText.message12 }}</span></button>
               </div>
             }
 
             <section class="talking-editor__personal-library" aria-labelledby="talking-editor-personal-voices-title">
               <header>
                 <span>
-                  <strong id="talking-editor-personal-voices-title">My voices</strong>
+                  <strong id="talking-editor-personal-voices-title" i18n>My voices</strong>
                   <small>Your private, reusable voice library · {{ personalVoiceUsageLabel() }}</small>
                 </span>
                 @if (personalVoiceLoading()) {
-                  <span class="material-symbols-outlined talking-editor__spin" aria-label="Loading your voices">progress_activity</span>
+                  <span class="material-symbols-outlined talking-editor__spin" aria-label="Loading your voices" i18n-aria-label>progress_activity</span>
                 } @else {
                   <button type="button" class="talking-editor__personal-add" (click)="openPersonalVoiceSetup()">
                     <span class="material-symbols-outlined">{{ personalVoiceCanAdd() ? 'add' : 'lock' }}</span>
-                    {{ personalVoices().length === 0 ? 'Create my voice' : personalVoiceCanAdd() ? 'Add voice' : 'Upgrade' }}
+                    {{ personalVoices().length === 0 ? templateText.message21 : personalVoiceCanAdd() ? templateText.message22 : templateText.message23 }}
                   </button>
                 }
               </header>
 
               @if (!personalVoiceLoading() && personalVoices().length) {
-                <div class="talking-editor__personal-list" role="radiogroup" aria-label="Your personal conversation voices">
+                <div class="talking-editor__personal-list" role="radiogroup" aria-label="Your personal conversation voices" i18n-aria-label>
                   @for (voice of personalVoices(); track voice.id) {
                     <article class="talking-editor__personal-voice" [class.is-selected]="voiceChoice() === 'personal' && personalVoiceId() === voice.id">
                       <button type="button" class="talking-editor__personal-select" role="radio" [attr.aria-checked]="voiceChoice() === 'personal' && personalVoiceId() === voice.id" (click)="selectPersonalVoice(voice)">
                         <span class="talking-editor__voice-icon material-symbols-outlined">spatial_audio_off</span>
-                        <span><strong>{{ voice.name }}</strong><small>Private · available to your agents and boards</small></span>
+                        <span><strong>{{ voice.name }}</strong><small i18n>Private · available to your agents and boards</small></span>
                         <span class="material-symbols-outlined">{{ voiceChoice() === 'personal' && personalVoiceId() === voice.id ? 'check_circle' : 'radio_button_unchecked' }}</span>
                       </button>
                       <div class="talking-editor__personal-actions">
                         <button type="button" [disabled]="!!voicePreviewLoadingKey() && voicePreviewLoadingKey() !== 'personal:' + voice.id + ':' + voice.voiceRevision" (click)="toggleVoicePreview('personal:' + voice.id + ':' + voice.voiceRevision, undefined, voice.narratorVoiceId)">
                           <span class="material-symbols-outlined" [class.talking-editor__spin]="voicePreviewLoadingKey() === 'personal:' + voice.id + ':' + voice.voiceRevision">{{ voicePreviewLoadingKey() === 'personal:' + voice.id + ':' + voice.voiceRevision ? 'progress_activity' : voicePreviewPlayingKey() === 'personal:' + voice.id + ':' + voice.voiceRevision ? 'stop' : 'play_arrow' }}</span>
-                          {{ voicePreviewPlayingKey() === 'personal:' + voice.id + ':' + voice.voiceRevision ? 'Stop' : 'Preview' }}
+                          {{ voicePreviewPlayingKey() === 'personal:' + voice.id + ':' + voice.voiceRevision ? templateText.message11 : templateText.message12 }}
                         </button>
-                        <button type="button" (click)="renamePersonalVoice(voice)">Rename</button>
-                        <button type="button" (click)="openPersonalVoiceSetup(voice)">Replace</button>
-                        <button type="button" class="is-danger" [disabled]="!!personalVoiceDeletingId()" (click)="deletePersonalVoice(voice)">{{ personalVoiceDeletingId() === voice.id ? 'Deleting…' : 'Delete' }}</button>
+                        <button type="button" (click)="renamePersonalVoice(voice)" i18n>Rename</button>
+                        <button type="button" (click)="openPersonalVoiceSetup(voice)" i18n>Replace</button>
+                        <button type="button" class="is-danger" [disabled]="!!personalVoiceDeletingId()" (click)="deletePersonalVoice(voice)">{{ personalVoiceDeletingId() === voice.id ? templateText.message24 : templateText.message25 }}</button>
                       </div>
                     </article>
                   }
                 </div>
               } @else if (!personalVoiceLoading()) {
-                <p class="talking-editor__personal-empty">Record or upload your own voice, then use it for this agent.</p>
+                <p class="talking-editor__personal-empty" i18n>Record or upload your own voice, then use it for this agent.</p>
               }
 
               @if (!personalVoiceCanAdd() && personalVoices().length) {
-                <small class="talking-editor__personal-limit">Your existing voice remains available. Replace it here, or upgrade to add more voices.</small>
+                <small class="talking-editor__personal-limit" i18n>Your existing voice remains available. Replace it here, or upgrade to add more voices.</small>
               }
               @if (publicBoard()) {
-                <small class="talking-editor__personal-disclosure"><span class="material-symbols-outlined">public</span>Your library stays private, but visitors will hear the selected voice when this agent speaks.</small>
+                <small class="talking-editor__personal-disclosure" i18n><span class="material-symbols-outlined">public</span>Your library stays private, but visitors will hear the selected voice when this agent speaks.</small>
               }
             </section>
 
             @if (personalVoiceSetupOpen()) {
-              <section class="talking-editor__voice-setup" aria-label="Create your personal conversation voice">
+              <section class="talking-editor__voice-setup" aria-label="Create your personal conversation voice" i18n-aria-label>
                 <header>
-                  <span><strong>{{ personalVoiceSetupVoiceId() ? 'Replace this voice' : 'Create a voice' }}</strong><small>One speaker, a quiet room, and a natural delivery work best.</small></span>
-                  <button type="button" aria-label="Close personal voice setup" [disabled]="personalVoiceCreating()" (click)="closePersonalVoiceSetup()"><span class="material-symbols-outlined">close</span></button>
+                  <span><strong>{{ personalVoiceSetupVoiceId() ? templateText.message26 : templateText.message27 }}</strong><small i18n>One speaker, a quiet room, and a natural delivery work best.</small></span>
+                  <button type="button" aria-label="Close personal voice setup" [disabled]="personalVoiceCreating()" (click)="closePersonalVoiceSetup()" i18n-aria-label><span class="material-symbols-outlined">close</span></button>
                 </header>
                 <div class="talking-editor__voice-script">
                   <span class="material-symbols-outlined">article</span>
-                  <p>Hello, and welcome to my LivingWiki. I enjoy sharing the people, places, and ideas that make every story memorable. As we explore these cards together, I will point out the details, connections, and moments that matter most.</p>
+                  <p i18n>Hello, and welcome to my LivingWiki. I enjoy sharing the people, places, and ideas that make every story memorable. As we explore these cards together, I will point out the details, connections, and moments that matter most.</p>
                 </div>
-                <label><span>Voice name</span><input type="text" maxlength="48" [ngModel]="personalVoiceName()" (ngModelChange)="personalVoiceName.set($event)" /></label>
+                <label><span i18n>Voice name</span><input type="text" maxlength="48" [ngModel]="personalVoiceName()" (ngModelChange)="personalVoiceName.set($event)" /></label>
                 <div class="talking-editor__voice-capture">
                   <button type="button" [class.is-recording]="personalVoiceRecording()" [disabled]="personalVoiceCreating()" (click)="personalVoiceRecording() ? stopPersonalVoiceRecording() : startPersonalVoiceRecording()">
                     <span class="material-symbols-outlined">{{ personalVoiceRecording() ? 'stop_circle' : 'mic' }}</span>
-                    {{ personalVoiceRecording() ? 'Stop recording' : 'Record my voice' }}
+                    {{ personalVoiceRecording() ? templateText.message28 : templateText.message29 }}
                     @if (personalVoiceRecording()) { <small>{{ personalVoiceRecordingSeconds() }}s / 120s</small> }
                   </button>
-                  <span>or</span>
-                  <label class="talking-editor__voice-upload"><span class="material-symbols-outlined">upload_file</span>Upload audio<input type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.webm" [disabled]="personalVoiceCreating()" (change)="choosePersonalVoiceFile($event)" /></label>
+                  <span i18n>or</span>
+                  <label class="talking-editor__voice-upload" i18n><span class="material-symbols-outlined">upload_file</span>Upload audio<input type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.webm" [disabled]="personalVoiceCreating()" (change)="choosePersonalVoiceFile($event)" /></label>
                 </div>
                 <div class="talking-editor__voice-file" [class.is-ready]="!!personalVoiceFile()">
                   <span class="material-symbols-outlined">{{ personalVoiceFile() ? 'check_circle' : 'audio_file' }}</span>
-                  <span><strong>{{ personalVoiceFileLabel() }}</strong><small>Audio only · 20–180 seconds · up to 60 MB</small></span>
+                  <span><strong>{{ personalVoiceFileLabel() }}</strong><small i18n>Audio only · 20–180 seconds · up to 60 MB</small></span>
                 </div>
-                <label class="talking-editor__voice-consent"><input type="checkbox" [ngModel]="personalVoiceOwnVoiceConfirmed()" (ngModelChange)="personalVoiceOwnVoiceConfirmed.set($event)" /><span>I confirm this recording contains only my own voice.</span></label>
-                <label class="talking-editor__voice-consent"><input type="checkbox" [ngModel]="personalVoiceConsentConfirmed()" (ngModelChange)="personalVoiceConsentConfirmed.set($event)" /><span>I consent to LivingWiki and ElevenLabs processing it to create my reusable voice.</span></label>
+                <label class="talking-editor__voice-consent"><input type="checkbox" [ngModel]="personalVoiceOwnVoiceConfirmed()" (ngModelChange)="personalVoiceOwnVoiceConfirmed.set($event)" /><span i18n>I confirm this recording contains only my own voice.</span></label>
+                <label class="talking-editor__voice-consent"><input type="checkbox" [ngModel]="personalVoiceConsentConfirmed()" (ngModelChange)="personalVoiceConsentConfirmed.set($event)" /><span i18n>I consent to LivingWiki and ElevenLabs processing it to create my reusable voice.</span></label>
                 <button type="button" class="talking-editor__voice-create" [disabled]="personalVoiceCreating() || !personalVoiceFile() || !personalVoiceOwnVoiceConfirmed() || !personalVoiceConsentConfirmed()" (click)="createPersonalVoice()">
                   <span class="material-symbols-outlined" [class.talking-editor__spin]="personalVoiceCreating()">{{ personalVoiceCreating() ? 'progress_activity' : 'auto_awesome' }}</span>
                   {{ personalVoiceCreating()
                     ? personalVoiceUploadProgress() !== null && personalVoiceUploadProgress()! < 100
-                      ? 'Uploading… ' + personalVoiceUploadProgress() + '%'
-                      : 'Creating your voice…'
-                    : personalVoiceSetupVoiceId() ? 'Replace this voice' : 'Create this voice' }}
+                      ? templateText.message30 + personalVoiceUploadProgress() + '%'
+                      : templateText.message31
+                    : personalVoiceSetupVoiceId() ? templateText.message26 : templateText.message32 }}
                 </button>
               </section>
             }
@@ -405,10 +405,10 @@
             @if (selectedCatalogVoice(); as selectedVoice) {
               <div class="talking-editor__selected-voice">
                 <span class="material-symbols-outlined">check_circle</span>
-                <span><small>Selected included voice</small><strong>{{ selectedVoice.name }}</strong><em>{{ selectedVoice.accent }} · {{ selectedVoice.style }}</em></span>
+                <span><small i18n>Selected included voice</small><strong>{{ selectedVoice.name }}</strong><em>{{ selectedVoice.accent }} · {{ selectedVoice.style }}</em></span>
                 <button type="button" [disabled]="!!voicePreviewLoadingKey() && voicePreviewLoadingKey() !== 'catalog:' + selectedVoice.id" (click)="toggleVoicePreview('catalog:' + selectedVoice.id, selectedVoice)">
                   <span class="material-symbols-outlined" [class.talking-editor__spin]="voicePreviewLoadingKey() === 'catalog:' + selectedVoice.id">{{ voicePreviewLoadingKey() === 'catalog:' + selectedVoice.id ? 'progress_activity' : voicePreviewPlayingKey() === 'catalog:' + selectedVoice.id ? 'stop' : 'play_arrow' }}</span>
-                  {{ voicePreviewLoadingKey() === 'catalog:' + selectedVoice.id ? 'Loading…' : voicePreviewPlayingKey() === 'catalog:' + selectedVoice.id ? 'Stop' : 'Preview' }}
+                  {{ voicePreviewLoadingKey() === 'catalog:' + selectedVoice.id ? templateText.message20 : voicePreviewPlayingKey() === 'catalog:' + selectedVoice.id ? templateText.message11 : templateText.message12 }}
                 </button>
               </div>
             }
@@ -416,11 +416,11 @@
             <div class="talking-editor__voice-library">
               <div class="talking-editor__voice-search">
                 <span class="material-symbols-outlined" aria-hidden="true">search</span>
-                <input type="search" autocomplete="off" [placeholder]="'Search ' + catalogVoiceCount + ' voices by name, accent, or style…'" [ngModel]="voiceSearch()" (ngModelChange)="voiceSearch.set($event)" />
-                @if (voiceSearch()) { <button type="button" aria-label="Clear voice search" (click)="voiceSearch.set('')"><span class="material-symbols-outlined">close</span></button> }
+                <input type="search" autocomplete="off" [placeholder]="templateText.message53 + catalogVoiceCount + templateText.message54" [ngModel]="voiceSearch()" (ngModelChange)="voiceSearch.set($event)" />
+                @if (voiceSearch()) { <button type="button" aria-label="Clear voice search" (click)="voiceSearch.set('')" i18n-aria-label><span class="material-symbols-outlined">close</span></button> }
               </div>
-              <small class="talking-editor__voice-library-label">{{ voiceSearch().trim() ? displayedVoices().length + ' matching voices' : 'All ' + catalogVoiceCount + ' voices' }}</small>
-              <div class="talking-editor__voice-results" role="radiogroup" aria-label="Included conversation voices">
+              <small class="talking-editor__voice-library-label">{{ voiceSearch().trim() ? displayedVoices().length + templateText.message33 : templateText.message34 + catalogVoiceCount + templateText.message35 }}</small>
+              <div class="talking-editor__voice-results" role="radiogroup" aria-label="Included conversation voices" i18n-aria-label>
                 @for (voice of displayedVoices(); track voice.id) {
                   <div class="talking-editor__voice-option" [class.is-selected]="voiceChoice() === 'catalog' && catalogVoiceId() === voice.id">
                     <button type="button" class="talking-editor__voice-select" role="radio" [attr.aria-checked]="voiceChoice() === 'catalog' && catalogVoiceId() === voice.id" (click)="selectCatalogVoice(voice)">
@@ -432,29 +432,29 @@
                       type="button"
                       class="talking-editor__voice-preview"
                       [disabled]="!!voicePreviewLoadingKey() && voicePreviewLoadingKey() !== 'catalog:' + voice.id"
-                      [attr.aria-label]="voicePreviewPlayingKey() === 'catalog:' + voice.id ? 'Stop ' + voice.name + ' preview' : 'Preview ' + voice.name"
+                      [attr.aria-label]="voicePreviewPlayingKey() === 'catalog:' + voice.id ? templateText.message55 + voice.name + templateText.message56 : templateText.message57 + voice.name"
                       (click)="toggleVoicePreview('catalog:' + voice.id, voice)"
-                    ><span class="material-symbols-outlined" [class.talking-editor__spin]="voicePreviewLoadingKey() === 'catalog:' + voice.id">{{ voicePreviewLoadingKey() === 'catalog:' + voice.id ? 'progress_activity' : voicePreviewPlayingKey() === 'catalog:' + voice.id ? 'stop' : 'play_arrow' }}</span><span>{{ voicePreviewLoadingKey() === 'catalog:' + voice.id ? 'Loading…' : voicePreviewPlayingKey() === 'catalog:' + voice.id ? 'Stop' : 'Preview' }}</span></button>
+                    ><span class="material-symbols-outlined" [class.talking-editor__spin]="voicePreviewLoadingKey() === 'catalog:' + voice.id">{{ voicePreviewLoadingKey() === 'catalog:' + voice.id ? 'progress_activity' : voicePreviewPlayingKey() === 'catalog:' + voice.id ? 'stop' : 'play_arrow' }}</span><span>{{ voicePreviewLoadingKey() === 'catalog:' + voice.id ? templateText.message20 : voicePreviewPlayingKey() === 'catalog:' + voice.id ? templateText.message11 : templateText.message12 }}</span></button>
                   </div>
                 } @empty {
                   <p>No voices match “{{ voiceSearch().trim() }}”.</p>
                 }
               </div>
             </div>
-            <small class="talking-editor__voice-note">{{ mode() === 'existing' ? 'Changing the voice updates this avatar anywhere it speaks.' : 'This voice will be saved to the new avatar and used in live conversations.' }}</small>
+            <small class="talking-editor__voice-note">{{ mode() === 'existing' ? templateText.message36 : templateText.message37 }}</small>
           }
           @if (voiceErrorMessage()) { <p class="talking-editor__error" role="alert">{{ voiceErrorMessage() }}</p> }
         </section>
       }
       @if (isEditing() && editorSection() === 'voice' && !selectedAtlasEditable()) {
-        <p class="talking-editor__notice"><span class="material-symbols-outlined">lock</span>This public avatar’s voice is managed by its creator. You can still edit this card’s presentation and links.</p>
+        <p class="talking-editor__notice" i18n><span class="material-symbols-outlined">lock</span>This public avatar’s voice is managed by its creator. You can still edit this card’s presentation and links.</p>
       }
 
       @if (!isEditing() && !isRealEstateSetup()) {
       <div class="talking-editor__grid">
-        <label><span>Opening message *</span><textarea rows="3" maxlength="500" [ngModel]="openingMessage()" (ngModelChange)="openingMessage.set($event)"></textarea></label>
+        <label><span i18n>Opening message *</span><textarea rows="3" maxlength="500" [ngModel]="openingMessage()" (ngModelChange)="openingMessage.set($event)"></textarea></label>
         <div>
-          <label><span>Place card</span><select [ngModel]="placement()" (ngModelChange)="placement.set($event)"><option value="end">At the end</option><option value="start">At the beginning</option></select></label>
+          <label><span i18n>Place card</span><select [ngModel]="placement()" (ngModelChange)="placement.set($event)"><option value="end" i18n>At the end</option><option value="start" i18n>At the beginning</option></select></label>
         </div>
       </div>
       }
@@ -463,33 +463,33 @@
         <section class="talking-editor__edit-section talking-editor__actions-section" aria-labelledby="talking-editor-actions-heading">
           <header class="talking-editor__section-heading">
             <span class="material-symbols-outlined">ads_click</span>
-            <span><strong id="talking-editor-actions-heading">Visitor actions</strong><small>Add scheduling or other useful links without changing the conversation.</small></span>
+            <span><strong id="talking-editor-actions-heading" i18n>Visitor actions</strong><small i18n>Add scheduling or other useful links without changing the conversation.</small></span>
           </header>
-          <label><span>Conversation button</span><input maxlength="48" [ngModel]="ctaLabel()" (ngModelChange)="ctaLabel.set($event)" placeholder="Talk to me" /></label>
+          <label><span i18n>Conversation button</span><input maxlength="48" [ngModel]="ctaLabel()" (ngModelChange)="ctaLabel.set($event)" placeholder="Talk to me"  i18n-placeholder/></label>
 
           <div class="talking-editor__action-list">
             @for (action of actions(); track action.id; let actionIndex = $index) {
               <article class="talking-editor__action-card" [class.is-schedule]="action.kind === 'schedule'">
                 <header>
                   <span class="material-symbols-outlined">{{ action.kind === 'schedule' ? 'calendar_month' : 'link' }}</span>
-                  <span><strong>{{ action.kind === 'schedule' ? 'Scheduling' : 'Additional link' }}</strong><small>{{ action.kind === 'schedule' ? 'Shown prominently in recap emails.' : 'Shown with the Talking Card actions.' }}</small></span>
-                  <button type="button" aria-label="Remove action" (click)="removeAction(actionIndex)"><span class="material-symbols-outlined">close</span></button>
+                  <span><strong>{{ action.kind === 'schedule' ? templateText.message38 : templateText.message39 }}</strong><small>{{ action.kind === 'schedule' ? templateText.message40 : templateText.message41 }}</small></span>
+                  <button type="button" aria-label="Remove action" (click)="removeAction(actionIndex)" i18n-aria-label><span class="material-symbols-outlined">close</span></button>
                 </header>
                 <div class="talking-editor__grid">
-                  <label><span>Button label</span><input maxlength="48" [ngModel]="action.label" (ngModelChange)="updateAction(actionIndex, 'label', $event)" /></label>
-                  <label><span>Secure link</span><input type="url" maxlength="2000" inputmode="url" placeholder="https://calendly.com/your-name" [ngModel]="action.url" (ngModelChange)="updateAction(actionIndex, 'url', $event)" /></label>
+                  <label><span i18n>Button label</span><input maxlength="48" [ngModel]="action.label" (ngModelChange)="updateAction(actionIndex, 'label', $event)" /></label>
+                  <label><span i18n>Secure link</span><input type="url" maxlength="2000" inputmode="url" placeholder="https://calendly.com/your-name" [ngModel]="action.url" (ngModelChange)="updateAction(actionIndex, 'url', $event)"  i18n-placeholder/></label>
                 </div>
-                <label><span>Supporting text</span><input maxlength="180" [ngModel]="action.description || ''" (ngModelChange)="updateAction(actionIndex, 'description', $event)" [placeholder]="action.kind === 'schedule' ? 'Choose a time to continue the conversation.' : 'Optional context for visitors'" /></label>
-                <button type="button" class="talking-editor__test-link" (click)="testAction(action)"><span class="material-symbols-outlined">open_in_new</span>Test link</button>
+                <label><span i18n>Supporting text</span><input maxlength="180" [ngModel]="action.description || ''" (ngModelChange)="updateAction(actionIndex, 'description', $event)" [placeholder]="action.kind === 'schedule' ? templateText.message58 : templateText.message59" /></label>
+                <button type="button" class="talking-editor__test-link" (click)="testAction(action)" i18n><span class="material-symbols-outlined">open_in_new</span>Test link</button>
               </article>
             } @empty {
-              <p class="talking-editor__action-empty">No extra actions yet. The conversation button will remain the only visitor action.</p>
+              <p class="talking-editor__action-empty" i18n>No extra actions yet. The conversation button will remain the only visitor action.</p>
             }
           </div>
           <div class="talking-editor__action-adds">
-            <button type="button" [disabled]="!!scheduleAction() || actions().length >= 4" (click)="addAction('schedule')"><span class="material-symbols-outlined">calendar_add_on</span>Add scheduling</button>
-            <button type="button" [disabled]="actions().length >= 4" (click)="addAction('link')"><span class="material-symbols-outlined">add_link</span>Add another link</button>
-            <small>Up to four secure public links, including one scheduling action.</small>
+            <button type="button" [disabled]="!!scheduleAction() || actions().length >= 4" (click)="addAction('schedule')" i18n><span class="material-symbols-outlined">calendar_add_on</span>Add scheduling</button>
+            <button type="button" [disabled]="actions().length >= 4" (click)="addAction('link')" i18n><span class="material-symbols-outlined">add_link</span>Add another link</button>
+            <small i18n>Up to four secure public links, including one scheduling action.</small>
           </div>
           @if (actionFormMessage()) { <small class="talking-editor__field-warning"><span class="material-symbols-outlined">info</span>{{ actionFormMessage() }}</small> }
           @if (actionValidationMessage()) { <p class="talking-editor__error" role="alert">{{ actionValidationMessage() }}</p> }
@@ -503,10 +503,10 @@
         @if (draftStatus() === 'restored') { <span class="material-symbols-outlined" aria-hidden="true">history</span> Draft restored }
         @else if (draftStatus() === 'saved') { <span class="material-symbols-outlined" aria-hidden="true">cloud_done</span> Draft saved on this device }
       </span>
-      <button type="button" class="talking-editor__secondary" [disabled]="saving()" (click)="close()">Cancel</button>
+      <button type="button" class="talking-editor__secondary" [disabled]="saving()" (click)="close()" i18n>Cancel</button>
       <button type="button" class="talking-editor__primary" [disabled]="!canSave()" (click)="save()">
-        @if (saving()) { <span class="material-symbols-outlined talking-editor__spin">progress_activity</span> {{ saveStage() || 'Saving…' }} }
-        @else { <span class="material-symbols-outlined">{{ isEditing() ? 'save' : 'record_voice_over' }}</span> {{ isEditing() ? 'Save changes' : isRealEstateSetup() ? 'Create my Talking Card' : 'Add Talking Card' }} }
+        @if (saving()) { <span class="material-symbols-outlined talking-editor__spin">progress_activity</span> {{ saveStage() || templateText.message42 }} }
+        @else { <span class="material-symbols-outlined">{{ isEditing() ? 'save' : 'record_voice_over' }}</span> {{ isEditing() ? templateText.message43 : isRealEstateSetup() ? templateText.message44 : templateText.message45 }} }
       </button>
     </footer>
   </section>

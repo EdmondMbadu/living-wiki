@@ -80,6 +80,7 @@ import { extractYouTubeWebSearchResults } from './youtube-web-search';
 import {
   extractBoardTranslationSource,
   isBoardTranslationLanguage,
+  type BoardTranslationLanguage,
   type BoardTranslationSegment,
 } from './board-translation';
 import { db, storage } from './firebase';
@@ -108,7 +109,7 @@ export {
 } from './custom-public-routes';
 export { getBoardInsights, recordBoardAnalyticsEvent } from './board-analytics';
 export { teamCommand, getPublicTeamPage, getTeamInvitationPreview } from './teams';
-export { kiwiPreferences, kiwiTalk, kiwiApply, kiwiReadback, kiwiSpeak, kiwiSpeakStream, kiwiVoiceSession } from './kiwi';
+export { kiwiPreferences, kiwiTalk, kiwiStageDescribeBoard, kiwiApply, kiwiReadback, kiwiSpeak, kiwiSpeakStream, kiwiVoiceSession } from './kiwi';
 export { sendTeamInvitationEmail, retryTeamInvitationEmails, syncTeamInvitationNotification, syncTeamInvitationAvailability } from './team-invitations';
 export { getTeamInsights, submitTeamContact, manageTeamContacts, getTeamConversations } from './team-analytics';
 // Team call verification is deferred. Do not export teamVoiceWebhook until its
@@ -7667,16 +7668,16 @@ async function consumeBoardTranslationQuota(
 
 function boardTranslationCallableResponse(
   boardId: string,
-  targetLanguage: 'en' | 'fr' | 'ja',
-  sourceLanguage: 'en' | 'fr' | 'ja',
+  targetLanguage: BoardTranslationLanguage,
+  sourceLanguage: BoardTranslationLanguage,
   fingerprint: string,
   value: unknown,
   cached: boolean,
   changed: boolean,
 ): {
   boardId: string;
-  targetLanguage: 'en' | 'fr' | 'ja';
-  sourceLanguage: 'en' | 'fr' | 'ja';
+  targetLanguage: BoardTranslationLanguage;
+  sourceLanguage: BoardTranslationLanguage;
   fingerprint: string;
   segments: BoardTranslationSegment[];
   cached: boolean;

@@ -16,7 +16,7 @@
     <button
       type="button"
       class="trove-control"
-      [attr.aria-label]="isFullscreen() ? 'Exit fullscreen' : 'Play fullscreen'"
+      [attr.aria-label]="isFullscreen() ? templateText.message1 : templateText.message2"
       (click)="toggleFullscreen()"
     >
       <span class="material-symbols-outlined">{{ isFullscreen() ? 'fullscreen_exit' : 'fullscreen' }}</span>

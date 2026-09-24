@@ -9,6 +9,10 @@ import type { AtlasItem } from '../atlas.models';
   templateUrl: './atlas-switcher.html',
 })
 export class AtlasSwitcherComponent {
+  readonly templateText = {
+    message1: $localize`Creating...`,
+    message2: $localize`Create`,
+  };
   private readonly atlasService = inject(AtlasService);
   private readonly elementRef = inject(ElementRef);
 

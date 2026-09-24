@@ -68,7 +68,7 @@
           <span class="block text-[10px] font-black uppercase tracking-[0.24em] text-[var(--accent)]" i18n>Account businesses</span>
           <span class="mt-2 block text-2xl font-black tracking-tight" i18n>Manage claimed business pages.</span>
           <span class="mt-2 block text-sm leading-6 text-[var(--muted)]">
-            {{ loadingBusinesses() ? 'Loading businesses...' : businessClaims().length + ' businesses connected to this account.' }}
+            {{ loadingBusinesses() ? templateText.message1 : businessClaims().length + templateText.message2 }}
           </span>
         </span>
         <span class="flex shrink-0 items-center gap-3">
@@ -150,7 +150,7 @@
 
                       <h3 class="mt-3 text-2xl font-black tracking-tight">{{ business.business_name }}</h3>
                       <p class="mt-2 text-sm leading-6 text-[var(--muted)]">
-                        {{ business.category || 'Business' }} · {{ business.business_address || 'No location detail yet' }}
+                        {{ business.category || templateText.message3 }} · {{ business.business_address || templateText.message4 }}
                       </p>
 
                       <label class="mt-4 block">
@@ -185,7 +185,7 @@
                           class="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/35 hover:bg-[var(--soft-fill-strong)]"
                         >
                           <span class="material-symbols-outlined text-[1rem]">content_copy</span>
-                          <span>{{ copiedBusinessClaimKey() === business.claim_key ? 'Copied' : 'Copy link' }}</span>
+                          <span>{{ copiedBusinessClaimKey() === business.claim_key ? templateText.message5 : templateText.message6 }}</span>
                         </button>
                         <button
                           type="button"
@@ -193,7 +193,7 @@
                           class="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/35 hover:bg-[var(--soft-fill-strong)]"
                         >
                           <span class="material-symbols-outlined text-[1rem]">edit</span>
-                          <span>{{ isBusinessEditing(business) ? 'Close editor' : 'Edit business' }}</span>
+                          <span>{{ isBusinessEditing(business) ? templateText.message7 : templateText.message8 }}</span>
                         </button>
                       </div>
                     </div>
@@ -203,8 +203,8 @@
                       <dl class="mt-3 grid gap-3 text-sm">
                         <div>
                           <dt class="text-xs font-black uppercase tracking-[0.16em] text-[var(--muted)]" i18n>Admin</dt>
-                          <dd class="mt-1 font-semibold text-[var(--text)]">{{ business.admin_name || 'Not set' }}</dd>
-                          <dd class="mt-0.5 truncate text-xs text-[var(--muted)]">{{ business.admin_email || 'No admin email' }}</dd>
+                          <dd class="mt-1 font-semibold text-[var(--text)]">{{ business.admin_name || templateText.message9 }}</dd>
+                          <dd class="mt-0.5 truncate text-xs text-[var(--muted)]">{{ business.admin_email || templateText.message10 }}</dd>
                         </div>
                         <div>
                           <dt class="text-xs font-black uppercase tracking-[0.16em] text-[var(--muted)]" i18n>Badge icons</dt>
@@ -212,7 +212,7 @@
                         </div>
                         <div>
                           <dt class="text-xs font-black uppercase tracking-[0.16em] text-[var(--muted)]" i18n>Guide prompt</dt>
-                          <dd class="mt-1 line-clamp-4 text-sm leading-6 text-[var(--muted)]">{{ business.guide_prompt || 'No guide prompt saved yet.' }}</dd>
+                          <dd class="mt-1 line-clamp-4 text-sm leading-6 text-[var(--muted)]">{{ business.guide_prompt || templateText.message11 }}</dd>
                         </div>
                       </dl>
                     </div>
@@ -257,7 +257,7 @@
                             class="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-black text-[var(--accent-contrast)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             <span class="material-symbols-outlined text-[1rem]">save</span>
-                            <span>{{ isBusinessSaving(business) ? 'Saving...' : 'Save business changes' }}</span>
+                            <span>{{ isBusinessSaving(business) ? templateText.message12 : templateText.message13 }}</span>
                           </button>
                           <button
                             type="button"
@@ -288,12 +288,12 @@
     <section class="mt-6 overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-floating)]">
       <button type="button" class="flex w-full items-center justify-between gap-4 px-5 py-5 text-left transition hover:bg-[var(--soft-fill)]" (click)="toggleUniversityLaunch()" [attr.aria-expanded]="universityLaunchOpen()">
         <span class="min-w-0">
-          <span class="block text-[10px] font-black uppercase tracking-[0.24em] text-[var(--accent)]">College & university launch</span>
-          <span class="mt-2 block text-2xl font-black tracking-tight">Create source-aware public university Wikis.</span>
-          <span class="mt-2 block max-w-3xl text-sm leading-6 text-[var(--muted)]">Create one institution or upload a federal-data CSV. Unit ID is the durable identity; batches run safely in groups of 250 and skip duplicates.</span>
+          <span class="block text-[10px] font-black uppercase tracking-[0.24em] text-[var(--accent)]" i18n>College & university launch</span>
+          <span class="mt-2 block text-2xl font-black tracking-tight" i18n>Create source-aware public university Wikis.</span>
+          <span class="mt-2 block max-w-3xl text-sm leading-6 text-[var(--muted)]" i18n>Create one institution or upload a federal-data CSV. Unit ID is the durable identity; batches run safely in groups of 250 and skip duplicates.</span>
         </span>
         <span class="flex shrink-0 items-center gap-3">
-          <span class="hidden rounded-2xl border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-3 text-sm sm:inline-flex"><b>{{ universityBulkRows().length }}</b><span class="ml-1 text-[var(--muted)]"> ready</span></span>
+          <span class="hidden rounded-2xl border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-3 text-sm sm:inline-flex"><b>{{ universityBulkRows().length }}</b><span class="ml-1 text-[var(--muted)]" i18n> ready</span></span>
           <span class="material-symbols-outlined text-[1.4rem] text-[var(--muted)]">{{ universityLaunchOpen() ? 'expand_less' : 'expand_more' }}</span>
         </span>
       </button>
@@ -308,35 +308,35 @@
           }
 
           <form class="rounded-3xl border border-[var(--line)] bg-[var(--soft-fill)] p-4" (submit)="createUniversity($event)">
-            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">Individual institution</p>
-            <h3 class="mt-1 text-lg font-black">Create a public university Wiki</h3>
-            <p class="mt-1 text-sm leading-6 text-[var(--muted)]">Use the federal Unit ID and official institution name. Images remain independently sourced and traceable.</p>
+            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]" i18n>Individual institution</p>
+            <h3 class="mt-1 text-lg font-black" i18n>Create a public university Wiki</h3>
+            <p class="mt-1 text-sm leading-6 text-[var(--muted)]" i18n>Use the federal Unit ID and official institution name. Images remain independently sourced and traceable.</p>
             <div class="mt-4 grid gap-3 sm:grid-cols-2">
-              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]">Federal Unit ID *</span><input class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().unit_id" (input)="updateUniversityDraft('unit_id', $any($event.target).value)" placeholder="166027" /></label>
-              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]">Official name *</span><input class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().official_name" (input)="updateUniversityDraft('official_name', $any($event.target).value)" placeholder="Harvard University" /></label>
-              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]">City *</span><input class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().city" (input)="updateUniversityDraft('city', $any($event.target).value)" placeholder="Cambridge" /></label>
-              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]">State *</span><input maxlength="2" class="theme-input w-full rounded-2xl px-4 py-3 text-sm uppercase" [value]="universityDraft().state" (input)="updateUniversityDraft('state', $any($event.target).value)" placeholder="MA" /></label>
-              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]">Official website</span><input class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().website" (input)="updateUniversityDraft('website', $any($event.target).value)" placeholder="https://www.example.edu" /></label>
-              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]">Control</span><select class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().control" (change)="updateUniversityDraft('control', $any($event.target).value)"><option>Unknown</option><option>Public</option><option>Private nonprofit</option><option>Private for-profit</option></select></label>
-              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]">Undergraduate enrollment</span><input inputmode="numeric" class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().undergraduate_enrollment" (input)="updateUniversityDraft('undergraduate_enrollment', $any($event.target).value)" placeholder="7973" /></label>
-              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]">Logo URL</span><input class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().logo_url" (input)="updateUniversityDraft('logo_url', $any($event.target).value)" placeholder="Wikimedia or official URL" /></label>
-              <label class="block sm:col-span-2"><span class="mb-1 block text-xs font-bold text-[var(--muted)]">Main campus image URL</span><input class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().hero_url" (input)="updateUniversityDraft('hero_url', $any($event.target).value)" placeholder="Wikimedia image URL" /></label>
-              <label class="block sm:col-span-2"><span class="mb-1 block text-xs font-bold text-[var(--muted)]">Description</span><textarea rows="3" class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().description" (input)="updateUniversityDraft('description', $any($event.target).value)" placeholder="Leave blank for a factual generated summary."></textarea></label>
+              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]" i18n>Federal Unit ID *</span><input class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().unit_id" (input)="updateUniversityDraft('unit_id', $any($event.target).value)" placeholder="166027" /></label>
+              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]" i18n>Official name *</span><input class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().official_name" (input)="updateUniversityDraft('official_name', $any($event.target).value)" placeholder="Harvard University"  i18n-placeholder/></label>
+              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]" i18n>City *</span><input class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().city" (input)="updateUniversityDraft('city', $any($event.target).value)" placeholder="Cambridge"  i18n-placeholder/></label>
+              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]" i18n>State *</span><input maxlength="2" class="theme-input w-full rounded-2xl px-4 py-3 text-sm uppercase" [value]="universityDraft().state" (input)="updateUniversityDraft('state', $any($event.target).value)" placeholder="MA"  i18n-placeholder/></label>
+              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]" i18n>Official website</span><input class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().website" (input)="updateUniversityDraft('website', $any($event.target).value)" placeholder="https://www.example.edu"  i18n-placeholder/></label>
+              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]" i18n>Control</span><select class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().control" (change)="updateUniversityDraft('control', $any($event.target).value)"><option i18n>Unknown</option><option i18n>Public</option><option i18n>Private nonprofit</option><option i18n>Private for-profit</option></select></label>
+              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]" i18n>Undergraduate enrollment</span><input inputmode="numeric" class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().undergraduate_enrollment" (input)="updateUniversityDraft('undergraduate_enrollment', $any($event.target).value)" placeholder="7973" /></label>
+              <label class="block"><span class="mb-1 block text-xs font-bold text-[var(--muted)]" i18n>Logo URL</span><input class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().logo_url" (input)="updateUniversityDraft('logo_url', $any($event.target).value)" placeholder="Wikimedia or official URL"  i18n-placeholder/></label>
+              <label class="block sm:col-span-2"><span class="mb-1 block text-xs font-bold text-[var(--muted)]" i18n>Main campus image URL</span><input class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().hero_url" (input)="updateUniversityDraft('hero_url', $any($event.target).value)" placeholder="Wikimedia image URL"  i18n-placeholder/></label>
+              <label class="block sm:col-span-2"><span class="mb-1 block text-xs font-bold text-[var(--muted)]" i18n>Description</span><textarea rows="3" class="theme-input w-full rounded-2xl px-4 py-3 text-sm" [value]="universityDraft().description" (input)="updateUniversityDraft('description', $any($event.target).value)" placeholder="Leave blank for a factual generated summary." i18n-placeholder></textarea></label>
             </div>
-            <button type="submit" [disabled]="creatingUniversities()" class="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-black text-[var(--accent-contrast)] disabled:opacity-45"><span class="material-symbols-outlined">school</span>{{ creatingUniversities() ? 'Creating…' : 'Create university' }}</button>
+            <button type="submit" [disabled]="creatingUniversities()" class="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-black text-[var(--accent-contrast)] disabled:opacity-45"><span class="material-symbols-outlined">school</span>{{ creatingUniversities() ? templateText.message14 : templateText.message15 }}</button>
           </form>
 
           <section class="rounded-3xl border border-[var(--line)] bg-[var(--soft-fill)] p-4">
-            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">Bulk university CSV</p>
-            <h3 class="mt-1 text-lg font-black">Preview, deduplicate, and create</h3>
-            <p class="mt-1 text-sm leading-6 text-[var(--muted)]">Upload up to 500 prepared rows. The browser sends two safe 250-row batches, and a retry skips records already created by Unit ID.</p>
+            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]" i18n>Bulk university CSV</p>
+            <h3 class="mt-1 text-lg font-black" i18n>Preview, deduplicate, and create</h3>
+            <p class="mt-1 text-sm leading-6 text-[var(--muted)]" i18n>Upload up to 500 prepared rows. The browser sends two safe 250-row batches, and a retry skips records already created by Unit ID.</p>
             <div class="mt-4 flex flex-wrap gap-2">
-              <button type="button" (click)="downloadUniversitySampleCsv()" class="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-sm font-bold"><span class="material-symbols-outlined">download</span>Sample CSV</button>
-              <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-sm font-bold"><span class="material-symbols-outlined">upload_file</span>Upload CSV<input type="file" accept=".csv,text/csv" class="sr-only" (change)="onUniversityCsvSelected($event)" /></label>
+              <button type="button" (click)="downloadUniversitySampleCsv()" class="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-sm font-bold" i18n><span class="material-symbols-outlined">download</span>Sample CSV</button>
+              <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-sm font-bold" i18n><span class="material-symbols-outlined">upload_file</span>Upload CSV<input type="file" accept=".csv,text/csv" class="sr-only" (change)="onUniversityCsvSelected($event)" /></label>
             </div>
             @if (universityBulkFileName()) {
               <div class="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4">
-                <div class="flex items-center justify-between gap-3"><div><b>{{ universityBulkFileName() }}</b><p class="text-xs text-[var(--muted)]">{{ universityBulkRows().length }} valid rows</p></div><span class="rounded-full bg-[var(--accent)]/10 px-3 py-1 text-xs font-black text-[var(--accent)]">Ready</span></div>
+                <div class="flex items-center justify-between gap-3"><div><b>{{ universityBulkFileName() }}</b><p class="text-xs text-[var(--muted)]">{{ universityBulkRows().length }} valid rows</p></div><span class="rounded-full bg-[var(--accent)]/10 px-3 py-1 text-xs font-black text-[var(--accent)]" i18n>Ready</span></div>
                 <div class="mt-3 max-h-56 overflow-auto rounded-xl border border-[var(--line)]">
                   @for (row of universityBulkRows().slice(0, 12); track row.unitId) {
                     <div class="flex items-center justify-between gap-4 border-b border-[var(--line)] px-3 py-2 text-xs last:border-0"><span class="min-w-0 truncate"><b>{{ row.officialName }}</b> · {{ row.city }}, {{ row.state }}</span><span class="shrink-0 text-[var(--muted)]">{{ row.unitId }}</span></div>
@@ -348,7 +348,7 @@
             @if (universityBulkProgress(); as progress) {
               <div class="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4"><div class="flex justify-between text-xs font-black"><span>{{ progress.processed }} / {{ progress.total }}</span><span>{{ progress.created }} created · {{ progress.skipped }} skipped · {{ progress.failed }} failed</span></div><div class="mt-2 h-2 overflow-hidden rounded-full bg-[var(--soft-fill)]"><div class="h-full bg-[var(--accent)]" [style.width.%]="progress.total ? progress.processed / progress.total * 100 : 0"></div></div></div>
             }
-            <button type="button" (click)="createBulkUniversities()" [disabled]="!universityBulkRows().length || creatingUniversities()" class="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-black text-[var(--accent-contrast)] disabled:opacity-45"><span class="material-symbols-outlined">playlist_add</span>{{ creatingUniversities() ? 'Importing…' : 'Create all universities' }}</button>
+            <button type="button" (click)="createBulkUniversities()" [disabled]="!universityBulkRows().length || creatingUniversities()" class="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-black text-[var(--accent-contrast)] disabled:opacity-45"><span class="material-symbols-outlined">playlist_add</span>{{ creatingUniversities() ? templateText.message16 : templateText.message17 }}</button>
           </section>
         </div>
       }
@@ -437,14 +437,14 @@
             </div>
             <div class="rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3">
               <p class="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--muted)]" i18n>Last run</p>
-              <p class="mt-1 text-sm font-bold text-[var(--text)]">{{ populationBackfillMessage() || 'Not run yet' }}</p>
+              <p class="mt-1 text-sm font-bold text-[var(--text)]">{{ populationBackfillMessage() || templateText.message18 }}</p>
             </div>
           </div>
 
           @if (populationBackfillProgress()) {
             <div class="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3">
               <div class="flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.16em] text-[var(--muted)]">
-                <span>{{ populationBackfillProgress()?.mode === 'refresh' ? 'Refresh progress' : 'Backfill progress' }}</span>
+                <span>{{ populationBackfillProgress()?.mode === 'refresh' ? templateText.message19 : templateText.message20 }}</span>
                 <span>{{ populationBackfillProgressPercent() }}% · {{ populationBackfillEtaLabel() }}</span>
               </div>
               <div class="mt-2 h-2 overflow-hidden rounded-full bg-[var(--soft-fill)]">
@@ -550,7 +550,7 @@
               class="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-black text-[var(--accent-contrast)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
             >
               <span class="material-symbols-outlined text-[1rem]">add_location_alt</span>
-              <span>{{ creatingCustomCity() ? 'Creating...' : canCreateWikis() ? 'Create fresh city' : 'Upgrade required' }}</span>
+              <span>{{ creatingCustomCity() ? templateText.message21 : canCreateWikis() ? templateText.message22 : templateText.message23 }}</span>
             </button>
           </div>
         </form>
@@ -622,7 +622,7 @@
                   class="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-black text-[var(--accent-contrast)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   <span class="material-symbols-outlined text-[1rem]">playlist_add_check</span>
-	                  <span>{{ creatingBulkCities() ? 'Creating...' : canCreateWikis() ? 'Create valid rows' : 'Upgrade required' }}</span>
+	                  <span>{{ creatingBulkCities() ? templateText.message21 : canCreateWikis() ? templateText.message24 : templateText.message23 }}</span>
 	                </button>
 	              </div>
 	              @if (bulkCityProgress()) {
@@ -659,9 +659,9 @@
                       <tr class="align-top">
                         <td class="px-4 py-3 text-xs font-bold text-[var(--muted)]">{{ row.row_number }}</td>
 	                        <td class="px-4 py-3">
-	                          <p class="font-bold text-[var(--text)]">{{ row.city_name || 'Missing city' }}</p>
-	                          <p class="mt-1 max-w-[18rem] truncate text-xs text-[var(--muted)]">{{ row.name || 'No title' }}</p>
-	                          <p class="mt-1 max-w-[22rem] truncate text-xs text-[var(--muted)]">{{ row.description || 'No description' }}</p>
+	                          <p class="font-bold text-[var(--text)]">{{ row.city_name || templateText.message25 }}</p>
+	                          <p class="mt-1 max-w-[18rem] truncate text-xs text-[var(--muted)]">{{ row.name || templateText.message26 }}</p>
+	                          <p class="mt-1 max-w-[22rem] truncate text-xs text-[var(--muted)]">{{ row.description || templateText.message27 }}</p>
                         </td>
                         <td class="px-4 py-3 text-xs text-[var(--muted)]">
                           {{ row.region_name || '—' }}
@@ -693,7 +693,7 @@
                             —
                           }
                         </td>
-                        <td class="px-4 py-3 text-xs text-[var(--muted)]">{{ row.timezone || 'America/New_York' }}</td>
+                        <td class="px-4 py-3 text-xs text-[var(--muted)]">{{ row.timezone || templateText.message28 }}</td>
                         <td class="px-4 py-3 text-xs text-[var(--muted)]">
                           @if (row.latitude && row.longitude) {
                             <span class="inline-flex items-center gap-1 text-[var(--accent)]"><span class="material-symbols-outlined text-[0.9rem]">place</span>{{ row.latitude }}, {{ row.longitude }}</span>
@@ -712,7 +712,7 @@
 		                          } @else if (row.create_status === 'skipped') {
 		                            <span class="inline-flex rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--muted)]" i18n>Already created</span>
 		                          } @else if (row.create_status === 'failed') {
-	                            <span class="inline-flex max-w-[16rem] rounded-full border border-[var(--error-border)] bg-[var(--error-bg)] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--error-text)]" i18n>Failed: {{ row.create_error || 'Retry available' }}</span>
+	                            <span class="inline-flex max-w-[16rem] rounded-full border border-[var(--error-border)] bg-[var(--error-bg)] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--error-text)]" i18n>Failed: {{ row.create_error || templateText.message29 }}</span>
 	                          } @else if (row.duplicate) {
 	                            <span class="inline-flex rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--muted)]" i18n>Duplicate / created</span>
 	                          } @else {
@@ -744,7 +744,7 @@
 	              class="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-black text-[var(--accent-contrast)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
 	            >
 	              <span class="material-symbols-outlined text-[1rem]">image_search</span>
-	              <span>{{ automatingCoverImages() ? 'Adding covers...' : 'Automate missing covers' }}</span>
+	              <span>{{ automatingCoverImages() ? templateText.message30 : templateText.message31 }}</span>
 	            </button>
 	          </div>
 
@@ -794,7 +794,7 @@
 	                      class="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-sm font-bold text-[var(--text)] transition hover:border-[var(--accent)]/35 disabled:cursor-not-allowed disabled:opacity-45"
 	                    >
 	                      <span class="material-symbols-outlined text-[1rem]">add_photo_alternate</span>
-	                      <span>{{ automatingCoverImageId() === atlas.id ? 'Adding...' : 'Add cover' }}</span>
+	                      <span>{{ automatingCoverImageId() === atlas.id ? templateText.message32 : templateText.message33 }}</span>
 	                    </button>
 	                  </div>
 	                }
@@ -930,7 +930,7 @@
                       type="submit"
                       [disabled]="renaming() || !renameDraft().trim()"
                       class="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-bold text-[var(--accent-contrast)] disabled:opacity-50"
-                    >{{ renaming() ? 'Saving...' : 'Save' }}</button>
+                    >{{ renaming() ? templateText.message12 : templateText.message34 }}</button>
                     <button
                       type="button"
                       (click)="cancelRename()"
@@ -1048,7 +1048,7 @@
                 class="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/35 hover:bg-[var(--soft-fill-strong)]"
                 [attr.aria-expanded]="isWikiOpen(atlas)"
               >
-                <span>{{ isWikiOpen(atlas) ? 'Hide details' : 'Details' }}</span>
+                <span>{{ isWikiOpen(atlas) ? templateText.message35 : templateText.message36 }}</span>
                 <span class="material-symbols-outlined text-[1rem]">{{ isWikiOpen(atlas) ? 'expand_less' : 'expand_more' }}</span>
               </button>
               @if (isOwner(atlas)) {
@@ -1060,7 +1060,7 @@
                   title="Delete is available for empty Wikis."
                  i18n-title>
                   <span class="material-symbols-outlined text-[1rem]">delete</span>
-                  <span>{{ deletingId() === atlas.id ? 'Deleting...' : 'Delete' }}</span>
+                  <span>{{ deletingId() === atlas.id ? templateText.message37 : templateText.message38 }}</span>
                 </button>
               }
             </div>
@@ -1094,7 +1094,7 @@
                     class="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--accent)]/30 bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--accent)] transition hover:border-[var(--accent)]/50"
                   >
                     <span class="material-symbols-outlined text-[1rem]">tune</span>
-                    <span>{{ atlas.persona_prompt ? 'Edit voice' : 'Set voice' }}</span>
+                    <span>{{ atlas.persona_prompt ? templateText.message39 : templateText.message40 }}</span>
                   </a>
                 </div>
               </div>
@@ -1191,7 +1191,7 @@
                       (click)="saveVoiceAgentConfig(atlas)"
                     >
                       <span class="material-symbols-outlined text-[1rem]">save</span>
-                      <span>{{ isSavingVoiceAgent(atlas.id) ? 'Saving...' : 'Save Vapi settings' }}</span>
+                      <span>{{ isSavingVoiceAgent(atlas.id) ? templateText.message12 : templateText.message41 }}</span>
                     </button>
                     <button
                       type="button"
@@ -1200,7 +1200,7 @@
                       (click)="copyVoiceAgentToolUrl(atlas.id)"
                     >
                       <span class="material-symbols-outlined text-[1rem]">{{ copiedVoiceAgent(atlas.id) ? 'done' : 'content_copy' }}</span>
-                      <span>{{ copiedVoiceAgent(atlas.id) ? 'Copied' : 'Copy URL' }}</span>
+                      <span>{{ copiedVoiceAgent(atlas.id) ? templateText.message5 : templateText.message42 }}</span>
                     </button>
                     <button
                       type="button"
@@ -1308,7 +1308,7 @@
                       (click)="saveTextMessagingConfig(atlas)"
                     >
                       <span class="material-symbols-outlined text-[1rem]">save</span>
-                      <span>{{ isSavingTextMessaging(atlas.id) ? 'Saving...' : 'Save text settings' }}</span>
+                      <span>{{ isSavingTextMessaging(atlas.id) ? templateText.message12 : templateText.message43 }}</span>
                     </button>
                     <button
                       type="button"
@@ -1317,7 +1317,7 @@
                       (click)="copyTextMessagingWebhook(atlas.id)"
                     >
                       <span class="material-symbols-outlined text-[1rem]">{{ copiedTextMessaging(atlas.id) ? 'done' : 'content_copy' }}</span>
-                      <span>{{ copiedTextMessaging(atlas.id) ? 'Copied' : 'Copy URL' }}</span>
+                      <span>{{ copiedTextMessaging(atlas.id) ? templateText.message5 : templateText.message42 }}</span>
                     </button>
                     <button
                       type="button"
@@ -1370,7 +1370,7 @@
                         </div>
                         <label class="inline-flex w-28 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/35 hover:bg-[var(--soft-fill-strong)] has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
                           <span class="material-symbols-outlined text-[0.95rem]">{{ isUploadingChatGuideImage(atlas.id) ? 'hourglass_top' : 'upload' }}</span>
-                          <span>{{ isUploadingChatGuideImage(atlas.id) ? 'Uploading' : 'Upload' }}</span>
+                          <span>{{ isUploadingChatGuideImage(atlas.id) ? templateText.message44 : templateText.message45 }}</span>
                           <input
                             type="file"
                             accept="image/*"
@@ -1443,7 +1443,7 @@
                       (click)="saveChatGuide(atlas)"
                     >
                       <span class="material-symbols-outlined text-[1rem]">save</span>
-                      <span>{{ isSavingChatGuide(atlas.id) ? 'Saving...' : 'Save chat guide' }}</span>
+                      <span>{{ isSavingChatGuide(atlas.id) ? templateText.message12 : templateText.message46 }}</span>
                     </button>
                   </div>
                 </div>
@@ -1553,7 +1553,7 @@
                       (click)="saveNewsletterConfig(atlas)"
                     >
                       <span class="material-symbols-outlined text-[1rem]">save</span>
-                      <span>{{ isSavingNewsletter(atlas.id) ? 'Saving...' : 'Save email settings' }}</span>
+                      <span>{{ isSavingNewsletter(atlas.id) ? templateText.message12 : templateText.message47 }}</span>
                     </button>
                     <button
                       type="button"
@@ -1562,7 +1562,7 @@
                       (click)="sendNewsletterTest(atlas)"
                     >
                       <span class="material-symbols-outlined text-[1rem]">outgoing_mail</span>
-                      <span>{{ isSendingNewsletterTest(atlas.id) ? 'Generating...' : 'Send test email' }}</span>
+                      <span>{{ isSendingNewsletterTest(atlas.id) ? templateText.message48 : templateText.message49 }}</span>
                     </button>
                     </div>
                   </div>
@@ -1649,7 +1649,7 @@
                   <span class="min-w-0">
                     <span class="block text-sm font-black text-[var(--text)]" i18n>Admins</span>
                     <span class="block truncate text-xs text-[var(--muted)]">
-                      {{ adminProfiles(atlas).length ? adminProfiles(atlas).length + ' shared admin' + (adminProfiles(atlas).length === 1 ? '' : 's') : 'Owner only' }}
+                      {{ adminProfiles(atlas).length ? adminProfiles(atlas).length + templateText.message50 + (adminProfiles(atlas).length === 1 ? '' : 's') : templateText.message51 }}
                     </span>
                   </span>
                 </span>
@@ -1675,7 +1675,7 @@
                         [disabled]="isSharingAdmin(atlas.id) || !adminEmailDraft(atlas.id).trim()"
                       >
                         <span class="material-symbols-outlined text-[1rem]">person_add</span>
-                        <span>{{ isSharingAdmin(atlas.id) ? 'Adding...' : 'Add admin' }}</span>
+                        <span>{{ isSharingAdmin(atlas.id) ? templateText.message32 : templateText.message52 }}</span>
                       </button>
                     </form>
                   </div>
@@ -1738,7 +1738,7 @@
                           (click)="removeSubscription(atlas, subscription)"
                         >
                           <span class="material-symbols-outlined text-[0.95rem]">person_remove</span>
-                          <span>{{ isRemovingSubscription(atlas.id, subscription.id) ? 'Removing...' : 'Remove' }}</span>
+                          <span>{{ isRemovingSubscription(atlas.id, subscription.id) ? templateText.message53 : templateText.message54 }}</span>
                         </button>
                       </div>
                     }
@@ -1789,7 +1789,7 @@
                         class="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/35"
                       >
                         <span class="material-symbols-outlined text-[1rem]">tune</span>
-                        <span>{{ atlas.city_config?.enabled ? 'Edit city pulse' : 'Set up city pulse' }}</span>
+                        <span>{{ atlas.city_config?.enabled ? templateText.message55 : templateText.message56 }}</span>
                       </button>
                     }
                   </div>
@@ -1876,7 +1876,7 @@
 
                   <div class="mt-4 flex flex-wrap gap-2">
                     <button type="button" class="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-bold text-[var(--accent-contrast)] disabled:opacity-50" [disabled]="savingCityConfig()" (click)="saveCityConfig(atlas)">
-                      {{ savingCityConfig() ? 'Saving...' : 'Save city pulse' }}
+                      {{ savingCityConfig() ? templateText.message12 : templateText.message57 }}
                     </button>
                     <button type="button" class="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--muted)] hover:text-[var(--text)]" [disabled]="savingCityConfig()" (click)="cancelCityEdit()" i18n>Cancel</button>
                   </div>
@@ -1935,7 +1935,7 @@
                         class="inline-flex items-center gap-2 rounded-full border border-[var(--danger-text)]/25 bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--danger-text)] transition hover:bg-[var(--soft-fill-strong)] disabled:cursor-not-allowed disabled:opacity-35"
                       >
                         <span class="material-symbols-outlined text-[1rem]">delete</span>
-                        <span>{{ deletingId() === atlas.id ? 'Deleting...' : 'Delete empty Wiki' }}</span>
+                        <span>{{ deletingId() === atlas.id ? templateText.message37 : templateText.message58 }}</span>
                       </button>
                     </div>
                     @if (!hasMultipleAtlases()) {

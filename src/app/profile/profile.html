@@ -26,7 +26,7 @@
               <div class="flex flex-col items-center gap-4 sm:flex-row md:flex-col md:items-start">
                 <div class="relative flex h-36 w-36 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--line)] bg-[var(--soft-fill)] shadow-[var(--shadow-floating)] sm:h-44 sm:w-44" [class.profile-sticker-avatar]="!uploadedPhotoUrl()">
                   @if (uploadedPhotoUrl()) {
-                    <img [src]="uploadedPhotoUrl()" [alt]="userName() + ' profile photo'" class="h-full w-full object-cover" />
+                    <img [src]="uploadedPhotoUrl()" [alt]="userName() + templateText.message9" class="h-full w-full object-cover" />
                   } @else {
                     <div
                       class="flex h-full w-full items-center justify-center"
@@ -41,7 +41,7 @@
                 <div class="grid w-full max-w-52 gap-2">
                   <label class="primary-btn inline-flex cursor-pointer justify-center !px-4 !py-2.5 text-sm" [class.pointer-events-none]="profilePictureSaving()">
                     <span class="material-symbols-outlined text-base">upload</span>
-                    <span>{{ profilePictureSaving() ? 'Saving...' : 'Upload image' }}</span>
+                    <span>{{ profilePictureSaving() ? templateText.message1 : templateText.message2 }}</span>
                     <input type="file" accept="image/*" class="hidden" [disabled]="profilePictureSaving()" (change)="uploadPhoto($event)" />
                   </label>
                   <button type="button" class="ghost-btn inline-flex justify-center !px-4 !py-2.5 text-sm" [disabled]="profilePictureSaving()" (click)="openIconChooser()">
@@ -139,7 +139,7 @@
                   <div class="profile-info-sticker sticker-palette--green">
                     <span class="profile-info-sticker__icon material-symbols-outlined">verified_user</span>
                     <span class="profile-info-sticker__label" i18n>Email verified</span>
-                    <span class="profile-info-sticker__value">{{ profile()?.emailVerified ? 'Yes' : 'No' }}</span>
+                    <span class="profile-info-sticker__value">{{ profile()?.emailVerified ? templateText.message3 : templateText.message4 }}</span>
                   </div>
                   <div class="profile-info-sticker sticker-palette--yellow">
                     <span class="profile-info-sticker__icon material-symbols-outlined">calendar_month</span>
@@ -250,7 +250,7 @@
                           <span class="profile-card-sticker__icon material-symbols-outlined">storefront</span>
                           <span class="min-w-0 flex-1">
                             <span class="profile-card-sticker__title">{{ business.business_name }}</span>
-                            <span class="profile-card-sticker__subtitle" i18n>{{ business.city_name }} &middot; {{ business.category || 'Business' }}</span>
+                            <span class="profile-card-sticker__subtitle" i18n>{{ business.city_name }} &middot; {{ business.category || templateText.message5 }}</span>
                           </span>
                           <span class="profile-card-sticker__badge">{{ businessStatusLabel(business.status) }}</span>
                           <span class="profile-card-sticker__chevron material-symbols-outlined">expand_more</span>
@@ -259,13 +259,13 @@
                           <div class="flex gap-3">
                             <a [routerLink]="businessPath(business)" class="profile-card-sticker__image">
                               @if (businessImageUrl(business)) {
-                                <img [src]="businessImageUrl(business)" [alt]="business.business_name + ' image'" loading="lazy" />
+                                <img [src]="businessImageUrl(business)" [alt]="business.business_name + templateText.message10" loading="lazy" />
                               } @else {
                                 <span>{{ initialsFor(business.business_name) }}</span>
                               }
                             </a>
                             <div class="min-w-0 flex-1 text-sm leading-6 text-[#526458]">
-                              <p>{{ business.business_address || 'Business profile connected to this account.' }}</p>
+                              <p>{{ business.business_address || templateText.message6 }}</p>
                             </div>
                           </div>
                           <div class="mt-4 flex gap-2">
@@ -331,7 +331,7 @@
                       </span>
                       <span class="min-w-0">
                         <span class="profile-icon-sticker__label">{{ icon.label }}</span>
-                        <span class="profile-icon-sticker__status">{{ iconSelected(icon) ? 'Selected' : 'Tap to choose' }}</span>
+                        <span class="profile-icon-sticker__status">{{ iconSelected(icon) ? templateText.message7 : templateText.message8 }}</span>
                       </span>
                     </button>
                   }

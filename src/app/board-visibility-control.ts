@@ -36,9 +36,9 @@ export class BoardVisibilityControlComponent {
   readonly team = input(false);
   readonly valueChange = output<BoardVisibility>();
   readonly choices: Array<{ value: BoardVisibility; label: string; icon: string }> = [
-    { value: 'public', label: 'Public', icon: 'public' },
-    { value: 'unlisted', label: 'Unlisted', icon: 'link' },
-    { value: 'private', label: 'Private', icon: 'lock' },
+    { value: 'public', label: $localize`Public`, icon: 'public' },
+    { value: 'unlisted', label: $localize`Unlisted`, icon: 'link' },
+    { value: 'private', label: $localize`Private`, icon: 'lock' },
   ];
   description(): string {
     return this.team() && this.value() === 'private'

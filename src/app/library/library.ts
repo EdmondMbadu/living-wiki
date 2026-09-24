@@ -28,6 +28,27 @@ import { AccountMenuComponent } from '../account-menu/account-menu';
   styleUrl: './library.css',
 })
 export class LibraryComponent {
+  readonly templateText = {
+    message1: $localize`Uploading...`,
+    message2: $localize`Upload`,
+    message3: $localize`Upload Files`,
+    message4: $localize`Deleting Failed...`,
+    message5: $localize`Delete Failed`,
+    message6: $localize`No Failed Sources`,
+    message7: $localize`Deleting All...`,
+    message8: $localize`Delete All Sources`,
+    message9: $localize`Loading these public source files...`,
+    message10: $localize`Loading your source files...`,
+    message11: $localize`No source files yet`,
+    message12: $localize`Your source files are empty`,
+    message13: $localize`No public documents have been published here yet.`,
+    message14: $localize`Upload files or import a URL to start building your knowledge base.`,
+    message15: $localize`Deleting...`,
+    message16: $localize`Delete`,
+    message17: $localize`Uploading now`,
+    message18: $localize`Ready for upload`,
+    message19: $localize`Download `,
+  };
   private readonly localeId = inject(LOCALE_ID);
   @ViewChild('fileInput') private fileInput?: ElementRef<HTMLInputElement>;
 

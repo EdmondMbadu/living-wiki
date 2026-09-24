@@ -2,11 +2,11 @@
   <div class="section-heading">
     <span class="section-number" aria-hidden="true">01</span>
     <div>
-      <h4 id="property-source-title">Start with the property</h4>
-      <p>One listing link. The details stay together.</p>
+      <h4 id="property-source-title" i18n>Start with the property</h4>
+      <p i18n>One listing link. The details stay together.</p>
     </div>
   </div>
-  <label class="field-label" for="property-listing-url">Property listing URL</label>
+  <label class="field-label" for="property-listing-url" i18n>Property listing URL</label>
   <div class="url-field">
     <span class="material-symbols-outlined" aria-hidden="true">link</span>
     <input
@@ -22,9 +22,9 @@
       aria-describedby="property-listing-help"
       [value]="listingUrl()"
       (input)="listingUrl.set($any($event.target).value)"
-    />
+     i18n-placeholder/>
   </div>
-  <p id="property-listing-help" class="field-help">
+  <p id="property-listing-help" class="field-help" i18n>
     Paste a public listing. We’ll gather its property details, keeping the original source and attribution.
   </p>
   <ng-content />
@@ -33,13 +33,13 @@
   <div class="section-heading">
     <span class="section-number" aria-hidden="true">02</span>
     <div>
-      <h4 id="property-narration-title">Give the home a voice</h4>
-      <p>Choose how the property story is told.</p>
+      <h4 id="property-narration-title" i18n>Give the home a voice</h4>
+      <p i18n>Choose how the property story is told.</p>
     </div>
   </div>
   <div class="style-setting">
     <div>
-      <label class="field-label" for="property-narration-style">Narration style</label>
+      <label class="field-label" for="property-narration-style" i18n>Narration style</label>
       <select
         id="property-narration-style"
         name="propertyNarrationStyle"
@@ -55,14 +55,14 @@
     <div class="voice-preview" aria-live="polite">
       <span class="voice-icon material-symbols-outlined" aria-hidden="true">graphic_eq</span>
       <div>
-        <small>Starting voice</small><strong>{{ voiceName() }}</strong
-        ><small>You can change it later.</small>
+        <small i18n>Starting voice</small><strong>{{ voiceName() }}</strong
+        ><small i18n>You can change it later.</small>
       </div>
     </div>
   </div>
   <p id="property-style-description" class="field-help">{{ selectedStyle().description }}</p>
   <fieldset class="duration-setting">
-    <legend class="field-label">Narration length <span>per card</span></legend>
+    <legend class="field-label" i18n>Narration length <span>per card</span></legend>
     <div class="duration-presets">
       @for (preset of presets; track preset.seconds) {
         <label class="duration-option" [class.is-selected]="narrationSeconds() === preset.seconds">
@@ -82,11 +82,11 @@
     </div>
   </fieldset>
   <details class="custom-duration" [open]="customDuration()">
-    <summary>
+    <summary i18n>
       Custom duration <span>{{ durationLabel(narrationSeconds()) }} per card</span>
     </summary>
     <div class="custom-duration-controls">
-      <label for="property-narration-duration">Seconds per card</label>
+      <label for="property-narration-duration" i18n>Seconds per card</label>
       <output for="property-narration-duration">{{ narrationSeconds() }} seconds</output>
       <input
         id="property-narration-duration"
@@ -108,7 +108,7 @@
       <span>{{ cardCount() }} cards · ~{{ wordsPerCard() }} words per card</span>
     </div>
   </div>
-  <p class="field-help estimate-note">
+  <p class="field-help estimate-note" i18n>
     Card count may change after analysis. Actual voice timing may vary.
     @if (totalSeconds() > 1200) {
       <span>This longer narration may take more time to generate.</span>

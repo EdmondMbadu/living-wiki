@@ -138,7 +138,7 @@ export class OffGridsComponent {
       this.cursor = page.cursor;
       this.more.set(!!page.cursor);
     } catch (error) {
-      if (!this.disposed && version === this.requestVersion) this.error.set(error instanceof Error ? error.message : 'Could not load gems.');
+      if (!this.disposed && version === this.requestVersion) this.error.set(error instanceof Error ? error.message : $localize`Could not load gems.`);
     } finally {
       if (!this.disposed && version === this.requestVersion) this.loading.set(false);
     }

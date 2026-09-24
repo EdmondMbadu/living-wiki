@@ -26,6 +26,20 @@ import { AccountMenuComponent } from '../account-menu/account-menu';
   templateUrl: './landing.html',
 })
 export class LandingComponent {
+  readonly templateText = {
+    message1: $localize`Business AI source files`,
+    message2: $localize`Public access`,
+    message3: $localize`Cognitive Synchronization Active`,
+    message4: $localize`Train the business guide`,
+    message5: $localize`Uploads require sign-in`,
+    message6: $localize`Initialize Knowledge`,
+    message7: $localize`Uploading...`,
+    message8: $localize`Upload business docs`,
+    message9: $localize`Upload from device`,
+    message10: $localize`Public pages are view only`,
+    message11: $localize`Up to 10 files: PDF, DOC/DOCX, PPT/PPTX, TXT, PNG/JPG`,
+    message12: $localize`PDF, DOC/DOCX, PPT/PPTX, TXT, PNG/JPG, and supported Google Drive files`,
+  };
   private readonly authService = inject(AuthService);
   private readonly atlasService = inject(AtlasService);
   private readonly documentsService = inject(DocumentsService);

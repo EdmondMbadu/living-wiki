@@ -371,7 +371,7 @@ export class SpotifyPlaybackService {
       this.openConnectionDialog();
       return;
     }
-    if (!this.functions) { this.error.set('Spotify playlist export is unavailable here.'); return; }
+    if (!this.functions) { this.error.set($localize`Spotify playlist export is unavailable here.`); return; }
     this.playlistExporting.set(true);
     try {
       const callable = httpsCallable<{ boardId: string }, SpotifyPlaylistExport>(this.functions, 'exportSpotifyBoardPlaylist');
@@ -381,7 +381,7 @@ export class SpotifyPlaybackService {
       this.connectDialogOpen.set(true);
       this.notice.set(result.data.reused ? 'Your Spotify playlist is already up to date.' : 'Your full board is ready in Spotify.');
     } catch (error) {
-      this.error.set(this.friendlyError(error, 'Spotify could not create this playlist.'));
+      this.error.set(this.friendlyError(error, $localize`Spotify could not create this playlist.`));
       this.connectDialogOpen.set(true);
     } finally { this.playlistExporting.set(false); }
   }

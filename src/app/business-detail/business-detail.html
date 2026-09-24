@@ -64,7 +64,7 @@
         <section class="rounded-3xl border border-[var(--line)] bg-[var(--surface)] px-6 py-10 shadow-[var(--shadow-floating)]">
           <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]" i18n>Business page</p>
           <h1 class="mt-3 text-3xl font-black tracking-tight" i18n>This business is not available yet.</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{{ loadError() || 'The business page could not be found.' }}</p>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{{ loadError() || templateText.message1 }}</p>
           <a routerLink="/business/claim" class="mt-6 inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-black text-[var(--accent-contrast)]">
             <span class="material-symbols-outlined text-[1rem]">add_business</span>
             <span i18n>Claim a business</span>
@@ -76,7 +76,7 @@
             <div class="relative">
               <div class="flex h-32 w-32 items-center justify-center rounded-3xl border border-[var(--line)] bg-[var(--soft-fill)] text-5xl font-black text-[var(--accent)]">
                 @if (logoUrl()) {
-                  <img [src]="logoUrl()" [alt]="businessName() + ' logo'" class="h-full w-full rounded-3xl object-cover" />
+                  <img [src]="logoUrl()" [alt]="businessName() + templateText.message8" class="h-full w-full rounded-3xl object-cover" />
                 } @else {
                   {{ businessInitial() }}
                 }
@@ -184,14 +184,14 @@
           <article class="overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-floating)]">
             <div class="flex h-48 items-center justify-center bg-[var(--soft-fill)]">
               @if (coverImageUrl()) {
-                <img [src]="coverImageUrl()" [alt]="businessName() + ' cover image'" class="h-full w-full object-cover" />
+                <img [src]="coverImageUrl()" [alt]="businessName() + templateText.message9" class="h-full w-full object-cover" />
               } @else {
                 <span class="material-symbols-outlined text-6xl text-[var(--accent)]">storefront</span>
               }
             </div>
             <div class="p-6">
               <div class="flex items-start justify-between gap-3">
-                <h2 class="text-xl font-black tracking-tight">{{ business()?.category || 'Local guide' }}</h2>
+                <h2 class="text-xl font-black tracking-tight">{{ business()?.category || templateText.message2 }}</h2>
                 <span class="rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[var(--muted)]" i18n>Featured</span>
               </div>
               <p class="mt-3 text-sm leading-6 text-[var(--muted)]" i18n>Personalized local answers for visitors, customers, and residents through LivingWiki.</p>
@@ -218,8 +218,8 @@
                 <div class="flex items-start gap-3">
                   <span class="material-symbols-outlined text-[var(--accent)]">mail</span>
                   <div>
-                    <p class="font-black text-[var(--text)]">{{ contactEmail() || 'Business contact available after approval' }}</p>
-                    <p class="text-sm text-[var(--muted)]">{{ ownerCanViewPrivateDetails() ? 'Visible to business admins' : 'Public contact is not published yet' }}</p>
+                    <p class="font-black text-[var(--text)]">{{ contactEmail() || templateText.message3 }}</p>
+                    <p class="text-sm text-[var(--muted)]">{{ ownerCanViewPrivateDetails() ? templateText.message4 : templateText.message5 }}</p>
                   </div>
                 </div>
                 <div class="flex items-start gap-3">
@@ -237,7 +237,7 @@
                 </a>
                 <button type="button" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--accent)]/35 bg-[var(--soft-fill)] px-5 py-3 text-sm font-black text-[var(--accent)]" (click)="copyDetailLink()">
                   <span class="material-symbols-outlined text-[1rem]">content_copy</span>
-                  <span>{{ copiedLink() ? 'Copied' : 'Copy link' }}</span>
+                  <span>{{ copiedLink() ? templateText.message6 : templateText.message7 }}</span>
                 </button>
               </div>
             </div>
@@ -260,7 +260,7 @@
           <div class="grid gap-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
             <div class="flex items-center justify-center border-b border-[var(--line)] bg-[#f7f2e8] p-5 sm:p-6 lg:border-b-0 lg:border-r">
               <div class="aspect-square w-full max-w-sm rounded-3xl bg-[#111211] bg-contain bg-center bg-no-repeat shadow-[var(--shadow-floating)]" style="background-image: url('/assets/image/ring-countries.png')">
-                <img [src]="badgeSvgHref()" [alt]="'QR badge for ' + businessName()" class="h-full w-full rounded-3xl object-contain" />
+                <img [src]="badgeSvgHref()" [alt]="templateText.message10 + businessName()" class="h-full w-full rounded-3xl object-contain" />
               </div>
             </div>
             <div class="p-6 sm:p-8">
@@ -280,7 +280,7 @@
                 </button>
                 <button type="button" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-3 text-sm font-black text-[var(--text)]" (click)="copyGuideLink()">
                   <span class="material-symbols-outlined text-[1rem]">{{ copiedGuideLink() ? 'check' : 'content_copy' }}</span>
-                  <span>{{ copiedGuideLink() ? 'Copied' : 'Copy link' }}</span>
+                  <span>{{ copiedGuideLink() ? templateText.message6 : templateText.message7 }}</span>
                 </button>
                 @if (ownerCanViewPrivateDetails()) {
                   <button type="button" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-3 text-sm font-black text-[var(--text)]" (click)="downloadBadgePng()">
@@ -301,7 +301,7 @@
           <section class="overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-floating)]">
             <div class="grid gap-0 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
               <div class="flex items-center justify-center border-b border-[var(--line)] bg-white p-5 sm:p-6 lg:border-b-0 lg:border-r">
-                <img [src]="additionalQrSvgHref()" [alt]="additionalQrLabel() + ' QR code'" class="aspect-square w-full max-w-xs object-contain" />
+                <img [src]="additionalQrSvgHref()" [alt]="additionalQrLabel() + templateText.message11" class="aspect-square w-full max-w-xs object-contain" />
               </div>
               <div class="p-6 sm:p-8">
                 <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]" i18n>Additional QR</p>
@@ -344,7 +344,7 @@
           <div class="grid gap-4 bg-[var(--soft-fill)] px-5 py-6 sm:px-6">
             @if (profileImageUrl()) {
               <div class="flex items-center gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3">
-                <img [src]="profileImageUrl()" [alt]="businessName() + ' profile image'" class="h-12 w-12 rounded-full object-cover" />
+                <img [src]="profileImageUrl()" [alt]="businessName() + templateText.message12" class="h-12 w-12 rounded-full object-cover" />
                 <div class="min-w-0">
                   <p class="truncate text-sm font-black text-[var(--text)]">{{ businessName() }}</p>
                   <p class="truncate text-xs text-[var(--muted)]" i18n>Business guide profile</p>

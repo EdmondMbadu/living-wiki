@@ -18,10 +18,10 @@ export const CARD_CREATION_OPTIONS: ReadonlyArray<{
   description: string;
   icon: string;
 }> = [
-  { kind: 'general', title: 'General card', description: 'Describe a place, idea, memory, recommendation, or anything else.', icon: 'sticky_note_2' },
-  { kind: 'intro', title: 'Intro card', description: 'Welcome visitors and introduce the story in your own words.', icon: 'waving_hand' },
-  { kind: 'contact', title: 'Contact card', description: 'Share a name, phone number, email, and optional organization.', icon: 'contact_mail' },
-  { kind: 'qr-code', title: 'QR code card', description: 'Add a QR code people can scan.', icon: 'qr_code_2' },
+  { kind: 'general', title: $localize`General card`, description: $localize`Describe a place, idea, memory, recommendation, or anything else.`, icon: 'sticky_note_2' },
+  { kind: 'intro', title: $localize`Intro card`, description: $localize`Welcome visitors and introduce the story in your own words.`, icon: 'waving_hand' },
+  { kind: 'contact', title: $localize`Contact card`, description: $localize`Share a name, phone number, email, and optional organization.`, icon: 'contact_mail' },
+  { kind: 'qr-code', title: $localize`QR code card`, description: $localize`Add a QR code people can scan.`, icon: 'qr_code_2' },
 ];
 
 export function emptySpecialCardDraft(kind: SpecialCardCreationKind, defaults: Partial<SpecialCardDraft> = {}): SpecialCardDraft {

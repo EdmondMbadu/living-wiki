@@ -680,6 +680,48 @@ interface PublicWikiFeelingSticker {
   styleUrl: './public-wikis.css',
 })
 export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy {
+  readonly templateText = {
+    message1: $localize`Change`,
+    message2: $localize`Choose`,
+    message3: $localize`Universities`,
+    message4: $localize`Cities`,
+    message5: $localize`Explore properties`,
+    message6: $localize`Explore more`,
+    message7: $localize`Search properties`,
+    message8: $localize`Search public boards`,
+    message9: $localize` so far`,
+    message10: $localize`Searching more boards…`,
+    message11: $localize`No matching boards`,
+    message12: $localize`Try an address, place, agent, or property feature.`,
+    message13: $localize`Try a title, place, creator, card, or topic.`,
+    message14: $localize`No properties yet.`,
+    message15: $localize`No boards yet.`,
+    message16: $localize`Not reported`,
+    message17: $localize`Institution`,
+    message18: $localize`Loading the next 10…`,
+    message19: $localize`More LivingWiki pages load as you scroll`,
+    message20: $localize`universities`,
+    message21: $localize`cities`,
+    message22: $localize`match`,
+    message23: $localize`matches`,
+    message24: $localize` logo`,
+    message25: $localize` image`,
+    message26: $localize`Browse all universities`,
+    message27: $localize`Browse all cities`,
+    message28: $localize`Universities`,
+    message29: $localize`Cities`,
+    message30: $localize`Previous `,
+    message31: $localize`More `,
+    message32: $localize`Explore properties`,
+    message33: $localize`Explore more boards`,
+    message34: $localize`Search properties`,
+    message35: $localize`Search public boards`,
+    message36: $localize`Search addresses, places, agents, or features…`,
+    message37: $localize`Search titles, places, creators, or topics…`,
+    message38: $localize` cover image`,
+    message39: $localize` people per square kilometer`,
+    message40: $localize`People per square kilometer`,
+  };
   @ViewChild('directorySearchInput') private directorySearchInput?: ElementRef<HTMLInputElement>;
   @ViewChild('discoverLoadSentinel')
   set discoverLoadSentinel(element: ElementRef<HTMLElement> | undefined) {
@@ -856,7 +898,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
     this.mobileVideos().map((video) => ({
       id: video.id,
       title: video.sourceTitle,
-      chip: video.videoKind === 'trailer' ? 'Board trailer' : 'Full video',
+      chip: video.videoKind === 'trailer' ? $localize`Board trailer` : $localize`Full video`,
       icon: 'smart_display',
       accent: '#365f52',
       link: '/videos',
@@ -940,13 +982,13 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
 
   categoryLabel(category: PublicWikiCategory): string {
     if (category === CITIES_CATEGORY) return $localize`Cities`;
-    if (category === UNIVERSITIES_CATEGORY) return 'Universities';
+    if (category === UNIVERSITIES_CATEGORY) return $localize`Universities`;
     return $localize`Others`;
   }
 
   activeCategoryTitle(): string {
     if (this.activeCategory() === CITIES_CATEGORY) return $localize`City LivingWiki pages`;
-    if (this.activeCategory() === UNIVERSITIES_CATEGORY) return 'U.S. college & university LivingWiki pages';
+    if (this.activeCategory() === UNIVERSITIES_CATEGORY) return $localize`U.S. college & university LivingWiki pages`;
     return $localize`Public LivingWiki pages`;
   }
   readonly sortOptions = computed(() => [...PUBLIC_WIKI_SORTS]);
@@ -1008,8 +1050,8 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
   readonly mobileDirectoryIsUniversities = computed(() => this.activeCategory() === UNIVERSITIES_CATEGORY);
   readonly mobileDirectorySearchPlaceholder = computed(() =>
     this.mobileDirectoryIsUniversities()
-      ? 'Search universities by name, city, or state...'
-      : 'Search cities by name, country, or region...',
+      ? $localize`Search universities by name, city, or state...`
+      : $localize`Search cities by name, country, or region...`,
   );
   readonly hasMoreMobileDiscoverBoards = computed(() =>
     this.mobileDiscoverPreviewBoards().length < this.mobileDiscoverFilteredBoards().length
@@ -1032,7 +1074,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
   readonly mobileSelectedCityLink = computed(() => this.mobileSelectedCity()?.link ?? '/chat/philly');
   readonly mobileSelectedCityName = computed(() => {
     const city = this.mobileSelectedCity();
-    return city ? this.cityDisplayName(city) : 'Pick your city';
+    return city ? this.cityDisplayName(city) : $localize`Pick your city`;
   });
   readonly mobileSelectedUniversity = computed(() => {
     const selectedSlug = this.mobileSelectedUniversitySlug();
@@ -1047,7 +1089,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
   readonly mobileDirectoryPreferenceName = computed(() => {
     const selected = this.mobileDirectoryPreference();
     if (selected) return this.cityDisplayName(selected);
-    return this.mobileDirectoryIsUniversities() ? 'Choose a university' : 'Choose a city';
+    return this.mobileDirectoryIsUniversities() ? $localize`Choose a university` : $localize`Choose a city`;
   });
   readonly mobileDirectoryPreferenceLink = computed(() => this.mobileDirectoryPreference()?.link ?? null);
   readonly directorySuggestions = computed(() => {
@@ -2336,7 +2378,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
     return {
       id: `friend-${friend.userId}`,
       title: friend.displayName,
-      chip: 'Friend',
+      chip: $localize`Friend`,
       icon: friend.profileIcon || 'person',
       accent: '#1f6fd6',
       link: this.friendProfileLink(friend),
@@ -2488,7 +2530,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
 
   populationHeroLabel(wiki: PublicWikiCatalogItem): string {
     if (!wiki.population) {
-      return 'No population';
+      return $localize`No population`;
     }
 
     return new Intl.NumberFormat(this.localeId, { maximumFractionDigits: 0 }).format(wiki.population);
@@ -2524,7 +2566,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
   }
 
   densityHeroLabel(wiki: PublicWikiCatalogItem): string {
-    return this.densityLabel(wiki) ?? 'Density needed';
+    return this.densityLabel(wiki) ?? $localize`Density needed`;
   }
 
   cityStickerAttributes(wiki: PublicWikiCatalogItem): PublicWikiStickerAttribute[] {
@@ -2540,7 +2582,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
     if (country || region !== 'Other') {
       addSticker({
         id: 'region',
-        label: region === 'Other' ? 'Place' : region,
+        label: region === 'Other' ? $localize`Place` : region,
         value: country || region,
         caption: $localize`Region`,
         icon: 'public',
@@ -2553,7 +2595,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
         id: 'population',
         label: $localize`Population`,
         value: this.formatCompactNumber(wiki.population),
-        caption: wiki.populationYear ? `${wiki.populationYear} estimate` : 'Latest estimate',
+        caption: wiki.populationYear ? $localize`${wiki.populationYear}:year: estimate` : $localize`Latest estimate`,
         icon: 'groups',
         palette: 'coral',
       });
@@ -2578,7 +2620,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
         id: 'time',
         label: $localize`Local time`,
         value: localTime,
-        caption: wiki.timezone ? this.shortTimezone(wiki.timezone) : 'Timezone',
+        caption: wiki.timezone ? this.shortTimezone(wiki.timezone) : $localize`Timezone`,
         icon: this.timeIcon(wiki),
         palette: 'purple',
       });
@@ -2611,7 +2653,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
       addSticker({
         id: 'map',
         label: $localize`Map`,
-        value: 'Located',
+        value: $localize`Located`,
         caption: $localize`Coordinates attached`,
         icon: 'explore',
         palette: 'teal',
@@ -2705,27 +2747,27 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
     }
 
     if (!this.coordinatePair(wiki)) {
-      return 'Unavailable';
+      return $localize`Unavailable`;
     }
 
-    return this.isLoadingTemperatures() ? 'Loading' : null;
+    return this.isLoadingTemperatures() ? $localize`Loading` : null;
   }
 
   temperatureHeroLabel(wiki: PublicWikiCatalogItem): string {
-    return this.temperatureLabel(wiki) ?? 'No temp';
+    return this.temperatureLabel(wiki) ?? $localize`No temp`;
   }
 
   temperatureAssistiveLabel(wiki: PublicWikiCatalogItem): string {
     const reading = this.temperatureForWiki(wiki);
     if (reading) {
-      return 'Current temperature';
+      return $localize`Current temperature`;
     }
 
     if (!this.coordinatePair(wiki)) {
-      return 'Temperature unavailable';
+      return $localize`Temperature unavailable`;
     }
 
-    return this.isLoadingTemperatures() ? 'Loading current temperature' : 'Temperature pending';
+    return this.isLoadingTemperatures() ? $localize`Loading current temperature` : $localize`Temperature pending`;
   }
 
   temperatureBandBackground(wiki: PublicWikiCatalogItem): string | null {
@@ -2753,13 +2795,13 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
   timeHeroLabel(wiki: PublicWikiCatalogItem): string {
     const timezone = wiki.timezone?.trim();
     if (!timezone) {
-      return 'No time';
+      return $localize`No time`;
     }
 
     try {
       return this.localTimeHeroFormatter(timezone).format(new Date());
     } catch {
-      return 'No time';
+      return $localize`No time`;
     }
   }
 
@@ -2813,13 +2855,15 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
     }
 
     if (this.isLoadingTemperatures()) {
-      return 'Fetching current temps';
+      return $localize`Fetching current temps`;
     }
 
     const loadedCount = Object.keys(this.cityTemperatures()).length;
     const totalCount = this.cityTemperatureTotalCount();
     if (loadedCount > 0 && totalCount > 0) {
-      return loadedCount >= totalCount ? 'All city temps loaded' : `${loadedCount}/${totalCount} temps loaded`;
+      return loadedCount >= totalCount
+        ? $localize`All city temps loaded`
+        : $localize`${loadedCount}:loadedCount:/${totalCount}:totalCount: temps loaded`;
     }
 
     return this.temperatureError();

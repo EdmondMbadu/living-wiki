@@ -37,6 +37,25 @@ interface CityMoodSticker {
   styleUrl: './atlas-landing.css',
 })
 export class AtlasLandingComponent {
+  readonly templateText = {
+    message1: $localize`Uploading...`,
+    message2: $localize`Upload logo`,
+    message3: $localize`Upload cover`,
+    message4: $localize`Saving...`,
+    message5: $localize`Save changes`,
+    message6: $localize`Removing...`,
+    message7: $localize`Remove`,
+    message8: $localize`Uploading video...`,
+    message9: $localize`Add a video`,
+    message10: $localize`Make private`,
+    message11: $localize`Make public`,
+    message12: $localize`this wiki`,
+    message13: $localize` cover`,
+    message14: $localize` logo`,
+    message15: $localize`Public Wiki`,
+    message16: $localize`Private Wiki`,
+    message17: $localize`People per square kilometer`,
+  };
   private readonly localeId = inject(LOCALE_ID);
   private readonly authService = inject(AuthService);
   private readonly atlasService = inject(AtlasService);

@@ -468,6 +468,9 @@ const COMMUNITIES: FenceLineCommunity[] = [
   styleUrl: './fence-line.css',
 })
 export class FenceLineComponent {
+  readonly templateText = {
+    message1: $localize`Select `,
+  };
   readonly communities = COMMUNITIES;
   readonly categories = Object.keys(CATEGORY_LABELS) as FenceLineCategory[];
   readonly statuses = [

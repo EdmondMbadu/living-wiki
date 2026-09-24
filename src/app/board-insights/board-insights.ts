@@ -27,6 +27,15 @@ type TrackingSourceOption = {
   styleUrl: './board-insights.css',
 })
 export class BoardInsightsComponent {
+  readonly templateText = {
+    message1: $localize`Copied to clipboard`,
+    message2: $localize`Copy tracked link`,
+    message3: $localize`view`,
+    message4: $localize`views`,
+    message5: $localize` views, `,
+    message6: $localize` unique visitors, `,
+    message7: $localize` engaged visits`,
+  };
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly authService = inject(AuthService);
@@ -44,20 +53,20 @@ export class BoardInsightsComponent {
   readonly copied = signal(false);
   readonly copyError = signal('');
   readonly rangeOptions: Array<{ days: BoardInsightsRange; label: string }> = [
-    { days: 7, label: '7 days' },
-    { days: 30, label: '30 days' },
-    { days: 90, label: '90 days' },
+    { days: 7, label: $localize`7 days` },
+    { days: 30, label: $localize`30 days` },
+    { days: 90, label: $localize`90 days` },
   ];
   readonly trackingSources: TrackingSourceOption[] = [
-    { value: 'facebook', label: 'Facebook', description: 'Posts, pages, and groups' },
-    { value: 'instagram', label: 'Instagram', description: 'Bio, story, and direct shares' },
-    { value: 'email', label: 'Email newsletter', description: 'Campaigns and personal email' },
-    { value: 'linkedin', label: 'LinkedIn', description: 'Posts and organization pages' },
-    { value: 'x-twitter', label: 'X / Twitter', description: 'Posts and direct shares' },
-    { value: 'whatsapp', label: 'Text / WhatsApp', description: 'Messages and group chats' },
-    { value: 'qr-code', label: 'QR code', description: 'Print, signs, and in-person sharing' },
-    { value: 'partner-website', label: 'Partner website', description: 'Links from another site' },
-    { value: 'other', label: 'Other', description: 'Any channel not listed above' },
+    { value: 'facebook', label: $localize`Facebook`, description: $localize`Posts, pages, and groups` },
+    { value: 'instagram', label: $localize`Instagram`, description: $localize`Bio, story, and direct shares` },
+    { value: 'email', label: $localize`Email newsletter`, description: $localize`Campaigns and personal email` },
+    { value: 'linkedin', label: $localize`LinkedIn`, description: $localize`Posts and organization pages` },
+    { value: 'x-twitter', label: $localize`X / Twitter`, description: $localize`Posts and direct shares` },
+    { value: 'whatsapp', label: $localize`Text / WhatsApp`, description: $localize`Messages and group chats` },
+    { value: 'qr-code', label: $localize`QR code`, description: $localize`Print, signs, and in-person sharing` },
+    { value: 'partner-website', label: $localize`Partner website`, description: $localize`Links from another site` },
+    { value: 'other', label: $localize`Other`, description: $localize`Any channel not listed above` },
   ];
 
   readonly publicPath = computed(() => {
@@ -79,9 +88,9 @@ export class BoardInsightsComponent {
     try {
       const url = new URL(this.trackedUrl(), this.isBrowser ? window.location.origin : 'https://www.livingwiki.com');
       return [
-        { label: 'Source', value: url.searchParams.get('utm_source') ?? '' },
-        { label: 'Medium', value: url.searchParams.get('utm_medium') ?? '' },
-        { label: 'Campaign', value: url.searchParams.get('utm_campaign') ?? '' },
+        { label: $localize`Source`, value: url.searchParams.get('utm_source') ?? '' },
+        { label: $localize`Medium`, value: url.searchParams.get('utm_medium') ?? '' },
+        { label: $localize`Campaign`, value: url.searchParams.get('utm_campaign') ?? '' },
       ];
     } catch {
       return [];
@@ -147,7 +156,7 @@ export class BoardInsightsComponent {
     }
     if (!copied) copied = this.copyWithSelection(url);
     this.copied.set(copied);
-    this.copyError.set(copied ? '' : 'Copy was blocked. Select the tracked URL and copy it manually.');
+    this.copyError.set(copied ? '' : $localize`Copy was blocked. Select the tracked URL and copy it manually.`);
   }
 
   private copyWithSelection(value: string): boolean {
@@ -238,7 +247,7 @@ export class BoardInsightsComponent {
     const boardId = this.boardId();
     if (!boardId) {
       this.loading.set(false);
-      this.error.set('Choose a board to view its insights.');
+      this.error.set($localize`Choose a board to view its insights.`);
       return;
     }
     this.loading.set(true);

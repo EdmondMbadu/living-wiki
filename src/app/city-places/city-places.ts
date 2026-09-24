@@ -14,6 +14,16 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
   templateUrl: './city-places.html',
 })
 export class CityPlacesComponent implements OnDestroy {
+  readonly templateText = {
+    message1: $localize`Local reviewer`,
+    message2: $localize`Invite local reviews`,
+    message3: $localize`Share this city board`,
+    message4: $localize` places`,
+    message5: $localize`Local city board`,
+    message6: $localize`Rate `,
+    message7: $localize` stars`,
+    message8: $localize` map`,
+  };
   private readonly route = inject(ActivatedRoute);
   private readonly atlasService = inject(AtlasService);
   private readonly placeReviewsService = inject(PlaceReviewsService);

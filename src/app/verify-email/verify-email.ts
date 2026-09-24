@@ -10,6 +10,12 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
   templateUrl: './verify-email.html',
 })
 export class VerifyEmailComponent {
+  readonly templateText = {
+    message1: $localize`Checking...`,
+    message2: $localize`I verified my email`,
+    message3: $localize`Sending...`,
+    message4: $localize`Resend verification email`,
+  };
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);

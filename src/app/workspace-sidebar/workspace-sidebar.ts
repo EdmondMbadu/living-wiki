@@ -21,6 +21,10 @@ export type WorkspaceSidebarActive =
   styleUrl: './workspace-sidebar.css',
 })
 export class WorkspaceSidebarComponent implements OnDestroy {
+  readonly templateText = {
+    message1: $localize`Open sidebar`,
+    message2: $localize`Close sidebar`,
+  };
   readonly active = input<WorkspaceSidebarActive>('home');
   readonly businessName = input<string | null>(null);
   readonly businessCity = input<string | null>(null);

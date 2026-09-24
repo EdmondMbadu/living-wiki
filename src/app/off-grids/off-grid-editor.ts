@@ -28,6 +28,15 @@ import { normalizeWhat3WordsAddress } from '../boards/off-grid-location';
   styleUrl: './off-grids.css',
 })
 export class OffGridEditorComponent {
+  readonly templateText = {
+    message1: $localize` ready`,
+    message2: $localize`Use board visibility`,
+    message3: $localize`Public`,
+    message4: $localize`Anyone with the source board link can view. Hidden from public discovery.`,
+    message5: $localize`Share its photo, exact location and PinTalks with everyone.`,
+    message6: $localize` and its source board card`,
+    message7: $localize`s`,
+  };
   readonly copy = offGridCopy;
   readonly service = inject(OffGridService);
   private router = inject(Router);
@@ -53,7 +62,7 @@ export class OffGridEditorComponent {
   readonly clipCount = signal(0);
   readonly clipBusy = signal(false);
   readonly deleteConfirm = signal(false);
-  title = '';
+  title = $localize``;
   tip = '';
   accessNote = '';
   area = '';
@@ -128,7 +137,7 @@ export class OffGridEditorComponent {
         this.message.set($localize`Recovered your unfinished gem.`);
       }
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Could not open the editor.');
+      this.error.set(error instanceof Error ? error.message : $localize`Could not open the editor.`);
     } finally {
       this.loading.set(false);
     }
@@ -207,7 +216,7 @@ export class OffGridEditorComponent {
       () => {
         this.locating.set(false);
         this.error.set(
-          'Could not get your location. Check browser permissions, or enter coordinates.',
+          $localize`Could not get your location. Check browser permissions, or enter coordinates.`,
         );
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
@@ -224,7 +233,7 @@ export class OffGridEditorComponent {
     const words = normalizeWhat3WordsAddress(this.paste);
     if (!words) {
       this.error.set(
-        'Paste latitude, longitude, a Google Maps coordinate link, or a three-word address. Short Maps links need coordinates copied from Maps.',
+        $localize`Paste latitude, longitude, a Google Maps coordinate link, or a three-word address. Short Maps links need coordinates copied from Maps.`,
       );
       return;
     }
@@ -241,7 +250,7 @@ export class OffGridEditorComponent {
       this.showMap.set(true);
     } catch {
       this.error.set(
-        'what3words could not resolve this address. You can still drop a pin or enter coordinates.',
+        $localize`what3words could not resolve this address. You can still drop a pin or enter coordinates.`,
       );
     } finally {
       this.locating.set(false);
@@ -318,7 +327,7 @@ export class OffGridEditorComponent {
       this.photo.set(preview.coverUrl);
       this.persist();
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Could not upload the photo.');
+      this.error.set(error instanceof Error ? error.message : $localize`Could not upload the photo.`);
     } finally {
       this.photoUploading.set(false);
       this.photoProcessing.set(false);
@@ -353,7 +362,7 @@ export class OffGridEditorComponent {
       await this.router.navigate(['/off-grids', this.id()]);
     } catch (error) {
       this.error.set(
-        error instanceof Error ? error.message : 'Could not save the gem. Please retry.',
+        error instanceof Error ? error.message : $localize`Could not save the gem. Please retry.`,
       );
     } finally {
       this.saving.set(false);

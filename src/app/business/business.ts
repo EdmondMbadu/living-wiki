@@ -75,6 +75,13 @@ const BUSINESS_CATEGORY_ICON_BY_NAME: Record<string, string> = {
   templateUrl: './business.html',
 })
 export class BusinessComponent {
+  readonly templateText = {
+    message1: $localize`this account`,
+    message2: $localize`Business`,
+    message3: $localize`Deleting business`,
+    message4: $localize`Delete business`,
+    message5: $localize`Sample QR badge for `,
+  };
   private readonly authService = inject(AuthService);
   private readonly businessClaimService = inject(BusinessClaimService);
 

@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, HostListener, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
+import { Component, HostListener, LOCALE_ID, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc } from 'firebase/firestore';
@@ -15,7 +15,7 @@ type KiwiMessage = { id: number; role: 'user' | 'assistant'; text: string };
 type KiwiCardDraft = { title: string; subtitle: string; notes: string; type: string; imageUrl?: string; imageSource?: 'search' | 'generated' };
 type KiwiBoardDraft = { kind: 'create_board'; title: string; description: string; tone: string; visibility: string; cards: KiwiCardDraft[] };
 type KiwiProposal = { id: string; summary: string; details?: string[]; kind: string; cards?: string[]; visibility?: string; workspace: string; draft?: KiwiBoardDraft };
-type KiwiTalkResponse = { reply: string; proposal?: KiwiProposal };
+type KiwiTalkResponse = { reply: string; proposal?: KiwiProposal; describeRequest?: string };
 type KiwiApplyResponse = { boardId: string; applied: boolean };
 type KiwiStreamEvent = { type: 'started' | 'draft'; draft?: KiwiBoardDraft };
 type KiwiImageResult = { imageUrl: string; thumbnailUrl: string; sourceUrl: string; sourceLabel: string; title: string };
@@ -28,7 +28,66 @@ type VoicePhase = 'idle' | 'listening' | 'thinking' | 'speaking' | 'review';
   styleUrl: './kiwi.css',
 })
 export class KiwiComponent {
+  readonly ui = {
+    openPrefix: $localize`Open `,
+    askPrefix: $localize`Ask `,
+    meetKiwi: $localize`Meet Kiwi`,
+    assistantPrefix: $localize`Assistant `,
+    editPrefix: $localize`Edit name and voice of `,
+    hereToHelp: $localize`Here to talk and help`,
+    yourAssistant: $localize`Your LivingWiki assistant`,
+    endVoiceConversation: $localize`End voice conversation`,
+    startTalkingWithKiwi: $localize`Start talking with Kiwi`,
+    speakNaturally: $localize`Speak naturally. Kiwi will answer out loud.`,
+    haveConversation: $localize`Have a conversation with your LivingWiki assistant.`,
+    voicePrefix: $localize`Voice: `,
+    endConversation: $localize`End conversation`,
+    startTalking: $localize`Start talking`,
+    isThinking: $localize` is thinking…`,
+    teamDraft: $localize`Team draft`,
+    personal: $localize`Personal`,
+    sending: $localize`Sending…`,
+    saving: $localize`Saving…`,
+    sendEmail: $localize`Send email`,
+    applyChange: $localize`Apply change`,
+    stopPrefix: $localize`Stop `,
+    listenToPrefix: $localize`Listen to `,
+    saveChanges: $localize`Save changes`,
+    readyToReview: $localize`READY TO REVIEW`,
+    takingShape: $localize`TAKING SHAPE`,
+    reviewAndEdit: $localize`Review and edit anything before you create it.`,
+    watchKiwi: $localize`Watch Kiwi fill this board in. You can edit it while it works.`,
+    needsMoreDetail: $localize`Kiwi needs more detail to finish this draft. Tell it what to add in the box below.`,
+    untitledCard: $localize`Untitled card`,
+    removeCardPrefix: $localize`Remove card `,
+    photoForPrefix: $localize`Photo for `,
+    findingPhoto: $localize`Finding a photo…`,
+    noPhotoYet: $localize`No photo yet`,
+    searching: $localize`Searching…`,
+    changePhoto: $localize`Change photo`,
+    findPhoto: $localize`Find photo`,
+    creatingIllustration: $localize`Creating illustration…`,
+    generateIllustration: $localize`Generate illustration`,
+    photoChoicesForPrefix: $localize`Photo choices for `,
+    usePrefix: $localize`Use `,
+    readyForFirstCard: $localize`This board is ready for its first card.`,
+    preparingCards: $localize`Kiwi is preparing the first cards…`,
+    addCardPrompt: $localize`Add a card here or ask Kiwi to fill the board.`,
+    endKiwiVoiceConversation: $localize`End Kiwi voice conversation`,
+    talkToKiwi: $localize`Talk to Kiwi`,
+    opening: $localize`Opening…`,
+    creating: $localize`Creating…`,
+    openSavedBoard: $localize`Open saved board`,
+    createBoard: $localize`Create board`,
+    voiceDescriptions: {
+      'inspiring-guide': $localize`Warm, bright, and easy to talk to`,
+      'warm-storyteller': $localize`Gentle, thoughtful, and expressive`,
+      'elegant-guide': $localize`Poised, clear, with a British accent`,
+      'friendly-explainer': $localize`Calm, friendly, and direct`,
+    } as Record<string, string>,
+  };
   private readonly auth = inject(AuthService);
+  private readonly localeId = inject(LOCALE_ID);
   private readonly navigation = inject(WorkspaceNavigationService);
   private readonly boardRefresh = inject(KiwiBoardRefreshService);
   private readonly router = inject(Router);
@@ -53,6 +112,8 @@ export class KiwiComponent {
   private studioDirty = new Set<string>();
   private streamSequence = 0;
   private imageRun = 0;
+  private pendingCreationPrompt = '';
+  private proposalTeamId = '';
 
   readonly open = signal(false);
   readonly name = signal('Kiwi');
@@ -93,11 +154,11 @@ export class KiwiComponent {
   readonly scope = computed(() => {
     const path = this.currentUrl().split('?')[0].split('#')[0];
     const teamEdit = path.match(/^\/teams\/([A-Za-z0-9_-]+)\/listings\/([A-Za-z0-9_-]+)\/edit\/?$/);
-    if (teamEdit) return { teamId: teamEdit[1], boardId: teamEdit[2], label: 'Team workspace' };
+    if (teamEdit) return { teamId: teamEdit[1], boardId: teamEdit[2], label: $localize`Team workspace` };
     const team = path.match(/^\/teams\/([A-Za-z0-9_-]+)(?:\/.*)?$/);
-    if (team && !['new', 'invitations'].includes(team[1])) return { teamId: team[1], boardId: '', label: 'Team workspace' };
+    if (team && !['new', 'invitations'].includes(team[1])) return { teamId: team[1], boardId: '', label: $localize`Team workspace` };
     const board = path.match(/^\/(?:boards|songs|trips)\/([A-Za-z0-9_-]+)\/?$/);
-    return { teamId: '', boardId: board?.[1] || '', label: 'Personal' };
+    return { teamId: '', boardId: board?.[1] || '', label: $localize`Personal` };
   });
   readonly signInRedirect = computed(() => ({ redirectTo: this.currentUrl() || '/boards' }));
   readonly voiceAvailable = this.isBrowser && !!navigator.mediaDevices?.getUserMedia;
@@ -126,6 +187,8 @@ export class KiwiComponent {
         this.loadedForUid = '';
         this.messages.set([]);
         this.proposal.set(null);
+        this.pendingCreationPrompt = '';
+        this.proposalTeamId = '';
       } else if (uid !== this.loadedForUid) {
         void this.loadName();
       }
@@ -174,6 +237,7 @@ export class KiwiComponent {
     this.talkAbort?.abort();
     this.streamSequence++;
     this.stopVoiceSession();
+    this.pendingCreationPrompt = '';
     this.planningCreation.set(false);
     this.studioOpen.set(false);
     this.open.set(false);
@@ -234,7 +298,7 @@ export class KiwiComponent {
     } catch {
       if (this.auth.uid() === uid) {
         this.loadedForUid = uid;
-        if (this.open()) this.error.set('Kiwi could not connect. Please refresh after the service is available.');
+        if (this.open()) this.error.set($localize`Kiwi could not connect. Please refresh after the service is available.`);
       }
     } finally { if (this.loadingNameForUid === uid) this.loadingNameForUid = ''; }
   }
@@ -259,7 +323,7 @@ export class KiwiComponent {
   async saveSettings(): Promise<void> {
     const next = this.nameDraft().trim().slice(0, 32);
     if (next.length < 2 || !this.functions) {
-      this.settingsError.set('Choose a name with at least two characters.');
+      this.settingsError.set($localize`Choose a name with at least two characters.`);
       return;
     }
     this.savingSettings.set(true);
@@ -272,7 +336,7 @@ export class KiwiComponent {
       this.voiceId.set(data.voiceId);
       this.closeSettings();
     } catch (error) {
-      this.settingsError.set(this.errorText(error, 'Could not save your settings.'));
+      this.settingsError.set(this.errorText(error, $localize`Could not save your settings.`));
     } finally { this.savingSettings.set(false); }
   }
 
@@ -293,12 +357,12 @@ export class KiwiComponent {
       }, () => {
         this.releaseAudio();
         this.previewingVoice.set('');
-        this.settingsError.set('This voice could not play. Try another.');
+        this.settingsError.set($localize`This voice could not play. Try another.`);
       });
     } catch (error) {
       if (requestId === this.speechRequestId) {
         this.previewingVoice.set('');
-        this.settingsError.set(this.errorText(error, 'This voice could not play. Try another.'));
+        this.settingsError.set(this.errorText(error, $localize`This voice could not play. Try another.`));
       }
     }
   }
@@ -343,6 +407,7 @@ export class KiwiComponent {
 
   private async openBoardWizard(choice: string): Promise<void> {
     const create = choice === 'real-estate' ? choice : 'choose';
+    this.pendingCreationPrompt = '';
     this.studioOpen.set(false);
     this.open.set(false);
     this.proposal.set(null);
@@ -498,7 +563,7 @@ export class KiwiComponent {
     const previous = this.studioDraft();
     if (!previous || previous.cards.length >= 12) return;
     this.studioDraft.set({ ...previous, cards: [...previous.cards,
-      { title: 'New card', subtitle: '', notes: '', type: 'note' }] });
+      { title: $localize`New card`, subtitle: '', notes: '', type: 'note' }] });
     this.studioDirty.add('cards');
   }
 
@@ -516,17 +581,34 @@ export class KiwiComponent {
       if (fromVoiceTool) this.queuedVoiceRequest = text;
       return;
     }
-    const creating = /\b(create|make|build|design|draft)\b/i.test(text)
-      && /\b(board|menu|list|wiki|listing|tour)\b/i.test(text);
-    if (creating && /\b(real estate|property listing|home listing|rental property|sell my (?:home|house)|listing board)\b/i.test(text)) {
+    if (/\b(cancel|never mind|nevermind|stop)\b/i.test(text)) this.pendingCreationPrompt = '';
+    const followup = this.pendingCreationPrompt
+      && !/\b(create|make|build|design|draft)\b/i.test(text);
+    const creationRequest = followup ? `${this.pendingCreationPrompt}. ${text}` : text;
+    const creating = /\b(create|make|build|design|draft)\b/i.test(creationRequest)
+      && /\b(board|menu|list|wiki|listing|tour)\b/i.test(creationRequest);
+    const bareBoard = /^(?:please\s+)?(?:create|make|build)(?:\s+me)?\s+(?:a\s+|an\s+)?(?:new\s+)?(?:(?:public|private|unlisted)\s+)?board(?:\s+please)?[.!?]?$/i;
+    const needsSubject = bareBoard.test(creationRequest)
+      || !!(followup && bareBoard.test(this.pendingCreationPrompt)
+        && /^(?:(?:make it|it should be|choose)\s+)?(?:public|unlisted|private)(?:\s+please)?[.!?]?$/i.test(text));
+    if (creating && needsSubject) {
+      this.pendingCreationPrompt = creationRequest;
+      const reply = $localize`What should this board be about? Describe it in a sentence.`;
+      if (!fromVoiceTool) this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
+      this.draft.set('');
+      this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: reply }]);
+      this.conversation?.sendContextualUpdate(reply, { contextId: 'kiwi-last-action' });
+      return;
+    }
+    if (creating && /\b(real estate|property listing|home listing|rental property|sell my (?:home|house)|listing board)\b/i.test(creationRequest)) {
       if (!fromVoiceTool) this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
       this.draft.set('');
       await this.openBoardWizard('real-estate');
       return;
     }
-    if (creating && /\bwalking tour\b/i.test(text)) {
+    if (creating && /\bwalking tour\b/i.test(creationRequest)) {
       if (this.scope().teamId) {
-        const reply = 'Walking tours are currently created in personal boards. Team workspaces can create property listings here.';
+        const reply = $localize`Walking tours are currently created in personal boards. Team workspaces can create property listings here.`;
         if (!fromVoiceTool) this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
         this.draft.set('');
         this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: reply }]);
@@ -538,13 +620,24 @@ export class KiwiComponent {
       await this.openBoardWizard('choose');
       return;
     }
+    if (creating && !this.scope().teamId && !/\b(public|unlisted|private)\b/i.test(creationRequest)) {
+      this.pendingCreationPrompt = creationRequest;
+      const reply = $localize`Should this board be Public, Unlisted, or Private?`;
+      if (!fromVoiceTool) this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
+      this.draft.set('');
+      this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: reply }]);
+      this.conversation?.sendContextualUpdate(reply, { contextId: 'kiwi-last-action' });
+      return;
+    }
     const controller = new AbortController();
     this.talkAbort = controller;
-    const currentDraft = this.proposal()?.kind === 'create_board' ? this.studioDraft() : null;
+    const startingNew = creating && /\b(create|make|build|draft)\b/i.test(creationRequest);
+    const currentDraft = !startingNew && this.proposal()?.kind === 'create_board' ? this.studioDraft() : null;
     const modelDraft = currentDraft ? { ...currentDraft, cards: currentDraft.cards.map((card) =>
       ({ ...card, imageUrl: '', imageSource: undefined })) } : null;
     if (currentDraft) { this.imageRun++; this.imageLoading.set(false); }
-    const canStartCreation = creating && (!!this.scope().teamId || /\b(public|unlisted|private)\b/i.test(text));
+    const canStartCreation = creating && (!!this.scope().teamId || /\b(public|unlisted|private)\b/i.test(creationRequest));
+    this.pendingCreationPrompt = '';
     const sequence = ++this.streamSequence;
     const history = this.messages().slice(-8).map(({ role, text: content }) => ({ role, text: content }));
     if (!fromVoiceTool) this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
@@ -560,34 +653,52 @@ export class KiwiComponent {
       this.imageChoices.set({});
       this.boardAwaitingOpen.set('');
       this.studioDirty.clear();
-      this.studioDraft.set({ kind: 'create_board', title: 'New board', description: '', tone: 'teal',
-        visibility: this.scope().teamId || /\bprivate\b/i.test(text) ? 'private'
-          : /\bunlisted\b/i.test(text) ? 'unlisted' : 'public', cards: [] });
+      this.studioDraft.set({ kind: 'create_board', title: $localize`New board`, description: '', tone: 'teal',
+        visibility: this.scope().teamId || /\bprivate\b/i.test(creationRequest) ? 'private'
+          : /\bunlisted\b/i.test(creationRequest) ? 'unlisted' : 'public', cards: [] });
       this.studioReady.set(false);
       this.studioOpen.set(true);
     }
     this.busy.set(true);
     this.error.set('');
     try {
+      if (canStartCreation && !currentDraft) {
+        await this.prepareDescribeBoard(creationRequest, this.scope().teamId, sequence, fromVoiceTool);
+        return;
+      }
       const callable = httpsCallable<{
         message: string; history: Array<{ role: string; text: string }>;
-        teamId: string; boardId: string; currentDraft?: KiwiBoardDraft;
+        teamId: string; boardId: string; locale: string; currentDraft?: KiwiBoardDraft;
       }, KiwiTalkResponse, KiwiStreamEvent>(this.functions, 'kiwiTalk');
       const { stream, data: finalData } = await callable.stream({ message: text, history,
-        teamId: this.scope().teamId, boardId: this.scope().boardId,
+        teamId: this.scope().teamId, boardId: this.scope().boardId, locale: this.localeId,
         ...(modelDraft ? { currentDraft: modelDraft } : {}) }, { signal: controller.signal });
       for await (const event of stream) {
         if (sequence !== this.streamSequence) break;
-        if (event.type === 'draft' && event.draft) {
+        if (currentDraft && event.type === 'draft' && event.draft) {
           this.mergeStudioDraft(event.draft);
           this.studioOpen.set(true);
         }
       }
       const data = await finalData;
       if (sequence !== this.streamSequence) return;
+      if (data.describeRequest && !currentDraft) {
+        const describePrompt = data.describeRequest.trim();
+        if (!this.scope().teamId && !/\b(public|unlisted|private)\b/i.test(describePrompt)) {
+          this.pendingCreationPrompt = /\bboard\b/i.test(describePrompt)
+            ? describePrompt : `Create a board about ${describePrompt}`;
+          const reply = $localize`Should this board be Public, Unlisted, or Private?`;
+          this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: reply }]);
+          this.conversation?.sendContextualUpdate(reply, { contextId: 'kiwi-last-action' });
+          return;
+        }
+        await this.prepareDescribeBoard(describePrompt, this.scope().teamId, sequence, fromVoiceTool);
+        return;
+      }
       this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: data.reply }]);
       if (data.proposal) {
         this.proposal.set(data.proposal);
+        this.proposalTeamId = this.scope().teamId;
         if (fromVoiceTool) this.proposalReadyVoiceSequence = this.voiceUserSequence;
       }
       else if (!currentDraft) this.proposal.set(null);
@@ -607,7 +718,7 @@ export class KiwiComponent {
         { contextId: 'kiwi-last-action' });
     } catch (error) {
       if (sequence !== this.streamSequence || controller.signal.aborted) return;
-      this.error.set(this.errorText(error, 'Kiwi could not answer. Please try again.'));
+      this.error.set(this.errorText(error, $localize`Kiwi could not answer. Please try again.`));
       if (fromVoiceTool && this.conversation) this.conversation.sendContextualUpdate(
         'The requested change failed. Tell the user and offer to retry.', { contextId: 'kiwi-last-action' });
     } finally {
@@ -620,11 +731,76 @@ export class KiwiComponent {
     }
   }
 
+  private async prepareDescribeBoard(prompt: string, teamId: string, sequence: number, fromVoiceTool: boolean): Promise<void> {
+    if (!this.functions) return;
+    this.planningCreation.set(true);
+    if (!this.studioDraft()) {
+      this.studioDirty.clear();
+      this.studioDraft.set({ kind: 'create_board', title: $localize`New board`, description: '', tone: 'teal',
+        visibility: teamId || /\bprivate\b/i.test(prompt) ? 'private'
+          : /\bunlisted\b/i.test(prompt) ? 'unlisted' : 'public', cards: [] });
+      this.studioReady.set(false);
+      this.studioOpen.set(true);
+    }
+    this.imageNotice.set($localize`Researching your description and building the board…`);
+    const wizard = httpsCallable<Record<string, unknown>, {
+      board?: { title?: string; description?: string; tone?: string };
+      cards?: Array<{ title?: string; subtitle?: string; notes?: string; type?: string;
+        imageUrl?: string; imageUrls?: string[]; imageSource?: string }>;
+      generation?: { countPolicy?: string; targetCount?: number; resolvedCount?: number };
+    }>(this.functions, 'generateBoardWizardBatch', { timeout: 290_000 });
+    const { data } = await wizard({ mode: 'describe', prompt, defaultType: 'place', count: 12,
+      countMode: 'auto', vibe: 'playful', mediaMode: 'images' });
+    if (sequence !== this.streamSequence) return;
+    const cards = (data.cards || []).filter((card) => !!card?.title?.trim());
+    if (!cards.length) throw new Error($localize`Describe it did not produce usable cards. Please try again.`);
+    if (cards.length > 12) throw new Error($localize`This description needs more than 12 cards. Open Describe it in the board wizard to create the full set.`);
+    if (['prompt-exact', 'source-exact'].includes(data.generation?.countPolicy || '')
+      && data.generation?.targetCount !== cards.length)
+      throw new Error(`Describe it returned ${cards.length} cards instead of ${data.generation?.targetCount}. Please try again.`);
+    const visibility = teamId ? 'private'
+      : /\bprivate\b/i.test(prompt) ? 'private' : /\bunlisted\b/i.test(prompt) ? 'unlisted' : 'public';
+    const draft: KiwiBoardDraft = {
+      kind: 'create_board', title: data.board?.title?.trim() || $localize`New board`,
+      description: data.board?.description?.trim() || '', tone: data.board?.tone || 'teal', visibility,
+      cards: cards.map((card) => {
+        const imageUrl = card.imageUrl || card.imageUrls?.[0] || '';
+        return { title: card.title!.trim(), subtitle: card.subtitle || '', notes: card.notes || '',
+          type: card.type || 'note', imageUrl,
+          imageSource: card.imageSource === 'generated' || imageUrl.startsWith('data:') ? 'generated' as const : 'search' as const };
+      }),
+    };
+    // The wizard returns a complete batch; reveal its cards in the live studio.
+    for (let index = 1; index <= draft.cards.length; index++) {
+      if (sequence !== this.streamSequence) return;
+      this.mergeStudioDraft({ ...draft, cards: draft.cards.slice(0, index) });
+      await new Promise<void>((resolve) => setTimeout(resolve, 65));
+    }
+    this.imageNotice.set($localize`Checking card images…`);
+    const stage = httpsCallable<{ teamId: string; draft: KiwiBoardDraft; locale: string }, KiwiTalkResponse>(
+      this.functions, 'kiwiStageDescribeBoard');
+    const { data: staged } = await stage({ teamId, locale: this.localeId,
+      draft: { ...draft, cards: draft.cards.map((card) => ({ ...card,
+        imageUrl: card.imageUrl?.startsWith('data:') ? '' : card.imageUrl })) } });
+    if (sequence !== this.streamSequence) return;
+    if (!staged.proposal) throw new Error($localize`Kiwi could not prepare this board for review. Please try again.`);
+    this.proposal.set(staged.proposal);
+    this.proposalTeamId = teamId;
+    if (staged.proposal.draft) this.mergeStudioDraft(staged.proposal.draft);
+    this.studioOpen.set(true);
+    this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: staged.reply }]);
+    if (fromVoiceTool) this.proposalReadyVoiceSequence = this.voiceUserSequence;
+    if (this.conversation) this.conversation.sendContextualUpdate(
+      `The Describe it board draft is ready for review: ${staged.reply} The user must approve before saving.`,
+      { contextId: 'kiwi-last-action' });
+    void this.enrichStudioImages();
+  }
+
   async apply(): Promise<void> {
     const proposal = this.proposal();
     if (!proposal || this.applying() || !this.functions) return;
     if (proposal.kind === 'create_board' && this.imageLoading()) {
-      this.error.set('Kiwi is still adding photos. Wait until the board draft is ready.');
+      this.error.set($localize`Kiwi is still adding photos. Wait until the board draft is ready.`);
       return;
     }
     this.voiceTranscript.set('');
@@ -641,11 +817,11 @@ export class KiwiComponent {
       }
       let draft = creatingBoard ? this.studioDraft() : null;
       if (creatingBoard && (!draft || !draft.title.trim() || !draft.cards.length || draft.cards.some((card) => !card.title.trim()))) {
-        this.error.set('Give the board and at least one card a title before creating it.');
+        this.error.set($localize`Give the board and at least one card a title before creating it.`);
         return;
       }
       if (creatingBoard && !draft?.cards.some((card) => !!card.imageUrl)) {
-        this.error.set('Add at least one image before creating this board.');
+        this.error.set($localize`Add at least one image before creating this board.`);
         return;
       }
       let boardId = this.boardAwaitingOpen();
@@ -660,14 +836,14 @@ export class KiwiComponent {
         this.boardAwaitingOpen.set(boardId);
       }
       const readback = httpsCallable<{ boardId: string; teamId: string }, { boardId: string; title: string }>(this.functions, 'kiwiReadback');
-      await readback({ boardId, teamId: this.scope().teamId });
-      if (!this.scope().teamId && this.firestore) {
+      await readback({ boardId, teamId: this.proposalTeamId });
+      if (!this.proposalTeamId && this.firestore) {
         const snapshot = await getDoc(doc(this.firestore, 'boards', boardId));
         if (!snapshot.exists() || snapshot.data()['owner_user_id'] !== this.auth.uid())
           throw new Error('The board was saved, but it is not visible to your account yet. Try opening it again.');
       }
-      const path = this.scope().teamId
-        ? `/teams/${encodeURIComponent(this.scope().teamId)}/listings/${encodeURIComponent(boardId)}/edit`
+      const path = this.proposalTeamId
+        ? `/teams/${encodeURIComponent(this.proposalTeamId)}/listings/${encodeURIComponent(boardId)}/edit`
         : `/boards/${encodeURIComponent(boardId)}`;
       this.boardRefresh.notify(boardId);
       const opened = this.router.url.split('?')[0] === path ? true : await this.router.navigateByUrl(path);
@@ -675,6 +851,7 @@ export class KiwiComponent {
       if (creatingBoard || proposal.kind === 'copy_board') await this.waitForBoardRendered(boardId);
       this.boardAwaitingOpen.set('');
       this.proposal.set(null);
+      this.proposalTeamId = '';
       this.studioOpen.set(false);
       this.studioDraft.set(null);
       const confirmation = creatingBoard || proposal.kind === 'copy_board'
@@ -683,7 +860,7 @@ export class KiwiComponent {
       if (this.conversation) this.conversation.sendContextualUpdate(
         confirmation, { contextId: 'kiwi-last-action' });
     } catch (error) {
-      this.error.set(this.errorText(error, 'The change could not be saved. Ask Kiwi to review it again.'));
+      this.error.set(this.errorText(error, $localize`The change could not be saved. Ask Kiwi to review it again.`));
     } finally {
       this.applying.set(false);
     }
@@ -712,6 +889,7 @@ export class KiwiComponent {
     this.imageRun++;
     this.imageLoading.set(false);
     this.proposal.set(null);
+    this.proposalTeamId = '';
     this.boardAwaitingOpen.set('');
     this.studioOpen.set(false);
     this.studioDraft.set(null);
@@ -748,13 +926,17 @@ export class KiwiComponent {
           kiwi_request: (parameters: { request?: string }) => {
             const request = String(parameters?.request || '').trim().slice(0, 4000);
             if (!request) return 'Please ask what the user wants to change.';
-            if (/^(?:please\s+)?(?:create|make|build)(?:\s+me)?\s+(?:a\s+|an\s+)?(?:new\s+)?(?:(?:public|private|unlisted)\s+)?board(?:\s+please)?[.!?]?$/i.test(request))
+            if (/^(?:please\s+)?(?:create|make|build)(?:\s+me)?\s+(?:a\s+|an\s+)?(?:new\s+)?(?:(?:public|private|unlisted)\s+)?board(?:\s+please)?[.!?]?$/i.test(request)) {
+              this.pendingCreationPrompt = request;
               return 'Ask what the board should contain. Describe it is the default; Real Estate listing and More board types are other choices.';
+            }
             const creating = /\b(create|make|build|design|draft)\b/i.test(request)
               && /\b(board|menu|list|wiki|listing|tour)\b/i.test(request);
             const specialized = /\b(real estate|property listing|home listing|rental property|sell my (?:home|house)|listing board|walking tour)\b/i.test(request);
-            if (creating && !specialized && !this.scope().teamId && !/\b(public|unlisted|private)\b/i.test(request))
+            if (creating && !specialized && !this.scope().teamId && !/\b(public|unlisted|private)\b/i.test(request)) {
+              this.pendingCreationPrompt = request;
               return 'Ask the user whether this new board should be Public, Unlisted, or Private before starting the draft.';
+            }
             void this.send(request, true);
             return 'The request is being prepared on screen. The user will review it before it is saved.';
           },
@@ -805,7 +987,7 @@ export class KiwiComponent {
         },
         onError: (message) => {
           if (attempt !== this.voiceAttempt) return;
-          this.error.set(String(message || 'Kiwi voice was interrupted. Please try again.'));
+          this.error.set(String(message || $localize`Kiwi voice was interrupted. Please try again.`));
         },
       });
       if (attempt !== this.voiceAttempt || !this.voiceActive()) {
@@ -819,7 +1001,7 @@ export class KiwiComponent {
     } catch (error) {
       if (attempt !== this.voiceAttempt) return;
       this.stopVoiceSession();
-      this.error.set(this.errorText(error, 'Kiwi voice could not start. Check microphone access and try again.'));
+      this.error.set(this.errorText(error, $localize`Kiwi voice could not start. Check microphone access and try again.`));
     }
   }
 

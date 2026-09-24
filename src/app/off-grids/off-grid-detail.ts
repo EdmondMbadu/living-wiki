@@ -39,6 +39,9 @@ import { PinTalkRecorderComponent } from './pin-talk-recorder';
   styleUrls: ['./off-grids.css', './off-grid-detail.css'],
 })
 export class OffGridDetailComponent {
+  readonly templateText = {
+    message1: $localize`s`,
+  };
   readonly copy = offGridCopy;
   readonly service = inject(OffGridService);
   private route = inject(ActivatedRoute);
@@ -324,7 +327,7 @@ export class OffGridDetailComponent {
     if (this.disposed || id !== this.activeId()) return;
     this.composer.set(false);
     this.message.set(
-      this.owner() ? 'PinTalk added.' : 'Your PinTalk was sent to the owner for approval.',
+      this.owner() ? $localize`PinTalk added.` : $localize`Your PinTalk was sent to the owner for approval.`,
     );
     await this.loadDetail(id);
   }
@@ -346,7 +349,7 @@ export class OffGridDetailComponent {
       this.sheet.set(null);
       this.message.set($localize`This gem is now private.`);
     } catch (error) {
-      if (actionVersion === this.actionVersion) this.message.set(error instanceof Error ? error.message : 'Could not make this gem private.');
+      if (actionVersion === this.actionVersion) this.message.set(error instanceof Error ? error.message : $localize`Could not make this gem private.`);
     } finally {
       if (actionVersion === this.actionVersion) this.busy.set(false);
     }

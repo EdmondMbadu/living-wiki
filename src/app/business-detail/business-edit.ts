@@ -35,6 +35,20 @@ type BusinessEditDraft = {
   templateUrl: './business-edit.html',
 })
 export class BusinessEditComponent {
+  readonly templateText = {
+    message1: $localize`Only the account that claimed this business can edit the page.`,
+    message2: $localize`Saving...`,
+    message3: $localize`Save changes`,
+    message4: $localize`Uploading...`,
+    message5: $localize`Upload logo`,
+    message6: $localize`Upload profile`,
+    message7: $localize`Upload cover`,
+    message8: $localize`Less icons`,
+    message9: $localize`More icons`,
+    message10: $localize`Local business`,
+    message11: $localize`Save QR code`,
+    message12: $localize` QR preview`,
+  };
   private readonly route = inject(ActivatedRoute);
   private readonly title = inject(Title);
   readonly authService = inject(AuthService);

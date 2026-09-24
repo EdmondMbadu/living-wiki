@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-export type BoardTranslationLanguage = 'en' | 'fr' | 'ja';
+export type BoardTranslationLanguage = 'en' | 'fr' | 'ja' | 'pt';
 
 export interface BoardTranslationSegment {
   key: string;
@@ -19,7 +19,7 @@ const maximumBoardTranslationCards = 250;
 const maximumFieldCharacters = 8_000;
 
 export function isBoardTranslationLanguage(value: unknown): value is BoardTranslationLanguage {
-  return value === 'en' || value === 'fr' || value === 'ja';
+  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt';
 }
 
 export function extractBoardTranslationSource(value: unknown): BoardTranslationSource {
@@ -123,7 +123,13 @@ export function detectBoardSourceLanguage(text: string): BoardTranslationLanguag
   const frenchSignals = normalized.match(
     /(?:[àâçéèêëîïôùûüÿœæ]|\b(?:le|la|les|des|une|avec|pour|dans|sur|est|sont|et|du|au|aux|ce|cette|ces|vous|nous)\b)/gu,
   )?.length ?? 0;
+  const portugueseSignals = normalized.match(
+    /(?:[ãõ]|\b(?:não|uma|você|vocês|com|para|pelo|pela|pelos|pelas|também|está|estão|sobre|seu|sua|seus|suas|os|as|dos|das)\b)/gu,
+  )?.length ?? 0;
   const wordCount = Math.max(1, normalized.split(/\s+/u).filter(Boolean).length);
+  if (portugueseSignals >= 3 && portugueseSignals / wordCount >= 0.025 && portugueseSignals > frenchSignals) {
+    return 'pt';
+  }
   return frenchSignals >= 3 && frenchSignals / wordCount >= 0.025 ? 'fr' : 'en';
 }
 

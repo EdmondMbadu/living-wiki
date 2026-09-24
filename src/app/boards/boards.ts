@@ -1209,8 +1209,8 @@ const BOARD_WIZARD_MODES: Array<{
   },
   {
     id: 'nearby-gems',
-    label: 'Find gems near me',
-    description: 'Use your location to build an editable board of interesting places within reach.',
+    label: $localize`Find gems near me`,
+    description: $localize`Use your location to build an editable board of interesting places within reach.`,
     icon: 'explore_nearby',
   },
   {
@@ -1298,22 +1298,22 @@ const NEARBY_GEM_RANGES: Array<{
 }> = [
   {
     id: 'walk',
-    label: 'Walk nearby',
-    description: 'Best for a spontaneous stroll',
+    label: $localize`Walk nearby`,
+    description: $localize`Best for a spontaneous stroll`,
     detail: '30 min · up to 2 mi',
     icon: 'directions_walk',
   },
   {
     id: 'quick-drive',
-    label: 'Quick drive',
-    description: 'Close, easy, worthwhile',
+    label: $localize`Quick drive`,
+    description: $localize`Close, easy, worthwhile`,
     detail: '10 min · up to 10 mi',
     icon: 'directions_car',
   },
   {
     id: 'adventure',
-    label: 'Explore farther',
-    description: 'A small adventure',
+    label: $localize`Explore farther`,
+    description: $localize`A small adventure`,
     detail: '20 min · up to 20 mi',
     icon: 'explore',
   },
@@ -1708,6 +1708,465 @@ type BoardLoadContext = {
   styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './real-estate-wizard-modal.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
 })
 export class BoardsComponent implements AfterViewInit, OnDestroy {
+  readonly templateText = {
+    message1: $localize`Interested in this home?`,
+    message2: $localize`Want to get in touch?`,
+    message3: $localize`I’d be happy to answer your questions or arrange a private showing.`,
+    message4: $localize`Use the details below to continue the conversation.`,
+    message5: $localize`Close`,
+    message6: $localize`Read more`,
+    message7: $localize`Preparing voice`,
+    message8: $localize`Listen`,
+    message9: $localize`Preparing tour narration`,
+    message10: $localize`Tour guide speaking`,
+    message11: $localize`Tour narration ready`,
+    message12: $localize`Playing preview`,
+    message13: $localize`Preview`,
+    message14: $localize`Friends`,
+    message15: $localize`Songs`,
+    message16: $localize`Trips`,
+    message17: $localize`Boards`,
+    message18: $localize`Opening boards`,
+    message19: $localize`Opening board`,
+    message20: $localize`Gathering their stories…`,
+    message21: $localize`Gathering its story…`,
+    message22: $localize`Sending…`,
+    message23: $localize`Send invite`,
+    message24: $localize`No matching friends`,
+    message25: $localize`Your friends will appear here`,
+    message26: $localize`Try another name or email.`,
+    message27: $localize`Send an invite above to get started.`,
+    message28: $localize`LivingWiki member`,
+    message29: $localize`Discarding…`,
+    message30: $localize`Discard permanently`,
+    message31: $localize`Your boards`,
+    message32: $localize`Your cards`,
+    message33: $localize`Favorites`,
+    message34: $localize`Collections`,
+    message35: $localize`Private & unlisted boards`,
+    message36: $localize`A LivingWiki collection.`,
+    message37: $localize`Add a secret note, a memory, or a tiny fun fact for this collection.`,
+    message38: $localize`Loading boards…`,
+    message39: $localize`No private or unlisted boards yet.`,
+    message40: $localize`No public boards yet.`,
+    message41: $localize`No boards yet.`,
+    message42: $localize`Bringing in the first 10 boards.`,
+    message43: $localize`Your Private and Unlisted boards appear here. They stay off your public profile.`,
+    message44: $localize`This public boards page is ready, but there are no public boards to show yet.`,
+    message45: $localize`Create a collection for places, restaurants, memories, ideas, or anything you want to keep together.`,
+    message46: $localize`Set up intro card`,
+    message47: $localize`Edit Talking Card & avatar`,
+    message48: $localize`Edit card`,
+    message49: $localize`Add memory`,
+    message50: $localize`Add photos`,
+    message51: $localize`No favorites yet.`,
+    message52: $localize`No cards yet.`,
+    message53: $localize`Parent board`,
+    message54: $localize`Board inside`,
+    message55: $localize`Music board`,
+    message56: $localize`Board`,
+    message57: $localize`A living collection ready to grow one card at a time.`,
+    message58: $localize`Copied`,
+    message59: $localize`Copy`,
+    message60: $localize`Custom board link copied.`,
+    message61: $localize`Jukebox`,
+    message62: $localize`Tour`,
+    message63: $localize`Cards`,
+    message64: $localize`Liked`,
+    message65: $localize`Like`,
+    message66: $localize`Saved`,
+    message67: $localize`Save`,
+    message68: $localize`Making your copy…`,
+    message69: $localize`Make your own copy`,
+    message70: $localize`Add song`,
+    message71: $localize`Add card`,
+    message72: $localize`Parent card`,
+    message73: $localize`Add cards to shape this collection.`,
+    message74: $localize`New`,
+    message75: $localize`Video ready`,
+    message76: $localize`Create video`,
+    message77: $localize`Send board`,
+    message78: $localize`Done`,
+    message79: $localize`Manage cards`,
+    message80: $localize`Add one card manually`,
+    message81: $localize`Create one card with the standard card editor.`,
+    message82: $localize`Saving route…`,
+    message83: $localize`All changes saved`,
+    message84: $localize`Close settings`,
+    message85: $localize`Tour settings`,
+    message86: $localize`Updating the map and directions…`,
+    message87: $localize`Hide wayfinders`,
+    message88: $localize`Wayfinders`,
+    message89: $localize`Add a concise story for this stop.`,
+    message90: $localize`Ready`,
+    message91: $localize`Needs a script`,
+    message92: $localize`Route needs attention`,
+    message93: $localize`Route is ready`,
+    message94: $localize`Narrated stop`,
+    message95: $localize`Open stop`,
+    message96: $localize`Self-paced`,
+    message97: $localize`Listen directly with Spotify’s official player. No LivingWiki connection is required.`,
+    message98: $localize`Like card`,
+    message99: $localize`Pause preview`,
+    message100: $localize`Open in Spotify`,
+    message101: $localize`Find on Spotify`,
+    message102: $localize`Hide board inside`,
+    message103: $localize`Only your team can see this setup card`,
+    message104: $localize`Only you can see this setup card`,
+    message105: $localize`Questions about this home?`,
+    message106: $localize`this property`,
+    message107: $localize`this board`,
+    message108: $localize`Talking Card`,
+    message109: $localize`Add notes, memories, details, or fun facts when editing this card.`,
+    message110: $localize`Talk Drop · `,
+    message111: $localize`Checking…`,
+    message112: $localize`Find another playable video`,
+    message113: $localize`Cover photo`,
+    message114: $localize`Memory `,
+    message115: $localize`New listing · `,
+    message116: $localize`Add to this board`,
+    message117: $localize`New board`,
+    message118: $localize`Shape the listing story`,
+    message119: $localize`Personalize your VirtualTalkThru`,
+    message120: $localize`Board type`,
+    message121: $localize`Use my current location`,
+    message122: $localize`Use another place`,
+    message123: $localize`Describe the cards you want to add`,
+    message124: $localize`What should this board include?`,
+    message125: $localize`what3words place`,
+    message126: $localize`what3words places`,
+    message127: $localize`row needs attention and will be skipped`,
+    message128: $localize`rows need attention and will be skipped`,
+    message129: $localize`Choose the moments to remember`,
+    message130: $localize`The first photo becomes the board cover.`,
+    message131: $localize`The first photo becomes the first new card.`,
+    message132: $localize`Preparing…`,
+    message133: $localize`Add more`,
+    message134: $localize`Choose photos`,
+    message135: $localize`Board cover`,
+    message136: $localize`First card`,
+    message137: $localize`Both choices create a private draft and open the editable Studio Script.`,
+    message138: $localize`Review the prepared cards before adding them to this existing board.`,
+    message139: $localize`Creating titles and stories…`,
+    message140: $localize`Generate titles and stories`,
+    message141: $localize`Generate editable preview`,
+    message142: $localize`Creating blank stories…`,
+    message143: $localize`Start with blank stories`,
+    message144: $localize`Create blank preview`,
+    message145: $localize`place recognized`,
+    message146: $localize`places recognized`,
+    message147: $localize`Verified near `,
+    message148: $localize`Coordinates verified`,
+    message149: $localize`row needs attention`,
+    message150: $localize`rows need attention`,
+    message151: $localize`Note for these places`,
+    message152: $localize`Insider tip`,
+    message153: $localize`Rental listing URL`,
+    message154: $localize`Property listing URL`,
+    message155: $localize`URL`,
+    message156: $localize`What should the TalkThru emphasize?`,
+    message157: $localize`Optional direction`,
+    message158: $localize`Number of stops`,
+    message159: $localize`Number of cards`,
+    message160: $localize` sec`,
+    message161: $localize`3 min`,
+    message162: $localize` seconds`,
+    message163: $localize` minutes`,
+    message164: $localize`Finding gems…`,
+    message165: $localize`Find gems from this place`,
+    message166: $localize`Analyze listing`,
+    message167: $localize`Preview card`,
+    message168: $localize`Create preview`,
+    message169: $localize`Generate preview`,
+    message170: $localize`Your photos stay in their selected order while the board is created.`,
+    message171: $localize`Building the preview. This stays active while places, images, and cards finish.`,
+    message172: $localize`the source page`,
+    message173: $localize`The source count and extracted list agree.`,
+    message174: $localize`Please check this list before card and picture generation begins.`,
+    message175: $localize`uploaded photos`,
+    message176: $localize`source photos`,
+    message177: $localize`Open link`,
+    message178: $localize`Selected`,
+    message179: $localize`Not selected`,
+    message180: $localize`Creating picture...`,
+    message181: $localize`Nano Banana`,
+    message182: $localize`View source`,
+    message183: $localize`Using picture...`,
+    message184: $localize`Use this picture`,
+    message185: $localize`Replacing card...`,
+    message186: $localize`Replace entire card`,
+    message187: $localize`YouTube`,
+    message188: $localize`Tune these gems`,
+    message189: $localize`Refine`,
+    message190: $localize`Deleting…`,
+    message191: $localize`Delete permanently`,
+    message192: $localize`Save team draft`,
+    message193: $localize`Save and publish`,
+    message194: $localize`Save unlisted board`,
+    message195: $localize`Save private board`,
+    message196: $localize`On the way`,
+    message197: $localize`Stop `,
+    message198: $localize`Tour stop`,
+    message199: $localize`To `,
+    message200: $localize`Stop`,
+    message201: $localize`Replay`,
+    message202: $localize`Private draft`,
+    message203: $localize`Unsaved changes`,
+    message204: $localize`Draft`,
+    message205: $localize`Saving…`,
+    message206: $localize`Manage sharing`,
+    message207: $localize`Share unlisted board`,
+    message208: $localize`Publish board`,
+    message209: $localize`Stories`,
+    message210: $localize`Script`,
+    message211: $localize`Shape every photo`,
+    message212: $localize`Write the story`,
+    message213: $localize`Refining…`,
+    message214: $localize`Shorten / expand`,
+    message215: $localize`Focused synthesis`,
+    message216: $localize`Balanced narration · Recommended`,
+    message217: $localize`Fuller story and flow`,
+    message218: $localize`Photo stories`,
+    message219: $localize`Narration sequence`,
+    message220: $localize`Titles, captions, and spoken narration`,
+    message221: $localize`Exactly what the voice will read`,
+    message222: $localize`Narration needed`,
+    message223: $localize`Title`,
+    message224: $localize`Card title`,
+    message225: $localize`Creating…`,
+    message226: $localize`Fresh narration`,
+    message227: $localize`Select at least one photo to edit its story.`,
+    message228: $localize`Select at least one card to write its script.`,
+    message229: $localize`Stories saved`,
+    message230: $localize`Script saved`,
+    message231: $localize`Ready to edit`,
+    message232: $localize`Save stories`,
+    message233: $localize`Save script`,
+    message234: $localize`Save your studio edits before changing the voice.`,
+    message235: $localize`Members can share or revoke their voice from the team’s Members tab.`,
+    message236: $localize`Use this voice`,
+    message237: $localize`Delete`,
+    message238: $localize`Create my voice`,
+    message239: $localize`Voice service update required`,
+    message240: $localize`Add another voice`,
+    message241: $localize`Upgrade to add more`,
+    message242: $localize`Replace this voice`,
+    message243: $localize`Create a new voice`,
+    message244: $localize`Stop recording`,
+    message245: $localize`Record my voice`,
+    message246: $localize`Uploading… `,
+    message247: $localize`Creating your voice…`,
+    message248: $localize`Create this voice`,
+    message249: $localize`No subtitle`,
+    message250: $localize`Keep exploring`,
+    message251: $localize`Pause`,
+    message252: $localize`Play`,
+    message253: $localize`Replace image`,
+    message254: $localize`Upload cover`,
+    message255: $localize`Save cover`,
+    message256: $localize`Cover saved`,
+    message257: $localize`Cover is current`,
+    message258: $localize`Replace custom`,
+    message259: $localize`Upload custom`,
+    message260: $localize`Save final card`,
+    message261: $localize`Final card is current`,
+    message262: $localize`Download DOCX`,
+    message263: $localize`Preparing image…`,
+    message264: $localize`Replace custom image`,
+    message265: $localize`Upload custom image`,
+    message266: $localize`Save final screen`,
+    message267: $localize`Final screen saved`,
+    message268: $localize`Member`,
+    message269: $localize`Your video logo`,
+    message270: $localize`Add your logo`,
+    message271: $localize`Replace logo`,
+    message272: $localize`Upload logo`,
+    message273: $localize`Rendering `,
+    message274: $localize`Waiting`,
+    message275: $localize`Creating 2 formats · `,
+    message276: $localize`Create Board Trailer in 2 formats`,
+    message277: $localize`Make a copy & continue`,
+    message278: $localize`Create video in 2 formats`,
+    message279: $localize`Board Trailer ready`,
+    message280: $localize`Full video ready`,
+    message281: $localize`Needs update`,
+    message282: $localize`Updating 2 formats · `,
+    message283: $localize`Update both versions`,
+    message284: $localize`Share video files`,
+    message285: $localize`Share live-view link`,
+    message286: $localize`Open a social composer`,
+    message287: $localize`Share the video from your device or download it to attach in another app.`,
+    message288: $localize`Includes the board picture and opens the interactive board.`,
+    message289: $localize`Downloads the MP4 and opens the selected composer. Attach it for in-feed autoplay.`,
+    message290: $localize`Delete song`,
+    message291: $localize`Delete card`,
+    message292: $localize`Edit board inside `,
+    message293: $localize`Create a board inside `,
+    message294: $localize`Edit board cover`,
+    message295: $localize`New collection`,
+    message296: $localize`Title, subtitle, and picture`,
+    message297: $localize`Create board`,
+    message298: $localize`Your personal introduction will appear here.`,
+    message299: $localize`Publishing…`,
+    message300: $localize`Publish intro card`,
+    message301: $localize`Create an Intro card`,
+    message302: $localize`Create a Contact card`,
+    message303: $localize`Create a QR code card`,
+    message304: $localize`Add Intro card`,
+    message305: $localize`Add Contact card`,
+    message306: $localize`Add QR code card`,
+    message307: $localize`New card`,
+    message308: $localize`Create a full board inside this card`,
+    message309: $localize`Open board`,
+    message310: $localize`Improve this song`,
+    message311: $localize`Create this song`,
+    message312: $localize`Populating...`,
+    message313: $localize`Populate song`,
+    message314: $localize`Playing`,
+    message315: $localize`Searching...`,
+    message316: $localize`Find photo`,
+    message317: $localize`Creating...`,
+    message318: $localize`Searching Wikimedia Commons...`,
+    message319: $localize`Search reusable images for this card`,
+    message320: $localize`Adding...`,
+    message321: $localize`Add to card`,
+    message322: $localize`Improve this card`,
+    message323: $localize`Create this card`,
+    message324: $localize`Populate card`,
+    message325: $localize`Contact details and narration`,
+    message326: $localize`Edit anything before saving`,
+    message327: $localize`YouTube video ready`,
+    message328: $localize`Save song`,
+    message329: $localize`Save Contact Card`,
+    message330: $localize`Save card`,
+    message331: $localize`Edit related card`,
+    message332: $localize`New related card`,
+    message333: $localize`Prepare with AI`,
+    message334: $localize`Save related card`,
+    message335: $localize`Joining…`,
+    message336: $localize`Join this plan`,
+    message337: $localize`Interest saved`,
+    message338: $localize`I’m interested`,
+    message339: $localize`Update plan`,
+    message340: $localize`Confirm I’m going`,
+    message341: $localize`today`,
+    message342: $localize`card`,
+    message343: $localize`cards`,
+    message344: $localize`rental`,
+    message345: $localize`property`,
+    message346: $localize`stops`,
+    message347: $localize`s`,
+    message348: $localize`photo`,
+    message349: $localize`photos`,
+    message350: $localize`sentence`,
+    message351: $localize`sentences`,
+    message352: $localize`voice`,
+    message353: $localize`voices`,
+    message354: $localize`image`,
+    message355: $localize`images`,
+    message356: $localize`warning`,
+    message357: $localize`warnings`,
+    message358: $localize`song`,
+    message359: $localize`Preparing ElevenLabs narration`,
+    message360: $localize`Stop narration`,
+    message361: $localize`Listen to next stop handoff`,
+    message362: $localize`Listen to card`,
+    message363: $localize`Pause Stack`,
+    message364: $localize`Play Stack`,
+    message365: $localize`Call `,
+    message366: $localize`Email `,
+    message367: $localize`Pause audio preview`,
+    message368: $localize`Play audio preview`,
+    message369: $localize`Photos in `,
+    message370: $localize`Show photo `,
+    message371: $localize` of `,
+    message372: $localize`Loading public boards`,
+    message373: $localize`Loading board`,
+    message374: $localize` profile photo`,
+    message375: $localize`Search boards...`,
+    message376: $localize`Search private & unlisted boards...`,
+    message377: $localize`Search collections...`,
+    message378: $localize`Search cards...`,
+    message379: $localize` cover image`,
+    message380: $localize`Show board front`,
+    message381: $localize`Show board back`,
+    message382: $localize`Unlike board`,
+    message383: $localize`Like board`,
+    message384: $localize`Remove saved board`,
+    message385: $localize`Save board`,
+    message386: $localize`Show card front`,
+    message387: $localize`Show card back`,
+    message388: $localize` logo`,
+    message389: $localize`Custom board link copied`,
+    message390: $localize`Copy custom board link`,
+    message391: $localize`Open `,
+    message392: $localize` city Wiki`,
+    message393: $localize`Search `,
+    message394: $localize`Search inside this card...`,
+    message395: $localize`Search songs...`,
+    message396: $localize`Search this board...`,
+    message397: $localize`Select stop `,
+    message398: $localize`% ready`,
+    message399: $localize` editable stops map`,
+    message400: $localize` photo`,
+    message401: $localize` stops map`,
+    message402: $localize` photos full screen`,
+    message403: $localize`Edit Talking Card `,
+    message404: $localize` cover art`,
+    message405: $localize`Edit `,
+    message406: $localize`Delete `,
+    message407: $localize`Open board inside `,
+    message408: $localize`Close cards inside `,
+    message409: $localize`Select `,
+    message410: $localize`Unlike card`,
+    message411: $localize`Like card`,
+    message412: $localize`Play `,
+    message413: $localize` video`,
+    message414: $localize` video thumbnail`,
+    message415: $localize` photo `,
+    message416: $localize`Play here: `,
+    message417: $localize`Play on Spotify: `,
+    message418: $localize`Show cover photo`,
+    message419: $localize`Show memory `,
+    message420: $localize`Wait for images to finish, or choose Stop before closing.`,
+    message421: $localize`Close`,
+    message422: $localize`Show `,
+    message423: $localize`Selected photo `,
+    message424: $localize`Make `,
+    message425: $localize` the first photo`,
+    message426: $localize`Remove `,
+    message427: $localize`Lead with the setting, living spaces, amenities, or guest experience`,
+    message428: $localize`Focus on places, food, and things worth saving`,
+    message429: $localize`Select picture `,
+    message430: $localize`Preview video for `,
+    message431: $localize`Unselect card`,
+    message432: $localize`Select card`,
+    message433: $localize`Remove video from `,
+    message434: $localize`More gardens and local history, fewer food stops…`,
+    message435: $localize`Make it more kid-friendly, add cheaper options, remove duplicates...`,
+    message436: $localize`Wait for images to finish, or choose Stop before going back.`,
+    message437: $localize`Publishing will unlock when image preparation finishes. Choose Stop to continue with the images already added.`,
+    message438: $localize` tour map`,
+    message439: $localize`Publish the board before copying its Stack link`,
+    message440: $localize`Copy Stack link`,
+    message441: $localize`Stop `,
+    message442: $localize` preview`,
+    message443: $localize`Preview `,
+    message444: $localize`Delete song confirmation`,
+    message445: $localize`Delete card confirmation`,
+    message446: $localize`Board link copied`,
+    message447: $localize`Copy board link`,
+    message448: $localize`Use `,
+    message449: $localize` tone`,
+    message450: $localize`Toggle `,
+    message451: $localize` sticker`,
+    message452: $localize`Card photo `,
+    message453: $localize`Make photo `,
+    message454: $localize` the cover`,
+    message455: $localize`Remove photo `,
+    message456: $localize`Tell the story behind this photo.`,
+    message457: $localize`Why this belongs on the board.`,
+  };
   readonly teamWizardOnly = input(false);
   readonly teamWizardReady = output<void>();
   readonly teamWizardDismissed = output<void>();
@@ -2270,11 +2729,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     description: string;
     icon: string;
   }> = [
-    { id: 'warm', label: 'Warm storyteller', description: 'An inviting, connected walk-through without sales hype.', icon: 'auto_stories' },
-    { id: 'guided', label: 'Guided tour', description: 'Lead the viewer naturally from one space to the next.', icon: 'explore' },
-    { id: 'luxury', label: 'Luxury editorial', description: 'Polished and restrained, grounded in visible details.', icon: 'diamond' },
-    { id: 'brisk', label: 'Brisk agent reel', description: 'Concise, energetic copy for a quick social story.', icon: 'bolt' },
-    { id: 'investor', label: 'Fact-forward', description: 'Emphasize verified practical property information.', icon: 'analytics' },
+    { id: 'warm', label: $localize`Warm storyteller`, description: $localize`An inviting, connected walk-through without sales hype.`, icon: 'auto_stories' },
+    { id: 'guided', label: $localize`Guided tour`, description: $localize`Lead the viewer naturally from one space to the next.`, icon: 'explore' },
+    { id: 'luxury', label: $localize`Luxury editorial`, description: $localize`Polished and restrained, grounded in visible details.`, icon: 'diamond' },
+    { id: 'brisk', label: $localize`Brisk agent reel`, description: $localize`Concise, energetic copy for a quick social story.`, icon: 'bolt' },
+    { id: 'investor', label: $localize`Fact-forward`, description: $localize`Emphasize verified practical property information.`, icon: 'analytics' },
   ];
   readonly wizardPhotos = signal<BoardWizardPhoto[]>([]);
   readonly wizardListingPhotoSource = signal<ListingPhotoSource>('url');
@@ -3143,9 +3602,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       .sort((left, right) => left.offset - right.offset);
   });
   readonly wizardMediaModeLabel = computed(() => this.wizardMediaModes
-    .find((mode) => mode.id === this.wizardMediaMode())?.label ?? 'Images only');
+    .find((mode) => mode.id === this.wizardMediaMode())?.label ?? $localize`Images only`);
   readonly wizardDefaultTypeLabel = computed(() => this.cardTypes
-    .find((type) => type.id === this.wizardDefaultType())?.label ?? 'Place');
+    .find((type) => type.id === this.wizardDefaultType())?.label ?? $localize`Place`);
   readonly wizardContributionBoard = computed(() => {
     const boardId = this.wizardContributionBoardId();
     return boardId ? this.boards().find((board) => board.id === boardId) ?? null : null;
@@ -3911,7 +4370,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.boardsSyncError.set(null);
     } catch (error) {
       console.error('Private and unlisted boards load failed', error);
-      this.boardsSyncError.set('Private and unlisted boards could not be loaded. Refresh and try again.');
+      this.boardsSyncError.set($localize`Private and unlisted boards could not be loaded. Refresh and try again.`);
     } finally {
       this.boardsLoading.set(false);
       this.scheduleGalleryViewportCheck();
@@ -4005,7 +4464,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       }
     } catch {
       this.boardsHasMore.set(false);
-      this.boardsSyncError.set('More boards could not be loaded. Check your connection and try again.');
+      this.boardsSyncError.set($localize`More boards could not be loaded. Check your connection and try again.`);
     }
     this.scheduleGalleryViewportCheck();
   }
@@ -4082,7 +4541,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       }
     } catch {
       this.boardsHasMore.set(false);
-      this.boardsSyncError.set('Search could not load the rest of the boards. Check your connection and try again.');
+      this.boardsSyncError.set($localize`Search could not load the rest of the boards. Check your connection and try again.`);
     } finally {
       this.scheduleGalleryViewportCheck();
     }
@@ -4450,7 +4909,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     if (!this.canCreateBoard()) {
-      this.boardsSyncError.set('Sign in to create a nearby gems board.');
+      this.boardsSyncError.set($localize`Sign in to create a nearby gems board.`);
       return;
     }
     this.resetBoardWizard();
@@ -4736,7 +5195,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }): Promise<void> {
     if (!this.functions) throw new Error('Nearby search is not ready. Refresh and try again.');
     this.wizardStep.set('loading');
-    this.wizardLoadingTask.set({ message: 'Finding genuinely interesting places within reach', progress: 24 });
+    this.wizardLoadingTask.set({ message: $localize`Finding genuinely interesting places within reach`, progress: 24 });
     const boardId = this.wizardActiveDraftId() ?? this.createId();
     this.wizardActiveDraftId.set(boardId);
     const callable = httpsCallable<Record<string, unknown>, unknown>(this.functions, 'discoverNearbyGems', {
@@ -4748,7 +5207,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       details: this.nearbyGemDetails().trim(),
       count: this.wizardCount(),
     });
-    this.wizardLoadingTask.set({ message: 'Preparing your editable gem cards', progress: 82 });
+    this.wizardLoadingTask.set({ message: $localize`Preparing your editable gem cards`, progress: 82 });
     const batch = this.normalizeWizardBatch(response.data);
     if (batch.board.kind !== 'nearby-gems'
       || !batch.board.nearbyGems
@@ -4835,7 +5294,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     })) {
       const saved = await this.flushWizardDraftAutosave();
       if (!saved) {
-        this.wizardError.set('This draft could not be saved yet. Check your connection and try closing again.');
+        this.wizardError.set($localize`This draft could not be saved yet. Check your connection and try closing again.`);
         return;
       }
     }
@@ -4965,7 +5424,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         this.wizardOpen.set(false);
       }
     } catch (error) {
-      this.wizardError.set(this.boardFriendErrorMessage(error, 'Could not discard this draft. Please try again.'));
+      this.wizardError.set(this.boardFriendErrorMessage(error, $localize`Could not discard this draft. Please try again.`));
     } finally {
       this.wizardDraftDiscarding.set(false);
       this.wizardDraftRestoreInProgress = false;
@@ -5140,7 +5599,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const current = this.wizardPhotos();
     const available = Math.max(0, 24 - current.length);
     if (!available) {
-      this.wizardPhotoError.set(this.wizardIsTalkThruListing() ? 'A TalkThru can use up to 24 uploaded photos.' : $localize`A photo board can hold up to 24 photos.`);
+      this.wizardPhotoError.set(this.wizardIsTalkThruListing() ? $localize`A TalkThru can use up to 24 uploaded photos.` : $localize`A photo board can hold up to 24 photos.`);
       return;
     }
 
@@ -5234,7 +5693,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       }
     } catch (error) {
       this.wizardError.set(
-        error instanceof Error ? error.message : 'This photo board could not be created. Please try again.',
+        error instanceof Error ? error.message : $localize`This photo board could not be created. Please try again.`,
       );
       this.wizardStep.set(this.wizardResult() ? 'preview' : 'configure');
     } finally {
@@ -5270,7 +5729,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.wizardSaveDestination.set('studio');
     this.wizardError.set(null);
     this.wizardStep.set('loading');
-    this.wizardLoadingTask.set({ message: 'Saving your private draft and opening Studio', progress: 92 });
+    this.wizardLoadingTask.set({ message: $localize`Saving your private draft and opening Studio`, progress: 92 });
     try {
       await this.saveWizardBatch();
     } finally {
@@ -5536,7 +5995,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return false;
     }
     this.wizardStep.set('loading');
-    this.wizardLoadingTask.set({ message: 'Reading the source page', progress: 18 });
+    this.wizardLoadingTask.set({ message: $localize`Reading the source page`, progress: 18 });
     this.wizardError.set(null);
     try {
       const callable = httpsCallable<Record<string, unknown>, unknown>(
@@ -6434,8 +6893,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const draftSaved = await this.flushWizardDraftAutosave();
     if (!draftSaved) {
       this.wizardError.set(this.wizardMode() === 'nearby-gems'
-        ? 'Saving is paused because the latest private draft could not be synced. Check your connection and try again.'
-        : 'Save and publish is paused because the latest draft could not be synced. Check your connection and try again.');
+        ? $localize`Saving is paused because the latest private draft could not be synced. Check your connection and try again.`
+        : $localize`Save and publish is paused because the latest draft could not be synced. Check your connection and try again.`);
       this.wizardSaving.set(false);
       return;
     }
@@ -6760,7 +7219,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     if (!title) {
-      this.boardSettingsError.set('Give this board a title before saving.');
+      this.boardSettingsError.set($localize`Give this board a title before saving.`);
       return;
     }
 
@@ -6789,7 +7248,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       await this.assertBoardVisitorKnowledge({ ...current,
         visibility: current.teamId && this.canPublishTeamBoard(current) ? draft.visibility : visibility });
     } catch (error) {
-      this.boardSettingsError.set(error instanceof Error ? error.message : 'Talking Card knowledge could not be checked. Please try again.');
+      this.boardSettingsError.set(error instanceof Error ? error.message : $localize`Talking Card knowledge could not be checked. Please try again.`);
       this.boardSettingsSaving.set(false);
       return;
     }
@@ -6824,7 +7283,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           : await this.persistAndReplaceBoard(nextBoard, 'settings');
       if (!saved) {
         if (!current.teamId) this.boards.update((boards) => boards.map((board) => board.id === current.id ? current : board));
-        this.boardSettingsError.set(this.boardsSyncError() || 'These changes could not be saved. Please try again.');
+        this.boardSettingsError.set(this.boardsSyncError() || $localize`These changes could not be saved. Please try again.`);
         return;
       }
       if (contentChanged) {
@@ -6850,7 +7309,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         this.boards.update((boards) => boards.map((board) => linkedById.get(board.id) ?? board));
         const childSaveResults = await Promise.all(linkedChildren.map((board) => this.persistVisibilityAndReplaceBoard(board)));
         if (childSaveResults.some((result) => !result)) {
-          this.boardSettingsError.set('The board was updated, but one of its boards inside could not be synced.');
+          this.boardSettingsError.set($localize`The board was updated, but one of its boards inside could not be synced.`);
           return;
         }
       }
@@ -6935,7 +7394,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           if (!refreshed) throw new Error('The refreshed listing is unavailable.');
           this.boards.update((boards) => boards.map((item) => item.id === saved.id ? refreshed : item));
         } catch {
-          this.boardsSyncError.set('Visibility was updated. Reopen the board to refresh its working copy.');
+          this.boardsSyncError.set($localize`Visibility was updated. Reopen the board to refresh its working copy.`);
           return true;
         }
       }
@@ -7031,7 +7490,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         : null;
       const parentCard = parentBoard?.cards.find((card) => card.id === insideContext?.parentCardId) ?? null;
       if (insideContext && (!parentBoard || !parentCard || !this.canEditBoard(parentBoard))) {
-        this.boardsSyncError.set('The parent card could not be found.');
+        this.boardsSyncError.set($localize`The parent card could not be found.`);
         return;
       }
       const board: Board = {
@@ -7138,7 +7597,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           this.boards.update((boards) => boards.map((board) =>
             board.id === editingId && board.updatedAt === now ? editingBoardForVisibility : board));
         }
-        this.boardDialogError.set(this.boardsSyncError() || 'These changes could not be saved. Please try again.');
+        this.boardDialogError.set(this.boardsSyncError() || $localize`These changes could not be saved. Please try again.`);
         return;
       }
       if (editingId) {
@@ -7156,7 +7615,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           this.boards.update((boards) => boards.map((board) => linkedById.get(board.id) ?? board));
           const childSaveResults = await Promise.all(linkedChildren.map((board) => this.persistVisibilityAndReplaceBoard(board)));
           if (childSaveResults.some((result) => !result)) {
-            this.boardDialogError.set('The board was updated, but one of its boards inside could not be synced. Please try again.');
+            this.boardDialogError.set($localize`The board was updated, but one of its boards inside could not be synced. Please try again.`);
             return;
           }
         }
@@ -7168,7 +7627,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   deleteBoard(board: Board, event?: Event): void {
     event?.preventDefault();
     event?.stopPropagation();
-    if (board.teamId) { this.boardsSyncError.set('Archive or delete team listings from the team management page.'); return; }
+    if (board.teamId) { this.boardsSyncError.set($localize`Archive or delete team listings from the team management page.`); return; }
     if (!this.canEditBoard(board)) {
       this.boardsSyncError.set($localize`Only the board owner can delete this board.`);
       return;
@@ -7179,9 +7638,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   openCustomUrlDialog(board: Board, event?: Event): void {
     event?.preventDefault();
     event?.stopPropagation();
-    if (board.teamId) { this.boardsSyncError.set('Team listings use a stable visitor link. Manage sharing in Board settings or on the team page.'); return; }
+    if (board.teamId) { this.boardsSyncError.set($localize`Team listings use a stable visitor link. Manage sharing in Board settings or on the team page.`); return; }
     if (!this.canEditBoard(board)) {
-      this.boardsSyncError.set('Only the board owner can set its custom URL.');
+      this.boardsSyncError.set($localize`Only the board owner can set its custom URL.`);
       return;
     }
     this.customUrlBoard.set(board);
@@ -7191,7 +7650,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     event?.preventDefault();
     event?.stopPropagation();
     if (!isLinkReadableVisibility(board.visibility)) {
-      this.boardsSyncError.set('Choose Public or Unlisted before creating a promo image.');
+      this.boardsSyncError.set($localize`Choose Public or Unlisted before creating a promo image.`);
       return;
     }
     this.boardPromoImageBoard.set(board);
@@ -7477,7 +7936,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     event?.stopPropagation();
     const board = this.boards().find((item) => item.id === boardId);
     if (!board || !this.canEditBoard(board)) {
-      this.boardsSyncError.set('Only the board owner can add Talking Cards.');
+      this.boardsSyncError.set($localize`Only the board owner can add Talking Cards.`);
       return;
     }
     this.listingTalkingCardSetup.set(null);
@@ -7489,7 +7948,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     event?.preventDefault();
     event?.stopPropagation();
     if (!this.canEditBoard(board)) {
-      this.boardsSyncError.set('Only the board owner can set up this Talking Card.');
+      this.boardsSyncError.set($localize`Only the board owner can set up this Talking Card.`);
       return;
     }
     this.listingTalkingCardSetup.set({
@@ -7505,7 +7964,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     event?.stopPropagation();
     const board = boardOverride ?? this.boards().find((candidate) => candidate.cards.some((item) => item.id === card.id));
     if (!board || !this.canEditBoard(board) || !card.conversation?.atlasId) {
-      this.boardsSyncError.set('Only the board owner can edit this Talking Card.');
+      this.boardsSyncError.set($localize`Only the board owner can edit this Talking Card.`);
       return;
     }
     this.listingTalkingCardSetup.set(null);
@@ -7517,7 +7976,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     event?.preventDefault();
     event?.stopPropagation();
     if (!this.canEditBoard(board)) {
-      this.boardSettingsError.set('Only the board owner can add Talking Cards.');
+      this.boardSettingsError.set($localize`Only the board owner can add Talking Cards.`);
       return;
     }
     this.listingTalkingCardSetup.set(null);
@@ -7686,7 +8145,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     event?.preventDefault();
     event?.stopPropagation();
     if (!this.canEditBoard(board) || !isListingIntroCardPlaceholderRecord(card)) {
-      this.boardsSyncError.set('Only the board owner can set up this introduction.');
+      this.boardsSyncError.set($localize`Only the board owner can set up this introduction.`);
       return;
     }
     this.closeCardActionMenu();
@@ -7711,11 +8170,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const card = this.listingIntroEditorCard();
     const message = this.listingIntroMessage().replace(/\s+/g, ' ').trim();
     if (!board || !card || !this.canEditBoard(board) || !isListingIntroCardPlaceholderRecord(card)) {
-      this.listingIntroError.set('This intro card is no longer available.');
+      this.listingIntroError.set($localize`This intro card is no longer available.`);
       return;
     }
     if (message.length < 12) {
-      this.listingIntroError.set('Add a brief personal welcome before publishing.');
+      this.listingIntroError.set($localize`Add a brief personal welcome before publishing.`);
       return;
     }
     const contactCard = board.cards.find((candidate) => !candidate.authorOnly && this.isListingContactCard(candidate));
@@ -7737,7 +8196,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     try {
       const saved = await this.persistAndReplaceBoard(nextBoard, 'cards');
       if (!saved) {
-        this.listingIntroError.set('Your introduction could not sync. Please try again.');
+        this.listingIntroError.set($localize`Your introduction could not sync. Please try again.`);
         return;
       }
       this.listingIntroEditorTarget.set(null);
@@ -7960,7 +8419,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         const label = clean(draft.qrLabel, 80) || 'Scan this QR code';
         record = {
           title: label,
-          subtitle: 'Scan with your phone',
+          subtitle: $localize`Scan with your phone`,
           notes: value,
           imageUrl: generateQrSvgDataUrl(value, { margin: 4 }),
           tags: ['qr-code-card', 'qr-code'],
@@ -7996,7 +8455,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       if (!saved) throw new Error('The card could not be saved. Please try again.');
       this.specialCardEditorBoardId.set(null);
     } catch (error) {
-      this.specialCardError.set(error instanceof Error ? error.message : 'The card could not be saved.');
+      this.specialCardError.set(error instanceof Error ? error.message : $localize`The card could not be saved.`);
     } finally {
       this.specialCardSaving.set(false);
     }
@@ -8233,7 +8692,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   async openBoardInside(card: BoardCard, event?: Event, parentBoardOverride?: Board): Promise<void> {
     event?.preventDefault();
     event?.stopPropagation();
-    if (this.teamContextId()) { this.cardWizardError.set('Team listings use cards and related cards. Separate nested boards cannot be shared here yet.'); return; }
+    if (this.teamContextId()) { this.cardWizardError.set($localize`Team listings use cards and related cards. Separate nested boards cannot be shared here yet.`); return; }
     this.boardAnalytics.trackCardOpen(card.id);
     const parentBoard = parentBoardOverride ?? this.originalSelectedBoard();
     if (!parentBoard) {
@@ -8260,7 +8719,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         }
       }
       if (!childBoard) {
-        this.boardsSyncError.set('The board inside this card could not be loaded.');
+        this.boardsSyncError.set($localize`The board inside this card could not be loaded.`);
         return;
       }
       if (this.canUseAlongsideBoardInside(parentBoard)) {
@@ -9618,7 +10077,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       const saved = await this.persistAndReplaceBoard(nextBoard, 'cards');
       if (!saved) {
         this.boards.update(items => items.map(item => item === nextBoard ? board : item));
-        this.imageUploadError.set('The card could not be saved. Your changes are still here; please try again.');
+        this.imageUploadError.set($localize`The card could not be saved. Your changes are still here; please try again.`);
         return;
       }
       if (!relatedParentId && editingId) {
@@ -9670,7 +10129,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       ? this.boards().find((candidate) => candidate.id === requestedBoard.id) ?? requestedBoard
       : null;
     if (!board || !this.canEditBoard(board)) {
-      this.boardsSyncError.set('Only the board owner can duplicate cards.');
+      this.boardsSyncError.set($localize`Only the board owner can duplicate cards.`);
       return;
     }
 
@@ -9682,7 +10141,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       const relatedCards = this.explicitRelatedCards(parent);
       const sourceIndex = relatedCards.findIndex((candidate) => candidate.id === card.id);
       if (!parent || sourceIndex < 0) {
-        this.boardsSyncError.set('The card to duplicate could not be found.');
+        this.boardsSyncError.set($localize`The card to duplicate could not be found.`);
         return;
       }
       const nextRelatedCards = [...relatedCards];
@@ -9705,7 +10164,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
     const sourceIndex = board.cards.findIndex((candidate) => candidate.id === card.id);
     if (sourceIndex < 0) {
-      this.boardsSyncError.set('The card to duplicate could not be found.');
+      this.boardsSyncError.set($localize`The card to duplicate could not be found.`);
       return;
     }
 
@@ -10587,12 +11046,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   tourStopReadyItems(card: BoardCard): Array<{ label: string; ready: boolean }> {
     return [
       {
-        label: 'Location',
+        label: $localize`Location`,
         ready: this.hasTourCoordinates(card) || !!card.tour?.address?.trim() || !!card.subtitle.trim(),
       },
-      { label: 'Photo', ready: !!this.cardMediaPoster(card) },
-      { label: 'Story', ready: !!card.notes.trim() },
-      { label: 'Audio', ready: !!card.tour?.guideScript?.trim() },
+      { label: $localize`Photo`, ready: !!this.cardMediaPoster(card) },
+      { label: $localize`Story`, ready: !!card.notes.trim() },
+      { label: $localize`Audio`, ready: !!card.tour?.guideScript?.trim() },
     ];
   }
 
@@ -14652,12 +15111,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     if (!this.functions || !isLinkReadableVisibility(board.visibility)) {
-      this.boardEmailShareError.set('Choose Public or Unlisted before emailing this board.');
+      this.boardEmailShareError.set($localize`Choose Public or Unlisted before emailing this board.`);
       return;
     }
     const email = this.boardEmailShareRecipient().trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      this.boardEmailShareError.set('Enter a valid email address.');
+      this.boardEmailShareError.set($localize`Enter a valid email address.`);
       return;
     }
 
@@ -14947,7 +15406,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     if (!this.stackScriptBoardTitle().trim()) {
-      this.stackScriptError.set('Add a board title before publishing.');
+      this.stackScriptError.set($localize`Add a board title before publishing.`);
       return;
     }
     const missingCount = this.stackPhotoDraftMissingCount(board);
@@ -14988,7 +15447,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         ? 'Board saved as Unlisted. Anyone with its link can view; it stays out of public discovery.'
         : 'Board published. Its link and Stack are now ready to share.', false);
     } catch (error) {
-      this.stackScriptError.set(error instanceof Error ? error.message : 'The board could not be published. It is still private.');
+      this.stackScriptError.set(error instanceof Error ? error.message : $localize`The board could not be published. It is still private.`);
     } finally {
       this.stackPhotoDraftPublishing.set(false);
     }
@@ -15067,7 +15526,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.stackDocsExportPhase.set(null);
     } catch (error) {
       this.stackDocsExportError.set(
-        error instanceof Error ? error.message : 'The DOCX file could not be created.',
+        error instanceof Error ? error.message : $localize`The DOCX file could not be created.`,
       );
       this.stackDocsExportPhase.set(null);
     } finally {
@@ -15576,13 +16035,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       audio.onended = () => this.stopStackVoicePreview();
       audio.onerror = () => {
         this.stopStackVoicePreview();
-        this.stackScriptError.set('This script preview could not be played.');
+        this.stackScriptError.set($localize`This script preview could not be played.`);
       };
       this.stackVoicePreview = audio;
       await audio.play();
       this.stackVoicePreviewingId.set(`studio-script:${card.id}`);
     } catch (error) {
-      this.stackScriptError.set(error instanceof Error ? error.message : 'This script preview could not be played.');
+      this.stackScriptError.set(error instanceof Error ? error.message : $localize`This script preview could not be played.`);
     } finally {
       this.stackScriptPreviewLoadingCardId.set(null);
     }
@@ -15632,14 +16091,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       audio.onended = () => this.stopStackVoicePreview();
       audio.onerror = () => {
         this.stopStackVoicePreview();
-        this.stackScriptError.set('The fresh narration was saved, but its preview could not be played.');
+        this.stackScriptError.set($localize`The fresh narration was saved, but its preview could not be played.`);
       };
       this.stackVoicePreview = audio;
       await audio.play();
       this.stackVoicePreviewingId.set(`studio-script:${card.id}`);
       this.setStackShareMessage('Fresh narration saved. The next Full video will use this take.', false);
     } catch (error) {
-      this.stackScriptError.set(error instanceof Error ? error.message : 'Fresh narration could not be created.');
+      this.stackScriptError.set(error instanceof Error ? error.message : $localize`Fresh narration could not be created.`);
     } finally {
       this.stackScriptRegeneratingCardId.set(null);
     }
@@ -15648,12 +16107,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   async saveStackScript(board: Board): Promise<boolean> {
     if (!this.canEditBoard(board) || this.stackScriptSaving() || this.stackCoverSaving()) return false;
     if (this.stackScriptShortening()) {
-      this.stackScriptError.set('Wait for the length adjustment to finish before saving.');
+      this.stackScriptError.set($localize`Wait for the length adjustment to finish before saving.`);
       return false;
     }
     const title = this.stackScriptBoardTitle().trim();
     if (!title) {
-      this.stackScriptError.set('Add a board title before saving.');
+      this.stackScriptError.set($localize`Add a board title before saving.`);
       return false;
     }
     if (this.stackScriptMissingCount() && !this.isPhotoStudioDraft(board)) {
@@ -15739,7 +16198,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       );
       return true;
     } catch (error) {
-      this.stackScriptError.set(error instanceof Error ? error.message : 'The script could not be saved. Your draft is still here.');
+      this.stackScriptError.set(error instanceof Error ? error.message : $localize`The script could not be saved. Your draft is still here.`);
       return false;
     } finally {
       this.stackScriptSaving.set(false);
@@ -15763,7 +16222,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     input.value = '';
     if (!file || this.stackCoverImageUploading()) return;
     if (file.size > 10 * 1024 * 1024) {
-      this.stackCoverError.set('Choose a cover image smaller than 10 MB.');
+      this.stackCoverError.set($localize`Choose a cover image smaller than 10 MB.`);
       return;
     }
     this.stackCoverImageUploading.set(true);
@@ -15771,7 +16230,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     try {
       this.stackCoverImageDraft.set(await this.readImageFile(file));
     } catch (error) {
-      this.stackCoverError.set(error instanceof Error ? error.message : 'That cover image could not be prepared.');
+      this.stackCoverError.set(error instanceof Error ? error.message : $localize`That cover image could not be prepared.`);
     } finally {
       this.stackCoverImageUploading.set(false);
     }
@@ -15788,7 +16247,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     const title = this.stackScriptBoardTitle().trim();
     if (!title) {
-      this.stackCoverError.set('Add a cover title before saving.');
+      this.stackCoverError.set($localize`Add a cover title before saving.`);
       return false;
     }
     this.stackCoverSaving.set(true);
@@ -15813,7 +16272,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.setStackShareMessage('Cover saved. Update the video when you are ready to publish it.', false);
       return true;
     } catch (error) {
-      this.stackCoverError.set(error instanceof Error ? error.message : 'The cover could not be saved.');
+      this.stackCoverError.set(error instanceof Error ? error.message : $localize`The cover could not be saved.`);
       return false;
     } finally {
       this.stackCoverSaving.set(false);
@@ -15847,7 +16306,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     input.value = '';
     if (!file || this.stackFinalScreenImageUploading()) return;
     if (file.size > 10 * 1024 * 1024) {
-      this.stackFinalScreenError.set('Choose a custom image smaller than 10 MB.');
+      this.stackFinalScreenError.set($localize`Choose a custom image smaller than 10 MB.`);
       return;
     }
     this.stackFinalScreenImageUploading.set(true);
@@ -15857,7 +16316,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.stackFinalScreenCustomImageUrl.set(imageUrl);
       this.stackFinalScreenImage.set('custom');
     } catch (error) {
-      this.stackFinalScreenError.set(error instanceof Error ? error.message : 'That custom image could not be prepared.');
+      this.stackFinalScreenError.set(error instanceof Error ? error.message : $localize`That custom image could not be prepared.`);
     } finally {
       this.stackFinalScreenImageUploading.set(false);
     }
@@ -15900,7 +16359,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (!this.canEditBoard(board) || this.stackFinalScreenSaving() || this.stackFinalScreenImageUploading()) return false;
     const normalized = this.currentStackFinalScreen(board);
     if (!normalized.headline || !normalized.message) {
-      this.stackFinalScreenError.set('Add a headline and closing message before saving.');
+      this.stackFinalScreenError.set($localize`Add a headline and closing message before saving.`);
       return false;
     }
     this.stackFinalScreenSaving.set(true);
@@ -15926,7 +16385,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.setStackShareMessage('Final screen saved. Update the Full video to publish it.', false);
       return true;
     } catch (error) {
-      this.stackFinalScreenError.set(error instanceof Error ? error.message : 'The final screen could not be saved.');
+      this.stackFinalScreenError.set(error instanceof Error ? error.message : $localize`The final screen could not be saved.`);
       return false;
     } finally {
       this.stackFinalScreenSaving.set(false);
@@ -15969,11 +16428,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      this.stackVideoBrandingError.set('Choose a logo smaller than 10 MB.');
+      this.stackVideoBrandingError.set($localize`Choose a logo smaller than 10 MB.`);
       return;
     }
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      this.stackVideoBrandingError.set('Choose a PNG, WebP, or JPG logo.');
+      this.stackVideoBrandingError.set($localize`Choose a PNG, WebP, or JPG logo.`);
       return;
     }
     this.stackVideoBrandingUploading.set(true);
@@ -15984,7 +16443,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.stackVideoBrandingLogoUrl.set(logoUrl);
       await this.saveStackVideoBranding(board, 'custom', logoUrl);
     } catch (error) {
-      this.stackVideoBrandingError.set(error instanceof Error ? error.message : 'That logo could not be prepared.');
+      this.stackVideoBrandingError.set(error instanceof Error ? error.message : $localize`That logo could not be prepared.`);
     } finally {
       this.stackVideoBrandingUploading.set(false);
     }
@@ -16018,7 +16477,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     const branding = normalizeStackVideoBranding({ mode, logoUrl });
     if (mode === 'custom' && branding.mode !== 'custom') {
-      this.stackVideoBrandingError.set('Upload a logo before selecting Your logo.');
+      this.stackVideoBrandingError.set($localize`Upload a logo before selecting Your logo.`);
       return false;
     }
     this.stackVideoBrandingSaving.set(true);
@@ -16048,7 +16507,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.setStackShareMessage('Video branding saved. Update existing videos to apply it.', false);
       return true;
     } catch (error) {
-      this.stackVideoBrandingError.set(error instanceof Error ? error.message : 'Video branding could not be saved.');
+      this.stackVideoBrandingError.set(error instanceof Error ? error.message : $localize`Video branding could not be saved.`);
       void this.loadStackVideoBranding(board, true);
       return false;
     } finally {
@@ -16066,7 +16525,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   selectStackNarratorVoice(board: Board, voiceId: string): void {
-    if (board.teamId) { this.stackVoiceError.set('Choose an approved voice using the Team listing voice selector.'); return; }
+    if (board.teamId) { this.stackVoiceError.set($localize`Choose an approved voice using the Team listing voice selector.`); return; }
     const normalizedVoiceId = normalizeStackNarratorVoiceId(voiceId);
     if (stackNarratorVoiceRequiresPaidPlan(normalizedVoiceId) && !this.personalVoiceEligible()) {
       this.requestPersonalVoiceUpgrade();
@@ -16085,7 +16544,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   async selectTeamNarrator(board: Board, ownerId: string): Promise<void> {
-    if (!board.teamId || this.stackStudioDirty()) { this.stackVoiceError.set('Save your studio edits before changing the team voice.'); return; }
+    if (!board.teamId || this.stackStudioDirty()) { this.stackVoiceError.set($localize`Save your studio edits before changing the team voice.`); return; }
     const member = this.teamEditorMembers().find(item => item.uid === ownerId);
     this.stackVoiceError.set(null);
     try {
@@ -16154,7 +16613,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   private requestPersonalVoiceUpgrade(): void {
     this.stopStackVoicePreview();
-    this.stackVoiceError.set('Your free account includes one personal voice. Upgrade to add more reusable voices.');
+    this.stackVoiceError.set($localize`Your free account includes one personal voice. Upgrade to add more reusable voices.`);
     void this.router.navigate(['/pricing'], { queryParams: { feature: 'personal-voice' } });
   }
 
@@ -16247,7 +16706,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       );
       if (run !== this.stackVoicePreviewRun) return;
       if (!audioUrl) {
-        this.stackVoiceError.set('This voice preview could not be loaded. Try again in a moment.');
+        this.stackVoiceError.set($localize`This voice preview could not be loaded. Try again in a moment.`);
         return;
       }
       const audio = new Audio(audioUrl);
@@ -16269,7 +16728,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     } catch {
       if (run === this.stackVoicePreviewRun) {
         this.stopStackVoicePreview();
-        this.stackVoiceError.set('Preview playback was blocked. Tap play again.');
+        this.stackVoiceError.set($localize`Preview playback was blocked. Tap play again.`);
       }
     } finally {
       if (run === this.stackVoicePreviewRun) {
@@ -16296,7 +16755,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     if (!voice && this.personalNarratorVoices().length > 0 && this.personalVoiceLibraryVersion() < 2) {
-      this.personalVoiceError.set('Additional voices are not active on the voice service yet. Update the deployed Functions before adding another voice.');
+      this.personalVoiceError.set($localize`Additional voices are not active on the voice service yet. Update the deployed Functions before adding another voice.`);
       return;
     }
     if (!voice && !this.personalVoiceCanAdd()) {
@@ -16328,7 +16787,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     try {
       this.applyPersonalNarratorVoiceResponse(await this.personalVoiceService.loadLibrary());
     } catch (error) {
-      this.personalVoiceError.set(this.cardImageActionErrorMessage(error, 'Your personal voice could not be loaded.'));
+      this.personalVoiceError.set(this.cardImageActionErrorMessage(error, $localize`Your personal voice could not be loaded.`));
     } finally {
       this.personalVoiceLoading.set(false);
     }
@@ -16350,7 +16809,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-      this.personalVoiceError.set('Voice recording is not supported in this browser. Upload an audio file instead.');
+      this.personalVoiceError.set($localize`Voice recording is not supported in this browser. Upload an audio file instead.`);
       return;
     }
 
@@ -16381,7 +16840,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         if (chunk.data.size) this.personalVoiceRecordingChunks.push(chunk.data);
       };
       recorder.onerror = () => {
-        this.personalVoiceError.set('The recording stopped unexpectedly. Please try again.');
+        this.personalVoiceError.set($localize`The recording stopped unexpectedly. Please try again.`);
         this.stopPersonalVoiceRecording(true);
       };
       recorder.onstop = () => {
@@ -16405,7 +16864,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       }, 500);
     } catch {
       this.cleanupPersonalVoiceRecorder();
-      this.personalVoiceError.set('Microphone access was not available. Allow microphone access or upload an audio file.');
+      this.personalVoiceError.set($localize`Microphone access was not available. Allow microphone access or upload an audio file.`);
     }
   }
 
@@ -16430,11 +16889,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const duration = this.personalVoiceDurationSeconds();
     const name = this.personalVoiceName().trim().slice(0, 48) || 'My voice';
     if (!file || duration < 20 || duration > 180) {
-      this.personalVoiceError.set('Choose a clear recording between 20 seconds and 3 minutes. Around 60–90 seconds works best.');
+      this.personalVoiceError.set($localize`Choose a clear recording between 20 seconds and 3 minutes. Around 60–90 seconds works best.`);
       return;
     }
     if (!this.personalVoiceOwnVoiceConfirmed() || !this.personalVoiceConsentConfirmed()) {
-      this.personalVoiceError.set('Confirm that this is your own voice and that you consent to creating the voice model.');
+      this.personalVoiceError.set($localize`Confirm that this is your own voice and that you consent to creating the voice model.`);
       return;
     }
 
@@ -16461,7 +16920,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         ?? this.personalNarratorVoices().at(-1);
       if (savedVoice) this.selectStackNarratorVoice(board, this.personalNarratorId(savedVoice));
     } catch (error) {
-      this.personalVoiceError.set(this.cardImageActionErrorMessage(error, 'Your voice could not be created. Check the recording and try again.'));
+      this.personalVoiceError.set(this.cardImageActionErrorMessage(error, $localize`Your voice could not be created. Check the recording and try again.`));
     } finally {
       this.personalVoiceCreating.set(false);
       this.personalVoiceUploadProgress.set(null);
@@ -16483,7 +16942,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         this.selectStackNarratorVoice(board, DEFAULT_STACK_NARRATOR_VOICE_ID);
       }
     } catch (error) {
-      this.personalVoiceError.set(this.cardImageActionErrorMessage(error, 'Your personal voice could not be deleted.'));
+      this.personalVoiceError.set(this.cardImageActionErrorMessage(error, $localize`Your personal voice could not be deleted.`));
     } finally {
       this.personalVoiceDeleting.set(false);
       this.personalVoiceDeletingId.set(null);
@@ -16500,7 +16959,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         await this.personalVoiceService.renameVoice(voice.id, requestedName),
       );
     } catch (error) {
-      this.personalVoiceError.set(this.cardImageActionErrorMessage(error, 'The voice name could not be updated.'));
+      this.personalVoiceError.set(this.cardImageActionErrorMessage(error, $localize`The voice name could not be updated.`));
     }
   }
 
@@ -16539,7 +16998,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       audio.onerror = () => {
         if (this.stackVoicePreview === audio) {
           this.stopStackVoicePreview();
-          this.personalVoiceError.set('Your voice preview could not be played.');
+          this.personalVoiceError.set($localize`Your voice preview could not be played.`);
         }
       };
       this.stackVoicePreview = audio;
@@ -16550,7 +17009,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     } catch (error) {
       if (run === this.stackVoicePreviewRun) {
         this.stopStackVoicePreview();
-        this.personalVoiceError.set(this.cardImageActionErrorMessage(error, 'Your voice preview could not be generated.'));
+        this.personalVoiceError.set(this.cardImageActionErrorMessage(error, $localize`Your voice preview could not be generated.`));
       }
     } finally {
       if (run === this.stackVoicePreviewRun) this.stackVoicePreviewLoadingId.set(null);
@@ -16567,13 +17026,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     try {
       const duration = knownDuration ?? await this.audioFileDuration(file);
       if (!Number.isFinite(duration) || duration < 20 || duration > 180) {
-        this.personalVoiceError.set('Use 20 seconds to 3 minutes of clear speech. Around 60–90 seconds works best.');
+        this.personalVoiceError.set($localize`Use 20 seconds to 3 minutes of clear speech. Around 60–90 seconds works best.`);
         return;
       }
       this.personalVoiceFile.set(file);
       this.personalVoiceDurationSeconds.set(duration);
     } catch {
-      this.personalVoiceError.set('The recording duration could not be read. Try an MP3, WAV, M4A, OGG, or WebM file.');
+      this.personalVoiceError.set($localize`The recording duration could not be read. Try an MP3, WAV, M4A, OGG, or WebM file.`);
     }
   }
 
@@ -18068,7 +18527,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         this.stackAudioTrackId.set(normalizeStackAudioTrackId(persisted.socialVideoAudioTrackId));
         this.stackAudioVolume.set(normalizeStackAudioVolume(persisted.socialVideoAudioVolume));
       }
-      this.stackAudioError.set(`Music did not save. ${this.boardsSyncError() || 'Choose it again to retry.'}`);
+      this.stackAudioError.set(`Music did not save. ${this.boardsSyncError() || $localize`Choose it again to retry.`}`);
     });
   }
 
@@ -18084,7 +18543,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     const uid = this.authService.uid();
     if (!this.firestore || !uid || board.ownerUserId !== uid) {
-      this.boardsSyncError.set('Board sync is not ready or you no longer own this board.');
+      this.boardsSyncError.set($localize`Board sync is not ready or you no longer own this board.`);
       return false;
     }
     const updatedAt = new Date().toISOString();
@@ -18134,14 +18593,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         const persisted = this.boards().find((item) => item.id === board.id);
         if (persisted) this.stackNarratorVoiceId.set(normalizeStackNarratorVoiceId(persisted.stackNarratorVoiceId));
       }
-      this.stackVoiceError.set(saved ? null : `This voice has not synced. ${this.boardsSyncError() || 'Select it again to retry.'}`);
+      this.stackVoiceError.set(saved ? null : `This voice has not synced. ${this.boardsSyncError() || $localize`Select it again to retry.`}`);
     });
   }
 
   private async persistStackNarratorPreference(board: Board): Promise<boolean> {
     const uid = this.authService.uid();
     if (!this.firestore || !uid) {
-      this.boardsSyncError.set('Board sync is not ready. Refresh and try again.');
+      this.boardsSyncError.set($localize`Board sync is not ready. Refresh and try again.`);
       return false;
     }
     if (board.ownerUserId !== uid) {
@@ -18489,7 +18948,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       if (!preserveError) this.stackVideoBrandingError.set(null);
     } catch (error) {
       if (this.stackStudioBoardId() === board.id && !preserveError) {
-        this.stackVideoBrandingError.set(error instanceof Error ? error.message : 'Video branding could not be loaded.');
+        this.stackVideoBrandingError.set(error instanceof Error ? error.message : $localize`Video branding could not be loaded.`);
       }
     } finally {
       if (this.stackStudioBoardId() === board.id) this.stackVideoBrandingLoading.set(false);
@@ -19802,7 +20261,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.wizardStep.set('loading');
     this.wizardError.set(null);
     this.wizardLoadingTask.set({
-      message: 'Creating editable photo cards and opening Studio',
+      message: $localize`Creating editable photo cards and opening Studio`,
       progress: 55,
     });
     const drafts = buildBoardPhotoStoryDrafts(this.wizardPhotos());
@@ -19823,7 +20282,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.wizardResult.set({ ...batch, cards: previewCards });
     this.wizardPreviewCards.set(previewCards);
     this.wizardSelectedCardIds.set(new Set(previewCards.map((card) => card.id)));
-    this.wizardLoadingTask.set({ message: 'Saving your photo board', progress: 88 });
+    this.wizardLoadingTask.set({ message: $localize`Saving your photo board`, progress: 88 });
     this.wizardStep.set('preview');
   }
 
@@ -19904,7 +20363,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       && draftId === this.wizardActiveDraftId() && importRun === this.wizardPhotoImportRun;
     this.wizardListingPhotoUploading.set(true);
     this.wizardPhotoError.set(null);
-    this.wizardLoadingTask.set({ message: 'Uploading your property photos', progress: 24 });
+    this.wizardLoadingTask.set({ message: $localize`Uploading your property photos`, progress: 24 });
     try {
       for (let index = 0; index < selected.length; index++) {
         const photo = selected[index];
@@ -19931,10 +20390,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       }
       const stored = this.storedWizardListingPhotos();
       if (stored.length !== selected.length) throw new Error('Some property photos could not be uploaded. Try again.');
-      this.wizardLoadingTask.set({ message: 'Identifying spaces and writing your property story', progress: 42 });
+      this.wizardLoadingTask.set({ message: $localize`Identifying spaces and writing your property story`, progress: 42 });
       return stored;
     } catch (error) {
-      if (stillCurrent()) this.wizardPhotoError.set(error instanceof Error ? error.message : 'Your photos could not be uploaded. Try again.');
+      if (stillCurrent()) this.wizardPhotoError.set(error instanceof Error ? error.message : $localize`Your photos could not be uploaded. Try again.`);
       throw error;
     } finally {
       if (stillCurrent()) this.wizardListingPhotoUploading.set(false);
@@ -21622,7 +22081,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     } catch {
       if (loadSequence === this.collectionLoadSequence) {
         this.boardCollections.set([]);
-        this.boardCollectionsError.set('Collections could not be loaded. Refresh and try again.');
+        this.boardCollectionsError.set($localize`Collections could not be loaded. Refresh and try again.`);
       }
     } finally {
       if (loadSequence === this.collectionLoadSequence) {
@@ -21943,7 +22402,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         }
         let record: Record<string, unknown>;
         try { record = teamWorkingCopy ? await this.teams.hydrateMedia(snapshot.data()) : snapshot.data(); }
-        catch { this.boardsSyncError.set('Listing media could not be loaded. Check your connection or team access.'); return; }
+        catch { this.boardsSyncError.set($localize`Listing media could not be loaded. Check your connection or team access.`); return; }
         if (this.selectedBoardId() !== boardId) return;
         // Keep the revision the editor opened with. The server can then merge
         // different-card edits or report a same-card conflict without losing work.
@@ -21977,7 +22436,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           this.cardDialogOpen.set(false); this.boardDialogOpen.set(false); this.boardSettingsBoardId.set(null);
           this.relatedCardEditorOpen.set(false); this.specialCardEditorBoardId.set(null);
           this.closeStackStudioImmediately(); this.resetBoardWizard(); this.wizardDrafts.set([]);
-          this.boardsSyncError.set('Your access to this team listing has ended.');
+          this.boardsSyncError.set($localize`Your access to this team listing has ended.`);
         } else {
           this.boards.update((boards) => boards.filter((board) => board.id !== boardId));
           this.stopStackPlayback();
@@ -22115,7 +22574,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           : items.map((item, index) => index === existing ? board : item);
       });
     } catch {
-      this.boardsSyncError.set('Kiwi saved this board, but the latest version could not be loaded. Refresh to try again.');
+      this.boardsSyncError.set($localize`Kiwi saved this board, but the latest version could not be loaded. Refresh to try again.`);
     }
   }
 
@@ -22386,14 +22845,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private async persistVisibilityAndReplaceBoard(board: Board): Promise<boolean> {
-    if (board.teamId) { this.boardsSyncError.set('Choose visitor visibility in Board settings or Manage on the team page. Working listings remain private.'); return false; }
+    if (board.teamId) { this.boardsSyncError.set($localize`Choose visitor visibility in Board settings or Manage on the team page. Working listings remain private.`); return false; }
     if (!this.canEditBoard(board)) {
       this.boardsSyncError.set($localize`Only the board owner can save changes.`);
       return false;
     }
     const uid = this.authService.uid();
     if (!this.firestore || !uid) {
-      this.boardsSyncError.set('Board sync is not ready. Refresh and try again.');
+      this.boardsSyncError.set($localize`Board sync is not ready. Refresh and try again.`);
       return false;
     }
     const updatedAt = board.updatedAt || new Date().toISOString();

@@ -12,6 +12,16 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
   styleUrl: './answer-quiz.css',
 })
 export class AnswerQuizComponent {
+  readonly templateText = {
+    message1: $localize`Saving...`,
+    message2: $localize`Save to leaderboard`,
+    message3: $localize`Checking...`,
+    message4: $localize`Finish quiz`,
+    message5: $localize` answered`,
+    message6: $localize`Current champion`,
+    message7: $localize`Copied`,
+    message8: $localize`Copy`,
+  };
   private readonly route = inject(ActivatedRoute);
   private readonly quizService = inject(AnswerQuizService);
   private readonly authService = inject(AuthService);

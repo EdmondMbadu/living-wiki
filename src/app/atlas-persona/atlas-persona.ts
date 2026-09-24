@@ -25,6 +25,21 @@ type IdentityMenu = 'wiki_type' | 'perspective';
   templateUrl: './atlas-persona.html',
 })
 export class AtlasPersonaComponent {
+  readonly templateText = {
+    message1: $localize`Ready`,
+    message2: $localize`Default`,
+    message3: $localize`Custom`,
+    message4: $localize`First person`,
+    message5: $localize`Third person`,
+    message6: $localize`Saving…`,
+    message7: $localize`Save identity & personality`,
+    message8: $localize`My voice`,
+    message9: $localize`Creating three previews…`,
+    message10: $localize`Generate three voices`,
+    message11: $localize`Saving voice…`,
+    message12: $localize`Save spoken voice`,
+    message13: $localize`Preview `,
+  };
   private readonly atlasService = inject(AtlasService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -100,7 +115,7 @@ export class AtlasPersonaComponent {
   readonly spokenVoiceReady = computed(() => this.speechVoiceConfig()?.source !== 'default');
   readonly spokenVoiceLabel = computed(() => {
     const config = this.speechVoiceConfig();
-    return !config || config.source === 'default' ? 'Default conversation voice' : config.name || 'ElevenLabs voice';
+    return !config || config.source === 'default' ? $localize`Default conversation voice` : config.name || $localize`ElevenLabs voice`;
   });
   readonly canSaveSpokenVoice = computed(() => {
     if (this.voiceSaving() || this.voiceConfigLoading()) return false;
@@ -121,17 +136,17 @@ export class AtlasPersonaComponent {
   });
   readonly wikiTypeLabel = computed(() => {
     switch (this.wikiTypeDraft()) {
-      case 'person': return $localize`Person`;
-      case 'city': return $localize`City`;
-      case 'university': return $localize`University`;
-      case 'organization': return $localize`Organization`;
+      case $localize`person`: return $localize`Person`;
+      case $localize`city`: return $localize`City`;
+      case $localize`university`: return $localize`University`;
+      case $localize`organization`: return $localize`Organization`;
       default: return $localize`Topic`;
     }
   });
   readonly perspectiveLabel = computed(() => {
     switch (this.perspectiveDraft()) {
-      case 'first_person': return $localize`First person`;
-      case 'third_person': return $localize`Third person`;
+      case $localize`first_person`: return $localize`First person`;
+      case $localize`third_person`: return $localize`Third person`;
       default: return $localize`Automatic (recommended)`;
     }
   });
@@ -303,7 +318,7 @@ export class AtlasPersonaComponent {
       this.selectedDesignPreviewId.set(result.previews[0]?.id ?? null);
       this.previewScript.set(result.previewText);
     } catch (error) {
-      this.voiceErrorMessage.set(this.errorText(error, 'Voice previews could not be generated.'));
+      this.voiceErrorMessage.set(this.errorText(error, $localize`Voice previews could not be generated.`));
     } finally {
       this.voiceGenerating.set(false);
     }
@@ -339,9 +354,9 @@ export class AtlasPersonaComponent {
       }
       this.speechVoiceConfig.set(saved);
       this.applyConfigToDraft(saved);
-      this.spokenSavedMessage.set('Saved. New voice conversations and spoken answers will use this voice.');
+      this.spokenSavedMessage.set($localize`Saved. New voice conversations and spoken answers will use this voice.`);
     } catch (error) {
-      this.voiceErrorMessage.set(this.errorText(error, 'The conversation voice could not be saved.'));
+      this.voiceErrorMessage.set(this.errorText(error, $localize`The conversation voice could not be saved.`));
     } finally {
       this.voiceSaving.set(false);
     }
@@ -430,7 +445,7 @@ export class AtlasPersonaComponent {
       this.applyConfigToDraft(config);
     } catch (error) {
       this.loadedVoiceAtlasId = null;
-      this.voiceErrorMessage.set(this.errorText(error, 'The conversation voice settings could not be loaded.'));
+      this.voiceErrorMessage.set(this.errorText(error, $localize`The conversation voice settings could not be loaded.`));
     } finally {
       this.voiceConfigLoading.set(false);
     }
@@ -483,7 +498,7 @@ export class AtlasPersonaComponent {
       this.previewUrlCache.set(key, url);
       await this.playVoiceUrl(key, url);
     } catch (error) {
-      this.voiceErrorMessage.set(this.errorText(error, 'That voice preview could not be played.'));
+      this.voiceErrorMessage.set(this.errorText(error, $localize`That voice preview could not be played.`));
     } finally {
       this.voicePreviewLoadingKey.set(null);
     }
@@ -506,13 +521,13 @@ export class AtlasPersonaComponent {
     audio.onended = () => this.stopVoicePreview();
     audio.onerror = () => {
       this.stopVoicePreview();
-      this.voiceErrorMessage.set('That voice preview could not be played.');
+      this.voiceErrorMessage.set($localize`That voice preview could not be played.`);
     };
     try {
       await audio.play();
     } catch (error) {
       this.stopVoicePreview();
-      this.voiceErrorMessage.set(this.errorText(error, 'Your browser blocked the voice preview. Try again.'));
+      this.voiceErrorMessage.set(this.errorText(error, $localize`Your browser blocked the voice preview. Try again.`));
     }
   }
 

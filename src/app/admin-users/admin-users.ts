@@ -39,6 +39,15 @@ type BusinessStatusFilter = 'all' | BusinessClaimStatus;
   templateUrl: './admin-users.html',
 })
 export class AdminUsersComponent implements OnInit {
+  readonly templateText = {
+    message1: $localize`Verified`,
+    message2: $localize`Unverified`,
+    message3: $localize`Not recorded`,
+    message4: $localize`Business`,
+    message5: $localize`No location detail yet`,
+    message6: $localize`Not set`,
+    message7: $localize`No admin email`,
+  };
   private readonly talkThruAdmin = viewChild(TalkThruInterestsAdminComponent);
   private readonly authService = inject(AuthService);
   private readonly businessClaimService = inject(BusinessClaimService);

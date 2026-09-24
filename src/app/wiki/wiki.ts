@@ -27,6 +27,11 @@ import { AccountMenuComponent } from '../account-menu/account-menu';
   templateUrl: './wiki.html',
 })
 export class WikiComponent {
+  readonly templateText = {
+    message1: $localize`Browse articles`,
+    message2: $localize`Browse topics`,
+    message3: $localize`s`,
+  };
   private readonly localeId = inject(LOCALE_ID);
   private readonly authService = inject(AuthService);
   private readonly atlasService = inject(AtlasService);

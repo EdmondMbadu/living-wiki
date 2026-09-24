@@ -15,6 +15,11 @@ import { AccountMenuComponent } from '../account-menu/account-menu';
   templateUrl: './city-pulse-admin.html',
 })
 export class CityPulseAdminComponent {
+  readonly templateText = {
+    message1: $localize`Refreshing…`,
+    message2: $localize`Refresh official metrics`,
+    message3: $localize`Not set`,
+  };
   private readonly localeId = inject(LOCALE_ID);
   private readonly route = inject(ActivatedRoute);
   private readonly atlasService = inject(AtlasService);

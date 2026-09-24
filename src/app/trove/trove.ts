@@ -8,6 +8,10 @@ import { RouterLink } from '@angular/router';
   styleUrl: './trove.css',
 })
 export class TroveComponent implements OnDestroy {
+  readonly templateText = {
+    message1: $localize`Exit fullscreen`,
+    message2: $localize`Play fullscreen`,
+  };
   @ViewChild('gameFrame') private readonly gameFrame?: ElementRef<HTMLIFrameElement>;
 
   readonly isFullscreen = signal(false);

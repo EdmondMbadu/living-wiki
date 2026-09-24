@@ -28,6 +28,10 @@ const PRODUCT_VIDEO_URL =
   styleUrl: './workspace-navigation-overlay.css',
 })
 export class WorkspaceNavigationOverlayComponent implements AfterViewChecked {
+  readonly templateText = {
+    message1: $localize`Signing out...`,
+    message2: $localize`Sign out`,
+  };
   @ViewChild('dialogPanel') private dialogPanel?: ElementRef<HTMLElement>;
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);

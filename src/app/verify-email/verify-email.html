@@ -50,7 +50,7 @@
             [disabled]="isRefreshing()"
             (click)="refreshStatus()"
           >
-            {{ isRefreshing() ? 'Checking...' : 'I verified my email' }}
+            {{ isRefreshing() ? templateText.message1 : templateText.message2 }}
           </button>
 
           <button
@@ -59,7 +59,7 @@
             [disabled]="isResending()"
             (click)="resendEmail()"
           >
-            {{ isResending() ? 'Sending...' : 'Resend verification email' }}
+            {{ isResending() ? templateText.message3 : templateText.message4 }}
           </button>
         </div>
 

@@ -15,6 +15,11 @@ type MembershipCheckoutPlan = 'explorer' | 'lifetime';
   styleUrl: './membership.css',
 })
 export class MembershipComponent implements OnInit, OnDestroy {
+  readonly templateText = {
+    message1: $localize`Opening secure checkout…`,
+    message2: $localize`Start Explorer Plan`,
+    message3: $localize`Go Lifetime`,
+  };
   private readonly document = inject(DOCUMENT);
   private readonly meta = inject(Meta);
   private readonly authService = inject(AuthService);
@@ -29,42 +34,42 @@ export class MembershipComponent implements OnInit, OnDestroy {
   readonly features = [
     {
       icon: 'auto_awesome',
-      title: 'AI Wiki Wizard',
+      title: $localize`AI Wiki Wizard`,
       copy: 'Build a rich, interactive board in under 5 minutes with our AI co-pilot.',
     },
     {
       icon: 'location_on',
-      title: 'Maps & Off-Grid',
+      title: $localize`Maps & Off-Grid`,
       copy: 'Tag places using what3words and find spots most people miss.',
     },
     {
       icon: 'music_video',
-      title: 'Media & Music',
+      title: $localize`Media & Music`,
       copy: 'Embed YouTube clips, songs, photos & more to bring boards to life.',
     },
     {
       icon: 'map',
-      title: 'Itineraries & Tours',
+      title: $localize`Itineraries & Tours`,
       copy: 'Create walking tours, road trips & day plans that are easy to share.',
     },
     {
       icon: 'share',
-      title: 'Share Anywhere',
+      title: $localize`Share Anywhere`,
       copy: 'Export as beautiful cards or MP4 videos for social media in one click.',
     },
     {
       icon: 'groups',
-      title: 'Connect & Collaborate',
+      title: $localize`Connect & Collaborate`,
       copy: 'Invite friends, plan events, and build boards together.',
     },
   ];
 
   readonly stats = [
-    { icon: 'public', value: '200+', label: 'Global Cities' },
-    { icon: 'school', value: '500+', label: 'Colleges & Universities' },
-    { icon: 'dashboard', value: '10,000+', label: 'Wiki Boards Created' },
-    { icon: 'collections', value: '150,000+', label: 'Cards Generated' },
-    { icon: 'smart_display', value: '25,000+', label: 'Social Videos Shared' },
+    { icon: 'public', value: '200+', label: $localize`Global Cities` },
+    { icon: 'school', value: '500+', label: $localize`Colleges & Universities` },
+    { icon: 'dashboard', value: '10,000+', label: $localize`Wiki Boards Created` },
+    { icon: 'collections', value: '150,000+', label: $localize`Cards Generated` },
+    { icon: 'smart_display', value: '25,000+', label: $localize`Social Videos Shared` },
   ];
 
   readonly launchPerks = [
@@ -134,7 +139,7 @@ export class MembershipComponent implements OnInit, OnDestroy {
       }
       window.location.href = checkoutUrl;
     } catch {
-      this.checkoutError.set('Checkout could not be started. Please try again in a moment.');
+      this.checkoutError.set($localize`Checkout could not be started. Please try again in a moment.`);
       this.checkoutLoading.set(null);
     }
   }
@@ -146,14 +151,14 @@ export class MembershipComponent implements OnInit, OnDestroy {
     const sessionId = this.route.snapshot.queryParamMap.get('session_id');
 
     if (payment === 'cancelled') {
-      this.checkoutError.set('Checkout was cancelled. Your place is still here when you’re ready.');
+      this.checkoutError.set($localize`Checkout was cancelled. Your place is still here when you’re ready.`);
       await this.clearCheckoutQueryParams();
       return;
     }
 
     if (payment === 'success') {
       if (!sessionId) {
-        this.checkoutError.set('Payment returned without a checkout session. Please contact support.');
+        this.checkoutError.set($localize`Payment returned without a checkout session. Please contact support.`);
         return;
       }
 
@@ -173,7 +178,7 @@ export class MembershipComponent implements OnInit, OnDestroy {
         this.checkoutStatus.set('Welcome, Launch Member! Your membership is active.');
       } catch {
         this.checkoutError.set(
-          'We could not confirm the payment yet. If you were charged, refresh in a moment or contact support.',
+          $localize`We could not confirm the payment yet. If you were charged, refresh in a moment or contact support.`,
         );
         this.checkoutStatus.set(null);
       } finally {

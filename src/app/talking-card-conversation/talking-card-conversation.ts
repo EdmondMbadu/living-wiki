@@ -121,6 +121,28 @@ export function talkingCardScopedQuestion(question: string, boardContext = ''): 
   styleUrl: './talking-card-conversation.css',
 })
 export class TalkingCardConversationComponent implements OnInit, OnDestroy {
+  readonly templateText = {
+    message1: $localize`Your conversation ended unexpectedly`,
+    message2: $localize`Keep what you talked about`,
+    message3: $localize`The call stopped, but your conversation is safe and can still be summarized.`,
+    message4: $localize`Send yourself the property details, photos, agent contact information, and conversation highlights.`,
+    message5: $localize`Send yourself a clear recap before you return to `,
+    message6: $localize`Send to`,
+    message7: $localize`Email address`,
+    message8: $localize`We sent the property details, agent contact information, and conversation recap to`,
+    message9: $localize`We sent the conversation summary and transcript to`,
+    message10: $localize`Try voice again`,
+    message11: $localize`Start voice`,
+    message12: $localize`AI speaking`,
+    message13: $localize`Listening for you`,
+    message14: $localize`You`,
+    message15: $localize`Contact `,
+    message16: $localize`Contact listing agent`,
+    message17: $localize`Close conversation`,
+    message18: $localize`Close recap`,
+    message19: $localize`Unmute microphone`,
+    message20: $localize`Mute microphone`,
+  };
   private readonly atlasService = inject(AtlasService);
   private readonly chatService = inject(ChatService);
   private readonly authService = inject(AuthService);
@@ -138,10 +160,10 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   readonly boardId = input('');
   readonly boardTitle = input('');
   readonly cardId = input('');
-  readonly cardTitle = input('Conversational guide');
+  readonly cardTitle = input($localize`Conversational guide`);
   readonly cardSubtitle = input('');
   readonly imageUrl = input('');
-  readonly openingMessage = input('Hi! What would you like to know?');
+  readonly openingMessage = input($localize`Hi! What would you like to know?`);
   readonly actions = input<TalkingCardAction[]>([]);
   readonly starterQuestions = input<string[]>([]);
   readonly boardContext = input('');
@@ -189,17 +211,17 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   readonly hasListingContact = computed(() => !!this.contactPhoneHref() || !!this.contactEmailHref());
   readonly voiceVisualGlow = computed(() => `${18 + this.voiceEnergyLevel() * 30}px`);
   readonly voiceStateLabel = computed(() => {
-    if (this.voiceStatus() === 'connecting') return 'Connecting…';
-    if (this.voiceStatus() === 'error') return 'Voice needs attention';
-    if (this.voiceStatus() !== 'connected') return 'Voice conversation';
-    return this.voiceMode() === 'speaking' ? `${this.avatarName()} is speaking` : 'Listening';
+    if (this.voiceStatus() === 'connecting') return $localize`Connecting…`;
+    if (this.voiceStatus() === 'error') return $localize`Voice needs attention`;
+    if (this.voiceStatus() !== 'connected') return $localize`Voice conversation`;
+    return this.voiceMode() === 'speaking' ? `${this.avatarName()} is speaking` : $localize`Listening`;
   });
   readonly voiceStateSubtitle = computed(() => {
-    if (this.voiceStatus() === 'connecting') return 'Preparing the microphone and voice';
-    if (this.voiceStatus() === 'error') return 'Try again or switch to text';
-    if (this.voiceStatus() !== 'connected') return 'Start a live conversation';
-    if (this.voiceMuted()) return 'Your microphone is muted';
-    return this.voiceMode() === 'speaking' ? 'The avatar is answering you' : 'Go ahead—ask your question';
+    if (this.voiceStatus() === 'connecting') return $localize`Preparing the microphone and voice`;
+    if (this.voiceStatus() === 'error') return $localize`Try again or switch to text`;
+    if (this.voiceStatus() !== 'connected') return $localize`Start a live conversation`;
+    if (this.voiceMuted()) return $localize`Your microphone is muted`;
+    return this.voiceMode() === 'speaking' ? $localize`The avatar is answering you` : $localize`Go ahead—ask your question`;
   });
   readonly recapPreview = computed(() => {
     const firstQuestion = meaningfulTalkingCardTranscript(this.recapTranscript())
@@ -259,7 +281,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       this.appendMessage('agent', response.answer, true, false);
       this.activity.emit('message');
     } catch (error) {
-      this.errorMessage.set(error instanceof Error ? error.message : 'The avatar could not answer right now.');
+      this.errorMessage.set(error instanceof Error ? error.message : $localize`The avatar could not answer right now.`);
     } finally {
       this.submitting.set(false);
     }
@@ -310,7 +332,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       || this.voiceStatus() === 'connecting' || this.voiceStatus() === 'connected') return;
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       this.voiceStatus.set('error');
-      this.errorMessage.set('This browser does not support microphone conversations. You can still type below.');
+      this.errorMessage.set($localize`This browser does not support microphone conversations. You can still type below.`);
       return;
     }
     this.voiceStatus.set('connecting');
@@ -411,7 +433,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       this.stopVoiceMeter();
       this.voiceStatus.set('error');
       this.voiceMode.set(null);
-      this.errorMessage.set(error instanceof Error ? error.message : 'Voice mode could not start.');
+      this.errorMessage.set(error instanceof Error ? error.message : $localize`Voice mode could not start.`);
     }
   }
 
@@ -473,12 +495,12 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     if (this.recapSending() || this.conversationStage() !== 'recap') return;
     const email = this.recapEmail().trim().toLowerCase();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      this.recapError.set('Enter a valid email address.');
+      this.recapError.set($localize`Enter a valid email address.`);
       return;
     }
     const transcript = meaningfulTalkingCardTranscript(this.recapTranscript());
     if (!shouldOfferTalkingCardRecap(transcript)) {
-      this.recapError.set('There is not enough conversation to create a recap yet.');
+      this.recapError.set($localize`There is not enough conversation to create a recap yet.`);
       return;
     }
 
@@ -653,7 +675,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     this.voiceMuted.set(false);
     this.emitVoiceEndIfActive();
     if (details.reason === 'error') {
-      this.errorMessage.set(details.message || details.closeReason || 'The voice conversation was interrupted.');
+      this.errorMessage.set(details.message || details.closeReason || $localize`The voice conversation was interrupted.`);
     }
     if (details.reason !== 'user') {
       this.offerRecap(details.reason === 'error' ? 'interrupted' : 'ended');

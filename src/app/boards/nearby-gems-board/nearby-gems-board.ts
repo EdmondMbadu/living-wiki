@@ -48,6 +48,21 @@ type MapsRuntime = {
   styleUrl: './nearby-gems-board.css',
 })
 export class NearbyGemsBoardComponent implements AfterViewInit {
+  readonly templateText = {
+    message1: $localize`Interesting places ranked by quickest travel time from your starting point.`,
+    message2: $localize`Unlisted board`,
+    message3: $localize`Public board`,
+    message4: $localize`Anyone with the link can view. Hidden from public discovery.`,
+    message5: $localize`Anyone can view these saved places.`,
+    message6: $localize`Saving…`,
+    message7: $localize`Change visibility`,
+    message8: $localize`Show fewer`,
+    message9: $localize` more places`,
+    message10: $localize`Choose destination `,
+    message11: $localize`Directions to `,
+    message12: $localize` map with numbered places`,
+    message13: $localize`Start directions with destination `,
+  };
   private readonly googleMaps = inject(GoogleMapsService);
   private map: InstanceType<MapsRuntime['maps']['Map']> | null = null;
   private markers: Array<InstanceType<NonNullable<MapsRuntime['maps']['marker']>['AdvancedMarkerElement']>> = [];
@@ -56,7 +71,7 @@ export class NearbyGemsBoardComponent implements AfterViewInit {
 
   readonly title = input.required<string>();
   readonly description = input('');
-  readonly locationLabel = input('your area');
+  readonly locationLabel = input($localize`your area`);
   readonly isLinkReadableVisibility = isLinkReadableVisibility;
   readonly visibility = input.required<BoardVisibility>();
   readonly canEdit = input(false);

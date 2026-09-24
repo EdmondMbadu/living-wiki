@@ -128,7 +128,7 @@ export class WorkspaceNavigationService {
 
     if (this.teams.activeMemberships().length) {
       const position = items.findIndex(item => item.key === 'boards') + 1;
-      items.splice(position, 0, { key: 'teams', label: 'Teams', route: this.teams.sidebarRoute(), icon: 'groups' });
+      items.splice(position, 0, { key: 'teams', label: $localize`Teams`, route: this.teams.sidebarRoute(), icon: 'groups' });
     }
     return items;
   });

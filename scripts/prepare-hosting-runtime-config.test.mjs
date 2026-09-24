@@ -14,8 +14,10 @@ async function fixture(t) {
   const publicDirectory = join(root, 'browser');
   const configPath = join(root, 'runtime-config.js');
   await mkdir(join(publicDirectory, 'fr'), { recursive: true });
+  await mkdir(join(publicDirectory, 'pt'), { recursive: true });
   await writeFile(join(publicDirectory, 'index.csr.html'), html);
   await writeFile(join(publicDirectory, 'fr/index.csr.html'), html);
+  await writeFile(join(publicDirectory, 'pt/index.csr.html'), html);
   await writeFile(configPath, config);
   return { publicDirectory, configPath, expectedProjectId: 'demo' };
 }
@@ -23,11 +25,11 @@ async function fixture(t) {
 test('includes the missing config and gives every locale a cache-safe startup URL', async t => {
   const options = await fixture(t);
   const result = await prepareHostingRuntimeConfig(options);
-  assert.equal(result.pages, 2);
+  assert.equal(result.pages, 3);
   assert.match(result.configName, /^runtime-config-[a-f0-9]{12}\.js$/);
   assert.equal(await readFile(join(options.publicDirectory, result.configName), 'utf8'), config);
   assert.equal(await readFile(join(options.publicDirectory, 'runtime-config.js'), 'utf8'), config);
-  for (const page of ['index.csr.html', 'fr/index.csr.html']) {
+  for (const page of ['index.csr.html', 'fr/index.csr.html', 'pt/index.csr.html']) {
     assert.equal(await readFile(join(options.publicDirectory, page), 'utf8'), html.replace('/runtime-config.js', '/' + result.configName));
   }
 });

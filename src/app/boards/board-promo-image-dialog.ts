@@ -24,6 +24,11 @@ import {
   styleUrl: './board-promo-image-dialog.css',
 })
 export class BoardPromoImageDialogComponent implements OnInit, AfterViewInit, OnDestroy {
+  readonly templateText = {
+    message1: $localize`Preparing…`,
+    message2: $localize`Download PNG`,
+    message3: $localize`Promo image preview for `,
+  };
   @ViewChild('dialog') private dialog?: ElementRef<HTMLElement>;
   @ViewChild('closeButton') private closeButton?: ElementRef<HTMLButtonElement>;
 
@@ -35,7 +40,7 @@ export class BoardPromoImageDialogComponent implements OnInit, AfterViewInit, On
   readonly coverImageUrl = input('');
   readonly boardUrl = input.required<string>();
   readonly qrUrl = input('');
-  readonly boardTypeLabel = input('Board');
+  readonly boardTypeLabel = input($localize`Board`);
   readonly icon = input('dashboard_customize');
 
   @Output() closed = new EventEmitter<void>();
@@ -46,7 +51,7 @@ export class BoardPromoImageDialogComponent implements OnInit, AfterViewInit, On
   readonly rendering = signal(true);
   readonly previewUrl = signal('');
   readonly error = signal<string | null>(null);
-  readonly statusMessage = signal('Preparing your promo image…');
+  readonly statusMessage = signal($localize`Preparing your promo image…`);
 
   private renderRun = 0;
   private promoBlob: Blob | null = null;
@@ -130,20 +135,20 @@ export class BoardPromoImageDialogComponent implements OnInit, AfterViewInit, On
     const run = ++this.renderRun;
     this.rendering.set(true);
     this.error.set(null);
-    this.statusMessage.set('Preparing your promo image…');
+    this.statusMessage.set($localize`Preparing your promo image…`);
     try {
       const blob = await renderBoardPromoImage(this.promoSpec());
       if (run !== this.renderRun) return;
       this.promoBlob = blob;
       this.revokePreviewUrl();
       this.previewUrl.set(URL.createObjectURL(blob));
-      this.statusMessage.set('Preview ready · 2400 × 1260 PNG');
+      this.statusMessage.set($localize`Preview ready · 2400 × 1260 PNG`);
     } catch (error) {
       if (run !== this.renderRun) return;
       this.promoBlob = null;
       this.revokePreviewUrl();
       this.error.set(this.errorMessage(error));
-      this.statusMessage.set('Promo image unavailable.');
+      this.statusMessage.set($localize`Promo image unavailable.`);
     } finally {
       if (run === this.renderRun) this.rendering.set(false);
     }

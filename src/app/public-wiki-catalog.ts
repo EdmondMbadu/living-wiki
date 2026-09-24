@@ -708,7 +708,7 @@ function inferPresentation(atlas: AtlasItem): PublicWikiPresentation {
   if (atlas.wiki_type === 'university' || atlas.university_config?.enabled) {
     return {
       title: atlas.university_config?.official_name?.trim() || atlas.name?.trim() || undefined,
-      subtitle: 'U.S. Colleges & Universities',
+      subtitle: $localize`U.S. Colleges & Universities`,
       category: 'Universities',
       priority: 'med',
       badges: ['evergreen'],

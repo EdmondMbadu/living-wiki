@@ -14,11 +14,11 @@
       <div class="flex items-center gap-3">
         <a routerLink="/admin/city-board-factory" class="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/35 hover:bg-[var(--soft-fill-strong)]">
           <span class="material-symbols-outlined text-[1rem]">factory</span>
-          <span>City Board Factory</span>
+          <span i18n>City Board Factory</span>
         </a>
         <a routerLink="/admin/university-board-factory" class="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/35 hover:bg-[var(--soft-fill-strong)]">
           <span class="material-symbols-outlined text-[1.1rem]">school</span>
-          <span>University Board Factory</span>
+          <span i18n>University Board Factory</span>
         </a>
         <a routerLink="/atlases" class="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--soft-fill)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)]/35 hover:bg-[var(--soft-fill-strong)]">
           <span class="material-symbols-outlined text-[1rem]">admin_panel_settings</span>
@@ -39,7 +39,7 @@
           <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]" i18n>
             Signed-in users synced from Firebase Auth into the LivingWiki user profile collection.
           </p>
-          <a routerLink="/admin/users" fragment="talkthru-signups" (click)="openTalkThruSignups()" class="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/40 bg-[var(--soft-fill)] px-4 py-2 text-sm font-bold text-[var(--accent)] hover:bg-[var(--soft-fill-strong)]">
+          <a routerLink="/admin/users" fragment="talkthru-signups" (click)="openTalkThruSignups()" class="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/40 bg-[var(--soft-fill)] px-4 py-2 text-sm font-bold text-[var(--accent)] hover:bg-[var(--soft-fill-strong)]" i18n>
             <span class="material-symbols-outlined text-lg">record_voice_over</span>
             TalkThru signups ↓
           </a>
@@ -137,14 +137,14 @@
                       </span>
                     </td>
                     <td class="px-5 py-4 text-xs font-semibold" [class.text-[var(--accent)]]="user.emailVerified" [class.text-[var(--muted)]]="!user.emailVerified">
-                      {{ user.emailVerified ? 'Verified' : 'Unverified' }}
+                      {{ user.emailVerified ? templateText.message1 : templateText.message2 }}
                     </td>
                     <td class="px-5 py-4 text-xs text-[var(--muted)]">{{ providerLabel(user) }}</td>
                     <td class="px-5 py-4 text-xs text-[var(--muted)]">
-                      {{ user.lastSignInTime ? (user.lastSignInTime | date: 'medium') : 'Not recorded' }}
+                      {{ user.lastSignInTime ? (user.lastSignInTime | date: 'medium') : templateText.message3 }}
                     </td>
                     <td class="px-5 py-4 text-xs text-[var(--muted)]">
-                      {{ user.creationTime ? (user.creationTime | date: 'medium') : 'Not recorded' }}
+                      {{ user.creationTime ? (user.creationTime | date: 'medium') : templateText.message3 }}
                     </td>
                   </tr>
                 }
@@ -224,7 +224,7 @@
                     </div>
 
                     <h3 class="mt-3 truncate text-2xl font-black tracking-tight">{{ business.business_name }}</h3>
-                    <p class="mt-2 text-sm leading-6 text-[var(--muted)]">{{ business.category || 'Business' }} · {{ business.business_address || 'No location detail yet' }}</p>
+                    <p class="mt-2 text-sm leading-6 text-[var(--muted)]">{{ business.category || templateText.message4 }} · {{ business.business_address || templateText.message5 }}</p>
 
                     <dl class="mt-4 grid gap-3 text-sm md:grid-cols-2">
                       <div class="rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3">
@@ -234,8 +234,8 @@
                       </div>
                       <div class="rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3">
                         <dt class="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--muted)]" i18n>Business admin</dt>
-                        <dd class="mt-1 font-bold text-[var(--text)]">{{ business.admin_name || 'Not set' }}</dd>
-                        <dd class="mt-0.5 truncate text-xs text-[var(--muted)]">{{ business.admin_email || 'No admin email' }}</dd>
+                        <dd class="mt-1 font-bold text-[var(--text)]">{{ business.admin_name || templateText.message6 }}</dd>
+                        <dd class="mt-0.5 truncate text-xs text-[var(--muted)]">{{ business.admin_email || templateText.message7 }}</dd>
                       </div>
                     </dl>
 

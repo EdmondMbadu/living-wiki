@@ -1,6 +1,6 @@
 <section class="nearby-gems-board" [class.nearby-gems-board--private]="visibility() === 'private'">
   <header class="nearby-gems-board__header">
-    <button type="button" class="nearby-gems-board__back" aria-label="Back to boards" (click)="backRequested.emit()">
+    <button type="button" class="nearby-gems-board__back" aria-label="Back to boards" (click)="backRequested.emit()" i18n-aria-label>
       <span class="material-symbols-outlined">arrow_back</span>
     </button>
     <span class="nearby-gems-board__compass" aria-hidden="true">
@@ -11,62 +11,62 @@
       <h1>
         {{ title() }}
         @if (visibility() === 'private') {
-          <span class="nearby-gems-board__title-lock" title="Private board">
+          <span class="nearby-gems-board__title-lock" title="Private board" i18n-title>
             <span class="material-symbols-outlined" aria-hidden="true">lock</span>
-            <span>Private</span>
+            <span i18n>Private</span>
           </span>
         }
       </h1>
-      <span>{{ description() || 'Interesting places ranked by quickest travel time from your starting point.' }}</span>
+      <span>{{ description() || templateText.message1 }}</span>
       @if (visibility() === 'private') {
         <div class="nearby-gems-board__privacy" role="status">
           <span class="material-symbols-outlined" aria-hidden="true">lock</span>
-          <span><strong>Only you can see this board.</strong><small>Your live location is shown only on this device and is never saved.</small></span>
+          <span><strong i18n>Only you can see this board.</strong><small i18n>Your live location is shown only on this device and is never saved.</small></span>
         </div>
       } @else {
         <div class="nearby-gems-board__privacy nearby-gems-board__privacy--public" role="status">
           <span class="material-symbols-outlined" aria-hidden="true">public</span>
-          <span><strong>{{ visibility() === 'unlisted' ? 'Unlisted board' : 'Public board' }}</strong><small>{{ visibility() === 'unlisted' ? 'Anyone with the link can view. Hidden from public discovery.' : 'Anyone can view these saved places.' }}</small></span>
+          <span><strong>{{ visibility() === 'unlisted' ? templateText.message2 : templateText.message3 }}</strong><small>{{ visibility() === 'unlisted' ? templateText.message4 : templateText.message5 }}</small></span>
         </div>
       }
     </div>
     @if (canEdit()) {
       <div class="nearby-gems-board__owner-actions">
-        <button type="button" class="nearby-gems-board__edit" (click)="settingsRequested.emit()">
+        <button type="button" class="nearby-gems-board__edit" (click)="settingsRequested.emit()" i18n>
           <span class="material-symbols-outlined">edit</span>
           Edit gems
         </button>
         <details class="nearby-gems-board__more">
-          <summary><span class="material-symbols-outlined">more_horiz</span><span>More</span></summary>
+          <summary><span class="material-symbols-outlined">more_horiz</span><span i18n>More</span></summary>
           <div class="nearby-gems-board__more-menu">
-            <button type="button" (click)="settingsRequested.emit()">
+            <button type="button" (click)="settingsRequested.emit()" i18n>
               <span class="material-symbols-outlined">settings</span>
               Board settings
             </button>
-            <button type="button" (click)="addRequested.emit()">
+            <button type="button" (click)="addRequested.emit()" i18n>
               <span class="material-symbols-outlined">add_location_alt</span>
               Add a place
             </button>
             @if (isLinkReadableVisibility(visibility())) {
-              <button type="button" (click)="shareRequested.emit()">
+              <button type="button" (click)="shareRequested.emit()" i18n>
                 <span class="material-symbols-outlined">content_copy</span>
                 Copy link
               </button>
-              <button type="button" (click)="customUrlRequested.emit()">
+              <button type="button" (click)="customUrlRequested.emit()" i18n>
                 <span class="material-symbols-outlined">link</span>
                 Set custom URL
               </button>
             }
             <button type="button" [disabled]="visibilitySaving()" (click)="visibilityRequested.emit()">
               <span class="material-symbols-outlined">{{ visibilitySaving() ? 'progress_activity' : 'settings' }}</span>
-              {{ visibilitySaving() ? 'Saving…' : 'Change visibility' }}
+              {{ visibilitySaving() ? templateText.message6 : templateText.message7 }}
             </button>
           </div>
         </details>
       </div>
     } @else if (isLinkReadableVisibility(visibility())) {
       <div class="nearby-gems-board__owner-actions">
-        <button type="button" class="nearby-gems-board__edit" (click)="shareRequested.emit()">
+        <button type="button" class="nearby-gems-board__edit" (click)="shareRequested.emit()" i18n>
           <span class="material-symbols-outlined">content_copy</span>
           Copy link
         </button>
@@ -78,12 +78,12 @@
   </header>
 
   <div class="nearby-gems-board__workspace">
-    <aside class="nearby-gems-board__list" aria-label="Nearby places ranked nearest first">
+    <aside class="nearby-gems-board__list" aria-label="Nearby places ranked nearest first" i18n-aria-label>
       <div class="nearby-gems-board__sort-head">
-        <span><strong>Route order</strong><small>Nearest first</small></span>
-        <div role="group" aria-label="Rank places by">
-          <button type="button" [class.is-active]="sortMode() === 'travel-time'" [attr.aria-pressed]="sortMode() === 'travel-time'" (click)="setSortMode('travel-time')">Travel time</button>
-          <button type="button" [class.is-active]="sortMode() === 'distance'" [attr.aria-pressed]="sortMode() === 'distance'" (click)="setSortMode('distance')">Distance</button>
+        <span><strong i18n>Route order</strong><small i18n>Nearest first</small></span>
+        <div role="group" aria-label="Rank places by" i18n-aria-label>
+          <button type="button" [class.is-active]="sortMode() === 'travel-time'" [attr.aria-pressed]="sortMode() === 'travel-time'" (click)="setSortMode('travel-time')" i18n>Travel time</button>
+          <button type="button" [class.is-active]="sortMode() === 'distance'" [attr.aria-pressed]="sortMode() === 'distance'" (click)="setSortMode('distance')" i18n>Distance</button>
         </div>
       </div>
 
@@ -93,7 +93,7 @@
             class="nearby-gems-place"
             [class.nearby-gems-place--active]="activeCardId() === card.id || (!activeCardId() && rankFor(card) === 1)"
             tabindex="0"
-            [attr.aria-label]="'Choose destination ' + rankFor(card) + ': ' + card.title"
+            [attr.aria-label]="templateText.message10 + rankFor(card) + ': ' + card.title"
             (click)="selectCard(card)"
             (focus)="selectCard(card)"
             (keydown.enter)="selectCard(card)"
@@ -108,9 +108,9 @@
             <span class="nearby-gems-place__metrics">
               <strong>{{ durationLabel(card.durationSeconds) }}</strong>
               <small>{{ distanceLabel(card.distanceMeters) }}</small>
-              @if (card.measurement === 'estimated') { <em title="Routing was unavailable, so this is an estimate">Est.</em> }
+              @if (card.measurement === 'estimated') { <em title="Routing was unavailable, so this is an estimate" i18n-title i18n>Est.</em> }
             </span>
-            <a [href]="directionsUrl(card)" target="_blank" rel="noopener" [attr.aria-label]="'Directions to ' + card.title" (click)="$event.stopPropagation()">
+            <a [href]="directionsUrl(card)" target="_blank" rel="noopener" [attr.aria-label]="templateText.message11 + card.title" (click)="$event.stopPropagation()">
               <span class="material-symbols-outlined">chevron_right</span>
             </a>
           </article>
@@ -118,45 +118,45 @@
       </div>
       @if (orderedCards().length > 4) {
         <button type="button" class="nearby-gems-board__expand" (click)="expanded.set(!expanded())">
-          {{ expanded() ? 'Show fewer' : (orderedCards().length - 4) + ' more places' }}
+          {{ expanded() ? templateText.message8 : (orderedCards().length - 4) + templateText.message9 }}
           <span class="material-symbols-outlined">{{ expanded() ? 'expand_less' : 'expand_more' }}</span>
         </button>
       }
     </aside>
 
-    <section class="nearby-gems-board__map" aria-label="Nearby gems map">
-      <div #mapCanvas class="nearby-gems-board__map-canvas" role="application" [attr.aria-label]="title() + ' map with numbered places'"></div>
+    <section class="nearby-gems-board__map" aria-label="Nearby gems map" i18n-aria-label>
+      <div #mapCanvas class="nearby-gems-board__map-canvas" role="application" [attr.aria-label]="title() + templateText.message12"></div>
       @if (mapLoading()) {
-        <div class="nearby-gems-board__map-state"><span class="material-symbols-outlined">progress_activity</span><span>Preparing map…</span></div>
+        <div class="nearby-gems-board__map-state"><span class="material-symbols-outlined">progress_activity</span><span i18n>Preparing map…</span></div>
       } @else if (mapUnavailable()) {
         <div class="nearby-gems-board__map-state nearby-gems-board__map-state--unavailable">
           <span class="material-symbols-outlined">explore</span>
-          <span><strong>Map unavailable</strong><small>The ranked places and directions still work.</small></span>
+          <span><strong i18n>Map unavailable</strong><small i18n>The ranked places and directions still work.</small></span>
         </div>
       }
       <div class="nearby-gems-board__map-compass" aria-hidden="true"><b>N</b><span class="material-symbols-outlined">navigation</span><small>W&nbsp;&nbsp;&nbsp;&nbsp;E</small><b>S</b></div>
       @if (visibility() === 'private' && canEdit()) {
         @if (viewerLocationState() === 'available') {
           <div class="nearby-gems-board__area-cue nearby-gems-board__area-cue--live">
-            <span class="material-symbols-outlined">my_location</span><span>You are here · not saved</span>
+            <span class="material-symbols-outlined">my_location</span><span i18n>You are here · not saved</span>
           </div>
         } @else if (viewerLocationState() === 'locating') {
           <div class="nearby-gems-board__area-cue">
-            <span class="material-symbols-outlined nearby-gems-board__location-spinner">progress_activity</span><span>Finding your location…</span>
+            <span class="material-symbols-outlined nearby-gems-board__location-spinner">progress_activity</span><span i18n>Finding your location…</span>
           </div>
         } @else {
           <button type="button" class="nearby-gems-board__area-cue nearby-gems-board__area-cue--button" (click)="requestViewerLocation()">
-            <span class="material-symbols-outlined">location_searching</span><span>Show my location</span>
+            <span class="material-symbols-outlined">location_searching</span><span i18n>Show my location</span>
           </button>
         }
       } @else {
-        <div class="nearby-gems-board__area-cue"><span class="material-symbols-outlined">lock</span><span>Starting point hidden</span></div>
+        <div class="nearby-gems-board__area-cue"><span class="material-symbols-outlined">lock</span><span i18n>Starting point hidden</span></div>
       }
       @if (selectedStartCard(); as selected) {
         <div class="nearby-gems-board__nav-tray">
           <span class="nearby-gems-board__nav-icon material-symbols-outlined">near_me</span>
           <span><strong>{{ selected.title }}</strong><small>Destination #{{ selectedStartRank() }} selected · choose any place to change it</small></span>
-          <a [href]="directionsUrl(selected)" target="_blank" rel="noopener" [attr.aria-label]="'Start directions with destination ' + selectedStartRank() + ': ' + selected.title">
+          <a [href]="directionsUrl(selected)" target="_blank" rel="noopener" [attr.aria-label]="templateText.message13 + selectedStartRank() + ': ' + selected.title">
             Start with #{{ selectedStartRank() }}
             <span class="material-symbols-outlined">arrow_forward</span>
           </a>
