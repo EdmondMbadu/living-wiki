@@ -1,0 +1,124 @@
+@if (!hidden()) {
+  <button class="kiwi-launcher" type="button" (click)="toggle()" [attr.aria-expanded]="open()" aria-controls="kiwi-panel" [attr.aria-label]="'Open ' + name()">
+    <img src="/assets/kiwi/mascot.png" alt="" aria-hidden="true" />
+    <span>{{ signedIn() ? 'Ask ' + name() : 'Meet Kiwi' }}</span>
+    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+  </button>
+
+  @if (open()) {
+    <div class="kiwi-backdrop" (click)="close()" aria-hidden="true"></div>
+    <section id="kiwi-panel" class="kiwi-panel" role="dialog" aria-modal="true" [attr.aria-label]="name() + ' assistant'">
+      <header class="kiwi-panel__header">
+        <div class="kiwi-panel__identity">
+          <img src="/assets/kiwi/mascot.png" alt="" aria-hidden="true" />
+          <div>
+            <div class="kiwi-panel__name-row">
+              <h2>{{ name() }}</h2>
+              @if (signedIn() && !renaming()) {
+                <button type="button" class="kiwi-icon-button" (click)="beginRename()" [attr.aria-label]="'Rename ' + name()" title="Rename your assistant">
+                  <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+                </button>
+              }
+            </div>
+            <p>{{ signedIn() ? 'Here to talk and help' : 'Your LivingWiki assistant' }}</p>
+          </div>
+        </div>
+        <button type="button" class="kiwi-icon-button kiwi-panel__close" (click)="close()" aria-label="Close Kiwi">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </header>
+
+      @if (!signedIn()) {
+        <div class="kiwi-panel__guest">
+          <img src="/assets/kiwi/mascot.png" alt="Kiwi, the LivingWiki assistant" />
+          <h3>Make things happen with Kiwi</h3>
+          <p>Sign in to talk, create a board, and edit your own boards and cards.</p>
+          <a class="kiwi-primary" routerLink="/sign-in" [queryParams]="signInRedirect()" (click)="close()">Sign in to talk with Kiwi</a>
+        </div>
+      } @else {
+        @if (renaming()) {
+          <div class="kiwi-rename">
+            <label for="kiwi-name">What would you like to call your assistant?</label>
+            <div><input id="kiwi-name" [value]="nameDraft()" maxlength="32" (input)="setNameDraft($event)" (keydown.enter)="saveName()" />
+              <button type="button" (click)="saveName()" [disabled]="busy()">Save</button>
+              <button type="button" class="kiwi-rename__cancel" (click)="renaming.set(false)">Cancel</button>
+            </div>
+          </div>
+        }
+
+        <div class="kiwi-modes" role="tablist" aria-label="Conversation mode">
+          <button type="button" role="tab" [attr.aria-selected]="mode() === 'voice'" [class.kiwi-modes__active]="mode() === 'voice'" (click)="setMode('voice')">
+            <span class="material-symbols-outlined" aria-hidden="true">graphic_eq</span> Talk
+          </button>
+          <button type="button" role="tab" [attr.aria-selected]="mode() === 'chat'" [class.kiwi-modes__active]="mode() === 'chat'" (click)="setMode('chat')">
+            <span class="material-symbols-outlined" aria-hidden="true">chat_bubble</span> Chat
+          </button>
+        </div>
+
+        <div class="kiwi-panel__conversation" role="log" aria-live="polite" aria-label="Kiwi conversation">
+          @if (mode() === 'voice') {
+            <div class="kiwi-voice-stage" [class.kiwi-voice-stage--active]="voiceActive()">
+              <button type="button" class="kiwi-voice-orb" [class.kiwi-voice-orb--listening]="listening()" [class.kiwi-voice-orb--speaking]="speaking()" (click)="toggleVoiceSession()" [disabled]="!voiceAvailable || applying()" [attr.aria-label]="voiceActive() ? 'End voice conversation' : 'Start talking with Kiwi'">
+                <span class="kiwi-voice-orb__halo" aria-hidden="true"></span>
+                <img src="/assets/kiwi/mascot.png" alt="" aria-hidden="true" />
+                <span class="kiwi-voice-orb__mic material-symbols-outlined" aria-hidden="true">{{ voiceActive() ? 'graphic_eq' : 'mic' }}</span>
+              </button>
+              <h3>{{ voiceStatus() }}</h3>
+              <p>{{ voiceActive() ? 'Speak naturally. Kiwi will answer out loud.' : 'Have a conversation with your LivingWiki assistant.' }}</p>
+              @if (voiceAvailable) {
+                <button type="button" class="kiwi-voice-action" (click)="toggleVoiceSession()" [disabled]="applying()">
+                  <span class="material-symbols-outlined" aria-hidden="true">{{ voiceActive() ? 'call_end' : 'mic' }}</span>
+                  {{ voiceActive() ? 'End conversation' : 'Start talking' }}
+                </button>
+              } @else {
+                <p class="kiwi-voice-stage__unavailable">Voice is unavailable in this browser. Choose Chat to type to Kiwi.</p>
+              }
+            </div>
+          }
+          @if (!messages().length) {
+            <div class="kiwi-welcome" [class.kiwi-welcome--chat]="mode() === 'chat'">
+              @if (mode() === 'chat') {
+                <h3>Chat with Kiwi</h3>
+                <p>Ask a question or tell Kiwi what you would like to change. You can review any proposed action before it is saved.</p>
+              } @else {
+                <p>Ask about your boards, plan something new, or just talk.</p>
+              }
+            </div>
+          }
+          @for (message of messages(); track message.id) {
+            <p class="kiwi-message" [class.kiwi-message--user]="message.role === 'user'">{{ message.text }}</p>
+          }
+          @if (busy()) { <p class="kiwi-thinking" role="status"><span></span><span></span><span></span> {{ name() }} is thinking…</p> }
+          @if (proposal(); as change) {
+            <section class="kiwi-proposal" aria-label="Proposed change">
+              <small>Review before saving · {{ change.workspace === 'team' ? 'Team draft' : 'Personal' }}</small>
+              <strong>{{ change.summary }}</strong>
+              @if (change.details?.length) {
+                <ul class="kiwi-proposal__details">
+                  @for (detail of change.details; track $index) { <li>{{ detail }}</li> }
+                </ul>
+              }
+              <div class="kiwi-proposal__actions">
+                <button type="button" class="kiwi-primary" (click)="apply()" [disabled]="applying() || busy()">{{ applying() ? (change.kind === 'email_board' ? 'Sending…' : 'Saving…') : (change.kind === 'email_board' ? 'Send email' : 'Apply change') }}</button>
+                <button type="button" (click)="dismissProposal()">Dismiss</button>
+              </div>
+            </section>
+          }
+        </div>
+
+        @if (error()) { <p class="kiwi-error" role="alert">{{ error() }}</p> }
+        @if (mode() === 'chat') {
+          <div class="kiwi-composer">
+            <label class="sr-only" for="kiwi-request">Ask Kiwi</label>
+            <textarea id="kiwi-request" rows="2" maxlength="4000" placeholder="Message Kiwi…" [value]="draft()" (input)="setDraft($event)" (keydown)="onComposerKeydown($event)" [disabled]="busy() || applying()"></textarea>
+            <div class="kiwi-composer__actions">
+              <button type="button" class="kiwi-send" (click)="send()" [disabled]="!draft().trim() || busy() || applying()" aria-label="Send to Kiwi">
+                <span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span>
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </section>
+  }
+}

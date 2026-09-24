@@ -3222,23 +3222,6 @@
             } @else {
             <div class="detail-cards-grid">
               @for (card of filteredCards(); track card.id) {
-                @if (shouldShowListingTalkingCardSetupBefore(board, card)) {
-                  <article class="detail-card listing-talking-setup-card listing-talking-setup-card--virtual">
-                    <div class="listing-talking-setup-card__visual" aria-hidden="true">
-                      <span class="material-symbols-outlined">record_voice_over</span>
-                      <i></i>
-                    </div>
-                    <div class="listing-talking-setup-card__content">
-                      <span><span class="material-symbols-outlined">visibility_lock</span>{{ teamContextId() ? 'Only your team can see this setup card' : 'Only you can see this setup card' }}</span>
-                      <strong>Make yourself available to buyers</strong>
-                      <p>Let visitors ask you questions about this property.</p>
-                      <button type="button" (click)="openListingTalkingCardSetup(board, undefined, $event)">
-                        <span class="material-symbols-outlined">add_comment</span>
-                        Set up Talking Card
-                      </button>
-                    </div>
-                  </article>
-                }
                 <article
                   class="detail-card"
                   [class.detail-card--talk-drop]="!!card.talkDrop"
@@ -3839,23 +3822,6 @@
                   <h2 i18n>No cards match that search.</h2>
                   <p i18n>Clear the search or add another card to this board.</p>
                 </div>
-              }
-              @if (shouldShowListingTalkingCardSetupAtEnd(board)) {
-                <article class="detail-card listing-talking-setup-card listing-talking-setup-card--virtual">
-                  <div class="listing-talking-setup-card__visual" aria-hidden="true">
-                    <span class="material-symbols-outlined">record_voice_over</span>
-                    <i></i>
-                  </div>
-                  <div class="listing-talking-setup-card__content">
-                    <span><span class="material-symbols-outlined">visibility_lock</span>{{ teamContextId() ? 'Only your team can see this setup card' : 'Only you can see this setup card' }}</span>
-                    <strong>Make yourself available to buyers</strong>
-                    <p>Let visitors ask you questions about this property.</p>
-                    <button type="button" (click)="openListingTalkingCardSetup(board, undefined, $event)">
-                      <span class="material-symbols-outlined">add_comment</span>
-                      Set up Talking Card
-                    </button>
-                  </div>
-                </article>
               }
             </div>
             }
@@ -6288,7 +6254,7 @@
                           <output aria-live="polite">{{ wizardCount() }} scenes</output>
                           <button type="button" aria-label="Use one more property scene" [disabled]="wizardCount() >= wizardListingSceneMax" (click)="setWizardListingSceneCount(wizardCount() + 1)"><span class="material-symbols-outlined">add</span></button>
                         </div>
-                        <small class="boards-listing-story-helper">The Intro, private Talking Card setup, and closing cards are added automatically.</small>
+                        <small class="boards-listing-story-helper">The Intro and closing cards are added automatically.</small>
                       </section>
                       <label class="boards-listing-story-control-panel boards-listing-story-direction">
                         <span class="boards-listing-story-control-label"><strong>What should the story emphasize?</strong><small>Optional</small></span>
@@ -9337,22 +9303,6 @@
             ></textarea>
           </label>
 
-          <section class="board-settings-talking-card" aria-labelledby="board-settings-talking-card-title">
-            <span class="board-settings-talking-card__icon material-symbols-outlined" aria-hidden="true">record_voice_over</span>
-            <span class="board-settings-talking-card__copy">
-              <strong id="board-settings-talking-card-title">Talking Card</strong>
-              <small>Add a conversational avatar that visitors can talk to in Live View.</small>
-            </span>
-            <button
-              type="button"
-              class="boards-talking-action"
-              [disabled]="boardSettingsSaving()"
-              (click)="openTalkingCardEditorFromSettings(settingsBoard, $event)"
-            >
-              <span class="material-symbols-outlined" aria-hidden="true">add</span>
-              Add Talking Card
-            </button>
-          </section>
 
           <section class="board-inside-display board-settings-choice" aria-labelledby="board-settings-card-numbers-title">
             <div class="board-inside-display__copy board-settings-choice__copy">

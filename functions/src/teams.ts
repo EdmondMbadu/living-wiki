@@ -622,7 +622,7 @@ function boardContent(value: unknown): TeamRecord {
   return { ...clean, title };
 }
 
-async function saveListing(teamId: string, uid: string, data: TeamRecord) {
+async function saveListing(teamId: string, uid: string, data: TeamRecord, kiwiActionId = '') {
   const boardId = id(data.boardId);
   const incoming = boardContent(data.board);
   const saveKey = hash(`${uid}:${data.revision || 0}:${JSON.stringify(incoming)}`);
@@ -630,12 +630,17 @@ async function saveListing(teamId: string, uid: string, data: TeamRecord) {
   return db.runTransaction(async (tx) => {
     const { team } = await requireTeamMember(teamId, uid, false, tx);
     active(team);
+    const kiwiRef = kiwiActionId ? db.collection('users').doc(uid).collection('kiwi_actions').doc(kiwiActionId) : null;
+    const kiwiDoc = kiwiRef ? await tx.get(kiwiRef) : null;
     const [currentDoc, deleted] = await tx.getAll(
       listingRef(boardId),
       db.collection('team_deleted_listings').doc(boardId),
     );
     if (deleted.exists) fail('This listing was permanently deleted. Create a new listing instead.');
     const current = currentDoc.data();
+    if (kiwiRef && kiwiDoc?.data()?.['status'] === 'applied') return { board: current };
+    if (kiwiRef && kiwiDoc?.data()?.['status'] !== 'pending')
+      throw new HttpsError('failed-precondition', 'This Kiwi proposal is no longer pending.');
     const baseRef = listingRef(boardId)
       .collection('revisions')
       .doc(String(Number(data.revision) || 0));
@@ -644,7 +649,10 @@ async function saveListing(teamId: string, uid: string, data: TeamRecord) {
     const publicDoc = !current ? await tx.get(db.collection('boards').doc(boardId)) : null;
     if (current && current['team_id'] !== teamId)
       throw new HttpsError('permission-denied', 'This listing belongs to a different team.');
-    if (current?.['last_save_key'] === saveKey) return { board: current };
+    if (current?.['last_save_key'] === saveKey) {
+      if (kiwiRef) tx.update(kiwiRef, { status: 'applied', appliedAt: FieldValue.serverTimestamp() });
+      return { board: current };
+    }
     if (!current && publicDoc?.exists)
       fail('This board already exists. Use the explicit transfer action.');
     if (current?.['team_status'] === 'archived') fail('Restore this listing before editing.');
@@ -682,7 +690,7 @@ async function saveListing(teamId: string, uid: string, data: TeamRecord) {
       owner_user_id: `team:${teamId}`,
       owner_display_name: team['name'],
       owner_public_slug: '',
-      owner_photo_url: team['logo_url'],
+      owner_photo_url: team['logo_url'] || '',
       visibility: 'private',
       created_by: current?.['created_by'] || uid,
       representative_id: current?.['representative_id'] || uid,
@@ -701,6 +709,7 @@ async function saveListing(teamId: string, uid: string, data: TeamRecord) {
     tx.set(teamRef(teamId).collection('listings').doc(boardId), teamListingSummary(next));
     if (!current) tx.update(teamRef(teamId), { listing_count: FieldValue.increment(1) });
     audit(tx, teamId, uid, current ? 'listing.saved' : 'listing.created', boardId);
+    if (kiwiRef) tx.update(kiwiRef, { status: 'applied', appliedAt: FieldValue.serverTimestamp() });
     return { board: next };
   });
 }
@@ -712,6 +721,18 @@ export async function saveGeneratedTeamBoard(uid: string, board: TeamRecord, pat
     revision: board['team_revision'],
     board: { ...board, ...patch },
   });
+}
+
+/** Kiwi uses the same membership, revision, media, and audit path as the team editor. */
+export async function saveKiwiTeamBoard(
+  uid: string,
+  teamId: string,
+  boardId: string,
+  board: TeamRecord,
+  revision = 0,
+  kiwiActionId = '',
+) {
+  return saveListing(teamId, uid, { boardId, board, revision, requireExactRevision: true }, kiwiActionId);
 }
 
 /** Operator-reviewed copy repair uses normal membership, history and idempotency. */

@@ -19,7 +19,6 @@ export const CARD_CREATION_OPTIONS: ReadonlyArray<{
   icon: string;
 }> = [
   { kind: 'general', title: 'General card', description: 'Describe a place, idea, memory, recommendation, or anything else.', icon: 'sticky_note_2' },
-  { kind: 'talking', title: 'Talking Card', description: 'Let visitors ask your virtual agent questions by text or voice.', icon: 'record_voice_over' },
   { kind: 'intro', title: 'Intro card', description: 'Welcome visitors and introduce the story in your own words.', icon: 'waving_hand' },
   { kind: 'contact', title: 'Contact card', description: 'Share a name, phone number, email, and optional organization.', icon: 'contact_mail' },
   { kind: 'qr-code', title: 'QR code card', description: 'Add a QR code people can scan.', icon: 'qr_code_2' },

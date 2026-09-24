@@ -1,4 +1,5 @@
 import { isLinkReadableVisibility } from './board-visibility';
+import { normalizeKiwiAction } from './kiwi-policy';
 import { removeHiddenBoardFromDiscovery } from './board-discovery';
 import { finalizeBoardWizardCopy, BOARD_COPY_VERSION } from './board-wizard-copy-quality';
 import { repairBoardWizardCopy } from './gemini';
@@ -107,6 +108,7 @@ export {
 } from './custom-public-routes';
 export { getBoardInsights, recordBoardAnalyticsEvent } from './board-analytics';
 export { teamCommand, getPublicTeamPage, getTeamInvitationPreview } from './teams';
+export { kiwiPreferences, kiwiTalk, kiwiApply } from './kiwi';
 export { sendTeamInvitationEmail, retryTeamInvitationEmails, syncTeamInvitationNotification, syncTeamInvitationAvailability } from './team-invitations';
 export { getTeamInsights, submitTeamContact, manageTeamContacts, getTeamConversations } from './team-analytics';
 // Team call verification is deferred. Do not export teamVoiceWebhook until its
@@ -3674,6 +3676,80 @@ export const shareBoardByEmail = onCall(
     await sendBoardFriendEmail({ recipientEmail, ...email });
     logger.info('Public board shared by email.', { boardId, senderUserId });
     return { sent: true };
+  },
+);
+
+/** A reviewed Kiwi proposal uses the existing board email template, quota, and sender rules. */
+export const kiwiEmail = onCall(
+  { region: callableRegion, cors: true, secrets: [sendgridApiKey] },
+  async (request) => {
+    const uid = request.auth?.uid ?? '';
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in to send a board.');
+    if (request.auth?.token.email_verified !== true)
+      throw new HttpsError('failed-precondition', 'Verify your email address before emailing a board.');
+    const proposalId = typeof request.data?.proposalId === 'string' ? request.data.proposalId.trim() : '';
+    if (!/^[A-Za-z0-9_-]{1,180}$/.test(proposalId))
+      throw new HttpsError('invalid-argument', 'Choose a valid Kiwi proposal.');
+    const ref = db.collection('users').doc(uid).collection('kiwi_actions').doc(proposalId);
+    const selected = await db.runTransaction(async (tx) => {
+      const snapshot = await tx.get(ref);
+      const proposal = snapshot.data();
+      if (proposal?.status === 'applied') return { alreadySent: true };
+      if (proposal?.status !== 'pending' || Number(proposal.expiresAt) < Date.now())
+        throw new HttpsError('failed-precondition', 'This email proposal expired or is already being sent.');
+      const action = normalizeKiwiAction(proposal.action);
+      if (action?.kind !== 'email_board' || proposal.teamId || proposal.boardId !== action.boardId)
+        throw new HttpsError('failed-precondition', 'This is not a valid personal board email proposal.');
+      if (!isValidEmail(action.email))
+        throw new HttpsError('invalid-argument', 'Enter a valid recipient email address.');
+      const boardSnapshot = await tx.get(db.collection('boards').doc(action.boardId));
+      const board = boardSnapshot.data() as Record<string, unknown> | undefined;
+      if (!board || board.owner_user_id !== uid)
+        throw new HttpsError('permission-denied', 'Only the board owner can email this board with Kiwi.');
+      if (!isLinkReadableVisibility(board.visibility))
+        throw new HttpsError('failed-precondition', 'Private boards cannot be emailed.');
+      if (board.updated_at_iso !== proposal.baseUpdatedAt)
+        throw new HttpsError('aborted', 'The board changed after Kiwi prepared the email. Ask Kiwi to review it again.');
+      tx.update(ref, { status: 'sending', sendingAt: FieldValue.serverTimestamp() });
+      return { alreadySent: false, action, board };
+    });
+    if (selected.alreadySent) return { sent: true };
+    const action = selected.action!;
+    const board = selected.board!;
+    let delivered = false;
+    try {
+      await consumeBoardEmailShareQuota(uid);
+      const senderEmail = normalizeUserEmail(request.auth?.token.email);
+      const [senderSnapshot, recipientSnapshot] = await Promise.all([
+        db.collection('users').doc(uid).get(),
+        db.collection('users').where('email', '==', action.email).limit(1).get(),
+      ]);
+      const senderName = displayNameForUser(senderSnapshot.data() as Record<string, unknown> | undefined,
+        senderEmail, 'A LivingWiki member').slice(0, 100);
+      const recipientDoc = recipientSnapshot.docs[0];
+      const email = buildDirectBoardShareEmail({
+        recipientEmail: action.email,
+        recipientName: recipientDoc
+          ? displayNameForUser(recipientDoc.data() as Record<string, unknown>, action.email) : null,
+        senderName,
+        boardTitle: typeof board.title === 'string' ? board.title.slice(0, 120) : 'LivingWiki board',
+        boardDescription: typeof board.description === 'string' ? board.description.slice(0, 600) : '',
+        boardCoverImageUrl: safeBoardShareImageUrl(board.imageUrl),
+        boardUrl: `${publicAppUrl}/boards/${encodeURIComponent(publicBoardRouteKey(action.boardId, board.custom_slug))}`,
+      });
+      await sendBoardFriendEmail({ recipientEmail: action.email, ...email });
+      delivered = true;
+      await ref.update({ status: 'applied', appliedAt: FieldValue.serverTimestamp() });
+      logger.info('Board shared by Kiwi email.', { boardId: action.boardId, senderUserId: uid });
+      return { sent: true };
+    } catch (error) {
+      if (!delivered) {
+        await db.runTransaction(async (tx) => {
+          if ((await tx.get(ref)).data()?.status === 'sending') tx.update(ref, { status: 'pending' });
+        });
+      }
+      throw error;
+    }
   },
 );
 

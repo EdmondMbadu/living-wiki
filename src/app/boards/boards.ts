@@ -2972,11 +2972,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
             board.insideCardsDisplay,
             this.activeAlongsideBoardIds(),
           );
+    const visibleCards = cards.filter((card) => !this.isListingTalkingCardPlaceholder(card));
     if (!query) {
-      return cards;
+      return visibleCards;
     }
 
-    return cards.filter((card) =>
+    return visibleCards.filter((card) =>
       [card.title, card.subtitle, card.notes, card.type, card.scope, card.status, card.tags.join(' ')]
         .join(' ')
         .toLowerCase()
@@ -3597,6 +3598,18 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       if (params.get('create') === 'gems' && !this.nearbyGemsQueryConsumed) {
         this.nearbyGemsQueryConsumed = true;
         if (this.isBrowser) void this.openNearbyGemsWizard();
+      }
+      if (params.get('create') === 'choose' && this.isBrowser) {
+        void this.authService.waitForReady().then(() => {
+          if (this.route.snapshot.queryParamMap.get('create') !== 'choose') return;
+          this.openBoardWizard();
+          void this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { create: null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
+        });
       }
       this.stackAutoplayRequested.set(params.get('autoplay') === '1');
       this.stackStudioDirectRequested = params.get('studio') === 'video';

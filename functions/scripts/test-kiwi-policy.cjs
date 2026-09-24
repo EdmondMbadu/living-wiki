@@ -1,0 +1,73 @@
+const assert = require('node:assert/strict');
+const { test } = require('node:test');
+const {
+  normalizeKiwiAction, kiwiApplyBoardAction, kiwiCanReadPersonalBoard,
+  kiwiCanEditPersonalBoard, kiwiCanCopyBoard, kiwiCanEditTeamBoard,
+} = require('../lib/kiwi-policy');
+
+test('personal reads, edits, and copies follow separate permission boundaries', () => {
+  const otherPublic = { owner_user_id: 'owner', visibility: 'public' };
+  const otherUnlisted = { owner_user_id: 'owner', visibility: 'unlisted' };
+  const otherPrivate = { owner_user_id: 'owner', visibility: 'private' };
+  assert.equal(kiwiCanReadPersonalBoard('reader', otherPublic), true);
+  assert.equal(kiwiCanReadPersonalBoard('reader', otherUnlisted), true);
+  assert.equal(kiwiCanReadPersonalBoard('reader', otherPrivate), false);
+  assert.equal(kiwiCanEditPersonalBoard('reader', otherPublic), false);
+  assert.equal(kiwiCanEditPersonalBoard('owner', otherPrivate), true);
+  assert.equal(kiwiCanCopyBoard('reader', otherPublic), true);
+  assert.equal(kiwiCanCopyBoard('reader', otherUnlisted), false);
+  assert.equal(kiwiCanCopyBoard('reader', { ...otherPublic, team_id: 'team' }), false);
+});
+
+test('team board edits require matching team and active draft status', () => {
+  const board = { team_id: 'team-a', team_status: 'draft' };
+  assert.equal(kiwiCanEditTeamBoard('team-a', board), true);
+  assert.equal(kiwiCanEditTeamBoard('team-b', board), false);
+  assert.equal(kiwiCanEditTeamBoard('team-a', { ...board, team_status: 'archived' }), false);
+});
+
+test('model output is restricted to named board and card fields', () => {
+  const action = normalizeKiwiAction({
+    kind: 'update_card', boardId: 'board-1', cardId: 'card-1', title: 'New title',
+    owner_user_id: 'attacker', visibility: 'public', team_id: 'other-team',
+  });
+  assert.deepEqual(action, { kind: 'update_card', boardId: 'board-1', cardId: 'card-1', title: 'New title' });
+  assert.equal(normalizeKiwiAction({ kind: 'update_board', boardId: '../../other', title: 'Oops' }), null);
+  assert.equal(normalizeKiwiAction({ kind: 'create_board', title: 'Untitled', visibility: 'surprise' }), null);
+  assert.deepEqual(normalizeKiwiAction({ kind: 'email_board', boardId: 'board-1', email: 'FRIEND@example.com', visibility: 'private' }),
+    { kind: 'email_board', boardId: 'board-1', email: 'friend@example.com' });
+  assert.equal(normalizeKiwiAction({ kind: 'email_board', boardId: 'board-1', email: 'invalid email' }), null);
+});
+
+test('card edits preserve unrelated content and invalidate derived board video', () => {
+  const board = {
+    title: 'Board', owner_user_id: 'owner', visibility: 'private',
+    cards: [{ id: 'card-1', title: 'Old', notes: 'Original', imageUrl: 'https://example.com/photo.jpg' }],
+    socialVideoRenderVersion: 'old-render',
+  };
+  const action = normalizeKiwiAction({ kind: 'update_card', boardId: 'board-1', cardId: 'card-1', title: 'New' });
+  assert.ok(action && action.kind === 'update_card');
+  const next = kiwiApplyBoardAction(board, action, 'unused-id', '2026-09-23T00:00:00.000Z');
+  assert.equal(next.owner_user_id, 'owner');
+  assert.equal(next.visibility, 'private');
+  assert.equal(next.cards[0].title, 'New');
+  assert.equal(next.cards[0].notes, 'Original');
+  assert.equal(next.cards[0].imageUrl, 'https://example.com/photo.jpg');
+  assert.equal(next.socialVideoRenderVersion, '');
+  assert.equal(board.cards[0].title, 'Old');
+});
+
+test('board design adds distinct cards while preserving existing cards and ownership', () => {
+  const board = { title: 'Original', owner_user_id: 'owner', visibility: 'private',
+    cards: [{ id: 'existing', title: 'Existing' }] };
+  const action = normalizeKiwiAction({ kind: 'design_board', boardId: 'board-1', title: 'Reimagined',
+    cards: [{ title: 'First', notes: 'First note' }, { title: 'Second', notes: 'Second note' }],
+    owner_user_id: 'attacker' });
+  assert.ok(action && action.kind === 'design_board');
+  const next = kiwiApplyBoardAction(board, action, 'new-id', '2026-09-23T00:00:00.000Z');
+  assert.equal(next.title, 'Reimagined');
+  assert.equal(next.owner_user_id, 'owner');
+  assert.equal(next.visibility, 'private');
+  assert.deepEqual(next.cards.map((card) => card.id), ['existing', 'new-id-1', 'new-id-2']);
+  assert.equal(board.cards.length, 1);
+});

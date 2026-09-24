@@ -6,9 +6,9 @@ import {
 } from './card-creation';
 
 describe('card creation chooser', () => {
-  it('offers the five intentional top-level card types', () => {
+  it('offers the four intentional top-level card types', () => {
     expect(CARD_CREATION_OPTIONS.map((option) => option.kind)).toEqual([
-      'general', 'talking', 'intro', 'contact', 'qr-code',
+      'general', 'intro', 'contact', 'qr-code',
     ]);
   });
 
