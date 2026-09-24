@@ -108,7 +108,7 @@ export {
 } from './custom-public-routes';
 export { getBoardInsights, recordBoardAnalyticsEvent } from './board-analytics';
 export { teamCommand, getPublicTeamPage, getTeamInvitationPreview } from './teams';
-export { kiwiPreferences, kiwiTalk, kiwiApply } from './kiwi';
+export { kiwiPreferences, kiwiTalk, kiwiApply, kiwiSpeak } from './kiwi';
 export { sendTeamInvitationEmail, retryTeamInvitationEmails, syncTeamInvitationNotification, syncTeamInvitationAvailability } from './team-invitations';
 export { getTeamInsights, submitTeamContact, manageTeamContacts, getTeamConversations } from './team-analytics';
 // Team call verification is deferred. Do not export teamVoiceWebhook until its

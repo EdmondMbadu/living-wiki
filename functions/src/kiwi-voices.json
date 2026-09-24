@@ -1,0 +1,6 @@
+[
+  {"id":"inspiring-guide","name":"Sunny","description":"Warm, bright, and easy to talk to","providerVoiceId":"EXAVITQu4vr4xnSDxMaL","sampleText":"Hi, I'm Kiwi. Tell me what is on your mind, and we can make something wonderful together."},
+  {"id":"warm-storyteller","name":"Wren","description":"Gentle, thoughtful, and expressive","providerVoiceId":"21m00Tcm4TlvDq8ikWAM","sampleText":"Hello. I can help you shape an idea, find a board, or make a small change together."},
+  {"id":"elegant-guide","name":"Cleo","description":"Poised, clear, with a British accent","providerVoiceId":"XB0fDUnXU5powFXDhCwa","sampleText":"Hello there. Let's turn your thoughts into something you can explore and share."},
+  {"id":"friendly-explainer","name":"Miles","description":"Calm, friendly, and direct","providerVoiceId":"ODq5zmih8GrVes37Dizd","sampleText":"Hi there. Tell me what you would like to build, and we will take it one step at a time."}
+]

@@ -75,4 +75,28 @@ describe('Kiwi conversation interface', () => {
     expect(fixture.componentInstance.voiceActive()).toBeFalse();
     expect(FakeRecognition.latest?.started).toBeFalse();
   });
+
+  it('opens name and voice settings, previews voice choices, and stops an active conversation', () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    fixture.componentInstance.toggle();
+    fixture.componentInstance.toggleVoiceSession();
+    fixture.componentInstance.beginRename();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.voiceActive()).toBeFalse();
+    expect(FakeRecognition.latest?.started).toBeFalse();
+    expect(fixture.nativeElement.querySelector('.kiwi-settings[role="dialog"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('input[name="kiwi-voice"]').length).toBe(4);
+    expect(fixture.nativeElement.textContent).toContain('Name & voice');
+    expect(fixture.nativeElement.textContent).toContain('Sunny');
+    expect(fixture.nativeElement.textContent).toContain('Listen');
+
+    fixture.componentInstance.selectVoice('elegant-guide');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('input[value="elegant-guide"]').checked).toBeTrue();
+    fixture.componentInstance.closeSettings();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.kiwi-settings')).toBeNull();
+  });
 });

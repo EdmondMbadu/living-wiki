@@ -5,6 +5,7 @@ import { httpsCallable } from 'firebase/functions';
 import { AuthService } from '../auth.service';
 import { getFirebaseFunctions } from '../firebase.client';
 import { WorkspaceNavigationService } from '../workspace-navigation/workspace-navigation';
+import kiwiVoices from '../../../functions/src/kiwi-voices.json';
 
 type KiwiMessage = { id: number; role: 'user' | 'assistant'; text: string };
 type KiwiProposal = { id: string; summary: string; details?: string[]; kind: string; cards?: string[]; visibility?: string; workspace: string };
@@ -44,11 +45,20 @@ export class KiwiComponent {
   private loadingNameForUid = '';
   private scopeKey = '';
   private recognitionRestartTimer: ReturnType<typeof setTimeout> | null = null;
+  private audio: HTMLAudioElement | null = null;
+  private audioUrl = '';
+  private speechRequestId = 0;
 
   readonly open = signal(false);
   readonly name = signal('Kiwi');
-  readonly renaming = signal(false);
   readonly nameDraft = signal('Kiwi');
+  readonly voices = kiwiVoices;
+  readonly voiceId = signal(kiwiVoices[0].id);
+  readonly voiceDraft = signal(kiwiVoices[0].id);
+  readonly settingsOpen = signal(false);
+  readonly settingsError = signal('');
+  readonly savingSettings = signal(false);
+  readonly previewingVoice = signal('');
   readonly draft = signal('');
   readonly messages = signal<KiwiMessage[]>([]);
   readonly proposal = signal<KiwiProposal | null>(null);
@@ -73,6 +83,7 @@ export class KiwiComponent {
   });
   readonly signInRedirect = computed(() => ({ redirectTo: this.currentUrl() || '/boards' }));
   readonly voiceAvailable = this.isBrowser && !!((window as RecognitionWindow).SpeechRecognition || (window as RecognitionWindow).webkitSpeechRecognition);
+  readonly currentVoiceName = computed(() => this.voices.find((voice) => voice.id === this.voiceId())?.name || 'Sunny');
   readonly hidden = computed(() => /^\/(?:sign-in|sign-up|reset-password|verify-email)(?:\/|$)/.test(this.currentUrl()));
   readonly voiceStatus = computed(() => {
     switch (this.voicePhase()) {
@@ -91,6 +102,9 @@ export class KiwiComponent {
         this.stopVoiceSession();
         this.name.set('Kiwi');
         this.nameDraft.set('Kiwi');
+        this.voiceId.set(kiwiVoices[0].id);
+        this.voiceDraft.set(kiwiVoices[0].id);
+        this.settingsOpen.set(false);
         this.loadedForUid = '';
         this.messages.set([]);
         this.proposal.set(null);
@@ -122,7 +136,7 @@ export class KiwiComponent {
   }
 
   @HostListener('window:keydown.escape')
-  onEscape(): void { if (this.open()) this.close(); }
+  onEscape(): void { if (this.settingsOpen()) this.closeSettings(); else if (this.open()) this.close(); }
 
   toggle(): void {
     if (this.open()) { this.close(); return; }
@@ -139,7 +153,7 @@ export class KiwiComponent {
   close(): void {
     this.stopVoiceSession();
     this.open.set(false);
-    this.renaming.set(false);
+    this.closeSettings();
     if (this.isBrowser) window.requestAnimationFrame(() => {
       document.querySelector<HTMLElement>('.kiwi-launcher')?.focus();
     });
@@ -167,11 +181,14 @@ export class KiwiComponent {
     if (!uid || uid === this.loadedForUid || uid === this.loadingNameForUid || !this.functions) return;
     this.loadingNameForUid = uid;
     try {
-      const callable = httpsCallable<Record<string, never>, { name: string }>(this.functions, 'kiwiPreferences');
+      const callable = httpsCallable<Record<string, never>, { name: string; voiceId?: string }>(this.functions, 'kiwiPreferences');
       const { data } = await callable({});
       if (this.auth.uid() === uid) {
         this.name.set(data.name || 'Kiwi');
         this.nameDraft.set(data.name || 'Kiwi');
+        const selectedVoice = this.voices.find((voice) => voice.id === data.voiceId)?.id || this.voices[0].id;
+        this.voiceId.set(selectedVoice);
+        this.voiceDraft.set(selectedVoice);
         this.loadedForUid = uid;
       }
     } catch {
@@ -184,25 +201,66 @@ export class KiwiComponent {
 
   beginRename(): void {
     this.nameDraft.set(this.name());
-    this.renaming.set(true);
+    this.voiceDraft.set(this.voiceId());
+    this.settingsError.set('');
+    this.stopVoiceSession();
+    this.settingsOpen.set(true);
+    if (this.isBrowser) window.requestAnimationFrame(() => document.querySelector<HTMLInputElement>('#kiwi-name')?.focus());
   }
 
-  async saveName(): Promise<void> {
+  closeSettings(): void {
+    this.stopSpeaking();
+    this.settingsOpen.set(false);
+    this.settingsError.set('');
+  }
+
+  selectVoice(voiceId: string): void { this.voiceDraft.set(voiceId); }
+
+  async saveSettings(): Promise<void> {
     const next = this.nameDraft().trim().slice(0, 32);
     if (next.length < 2 || !this.functions) {
-      this.error.set('Choose a name with at least two characters.');
+      this.settingsError.set('Choose a name with at least two characters.');
       return;
     }
-    this.busy.set(true);
-    this.error.set('');
+    this.savingSettings.set(true);
+    this.settingsError.set('');
     try {
-      const callable = httpsCallable<{ operation: string; name: string }, { name: string }>(this.functions, 'kiwiPreferences');
-      const { data } = await callable({ operation: 'setName', name: next });
+      const callable = httpsCallable<{ operation: string; name: string; voiceId: string },
+        { name: string; voiceId: string }>(this.functions, 'kiwiPreferences');
+      const { data } = await callable({ operation: 'setPreferences', name: next, voiceId: this.voiceDraft() });
       this.name.set(data.name);
-      this.renaming.set(false);
+      this.voiceId.set(data.voiceId);
+      this.closeSettings();
     } catch (error) {
-      this.error.set(this.errorText(error, 'Could not save the name.'));
-    } finally { this.busy.set(false); }
+      this.settingsError.set(this.errorText(error, 'Could not save your settings.'));
+    } finally { this.savingSettings.set(false); }
+  }
+
+  async previewVoice(voiceId: string): Promise<void> {
+    if (!this.functions || !this.settingsOpen()) return;
+    if (this.previewingVoice() === voiceId) { this.stopSpeaking(); return; }
+    this.stopSpeaking();
+    this.settingsError.set('');
+    this.previewingVoice.set(voiceId);
+    const requestId = this.speechRequestId;
+    try {
+      const callable = httpsCallable<{ voiceId: string; preview: boolean }, { audio: string }>(this.functions, 'kiwiSpeak');
+      const { data } = await callable({ voiceId, preview: true });
+      if (requestId !== this.speechRequestId || !this.settingsOpen()) return;
+      await this.playAudio(data.audio, requestId, () => {
+        this.releaseAudio();
+        this.previewingVoice.set('');
+      }, () => {
+        this.releaseAudio();
+        this.previewingVoice.set('');
+        this.settingsError.set('This voice could not play. Try another.');
+      });
+    } catch (error) {
+      if (requestId === this.speechRequestId) {
+        this.previewingVoice.set('');
+        this.settingsError.set(this.errorText(error, 'This voice could not play. Try another.'));
+      }
+    }
   }
 
   async send(prefill?: string, byVoice = false): Promise<void> {
@@ -223,7 +281,7 @@ export class KiwiComponent {
       const { data } = await callable({ message: text, history, teamId: this.scope().teamId, boardId: this.scope().boardId });
       this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: data.reply }]);
       this.proposal.set(data.proposal || null);
-      if (byVoice && this.voiceActive()) this.speak(data.proposal
+      if (byVoice && this.voiceActive()) void this.speak(data.proposal
         ? `${data.reply} Please review the proposed change on screen and tap Apply when you are ready.`
         : data.reply);
     } catch (error) {
@@ -338,13 +396,15 @@ export class KiwiComponent {
     this.stopSpeaking();
   }
 
-  private speak(text: string): void {
-    if (!this.isBrowser || !('speechSynthesis' in window)) return;
+  private async speak(text: string): Promise<void> {
+    if (!this.isBrowser || !this.functions) return;
     this.stopSpeaking();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = document.documentElement.lang || 'en-US';
-    utterance.rate = 1;
+    const requestId = this.speechRequestId;
+    this.speaking.set(true);
+    this.voicePhase.set('speaking');
     const finished = () => {
+      if (requestId !== this.speechRequestId) return;
+      this.releaseAudio();
       this.speaking.set(false);
       if (!this.voiceActive()) return;
       if (this.proposal()) {
@@ -352,16 +412,52 @@ export class KiwiComponent {
         this.voicePhase.set('review');
       } else this.scheduleListening();
     };
-    utterance.onend = finished;
-    utterance.onerror = finished;
-    window.speechSynthesis.speak(utterance);
-    this.speaking.set(true);
-    this.voicePhase.set('speaking');
+    try {
+      const callable = httpsCallable<{ voiceId: string; text: string }, { audio: string }>(this.functions, 'kiwiSpeak');
+      const { data } = await callable({ voiceId: this.voiceId(), text });
+      if (requestId !== this.speechRequestId || !this.voiceActive()) return;
+      await this.playAudio(data.audio, requestId, finished, () => {
+        if (requestId !== this.speechRequestId) return;
+        this.stopVoiceSession();
+        this.error.set('Kiwi’s voice could not play. You can continue in Chat.');
+      });
+    } catch (error) {
+      if (requestId !== this.speechRequestId) return;
+      this.stopVoiceSession();
+      this.error.set(this.errorText(error, 'Kiwi could not speak. You can continue in Chat.'));
+    }
   }
 
   stopSpeaking(): void {
-    if (this.isBrowser && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+    this.speechRequestId++;
+    this.releaseAudio();
+    this.previewingVoice.set('');
     this.speaking.set(false);
+  }
+
+  private releaseAudio(): void {
+    if (this.audio) {
+      this.audio.onended = null;
+      this.audio.onerror = null;
+      this.audio.pause();
+      this.audio.removeAttribute('src');
+      this.audio.load();
+      this.audio = null;
+    }
+    if (this.audioUrl) URL.revokeObjectURL(this.audioUrl);
+    this.audioUrl = '';
+  }
+
+  private async playAudio(encoded: string, requestId: number, finished: () => void, failed: () => void): Promise<void> {
+    const bytes = Uint8Array.from(atob(encoded), (character) => character.charCodeAt(0));
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'audio/mpeg' }));
+    if (requestId !== this.speechRequestId) { URL.revokeObjectURL(url); return; }
+    this.audioUrl = url;
+    const audio = new Audio(url);
+    this.audio = audio;
+    audio.onended = finished;
+    audio.onerror = failed;
+    await audio.play();
   }
 
   private errorText(error: unknown, fallback: string): string {

@@ -14,8 +14,8 @@
           <div>
             <div class="kiwi-panel__name-row">
               <h2>{{ name() }}</h2>
-              @if (signedIn() && !renaming()) {
-                <button type="button" class="kiwi-icon-button" (click)="beginRename()" [attr.aria-label]="'Rename ' + name()" title="Rename your assistant">
+              @if (signedIn()) {
+                <button type="button" class="kiwi-icon-button" (click)="beginRename()" [attr.aria-label]="'Edit ' + name() + ' name and voice'" title="Edit name and voice">
                   <span class="material-symbols-outlined" aria-hidden="true">edit</span>
                 </button>
               }
@@ -36,16 +36,6 @@
           <a class="kiwi-primary" routerLink="/sign-in" [queryParams]="signInRedirect()" (click)="close()">Sign in to talk with Kiwi</a>
         </div>
       } @else {
-        @if (renaming()) {
-          <div class="kiwi-rename">
-            <label for="kiwi-name">What would you like to call your assistant?</label>
-            <div><input id="kiwi-name" [value]="nameDraft()" maxlength="32" (input)="setNameDraft($event)" (keydown.enter)="saveName()" />
-              <button type="button" (click)="saveName()" [disabled]="busy()">Save</button>
-              <button type="button" class="kiwi-rename__cancel" (click)="renaming.set(false)">Cancel</button>
-            </div>
-          </div>
-        }
-
         <div class="kiwi-modes" role="tablist" aria-label="Conversation mode">
           <button type="button" role="tab" [attr.aria-selected]="mode() === 'voice'" [class.kiwi-modes__active]="mode() === 'voice'" (click)="setMode('voice')">
             <span class="material-symbols-outlined" aria-hidden="true">graphic_eq</span> Talk
@@ -65,6 +55,7 @@
               </button>
               <h3>{{ voiceStatus() }}</h3>
               <p>{{ voiceActive() ? 'Speak naturally. Kiwi will answer out loud.' : 'Have a conversation with your LivingWiki assistant.' }}</p>
+              <span class="kiwi-voice-stage__voice">Voice: {{ currentVoiceName() }}</span>
               @if (voiceAvailable) {
                 <button type="button" class="kiwi-voice-action" (click)="toggleVoiceSession()" [disabled]="applying()">
                   <span class="material-symbols-outlined" aria-hidden="true">{{ voiceActive() ? 'call_end' : 'mic' }}</span>
@@ -116,6 +107,38 @@
                 <span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span>
               </button>
             </div>
+          </div>
+        }
+
+        @if (settingsOpen()) {
+          <div class="kiwi-settings-backdrop" (click)="closeSettings()" aria-hidden="true"></div>
+          <div class="kiwi-settings" role="dialog" aria-modal="true" aria-labelledby="kiwi-settings-title">
+            <header class="kiwi-settings__header">
+              <div><small>MAKE KIWI YOURS</small><h3 id="kiwi-settings-title">Name &amp; voice</h3></div>
+              <button type="button" class="kiwi-icon-button" (click)="closeSettings()" aria-label="Close name and voice settings"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
+            </header>
+            <div class="kiwi-settings__body">
+              <label class="kiwi-settings__label" for="kiwi-name">Your assistant’s name</label>
+              <input id="kiwi-name" [value]="nameDraft()" maxlength="32" (input)="setNameDraft($event)" (keydown.enter)="saveSettings()" />
+              <p class="kiwi-settings__hint">Choose a voice that feels right. Tap Listen to hear it first.</p>
+              <fieldset class="kiwi-voice-choices"><legend>Voice</legend>
+                @for (voice of voices; track voice.id) {
+                  <div class="kiwi-voice-choice" [class.kiwi-voice-choice--selected]="voiceDraft() === voice.id">
+                    <label><input type="radio" name="kiwi-voice" [value]="voice.id" [checked]="voiceDraft() === voice.id" (change)="selectVoice(voice.id)" />
+                      <span class="kiwi-voice-choice__info"><strong>{{ voice.name }}</strong><small>{{ voice.description }}</small></span>
+                    </label>
+                    <button type="button" (click)="previewVoice(voice.id)" [attr.aria-label]="(previewingVoice() === voice.id ? 'Stop ' : 'Listen to ') + voice.name" [disabled]="savingSettings()">
+                      <span class="material-symbols-outlined" aria-hidden="true">{{ previewingVoice() === voice.id ? 'stop' : 'play_arrow' }}</span>
+                    </button>
+                  </div>
+                }
+              </fieldset>
+              @if (settingsError()) { <p class="kiwi-error" role="alert">{{ settingsError() }}</p> }
+            </div>
+            <footer class="kiwi-settings__footer">
+              <button type="button" class="kiwi-settings__cancel" (click)="closeSettings()">Cancel</button>
+              <button type="button" class="kiwi-primary" (click)="saveSettings()" [disabled]="savingSettings()">{{ savingSettings() ? 'Saving…' : 'Save changes' }}</button>
+            </footer>
           </div>
         }
       }

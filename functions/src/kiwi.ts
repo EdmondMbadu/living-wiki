@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
+import { defineSecret } from 'firebase-functions/params';
 import { FieldValue } from 'firebase-admin/firestore';
 import { randomUUID } from 'node:crypto';
 import { db } from './firebase';
@@ -7,12 +8,16 @@ import { geminiApiKey } from './gemini';
 import { requireTeamMember, saveKiwiTeamBoard } from './teams';
 import { kiwiActionDetails, kiwiActionSummary, kiwiApplyBoardAction, kiwiCanCopyBoard, kiwiCanEditPersonalBoard,
   kiwiCanEditTeamBoard, kiwiCanReadPersonalBoard, normalizeKiwiAction, type KiwiAction } from './kiwi-policy';
+import kiwiVoices from './kiwi-voices.json';
 
 type Data = Record<string, unknown>;
 type Scope = { teamId: string; boardId: string };
 const region = 'us-central1';
 const ACTION_LIFETIME_MS = 15 * 60 * 1000;
 const MAX_PROMPT = 4000;
+const elevenLabsApiKey = defineSecret('ELEVENLABS_API_KEY');
+const DEFAULT_VOICE_ID = kiwiVoices[0].id;
+const voiceById = new Map(kiwiVoices.map((voice) => [voice.id, voice]));
 
 function value(input: unknown, max: number): string {
   return typeof input === 'string' ? input.trim().slice(0, max) : '';
@@ -158,8 +163,75 @@ export const kiwiPreferences = onCall({ region, cors: true }, async (request) =>
     await ref.set({ name, updated_at: FieldValue.serverTimestamp() }, { merge: true });
     return { name };
   }
+  if (request.data?.operation === 'setVoice') {
+    const voiceId = value(request.data?.voiceId, 80);
+    if (!voiceById.has(voiceId)) throw new HttpsError('invalid-argument', 'Choose one of Kiwi’s available voices.');
+    await ref.set({ voiceId, updated_at: FieldValue.serverTimestamp() }, { merge: true });
+    return { voiceId };
+  }
+  if (request.data?.operation === 'setPreferences') {
+    const name = value(request.data?.name, 32);
+    const voiceId = value(request.data?.voiceId, 80);
+    if (name.length < 2) throw new HttpsError('invalid-argument', 'Choose a name with at least two characters.');
+    if (!voiceById.has(voiceId)) throw new HttpsError('invalid-argument', 'Choose one of Kiwi’s available voices.');
+    await ref.set({ name, voiceId, updated_at: FieldValue.serverTimestamp() }, { merge: true });
+    return { name, voiceId };
+  }
   const snapshot = await ref.get();
-  return { name: value(snapshot.data()?.['name'], 32) || 'Kiwi' };
+  const storedVoiceId = value(snapshot.data()?.['voiceId'], 80);
+  return { name: value(snapshot.data()?.['name'], 32) || 'Kiwi',
+    voiceId: voiceById.has(storedVoiceId) ? storedVoiceId : DEFAULT_VOICE_ID };
+});
+
+async function consumeKiwiSpeechQuota(uid: string): Promise<void> {
+  const now = new Date();
+  const hour = now.toISOString().slice(0, 13);
+  const day = now.toISOString().slice(0, 10);
+  const ref = db.collection('users').doc(uid).collection('kiwi').doc('speech_quota');
+  await db.runTransaction(async (tx) => {
+    const previous = (await tx.get(ref)).data() || {};
+    const hourCount = previous['hour'] === hour ? Number(previous['hourCount']) || 0 : 0;
+    const dayCount = previous['day'] === day ? Number(previous['dayCount']) || 0 : 0;
+    if (hourCount >= 40 || dayCount >= 170)
+      throw new HttpsError('resource-exhausted', 'Kiwi has reached today’s voice limit. You can continue in Chat.');
+    tx.set(ref, { hour, day, hourCount: hourCount + 1, dayCount: dayCount + 1,
+      updatedAt: FieldValue.serverTimestamp() });
+  });
+}
+
+export const kiwiSpeak = onCall({ region, cors: true, secrets: [elevenLabsApiKey], timeoutSeconds: 30,
+  memory: '256MiB' }, async (request) => {
+  const uid = actor(request.auth?.uid);
+  const voiceId = value(request.data?.voiceId, 80);
+  const voice = voiceById.get(voiceId);
+  if (!voice) throw new HttpsError('invalid-argument', 'Choose one of Kiwi’s available voices.');
+  const preview = request.data?.preview === true;
+  const rawText = typeof request.data?.text === 'string' ? request.data.text.trim() : '';
+  if (!preview && (!rawText || rawText.length > 1400))
+    throw new HttpsError('invalid-argument', 'Kiwi’s spoken response is too long.');
+  const text = preview ? voice.sampleText : rawText;
+  await consumeKiwiSpeechQuota(uid);
+  const apiKey = elevenLabsApiKey.value();
+  if (!apiKey) throw new HttpsError('failed-precondition', 'Kiwi’s natural voice is not configured.');
+  let response: Response;
+  try {
+    response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voice.providerVoiceId)}?output_format=mp3_44100_128`, {
+      method: 'POST', signal: AbortSignal.timeout(20_000),
+      headers: { 'Content-Type': 'application/json', 'xi-api-key': apiKey },
+      body: JSON.stringify({ text, model_id: 'eleven_turbo_v2_5',
+        voice_settings: { stability: 0.46, similarity_boost: 0.78, style: 0.12, use_speaker_boost: true, speed: 1.0 } }),
+    });
+  } catch {
+    throw new HttpsError('unavailable', 'Kiwi’s natural voice could not connect. Please try again.');
+  }
+  if (!response.ok) {
+    if (response.status === 429) throw new HttpsError('resource-exhausted', 'Kiwi’s natural voice is busy. Try again shortly.');
+    throw new HttpsError('unavailable', 'Kiwi’s natural voice is unavailable. You can continue in Chat.');
+  }
+  const buffer = Buffer.from(await response.arrayBuffer());
+  if (!buffer.length || buffer.length > 3_000_000)
+    throw new HttpsError('internal', 'Kiwi received an invalid voice response.');
+  return { audio: buffer.toString('base64'), contentType: 'audio/mpeg' };
 });
 
 export const kiwiTalk = onCall({ region, cors: true, secrets: [geminiApiKey], timeoutSeconds: 60, memory: '512MiB' }, async (request) => {
