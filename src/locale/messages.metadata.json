@@ -13291,6 +13291,10 @@
     "source": "Welcome back to your world.",
     "file": "src/app/auth-story-panel/auth-story-panel.html"
   },
+  "duplicateBoardMenu": {
+    "source": "Duplicate board",
+    "file": "src/app/boards/boards.html"
+  },
   "languageSwitcher.menuLabel": {
     "source": "Languages",
     "file": "src/app/language-switcher/language-switcher.html"

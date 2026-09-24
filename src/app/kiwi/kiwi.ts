@@ -5,6 +5,7 @@ import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc } from 'firebase/firestore';
 import { AuthService } from '../auth.service';
 import { getFirebaseFirestore, getFirebaseFunctions } from '../firebase.client';
+import type { VoiceConversation } from '@elevenlabs/client';
 import { WorkspaceNavigationService } from '../workspace-navigation/workspace-navigation';
 import { KiwiBoardRefreshService } from './kiwi-board-refresh.service';
 import kiwiVoices from '../../../functions/src/kiwi-voices.json';
@@ -16,22 +17,7 @@ type KiwiProposal = { id: string; summary: string; details?: string[]; kind: str
 type KiwiTalkResponse = { reply: string; proposal?: KiwiProposal };
 type KiwiApplyResponse = { boardId: string; applied: boolean };
 type KiwiStreamEvent = { type: 'started' | 'draft'; draft?: KiwiBoardDraft };
-type VoiceResult = { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal?: boolean }> };
 type VoicePhase = 'idle' | 'listening' | 'thinking' | 'speaking' | 'review';
-type BrowserRecognition = {
-  lang: string;
-  interimResults: boolean;
-  continuous: boolean;
-  onresult: ((event: VoiceResult) => void) | null;
-  onerror: ((event: { error?: string }) => void) | null;
-  onend: (() => void) | null;
-  start(): void;
-  stop(): void;
-};
-type RecognitionWindow = Window & {
-  SpeechRecognition?: new () => BrowserRecognition;
-  webkitSpeechRecognition?: new () => BrowserRecognition;
-};
 
 @Component({
   selector: 'app-kiwi',
@@ -47,15 +33,15 @@ export class KiwiComponent {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly functions = this.isBrowser ? getFirebaseFunctions() : null;
   private readonly firestore = this.isBrowser ? getFirebaseFirestore() : null;
-  private recognition: BrowserRecognition | null = null;
+  private conversation: VoiceConversation | null = null;
+  private voiceAttempt = 0;
+  private queuedVoiceRequest = '';
+  private voiceUserSequence = 0;
+  private proposalReadyVoiceSequence = 0;
   private nextMessageId = 1;
   private loadedForUid = '';
   private loadingNameForUid = '';
   private scopeKey = '';
-  private recognitionRestartTimer: ReturnType<typeof setTimeout> | null = null;
-  private voiceTurnTimer: ReturnType<typeof setTimeout> | null = null;
-  private voiceCommittedTranscript = '';
-  private recognitionTranscript = '';
   private audio: HTMLAudioElement | null = null;
   private audioUrl = '';
   private speechAbort: AbortController | null = null;
@@ -104,13 +90,13 @@ export class KiwiComponent {
     return { teamId: '', boardId: board?.[1] || '', label: 'Personal' };
   });
   readonly signInRedirect = computed(() => ({ redirectTo: this.currentUrl() || '/boards' }));
-  readonly voiceAvailable = this.isBrowser && !!((window as RecognitionWindow).SpeechRecognition || (window as RecognitionWindow).webkitSpeechRecognition);
+  readonly voiceAvailable = this.isBrowser && !!navigator.mediaDevices?.getUserMedia;
   readonly currentVoiceName = computed(() => this.voices.find((voice) => voice.id === this.voiceId())?.name || 'Sunny');
   readonly hidden = computed(() => /^\/(?:sign-in|sign-up|reset-password|verify-email)(?:\/|$)/.test(this.currentUrl()));
   readonly voiceStatus = computed(() => {
     switch (this.voicePhase()) {
       case 'listening': return 'Listening…';
-      case 'thinking': return 'Kiwi is thinking…';
+      case 'thinking': return 'Connecting to Kiwi…';
       case 'speaking': return 'Kiwi is speaking…';
       case 'review': return 'Review the proposed change below';
       default: return 'Talk with Kiwi';
@@ -141,6 +127,10 @@ export class KiwiComponent {
       this.scopeKey = nextKey;
       // The voice connection lives at the app shell. Route changes update the
       // action scope but must not end the conversation or discard its draft.
+      if (this.conversation) this.conversation.sendContextualUpdate(
+        `The user is now in ${teamId ? 'team workspace ' + teamId : 'their personal workspace'}${
+          boardId ? ', viewing board ' + boardId : ''}. Use the client tool for all board or card actions.`,
+        { contextId: 'kiwi-current-workspace' });
     });
     effect(() => {
       this.messages();
@@ -190,7 +180,13 @@ export class KiwiComponent {
   }
   async sendStudioMessage(): Promise<void> {
     const message = this.studioMessage().trim();
-    if (!message || this.busy() || this.applying()) return;
+    if (!message) return;
+    if (this.conversation) {
+      this.studioMessage.set('');
+      this.conversation.sendUserMessage(message);
+      return;
+    }
+    if (this.busy() || this.applying()) return;
     this.studioMessage.set('');
     await this.send(message);
   }
@@ -359,36 +355,39 @@ export class KiwiComponent {
     this.studioDirty.add('cards');
   }
 
-  async send(prefill?: string, byVoice = false): Promise<void> {
+  async send(prefill?: string, fromVoiceTool = false): Promise<void> {
     const text = (prefill || this.draft()).trim();
-    if (!text || this.busy() || this.applying() || this.boardAwaitingOpen() || !this.signedIn() || !this.functions) return;
+    if (!text || !this.signedIn() || !this.functions) return;
+    if (this.busy() || this.applying() || this.boardAwaitingOpen()) {
+      if (fromVoiceTool) this.queuedVoiceRequest = text;
+      return;
+    }
     const controller = new AbortController();
     this.talkAbort = controller;
     const currentDraft = this.proposal()?.kind === 'create_board' ? this.studioDraft() : null;
     const creating = /\b(create|make|build|design|draft)\b/i.test(text)
       && /\b(board|menu|list|wiki)\b/i.test(text);
+    const canStartCreation = creating && (!!this.scope().teamId || /\b(public|unlisted|private)\b/i.test(text));
     const sequence = ++this.streamSequence;
     const history = this.messages().slice(-8).map(({ role, text: content }) => ({ role, text: content }));
-    this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
+    if (!fromVoiceTool) this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
     this.draft.set('');
     if (!currentDraft) {
       this.proposal.set(null);
       this.planningCreation.set(false);
     }
-    this.planningCreation.set(creating || !!currentDraft);
-    if (creating && !currentDraft) {
+    this.planningCreation.set(canStartCreation || !!currentDraft);
+    if (canStartCreation && !currentDraft) {
       this.boardAwaitingOpen.set('');
       this.studioDirty.clear();
       this.studioDraft.set({ kind: 'create_board', title: 'New board', description: '', tone: 'teal',
-        visibility: this.scope().teamId ? 'private' : 'public', cards: [] });
+        visibility: this.scope().teamId || /\bprivate\b/i.test(text) ? 'private'
+          : /\bunlisted\b/i.test(text) ? 'unlisted' : 'public', cards: [] });
       this.studioReady.set(false);
       this.studioOpen.set(true);
     }
     this.busy.set(true);
-    if (byVoice) this.voicePhase.set('thinking');
     this.error.set('');
-    if (byVoice && (creating || currentDraft)) void this.speak(currentDraft
-      ? 'I’ll update the draft on your screen.' : 'I’ll start the board on your screen.');
     try {
       const callable = httpsCallable<{
         message: string; history: Array<{ role: string; text: string }>;
@@ -407,7 +406,10 @@ export class KiwiComponent {
       const data = await finalData;
       if (sequence !== this.streamSequence) return;
       this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: data.reply }]);
-      if (data.proposal) this.proposal.set(data.proposal);
+      if (data.proposal) {
+        this.proposal.set(data.proposal);
+        if (fromVoiceTool) this.proposalReadyVoiceSequence = this.voiceUserSequence;
+      }
       else if (!currentDraft) this.proposal.set(null);
       if (data.proposal?.kind === 'create_board' && data.proposal.draft) {
         this.mergeStudioDraft(data.proposal.draft);
@@ -416,35 +418,30 @@ export class KiwiComponent {
       } else if (creating && !currentDraft) {
         this.studioReady.set(false);
       }
-      if (byVoice && this.voiceActive()) void this.speak(data.proposal
-        ? `${data.reply} Please review the draft on screen. You can keep talking or create it when you are ready.`
-        : data.reply);
+      if (fromVoiceTool && this.conversation) this.conversation.sendContextualUpdate(
+        data.proposal
+          ? `The requested change is ready for review on screen: ${data.reply} The user must approve before saving.`
+          : `The action could not produce a proposal: ${data.reply}`,
+        { contextId: 'kiwi-last-action' });
     } catch (error) {
       if (sequence !== this.streamSequence || controller.signal.aborted) return;
       this.error.set(this.errorText(error, 'Kiwi could not answer. Please try again.'));
-      if (byVoice && this.voiceActive()) this.scheduleListening();
+      if (fromVoiceTool && this.conversation) this.conversation.sendContextualUpdate(
+        'The requested change failed. Tell the user and offer to retry.', { contextId: 'kiwi-last-action' });
     } finally {
       if (this.talkAbort === controller) this.talkAbort = null;
       this.busy.set(false);
       this.planningCreation.set(false);
-      if (byVoice && this.voiceActive() && !this.speaking()) this.scheduleListening();
+      const queued = this.queuedVoiceRequest;
+      this.queuedVoiceRequest = '';
+      if (queued) queueMicrotask(() => void this.send(queued, true));
     }
   }
 
   async apply(): Promise<void> {
     const proposal = this.proposal();
     if (!proposal || this.applying() || !this.functions) return;
-    if (this.voiceTurnTimer) clearTimeout(this.voiceTurnTimer);
-    this.voiceTurnTimer = null;
-    this.voiceCommittedTranscript = '';
-    this.recognitionTranscript = '';
     this.voiceTranscript.set('');
-    if (this.recognition) {
-      const recognition = this.recognition;
-      this.recognition = null;
-      recognition.stop();
-      this.listening.set(false);
-    }
     this.applying.set(true);
     const creatingBoard = proposal.kind === 'create_board';
     this.error.set('');
@@ -489,12 +486,12 @@ export class KiwiComponent {
       const confirmation = creatingBoard || proposal.kind === 'copy_board'
         ? 'Your board is created and open.' : 'Your changes are saved and the board is open.';
       this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: confirmation }]);
-      if (this.voiceActive()) void this.speak(`${confirmation} What would you like to change or add?`);
+      if (this.conversation) this.conversation.sendContextualUpdate(
+        confirmation, { contextId: 'kiwi-last-action' });
     } catch (error) {
       this.error.set(this.errorText(error, 'The change could not be saved. Ask Kiwi to review it again.'));
     } finally {
       this.applying.set(false);
-      if (this.voiceActive() && !this.speaking()) this.scheduleListening();
     }
   }
 
@@ -510,216 +507,113 @@ export class KiwiComponent {
 
   toggleVoiceSession(): void {
     if (this.voiceActive()) { this.stopVoiceSession(); return; }
-    if (!this.signedIn() || !this.voiceAvailable || this.busy() || this.applying()) return;
+    if (!this.signedIn() || !this.voiceAvailable) return;
     this.error.set('');
     this.voiceActive.set(true);
-    this.startListening();
-  }
-
-  private startListening(): void {
-    if (!this.voiceActive() || !this.voiceAvailable || this.listening() || this.busy() || this.speaking()) return;
-    const browser = window as RecognitionWindow;
-    const Recognition = browser.SpeechRecognition || browser.webkitSpeechRecognition;
-    if (!Recognition) return;
-    const recognition = new Recognition();
-    this.recognition = recognition;
-    recognition.lang = document.documentElement.lang || 'en-US';
-    recognition.interimResults = true;
-    recognition.continuous = true;
-    recognition.onresult = (event) => {
-      if (!this.voiceActive() || this.recognition !== recognition) return;
-      const results = Array.from(event.results);
-      this.recognitionTranscript = results
-        .map((result) => result[0]?.transcript?.trim() || '').filter(Boolean).join(' ');
-      const transcript = [this.voiceCommittedTranscript, this.recognitionTranscript].filter(Boolean).join(' ').trim();
-      if (!transcript) return;
-      this.voiceTranscript.set(transcript);
-      if (results[results.length - 1]?.isFinal) this.scheduleVoiceTurn(1100);
-      else if (this.voiceTurnTimer) { clearTimeout(this.voiceTurnTimer); this.voiceTurnTimer = null; }
-    };
-    recognition.onerror = (event) => {
-      if (event.error === 'no-speech' || event.error === 'aborted') return;
-      this.stopVoiceSession();
-      this.error.set(event.error === 'not-allowed' || event.error === 'service-not-allowed'
-        ? 'Microphone access was denied. Allow it in your browser, or choose Chat.'
-        : 'Voice recognition stopped. Try again or choose Chat.');
-    };
-    recognition.onend = () => {
-      if (this.recognition !== recognition) return;
-      this.recognition = null;
-      this.listening.set(false);
-      if (this.recognitionTranscript) this.voiceCommittedTranscript =
-        [this.voiceCommittedTranscript, this.recognitionTranscript].filter(Boolean).join(' ');
-      this.recognitionTranscript = '';
-      if (this.voiceCommittedTranscript && !this.voiceTurnTimer && !this.busy()) this.scheduleVoiceTurn(1100);
-      if (this.voiceActive() && !this.busy() && !this.speaking()) this.scheduleListening();
-    };
-    try {
-      recognition.start();
-      this.listening.set(true);
-      this.voicePhase.set('listening');
-    } catch {
-      this.stopVoiceSession();
-      this.error.set('Microphone access is unavailable. Choose Chat to type your request.');
-    }
-  }
-
-  private scheduleListening(): void {
-    if (!this.voiceActive() || this.recognitionRestartTimer) return;
-    this.recognitionRestartTimer = setTimeout(() => {
-      this.recognitionRestartTimer = null;
-      this.startListening();
-    }, 300);
-  }
-
-  private scheduleVoiceTurn(delayMs: number): void {
-    if (this.voiceTurnTimer) clearTimeout(this.voiceTurnTimer);
-    this.voiceTurnTimer = setTimeout(() => {
-      this.voiceTurnTimer = null;
-      this.finishVoiceTurn();
-    }, delayMs);
-  }
-
-  finishVoiceTurn(): void {
-    const transcript = this.voiceTranscript().trim();
-    if (!transcript || !this.voiceActive() || this.busy() || this.applying()) return;
-    if (this.voiceTurnTimer) clearTimeout(this.voiceTurnTimer);
-    this.voiceTurnTimer = null;
-    if (this.recognitionRestartTimer) clearTimeout(this.recognitionRestartTimer);
-    this.recognitionRestartTimer = null;
-    const recognition = this.recognition;
-    this.recognition = null;
-    recognition?.stop();
-    this.voiceCommittedTranscript = '';
-    this.recognitionTranscript = '';
-    this.voiceTranscript.set('');
-    this.listening.set(false);
     this.voicePhase.set('thinking');
-    if (this.proposal() && /^(?:yes[, ]+)?(?:create|save|apply)(?: it| this board| the board| this change)(?: now)?[.!]?$/i.test(transcript)) {
-      void this.apply();
-      return;
+    void this.startVoiceSession(++this.voiceAttempt);
+  }
+
+  private async startVoiceSession(attempt: number): Promise<void> {
+    if (!this.functions) return;
+    try {
+      const [session, client] = await Promise.all([
+        httpsCallable<{ voiceId: string }, { signedUrl: string; providerVoiceId: string }>(
+          this.functions, 'kiwiVoiceSession')({ voiceId: this.voiceId() }),
+        import('@elevenlabs/client'),
+      ]);
+      if (attempt !== this.voiceAttempt || !this.voiceActive()) return;
+      const conversation = await client.Conversation.startSession({
+        signedUrl: session.data.signedUrl,
+        connectionType: 'websocket',
+        textOnly: false,
+        overrides: { tts: { voiceId: session.data.providerVoiceId } },
+        dynamicVariables: { assistant_name: this.name() },
+        clientTools: {
+          kiwi_request: (parameters: { request?: string }) => {
+            const request = String(parameters?.request || '').trim().slice(0, 4000);
+            if (!request) return 'Please ask what the user wants to change.';
+            const creating = /\b(create|make|build|design|draft)\b/i.test(request)
+              && /\b(board|menu|list|wiki)\b/i.test(request);
+            if (creating && !this.scope().teamId && !/\b(public|unlisted|private)\b/i.test(request))
+              return 'Ask the user whether this new board should be Public, Unlisted, or Private before starting the draft.';
+            void this.send(request, true);
+            return 'The request is being prepared on screen. The user will review it before it is saved.';
+          },
+          kiwi_apply: () => {
+            if (this.busy()) return 'The proposal is still being prepared. Ask the user to approve after it appears.';
+            if (!this.proposal()) return 'There is no ready proposal to save. Ask the user what to make or change.';
+            if (this.voiceUserSequence <= this.proposalReadyVoiceSequence
+              || !/\b(yes|yeah|yep|go ahead|do it|create|save|apply|send|publish)\b/i.test(this.voiceTranscript()))
+              return 'The user has not explicitly approved this ready proposal. Ask them to review it and say to save it.';
+            void this.apply();
+            return 'Saving the approved change now.';
+          },
+        },
+        onConnect: () => {
+          if (attempt !== this.voiceAttempt) return;
+          this.voicePhase.set('listening');
+          this.listening.set(true);
+        },
+        onDisconnect: () => {
+          if (attempt !== this.voiceAttempt) return;
+          this.conversation = null;
+          this.voiceActive.set(false);
+          this.voicePhase.set('idle');
+          this.listening.set(false);
+          this.speaking.set(false);
+        },
+        onModeChange: ({ mode }) => {
+          if (attempt !== this.voiceAttempt) return;
+          const speaking = mode === 'speaking';
+          this.speaking.set(speaking);
+          this.listening.set(!speaking);
+          this.voicePhase.set(speaking ? 'speaking' : 'listening');
+        },
+        onMessage: ({ role, message }) => {
+          if (attempt !== this.voiceAttempt) return;
+          const text = String(message || '').trim();
+          if (!text) return;
+          this.messages.update((items) => [...items, {
+            id: this.nextMessageId++, role: role === 'agent' ? 'assistant' : 'user', text,
+          }]);
+          if (role === 'user') {
+            this.voiceUserSequence++;
+            this.voiceTranscript.set(text);
+          }
+        },
+        onError: (message) => {
+          if (attempt !== this.voiceAttempt) return;
+          this.error.set(String(message || 'Kiwi voice was interrupted. Please try again.'));
+        },
+      });
+      if (attempt !== this.voiceAttempt || !this.voiceActive()) {
+        await conversation.endSession();
+        return;
+      }
+      this.conversation = conversation;
+      const { teamId, boardId } = this.scope();
+      conversation.sendContextualUpdate(`The user is in ${teamId ? 'team workspace ' + teamId : 'their personal workspace'}${boardId ? ', viewing board ' + boardId : ''}. The user calls you ${this.name()}. Use kiwi_request for board/card operations and kiwi_apply only after explicit approval.`,
+        { contextId: 'kiwi-current-workspace' });
+    } catch (error) {
+      if (attempt !== this.voiceAttempt) return;
+      this.stopVoiceSession();
+      this.error.set(this.errorText(error, 'Kiwi voice could not start. Check microphone access and try again.'));
     }
-    void this.send(transcript, true);
   }
 
   stopVoiceSession(): void {
+    this.voiceAttempt++;
+    const conversation = this.conversation;
+    this.conversation = null;
     this.voiceActive.set(false);
     this.voicePhase.set('idle');
-    if (this.recognitionRestartTimer) clearTimeout(this.recognitionRestartTimer);
-    this.recognitionRestartTimer = null;
-    if (this.voiceTurnTimer) clearTimeout(this.voiceTurnTimer);
-    this.voiceTurnTimer = null;
-    this.recognition?.stop();
-    this.recognition = null;
-    this.voiceCommittedTranscript = '';
-    this.recognitionTranscript = '';
     this.voiceTranscript.set('');
     this.listening.set(false);
+    this.speaking.set(false);
+    this.queuedVoiceRequest = '';
+    if (conversation) void conversation.endSession().catch(() => {});
     this.stopSpeaking();
-  }
-
-  private async speak(text: string): Promise<void> {
-    if (!this.isBrowser || !this.functions) return;
-    this.stopSpeaking();
-    const requestId = this.speechRequestId;
-    this.speaking.set(true);
-    this.voicePhase.set('speaking');
-    const finished = () => {
-      if (requestId !== this.speechRequestId) return;
-      this.releaseAudio();
-      this.speaking.set(false);
-      if (!this.voiceActive()) return;
-      this.scheduleListening();
-    };
-    try {
-      if (typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported('audio/mpeg')) {
-        try { await this.playStreamedSpeech(text, requestId, finished); }
-        catch (streamError) {
-          if (requestId !== this.speechRequestId || !this.voiceActive()) return;
-          if (this.audio && this.audio.currentTime > 0) throw streamError;
-          this.releaseAudio();
-          await this.playCompleteSpeech(text, requestId, finished);
-        }
-      } else {
-        await this.playCompleteSpeech(text, requestId, finished);
-      }
-    } catch (error) {
-      if (requestId !== this.speechRequestId) return;
-      this.releaseAudio();
-      this.speaking.set(false);
-      this.error.set(this.errorText(error, 'Kiwi could not speak. You can continue in Chat.'));
-      this.scheduleListening();
-    }
-  }
-
-  private async playCompleteSpeech(text: string, requestId: number, finished: () => void): Promise<void> {
-    if (!this.functions) return;
-    const callable = httpsCallable<{ voiceId: string; text: string }, { audio: string }>(this.functions, 'kiwiSpeak');
-    const { data } = await callable({ voiceId: this.voiceId(), text });
-    if (requestId !== this.speechRequestId || !this.voiceActive()) return;
-    await this.playAudio(data.audio, requestId, finished, () => {
-      if (requestId !== this.speechRequestId) return;
-      this.releaseAudio();
-      this.speaking.set(false);
-      this.error.set('Kiwi’s voice could not play. You can continue talking or choose Chat.');
-      this.scheduleListening();
-    });
-  }
-
-  private async playStreamedSpeech(text: string, requestId: number, finished: () => void): Promise<void> {
-    if (!this.functions) return;
-    const controller = new AbortController();
-    this.speechAbort = controller;
-    const source = new MediaSource();
-    const url = URL.createObjectURL(source);
-    this.audioUrl = url;
-    const audio = new Audio(url);
-    this.audio = audio;
-    audio.onended = finished;
-    audio.onerror = () => {
-      if (requestId !== this.speechRequestId) return;
-      this.releaseAudio();
-      this.speaking.set(false);
-      this.error.set('Kiwi’s voice could not play. You can continue talking or choose Chat.');
-      this.scheduleListening();
-    };
-    const bufferReady = new Promise<SourceBuffer>((resolve, reject) => {
-      source.addEventListener('sourceopen', () => {
-        try { resolve(source.addSourceBuffer('audio/mpeg')); } catch (error) { reject(error); }
-      }, { once: true });
-      source.addEventListener('sourceclose', () => reject(new Error('Voice playback closed.')), { once: true });
-    });
-    audio.load();
-    const buffer = await bufferReady;
-    if (requestId !== this.speechRequestId) return;
-    const callable = httpsCallable<{ voiceId: string; text: string }, { contentType: string },
-      { type: 'audio'; data: string }>(this.functions, 'kiwiSpeakStream');
-    const { stream, data } = await callable.stream({ voiceId: this.voiceId(), text }, { signal: controller.signal });
-    let started = false;
-    for await (const chunk of stream) {
-      if (requestId !== this.speechRequestId || controller.signal.aborted) return;
-      if (chunk.type !== 'audio' || !chunk.data) continue;
-      const bytes = Uint8Array.from(atob(chunk.data), (character) => character.charCodeAt(0));
-      await new Promise<void>((resolve, reject) => {
-        const done = () => { buffer.removeEventListener('error', failed); resolve(); };
-        const failed = () => { buffer.removeEventListener('updateend', done); reject(new Error('Voice buffer failed.')); };
-        buffer.addEventListener('updateend', done, { once: true });
-        buffer.addEventListener('error', failed, { once: true });
-        try { buffer.appendBuffer(bytes); } catch (error) { failed(); reject(error); }
-      });
-      if (!started) {
-        started = true;
-        void audio.play().catch((error) => {
-          if (requestId !== this.speechRequestId) return;
-          this.error.set(this.errorText(error, 'Kiwi’s voice could not start.'));
-          this.releaseAudio();
-          this.speaking.set(false);
-          this.scheduleListening();
-        });
-      }
-    }
-    await data;
-    if (requestId === this.speechRequestId && source.readyState === 'open' && !buffer.updating) source.endOfStream();
   }
 
   stopSpeaking(): void {

@@ -48,7 +48,7 @@
         <div class="kiwi-panel__conversation" role="log" aria-live="polite" aria-label="Kiwi conversation">
           @if (mode() === 'voice') {
             <div class="kiwi-voice-stage" [class.kiwi-voice-stage--active]="voiceActive()">
-              <button type="button" class="kiwi-voice-orb" [class.kiwi-voice-orb--listening]="listening()" [class.kiwi-voice-orb--speaking]="speaking()" (click)="toggleVoiceSession()" [disabled]="!voiceAvailable || applying()" [attr.aria-label]="voiceActive() ? 'End voice conversation' : 'Start talking with Kiwi'">
+              <button type="button" class="kiwi-voice-orb" [class.kiwi-voice-orb--listening]="listening()" [class.kiwi-voice-orb--speaking]="speaking()" (click)="toggleVoiceSession()" [disabled]="!voiceAvailable" [attr.aria-label]="voiceActive() ? 'End voice conversation' : 'Start talking with Kiwi'">
                 <span class="kiwi-voice-orb__halo" aria-hidden="true"></span>
                 <img src="/assets/kiwi/mascot.png" alt="" aria-hidden="true" />
                 <span class="kiwi-voice-orb__mic material-symbols-outlined" aria-hidden="true">{{ voiceActive() ? 'graphic_eq' : 'mic' }}</span>
@@ -57,14 +57,11 @@
               <p>{{ voiceActive() ? 'Speak naturally. Kiwi will answer out loud.' : 'Have a conversation with your LivingWiki assistant.' }}</p>
               <span class="kiwi-voice-stage__voice">Voice: {{ currentVoiceName() }}</span>
               @if (voiceAvailable) {
-                <button type="button" class="kiwi-voice-action" (click)="toggleVoiceSession()" [disabled]="applying()">
+                <button type="button" class="kiwi-voice-action" (click)="toggleVoiceSession()">
                   <span class="material-symbols-outlined" aria-hidden="true">{{ voiceActive() ? 'call_end' : 'mic' }}</span>
                   {{ voiceActive() ? 'End conversation' : 'Start talking' }}
                 </button>
-                @if (voiceTranscript()) {
-                  <div class="kiwi-live-transcript" aria-label="What Kiwi heard">{{ voiceTranscript() }}</div>
-                  <button type="button" class="kiwi-finish-speaking" (click)="finishVoiceTurn()">I’m done speaking <span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span></button>
-                }
+                @if (voiceTranscript()) { <div class="kiwi-live-transcript" aria-label="What Kiwi heard">{{ voiceTranscript() }}</div> }
               } @else {
                 <p class="kiwi-voice-stage__unavailable">Voice is unavailable in this browser. Choose Chat to type to Kiwi.</p>
               }
@@ -183,8 +180,8 @@
         </div>
         <footer class="kiwi-studio__footer">
           <div class="kiwi-studio__conversation">
-            <div class="kiwi-studio__voice"><button type="button" (click)="toggleVoiceSession()" [disabled]="!voiceAvailable || applying()" [attr.aria-label]="voiceActive() ? 'End Kiwi voice conversation' : 'Talk to Kiwi'"><span class="material-symbols-outlined" aria-hidden="true">{{ voiceActive() ? 'graphic_eq' : 'mic' }}</span></button><span>{{ voiceStatus() }}</span></div>
-            <div class="kiwi-studio__chat"><label class="sr-only" for="kiwi-studio-message">Ask Kiwi to change this draft</label><input id="kiwi-studio-message" type="text" maxlength="4000" placeholder="Ask Kiwi to change this draft…" [value]="studioMessage()" (input)="setStudioMessage($event)" (keydown)="onStudioMessageKeydown($event)" [disabled]="busy() || applying()" /><button type="button" (click)="sendStudioMessage()" [disabled]="!studioMessage().trim() || busy() || applying()" aria-label="Send draft change to Kiwi"><span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span></button></div>
+            <div class="kiwi-studio__voice"><button type="button" (click)="toggleVoiceSession()" [disabled]="!voiceAvailable" [attr.aria-label]="voiceActive() ? 'End Kiwi voice conversation' : 'Talk to Kiwi'"><span class="material-symbols-outlined" aria-hidden="true">{{ voiceActive() ? 'graphic_eq' : 'mic' }}</span></button><span>{{ voiceStatus() }}</span></div>
+            <div class="kiwi-studio__chat"><label class="sr-only" for="kiwi-studio-message">Ask Kiwi to change this draft</label><input id="kiwi-studio-message" type="text" maxlength="4000" placeholder="Ask Kiwi to change this draft…" [value]="studioMessage()" (input)="setStudioMessage($event)" (keydown)="onStudioMessageKeydown($event)" [disabled]="!voiceActive() && (busy() || applying())" /><button type="button" (click)="sendStudioMessage()" [disabled]="!studioMessage().trim() || (!voiceActive() && (busy() || applying()))" aria-label="Send draft change to Kiwi"><span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span></button></div>
           </div>
           <button type="button" class="kiwi-primary" (click)="apply()" [disabled]="!proposal() || !studioReady() || applying() || busy()">{{ applying() ? (boardAwaitingOpen() ? 'Opening…' : 'Creating…') : boardAwaitingOpen() ? 'Open saved board' : 'Create board' }}</button>
         </footer>

@@ -3324,6 +3324,7 @@
     "authStoryCreateTitle": "Votre monde est plein de connexions.",
     "authStorySignInDescription": " Les lieux, les idées et les liens que vous avez enregistrés vous attendent. ",
     "authStorySignInTitle": "Bienvenue dans votre monde.",
-    "languageSwitcher.menuLabel": "Langues"
+    "languageSwitcher.menuLabel": "Langues",
+    "duplicateBoardMenu": "Dupliquer le tableau"
   }
 }

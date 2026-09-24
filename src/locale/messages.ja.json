@@ -3324,6 +3324,7 @@
     "authStoryCreateTitle": "あなたの世界は、つながりに満ちています。",
     "authStorySignInDescription": " 保存した場所、アイデア、つながりは、いつでもここにあります。 ",
     "authStorySignInTitle": "あなたの世界へ、おかえりなさい。",
-    "languageSwitcher.menuLabel": "言語"
+    "languageSwitcher.menuLabel": "言語",
+    "duplicateBoardMenu": "ボードを複製"
   }
 }

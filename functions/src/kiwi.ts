@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
-import { defineSecret } from 'firebase-functions/params';
+import { defineSecret, defineString } from 'firebase-functions/params';
 import { FieldValue } from 'firebase-admin/firestore';
 import { randomUUID } from 'node:crypto';
 import { db } from './firebase';
@@ -16,6 +16,7 @@ const region = 'us-central1';
 const ACTION_LIFETIME_MS = 15 * 60 * 1000;
 const MAX_PROMPT = 4000;
 const elevenLabsApiKey = defineSecret('ELEVENLABS_API_KEY');
+const elevenLabsKiwiAgentId = defineString('ELEVENLABS_KIWI_AGENT_ID');
 const DEFAULT_VOICE_ID = kiwiVoices[0].id;
 const voiceById = new Map(kiwiVoices.map((voice) => [voice.id, voice]));
 
@@ -225,6 +226,28 @@ export const kiwiPreferences = onCall({ region, cors: true }, async (request) =>
     voiceId: voiceById.has(storedVoiceId) ? storedVoiceId : DEFAULT_VOICE_ID };
 });
 
+// Voice is a single persistent conversation. The credential is issued only to
+// signed-in users; all actions still go through kiwiTalk/kiwiApply as that user.
+export const kiwiVoiceSession = onCall({ region, cors: true, secrets: [elevenLabsApiKey],
+  timeoutSeconds: 20, memory: '256MiB' }, async (request) => {
+  const uid = actor(request.auth?.uid);
+  const agentId = elevenLabsKiwiAgentId.value().trim();
+  if (!agentId) throw new HttpsError('failed-precondition', 'Kiwi voice is not configured.');
+  const voiceId = value(request.data?.voiceId, 80);
+  const voice = voiceById.get(voiceId || DEFAULT_VOICE_ID);
+  if (!voice) throw new HttpsError('invalid-argument', 'Choose one of Kiwi’s available voices.');
+  await consumeKiwiSpeechQuota(uid);
+  const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?${
+    new URLSearchParams({ agent_id: agentId, environment: 'production' })}`, {
+    headers: { 'xi-api-key': elevenLabsApiKey.value() }, signal: AbortSignal.timeout(12000),
+  }).catch(() => { throw new HttpsError('unavailable', 'Kiwi voice is temporarily unavailable.'); });
+  if (!response.ok) throw new HttpsError('unavailable', 'Kiwi voice could not start.');
+  const body = await response.json() as { signed_url?: unknown };
+  if (typeof body.signed_url !== 'string' || !body.signed_url.startsWith('wss://'))
+    throw new HttpsError('internal', 'Kiwi voice did not return a valid session.');
+  return { signedUrl: body.signed_url, providerVoiceId: voice.providerVoiceId };
+});
+
 async function consumeKiwiSpeechQuota(uid: string): Promise<void> {
   const now = new Date();
   const hour = now.toISOString().slice(0, 13);
@@ -341,7 +364,8 @@ export const kiwiTalk = onCall({ region, cors: true, secrets: [geminiApiKey], ti
   const generation = { model: 'gemini-3-flash-preview',
     contents: [{ role: 'user', parts: [{ text: JSON.stringify({ message, history, workspace: scope.teamId ? 'team' : 'personal', board: boardContext, choices,
       currentDraft: currentDraft?.kind === 'create_board' ? currentDraft : null }) }] }],
-    config: { systemInstruction: instruction, responseMimeType: 'application/json', temperature: 0.3, maxOutputTokens: 2200 },
+    config: { systemInstruction: instruction + ' Keep new boards to at most 6 useful cards, with concise card details so the JSON completes.',
+      responseMimeType: 'application/json', temperature: 0.3, maxOutputTokens: 3200 },
   };
   let responseText = '';
   if (request.acceptsStreaming && stream) {
@@ -366,7 +390,15 @@ export const kiwiTalk = onCall({ region, cors: true, secrets: [geminiApiKey], ti
   }
   let parsed: Data;
   try { parsed = JSON.parse(responseText || '{}') as Data; }
-  catch { throw new HttpsError('internal', 'Kiwi could not prepare a response. Please try again.'); }
+  catch {
+    // A partial JSON stream can leave a visible preview without a usable
+    // proposal. Retry once with a smaller non-streamed action before failing.
+    const retry = await ai.models.generateContent({ ...generation,
+      config: { ...generation.config, maxOutputTokens: 1800,
+        systemInstruction: generation.config.systemInstruction + ' On this retry, return no more than 4 cards and keep every field brief. Return complete valid JSON.' } });
+    try { parsed = JSON.parse(retry.text || '{}') as Data; }
+    catch { throw new HttpsError('internal', 'Kiwi could not prepare a response. Please try again.'); }
+  }
   let reply = value(parsed['reply'], 1200) || 'Tell me a little more about what you would like to make.';
   const rawAction = parsed['action'] && typeof parsed['action'] === 'object' && !Array.isArray(parsed['action'])
     ? { ...(parsed['action'] as Data) } : null;

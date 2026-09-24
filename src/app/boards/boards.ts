@@ -2479,6 +2479,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly stackExpandedCardId = signal<string | null>(null);
   readonly stackShareDialogOpen = signal(false);
   readonly boardForkingId = signal<string | null>(null);
+  readonly boardDuplicatingId = signal<string | null>(null);
   readonly stackFrameDurationMs = 4200;
   readonly stackActiveFrameDurationMs = signal(this.stackFrameDurationMs);
   readonly tourWayfindersShown = signal(false);
@@ -9722,22 +9723,23 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     await this.persistAndReplaceBoard(nextBoard, 'cards');
   }
 
-  private duplicateCardWithBoardInside(card: BoardCard, now: string): BoardCard {
-    const duplicate = duplicateCardRecord(card, () => this.createId(), now);
+  private duplicateCardWithBoardInside(card: BoardCard, now: string, forBoard = false, childBoards?: Map<string, Board>): BoardCard {
+    const duplicate = duplicateCardRecord(card, () => this.createId(), now, !forBoard, !forBoard);
     const childBoardId = card.childBoardId?.trim();
     const childBoard = childBoardId
-      ? this.boards().find((candidate) => candidate.id === childBoardId) ?? null
+      ? childBoards?.get(childBoardId) ?? this.boards().find((candidate) => candidate.id === childBoardId) ?? null
       : null;
     if (!childBoard) {
       return duplicate;
     }
+    const relatedCards = childBoard.cards.map((childCard, index) => ({
+      ...duplicateCardRecord(childCard, () => this.createId(), now, false, !forBoard),
+      rank: index + 1,
+    }));
     return {
       ...duplicate,
       childBoardId: '',
-      relatedCards: childBoard.cards.map((childCard, index) => ({
-        ...duplicateCardRecord(childCard, () => this.createId(), now, false),
-        rank: index + 1,
-      })),
+      relatedCards: forBoard ? this.remapCopiedTourLegs(childBoard.cards, relatedCards) : relatedCards,
     };
   }
 
@@ -14217,6 +14219,42 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       && board.ownerUserId !== uid;
   }
 
+  async duplicateBoard(board: Board, event?: Event): Promise<void> {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (!this.canEditBoard(board) || board.teamId || this.boardDuplicatingId()) return;
+
+    this.boardDuplicatingId.set(board.id);
+    try {
+      let source = this.boards().find((item) => item.id === board.id) ?? board;
+      if (source.isSummary) {
+        const loaded = await this.loadBoardById(source.id);
+        if (!loaded || loaded.isSummary || !this.canEditBoard(loaded)) {
+          throw new Error('Could not load the full board to duplicate. Please try again.');
+        }
+        source = loaded;
+      }
+      const childIds = [...new Set(source.cards.map((card) => card.childBoardId?.trim()).filter((id): id is string => !!id))];
+      const children = await Promise.all(childIds.map(async (id) => {
+        const cached = this.boards().find((item) => item.id === id && !item.isSummary);
+        const child = cached ?? await this.loadBoardById(id);
+        if (!child || child.isSummary) throw new Error('Could not load a board inside this board. Please try again.');
+        return [id, child] as const;
+      }));
+      const suffix = ' (copy)';
+      const title = `${source.title.trim().slice(0, 90 - suffix.length).trimEnd()}${suffix}`;
+      const copy = this.buildBoardCopy(source, new Date().toISOString(), title, false, new Map(children));
+      const persisted = await this.persistBoard(copy);
+      this.boards.update((boards) => [persisted, ...boards]);
+      this.boardsSyncError.set(null);
+    } catch (error) {
+      console.error('Board duplication failed', error, { boardId: board.id });
+      this.boardsSyncError.set(this.boardSaveErrorMessage(error));
+    } finally {
+      this.boardDuplicatingId.set(null);
+    }
+  }
+
   async forkBoard(board: Board, event?: Event, navigateToCopy = true): Promise<Board | null> {
     event?.preventDefault();
     event?.stopPropagation();
@@ -14225,19 +14263,42 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     this.boardForkingId.set(board.id);
     const now = new Date().toISOString();
+    try {
+      const forked = this.buildBoardCopy(board, now, board.title, true);
+      const persisted = await this.persistBoard(forked);
+      this.boards.update((boards) => [persisted, ...boards]);
+      this.boardsSyncError.set(null);
+      this.setShareMessage('Added a copy to your boards.');
+      if (navigateToCopy) {
+        await this.router.navigate(['/boards', persisted.id]);
+      }
+      return persisted;
+    } catch (error) {
+      console.error('Board fork failed', error, { boardId: board.id });
+      this.boardsSyncError.set($localize`Could not make a copy of this board. Please try again.`);
+      return null;
+    } finally {
+      this.boardForkingId.set(null);
+    }
+  }
+
+  private buildBoardCopy(board: Board, now: string, title: string, isFork: boolean, childBoards?: Map<string, Board>): Board {
+    const cards = board.cards.map((card) => this.duplicateCardWithBoardInside(card, now, true, childBoards));
+    const copiedCards = this.remapCopiedTourLegs(board.cards, cards);
     const forked: Board = {
       ...board,
       ...this.currentOwnerSnapshot(),
       id: this.createId(),
+      title,
       customSlug: '',
       atlasId: '',
       generatedForAtlasId: '',
       likeCount: 0,
       sortOrder: this.nextBoardSortOrder(),
-      forkedFromBoardId: board.id,
-      forkedFromTitle: board.title,
-      forkedFromOwnerUserId: board.ownerUserId,
-      forkedFromOwnerName: this.ownerName(board),
+      forkedFromBoardId: isFork ? board.id : '',
+      forkedFromTitle: isFork ? board.title : '',
+      forkedFromOwnerUserId: isFork ? board.ownerUserId : '',
+      forkedFromOwnerName: isFork ? this.ownerName(board) : '',
       socialVideoUrl: '',
       socialVideoMimeType: '',
       socialVideoUpdatedAt: '',
@@ -14277,42 +14338,27 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       parentCardId: '',
       parentBoardTitle: '',
       parentCardTitle: '',
-      cards: board.cards.map((card) => ({
-        ...card,
-        id: this.createId(),
-        childBoardId: '',
-        stickers: card.stickers.map((sticker) => ({ ...sticker })),
-        tour: card.tour
-          ? {
-              ...card.tour,
-              legToNext: card.tour.legToNext ? { ...card.tour.legToNext } : null,
-            }
-          : null,
-        createdAt: now,
-        updatedAt: now,
-      })),
-      stickers: board.stickers.map((sticker) => ({ ...sticker })),
+      cards: copiedCards,
+      stickers: board.stickers.map((sticker) => ({ ...sticker, id: this.createId() })),
       tourMeta: board.tourMeta ? { ...board.tourMeta, extras: [...board.tourMeta.extras] } : null,
       learningQuiz: null,
       createdAt: now,
       updatedAt: now,
     };
-    try {
-      const persisted = await this.persistBoard(forked);
-      this.boards.update((boards) => [persisted, ...boards]);
-      this.boardsSyncError.set(null);
-      this.setShareMessage('Added a copy to your boards.');
-      if (navigateToCopy) {
-        await this.router.navigate(['/boards', persisted.id]);
-      }
-      return persisted;
-    } catch (error) {
-      console.error('Board fork failed', error, { boardId: board.id });
-      this.boardsSyncError.set($localize`Could not make a copy of this board. Please try again.`);
-      return null;
-    } finally {
-      this.boardForkingId.set(null);
-    }
+    return forked;
+  }
+
+  private remapCopiedTourLegs(originals: BoardCard[], copies: BoardCard[]): BoardCard[] {
+    const cardIds = new Map(originals.map((card, index) => [card.id, copies[index].id]));
+    return copies.map((card, index) => {
+      const leg = card.tour?.legToNext;
+      if (!leg) return card;
+      const target = cardIds.get(originals[index].tour?.legToNext?.toCardId ?? '');
+      return {
+        ...card,
+        tour: { ...card.tour!, legToNext: target ? { ...leg, toCardId: target } : null },
+      };
+    });
   }
 
   async makeStackCopyAndContinue(board: Board, mode: 'trailer' | 'video'): Promise<void> {

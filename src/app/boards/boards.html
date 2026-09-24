@@ -1189,6 +1189,12 @@
                             <span class="material-symbols-outlined">edit</span>
                             Edit board
                           </button>
+                          @if (!board.teamId) {
+                            <button type="button" role="menuitem" [disabled]="!!boardDuplicatingId()" (click)="closeCardActionMenu(); duplicateBoard(board, $event)">
+                              <span class="material-symbols-outlined">content_copy</span>
+                              <span i18n="@@duplicateBoardMenu">Duplicate board</span>
+                            </button>
+                          }
                           <button type="button" role="menuitem" class="card-action-menu__danger" (click)="closeCardActionMenu(); deleteBoard(board, $event)" i18n>
                             <span class="material-symbols-outlined">delete</span>
                             Delete board

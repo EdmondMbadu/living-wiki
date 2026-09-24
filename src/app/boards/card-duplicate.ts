@@ -23,6 +23,7 @@ export function duplicateCardRecord<T extends DuplicableCard>(
   createId: () => string,
   now: string,
   appendCopySuffix = true,
+  resetTourLeg = true,
 ): T {
   const copySuffix = ' (copy)';
   const maxTitleLength = 160;
@@ -30,7 +31,7 @@ export function duplicateCardRecord<T extends DuplicableCard>(
     ? `${card.title.trim().slice(0, maxTitleLength - copySuffix.length).trimEnd()}${copySuffix}`
     : card.title;
   const relatedCards = (card.relatedCards ?? []).map((relatedCard, index) => ({
-    ...duplicateCardRecord(relatedCard, createId, now, false),
+    ...duplicateCardRecord(relatedCard, createId, now, false, resetTourLeg),
     rank: index + 1,
   }));
   const conversation = card.conversation ? { ...card.conversation } as Record<string, unknown> : null;
@@ -47,7 +48,7 @@ export function duplicateCardRecord<T extends DuplicableCard>(
     tags: [...card.tags],
     nearby: card.nearby ? { ...card.nearby } : undefined,
     stickers: card.stickers.map((sticker) => ({ ...sticker, id: createId() })),
-    tour: card.tour ? { ...card.tour, legToNext: null } : null,
+    tour: card.tour ? { ...card.tour, legToNext: resetTourLeg ? null : structuredClone(card.tour.legToNext ?? null) } : null,
     childBoardId: '',
     relatedCards,
     conversation,
