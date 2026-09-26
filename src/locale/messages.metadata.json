@@ -6703,10 +6703,6 @@
     "source": "Control",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
-  "3184541958586845717": {
-    "source": "Describe the tour",
-    "file": "src/app/boards/boards.html"
-  },
   "3185198514626127525": {
     "source": "How people will know you",
     "file": "src/app/boards/boards.html"
@@ -25666,5 +25662,25 @@
   "languageSwitcher.menuLabel": {
     "source": "Languages",
     "file": "src/app/language-switcher/language-switcher.html"
+  },
+  "tourWizardEditHelp": {
+    "source": "Your itinerary is preserved. Edit individual stops, or update the original script to change the route.",
+    "file": "src/app/boards/boards.html"
+  },
+  "tourWizardEditSource": {
+    "source": "Edit original itinerary",
+    "file": "src/app/boards/boards.html"
+  },
+  "tourWizardInputHelp": {
+    "source": "Paste numbered stops with narration and optional “Next:” directions. Up to 30,000 characters.",
+    "file": "src/app/boards/boards.html"
+  },
+  "tourWizardInputLabel": {
+    "source": "Describe your tour or paste a complete itinerary",
+    "file": "src/app/boards/boards.html"
+  },
+  "tourWizardSourceDetected": {
+    "source": " Detected {$INTERPOLATION} stops. Your stop order, narration, and directions will be preserved, including any return stop. ",
+    "file": "src/app/boards/boards.html"
   }
 }

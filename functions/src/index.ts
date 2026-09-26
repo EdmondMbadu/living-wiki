@@ -42,6 +42,8 @@ import {
   parseNumberedBoardSource,
   type NumberedBoardSource,
 } from './board-wizard-source';
+import { parseTourItinerary, tourItineraryInputError } from './board-wizard-tour-source';
+import { buildTourItineraryBatch } from './board-wizard-tour-itinerary';
 import {
   boardWizardImageEntityName,
   buildBoardWizardContextualImagePrompt,
@@ -7836,17 +7838,21 @@ export const generateBoardWizardBatch = onCall(
     const tourOptions = normalizeBoardWizardTourOptions(data.tourOptions, mode);
     const targetBoardId = stringOrEmpty(data.targetBoardId).slice(0, 140);
     const targetBoardTitle = stringOrEmpty(data.targetBoardTitle).slice(0, 120);
-    const prompt = stringOrEmpty(data.prompt).slice(0, BOARD_WIZARD_PASTE_MAX_LENGTH);
+    const submittedPrompt = stringOrEmpty(data.prompt);
+    const tourSource = isBoardWizardTourMode(mode) && !data.singleTourStop ? parseTourItinerary(submittedPrompt) : null;
+    const tourSourceError = isBoardWizardTourMode(mode) ? tourItineraryInputError(submittedPrompt, tourSource) : '';
+    if (tourSourceError) throw new HttpsError('invalid-argument', tourSourceError);
+    const prompt = submittedPrompt.slice(0, BOARD_WIZARD_PASTE_MAX_LENGTH);
     const submittedPastedList = stringOrEmpty(data.pastedList).slice(0, BOARD_WIZARD_PASTE_MAX_LENGTH);
-    // Long prose pasted into Describe is source material too. Keep the entire
+    // Long prose pasted into Describe or a tour is source material too. Keep the entire
     // text available to Gemini instead of silently reducing it to the 4,000-
     // character creative-prompt preview used by the model instructions.
     const pastedList = submittedPastedList
-      || (mode === 'describe' && prompt.length > 4_000 ? prompt : '');
+      || ((mode === 'describe' || isBoardWizardTourMode(mode)) && prompt.length > 4_000 ? prompt : '');
     const numberedSourceText = mode === 'paste' ? submittedPastedList : mode === 'describe' ? prompt : '';
     const numberedSource = parseNumberedBoardSource(numberedSourceText);
     const describedUrl = mode === 'describe' && !numberedSource ? firstHttpUrl(prompt) : '';
-    const submittedUrl = numberedSource
+    const submittedUrl = (numberedSource || tourSource)
       ? ''
       : stringOrEmpty(data.url).slice(0, 1000) || describedUrl;
     const url = submittedUrl ? safeBoardCardSourceUrl(submittedUrl) : '';
@@ -7874,7 +7880,7 @@ export const generateBoardWizardBatch = onCall(
       text: [prompt, pastedList, targetBoardTitle].join(' '),
       submittedCount: data.count,
       countMode: data.countMode,
-      sourceCount: numberedSource?.items.length,
+      sourceCount: tourSource?.items.length ?? numberedSource?.items.length,
     });
     const explicitCount = countResolution.explicitCount;
     const count = countResolution.targetCount;
@@ -7958,7 +7964,7 @@ export const generateBoardWizardBatch = onCall(
     let urlSourceBlocked = false;
     let urlRecoveryMethod: GeneratedBoardWizardSourceReport['method'] = 'page';
     let mapsTourContext = '';
-    const tourPromptUrl = isBoardWizardTourMode(mode) ? firstHttpUrl(prompt) : '';
+    const tourPromptUrl = isBoardWizardTourMode(mode) && !tourSource ? firstHttpUrl(prompt) : '';
     const sourceUrl = url || tourPromptUrl;
     if (isBoardWizardTourMode(mode) && sourceUrl && isGoogleMapsUrl(sourceUrl)) {
       try {
@@ -8248,7 +8254,7 @@ export const generateBoardWizardBatch = onCall(
     }
 
     let completeSetManifest: BoardWizardCompleteSetManifest | null = null;
-    if (countResolution.completeSet && !usesUrlSource && !numberedSource && !photos.length) {
+    if (countResolution.completeSet && !usesUrlSource && !numberedSource && !tourSource && !photos.length) {
       try {
         completeSetManifest = await resolveBoardWizardCompleteSetManifest({
           prompt: effectivePrompt || prompt,
@@ -8276,17 +8282,18 @@ export const generateBoardWizardBatch = onCall(
     }
 
     const generationCount = completeSetManifest?.items.length
+      || tourSource?.items.length
       || numberedSource?.items.length
       || articleManifest?.items.length
       || mapsTourStopCount
       || photos.length
       || count;
-    const generationCountPolicy: BoardWizardCountPolicy = numberedSource || articleManifest || mapsTourStopCount || photos.length
+    const generationCountPolicy: BoardWizardCountPolicy = tourSource || numberedSource || articleManifest || mapsTourStopCount || photos.length
       ? 'source-exact'
       : countResolution.policy;
-    const inferredSourceNarrationSeconds = numberedSource
+    const inferredSourceNarrationSeconds = (tourSource || numberedSource)
       ? normalizeBoardNarrationSeconds(estimateNumberedBoardSourceNarrationSeconds(
-          numberedSource,
+          tourSource || numberedSource,
           BOARD_NARRATION_WORDS_PER_SECOND,
         ))
       : 0;
@@ -8334,7 +8341,9 @@ export const generateBoardWizardBatch = onCall(
       && !(urlExtraction?.restaurantLike && urlExtraction.menuItems.length >= 3));
     let generated: GeneratedBoardWizardBatch;
     try {
-      generated = commerceExtraction
+      generated = tourSource && isBoardWizardTourMode(mode)
+        ? buildTourItineraryBatch(tourSource, mode, tourOptions)
+        : commerceExtraction
         ? buildCommerceWizardBatch({
             extraction: commerceExtraction,
             targetBoardTitle,
@@ -8481,7 +8490,7 @@ export const generateBoardWizardBatch = onCall(
     const urlFallbackShapedGenerated = urlResearchFallback
       ? shapeBoardWizardResearchFallbackBatch(sourceShapedGenerated, url)
       : sourceShapedGenerated;
-    const deferMediaEnrichment = data.deferMediaEnrichment === true && generationCount > 16;
+    const deferMediaEnrichment = !tourSource && data.deferMediaEnrichment === true && generationCount > 16;
     const enrichedResult = listingExtraction || accommodationExtraction
       || deferMediaEnrichment
       ? urlFallbackShapedGenerated
@@ -8493,7 +8502,9 @@ export const generateBoardWizardBatch = onCall(
           defaultType,
         });
     const imageProvenanceResult = markCommerceImageFallbacks(enrichedResult);
-    const result = numberedSource
+    const result = tourSource && isBoardWizardTourMode(mode)
+      ? buildTourItineraryBatch(tourSource, mode, tourOptions, imageProvenanceResult)
+      : numberedSource
       ? shapeNumberedSourceWizardBatch(imageProvenanceResult, numberedSource, defaultType)
       : articleManifest
         ? shapeArticleSourceWizardBatch(imageProvenanceResult, articleManifest, defaultType)
@@ -8522,7 +8533,7 @@ export const generateBoardWizardBatch = onCall(
       ...routeReadyResult,
       cards: applyBoardWizardMediaMode(routeReadyResult.cards, mediaMode),
     };
-    const sourceNarrationSecondsPerCard = numberedSource && data.narrationLengthCustomized !== true
+    const sourceNarrationSecondsPerCard = (tourSource || numberedSource) && data.narrationLengthCustomized !== true
       ? inferredSourceNarrationSeconds
       : narrationSecondsPerCard;
     const reportedNarrationSecondsPerCard = Math.max(
@@ -11531,7 +11542,7 @@ async function enrichBoardWizardTourBatchWithRoutes(
       const next = sorted.find((item) => (item.tour?.sequence ?? 0) === (card.tour?.sequence ?? 0) + 1) ?? null;
       const computed = next ? await computeBoardWizardTourLeg(card, next, tourMode) : null;
       if (computed?.encodedPolyline) {
-        routePolylineParts.push(computed.encodedPolyline);
+        routePolylineParts[sorted.indexOf(card)] = computed.encodedPolyline;
       }
       if (computed?.meters) {
         totalMeters += computed.meters;
@@ -11562,7 +11573,7 @@ async function enrichBoardWizardTourBatchWithRoutes(
     mode: tourMode,
     totalDistanceText: formatMeters(totalMeters || fallbackDistance),
     totalDurationText: formatSeconds(totalSeconds || fallbackSeconds),
-    routePolyline: routePolylineParts.join('|'),
+    routePolyline: routePolylineParts.filter(Boolean).join('|'),
     voiceStyle: tourOptions.voiceStyle,
     paceOrRouteStyle: tourOptions.paceOrRouteStyle,
     extras: tourOptions.extras,

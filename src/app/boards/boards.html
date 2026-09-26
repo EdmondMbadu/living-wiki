@@ -5585,14 +5585,24 @@
                 </label>
               } @else if (isTourWizardMode()) {
                 <label>
-                  <span i18n>Describe the tour</span>
+                  <span i18n="@@tourWizardInputLabel">Describe your tour or paste a complete itinerary</span>
                   <textarea
-                    rows="6"
-                    maxlength="2200"
+                    [attr.rows]="wizardTourSource() ? 12 : 6"
                     [placeholder]="wizardInputPlaceholder()"
                     [value]="wizardPrompt()"
-                    (input)="wizardPrompt.set($any($event.target).value)"
+                    [attr.aria-invalid]="wizardTourInputError() ? 'true' : null"
+                    aria-describedby="tour-itinerary-help"
+                    (input)="updateWizardPrompt($any($event.target).value)"
                   ></textarea>
+                  <small id="tour-itinerary-help" i18n="@@tourWizardInputHelp">Paste numbered stops with narration and optional “Next:” directions. Up to 30,000 characters.</small>
+                  <small>{{ wizardPrompt().length }} / {{ wizardPasteMaxLength }}</small>
+                  @if (wizardTourInputError()) {
+                    <small class="boards-wizard-paste-warning" role="alert">{{ wizardTourInputError() }}</small>
+                  } @else if (wizardTourSource(); as itinerary) {
+                    <small class="boards-wizard-paste-detected" aria-live="polite" i18n="@@tourWizardSourceDetected">
+                      Detected {{ itinerary.items.length }} stops. Your stop order, narration, and directions will be preserved, including any return stop.
+                    </small>
+                  }
                 </label>
                 <div class="boards-tour-wizard-grid">
                   <section>
@@ -5722,7 +5732,7 @@
                     <button
                       type="button"
                       aria-label="Use one fewer card"
-                      [disabled]="wizardCount() <= 1 || wizardCountIsPromptControlled() || wizardMode() === 'photos' || (wizardMode() === 'paste' && wizardDetectedPasteCount() > 0)"
+                      [disabled]="wizardCount() <= 1 || wizardCountIsPromptControlled() || wizardMode() === 'photos' || ((wizardMode() === 'paste' || isTourWizardMode()) && wizardDetectedPasteCount() > 0)"
                       (click)="setWizardCount(wizardCount() - 1)"
                      i18n-aria-label>
                       <span class="material-symbols-outlined">remove</span>
@@ -5731,14 +5741,14 @@
                       type="number"
                       min="1"
                       max="100"
-                      [disabled]="wizardCountIsPromptControlled() || wizardMode() === 'photos' || (wizardMode() === 'paste' && wizardDetectedPasteCount() > 0)"
+                      [disabled]="wizardCountIsPromptControlled() || wizardMode() === 'photos' || ((wizardMode() === 'paste' || isTourWizardMode()) && wizardDetectedPasteCount() > 0)"
                       [value]="wizardCount()"
                       (input)="setWizardCount($any($event.target).value)"
                     />
                     <button
                       type="button"
                       aria-label="Use one more card"
-                      [disabled]="wizardCount() >= 100 || wizardCountIsPromptControlled() || wizardMode() === 'photos' || (wizardMode() === 'paste' && wizardDetectedPasteCount() > 0)"
+                      [disabled]="wizardCount() >= 100 || wizardCountIsPromptControlled() || wizardMode() === 'photos' || ((wizardMode() === 'paste' || isTourWizardMode()) && wizardDetectedPasteCount() > 0)"
                       (click)="setWizardCount(wizardCount() + 1)"
                      i18n-aria-label>
                       <span class="material-symbols-outlined">add</span>
@@ -5748,7 +5758,7 @@
                     type="range"
                     min="1"
                     max="100"
-                    [disabled]="wizardCountIsPromptControlled() || wizardMode() === 'photos' || (wizardMode() === 'paste' && wizardDetectedPasteCount() > 0)"
+                    [disabled]="wizardCountIsPromptControlled() || wizardMode() === 'photos' || ((wizardMode() === 'paste' || isTourWizardMode()) && wizardDetectedPasteCount() > 0)"
                     [value]="wizardCount()"
                     (input)="setWizardCount($any($event.target).value)"
                   />
@@ -5776,7 +5786,7 @@
                       type="range"
                       min="1"
                       max="100"
-                      [disabled]="wizardCountIsPromptControlled() || wizardMode() === 'photos' || (wizardMode() === 'paste' && wizardDetectedPasteCount() > 0)"
+                      [disabled]="wizardCountIsPromptControlled() || wizardMode() === 'photos' || ((wizardMode() === 'paste' || isTourWizardMode()) && wizardDetectedPasteCount() > 0)"
                       [value]="wizardCount()"
                       (input)="setWizardCount($any($event.target).value)"
                     />
@@ -5784,7 +5794,7 @@
                       type="number"
                       min="1"
                       max="100"
-                      [disabled]="wizardCountIsPromptControlled() || wizardMode() === 'photos' || (wizardMode() === 'paste' && wizardDetectedPasteCount() > 0)"
+                      [disabled]="wizardCountIsPromptControlled() || wizardMode() === 'photos' || ((wizardMode() === 'paste' || isTourWizardMode()) && wizardDetectedPasteCount() > 0)"
                       [value]="wizardCount()"
                       (input)="setWizardCount($any($event.target).value)"
                     />
@@ -6753,7 +6763,7 @@
                     <footer class="wizard-card-editor__footer">
                       <div class="wizard-card-editor__secondary-actions">
                         @if (wizardMode() !== 'off-grid' && !wizardSourceManifest()) {
-                        <button type="button" [disabled]="isWizardCardBusy(card.id)" (click)="redoWizardCard(card.id)">
+                        <button type="button" [disabled]="isWizardCardBusy(card.id) || !!wizardTourSource()" (click)="redoWizardCard(card.id)">
                           <span class="material-symbols-outlined">autorenew</span>
                           <span>
                             <strong>{{ wizardRedoingCardIds().has(card.id) ? templateText.message185 : templateText.message186 }}</strong>
@@ -6986,6 +6996,10 @@
                       }
                     </div>
                   }
+                  @if (wizardTourSource()) {
+                    <small i18n="@@tourWizardEditHelp">Your itinerary is preserved. Edit individual stops, or update the original script to change the route.</small>
+                    <button type="button" class="boards-ghost-action" (click)="wizardStep.set('configure')" i18n="@@tourWizardEditSource">Edit original itinerary</button>
+                  } @else {
                   <textarea
                     rows="5"
                     [placeholder]="wizardMode() === 'nearby-gems' ? templateText.message434 : templateText.message435"
@@ -7003,6 +7017,7 @@
                     </button>
                   } @else if (wizardSourceManifest()) {
                     <small i18n>Source titles stay locked while you refine descriptions and presentation.</small>
+                  }
                   }
                   }
                 </aside>

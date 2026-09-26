@@ -209,6 +209,33 @@ test('owner can atomically save a personal wizard board and remove its draft', a
   });
 });
 
+test('a complete authored tour survives draft save, reload, and atomic board publication', async () => {
+  const { parseTourItinerary } = await import('../../functions/lib/board-wizard-tour-source.js');
+  const { buildTourItineraryBatch } = await import('../../functions/lib/board-wizard-tour-itinerary.js');
+  const { script } = JSON.parse(await readFile(new URL('../fixtures/london-eagles-tour.json', import.meta.url), 'utf8'));
+  const source = parseTourItinerary(script);
+  const generated = buildTourItineraryBatch(source, 'walking-tour', {
+    voiceStyle: 'historian', paceOrRouteStyle: 'Standard', extras: [],
+  });
+  const database = testEnvironment.authenticatedContext(ownerUid).firestore();
+  const draftRef = doc(database, 'users', ownerUid, 'board_wizard_drafts', 'london-tour-draft');
+  const cards = JSON.parse(JSON.stringify(generated.cards.map((card, i) => ({ ...card, id: `stop-${i + 1}` }))));
+  await assertSucceeds(setDoc(draftRef, personalWizardDraft({
+    id: 'london-tour-draft', mode: 'walking-tour', prompt: script, count: 9,
+    result: { board: generated.board, cards }, selected_card_ids: cards.map(card => card.id),
+  })));
+  const restored = (await getDoc(draftRef)).data();
+  assert.equal(restored.prompt, script);
+  assert.equal(restored.result.cards[8].tour.guideScript, source.items[8].guideScript);
+  const boardRef = doc(database, 'boards', 'london-tour');
+  const batch = writeBatch(database);
+  batch.set(boardRef, personalWizardBoard({ ...restored.result.board, id: 'london-tour', cards: restored.result.cards }));
+  batch.delete(draftRef);
+  await assertSucceeds(batch.commit());
+  assert.deepEqual((await getDoc(boardRef)).data().cards, cards);
+  assert.equal((await getDoc(draftRef)).exists(), false);
+});
+
 test('personal board description boundary matches the client persistence contract', async () => {
   const database = testEnvironment.authenticatedContext(ownerUid).firestore();
   await assertSucceeds(setDoc(

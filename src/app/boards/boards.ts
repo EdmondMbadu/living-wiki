@@ -113,6 +113,7 @@ import {
   estimateNumberedBoardSourceNarrationSeconds,
   parseNumberedBoardSource,
 } from './board-wizard-source';
+import { parseTourItinerary, tourItineraryInputError } from './board-wizard-tour-source';
 import {
   boardWizardDoorwayOffset,
   boardWizardModeForDoorway,
@@ -2657,7 +2658,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly wizardPrompt = signal('');
   readonly wizardPastedList = signal('');
   readonly wizardPasteMaxLength = BOARD_WIZARD_PASTE_MAX_LENGTH;
-  readonly wizardNumberedSource = computed(() => parseNumberedBoardSource(
+  readonly wizardTourSource = computed(() => this.isTourWizardMode() ? parseTourItinerary(this.wizardPrompt()) : null);
+  readonly wizardTourInputError = computed(() => this.isTourWizardMode()
+    ? tourItineraryInputError(this.wizardPrompt(), this.wizardTourSource()) : '');
+  readonly wizardNumberedSource = computed(() => this.wizardTourSource() ?? parseNumberedBoardSource(
     this.wizardMode() === 'paste' ? this.wizardPastedList() : this.wizardMode() === 'describe' ? this.wizardPrompt() : '',
   ));
   readonly wizardPastedWhat3WordsSource = computed(() => parseWhat3WordsBoardSource(this.wizardPastedList()));
@@ -3881,7 +3885,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       );
     }
     if (this.isTourWizardMode(mode)) {
-      return this.wizardPrompt().trim().length >= 4;
+      return this.wizardPrompt().trim().length >= 4 && !this.wizardTourInputError();
     }
     return mode === 'photos'
       ? this.wizardPhotos().length > 0 && !this.wizardPhotosLoading()
@@ -5548,9 +5552,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   updateWizardPrompt(value: string): void {
-    const prompt = value.slice(0, BOARD_WIZARD_PASTE_MAX_LENGTH);
+    // Keep oversized tour input visible so the user can fix it without losing text.
+    const prompt = this.isTourWizardMode() ? value : value.slice(0, BOARD_WIZARD_PASTE_MAX_LENGTH);
     this.wizardPrompt.set(prompt);
-    this.syncWizardNumberedSourceControls(parseNumberedBoardSource(prompt));
+    this.syncWizardNumberedSourceControls(this.isTourWizardMode() ? parseTourItinerary(prompt) : parseNumberedBoardSource(prompt));
   }
 
   private syncWizardNumberedSourceControls(source: ReturnType<typeof parseNumberedBoardSource>): void {
@@ -6517,6 +6522,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   async redoWizardCard(cardId: string): Promise<void> {
+    if (this.wizardTourSource()) { this.openWizardCardEditor(cardId); return; }
     const card = this.wizardPreviewCards().find((item) => item.id === cardId);
     if (!card || this.isWizardCardBusy(cardId)) {
       return;
@@ -20417,9 +20423,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const targetBoard = this.wizardTargetBoardId() === 'new'
       ? null
       : this.boards().find((board) => board.id === this.wizardTargetBoardId()) ?? null;
+    const tourInputError = this.isTourWizardMode() ? tourItineraryInputError(this.wizardPrompt()) : '';
+    if (tourInputError) throw new Error(tourInputError);
     const prompt = [
       this.wizardPrompt().trim(),
-      refinement ? `Refinement: ${refinement}` : '',
+      refinement && !this.wizardTourSource() ? `Refinement: ${refinement}` : '',
     ].filter(Boolean).join('\n');
     const callable = httpsCallable<Record<string, unknown>, unknown>(this.functions, 'generateBoardWizardBatch', {
       timeout: 290_000,

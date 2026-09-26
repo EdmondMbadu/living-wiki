@@ -1677,7 +1677,6 @@
     "3180135722751253645": "Carregando conversa",
     "3181015128176551788": "Desbloqueie sua voz de narrador pessoal.",
     "318262165361158083": "Controle.",
-    "3184541958586845717": "Descreva o passeio",
     "3185198514626127525": "Como as pessoas vão te conhecer",
     "3186452641234187874": " Toda cidade pública Wiki tem uma imagem de capa. ",
     "31884475587223189": "Dentro.",
@@ -6417,6 +6416,11 @@
     "authStorySignInDescription": " Seus lugares salvos, idéias e conexões estão exatamente onde você os deixou. ",
     "authStorySignInTitle": "Bem-vindo de volta ao seu mundo.",
     "duplicateBoardMenu": "Quadro duplicada.",
-    "languageSwitcher.menuLabel": "Idiomas"
+    "languageSwitcher.menuLabel": "Idiomas",
+    "tourWizardEditHelp": "Seu itinerário foi preservado. Edite as paradas individualmente ou atualize o roteiro original para alterar o percurso.",
+    "tourWizardEditSource": "Editar itinerário original",
+    "tourWizardInputHelp": "Cole as paradas numeradas com a narração e, se quiser, as orientações precedidas de “Next:”. Até 30.000 caracteres.",
+    "tourWizardInputLabel": "Descreva seu passeio ou cole um itinerário completo",
+    "tourWizardSourceDetected": " {$INTERPOLATION} paradas detectadas. A ordem, a narração e as orientações serão preservadas, incluindo qualquer parada de retorno. "
   }
 }

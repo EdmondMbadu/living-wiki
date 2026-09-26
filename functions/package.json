@@ -52,7 +52,8 @@
     "clean": "rimraf lib",
     "serve": "npm run build && firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions",
-    "lint": "tsc -p tsconfig.json --noEmit"
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test:tour-itinerary": "npm run build && node --test scripts/test-board-wizard-tour-itinerary.cjs"
   },
   "dependencies": {
     "@google/genai": "^1.16.0",

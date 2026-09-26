@@ -1677,7 +1677,6 @@
     "3180135722751253645": "Chargement du chat",
     "3181015128176551788": "Débloquez votre voix de narrateur personnelle",
     "318262165361158083": "Contrôle",
-    "3184541958586845717": "Décrivez la tournée",
     "3185198514626127525": "Le nom sous lequel les autres vous connaissent",
     "3186452641234187874": " Chaque ville publique Wiki a actuellement une image de couverture. ",
     "31884475587223189": "À l’intérieur",
@@ -6417,6 +6416,11 @@
     "authStorySignInDescription": " Les lieux, les idées et les liens que vous avez enregistrés vous attendent. ",
     "authStorySignInTitle": "Bienvenue dans votre monde.",
     "duplicateBoardMenu": "Dupliquer le tableau",
-    "languageSwitcher.menuLabel": "Langues"
+    "languageSwitcher.menuLabel": "Langues",
+    "tourWizardEditHelp": "Votre itinéraire est préservé. Modifiez chaque étape ou le texte original pour changer le parcours.",
+    "tourWizardEditSource": "Modifier l’itinéraire original",
+    "tourWizardInputHelp": "Collez les étapes numérotées avec leur narration et, si vous le souhaitez, des indications précédées de « Next: ». Jusqu’à 30 000 caractères.",
+    "tourWizardInputLabel": "Décrivez votre circuit ou collez un itinéraire complet",
+    "tourWizardSourceDetected": " {$INTERPOLATION} étapes détectées. Leur ordre, leur narration et leurs indications seront préservés, y compris toute étape de retour. "
   }
 }

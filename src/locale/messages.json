@@ -1677,7 +1677,6 @@
     "3180135722751253645": "Loading chat",
     "3181015128176551788": "Unlock your personal narrator voice",
     "318262165361158083": "Control",
-    "3184541958586845717": "Describe the tour",
     "3185198514626127525": "How people will know you",
     "3186452641234187874": " Every public city Wiki currently has a cover image. ",
     "31884475587223189": "Inside",
@@ -6417,6 +6416,11 @@
     "authStorySignInDescription": " Your saved places, ideas, and connections are right where you left them. ",
     "authStorySignInTitle": "Welcome back to your world.",
     "duplicateBoardMenu": "Duplicate board",
-    "languageSwitcher.menuLabel": "Languages"
+    "languageSwitcher.menuLabel": "Languages",
+    "tourWizardEditHelp": "Your itinerary is preserved. Edit individual stops, or update the original script to change the route.",
+    "tourWizardEditSource": "Edit original itinerary",
+    "tourWizardInputHelp": "Paste numbered stops with narration and optional “Next:” directions. Up to 30,000 characters.",
+    "tourWizardInputLabel": "Describe your tour or paste a complete itinerary",
+    "tourWizardSourceDetected": " Detected {$INTERPOLATION} stops. Your stop order, narration, and directions will be preserved, including any return stop. "
   }
 }
