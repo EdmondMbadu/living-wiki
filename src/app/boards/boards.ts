@@ -69,7 +69,7 @@ import {
 import { VideoLibraryService } from '../video-library/video-library.service';
 import type { VideoLibraryItem } from '../video-library/video-library.models';
 import { boardVideoMetadataPatch } from './board-video-persistence';
-import { boardAudioPreferencePatch, boardStudioPatch, boardVoicePreferencePatch, type BoardStudioSaveKind } from './board-studio-persistence';
+import { boardAudioPreferencePatch, boardDetailsPatch, boardStudioPatch, boardVoicePreferencePatch, type BoardStudioSaveKind } from './board-studio-persistence';
 import { BoardWriteQueue } from './board-write-queue';
 import { BoardPromoImageDialogComponent } from './board-promo-image-dialog';
 import { BackdropDismissDirective } from '../backdrop-dismiss.directive';
@@ -7591,7 +7591,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         ? await this.persistTeamBoardAudience(nextBoard, draft.visibility)
         : visibilityOnlyEdit
           ? await this.persistVisibilityAndReplaceBoard(nextBoard)
-          : await this.persistAndReplaceBoard(nextBoard);
+          : editingBoardForVisibility
+            ? await this.persistAndReplaceBoard(nextBoard, 'details', editingBoardForVisibility)
+            : await this.persistAndReplaceBoard(nextBoard);
       if (!saved) {
         if (editingId && editingBoardForVisibility && !nextBoard.teamId) {
           this.boards.update((boards) => boards.map((board) =>
@@ -7601,6 +7603,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         return;
       }
       if (editingId) {
+        if (!visibilityOnlyEdit && !nextBoard.teamId) {
+          this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(editingId, 'vertical'));
+          this.publishedStackVideoFiles.delete(this.stackPublishedFileKey(editingId, 'landscape'));
+          this.publishedStackTrailerFiles.delete(this.stackPublishedFileKey(editingId, 'vertical'));
+          this.publishedStackTrailerFiles.delete(this.stackPublishedFileKey(editingId, 'landscape'));
+          this.stackPublishedVideoReady.set(false);
+          this.stackPublishedTrailerReady.set(false);
+        }
         const linkedChildren = this.nestedBoardsUnder(editingId)
           .filter((board) => board.visibility !== nextBoard!.visibility
             || (board.parentBoardId === editingId && board.parentBoardTitle !== title))
@@ -22787,14 +22797,18 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private async persistAndReplaceBoard(board: Board, kind: 'full' | BoardStudioSaveKind = 'full'): Promise<boolean> {
+  private async persistAndReplaceBoard(board: Board, kind: 'full' | 'details' | BoardStudioSaveKind = 'full', previous?: Board): Promise<boolean> {
     if (!this.canEditBoard(board)) {
       this.boardsSyncError.set($localize`Only the board owner can save changes.`);
       return false;
     }
     try {
       const saveBoard = kind === 'cards' ? { ...board, ...invalidatedNarrationMedia() } : board;
-      const persisted = kind === 'full' ? await this.persistBoard(saveBoard) : await this.persistBoardStudio(saveBoard, kind);
+      const persisted = kind === 'full'
+        ? await this.persistBoard(saveBoard)
+        : kind === 'details'
+          ? await this.persistBoardStudio(saveBoard, kind, previous)
+          : await this.persistBoardStudio(saveBoard, kind);
       this.boards.update((boards) => boards.map((item) => {
         if (item.id !== persisted.id) return item;
         // A later edit may have happened while images or Firestore were saving.
@@ -22893,7 +22907,23 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     return { ...current, ...patch };
   }
 
-  private async persistBoardStudio(board: Board, kind: BoardStudioSaveKind): Promise<Board> {
+  private async prepareBoardDetailsForFirestore(board: Board, previous: Board | undefined, uid: string): Promise<Record<string, unknown>> {
+    if (!previous || previous.id !== board.id) throw new Error('Reopen the board editor and try again.');
+    const patch = boardDetailsPatch(previous as unknown as Record<string, unknown>, {
+      ...board, updated_at_iso: board.updatedAt,
+    });
+    if ('visibility' in patch) await this.assertBoardVisitorKnowledge(board);
+    if ('description' in patch) patch['description'] = boardDescriptionForFirestore(board.description);
+    if ('imageUrl' in patch) patch['imageUrl'] = await this.persistImageIfNeeded(
+      board.imageUrl, `users/${uid}/boards/${board.id}/cover.jpg`,
+    );
+    if ('logoUrl' in patch) patch['logoUrl'] = await this.persistImageIfNeeded(
+      board.logoUrl, `users/${uid}/boards/${board.id}/logo.jpg`,
+    );
+    return patch;
+  }
+
+  private async persistBoardStudio(board: Board, kind: BoardStudioSaveKind | 'details', previous?: Board): Promise<Board> {
     if (board.teamId || this.teamContextId()) return this.persistBoard(board);
     const uid = this.authService.uid();
     if (!uid || board.ownerUserId !== uid) {
@@ -22901,6 +22931,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     if (!this.firestore) throw new Error('Board sync is not ready. Refresh and try again.');
     return this.queueBoardWrite(board.id, async () => {
+      if (kind === 'details') {
+        const patch = await this.prepareBoardDetailsForFirestore(board, previous, uid);
+        await updateDoc(doc(this.firestore!, 'boards', board.id), {
+          ...patch, server_updated_at: serverTimestamp(),
+        });
+        const { studioSaveNonce, updated_at_iso, ...savedFields } = patch;
+        return { ...board, ...savedFields } as Board;
+      }
       // A small edit should prepare only the fields it writes. Unrelated
       // cover, logo, owner profile, and Talking Card work can fail separately.
       if (kind === 'cards') await this.assertBoardVisitorKnowledge(board);

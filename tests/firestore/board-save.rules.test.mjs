@@ -31,7 +31,7 @@ const { boardVideoMetadataPatch } = await import(`data:text/javascript;base64,${
   videoPersistenceSource, { compilerOptions: { module: ts.ModuleKind.ES2022 } },
 ).outputText).toString('base64')}`);
 const studioPersistenceSource = await readFile(new URL('../../src/app/boards/board-studio-persistence.ts', import.meta.url), 'utf8');
-const { boardStudioPatch, boardAudioPreferencePatch, boardVoicePreferencePatch } = await import(`data:text/javascript;base64,${Buffer.from(ts.transpileModule(
+const { boardDetailsPatch, boardStudioPatch, boardAudioPreferencePatch, boardVoicePreferencePatch } = await import(`data:text/javascript;base64,${Buffer.from(ts.transpileModule(
   studioPersistenceSource, { compilerOptions: { module: ts.ModuleKind.ES2022 } },
 ).outputText).toString('base64')}`);
 
@@ -448,6 +448,90 @@ test('owner can save narration on a richly populated 30-card board', async () =>
   assert.equal(saved.cards.length, 30);
   assert.equal(saved.cards[0].notes, 'Revised narration for card 1.');
   assert.equal(saved.narrationSecondsPerCard, 30);
+});
+
+test('general editor can replace a cover after script saves without rewriting the rich board', async () => {
+  const rich = JSON.parse(await readFile(new URL('./fixtures/rich-board-shape.json', import.meta.url), 'utf8'));
+  const stored = { ...rich, custom_slug: 'william-penn',
+    trailerVideoScriptUpdatedAt: '2026-09-26T10:00:00.000Z',
+    server_updated_at: new Date('2026-09-26T10:00:00.000Z') };
+  await testEnvironment.withSecurityRulesDisabled(async c => {
+    await setDoc(doc(c.firestore(), 'boards', stored.id), stored);
+  });
+  const reference = doc(testEnvironment.authenticatedContext(ownerUid).firestore(), 'boards', stored.id);
+  const cards = stored.cards.map((card, index) => index === 0 ? { ...card, notes: 'Latest saved script.' } : card);
+  await assertSucceeds(updateDoc(reference, { ...boardStudioPatch({ ...stored, cards,
+    socialVideoRenderVersion: '', socialLandscapeVideoRenderVersion: '',
+    trailerVideoRenderVersion: '', trailerLandscapeVideoRenderVersion: '', trailerVideoSourceFingerprint: '',
+    updated_at_iso: '2026-09-26T11:00:00.000Z' }, 'script'), server_updated_at: serverTimestamp() }));
+  const before = (await getDoc(reference)).data();
+  const next = { ...before, imageUrl: 'https://example.com/replacement-cover.jpg', updated_at_iso: '2026-09-26T12:00:00.000Z' };
+  // The old editor rebuilt the document from the client model, dropping
+  // server-only fields and the nonce left by the successful script save.
+  const { trailerVideoScriptUpdatedAt, studioSaveNonce, custom_slug, ...oldFullSave } = next;
+  await assertFails(setDoc(reference, { ...oldFullSave, server_updated_at: serverTimestamp() }));
+  const patch = { ...boardDetailsPatch(before, next), server_updated_at: serverTimestamp() };
+  await assertSucceeds(updateDoc(reference, patch));
+  const saved = (await getDoc(reference)).data();
+  assert.equal(saved.imageUrl, next.imageUrl);
+  for (const key of Object.keys(before).filter(key => !(key in patch))) assert.deepEqual(saved[key], before[key], key);
+  assert.deepEqual(saved.cards, cards);
+  // Repeat and remove the cover, including after an unrelated concurrent script update.
+  await updateDoc(reference, { ...boardStudioPatch({ ...saved, cards: [...cards].reverse() }, 'cards'), server_updated_at: serverTimestamp() });
+  await assertSucceeds(updateDoc(reference, { ...boardDetailsPatch(next, { ...next, imageUrl: '' }), server_updated_at: serverTimestamp() }));
+  assert.equal((await getDoc(reference)).data().imageUrl, '');
+  assert.deepEqual((await getDoc(reference)).data().cards, [...cards].reverse());
+});
+
+for (const visibility of ['public', 'unlisted', 'private']) {
+  test(`general editor preserves legacy content and validates changes on a ${visibility} board`, async () => {
+    const stored = personalWizardBoard({ visibility, description: 'Legacy description. '.repeat(40),
+      backNote: 'Legacy notes. '.repeat(40), legacy_field: true, socialVideoUrl: 'https://example.com/saved.mp4' });
+    await testEnvironment.withSecurityRulesDisabled(async c => {
+      await setDoc(doc(c.firestore(), 'users', ownerUid), { role: 'member', pricingPlan: 'creator', subscriptionStatus: 'active' });
+      await setDoc(doc(c.firestore(), 'boards', stored.id), stored);
+    });
+    const reference = doc(testEnvironment.authenticatedContext(ownerUid).firestore(), 'boards', stored.id);
+    const next = { ...stored, imageUrl: 'https://example.com/new.jpg' };
+    const patch = () => ({ ...boardDetailsPatch(stored, next), server_updated_at: serverTimestamp() });
+    for (const context of [testEnvironment.unauthenticatedContext(), testEnvironment.authenticatedContext('outsider')]) {
+      await assertFails(updateDoc(doc(context.firestore(), 'boards', stored.id), patch()));
+    }
+    for (const invalid of [
+      { owner_user_id: 'outsider' }, { cards: [{ id: 'unauthorized-card-edit' }] }, { custom_slug: 'forged' },
+      { atlas_id: 'forged' }, { team_id: 'forged' }, { imageUrl: 123 }, { imageUrl: 'x'.repeat(2501) },
+      { title: '' }, { title: 'x'.repeat(91) }, { description: 'x'.repeat(241) }, { backNote: 'x'.repeat(301) },
+      { icon: 'x'.repeat(65) }, { tone: 'invalid' }, { logoUrl: 'x'.repeat(2001) },
+      { logoLinkUrl: 'x'.repeat(241) }, { stackCtaLabel: 'x'.repeat(49) }, { stackCtaUrl: 'x'.repeat(241) },
+      { stickers: Array(49).fill('star') }, { photoStudioDraft: true }, { visibility: 'invalid' },
+      { socialVideoRenderVersion: 'forged' }, { server_updated_at: new Date(0) },
+    ]) await assertFails(updateDoc(reference, { ...patch(), ...invalid }));
+    await assertSucceeds(updateDoc(reference, patch()));
+    const saved = (await getDoc(reference)).data();
+    assert.equal(saved.description, stored.description);
+    assert.equal(saved.backNote, stored.backNote);
+    assert.equal(saved.visibility, visibility);
+    assert.equal(saved.socialVideoUrl, stored.socialVideoUrl);
+    const edits = { title: 'New title', description: 'New description', backNote: 'New note', icon: 'school',
+      tone: 'blue', logoUrl: 'https://example.com/logo.png', logoLinkUrl: 'https://example.com',
+      stackCtaLabel: 'Explore', stackCtaUrl: 'https://example.com/explore', stickers: [] };
+    await assertSucceeds(updateDoc(reference, { ...boardDetailsPatch(saved, { ...saved, ...edits }), server_updated_at: serverTimestamp() }));
+    for (const [key, value] of Object.entries(edits)) assert.deepEqual((await getDoc(reference)).data()[key], value);
+  });
+}
+
+test('general editor enforces private-plan access and rejects direct edits of team snapshots', async () => {
+  const stored = personalWizardBoard();
+  await testEnvironment.withSecurityRulesDisabled(async c => {
+    await setDoc(doc(c.firestore(), 'boards', stored.id), stored);
+    await setDoc(doc(c.firestore(), 'boards', 'team-snapshot'), { ...stored, id: 'team-snapshot', team_id: 'team-1' });
+  });
+  const owner = testEnvironment.authenticatedContext(ownerUid).firestore();
+  const next = { ...stored, imageUrl: 'https://example.com/new.jpg', visibility: 'private' };
+  await assertFails(updateDoc(doc(owner, 'boards', stored.id), { ...boardDetailsPatch(stored, next), server_updated_at: serverTimestamp() }));
+  await assertFails(updateDoc(doc(owner, 'boards', 'team-snapshot'), { ...boardDetailsPatch(stored, { ...next, visibility: 'public' }), server_updated_at: serverTimestamp() }));
+  await assertSucceeds(updateDoc(doc(owner, 'boards', stored.id), { ...boardDetailsPatch(stored, { ...next, visibility: 'unlisted' }), server_updated_at: serverTimestamp() }));
+  assert.equal((await getDoc(doc(owner, 'boards', stored.id))).data().visibility, 'unlisted');
 });
 
 test('all small Studio saves work on a published board and preserve unrelated fields', async () => {

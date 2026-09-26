@@ -1,4 +1,4 @@
-import { boardAudioPreferencePatch, boardStudioPatch, boardVoicePreferencePatch } from './board-studio-persistence';
+import { boardAudioPreferencePatch, boardDetailsPatch, boardStudioPatch, boardVoicePreferencePatch } from './board-studio-persistence';
 
 describe('board Studio persistence contracts', () => {
   const record: Record<string, unknown> = {
@@ -65,5 +65,34 @@ describe('board Studio persistence contracts', () => {
     expect(patch['socialVideoRenderVersion']).toBe('');
     expect(patch['trailerVideoRenderVersion']).toBe('');
     expect(patch['socialVideoUrl']).toBeUndefined();
+  });
+
+  it('changes only edited details and preserves legacy content and independently saved scripts', () => {
+    const previous = { ...record, description: 'Legacy description. '.repeat(40), stickers: [{ icon: 'star' }],
+      visibility: 'unlisted', custom_slug: 'william-penn', trailerVideoScriptUpdatedAt: 'server timestamp' };
+    const next = { ...previous, imageUrl: 'data:image/jpeg;base64,new-image',
+      cards: [{ notes: 'Stale script in editor' }], stickers: [{ icon: 'star' }] };
+    const patch = boardDetailsPatch(previous, next);
+    expect(patch['imageUrl']).toBe(next.imageUrl);
+    for (const key of ['cards', 'description', 'stickers', 'visibility', 'custom_slug',
+      'trailerVideoScriptUpdatedAt', 'socialVideoUrl', 'legacy_board_field']) {
+      expect(Object.hasOwn(patch, key)).withContext(key).toBeFalse();
+    }
+    expect(patch['socialVideoRenderVersion']).toBe('');
+    expect(patch['trailerVideoRenderVersion']).toBe('');
+    expect(patch['studioSaveNonce']).toMatch(/^details:[0-9a-f-]{36}$/);
+    expect(boardDetailsPatch(previous, next)['studioSaveNonce']).not.toBe(patch['studioSaveNonce']);
+    expect(boardDetailsPatch(previous, { ...next, imageUrl: '' })['imageUrl']).toBe('');
+    expect(previous.description.length).toBeGreaterThan(240);
+  });
+
+  it('includes explicit visibility changes and clears the private photo draft flag when sharing', () => {
+    const previous = { ...record, visibility: 'private', photoStudioDraft: true };
+    for (const visibility of ['public', 'unlisted']) {
+      const patch = boardDetailsPatch(previous, { ...previous, visibility });
+      expect(patch['visibility']).toBe(visibility);
+      expect(patch['photoStudioDraft']).toBeFalse();
+    }
+    expect(boardDetailsPatch(previous, previous)['photoStudioDraft']).toBeUndefined();
   });
 });

@@ -975,7 +975,9 @@ service cloud.firestore {
       // Keep these checks aligned with the legacy Studio update below. New
       // clients mark focused saves so they run before broader validators.
       function validNonceStudioUpdate() {
-        return isSignedIn()
+        return request.resource.data.studioSaveNonce.matches('details:.*')
+          ? validBoardDetailsUpdate()
+          : (isSignedIn()
         && personalBoardMutation()
         && resource.data.owner_user_id == request.auth.uid
         && (
@@ -1062,7 +1064,51 @@ service cloud.firestore {
           )
         )
         && request.resource.data.updated_at_iso is string
-        && request.resource.data.server_updated_at == request.time;
+        && request.resource.data.server_updated_at == request.time);
+      }
+
+      // Board details are validated as a patch: unchanged historical content and
+      // server-managed fields must not block replacing a cover or logo.
+      function validDetailsString(field, maxLength) {
+        return !request.resource.data.diff(resource.data).affectedKeys().hasAny([field])
+          || (request.resource.data[field] is string && request.resource.data[field].size() <= maxLength);
+      }
+      function validBoardDetailsUpdate() {
+        let changed = request.resource.data.diff(resource.data).affectedKeys();
+        let data = request.resource.data;
+        return isSignedIn()
+          && personalBoardMutation()
+          && resource.data.owner_user_id == request.auth.uid
+          && changed.hasOnly([
+            'title', 'description', 'backNote', 'icon', 'tone', 'visibility',
+            'imageUrl', 'logoUrl', 'logoLinkUrl', 'stackCtaLabel', 'stackCtaUrl', 'stickers',
+            'photoStudioDraft', 'socialVideoRenderVersion', 'socialLandscapeVideoRenderVersion',
+            'trailerVideoRenderVersion', 'trailerLandscapeVideoRenderVersion',
+            'trailerVideoSourceFingerprint', 'studioSaveNonce', 'updated_at_iso', 'server_updated_at'
+          ])
+          && data.visibility in ['public', 'unlisted', 'private']
+          && (data.visibility in ['public', 'unlisted']
+            || resource.data.get('kind', '') == 'nearby-gems'
+            || isPhotoStudioDraft(resource.data)
+            || isPlatformAdmin() || hasActivePersonalWikiPlan())
+          && (!changed.hasAny(['photoStudioDraft'])
+            || (data.photoStudioDraft == false && data.visibility in ['public', 'unlisted']))
+          && validDetailsString('title', 90)
+          && (!changed.hasAny(['title']) || data.title.size() >= 1)
+          && validDetailsString('description', 240)
+          && validDetailsString('backNote', 300)
+          && validDetailsString('icon', 64)
+          && (!changed.hasAny(['tone']) || data.tone in ['teal', 'coral', 'yellow', 'green', 'blue', 'sky', 'purple'])
+          && validDetailsString('imageUrl', 2500)
+          && validDetailsString('logoUrl', 2000)
+          && validDetailsString('logoLinkUrl', 240)
+          && validDetailsString('stackCtaLabel', 48)
+          && validDetailsString('stackCtaUrl', 240)
+          && (!changed.hasAny(['stickers']) || (data.stickers is list && data.stickers.size() <= 48))
+          && data.socialVideoRenderVersion == '' && data.socialLandscapeVideoRenderVersion == ''
+          && data.trailerVideoRenderVersion == '' && data.trailerLandscapeVideoRenderVersion == ''
+          && data.trailerVideoSourceFingerprint == ''
+          && data.updated_at_iso is string && data.server_updated_at == request.time;
       }
 
       function focusedBoardUpdate() {

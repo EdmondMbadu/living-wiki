@@ -333,6 +333,7 @@ describe('team visitor visibility in the board editor', () => {
     component.setBoardSettingsVisibility('public');
     expect(component.boardSettingsDraft().visibility).toBe('unlisted');
     expect(component.boardVisibilitySaveLabel(component.boards()[0], 'unlisted')).toBe('Save changes');
+    component.updateBoardSettingsDraft('title', 'Updated working copy');
     await component.saveBoardSettings(new Event('submit'));
     expect(component.teams.saveBoard).toHaveBeenCalled();
     expect(component.teams.command).not.toHaveBeenCalled();

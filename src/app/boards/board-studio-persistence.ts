@@ -1,5 +1,21 @@
 export type BoardStudioSaveKind = 'script' | 'cover' | 'fresh-narration' | 'cards' | 'final-screen' | 'settings';
 
+/** The general editor must not replace cards or server-managed metadata. */
+export function boardDetailsPatch(previous: Record<string, unknown>, next: Record<string, unknown>): Record<string, unknown> {
+  const fields = ['title', 'description', 'backNote', 'icon', 'tone', 'visibility',
+    'imageUrl', 'logoUrl', 'logoLinkUrl', 'stackCtaLabel', 'stackCtaUrl', 'stickers'];
+  const changes = Object.fromEntries(fields
+    .filter((field) => next[field] !== undefined && JSON.stringify(previous[field]) !== JSON.stringify(next[field]))
+    .map((field) => [field, next[field]]));
+  return {
+    ...changes,
+    ...(changes['visibility'] === 'public' || changes['visibility'] === 'unlisted' ? { photoStudioDraft: false } : {}),
+    ...Object.fromEntries(mediaInvalidationFields.map((field) => [field, ''])),
+    updated_at_iso: next['updated_at_iso'],
+    studioSaveNonce: `details:${globalThis.crypto.randomUUID()}`,
+  };
+}
+
 const mediaInvalidationFields = [
   'socialVideoRenderVersion',
   'socialLandscapeVideoRenderVersion',

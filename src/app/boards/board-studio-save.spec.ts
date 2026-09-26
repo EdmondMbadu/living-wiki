@@ -41,6 +41,35 @@ function harness(): any {
 }
 
 describe('published board Studio saves', () => {
+  it('uploads only the changed cover and writes its download URL without touching legacy content', async () => {
+    const c = harness();
+    const previous = { ...board, description: 'Legacy text. '.repeat(40), logoUrl: 'data:image/png;base64,old-logo',
+      visibility: 'unlisted' };
+    const next = { ...previous, imageUrl: 'data:image/jpeg;base64,new-cover', updatedAt: '2026-09-26T12:00:00.000Z' };
+    c.persistImageIfNeeded = jasmine.createSpy('upload').and.resolveTo('https://example.com/uploaded-cover.jpg');
+    c.assertBoardVisitorKnowledge = jasmine.createSpy('check knowledge');
+    const patch = await c.prepareBoardDetailsForFirestore(next, previous, 'owner');
+    expect(c.persistImageIfNeeded).toHaveBeenCalledOnceWith(next.imageUrl, `users/owner/boards/${board.id}/cover.jpg`);
+    expect(patch.imageUrl).toBe('https://example.com/uploaded-cover.jpg');
+    expect(patch.updated_at_iso).toBe(next.updatedAt);
+    expect(patch.cards).toBeUndefined();
+    expect(patch.description).toBeUndefined();
+    expect(patch.logoUrl).toBeUndefined();
+    expect(c.assertBoardVisitorKnowledge).not.toHaveBeenCalled();
+    expect(previous.imageUrl).toBe('');
+  });
+
+  it('checks knowledge when changing visibility and propagates an image upload failure', async () => {
+    const c = harness();
+    const previous = { ...board, visibility: 'private' };
+    const next = { ...previous, imageUrl: 'data:image/jpeg;base64,new-cover', visibility: 'public' };
+    c.assertBoardVisitorKnowledge = jasmine.createSpy('check knowledge').and.resolveTo();
+    c.persistImageIfNeeded = jasmine.createSpy('upload').and.rejectWith(new Error('Image upload failed'));
+    await expectAsync(c.prepareBoardDetailsForFirestore(next, previous, 'owner')).toBeRejectedWithError('Image upload failed');
+    expect(c.assertBoardVisitorKnowledge).toHaveBeenCalledOnceWith(next);
+    expect(previous.imageUrl).toBe('');
+  });
+
   it('routes cover and final-screen saves through focused writes', async () => {
     const c = harness();
     expect(await c.saveStackCover(board)).toBeTrue();
@@ -140,5 +169,40 @@ describe('published board Studio saves', () => {
     expect(c.boards()[0]).toBe(previous);
     expect(c.boardDialogError()).toContain('permission-denied');
     expect(c.closeBoardDialog).not.toHaveBeenCalled();
+    expect(c.persistAndReplaceBoard).toHaveBeenCalledWith(jasmine.objectContaining({
+      title: 'Edited title', cards: previous.cards,
+    }), 'details', previous);
+    expect(c.boardDraft().title).toBe('Edited title');
+    c.nestedBoardsUnder = () => [];
+    c.persistAndReplaceBoard.and.resolveTo(true);
+    await c.saveBoardDraft(new Event('submit'));
+    expect(c.closeBoardDialog).toHaveBeenCalled();
+  });
+
+  it('saves a cover from the general editor through a focused write and closes only after success', async () => {
+    const c = harness();
+    const previous = { ...board, visibility: 'unlisted', backNote: '', icon: 'school',
+      tone: 'teal', logoUrl: '', logoLinkUrl: '', stackCtaLabel: '', stackCtaUrl: '', stickers: [] };
+    c.boards.set([previous]);
+    c.editingBoardId = signal(board.id);
+    c.creatingBoardInside = signal(null);
+    c.boardDraft = signal({ ...previous, imageUrl: 'data:image/jpeg;base64,replacement' });
+    c.boardDialogError = signal(null);
+    c.closeBoardDialog = jasmine.createSpy('close editor');
+    c.nestedBoardsUnder = () => [];
+    let complete!: (value: boolean) => void;
+    c.persistAndReplaceBoard.and.callFake(() => new Promise<boolean>(resolve => { complete = resolve; }));
+
+    const saving = c.saveBoardDraft(new Event('submit'));
+    expect(c.persistAndReplaceBoard).toHaveBeenCalledWith(jasmine.objectContaining({
+      imageUrl: 'data:image/jpeg;base64,replacement', visibility: 'unlisted', cards: previous.cards,
+      socialVideoUrl: previous.socialVideoUrl,
+    }), 'details', previous);
+    expect(c.closeBoardDialog).not.toHaveBeenCalled();
+    complete(true);
+    await saving;
+    expect(c.closeBoardDialog).toHaveBeenCalled();
+    expect(c.stackPublishedVideoReady()).toBeFalse();
+    expect(c.stackPublishedTrailerReady()).toBeFalse();
   });
 });
