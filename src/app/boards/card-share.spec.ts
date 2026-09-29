@@ -1,4 +1,4 @@
-import { canShareCardPublicly, findCardPath, publicCardUrl } from './card-share';
+import { canShareCardPublicly, findCardPath, narratedLiveCard, publicCardUrl } from './card-share';
 
 describe('card sharing', () => {
   it('builds a stable public link from IDs and encodes special characters', () => {
@@ -20,5 +20,20 @@ describe('card sharing', () => {
     expect(canShareCardPublicly('private', false, false)).toBeFalse();
     expect(canShareCardPublicly('public', true, false)).toBeFalse();
     expect(canShareCardPublicly('public', false, true)).toBeFalse();
+  });
+
+  it('opens only a top-level narratable card in Live view', () => {
+    const cards = [
+      { id: 'narrated', title: 'Kitchen', notes: 'Welcome to the kitchen.' },
+      { id: 'silent', title: '' },
+      { id: 'talking', title: 'Ask me', conversation: { atlasId: 'agent' } },
+      { id: 'hidden', title: 'Secret', authorOnly: true },
+      { id: 'parent', title: 'Parent', relatedCards: [{ id: 'nested', title: 'Nested' }] },
+    ];
+    expect(narratedLiveCard(cards, 'narrated')).toBe(cards[0]);
+    expect(narratedLiveCard(cards, 'silent')).toBeNull();
+    expect(narratedLiveCard(cards, 'talking')).toBeNull();
+    expect(narratedLiveCard(cards, 'hidden')).toBeNull();
+    expect(narratedLiveCard(cards, 'nested')).toBeNull();
   });
 });

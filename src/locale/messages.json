@@ -6428,6 +6428,8 @@
     "authStorySignInTitle": "Welcome back to your world.",
     "duplicateBoardMenu": "Duplicate board",
     "languageSwitcher.menuLabel": "Languages",
+    "scanLiveCard": "Scan to open this card in Live view and hear its narration.",
+    "tapToHearCard": "Tap to hear this card",
     "tourWizardEditHelp": "Your itinerary is preserved. Edit individual stops, or update the original script to change the route.",
     "tourWizardEditSource": "Edit original itinerary",
     "tourWizardInputHelp": "Paste numbered stops with narration and optional “Next:” directions. Up to 30,000 characters.",

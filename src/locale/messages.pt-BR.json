@@ -6428,6 +6428,8 @@
     "authStorySignInTitle": "Bem-vindo de volta ao seu mundo.",
     "duplicateBoardMenu": "Quadro duplicada.",
     "languageSwitcher.menuLabel": "Idiomas",
+    "scanLiveCard": "Leia o código para abrir este cartão na visualização ao vivo e ouvir a narração.",
+    "tapToHearCard": "Toque para ouvir este cartão",
     "tourWizardEditHelp": "Seu itinerário foi preservado. Edite as paradas individualmente ou atualize o roteiro original para alterar o percurso.",
     "tourWizardEditSource": "Editar itinerário original",
     "tourWizardInputHelp": "Cole as paradas numeradas com a narração e, se quiser, as orientações precedidas de “Next:”. Até 30.000 caracteres.",

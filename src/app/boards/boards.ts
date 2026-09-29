@@ -62,6 +62,7 @@ import { generateQrSvgDataUrl } from '../qr-code';
 import { publicBoardQrUrl } from '../board-qr-code';
 import { CardShareDialogComponent } from './card-share-dialog';
 import { CardFocusDialogComponent } from './card-focus-dialog';
+import { narratedLiveCard } from './card-share';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 import { WorkspaceSidebarComponent } from '../workspace-sidebar/workspace-sidebar';
 import {
@@ -2377,6 +2378,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly citiesLoading = signal(false);
   readonly selectedBoardId = signal<string | null>(null);
   readonly requestedCardId = signal<string | null>(null);
+  private cardLiveRouteKey = '';
+  readonly stackNarrationNeedsGesture = signal(false);
   readonly cardShareTarget = signal<{ boardId: string; cardId: string } | null>(null);
   readonly publicOwnerKey = signal<string | null>(null);
   readonly publicOwnerUid = signal<string | null>(null);
@@ -3100,6 +3103,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     return findResolvedBoardRoute(this.boards(), this.selectedBoardId());
   });
   private readonly boardRouteLoadState = signal(beginBoardRouteLoad(0, null));
+  readonly boardRouteLoadReady = computed(() => this.boardRouteLoadState().complete);
   private readonly boardRouteUnavailableReady = signal(false);
   readonly boardRouteLoading = computed(() =>
     !!this.selectedBoardId()
@@ -4042,6 +4046,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           this.watchSelectedBoard(resolvedBoard?.id ?? null);
         }
         this.syncStackDirectView();
+        this.syncRequestedCardRoute();
         this.syncRequestedStackStudio();
         this.syncRequestedStackShare();
         this.syncBoardLearnDirectView();
@@ -4070,7 +4075,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.requestedCardId.set(params.get('card'));
       const view = params.get('view') ?? params.get('stack');
       const wantsFriends = params.get('friends') === '1';
-      const wantsStack = view === 'stack' || view === 'reel';
+      const wantsStack = view === 'stack' || view === 'reel'
+        || (!!this.requestedCardId() && this.cardLiveRouteKey === `${this.selectedBoard()?.id}:${this.requestedCardId()}`);
       if (params.get('create') === 'gems' && !this.nearbyGemsQueryConsumed) {
         this.nearbyGemsQueryConsumed = true;
         if (this.isBrowser) void this.openNearbyGemsWizard();
@@ -4118,6 +4124,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         this.stopSongPreview();
         this.stopStackPlayback();
       }
+      this.syncRequestedCardRoute();
       this.syncRequestedStackStudio();
       this.syncRequestedStackShare();
       if (this.isBrowser && wantsFriends) {
@@ -19040,7 +19047,45 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  private syncStackDirectView(): void {
+  private syncRequestedCardRoute(): void {
+    const cardId = this.requestedCardId();
+    const board = this.selectedBoard();
+    if (!cardId) {
+      this.cardLiveRouteKey = '';
+      this.stackNarrationNeedsGesture.set(false);
+      return;
+    }
+    if (!board || !this.boardRouteLoadState().complete) return;
+
+    const card = narratedLiveCard(board.cards, cardId);
+    if (!card) {
+      this.cardLiveRouteKey = '';
+      this.stackNarrationNeedsGesture.set(false);
+      this.stopStackPlayback();
+      this.stackDirectView.set(false);
+      return;
+    }
+
+    const routeKey = `${board.id}:${card.id}`;
+    if (this.cardLiveRouteKey === routeKey && this.stackDirectView()) return;
+    this.cardLiveRouteKey = routeKey;
+    this.stopStackPlayback();
+    this.stackDirectView.set(true);
+    this.syncStackDirectView({ deferPlayback: true });
+    const frameIndex = this.stackFrames().findIndex((frame) => frame.kind === 'card' && frame.card.id === card.id);
+    if (frameIndex < 0) {
+      this.cardLiveRouteKey = '';
+      this.stackDirectView.set(false);
+      return;
+    }
+    this.stackFrameIndex.set(frameIndex);
+    this.stackCardPhotoIndex.set(0);
+    this.stackTourNarrationConsent.set(true);
+    this.stackNarrationNeedsGesture.set(false);
+    this.startStackPlayback();
+  }
+
+  private syncStackDirectView(options: { deferPlayback?: boolean } = {}): void {
     if (!this.stackDirectView()) {
       return;
     }
@@ -19062,6 +19107,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       }
     }
     this.stackStudioOpen.set(false);
+    if (options.deferPlayback) return;
     if (this.stackAutoplayRequested() || this.stackNarrationSession.isUnlocked()) {
       this.stackTourNarrationConsent.set(true);
       this.startStackPlayback();
@@ -19530,6 +19576,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
     try {
       await audio.play();
+      this.stackNarrationNeedsGesture.set(false);
       syncProgressDuration();
       this.prefetchNextStackNarration(frameKey);
     } catch {
@@ -19543,6 +19590,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       }
       this.clearStackPlaybackTimer();
       this.stackPlaying.set(false);
+      this.stackNarrationNeedsGesture.set(true);
       this.stackActiveFrameDurationMs.set(this.stackFrameDurationMs);
       this.tourAudioNotice.set('Your browser paused automatic narration. Tap the voice button to start this location.');
     }
@@ -19575,6 +19623,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     utterance.pitch = 1;
     this.tourSpeechUtterance = utterance;
     this.tourSpeechPlaying.set(true);
+    utterance.onstart = () => this.stackNarrationNeedsGesture.set(false);
     const estimatedSpeechMs = Math.max(this.stackFrameDurationMs, Math.ceil(utterance.text.trim().split(/\s+/).length / 2.45 * 1000));
     this.stackActiveFrameDurationMs.set(Date.now() - startedAt + estimatedSpeechMs + 450);
 
@@ -19596,6 +19645,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.tourSpeechPlaying.set(false);
       this.clearStackPlaybackTimer();
       this.stackPlaying.set(false);
+      this.stackNarrationNeedsGesture.set(true);
       this.stackActiveFrameDurationMs.set(this.stackFrameDurationMs);
       this.tourAudioNotice.set('Narration could not start. Tap the voice button to try this location again.');
     };
@@ -22466,6 +22516,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
             ? boards.map((item) => item.id === board.id ? board : item)
             : [board, ...boards];
         });
+        this.syncRequestedCardRoute();
         if (this.boardTranslationTarget()
           && this.boardTranslationVersion()
           && this.boardTranslationVersion() !== board.updatedAt) {

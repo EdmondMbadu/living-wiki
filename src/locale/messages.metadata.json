@@ -25707,6 +25707,14 @@
     "source": "Languages",
     "file": "src/app/language-switcher/language-switcher.html"
   },
+  "scanLiveCard": {
+    "source": "Scan to open this card in Live view and hear its narration.",
+    "file": "src/app/boards/card-share-dialog.html"
+  },
+  "tapToHearCard": {
+    "source": "Tap to hear this card",
+    "file": "src/app/boards/boards.html"
+  },
   "tourWizardEditHelp": {
     "source": "Your itinerary is preserved. Edit individual stops, or update the original script to change the route.",
     "file": "src/app/boards/boards.html"

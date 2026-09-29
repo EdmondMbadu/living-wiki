@@ -385,6 +385,12 @@
             @if (stackShareMessage() || shareMessage() || tourAudioNotice()) {
               <small class="stack-viewer-toast">{{ stackShareMessage() || shareMessage() || tourAudioNotice() }}</small>
             }
+            @if (requestedCardId() && stackNarrationNeedsGesture() && stackCurrentNarrationFrame()) {
+              <button type="button" class="stack-viewer-hear-card" (click)="replayStackCurrentNarration($event)">
+                <span class="material-symbols-outlined" aria-hidden="true">volume_up</span>
+                <span i18n="@@tapToHearCard">Tap to hear this card</span>
+              </button>
+            }
           </section>
 
           <button
@@ -11568,7 +11574,7 @@
 }
 
 @defer (when !!requestedCardId()) {
-  @if (requestedCardId() && !stackDirectView()) {
+  @if (requestedCardId() && !stackDirectView() && boardRouteLoadReady()) {
     @if (selectedBoard(); as focusBoard) {
       <app-card-focus-dialog
         [boardTitle]="focusBoard.title"

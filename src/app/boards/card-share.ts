@@ -1,11 +1,15 @@
 import { isLinkReadableVisibility, type BoardVisibility } from '../board-visibility';
 import { publicBoardQrUrl } from '../board-qr-code';
+import { canonicalCardNarration } from '../../../functions/src/card-narration';
 
 export type ShareableCard = {
   id: string;
   title?: string;
   subtitle?: string;
   notes?: string;
+  shortSummary?: string;
+  tour?: { guideScript?: string } | null;
+  conversation?: { atlasId?: string | null } | null;
   imageUrl?: string;
   imageUrls?: string[];
   authorOnly?: boolean;
@@ -21,6 +25,14 @@ export type ShareableBoard = {
 
 export function publicCardUrl(boardId: string, cardId: string): string {
   return `${publicBoardQrUrl(boardId)}?card=${encodeURIComponent(cardId)}`;
+}
+
+/** Only top-level cards with an actual Live voice script can open in Live view. */
+export function narratedLiveCard<T extends ShareableCard>(cards: readonly T[], cardId: string): T | null {
+  const card = cards.find((candidate) => candidate.id === cardId);
+  return card && !card.authorOnly && !card.conversation?.atlasId && canonicalCardNarration(card).trim()
+    ? card
+    : null;
 }
 
 /** A hidden parent also makes its nested cards unsuitable for a public link. */

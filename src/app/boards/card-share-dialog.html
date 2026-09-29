@@ -7,7 +7,11 @@
       <span class="card-share-dialog__eyebrow" i18n>Share this card</span>
       <h2 id="card-share-title">{{ title() }}</h2>
       @if (allowed()) {
-        <p i18n>Scan to open this card on LivingWiki.</p>
+        @if (opensLive()) {
+          <p i18n="@@scanLiveCard">Scan to open this card in Live view and hear its narration.</p>
+        } @else {
+          <p i18n>Scan to open this card on LivingWiki.</p>
+        }
         <img class="card-share-dialog__qr" [src]="qrImage()" [alt]="'QR code for ' + title()" />
         <label class="card-share-dialog__link">
           <span i18n>Card link</span>

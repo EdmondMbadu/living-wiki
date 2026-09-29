@@ -1889,6 +1889,31 @@ html.workspace-overlay-open body {
   backdrop-filter: blur(8px);
 }
 .card-share-overlay { z-index: 10001; }
+.stack-viewer-hear-card {
+  position: absolute;
+  left: 50%;
+  bottom: max(4.2rem, calc(env(safe-area-inset-bottom) + 3.2rem));
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 999px;
+  background: #fff;
+  color: #14271f;
+  font-weight: 800;
+  transform: translateX(-50%);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.stack-viewer-story:has(.stack-viewer-lets-go) .stack-viewer-hear-card {
+  bottom: max(9rem, calc(env(safe-area-inset-bottom) + 8.25rem));
+}
+
 .card-share-dialog, .card-focus-dialog {
   position: relative;
   width: min(100%, 35rem);
