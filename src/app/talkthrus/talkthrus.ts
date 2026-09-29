@@ -4,11 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { httpsCallable } from 'firebase/functions';
 import { getFirebaseFunctions } from '../firebase.client';
 
-const exampleUrl = 'https://www.livingwiki.com/share/board/00f3683f-229a-4fb6-8e28-2faf028ff1e0?v=2026-09-15T21%3A03%3A58.442Z&ui=en';
+const exampleUrl = 'https://www.livingwiki.com/boards/charming-beach-condo-wildwood-nj';
 
 const previews = [
   { label: $localize`The property`, image: '/assets/talkthrus/property.png', alt: $localize`Beach Holiday Condo TalkThru listing example`, step: $localize`01 / SET THE SCENE`, heading: $localize`A home worth getting to know.`, body: $localize`Bring the listing together in a visual story that buyers can explore at their own pace.` },
-  { label: $localize`The agent`, image: '/assets/talkthrus/agent.png', alt: $localize`Chip Watson personal welcome card`, step: $localize`02 / MAKE IT PERSONAL`, heading: $localize`Start with a familiar voice. Yours.`, body: $localize`Introduce yourself and welcome buyers into the property. Give them a person to connect with from the very beginning.` },
+  { label: $localize`The agent`, image: '/assets/talkthrus/jennifer-jones-card.png', alt: $localize`Jennifer Jones personal welcome card for a Wildwood condominium`, step: $localize`02 / MAKE IT PERSONAL`, heading: $localize`Start with a familiar voice. Yours.`, body: $localize`Introduce yourself and welcome buyers into the property. Give them a person to connect with from the very beginning.` },
   { label: $localize`The narration`, image: '/assets/talkthrus/voice.png', alt: $localize`TalkThru narration settings with style and length choices`, step: $localize`03 / TELL ITS STORY`, heading: $localize`Add the details only you can.`, body: $localize`Shape the narration around your insights, from the way a room feels to the features that deserve a closer look.` },
 ] as const;
 

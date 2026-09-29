@@ -59,10 +59,6 @@
     "source": " Keep it private ",
     "file": "src/app/boards/boards.html"
   },
-  "101558144998977207": {
-    "source": "A modern home glowing with warm evening light",
-    "file": "src/app/talkthrus/talkthrus.html"
-  },
   "1017788635215690162": {
     "source": "{$INTERPOLATION} Talk with {$INTERPOLATION_1} through the {$INTERPOLATION_2} city wiki.",
     "file": "src/app/business-detail/business-detail.html"
@@ -7771,10 +7767,6 @@
     "source": "Unsaved",
     "file": "src/app/boards/boards.html"
   },
-  "3507678028666193467": {
-    "source": "Your voice is the difference.",
-    "file": "src/app/talkthrus/talkthrus.html"
-  },
   "3509362658974456343": {
     "source": "End (seconds){$TAG_INPUT}",
     "file": "src/app/off-grids/pin-talk-recorder.html"
@@ -9835,10 +9827,6 @@
     "source": "{$START_TAG_SPAN}waving_hand{$CLOSE_TAG_SPAN} Opening card",
     "file": "src/app/boards/boards.html"
   },
-  "4182594269755687465": {
-    "source": "A listing. A story. A human connection.",
-    "file": "src/app/talkthrus/talkthrus.html"
-  },
   "4184412100004696593": {
     "source": "Promo image preview for ",
     "file": "src/app/boards/board-promo-image-dialog.ts"
@@ -10238,10 +10226,6 @@
   "4298843972406017764": {
     "source": "Tour stop navigation",
     "file": "src/app/boards/boards.html"
-  },
-  "4302408945290251151": {
-    "source": "TalkThru example: a personal welcome from agent Chip Watson",
-    "file": "src/app/talkthrus/talkthrus.html"
   },
   "4302912603848458571": {
     "source": "Editing preview",
@@ -10818,10 +10802,6 @@
   "4506803456670769268": {
     "source": "Admins",
     "file": "src/app/admin-users/admin-users.html"
-  },
-  "4508147156426426253": {
-    "source": "Let buyers hear the person behind the listing.",
-    "file": "src/app/talkthrus/talkthrus.html"
   },
   "45094803335320939": {
     "source": "Counter card",
@@ -13026,6 +13006,10 @@
   "5208602557521045574": {
     "source": "Loading boards",
     "file": "src/app/chat/chat.html"
+  },
+  "5209381129800084502": {
+    "source": "Jennifer Jones welcoming viewers in a TalkThru over a photo of a home",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "5210415889355106555": {
     "source": "Parent card",
@@ -16734,6 +16718,10 @@
   "6381230596990321277": {
     "source": "Wiki subject",
     "file": "src/app/atlas-persona/atlas-persona.html"
+  },
+  "6382525991787587845": {
+    "source": "Jennifer Jones personal welcome card for a Wildwood condominium",
+    "file": "src/app/talkthrus/talkthrus.ts"
   },
   "6384005974384003155": {
     "source": "Snapshot {$INTERPOLATION}",
@@ -21094,10 +21082,6 @@
   "7811638740066224896": {
     "source": "{$INTERPOLATION} selected · up to {$INTERPOLATION_1}",
     "file": "src/app/board-collection-create/board-collection-create.html"
-  },
-  "7812348472489945481": {
-    "source": "Chip Watson personal welcome card",
-    "file": "src/app/talkthrus/talkthrus.ts"
   },
   "7813846944360361065": {
     "source": "Submit {$INTERPOLATION} for review.",

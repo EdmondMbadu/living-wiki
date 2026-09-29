@@ -47,17 +47,8 @@ h1, h2, h3, p { margin-top: 0; }
 .hero-note { display: flex; gap: 13px; align-items: center; margin: 39px 0 0; color: #d4dcd6; font-size: 13px; line-height: 1.35; }
 .hero-note > span:first-child { color: var(--gold); font-size: 25px; }
 .hero-note strong { color: white; font-weight: 400; }
-.hero-visual { position: relative; min-width: 0; padding-top: 1px; }
-.visual-caption { margin-bottom: 22px; font-size: 11px; letter-spacing: .26em; text-transform: uppercase; color: #cfdbd3; white-space: nowrap; }
-.photo-window { width: 100%; height: 360px; overflow: hidden; border-radius: 110px 7px 0 0; }
-.photo-window img { width: 100%; height: 100%; object-fit: cover; object-position: center top; transform: scale(1.7); transform-origin: center top; }
-.portrait { position: absolute; z-index: 1; top: 31px; right: 4%; width: 42%; max-width: 225px; height: 408px; overflow: hidden; border-radius: 24px; border: 4px solid #73d3b0; background: #141714; transform: rotate(5deg); box-shadow: 0 10px 25px #07110c8f; }
-.portrait img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.voice-card { position: relative; z-index: 2; display: flex; align-items: center; gap: 14px; min-height: 91px; padding: 15px 20px; margin-top: 50px; border-radius: 8px; background: white; color: #1d2a27; }
-.voice-card strong, .voice-card small { display: block; }
-.voice-card strong { font-size: 14px; }
-.voice-card small { margin-top: 2px; font-size: 12px; color: #606a64; }
-.round-icon { width: 45px; height: 45px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #f2f4ef; font-size: 25px; }
+.hero-visual { min-width: 0; align-self: center; }
+.hero-showcase { display: block; width: 100%; height: auto; }
 .visual-footnote { margin-top: 10px; color: #aebcb4; font-size: 12px; }
 .benefit-strip { display: flex; justify-content: center; gap: clamp(30px, 8vw, 110px); padding: 28px; border-bottom: 1px solid var(--line); font-size: 14px; }
 .promise { padding-block: 105px 110px; }
@@ -75,7 +66,7 @@ h1, h2, h3, p { margin-top: 0; }
 .preview-panel { display: grid; grid-template-columns: 57% 43%; min-height: 470px; border: 1px solid #dfe4df; border-radius: 8px; overflow: hidden; background: #fff; }
 .preview-art { display: grid; place-items: center; background: #edf4ee; padding: 35px 28px; min-width: 0; }
 .preview-art img { display: block; width: 100%; max-height: 420px; object-fit: contain; border-radius: 9px; }
-.preview-panel:has(img[src$="agent.png"]) .preview-art img { max-height: 405px; width: auto; }
+.preview-panel:has(img[src$="jennifer-jones-card.png"]) .preview-art img { max-height: 405px; width: auto; }
 .preview-copy { display: flex; flex-direction: column; align-items: start; justify-content: center; padding: 45px 55px; }
 .preview-copy h3 { font-size: clamp(29px, 3vw, 41px); margin: 14px 0 22px; }
 .preview-copy > p:not(.eyebrow) { font-size: 16px; color: #5b665f; line-height: 1.65; }
@@ -141,7 +132,6 @@ footer { padding: 33px 0; border-top: 1px solid var(--line); }
 @media (max-width: 950px) {
   .hero-inner { gap: 30px; }
   .hero h1 { font-size: clamp(44px, 5.2vw, 62px); }
-  .portrait { height: 315px; }
   .signup { gap: 35px; }
   .preview-copy { padding: 30px; }
 }
@@ -158,9 +148,6 @@ footer { padding: 33px 0; border-top: 1px solid var(--line); }
   .hero h1 { font-size: clamp(44px, 10vw, 62px); }
   .hero h1 em { white-space: normal; }
   .hero-visual { max-width: 560px; }
-  .photo-window { height: 300px; }
-  .portrait { height: 320px; top: 20px; }
-  .voice-card { margin-top: 27px; }
   .benefit-strip { flex-wrap: wrap; justify-content: space-evenly; gap: 10px 20px; font-size: 12px; }
   .promise, .how { padding-block: 75px; }
   .promise-copy, .steps, .team-cards, .preview-panel { grid-template-columns: 1fr; }
@@ -179,8 +166,6 @@ footer { padding: 33px 0; border-top: 1px solid var(--line); }
 @media (max-width: 420px) {
   .hero-actions { align-items: stretch; flex-direction: column; }
   .hero-actions .button { width: 100%; }
-  .visual-caption { font-size: 9px; }
-  .portrait { height: 260px; }
   .preview-tabs { display: flex; width: 100%; }
   .preview-tabs button { min-width: 0; flex: 1; padding-inline: 6px; font-size: 12px; }
   .form-grid { grid-template-columns: 1fr; gap: 0; }
