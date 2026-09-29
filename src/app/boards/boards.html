@@ -69,8 +69,8 @@
                   </button>
                 }
                 @if (stackCurrentFrame().kind !== 'closing') {
-                  <button type="button" aria-label="{{ stackPlaying() ? templateText.message363 : templateText.message364 }}" (click)="toggleStackPlayback()">
-                    <span class="material-symbols-outlined">{{ stackPlaying() ? 'pause' : 'play_arrow' }}</span>
+                  <button type="button" [attr.aria-label]="requestedCardId() && stackNarrationNeedsGesture() ? templateText.message362 : stackPlaying() ? templateText.message363 : templateText.message364" (click)="requestedCardId() && stackNarrationNeedsGesture() ? replayStackCurrentNarration($event) : toggleStackPlayback()">
+                    <span class="material-symbols-outlined">{{ stackPlaying() && !(requestedCardId() && stackNarrationNeedsGesture()) ? 'pause' : 'play_arrow' }}</span>
                   </button>
                 }
                 <button type="button" aria-label="Share Stack" (click)="openStackShareDialog(board, $event)" i18n-aria-label>

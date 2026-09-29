@@ -17628,6 +17628,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     event?.stopPropagation();
     const frameKey = stackStoryFrameKey(this.stackCurrentFrame());
     if (!this.stackCurrentNarrationFrame()) return;
+    if (this.requestedCardId()) this.stackNarrationNeedsGesture.set(false);
     this.stopStackPlayback();
     await this.unlockStackNarrationAudio();
     if (stackStoryFrameKey(this.stackCurrentFrame()) !== frameKey) return;
@@ -19081,7 +19082,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stackFrameIndex.set(frameIndex);
     this.stackCardPhotoIndex.set(0);
     this.stackTourNarrationConsent.set(true);
-    this.stackNarrationNeedsGesture.set(false);
+    // A scanned QR link has no browser user gesture. Keep Play available until
+    // audio really starts; tapping it unlocks the narrator on this same card.
+    this.stackNarrationNeedsGesture.set(true);
     this.startStackPlayback();
   }
 
