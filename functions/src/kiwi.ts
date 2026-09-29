@@ -97,10 +97,29 @@ function canUsePrivateBoard(profile: Data): boolean {
       && statuses.some((status) => ['active', 'trialing', 'paid'].includes(status)));
 }
 
-function publicOwnerSlug(uid: string, profile: Data): string {
-  const name = value(profile['displayName'], 80).normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 55) || 'livingwiki-user';
-  return `${name}-${uid.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8)}`;
+async function publicOwnerSlug(uid: string, profile: Data): Promise<string> {
+  // The public profile is keyed by the same handle used by the board editor.
+  // Reuse an existing handle so Kiwi boards join that owner's public shelf.
+  const base = (value(profile['displayName'], 80) || value(profile['email'], 80))
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/@.*$/, '').replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '').slice(0, 48) || 'livingwiki-user';
+  const uidSuffix = uid.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const owned = await db.collection('boards').where('owner_user_id', '==', uid)
+    .limit(200).select('owner_public_slug').get();
+  const counts = new Map<string, number>();
+  for (const board of owned.docs) {
+    const slug = value(board.data()['owner_public_slug'], 80);
+    if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)
+      && slug !== `${base}-${uidSuffix.slice(0, 8)}`) counts.set(slug, (counts.get(slug) || 0) + 1);
+  }
+  const existing = [...counts].sort((a, b) => b[1] - a[1])[0]?.[0];
+  if (existing) return existing;
+
+  const collision = await db.collection('boards').where('owner_public_slug', '==', base)
+    .where('visibility', '==', 'public').limit(1).select('owner_user_id').get();
+  return collision.docs.some((board) => board.data()['owner_user_id'] !== uid)
+    ? `${base}-${uidSuffix.slice(0, 6)}` : base;
 }
 
 function cardsFromDrafts(action: Extract<KiwiAction, { kind: 'create_board' }>, now: string): Data[] {
@@ -112,23 +131,23 @@ function cardsFromDrafts(action: Extract<KiwiAction, { kind: 'create_board' }>, 
   }));
 }
 
-function newBoard(action: Extract<KiwiAction, { kind: 'create_board' }>, boardId: string, uid: string, profile: Data, now: string, teamId = ''): Data {
+function newBoard(action: Extract<KiwiAction, { kind: 'create_board' }>, boardId: string, uid: string, profile: Data, now: string, teamId = '', ownerSlug = ''): Data {
   return {
     id: boardId,
     owner_user_id: teamId ? `team:${teamId}` : uid,
-    owner_public_slug: teamId ? '' : publicOwnerSlug(uid, profile),
+    owner_public_slug: teamId ? '' : ownerSlug,
     owner_display_name: value(profile['displayName'], 100) || 'LivingWiki member',
     owner_photo_url: '', owner_profile_icon: '', owner_profile_picture_type: null,
     title: action.title, description: action.description, kind: 'standard', tone: action.tone,
     icon: 'auto_stories', visibility: teamId ? 'private' : action.visibility,
     visibility_schema_version: 1, cards: cardsFromDrafts(action, now), stickers: [],
-    sortOrder: Date.now(), imageUrl: action.cards.find((card) => card.imageUrl)?.imageUrl || '', backNote: '', insideCardsDisplay: 'nested',
+    sortOrder: -Date.now(), imageUrl: action.cards.find((card) => card.imageUrl)?.imageUrl || '', backNote: '', insideCardsDisplay: 'nested',
     showCardNumbers: true, created_at_iso: now, updated_at_iso: now,
     ...(teamId ? { team_id: teamId } : {}),
   };
 }
 
-function publicCopy(source: Data, boardId: string, uid: string, profile: Data, now: string): Data {
+function publicCopy(source: Data, boardId: string, uid: string, profile: Data, now: string, ownerSlug: string): Data {
   const cards = Array.isArray(source['cards']) ? source['cards'].slice(0, 200) : [];
   const allowedTypes = ['place', 'food', 'memory', 'idea', 'shop', 'note'];
   const publicImage = (input: unknown): string => {
@@ -136,7 +155,7 @@ function publicCopy(source: Data, boardId: string, uid: string, profile: Data, n
     return /^https:\/\//i.test(url) ? url : '';
   };
   return {
-    id: boardId, owner_user_id: uid, owner_public_slug: publicOwnerSlug(uid, profile),
+    id: boardId, owner_user_id: uid, owner_public_slug: ownerSlug,
     owner_display_name: value(profile['displayName'], 100) || 'LivingWiki member',
     owner_photo_url: '', owner_profile_icon: '', owner_profile_picture_type: null,
     forkedFromBoardId: source['id'], forkedFromTitle: source['title'],
@@ -146,7 +165,7 @@ function publicCopy(source: Data, boardId: string, uid: string, profile: Data, n
     description: value(source['description'], 240), kind: 'standard',
     tone: value(source['tone'], 20) || 'teal', icon: value(source['icon'], 64) || 'auto_stories',
     visibility: 'public', visibility_schema_version: 1, imageUrl: publicImage(source['imageUrl']), stickers: [],
-    sortOrder: Date.now(), backNote: '', insideCardsDisplay: 'nested', showCardNumbers: true,
+    sortOrder: -Date.now(), backNote: '', insideCardsDisplay: 'nested', showCardNumbers: true,
     cards: cards.filter((item) => item && typeof item === 'object' && !Array.isArray(item)
       && (item as Data)['authorOnly'] !== true)
       .map((item) => {
@@ -586,6 +605,8 @@ export const kiwiApply = onCall({ region, cors: true, timeoutSeconds: 60 }, asyn
     }
     return { boardId: resultBoardId, applied: true };
   }
+  const ownerSlug = action.kind === 'create_board' || action.kind === 'copy_board'
+    ? await publicOwnerSlug(uid, (await db.collection('users').doc(uid).get()).data() || {}) : '';
   await db.runTransaction(async (tx) => {
     const freshProposal = await tx.get(ref);
     const data = freshProposal.data();
@@ -598,12 +619,12 @@ export const kiwiApply = onCall({ region, cors: true, timeoutSeconds: 60 }, asyn
       if (action.visibility === 'private' && !canUsePrivateBoard(profile))
         throw new HttpsError('permission-denied', 'Private boards require an eligible plan. Choose Public or Unlisted.');
       const target = db.collection('boards').doc(resultBoardId);
-      tx.create(target, { ...newBoard(action, resultBoardId, uid, profile, now), server_updated_at: FieldValue.serverTimestamp() });
+      tx.create(target, { ...newBoard(action, resultBoardId, uid, profile, now, '', ownerSlug), server_updated_at: FieldValue.serverTimestamp() });
     } else if (action.kind === 'copy_board') {
       const source = (await tx.get(db.collection('boards').doc(action.boardId))).data();
       if (!source || !kiwiCanCopyBoard(uid, source))
         throw new HttpsError('permission-denied', 'Only another person’s public personal board can be copied.');
-      tx.create(db.collection('boards').doc(resultBoardId), { ...publicCopy({ ...source, id: action.boardId }, resultBoardId, uid, profile, now), server_updated_at: FieldValue.serverTimestamp() });
+      tx.create(db.collection('boards').doc(resultBoardId), { ...publicCopy({ ...source, id: action.boardId }, resultBoardId, uid, profile, now, ownerSlug), server_updated_at: FieldValue.serverTimestamp() });
     } else {
       const boardRef = db.collection('boards').doc(action.boardId);
       const board = (await tx.get(boardRef)).data();

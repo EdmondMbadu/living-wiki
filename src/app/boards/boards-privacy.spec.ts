@@ -257,6 +257,73 @@ describe('board privacy and video creation', () => {
   });
 });
 
+describe('public owner gallery', () => {
+  it('reloads a handle-based profile by owner ID so Kiwi boards with a different stored handle appear', async () => {
+    const component = harness();
+    component.boards.set([{ id: 'older', ownerUserId: 'edmond-uid', ownerPublicSlug: 'edmond-mbadu' }]);
+    component.publicOwnerUid = signal(null);
+    component.boardsHasMore = signal(false);
+    component.boardLoadContext = { uid: '', publicOwnerUid: null,
+      publicOwnerSlug: 'edmond-mbadu', publicOwnerRouteActive: true };
+    component.boardLoadSequence = 7;
+    component.boardPageCursor = { id: 'last-page' };
+    component.loadNextBoardPage = jasmine.createSpy('reload by owner').and.callFake(async () => {
+      component.boards.set([
+        { id: 'older', ownerUserId: 'edmond-uid', ownerPublicSlug: 'edmond-mbadu' },
+        { id: 'kiwi', ownerUserId: 'edmond-uid', ownerPublicSlug: 'edmond-mbadu-edmond' },
+      ]);
+      return true;
+    });
+
+    await component.resolvePublicOwnerRouteUid(7);
+
+    expect(component.publicOwnerUid()).toBe('edmond-uid');
+    expect(component.boardLoadContext.publicOwnerUid).toBe('edmond-uid');
+    expect(component.boardPageCursor).toBeNull();
+    expect(component.loadNextBoardPage).toHaveBeenCalledOnceWith(7, true);
+    expect(component.boards().map((board: { id: string }) => board.id)).toContain('kiwi');
+  });
+
+  it('does not merge profiles when a handle points to multiple owners', async () => {
+    const component = harness();
+    component.boards.set([
+      { id: 'one', ownerUserId: 'owner-one' },
+      { id: 'two', ownerUserId: 'owner-two' },
+    ]);
+    component.publicOwnerUid = signal(null);
+    component.boardLoadContext = { uid: '', publicOwnerUid: null,
+      publicOwnerSlug: 'shared-name', publicOwnerRouteActive: true };
+    component.boardLoadSequence = 7;
+    component.loadNextBoardPage = jasmine.createSpy('reload by owner');
+
+    await component.resolvePublicOwnerRouteUid(7);
+
+    expect(component.publicOwnerUid()).toBeNull();
+    expect(component.loadNextBoardPage).not.toHaveBeenCalled();
+  });
+
+  it('keeps the handle-based page if the owner-wide query fails', async () => {
+    const component = harness();
+    const original = [{ id: 'older', ownerUserId: 'edmond-uid' }];
+    component.boards.set(original);
+    component.publicOwnerUid = signal(null);
+    component.boardsHasMore = signal(true);
+    component.boardLoadContext = { uid: '', publicOwnerUid: null,
+      publicOwnerSlug: 'edmond-mbadu', publicOwnerRouteActive: true };
+    component.boardLoadSequence = 7;
+    component.boardPageCursor = { id: 'last-page' };
+    component.loadNextBoardPage = jasmine.createSpy('reload by owner').and.rejectWith(new Error('Unavailable'));
+
+    await component.resolvePublicOwnerRouteUid(7);
+
+    expect(component.boards()).toEqual(original);
+    expect(component.publicOwnerUid()).toBeNull();
+    expect(component.boardLoadContext.publicOwnerUid).toBeNull();
+    expect(component.boardPageCursor).toEqual({ id: 'last-page' });
+    expect(component.boardsHasMore()).toBeTrue();
+  });
+});
+
 
 describe('unlisted board access and sharing', () => {
   it('preserves an unlisted photo story across loading and normalization', () => {

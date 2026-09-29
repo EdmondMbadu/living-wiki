@@ -22283,6 +22283,15 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
       let loaded = this.boards();
 
+      // Older profile URLs contain only a handle. Resolve its owner from the
+      // first page, then page by owner ID so boards with a different stored
+      // handle (including boards made by Kiwi) appear on the same profile.
+      if (publicOwnerRouteActive && publicOwnerSlug && !publicOwnerUid && loaded.length) {
+        await this.resolvePublicOwnerRouteUid(loadSequence);
+        if (loadSequence !== this.boardLoadSequence) return;
+        loaded = this.boards();
+      }
+
       // Older public boards may predate the normalized owner slug. Keep the
       // compatibility lookup off the hot path and only use it when page one is empty.
       if (!loaded.length && publicOwnerRouteActive && publicOwnerSlug) {
@@ -22359,6 +22368,29 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         this.scheduleGalleryViewportCheck();
       }
     }
+  }
+
+  private async resolvePublicOwnerRouteUid(loadSequence: number): Promise<void> {
+    const owners = new Set(this.boards().map((board) => board.ownerUserId).filter(Boolean));
+    if (owners.size !== 1 || !this.boardLoadContext) return;
+    const resolvedUid = [...owners][0];
+    const previousBoards = this.boards();
+    const previousCursor = this.boardPageCursor;
+    const previousHasMore = this.boardsHasMore();
+    this.boardLoadContext.publicOwnerUid = resolvedUid;
+    this.boardPageCursor = null;
+    this.boardsHasMore.set(true);
+    try {
+      if (await this.loadNextBoardPage(loadSequence, true)) {
+        if (loadSequence === this.boardLoadSequence) this.publicOwnerUid.set(resolvedUid);
+        return;
+      }
+    } catch { /* Keep the handle-based results if the broader owner query is unavailable. */ }
+    if (loadSequence !== this.boardLoadSequence) return;
+    this.boards.set(previousBoards);
+    this.boardLoadContext.publicOwnerUid = null;
+    this.boardPageCursor = previousCursor;
+    this.boardsHasMore.set(previousHasMore);
   }
 
   private retainPriorityRouteBoard(
