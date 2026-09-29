@@ -156,4 +156,116 @@ describe('Kiwi conversation interface', () => {
     expect((fixture.nativeElement.querySelector('.kiwi-studio__footer > .kiwi-primary') as HTMLButtonElement).disabled).toBeFalse();
     expect(fixture.nativeElement.textContent).toContain('AI illustration');
   });
+
+  it('keeps Kiwi work visible above the voice conversation and clears it when finished', () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    const kiwi = fixture.componentInstance;
+    kiwi.toggle();
+    kiwi.busy.set(true);
+    fixture.detectChanges();
+
+    const status = fixture.nativeElement.querySelector('.kiwi-work-status--panel') as HTMLElement;
+    expect(status.textContent).toContain('Kiwi is working');
+    expect(status.compareDocumentPosition(fixture.nativeElement.querySelector('.kiwi-panel__conversation'))
+      & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    kiwi.busy.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.kiwi-work-status--panel')).toBeNull();
+  });
+
+  it('shows board creation progress in the draft and exposes errors there', () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    const kiwi = fixture.componentInstance;
+    kiwi.toggle();
+    kiwi.studioDraft.set({ kind: 'create_board', title: 'New board', description: '', tone: 'teal',
+      visibility: 'public', cards: [] });
+    kiwi.studioOpen.set(true);
+    kiwi.busy.set(true);
+    kiwi.planningCreation.set(true);
+    kiwi.boardBuildPhase.set('research');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.kiwi-work-status--studio').textContent)
+      .toContain('Creating your board');
+    expect(fixture.nativeElement.querySelectorAll('.kiwi-studio__loading-cards .kiwi-build__skeleton').length)
+      .toBe(4);
+
+    kiwi.boardBuildPhase.set('cards');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.kiwi-work-status--studio').textContent)
+      .toContain('Adding cards to your draft');
+
+    kiwi.busy.set(false);
+    kiwi.planningCreation.set(false);
+    kiwi.boardBuildPhase.set(null);
+    kiwi.error.set('Please try again.');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.kiwi-work-status--studio')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.kiwi-studio__error[role="alert"]').textContent)
+      .toContain('Please try again.');
+  });
+
+  it('updates the draft status during image search and saving', () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    const kiwi = fixture.componentInstance;
+    kiwi.toggle();
+    kiwi.studioDraft.set({ kind: 'create_board', title: 'Places', description: '', tone: 'teal',
+      visibility: 'public', cards: [{ title: 'Museum', subtitle: '', notes: '', type: 'place' }] });
+    kiwi.studioOpen.set(true);
+    kiwi.imageLoading.set(true);
+    kiwi.imageNotice.set('Finding photos for your cards…');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.kiwi-work-status--studio').textContent)
+      .toContain('Finding photos for your cards…');
+    expect(fixture.nativeElement.querySelector('.kiwi-studio__intro').textContent)
+      .toContain('Watch Kiwi fill this board in');
+
+    kiwi.imageChoosing.set(0);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.kiwi-work-status--studio').textContent)
+      .toContain('Searching for card photos');
+
+    kiwi.imageChoosing.set(null);
+    kiwi.imageLoading.set(false);
+    kiwi.proposal.set({ id: 'proposal', summary: 'Create', kind: 'create_board', workspace: 'personal' });
+    kiwi.applying.set(true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.kiwi-work-status--studio').textContent)
+      .toContain('Saving your board');
+
+    kiwi.boardAwaitingOpen.set('board-id');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.kiwi-work-status--studio').textContent)
+      .toContain('Opening your board');
+  });
+
+  it('opens a loading draft immediately and replaces it with an error if creation fails', async () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    const kiwi = fixture.componentInstance;
+    kiwi.toggle();
+    let fail!: (reason: Error) => void;
+    const pending = new Promise<void>((_, reject) => { fail = reject; });
+    spyOn<any>(kiwi, 'prepareDescribeBoard').and.callFake(() => {
+      kiwi.boardBuildPhase.set('research');
+      return pending;
+    });
+
+    const request = kiwi.send('Create a public board about vintage trains');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.kiwi-work-status--studio').textContent)
+      .toContain('Creating your board');
+    expect(fixture.nativeElement.querySelector('.kiwi-studio__loading-cards')).not.toBeNull();
+
+    fail(new Error('Board service unavailable'));
+    await request;
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.kiwi-work-status--studio')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.kiwi-studio__error').textContent)
+      .toContain('Board service unavailable');
+  });
 });

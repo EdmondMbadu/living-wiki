@@ -45,6 +45,12 @@
           </button>
         </div>
 
+        @if (!studioOpen() && workStatus(); as status) {
+          <div class="kiwi-work-status kiwi-work-status--panel" role="status" aria-live="polite">
+            <span class="kiwi-work-status__spinner" aria-hidden="true"></span>
+            <div><strong>{{ status.title }}</strong><p>{{ status.detail }}</p></div>
+          </div>
+        }
         <div class="kiwi-panel__conversation" role="log" aria-live="polite" aria-label="Kiwi conversation" i18n-aria-label>
           @if (mode() === 'voice') {
             <div class="kiwi-voice-stage" [class.kiwi-voice-stage--active]="voiceActive()">
@@ -80,8 +86,6 @@
           @for (message of messages(); track message.id) {
             <p class="kiwi-message" [class.kiwi-message--user]="message.role === 'user'">{{ message.text }}</p>
           }
-          @if (busy()) { <p class="kiwi-thinking" role="status" i18n><span></span><span></span><span></span> {{ name() }} is thinking…</p> }
-          @if (busy() && planningCreation()) { <p class="kiwi-thinking" role="status" i18n>The board draft is filling in on your screen.</p> }
           @if (proposal(); as change) {
             <section class="kiwi-proposal" aria-label="Proposed change" i18n-aria-label>
               <small i18n>Review before saving · {{ change.workspace === 'team' ? ui.teamDraft : ui.personal }}</small>
@@ -102,7 +106,7 @@
           }
         </div>
 
-        @if (error()) { <p class="kiwi-error" role="alert">{{ error() }}</p> }
+        @if (error() && !studioOpen()) { <p class="kiwi-error" role="alert">{{ error() }}</p> }
         @if (mode() === 'chat') {
           <div class="kiwi-composer">
             <label class="sr-only" for="kiwi-request" i18n>Ask Kiwi</label>
@@ -154,8 +158,15 @@
           <div class="kiwi-studio__heading"><img src="/assets/kiwi/mascot.png" alt="" aria-hidden="true" /><div><small>{{ studioReady() ? ui.readyToReview : ui.takingShape }}</small><h2 id="kiwi-studio-title" i18n>Your board draft</h2></div></div>
           <button type="button" class="kiwi-icon-button" (click)="studioOpen.set(false)" aria-label="Close board draft" i18n-aria-label><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
         </header>
+        @if (workStatus(); as status) {
+          <div class="kiwi-work-status kiwi-work-status--studio" role="status" aria-live="polite">
+            <span class="kiwi-work-status__spinner" aria-hidden="true"></span>
+            <div><strong>{{ status.title }}</strong><p>{{ status.detail }}</p></div>
+          </div>
+        }
+        @if (error()) { <p class="kiwi-error kiwi-studio__error" role="alert">{{ error() }}</p> }
         <div class="kiwi-studio__body">
-          <div class="kiwi-studio__intro"><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span><p>{{ studioReady() ? ui.reviewAndEdit : busy() ? ui.watchKiwi : ui.needsMoreDetail }}</p></div>
+          <div class="kiwi-studio__intro"><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span><p>{{ studioReady() ? ui.reviewAndEdit : busy() || imageLoading() ? ui.watchKiwi : ui.needsMoreDetail }}</p></div>
           @if (boardAwaitingOpen()) { <p class="kiwi-studio__saved-notice" role="status" i18n>The board was saved. Kiwi is checking that it opens in your workspace.</p> }
           <fieldset class="kiwi-studio__editing" [disabled]="!!boardAwaitingOpen()">
           <div class="kiwi-studio__meta">
@@ -176,8 +187,8 @@
                   @else { <span class="material-symbols-outlined" aria-hidden="true">image</span><span>{{ imageLoading() ? ui.findingPhoto : ui.noPhotoYet }}</span> }
                 </div>
                 @if (card.imageSource === 'generated') { <small class="kiwi-studio-card__image-label" i18n>AI illustration</small> }
-                <button type="button" class="kiwi-studio-card__find" (click)="searchStudioCardImage(index)" [disabled]="imageChoosing() === index">{{ imageChoosing() === index ? ui.searching : card.imageUrl ? ui.changePhoto : ui.findPhoto }}</button>
-                @if (!card.imageUrl && !imageLoading()) { <button type="button" class="kiwi-studio-card__find" (click)="generateStudioCardImage(index)" [disabled]="imageGenerating() === index">{{ imageGenerating() === index ? ui.creatingIllustration : ui.generateIllustration }}</button> }
+                <button type="button" class="kiwi-studio-card__find" (click)="searchStudioCardImage(index)" [disabled]="imageChoosing() !== null">{{ imageChoosing() === index ? ui.searching : card.imageUrl ? ui.changePhoto : ui.findPhoto }}</button>
+                @if (!card.imageUrl && !imageLoading()) { <button type="button" class="kiwi-studio-card__find" (click)="generateStudioCardImage(index)" [disabled]="imageGenerating() !== null">{{ imageGenerating() === index ? ui.creatingIllustration : ui.generateIllustration }}</button> }
                 @if (imageChoices()[index]?.length) {
                   <div class="kiwi-studio-card__choices" [attr.aria-label]="ui.photoChoicesForPrefix + card.title">
                     @for (choice of imageChoices()[index]; track choice.imageUrl) {
@@ -189,7 +200,18 @@
                 <label i18n>Subtitle<input type="text" maxlength="240" [value]="card.subtitle" (input)="setStudioCardField(index, 'subtitle', $event)" /></label>
                 <label i18n>Details<textarea rows="3" maxlength="3000" [value]="card.notes" (input)="setStudioCardField(index, 'notes', $event)"></textarea></label>
               </article>
-            } @empty { <div class="kiwi-studio__empty"><span class="material-symbols-outlined" aria-hidden="true">dashboard_customize</span><p>{{ studioReady() ? ui.readyForFirstCard : busy() ? ui.preparingCards : ui.addCardPrompt }}</p></div> }
+            } @empty {
+              @if (busy() && planningCreation()) {
+                <div class="kiwi-studio__loading-cards" aria-hidden="true">
+                  <div class="kiwi-build__skeleton kiwi-build__skeleton--title"></div>
+                  <div class="kiwi-build__skeleton kiwi-build__skeleton--card"></div>
+                  <div class="kiwi-build__skeleton kiwi-build__skeleton--card"></div>
+                  <div class="kiwi-build__skeleton kiwi-build__skeleton--card"></div>
+                </div>
+              } @else {
+                <div class="kiwi-studio__empty"><span class="material-symbols-outlined" aria-hidden="true">dashboard_customize</span><p>{{ studioReady() ? ui.readyForFirstCard : ui.addCardPrompt }}</p></div>
+              }
+            }
           </div>
           </fieldset>
         </div>

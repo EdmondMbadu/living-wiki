@@ -20,6 +20,7 @@ type KiwiApplyResponse = { boardId: string; applied: boolean };
 type KiwiStreamEvent = { type: 'started' | 'draft'; draft?: KiwiBoardDraft };
 type KiwiImageResult = { imageUrl: string; thumbnailUrl: string; sourceUrl: string; sourceLabel: string; title: string };
 type VoicePhase = 'idle' | 'listening' | 'thinking' | 'speaking' | 'review';
+type BoardBuildPhase = 'research' | 'cards' | 'review' | null;
 
 @Component({
   selector: 'app-kiwi',
@@ -138,6 +139,7 @@ export class KiwiComponent {
   readonly voicePhase = signal<VoicePhase>('idle');
   readonly voiceTranscript = signal('');
   readonly planningCreation = signal(false);
+  readonly boardBuildPhase = signal<BoardBuildPhase>(null);
   readonly boardAwaitingOpen = signal('');
   readonly studioOpen = signal(false);
   readonly studioDraft = signal<KiwiBoardDraft | null>(null);
@@ -148,6 +150,30 @@ export class KiwiComponent {
   readonly imageChoices = signal<Record<number, KiwiImageResult[]>>({});
   readonly imageChoosing = signal<number | null>(null);
   readonly imageGenerating = signal<number | null>(null);
+  readonly workStatus = computed(() => {
+    if (this.applying()) return this.boardAwaitingOpen()
+      ? { title: $localize`Opening your board`, detail: $localize`Your board is saved. Kiwi is checking that it opens correctly.` }
+      : this.proposal()?.kind === 'create_board'
+        ? { title: $localize`Saving your board`, detail: $localize`Kiwi is saving the cards and images. Please wait.` }
+        : { title: $localize`Saving your change`, detail: $localize`Kiwi is applying your approved change.` };
+    if (this.busy() && this.boardBuildPhase() === 'research')
+      return { title: $localize`Creating your board`, detail: $localize`Kiwi is researching your idea and writing the cards. This can take a minute.` };
+    if (this.busy() && this.boardBuildPhase() === 'cards')
+      return { title: $localize`Adding cards to your draft`, detail: $localize`The cards are appearing as Kiwi finishes them.` };
+    if (this.busy() && this.boardBuildPhase() === 'review')
+      return { title: $localize`Preparing your board for review`, detail: $localize`Kiwi is checking the cards and images.` };
+    if (this.busy() && this.planningCreation())
+      return { title: $localize`Updating your board draft`, detail: $localize`Kiwi is preparing the changes you requested.` };
+    if (this.imageGenerating() !== null)
+      return { title: $localize`Creating an illustration`, detail: $localize`Kiwi is generating an image for this card.` };
+    if (this.imageChoosing() !== null)
+      return { title: $localize`Searching for card photos`, detail: $localize`Kiwi is looking for photo choices for this card.` };
+    if (this.imageLoading())
+      return { title: $localize`Adding images to your board`, detail: this.imageNotice() || $localize`Kiwi is finding photos for the cards.` };
+    if (this.busy())
+      return { title: $localize`Kiwi is working`, detail: $localize`Preparing a response. Please wait.` };
+    return null;
+  });
   readonly studioMessage = signal('');
   readonly signedIn = this.auth.isAuthenticated;
   readonly currentUrl = this.navigation.currentUrl;
@@ -239,6 +265,7 @@ export class KiwiComponent {
     this.stopVoiceSession();
     this.pendingCreationPrompt = '';
     this.planningCreation.set(false);
+    this.boardBuildPhase.set(null);
     this.studioOpen.set(false);
     this.open.set(false);
     this.closeSettings();
@@ -532,6 +559,7 @@ export class KiwiComponent {
   }
 
   async searchStudioCardImage(index: number): Promise<void> {
+    if (this.imageChoosing() !== null) return;
     this.imageChoosing.set(index);
     this.imageNotice.set('Finding photo choices…');
     try {
@@ -649,6 +677,7 @@ export class KiwiComponent {
     this.planningCreation.set(canStartCreation || !!currentDraft);
     if (canStartCreation && !currentDraft) {
       this.imageRun++;
+      this.imageLoading.set(false);
       this.imageNotice.set('');
       this.imageChoices.set({});
       this.boardAwaitingOpen.set('');
@@ -718,6 +747,7 @@ export class KiwiComponent {
         { contextId: 'kiwi-last-action' });
     } catch (error) {
       if (sequence !== this.streamSequence || controller.signal.aborted) return;
+      if (this.planningCreation()) this.imageNotice.set('');
       this.error.set(this.errorText(error, $localize`Kiwi could not answer. Please try again.`));
       if (fromVoiceTool && this.conversation) this.conversation.sendContextualUpdate(
         'The requested change failed. Tell the user and offer to retry.', { contextId: 'kiwi-last-action' });
@@ -725,6 +755,7 @@ export class KiwiComponent {
       if (this.talkAbort === controller) this.talkAbort = null;
       this.busy.set(false);
       this.planningCreation.set(false);
+      this.boardBuildPhase.set(null);
       const queued = this.queuedVoiceRequest;
       this.queuedVoiceRequest = '';
       if (queued) queueMicrotask(() => void this.send(queued, true));
@@ -734,6 +765,7 @@ export class KiwiComponent {
   private async prepareDescribeBoard(prompt: string, teamId: string, sequence: number, fromVoiceTool: boolean): Promise<void> {
     if (!this.functions) return;
     this.planningCreation.set(true);
+    this.boardBuildPhase.set('research');
     if (!this.studioDraft()) {
       this.studioDirty.clear();
       this.studioDraft.set({ kind: 'create_board', title: $localize`New board`, description: '', tone: 'teal',
@@ -771,11 +803,13 @@ export class KiwiComponent {
       }),
     };
     // The wizard returns a complete batch; reveal its cards in the live studio.
+    this.boardBuildPhase.set('cards');
     for (let index = 1; index <= draft.cards.length; index++) {
       if (sequence !== this.streamSequence) return;
       this.mergeStudioDraft({ ...draft, cards: draft.cards.slice(0, index) });
       await new Promise<void>((resolve) => setTimeout(resolve, 65));
     }
+    this.boardBuildPhase.set('review');
     this.imageNotice.set($localize`Checking card images…`);
     const stage = httpsCallable<{ teamId: string; draft: KiwiBoardDraft; locale: string }, KiwiTalkResponse>(
       this.functions, 'kiwiStageDescribeBoard');

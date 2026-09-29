@@ -299,6 +299,10 @@
     "source": "The Podcast Universe",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "1108391297810922565": {
+    "source": "Saving your change",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "110877521158514796": {
     "source": "Add a concise story for this stop.",
     "file": "src/app/boards/boards.ts"
@@ -1098,6 +1102,10 @@
   "1370922594157390261": {
     "source": "Travel to next stop",
     "file": "src/app/boards/boards.html"
+  },
+  "1371083284945530351": {
+    "source": "The cards are appearing as Kiwi finishes them.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "1371294121452865029": {
     "source": " Icon choices appear on both sides of the printed badge. ",
@@ -3647,6 +3655,10 @@
     "source": "Short description{$TAG_INPUT}",
     "file": "src/app/teams/teams.html"
   },
+  "2181376417745960977": {
+    "source": "Kiwi is applying your approved change.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "2184619916211262318": {
     "source": "Copy URL",
     "file": "src/app/atlas-manage/atlas-manage.ts"
@@ -4862,6 +4874,10 @@
   "2580023614957355751": {
     "source": "How many to scrape?",
     "file": "src/app/web-scraper/web-scraper.html"
+  },
+  "2583072641255766710": {
+    "source": "Kiwi is working",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "2585937137819085192": {
     "source": " {$INTERPOLATION} of {$INTERPOLATION_1} processed · {$INTERPOLATION_2} created · {$INTERPOLATION_3} failed · {$INTERPOLATION_4} skipped ",
@@ -6695,6 +6711,10 @@
     "source": "Script ready",
     "file": "src/app/boards/boards.html"
   },
+  "3177983628484296467": {
+    "source": "Saving your board",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "3178504282709356534": {
     "source": "Loading business editor...",
     "file": "src/app/business-detail/business-edit.html"
@@ -7475,6 +7495,10 @@
     "source": "No active article.",
     "file": "src/app/web-scraper/web-scraper.html"
   },
+  "3409249961872976902": {
+    "source": "Kiwi is preparing the changes you requested.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "3411313811577590245": {
     "source": "Your score is ready, but it could not be saved.",
     "file": "src/app/boards/boards.ts"
@@ -7730,6 +7754,10 @@
   "3483240007042598139": {
     "source": "AI can make mistakes. Verify important information.",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
+  "3483890004709455338": {
+    "source": "Kiwi is generating an image for this card.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "3484473240362271233": {
     "source": "Everything in Local",
@@ -8166,6 +8194,10 @@
   "3625662732626423036": {
     "source": "Your next listing.{$LINE_BREAK}Your next great story.",
     "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "3625905116474120776": {
+    "source": "Kiwi is saving the cards and images. Please wait.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "362602485713967339": {
     "source": "Start with the public collection.",
@@ -8739,6 +8771,10 @@
     "source": "Your photos stay in their selected order while the board is created.",
     "file": "src/app/boards/boards.ts"
   },
+  "3808893800325991284": {
+    "source": "Kiwi is looking for photo choices for this card.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "3810441463388899470": {
     "source": "Synthesizing answer",
     "file": "src/app/chat/chat.ts"
@@ -8818,6 +8854,10 @@
   "3832759023700428927": {
     "source": "Speak to me in {language}",
     "file": "src/app/chat/chat.ts"
+  },
+  "3832855515460880870": {
+    "source": "Creating your board",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "3837019738313777797": {
     "source": "Board settings",
@@ -9975,10 +10015,6 @@
     "source": "MOST POPULAR",
     "file": "src/app/membership/membership.html"
   },
-  "4213249868884830709": {
-    "source": "{$START_TAG_SPAN}{$CLOSE_TAG_SPAN}{$START_TAG_SPAN}{$CLOSE_TAG_SPAN}{$START_TAG_SPAN}{$CLOSE_TAG_SPAN} {$INTERPOLATION} is thinking…",
-    "file": "src/app/kiwi/kiwi.html"
-  },
   "4213702599400541027": {
     "source": "Off Grids | LivingWiki",
     "file": "src/app/app.routes.ts"
@@ -11051,6 +11087,10 @@
     "source": "Reach readers exploring Philadelphia civic data, green jobs, and local knowledge.",
     "file": "src/app/atlas-landing/atlas-landing.html"
   },
+  "4560434102104898868": {
+    "source": "Opening your board",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "4560535958566611225": {
     "source": "Turn real estate listing photos into a personal, narrated TalkThru. Your voice, your insights, and a more human connection with buyers.",
     "file": "src/app/talkthrus/talkthrus.ts"
@@ -11082,6 +11122,10 @@
   "4568293355349183679": {
     "source": "Select card",
     "file": "src/app/boards/boards.ts"
+  },
+  "4568877137426389060": {
+    "source": "Adding images to your board",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "4568998332883224453": {
     "source": " Detected {$INTERPOLATION} numbered items. The preview will keep one card per item in this order. ",
@@ -16375,6 +16419,10 @@
     "source": "Choose a paid plan before uploading business documents.",
     "file": "src/app/business-claim/business-claim.ts"
   },
+  "6253044466721818926": {
+    "source": "Creating an illustration",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "6253812392682780704": {
     "source": "Trove controls",
     "file": "src/app/trove/trove.html"
@@ -17907,6 +17955,10 @@
     "source": "US East Coast",
     "file": "src/app/dymaxion/dymaxion.ts"
   },
+  "674356033328533655": {
+    "source": "Your board is saved. Kiwi is checking that it opens correctly.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "674409688001095544": {
     "source": "Your Private and Unlisted boards appear here. They stay off your public profile.",
     "file": "src/app/boards/boards.ts"
@@ -18678,6 +18730,10 @@
   "7014867670519668895": {
     "source": "Map unavailable",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
+  },
+  "7015894173355804324": {
+    "source": "Kiwi is finding photos for the cards.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "701721694157980584": {
     "source": "Taco",
@@ -20251,6 +20307,10 @@
     "source": "Retry analytics",
     "file": "src/app/teams/teams.ts"
   },
+  "7526606655315459236": {
+    "source": "Kiwi is checking the cards and images.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "7527242895095482156": {
     "source": "This board is already in {$INTERPOLATION}",
     "file": "src/app/boards/boards.html"
@@ -20791,9 +20851,17 @@
     "source": "Your saved personality and wiki sources",
     "file": "src/app/atlas-persona/atlas-persona.html"
   },
+  "7707551450697404314": {
+    "source": "Kiwi is researching your idea and writing the cards. This can take a minute.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "7710508469345502569": {
     "source": "Neighborhood sponsor view",
     "file": "src/app/business/business.html"
+  },
+  "7711249569189343586": {
+    "source": "Preparing your board for review",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "7716186384439137407": {
     "source": "Close share dialog",
@@ -22166,10 +22234,6 @@
   "8136076385961286941": {
     "source": "Steinbeck Plaza    ///candy.sage.sticks\nMonterey Bay Aquarium    https://w3w.co/sank.ticket.speeds",
     "file": "src/app/boards/boards.html"
-  },
-  "8136419931126928504": {
-    "source": "The board draft is filling in on your screen.",
-    "file": "src/app/kiwi/kiwi.html"
   },
   "8136479330482648695": {
     "source": "No knowledge documents have been added yet.",
@@ -23919,6 +23983,10 @@
     "source": "No LivingWiki connection needed",
     "file": "src/app/boards/boards.html"
   },
+  "8771480923599835644": {
+    "source": "Preparing a response. Please wait.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "8771700196696384900": {
     "source": "Turn your photos into narrated memory cards.",
     "file": "src/app/boards/boards.ts"
@@ -24050,6 +24118,10 @@
   "8802514833285901796": {
     "source": "Share your TalkThru with prospective buyers and let your listing start a more personal conversation.",
     "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "8803129241775239879": {
+    "source": "Searching for card photos",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "8803977195874302490": {
     "source": "What are people debating about {city} right now?",
@@ -25035,6 +25107,10 @@
     "source": " {$INTERPOLATION} stops {$START_BLOCK_IF} · {$INTERPOLATION_1} {$CLOSE_BLOCK_IF}{$START_BLOCK_IF_1} · {$INTERPOLATION_2} {$CLOSE_BLOCK_IF}",
     "file": "src/app/boards/boards.html"
   },
+  "9070443988539976516": {
+    "source": "Adding cards to your draft",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "9070768663485888935": {
     "source": "Graph",
     "file": "src/app/landing/landing.html"
@@ -25462,6 +25538,10 @@
   "929870222151145704": {
     "source": "Populating...",
     "file": "src/app/boards/boards.ts"
+  },
+  "930087879610275126": {
+    "source": "Updating your board draft",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "930208517910690441": {
     "source": "{$START_TAG_SPAN}download{$CLOSE_TAG_SPAN}Download both",

@@ -69,6 +69,12 @@
 .kiwi-modes button.kiwi-modes__active { background: #fffefb; box-shadow: 0 2px 9px rgba(23, 76, 42, .1); color: #176c43; }
 .kiwi-modes .material-symbols-outlined { font-size: 1.2rem; }
 .kiwi-modes button:focus-visible { outline: 3px solid #54b57c; outline-offset: 2px; }
+.kiwi-work-status { display: flex; align-items: center; gap: .85rem; border: 1px solid #b9dec3; background: linear-gradient(135deg, #f4fbf3, #eaf7ed); padding: .8rem .95rem; color: #1b6b42; }
+.kiwi-work-status--panel { margin: .8rem 1rem 0; border-radius: .85rem; }
+.kiwi-work-status--studio { flex: none; margin: .85rem 1.2rem 0; border-radius: .9rem; }
+.kiwi-work-status__spinner { flex: none; width: 1.8rem; height: 1.8rem; border: 3px solid #b7dfc2; border-top-color: #16804b; border-radius: 50%; animation: kiwi-spin .8s linear infinite; }
+.kiwi-work-status strong { display: block; font-size: .88rem; line-height: 1.25; }
+.kiwi-work-status p { margin: .2rem 0 0; color: #436b50; font-size: .77rem; line-height: 1.4; }
 .kiwi-panel__conversation { flex: 1; min-height: 12rem; overflow-y: auto; padding: 1.15rem 1rem; }
 .kiwi-welcome { text-align: center; }
 .kiwi-welcome--chat { padding: 2.2rem .6rem 1rem; }
@@ -128,6 +134,8 @@
 .kiwi-studio__heading small { color: #288456; font-size: .63rem; font-weight: 850; letter-spacing: .12em; }
 .kiwi-studio__heading h2 { margin: .15rem 0 0; font: 700 1.45rem/1.1 Georgia, 'Times New Roman', serif; }
 .kiwi-studio__body { flex: 1; overflow: auto; padding: 1rem 1.2rem 1.5rem; }
+.kiwi-studio__error { flex: none; margin: .75rem 1.2rem 0; }
+.kiwi-studio__loading-cards { width: 100%; padding: 1.2rem; border: 1px dashed #bcd9c3; border-radius: .9rem; background: #f7fbf6; }
 .kiwi-studio__editing { min-width: 0; margin: 0; padding: 0; border: 0; }
 .kiwi-studio__saved-notice { margin: 0 0 .75rem; padding: .6rem .75rem; border-radius: .7rem; background: #e9f5ec; color: #226e45; font-size: .82rem; font-weight: 750; }
 .kiwi-studio__intro { display: flex; align-items: center; gap: .6rem; margin: 0 0 1rem; padding: .6rem .75rem; border: 1px solid #d5ead8; border-radius: .75rem; background: #f2f9f0; color: #2b7950; }
@@ -217,6 +225,7 @@
 @keyframes kiwi-voice-wave { 0%, 100% { transform: scale(.98); opacity: .38; } 50% { transform: scale(1.07); opacity: .9; } }
 @keyframes kiwi-card-reveal { from { opacity: 0; transform: translateY(7px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes kiwi-build-shimmer { to { background-position: -220% 0; } }
+@keyframes kiwi-spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 640px) {
   .kiwi-launcher { right: .85rem; bottom: calc(4.85rem + env(safe-area-inset-bottom)); height: 3.25rem; min-width: 8.75rem; padding-right: .75rem; }
@@ -225,5 +234,6 @@
   .kiwi-composer { margin-bottom: max(.8rem, env(safe-area-inset-bottom)); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .kiwi-launcher, .kiwi-panel, .kiwi-launcher img, .kiwi-thinking span, .kiwi-voice-orb__halo, .kiwi-build__card, .kiwi-build__skeleton { animation: none; transition: none; }
+  .kiwi-launcher, .kiwi-panel, .kiwi-launcher img, .kiwi-thinking span, .kiwi-voice-orb__halo, .kiwi-build__card, .kiwi-build__skeleton, .kiwi-work-status__spinner { animation: none; transition: none; }
+  .kiwi-work-status__spinner { border-color: #16804b; }
 }
