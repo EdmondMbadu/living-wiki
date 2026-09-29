@@ -76,6 +76,11 @@
                 <button type="button" aria-label="Share Stack" (click)="openStackShareDialog(board, $event)" i18n-aria-label>
                   <span class="material-symbols-outlined">near_me</span>
                 </button>
+                @if (stackCurrentCard(); as currentCard) {
+                  <button type="button" aria-label="Share card" (click)="openCardShare(currentCard, board, $event)" i18n-aria-label>
+                    <span class="material-symbols-outlined">qr_code_2</span>
+                  </button>
+                }
                 <button type="button" aria-label="Open board" (click)="closeStackView(board)" i18n-aria-label>
                   <span class="material-symbols-outlined">close</span>
                 </button>
@@ -3231,6 +3236,7 @@
               @for (card of filteredCards(); track card.id) {
                 <article
                   class="detail-card"
+                  tabindex="-1"
                   [class.detail-card--talk-drop]="!!card.talkDrop"
                   [attr.data-analytics-card-id]="card.id"
                   [class.detail-card--favorite]="card.status === 'favorite'"
@@ -3306,7 +3312,6 @@
                     <button
                       type="button"
                       class="detail-card__like"
-                      [class.detail-card__like--solo]="!canEditBoard(cardHostBoard(board, card))"
                       [class.detail-card__like--active]="isCardLiked(cardHostBoard(board, card), card)"
                       [attr.aria-label]="isCardLiked(cardHostBoard(board, card), card) ? templateText.message410 : templateText.message411"
                       [attr.aria-pressed]="isCardLiked(cardHostBoard(board, card), card)"
@@ -3317,7 +3322,7 @@
                       <span class="detail-card__like-count">{{ cardLikeCount(cardHostBoard(board, card), card) }}</span>
                     </button>
                   }
-                  @if (!isListingTalkingCardPlaceholder(card) && canEditBoard(cardHostBoard(board, card)) && (!exploredRelatedCardParent() || !isLegacyMemoryRelatedCard(card))) {
+                  @if (!isListingTalkingCardPlaceholder(card) && (!exploredRelatedCardParent() || !isLegacyMemoryRelatedCard(card))) {
                     <div
                       class="card-action-menu detail-card__action-menu"
                       [class.card-action-menu--open]="isCardActionMenuOpen('card:' + card.id)"
@@ -3341,6 +3346,11 @@
                           role="menu"
                           (click)="$event.stopPropagation()"
                         >
+                          <button type="button" role="menuitem" (click)="openCardShare(card, cardHostBoard(board, card), $event)">
+                            <span class="material-symbols-outlined">qr_code_2</span>
+                            <span i18n>Share card</span>
+                          </button>
+                          @if (canEditBoard(cardHostBoard(board, card))) {
                           @if (exploredRelatedCardParent(); as relatedParent) {
                             @if (!isLegacyMemoryRelatedCard(card)) {
                               <button type="button" role="menuitem" (click)="closeCardActionMenu(); openEditRelatedCard(relatedParent.id, card, $event)">
@@ -3408,6 +3418,7 @@
                               <span class="material-symbols-outlined">delete</span>
                               <span i18n>Delete card</span>
                             </button>
+                          }
                           }
                         </div>
                       }
@@ -11543,6 +11554,32 @@
         }
       </section>
     </div>
+  }
+}
+
+@defer (when !!cardShareTarget()) {
+  @if (cardShareTarget(); as shareTarget) {
+    <app-card-share-dialog
+      [boards]="boards()"
+      [target]="shareTarget"
+      (closed)="closeCardShare()"
+    />
+  }
+}
+
+@defer (when !!requestedCardId()) {
+  @if (requestedCardId() && !stackDirectView()) {
+    @if (selectedBoard(); as focusBoard) {
+      <app-card-focus-dialog
+        [boardTitle]="focusBoard.title"
+        [cards]="focusBoard.cards"
+        [cardId]="requestedCardId() || ''"
+        [canViewAuthorOnly]="canEditBoard(focusBoard)"
+        [suspended]="!!cardShareTarget()"
+        (viewBoard)="showFocusedCardOnBoard($event)"
+        (share)="openCardShare({ id: $event }, focusBoard)"
+      />
+    }
   }
 }
 

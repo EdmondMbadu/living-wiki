@@ -60,6 +60,8 @@ import {
 import { profileIconByCode, profileIconForSeed } from '../profile/profile-icons';
 import { generateQrSvgDataUrl } from '../qr-code';
 import { publicBoardQrUrl } from '../board-qr-code';
+import { CardShareDialogComponent } from './card-share-dialog';
+import { CardFocusDialogComponent } from './card-focus-dialog';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 import { WorkspaceSidebarComponent } from '../workspace-sidebar/workspace-sidebar';
 import {
@@ -1703,7 +1705,7 @@ type BoardLoadContext = {
 
 @Component({
   selector: 'app-boards',
-  imports: [BoardVisibilityControlComponent, ListingLiveClosingComponent, PlacePhotoDirective, RealEstateWizardSourceComponent, ListingPhotoSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective],
+  imports: [BoardVisibilityControlComponent, ListingLiveClosingComponent, PlacePhotoDirective, RealEstateWizardSourceComponent, ListingPhotoSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective, CardShareDialogComponent, CardFocusDialogComponent],
   providers: [DocxExportService],
   templateUrl: './boards.html',
   styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './real-estate-wizard-modal.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
@@ -2374,6 +2376,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly publicCities = signal<BoardCityOption[]>([]);
   readonly citiesLoading = signal(false);
   readonly selectedBoardId = signal<string | null>(null);
+  readonly requestedCardId = signal<string | null>(null);
+  readonly cardShareTarget = signal<{ boardId: string; cardId: string } | null>(null);
   readonly publicOwnerKey = signal<string | null>(null);
   readonly publicOwnerUid = signal<string | null>(null);
   readonly publicOwnerSlug = signal<string | null>(null);
@@ -3989,6 +3993,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         this.relatedCardsReturnSearch = '';
       }
       this.selectedBoardId.set(selectedBoardId);
+      this.cardShareTarget.set(null);
       if (boardId) {
         this.resetBoardRouteScroll();
       }
@@ -4062,6 +4067,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     });
 
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      this.requestedCardId.set(params.get('card'));
       const view = params.get('view') ?? params.get('stack');
       const wantsFriends = params.get('friends') === '1';
       const wantsStack = view === 'stack' || view === 'reel';
@@ -13649,6 +13655,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   @HostListener('document:keydown', ['$event'])
   handleCardPhotoViewerKeydown(event: KeyboardEvent): void {
+    if (this.cardShareTarget() || (this.requestedCardId() && this.selectedBoard() && !this.stackDirectView())) return;
     if (this.collectionCreateOpen()) {
       return;
     }
@@ -13752,7 +13759,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   @HostListener('document:click', ['$event'])
   closeCardActionMenuOnOutsideClick(event?: MouseEvent): void {
-    this.closeCardActionMenu();
+    if (!(event?.target instanceof Element) || !event.target.closest('.card-action-menu')) {
+      this.closeCardActionMenu();
+    }
     this.closeBoardTranslationMenu();
     const target = event?.target;
     if (!(target instanceof Element)) return;
@@ -17280,6 +17289,24 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     return isLinkReadableVisibility(board.visibility) || !!board.teamId
       ? publicBoardQrUrl(board.id)
       : this.stackShareUrl(board);
+  }
+
+  openCardShare(card: Pick<BoardCard, 'id'>, board: Board, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.closeCardActionMenu();
+    this.stopStackPlayback();
+    this.cardShareTarget.set({ boardId: board.id, cardId: card.id });
+  }
+
+  closeCardShare(): void {
+    this.cardShareTarget.set(null);
+  }
+
+  showFocusedCardOnBoard(path: { cardId: string; parentId: string | null }): void {
+    this.cardSearch.set('');
+    if (path.parentId) this.exploredRelatedCardParentId.set(path.parentId);
+    this.expandedCardIds.update((ids) => new Set([...ids, path.cardId]));
   }
 
   stackQrImageUrl(board: Board): string {

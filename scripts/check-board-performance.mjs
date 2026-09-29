@@ -31,8 +31,9 @@ if (!main || !boards) throw new Error('Could not identify the main and boards pr
 const budgets = [
   { label: 'main', entry: main, maxGzipBytes: 450_000 },
   // Localizing previously unmarked Boards copy and dynamic labels adds about 13 KiB gzip.
-  // Keep a narrow ceiling until its large feature bundle is split.
-  { label: 'boards feature', entry: boards, maxGzipBytes: 465_000 },
+  // Card deep-link entry points add about 200 bytes after their dialogs are deferred.
+  // Keep a narrow ceiling until the remaining large board feature bundle is split.
+  { label: 'boards feature', entry: boards, maxGzipBytes: 465_250 },
   ...(offGrids ? [{ label: 'Off Grids', entry: offGrids, maxGzipBytes: 60_000 }] : []),
   ...(offGridDetail ? [{ label: 'Off Grid detail', entry: offGridDetail, maxGzipBytes: 60_000 }] : []),
   ...(offGridEditor

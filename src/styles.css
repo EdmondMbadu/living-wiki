@@ -1876,3 +1876,72 @@ html.workspace-overlay-open,
 html.workspace-overlay-open body {
   overflow: hidden;
 }
+
+.card-share-overlay, .card-focus-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+  background: rgba(10, 24, 22, .76);
+  backdrop-filter: blur(8px);
+}
+.card-share-overlay { z-index: 10001; }
+.card-share-dialog, .card-focus-dialog {
+  position: relative;
+  width: min(100%, 35rem);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  border-radius: 1.5rem;
+  background: #fffdf8;
+  color: #152821;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .35);
+}
+.card-share-dialog { padding: 2rem; text-align: center; }
+.card-share-dialog__close, .card-focus-dialog__close {
+  position: absolute;
+  z-index: 1;
+  top: .8rem;
+  right: .8rem;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(20, 43, 34, .1);
+  color: inherit;
+  cursor: pointer;
+}
+.card-share-dialog__eyebrow, .card-focus-dialog__eyebrow {
+  display: block;
+  margin-bottom: .45rem;
+  color: #436356;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.card-share-dialog h2, .card-focus-dialog h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.5rem); line-height: 1.1; overflow-wrap: anywhere; }
+.card-share-dialog p { margin: .8rem 0 1.2rem; }
+.card-share-dialog__qr { display: block; width: min(100%, 16rem); aspect-ratio: 1; margin: 1rem auto; border: .75rem solid white; border-radius: .8rem; box-shadow: 0 4px 24px rgba(17, 43, 31, .15); image-rendering: pixelated; }
+.card-share-dialog__link { display: grid; gap: .4rem; text-align: left; font-size: .8rem; font-weight: 800; }
+.card-share-dialog__link input { width: 100%; padding: .75rem; border: 1px solid #a6b9ac; border-radius: .65rem; background: white; color: #182c24; font: inherit; font-weight: 500; }
+.card-share-dialog__actions, .card-focus-dialog__actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; }
+.card-share-dialog__actions button, .card-focus-dialog__actions button, .card-focus-dialog__body > button { flex: 1 1 auto; min-height: 2.8rem; padding: .65rem .9rem; border: 1px solid #235d49; border-radius: .7rem; background: #15543f; color: white; font-weight: 800; cursor: pointer; }
+.card-share-dialog__actions button:not(:first-child), .card-focus-dialog__actions button:not(:first-child) { background: white; color: #15543f; }
+.card-share-dialog__notice { padding: 1rem; border-radius: .8rem; background: #fff1da; line-height: 1.5; }
+.card-share-dialog__feedback { color: #176747; font-weight: 700; }
+.card-focus-dialog { width: min(100%, 40rem); }
+.card-focus-dialog__image { display: block; width: 100%; max-height: min(48dvh, 26rem); object-fit: cover; }
+.card-focus-dialog__body { padding: clamp(1.2rem, 4vw, 2rem); }
+.card-focus-dialog__subtitle { font-size: 1.15rem; font-weight: 650; }
+.card-focus-dialog__notes { line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.card-focus-dialog__actions { margin-top: 1.5rem; }
+@media (max-width: 480px) {
+  .card-share-dialog { padding: 1.5rem 1rem; }
+  .card-share-dialog__actions { display: grid; }
+  .card-focus-dialog__image { max-height: 38dvh; }
+}

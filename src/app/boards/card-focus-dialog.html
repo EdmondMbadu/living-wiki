@@ -1,0 +1,26 @@
+<div class="card-focus-overlay" (click)="close()">
+  <section class="card-focus-dialog" role="dialog" aria-modal="true" aria-labelledby="card-focus-title" (click)="$event.stopPropagation()">
+    <button #closeButton type="button" class="card-focus-dialog__close" aria-label="Close card" (click)="close()" i18n-aria-label>
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    @if (path(); as focus) {
+      @if (imageUrl()) { <img class="card-focus-dialog__image" [src]="imageUrl()" [alt]="focus.card.title || ''" /> }
+      <div class="card-focus-dialog__body">
+        <span class="card-focus-dialog__eyebrow">{{ boardTitle() }}</span>
+        <h1 id="card-focus-title">{{ focus.card.title }}</h1>
+        @if (focus.card.subtitle) { <p class="card-focus-dialog__subtitle">{{ focus.card.subtitle }}</p> }
+        @if (focus.card.notes) { <p class="card-focus-dialog__notes">{{ focus.card.notes }}</p> }
+        <div class="card-focus-dialog__actions">
+          <button type="button" (click)="showOnBoard()" i18n>View on board</button>
+          <button type="button" (click)="share.emit(focus.card.id)" i18n>Share card</button>
+        </div>
+      </div>
+    } @else {
+      <div class="card-focus-dialog__body">
+        <h1 id="card-focus-title" i18n>Card unavailable</h1>
+        <p i18n>This card may have been removed or is not available to you.</p>
+        <button type="button" (click)="close()" i18n>View board</button>
+      </div>
+    }
+  </section>
+</div>

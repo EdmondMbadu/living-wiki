@@ -1,0 +1,30 @@
+<div class="card-share-overlay" (click)="closed.emit()">
+  <section class="card-share-dialog" role="dialog" aria-modal="true" aria-labelledby="card-share-title" (click)="$event.stopPropagation()">
+    <button #closeButton type="button" class="card-share-dialog__close" aria-label="Close share card" (click)="closed.emit()" i18n-aria-label>
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    @if (path()) {
+      <span class="card-share-dialog__eyebrow" i18n>Share this card</span>
+      <h2 id="card-share-title">{{ title() }}</h2>
+      @if (allowed()) {
+        <p i18n>Scan to open this card on LivingWiki.</p>
+        <img class="card-share-dialog__qr" [src]="qrImage()" [alt]="'QR code for ' + title()" />
+        <label class="card-share-dialog__link">
+          <span i18n>Card link</span>
+          <input type="text" [value]="url()" readonly (focus)="$any($event.target).select()" />
+        </label>
+        <div class="card-share-dialog__actions">
+          <button type="button" (click)="copyUrl()" i18n>Copy link</button>
+          <button type="button" (click)="download('png')" i18n>Download PNG</button>
+          <button type="button" (click)="download('svg')" i18n>Download SVG</button>
+        </div>
+      } @else {
+        <p class="card-share-dialog__notice" i18n>This card is not available to everyone. Make the board Public or Unlisted and turn off “Only you can see this” before sharing a QR code.</p>
+      }
+    } @else {
+      <h2 id="card-share-title" i18n>Card unavailable</h2>
+      <p i18n>This card may have been removed.</p>
+    }
+    @if (feedback()) { <p class="card-share-dialog__feedback" role="status">{{ feedback() }}</p> }
+  </section>
+</div>
