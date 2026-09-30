@@ -19,5 +19,5 @@ export function shouldCanonicalizeBoardsRootRoute(
     && !context.boardId
     && context.ownerKey === null
     && !!context.userId
-    && context.createQuery !== 'gems';
+    && !['gems', 'choose', 'real-estate', 'rental'].includes(context.createQuery ?? '');
 }

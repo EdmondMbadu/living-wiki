@@ -10,6 +10,7 @@ import type { VoiceConversation } from '@elevenlabs/client';
 import { WorkspaceNavigationService } from '../workspace-navigation/workspace-navigation';
 import { KiwiBoardRefreshService } from './kiwi-board-refresh.service';
 import kiwiVoices from '../../../functions/src/kiwi-voices.json';
+import { kiwiListingIntent, kiwiListingUrl, type KiwiListingIntent } from './kiwi-listing-request';
 
 type KiwiMessage = { id: number; role: 'user' | 'assistant'; text: string };
 type KiwiCardDraft = { title: string; subtitle: string; notes: string; type: string; imageUrl?: string; imageSource?: 'search' | 'generated' };
@@ -114,6 +115,9 @@ export class KiwiComponent {
   private streamSequence = 0;
   private imageRun = 0;
   private pendingCreationPrompt = '';
+  readonly listingIntake = signal<KiwiListingIntent | null>(null);
+  readonly listingUrlDraft = signal('');
+  readonly listingIntakeError = signal('');
   private proposalTeamId = '';
 
   readonly open = signal(false);
@@ -214,6 +218,7 @@ export class KiwiComponent {
         this.messages.set([]);
         this.proposal.set(null);
         this.pendingCreationPrompt = '';
+        this.listingIntake.set(null);
         this.proposalTeamId = '';
       } else if (uid !== this.loadedForUid) {
         void this.loadName();
@@ -264,6 +269,9 @@ export class KiwiComponent {
     this.streamSequence++;
     this.stopVoiceSession();
     this.pendingCreationPrompt = '';
+    this.listingIntake.set(null);
+    this.listingUrlDraft.set('');
+    this.listingIntakeError.set('');
     this.planningCreation.set(false);
     this.boardBuildPhase.set(null);
     this.studioOpen.set(false);
@@ -429,12 +437,63 @@ export class KiwiComponent {
   chooseStudioBoardType(event: Event): void {
     const choice = (event.target as HTMLSelectElement).value;
     if (choice === 'describe') return;
+    if (choice === 'real-estate' || choice === 'rental') {
+      this.studioOpen.set(false);
+      this.beginListingIntake(choice === 'rental' ? 'rental' : 'sale', '');
+      return;
+    }
     void this.openBoardWizard(choice);
   }
 
-  private async openBoardWizard(choice: string): Promise<void> {
-    const create = choice === 'real-estate' ? choice : 'choose';
+  setListingUrlDraft(event: Event): void {
+    this.listingUrlDraft.set((event.target as HTMLInputElement).value);
+    this.listingIntakeError.set('');
+  }
+
+  chooseListingIntent(intent: 'sale' | 'rental'): void {
+    this.listingIntake.set(intent);
+    if (this.listingUrlDraft()) void this.continueListingIntake();
+  }
+
+  cancelListingIntake(): void {
+    this.listingIntake.set(null);
+    this.listingUrlDraft.set('');
+    this.listingIntakeError.set('');
+  }
+
+  async continueListingIntake(): Promise<void> {
+    const intent = this.listingIntake();
+    if (!intent || intent === 'choose') return;
+    const url = kiwiListingUrl(this.listingUrlDraft());
+    if (!url) {
+      this.listingIntakeError.set($localize`Paste a public property listing URL to continue.`);
+      return;
+    }
+    this.listingIntakeError.set('');
+    await this.openBoardWizard(intent === 'rental' ? 'rental' : 'real-estate', url);
+  }
+
+  private beginListingIntake(intent: KiwiListingIntent, request: string): void {
     this.pendingCreationPrompt = '';
+    this.studioOpen.set(false);
+    this.proposal.set(null);
+    this.studioDraft.set(null);
+    this.imageRun++;
+    this.listingIntake.set(intent);
+    this.listingIntakeError.set('');
+    this.listingUrlDraft.set(kiwiListingUrl(request) || '');
+    const reply = intent === 'choose'
+      ? $localize`Is this property for sale or for rent?`
+      : $localize`Paste the public listing URL below. Kiwi will open the TalkThru setup with the link filled in. You can choose listing photos or upload your own there.`;
+    this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: reply }]);
+    this.conversation?.sendContextualUpdate(reply, { contextId: 'kiwi-last-action' });
+  }
+
+  private async openBoardWizard(choice: string, listingUrl = ''): Promise<void> {
+    const create = choice === 'real-estate' || choice === 'rental' ? choice : 'choose';
+    this.pendingCreationPrompt = '';
+    this.listingIntake.set(null);
+    this.listingUrlDraft.set('');
     this.studioOpen.set(false);
     this.open.set(false);
     this.proposal.set(null);
@@ -442,11 +501,14 @@ export class KiwiComponent {
     this.imageRun++;
     this.imageLoading.set(false);
     this.conversation?.sendContextualUpdate(
-      `The ${create === 'real-estate' ? 'real estate listing' : 'board'} wizard is opening. Ask the user to enter the source details there.`,
+      `The ${create === 'real-estate' ? 'real estate listing' : create === 'rental' ? 'rental property' : 'board'} wizard is opening${listingUrl ? ' with the listing URL already filled in' : ''}.`,
       { contextId: 'kiwi-last-action' });
-    const destination = this.scope().teamId
+    const path = this.scope().teamId
       ? `/teams/${encodeURIComponent(this.scope().teamId)}/create-listing`
-      : '/boards?create=choose';
+      : '/boards';
+    const query = new URLSearchParams({ create });
+    if (listingUrl) query.set('listingUrl', listingUrl);
+    const destination = `${path}?${query.toString()}`;
     await this.router.navigateByUrl(destination);
   }
 
@@ -609,10 +671,43 @@ export class KiwiComponent {
       if (fromVoiceTool) this.queuedVoiceRequest = text;
       return;
     }
-    if (/\b(cancel|never mind|nevermind|stop)\b/i.test(text)) this.pendingCreationPrompt = '';
+    const cancelled = /\b(cancel|never mind|nevermind|stop)\b/i.test(text);
+    if (cancelled) {
+      this.pendingCreationPrompt = '';
+      this.cancelListingIntake();
+    }
     const followup = this.pendingCreationPrompt
       && !/\b(create|make|build|design|draft)\b/i.test(text);
     const creationRequest = followup ? `${this.pendingCreationPrompt}. ${text}` : text;
+    const listingIntent = !cancelled ? kiwiListingIntent(creationRequest) : null;
+    if (listingIntent) {
+      if (!fromVoiceTool) this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
+      this.draft.set('');
+      const url = kiwiListingUrl(creationRequest);
+      if (listingIntent !== 'choose' && url) {
+        await this.openBoardWizard(listingIntent === 'rental' ? 'rental' : 'real-estate', url);
+      } else {
+        this.beginListingIntake(listingIntent, creationRequest);
+      }
+      return;
+    }
+    if (this.listingIntake() && /\b(create|make|build|design|draft)\b/i.test(text)
+      && /\b(board|menu|list|wiki|tour)\b/i.test(text)) this.cancelListingIntake();
+    if (this.listingIntake() && !cancelled) {
+      if (!fromVoiceTool) this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
+      this.draft.set('');
+      const url = kiwiListingUrl(text);
+      if (url) {
+        this.listingUrlDraft.set(url);
+        if (this.listingIntake() !== 'choose') await this.continueListingIntake();
+      } else if (this.listingIntake() === 'choose') {
+        if (/\b(rent|rental|lease)\b/i.test(text)) this.chooseListingIntent('rental');
+        else if (/\b(sale|sell)\b/i.test(text)) this.chooseListingIntent('sale');
+      } else {
+        this.listingIntakeError.set($localize`Paste a public property listing URL to continue.`);
+      }
+      return;
+    }
     const creating = /\b(create|make|build|design|draft)\b/i.test(creationRequest)
       && /\b(board|menu|list|wiki|listing|tour)\b/i.test(creationRequest);
     const bareBoard = /^(?:please\s+)?(?:create|make|build)(?:\s+me)?\s+(?:a\s+|an\s+)?(?:new\s+)?(?:(?:public|private|unlisted)\s+)?board(?:\s+please)?[.!?]?$/i;
@@ -626,12 +721,6 @@ export class KiwiComponent {
       this.draft.set('');
       this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: reply }]);
       this.conversation?.sendContextualUpdate(reply, { contextId: 'kiwi-last-action' });
-      return;
-    }
-    if (creating && /\b(real estate|property listing|home listing|rental property|sell my (?:home|house)|listing board)\b/i.test(creationRequest)) {
-      if (!fromVoiceTool) this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'user', text }]);
-      this.draft.set('');
-      await this.openBoardWizard('real-estate');
       return;
     }
     if (creating && /\bwalking tour\b/i.test(creationRequest)) {
@@ -966,13 +1055,15 @@ export class KiwiComponent {
             }
             const creating = /\b(create|make|build|design|draft)\b/i.test(request)
               && /\b(board|menu|list|wiki|listing|tour)\b/i.test(request);
-            const specialized = /\b(real estate|property listing|home listing|rental property|sell my (?:home|house)|listing board|walking tour)\b/i.test(request);
+            const specialized = !!kiwiListingIntent(request) || /\bwalking tour\b/i.test(request);
             if (creating && !specialized && !this.scope().teamId && !/\b(public|unlisted|private)\b/i.test(request)) {
               this.pendingCreationPrompt = request;
               return 'Ask the user whether this new board should be Public, Unlisted, or Private before starting the draft.';
             }
             void this.send(request, true);
-            return 'The request is being prepared on screen. The user will review it before it is saved.';
+            return specialized
+              ? 'The property or tour flow is opening on screen. If Kiwi asks for a listing URL, ask the user to paste it into the visible field.'
+              : 'The request is being prepared on screen. The user will review it before it is saved.';
           },
           kiwi_apply: () => {
             if (this.busy()) return 'The proposal is still being prepared. Ask the user to approve after it appears.';
@@ -1030,7 +1121,7 @@ export class KiwiComponent {
       }
       this.conversation = conversation;
       const { teamId, boardId } = this.scope();
-      conversation.sendContextualUpdate(`The user is in ${teamId ? 'team workspace ' + teamId : 'their personal workspace'}${boardId ? ', viewing board ' + boardId : ''}. The user calls you ${this.name()}. Use kiwi_request for board/card operations and kiwi_apply only after explicit approval.${this.localeId === 'pt-BR' ? ' Speak to the user in natural Brazilian Portuguese. Keep tool names and structured identifiers in English.' : ''}`,
+      conversation.sendContextualUpdate(`The user is in ${teamId ? 'team workspace ' + teamId : 'their personal workspace'}${boardId ? ', viewing board ' + boardId : ''}. The user calls you ${this.name()}. Use kiwi_request for board/card operations, including real estate and rental TalkThru creation; the app will ask for a public listing URL and open the specialized wizard. Use kiwi_apply only after explicit approval.${this.localeId === 'pt-BR' ? ' Speak to the user in natural Brazilian Portuguese. Keep tool names and structured identifiers in English.' : ''}`,
         { contextId: 'kiwi-current-workspace' });
     } catch (error) {
       if (attempt !== this.voiceAttempt) return;

@@ -7873,6 +7873,9 @@ export const generateBoardWizardBatch = onCall(
     if (usesUrlSource && submittedUrl && !url) {
       throw new HttpsError('invalid-argument', 'Provide a public HTTP or HTTPS page URL.');
     }
+    if (listingIntent !== 'auto' && (!usesUrlSource || !url)) {
+      throw new HttpsError('invalid-argument', 'Provide a public property listing URL before creating a TalkThru.');
+    }
     const submittedSourceManifest = url
       ? normalizeBoardWizardSourceManifest(data.sourceManifest, url)
       : null;
@@ -8197,10 +8200,11 @@ export const generateBoardWizardBatch = onCall(
       if (!listingExtraction && !accommodationExtraction && isBoardWizardAccommodationUrl(url)) {
         accommodationExtraction = buildFallbackAccommodationExtraction(url);
       }
-      if (!listingExtraction && isBoardWizardListingPageUrl(url)) {
+      if ((!listingExtraction || (listingIntent === 'sale' && listingExtraction.kind !== 'real-estate'))
+        && (listingIntent !== 'auto' || isBoardWizardListingPageUrl(url))) {
         throw new HttpsError(
           'unavailable',
-          'LivingWiki could not safely extract this property listing. No board was generated because unrelated homes or generic location results would be misleading. Please try again shortly.',
+          'LivingWiki could not verify property details from this listing URL. No board was generated. Check the direct public listing link and try again.',
         );
       }
       if (!urlExtraction && !listingExtraction && !accommodationExtraction && !commerceExtraction) {

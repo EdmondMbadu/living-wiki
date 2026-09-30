@@ -161,6 +161,7 @@ describe('Real estate doorway defaults', () => {
     return Object.assign(Object.create(BoardsComponent.prototype), {
       wizardEntryIntent: signal('default'),
       wizardSaveDestination: signal('board'),
+      wizardVisibility: signal('public'),
       wizardPhotoStudioNotice: signal(''),
       wizardMode: signal('url'),
       wizardTargetBoardId: signal('old-board'),
@@ -219,4 +220,14 @@ describe('Real estate doorway defaults', () => {
       expect(page.wizardNarrationSecondsPerCard()).toBe(30);
     });
   }
+});
+
+describe('Kiwi listing URL prefill', () => {
+  it('fills the property source field from a public link and ignores invalid links', () => {
+    const page = Object.assign(Object.create(BoardsComponent.prototype), { wizardUrl: signal('') });
+    page.prefillRequestedListingUrl('https://example.com/homes/123');
+    expect(page.wizardUrl()).toBe('https://example.com/homes/123');
+    page.prefillRequestedListingUrl('file:///private/listing');
+    expect(page.wizardUrl()).toBe('https://example.com/homes/123');
+  });
 });

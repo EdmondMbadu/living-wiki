@@ -82,7 +82,7 @@ describe('Kiwi conversation interface', () => {
     expect(fixture.nativeElement.querySelector('.kiwi-settings')).toBeNull();
   });
 
-  it('opens the property wizard without ending an active voice conversation', async () => {
+  it('asks for a listing URL and opens the sale wizard without ending voice', async () => {
     const fixture = TestBed.createComponent(KiwiComponent);
     spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
     spyOn<any>(fixture.componentInstance, 'startVoiceSession').and.resolveTo();
@@ -90,9 +90,49 @@ describe('Kiwi conversation interface', () => {
     const kiwi = fixture.componentInstance;
     kiwi.toggle();
     kiwi.toggleVoiceSession();
-    await kiwi.send('Create a real estate listing board', true);
-    expect(navigate).toHaveBeenCalledWith('/boards?create=choose');
+    await kiwi.send('Create a real estate TalkThru', true);
+    fixture.detectChanges();
+    expect(navigate).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('#kiwi-listing-url')).not.toBeNull();
+    const input = fixture.nativeElement.querySelector('#kiwi-listing-url') as HTMLInputElement;
+    input.value = 'https://example.com/homes/123';
+    input.dispatchEvent(new Event('input'));
+    await kiwi.continueListingIntake();
+    expect(navigate).toHaveBeenCalledWith('/boards?create=real-estate&listingUrl=https%3A%2F%2Fexample.com%2Fhomes%2F123');
     expect(kiwi.voiceActive()).toBeTrue();
+  });
+
+  it('routes a rental request with a link directly to rental TalkThru setup', async () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    const navigate = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    await fixture.componentInstance.send('Make a rental board from https://example.com/stays/42', true);
+    expect(navigate).toHaveBeenCalledWith('/boards?create=rental&listingUrl=https%3A%2F%2Fexample.com%2Fstays%2F42');
+  });
+
+  it('accepts the listing link as the next chat message', async () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    const navigate = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    const kiwi = fixture.componentInstance;
+    await kiwi.send('Create a rental TalkThru');
+    expect(kiwi.listingIntake()).toBe('rental');
+    await kiwi.send('www.example.com/rentals/24');
+    expect(navigate).toHaveBeenCalledWith('/boards?create=rental&listingUrl=https%3A%2F%2Fwww.example.com%2Frentals%2F24');
+  });
+
+  it('asks whether an ambiguous property TalkThru is for sale or rent', async () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    const navigate = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    const kiwi = fixture.componentInstance;
+    spyOn<any>(kiwi, 'loadName').and.resolveTo();
+    kiwi.toggle();
+    await kiwi.send('Create a TalkThru for my house', true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('For sale');
+    expect(fixture.nativeElement.textContent).toContain('For rent');
+    kiwi.chooseListingIntent('rental');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#kiwi-listing-url')).not.toBeNull();
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('renders streamed cards and preserves a title the user edits while Kiwi continues', () => {

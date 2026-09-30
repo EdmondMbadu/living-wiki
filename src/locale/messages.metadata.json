@@ -243,6 +243,10 @@
     "source": "Generate a new picture",
     "file": "src/app/boards/boards.html"
   },
+  "1085009837728415718": {
+    "source": "What kind of listing is this?",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "1087243376159383787": {
     "source": "Your selected cards were added without replacing the cards already there.",
     "file": "src/app/boards/boards.html"
@@ -682,6 +686,10 @@
   "1221499080458746717": {
     "source": "A job is already active",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
+  "122418041247193616": {
+    "source": "Property TalkThru setup",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "1225203534534338921": {
     "source": "Replay",
@@ -1946,6 +1954,10 @@
   "1576115352345737129": {
     "source": "The conversation voice settings could not be loaded.",
     "file": "src/app/atlas-persona/atlas-persona.ts"
+  },
+  "1576265228050116516": {
+    "source": "For sale",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "1576320601116652304": {
     "source": "Open a place from the list.",
@@ -5423,6 +5435,10 @@
     "source": "Describe the card",
     "file": "src/app/boards/boards.html"
   },
+  "2755670469639212466": {
+    "source": "The listing supplies property facts. You can choose your photos in the next step.",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "2761152964741900033": {
     "source": " so far",
     "file": "src/app/public-wikis/public-wikis.ts"
@@ -6270,6 +6286,10 @@
   "3040354352406928028": {
     "source": "Choose how much should be said at each stop. Actual voice timing may vary slightly.",
     "file": "src/app/boards/boards.html"
+  },
+  "3041458879885595840": {
+    "source": "This is not a sale listing. Check the link or choose Rental TalkThru.",
+    "file": "src/app/boards/boards.ts"
   },
   "3043241215169697558": {
     "source": "New tour stop preview",
@@ -12935,6 +12955,10 @@
     "source": "Current setup",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "5157604788236856693": {
+    "source": "Continue to TalkThru setup",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "5158401516813764836": {
     "source": "Share a name, phone number, email, and optional organization.",
     "file": "src/app/boards/card-creation.ts"
@@ -13523,6 +13547,10 @@
     "source": "Give the board and at least one card a title before creating it.",
     "file": "src/app/kiwi/kiwi.ts"
   },
+  "5347118357456186341": {
+    "source": "Public property listing URL",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "5349011165936351070": {
     "source": " views, ",
     "file": "src/app/board-insights/board-insights.ts"
@@ -13690,6 +13718,10 @@
   "5401235049169008975": {
     "source": "Open source page",
     "file": "src/app/green-jobs/green-jobs.html"
+  },
+  "5402003255038231328": {
+    "source": "Paste the public listing URL below. Kiwi will open the TalkThru setup with the link filled in. You can choose listing photos or upload your own there.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "5402963251231965741": {
     "source": "Countertop or host stand",
@@ -14366,6 +14398,10 @@
   "5624389745579853210": {
     "source": "Industrial legacy and heritage",
     "file": "src/app/fence-line/fence-line.ts"
+  },
+  "5625406872613314089": {
+    "source": "https://example.com/listing",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "5627072660785451875": {
     "source": "cards",
@@ -17731,6 +17767,10 @@
     "source": "Board visibility",
     "file": "src/app/boards/boards.html"
   },
+  "6657196932283858477": {
+    "source": "Is this property for sale or for rent?",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "6657566320598819860": {
     "source": " {$INTERPOLATION} · {$INTERPOLATION_1} sec {$START_BLOCK_IF} · Team preview {$CLOSE_BLOCK_IF}",
     "file": "src/app/teams/teams.html"
@@ -18594,6 +18634,10 @@
   "6959872088852202480": {
     "source": "Browse public LivingWikis and create narrated Stack videos for free, then upgrade when you need private spaces, Personal Voice, publishing, uploads, or team collaboration.",
     "file": "src/app/pricing/pricing.ts"
+  },
+  "6962026839949424559": {
+    "source": "Paste a public property listing URL to continue.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "6962699013778688473": {
     "source": "Continue",
@@ -22111,6 +22155,10 @@
     "source": "Compact entrance sticker",
     "file": "src/app/business/business.ts"
   },
+  "8109060271261473225": {
+    "source": "For rent",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "8109625938940233084": {
     "source": "Loading current temperature",
     "file": "src/app/public-wikis/public-wikis.ts"
@@ -22418,6 +22466,10 @@
   "8198326553944581889": {
     "source": "Search universities or towns…",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
+  "8199872365331449892": {
+    "source": "Start a property TalkThru",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "8200204097093169452": {
     "source": "Included in the image",
@@ -23158,6 +23210,10 @@
   "8461842260159597706": {
     "source": "Show",
     "file": "src/app/boards/boards.html"
+  },
+  "8462174346895977676": {
+    "source": "We could not read this property listing. Try a direct public URL. Your photos and settings remain here.",
+    "file": "src/app/boards/boards.ts"
   },
   "8467030743011765157": {
     "source": "New Board",

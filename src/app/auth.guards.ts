@@ -56,7 +56,8 @@ function isSafeInternalRedirect(value: string | null): value is string {
 
 export const boardsRootRedirectGuard: CanActivateFn = (route) => {
   const authService = inject(AuthService);
-  if (!authService.isAuthenticated() || route.queryParamMap.get('create') === 'gems') {
+  if (!authService.isAuthenticated()
+    || ['gems', 'choose', 'real-estate', 'rental'].includes(route.queryParamMap.get('create') ?? '')) {
     return true;
   }
 

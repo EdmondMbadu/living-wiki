@@ -189,6 +189,16 @@
 @media (max-width: 1150px) { .kiwi-studio { inset: .55rem; min-width: 0; } .kiwi-studio__meta { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .kiwi-studio { inset: 0; border: 0; border-radius: 0; padding-bottom: env(safe-area-inset-bottom); } .kiwi-studio__header, .kiwi-studio__footer { padding: .65rem .85rem; } .kiwi-studio__footer { align-items: stretch; flex-direction: column; } .kiwi-studio__conversation { width: 100%; } .kiwi-studio__voice > span { display: none; } .kiwi-studio__chat { max-width: none; } .kiwi-studio__body { padding: .75rem .85rem 1.2rem; } .kiwi-studio__meta { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kiwi-studio__meta label:first-child { grid-column: 1 / -1; } .kiwi-studio__cards { grid-template-columns: 1fr; } }
 .kiwi-error { margin: 0 .9rem .5rem; border-radius: .65rem; background: #fff0eb; color: #8a3425; padding: .65rem .75rem; font-size: .78rem; }
+.kiwi-listing-intake { display: grid; gap: .55rem; margin: .3rem .85rem .65rem; padding: .9rem; border: 1px solid #a8d8b9; border-radius: 1rem; background: #f1faf2; box-shadow: 0 4px 16px rgba(24, 108, 61, .08); }
+.kiwi-listing-intake > strong { color: #165b37; font: 700 1.05rem/1.3 Georgia, 'Times New Roman', serif; }
+.kiwi-listing-intake label { color: #245a3c; font-size: .78rem; font-weight: 750; }
+.kiwi-listing-intake input { min-width: 0; width: 100%; box-sizing: border-box; padding: .7rem .75rem; border: 1px solid #a9cbb5; border-radius: .65rem; background: white; color: #183629; font: inherit; font-size: .85rem; }
+.kiwi-listing-intake p { margin: 0; color: #4b6a56; font-size: .78rem; line-height: 1.4; }
+.kiwi-listing-intake .kiwi-listing-intake__error { color: #a23a2f; font-weight: 700; }
+.kiwi-listing-intake__choices { display: flex; gap: .5rem; }
+.kiwi-listing-intake__choices button { flex: 1; padding: .6rem .75rem; border: 1px solid #90c8a4; border-radius: .65rem; background: white; color: #176542; font-weight: 750; cursor: pointer; }
+.kiwi-listing-intake__choices button:hover { background: #e2f5e7; }
+.kiwi-listing-intake__cancel { justify-self: start; padding: .3rem 0; border: 0; background: none; color: #55745f; font-size: .78rem; font-weight: 700; cursor: pointer; }
 .kiwi-settings-backdrop { position: absolute; inset: 0; z-index: 3; background: rgba(14, 42, 27, .42); backdrop-filter: blur(2px); }
 .kiwi-settings { position: absolute; z-index: 4; inset: auto .65rem .65rem; display: flex; flex-direction: column; max-height: calc(100% - 1.3rem); overflow: hidden; border: 1px solid #d7e7d8; border-radius: 1.25rem; background: #fffefb; box-shadow: 0 18px 52px rgba(12, 45, 25, .23); }
 .kiwi-settings__header, .kiwi-settings__footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .85rem 1rem; }

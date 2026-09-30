@@ -4059,8 +4059,16 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           }
           this.teamWizardOpened = true;
           this.openBoardWizard();
-          this.chooseWizardMode('url', 'real-estate');
+          const launch = this.route.snapshot.queryParamMap;
+          this.chooseWizardMode('url', launch.get('create') === 'rental' ? 'rental' : 'real-estate');
+          this.prefillRequestedListingUrl(launch.get('listingUrl'));
           this.teamWizardReady.emit();
+          if (launch.has('create') || launch.has('listingUrl')) void this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { create: null, listingUrl: null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
         }
         if (boardId) {
           this.resetBoardRouteScroll();
@@ -4081,13 +4089,19 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         this.nearbyGemsQueryConsumed = true;
         if (this.isBrowser) void this.openNearbyGemsWizard();
       }
-      if (params.get('create') === 'choose' && this.isBrowser) {
+      const requestedCreate = params.get('create');
+      if (['choose', 'real-estate', 'rental'].includes(requestedCreate ?? '') && this.isBrowser && !this.teamContextId()) {
         void this.authService.waitForReady().then(() => {
-          if (this.route.snapshot.queryParamMap.get('create') !== 'choose') return;
+          if (this.route.snapshot.queryParamMap.get('create') !== requestedCreate) return;
           this.openBoardWizard();
+          if (!this.wizardOpen()) return;
+          if (requestedCreate === 'real-estate' || requestedCreate === 'rental') {
+            this.chooseWizardMode('url', requestedCreate);
+            this.prefillRequestedListingUrl(this.route.snapshot.queryParamMap.get('listingUrl'));
+          }
           void this.router.navigate([], {
             relativeTo: this.route,
-            queryParams: { create: null },
+            queryParams: { create: null, listingUrl: null },
             queryParamsHandling: 'merge',
             replaceUrl: true,
           });
@@ -4918,6 +4932,16 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     void this.ensureCitiesLoaded();
     this.resetBoardWizard();
     this.wizardOpen.set(true);
+  }
+
+  private prefillRequestedListingUrl(value: string | null): void {
+    if (!value || value.length > 1000) return;
+    try {
+      const parsed = new URL(value);
+      if (/^https?:$/.test(parsed.protocol) && !parsed.username && !parsed.password) {
+        this.wizardUrl.set(parsed.href);
+      }
+    } catch { /* The user can enter a valid URL in the wizard. */ }
   }
 
   async openNearbyGemsWizard(): Promise<void> {
@@ -6034,6 +6058,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.wizardSourceReviewExact.set(data['exact'] === true);
       this.wizardSourceReviewWarning.set(this.stringValue(data['warning'], '', 500));
       if (data['specializedKind'] === 'real-estate' || data['specializedKind'] === 'rental') {
+        if (this.wizardEntryIntent() === 'real-estate' && data['specializedKind'] !== 'real-estate') {
+          this.wizardStep.set('configure');
+          this.wizardLoadingTask.set(null);
+          this.wizardListingPreview.set(null);
+          this.wizardError.set($localize`This is not a sale listing. Check the link or choose Rental TalkThru.`);
+          return true;
+        }
         const listingPreview = this.normalizeWizardListingPreview(data['listingPreview'], sourceUrl);
         this.wizardListingPreview.set(listingPreview);
         this.wizardListingPropertyType.set(listingPreview.propertyType);
@@ -6056,6 +6087,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         return true;
       }
       this.wizardListingPreview.set(null);
+      if (this.wizardIsTalkThruListing()) {
+        this.wizardStep.set('configure');
+        this.wizardLoadingTask.set(null);
+        this.wizardSourceManifest.set(null);
+        this.wizardError.set(this.wizardListingSourceError());
+        return true;
+      }
       if (data['requiresReview'] === true && manifest) {
         this.wizardSourceManifest.set(manifest);
         this.wizardSourceConfirmedUrl.set('');
@@ -6069,6 +6107,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.wizardSourceConfirmedUrl.set(sourceUrl);
       return false;
     } catch {
+      if (this.wizardIsTalkThruListing()) {
+        this.wizardStep.set('configure');
+        this.wizardLoadingTask.set(null);
+        this.wizardListingPreview.set(null);
+        this.wizardSourceManifest.set(null);
+        this.wizardError.set(this.wizardListingSourceError());
+        return true;
+      }
       this.wizardStep.set('configure');
       this.wizardLoadingTask.set(null);
       this.wizardSourceManifest.set(null);
@@ -6080,6 +6126,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       // established generation pipeline still has direct, Reader, and search fallbacks.
       return false;
     }
+  }
+
+  private wizardListingSourceError(): string {
+    return $localize`We could not read this property listing. Try a direct public URL. Your photos and settings remain here.`;
   }
 
   async confirmWizardSourceReview(): Promise<void> {

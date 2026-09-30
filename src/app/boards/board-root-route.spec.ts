@@ -22,4 +22,9 @@ describe('boards root route', () => {
       createQuery: 'gems',
     })).toBeFalse();
   });
+
+  it('keeps Kiwi property handoffs on the launch route until the wizard opens', () => {
+    expect(shouldCanonicalizeBoardsRootRoute({ ...context, createQuery: 'real-estate' })).toBeFalse();
+    expect(shouldCanonicalizeBoardsRootRoute({ ...context, createQuery: 'rental' })).toBeFalse();
+  });
 });

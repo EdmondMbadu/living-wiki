@@ -107,6 +107,25 @@
         </div>
 
         @if (error() && !studioOpen()) { <p class="kiwi-error" role="alert">{{ error() }}</p> }
+        @if (listingIntake(); as intent) {
+          <section class="kiwi-listing-intake" aria-label="Property TalkThru setup" i18n-aria-label>
+            <strong i18n>Start a property TalkThru</strong>
+            @if (intent === 'choose') {
+              <p i18n>What kind of listing is this?</p>
+              <div class="kiwi-listing-intake__choices">
+                <button type="button" (click)="chooseListingIntent('sale')" i18n>For sale</button>
+                <button type="button" (click)="chooseListingIntent('rental')" i18n>For rent</button>
+              </div>
+            } @else {
+              <label for="kiwi-listing-url" i18n>Public property listing URL</label>
+              <input id="kiwi-listing-url" type="url" inputmode="url" autocomplete="url" maxlength="1000" placeholder="https://example.com/listing" [value]="listingUrlDraft()" (input)="setListingUrlDraft($event)" (keydown.enter)="continueListingIntake()" i18n-placeholder />
+              <p i18n>The listing supplies property facts. You can choose your photos in the next step.</p>
+              @if (listingIntakeError()) { <p class="kiwi-listing-intake__error" role="alert">{{ listingIntakeError() }}</p> }
+              <button type="button" class="kiwi-primary" (click)="continueListingIntake()" i18n>Continue to TalkThru setup</button>
+            }
+            <button type="button" class="kiwi-listing-intake__cancel" (click)="cancelListingIntake()" i18n>Cancel</button>
+          </section>
+        }
         @if (mode() === 'chat') {
           <div class="kiwi-composer">
             <label class="sr-only" for="kiwi-request" i18n>Ask Kiwi</label>
