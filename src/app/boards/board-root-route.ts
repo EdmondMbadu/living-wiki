@@ -7,6 +7,7 @@ export type BoardsRootCanonicalizationContext = {
   ownerKey: string | null;
   userId: string | null;
   createQuery: string | null;
+  wizardOpen: boolean;
 };
 
 export function shouldCanonicalizeBoardsRootRoute(
@@ -19,5 +20,6 @@ export function shouldCanonicalizeBoardsRootRoute(
     && !context.boardId
     && context.ownerKey === null
     && !!context.userId
+    && !context.wizardOpen
     && !['gems', 'choose', 'real-estate', 'rental'].includes(context.createQuery ?? '');
 }

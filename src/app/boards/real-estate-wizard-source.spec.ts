@@ -1,5 +1,6 @@
 import { Component, provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { convertToParamMap } from '@angular/router';
 import { BoardsComponent } from './boards';
 import { RealEstateWizardSourceComponent } from './real-estate-wizard-source';
 import type { BoardNarrationStyleId } from './board-narration-style';
@@ -229,5 +230,82 @@ describe('Kiwi listing URL prefill', () => {
     expect(page.wizardUrl()).toBe('https://example.com/homes/123');
     page.prefillRequestedListingUrl('file:///private/listing');
     expect(page.wizardUrl()).toBe('https://example.com/homes/123');
+  });
+
+  it('keeps the launch marker while removing the URL and does not reopen the wizard', () => {
+    const wizardOpen = signal(false);
+    const openBoardWizard = jasmine.createSpy('openBoardWizard').and.callFake(() => wizardOpen.set(true));
+    const navigate = jasmine.createSpy('navigate');
+    const page: any = Object.assign(Object.create(BoardsComponent.prototype), {
+      wizardOpen,
+      wizardUrl: signal(''),
+      route: { snapshot: { queryParamMap: convertToParamMap({
+        create: 'real-estate', listingUrl: 'https://example.com/homes/123',
+      }) } },
+      router: { navigate },
+      openBoardWizard,
+      chooseWizardMode: jasmine.createSpy('chooseWizardMode'),
+    });
+
+    page.openRequestedPersonalWizard('real-estate');
+    page.openRequestedPersonalWizard('real-estate');
+
+    expect(openBoardWizard).toHaveBeenCalledTimes(1);
+    expect(page.chooseWizardMode).toHaveBeenCalledWith('url', 'real-estate');
+    expect(page.wizardUrl()).toBe('https://example.com/homes/123');
+    expect(navigate).toHaveBeenCalledOnceWith([], jasmine.objectContaining({
+      queryParams: { listingUrl: null }, queryParamsHandling: 'merge', replaceUrl: true,
+    }));
+  });
+
+  it('returns to the owner profile when a Kiwi-launched property wizard is closed', async () => {
+    const navigateByUrl = jasmine.createSpy('navigateByUrl').and.resolveTo(true);
+    const page: any = Object.assign(Object.create(BoardsComponent.prototype), {
+      wizardPhotoStoryMode: () => false,
+      wizardStep: signal('configure'),
+      wizardImagesPreparing: () => false,
+      wizardResult: () => null,
+      wizardPreviewCards: () => [],
+      wizardOpen: signal(true),
+      wizardLockedTargetBoardId: signal(null),
+      wizardContributionBoardId: signal(null),
+      wizardError: signal(null),
+      wizardSaving: signal(false),
+      teamWizardOnly: () => false,
+      cancelWizardVideoEnrichment: () => undefined,
+      route: { snapshot: { queryParamMap: convertToParamMap({ create: 'real-estate' }) } },
+      router: { navigateByUrl },
+      boardsProfileRoutePath: () => '/boards/u/edmond-mbadu',
+    });
+
+    await page.closeBoardWizard();
+
+    expect(page.wizardOpen()).toBeFalse();
+    expect(navigateByUrl).toHaveBeenCalledOnceWith('/boards/u/edmond-mbadu', { replaceUrl: true });
+  });
+
+  it('opens a team rental TalkThru without changing the URL under the team modal', () => {
+    const wizardOpen = signal(false);
+    const navigate = jasmine.createSpy('navigate');
+    const ready = jasmine.createSpy('ready');
+    const page: any = Object.assign(Object.create(BoardsComponent.prototype), {
+      wizardOpen,
+      wizardUrl: signal(''),
+      route: { snapshot: { queryParamMap: convertToParamMap({
+        create: 'rental', listingUrl: 'https://example.com/rentals/42',
+      }) } },
+      router: { navigate },
+      openBoardWizard: () => wizardOpen.set(true),
+      chooseWizardMode: jasmine.createSpy('chooseWizardMode'),
+      teamWizardReady: { emit: ready },
+    });
+
+    page.openRequestedTeamWizard();
+
+    expect(wizardOpen()).toBeTrue();
+    expect(page.chooseWizardMode).toHaveBeenCalledWith('url', 'rental');
+    expect(page.wizardUrl()).toBe('https://example.com/rentals/42');
+    expect(ready).toHaveBeenCalledTimes(1);
+    expect(navigate).not.toHaveBeenCalled();
   });
 });

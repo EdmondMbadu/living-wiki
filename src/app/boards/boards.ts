@@ -4057,18 +4057,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
             this.teamWizardLaunchError.emit(this.boardsSyncError() || 'This team is unavailable. Return to the team page and try again.');
             return;
           }
-          this.teamWizardOpened = true;
-          this.openBoardWizard();
-          const launch = this.route.snapshot.queryParamMap;
-          this.chooseWizardMode('url', launch.get('create') === 'rental' ? 'rental' : 'real-estate');
-          this.prefillRequestedListingUrl(launch.get('listingUrl'));
-          this.teamWizardReady.emit();
-          if (launch.has('create') || launch.has('listingUrl')) void this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { create: null, listingUrl: null },
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-          });
+          this.openRequestedTeamWizard();
         }
         if (boardId) {
           this.resetBoardRouteScroll();
@@ -4093,18 +4082,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       if (['choose', 'real-estate', 'rental'].includes(requestedCreate ?? '') && this.isBrowser && !this.teamContextId()) {
         void this.authService.waitForReady().then(() => {
           if (this.route.snapshot.queryParamMap.get('create') !== requestedCreate) return;
-          this.openBoardWizard();
-          if (!this.wizardOpen()) return;
-          if (requestedCreate === 'real-estate' || requestedCreate === 'rental') {
-            this.chooseWizardMode('url', requestedCreate);
-            this.prefillRequestedListingUrl(this.route.snapshot.queryParamMap.get('listingUrl'));
-          }
-          void this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { create: null, listingUrl: null },
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-          });
+          this.openRequestedPersonalWizard(requestedCreate!);
         });
       }
       this.stackAutoplayRequested.set(params.get('autoplay') === '1');
@@ -4944,6 +4922,36 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     } catch { /* The user can enter a valid URL in the wizard. */ }
   }
 
+  private openRequestedPersonalWizard(requestedCreate: string): void {
+    // Keep the create marker until dismissal. Removing it while the wizard is
+    // open allows the delayed /boards -> /boards/u/:owner redirect to destroy it.
+    if (this.wizardOpen()) return;
+    this.openBoardWizard();
+    if (!this.wizardOpen()) return;
+    if (requestedCreate === 'real-estate' || requestedCreate === 'rental') {
+      this.chooseWizardMode('url', requestedCreate);
+      this.prefillRequestedListingUrl(this.route.snapshot.queryParamMap.get('listingUrl'));
+    }
+    if (this.route.snapshot.queryParamMap.has('listingUrl')) void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { listingUrl: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  private openRequestedTeamWizard(): void {
+    // The team page reloads and closes its modal when query parameters change.
+    // Its create-listing route will disappear when the wizard closes or saves.
+    this.teamWizardOpened = true;
+    this.openBoardWizard();
+    if (!this.wizardOpen()) return;
+    const launch = this.route.snapshot.queryParamMap;
+    this.chooseWizardMode('url', launch.get('create') === 'rental' ? 'rental' : 'real-estate');
+    this.prefillRequestedListingUrl(launch.get('listingUrl'));
+    this.teamWizardReady.emit();
+  }
+
   async openNearbyGemsWizard(): Promise<void> {
     await this.authService.waitForReady();
     if (this.route.snapshot.queryParamMap.get('create') !== 'gems' && this.nearbyGemsQueryConsumed) {
@@ -5349,10 +5357,18 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.teamWizardDismissed.emit();
       return;
     }
-    if (this.route.snapshot.queryParamMap.get('create') === 'gems') {
+    const createQuery = this.route.snapshot.queryParamMap.get('create');
+    if (['choose', 'real-estate', 'rental'].includes(createQuery ?? '')) {
+      const profilePath = this.boardsProfileRoutePath();
+      if (profilePath !== '/boards') {
+        await this.router.navigateByUrl(profilePath, { replaceUrl: true });
+        return;
+      }
+    }
+    if (['gems', 'choose', 'real-estate', 'rental'].includes(createQuery ?? '')) {
       await this.router.navigate([], {
         relativeTo: this.route,
-        queryParams: { create: null },
+        queryParams: { create: null, listingUrl: null },
         queryParamsHandling: 'merge',
         replaceUrl: true,
       });
@@ -19218,6 +19234,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       ownerKey,
       userId: this.authService.uid(),
       createQuery: this.route.snapshot.queryParamMap.get('create'),
+      wizardOpen: this.wizardOpen(),
     })) {
       return;
     }

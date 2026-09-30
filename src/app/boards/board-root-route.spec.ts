@@ -10,6 +10,7 @@ describe('boards root route', () => {
     ownerKey: null,
     userId: 'user-1',
     createQuery: null,
+    wizardOpen: false,
   };
 
   it('canonicalizes a signed-in board gallery route', () => {
@@ -26,5 +27,9 @@ describe('boards root route', () => {
   it('keeps Kiwi property handoffs on the launch route until the wizard opens', () => {
     expect(shouldCanonicalizeBoardsRootRoute({ ...context, createQuery: 'real-estate' })).toBeFalse();
     expect(shouldCanonicalizeBoardsRootRoute({ ...context, createQuery: 'rental' })).toBeFalse();
+  });
+
+  it('does not redirect while a board wizard remains open after URL cleanup', () => {
+    expect(shouldCanonicalizeBoardsRootRoute({ ...context, wizardOpen: true })).toBeFalse();
   });
 });
