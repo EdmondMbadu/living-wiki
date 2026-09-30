@@ -15,6 +15,7 @@ import {
 } from './gemini';
 import {
   BOARD_WIZARD_SOURCE_GALLERY_LIMIT,
+  boardWizardListingIsShortTermRental,
   boardWizardListingFurnishingsIncluded,
   buildBoardWizardListingBatch,
   normalizeBoardWizardListingIntent,
@@ -165,6 +166,13 @@ export function boardWizardListingPreview(
 }
 
 export function isLikelyBoardWizardRealEstateUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    if (/^(?:www\.)?capemayrentals\.com$/i.test(url.hostname)
+      && /^\/frontier\/properties\/[a-z0-9-]+\/?$/i.test(url.pathname)) return true;
+  } catch {
+    return false;
+  }
   if (/(^|\.)(?:zillow|trulia|hotpads|realtor|redfin|apartments|homes|rent|zumper|apartmentlist|exprealty)\./i.test(safeHostname(value))) {
     return true;
   }
@@ -658,7 +666,7 @@ function buildMarketingBatch(options: {
     const agency = showContact ? options.marketing?.agency.trim() || '' : options.extraction.realEstate.brokerage;
     const isListingContact = showContact && !!(contactPhone || contactEmail);
     const nextStepTitle = options.listingIntent === 'rental'
-      ? options.extraction.kind === 'vacation-rental' ? 'Check availability & book' : 'Check availability & apply'
+      ? boardWizardListingIsShortTermRental(options.extraction) ? 'Check availability & book' : 'Check availability & apply'
       : isListingContact ? `Contact ${contactName || 'the listing agent'}`
       : options.extraction.price ? `The next step · ${options.extraction.price}` : 'See the full listing';
     const contactInvitation = `Interested in this home? ${contactName ? `Contact ${contactName}` : 'Get in touch with the listing agent'} to ask a question or arrange a private showing.`;
@@ -876,7 +884,7 @@ function listingClose(
     ? `Contact ${extraction.realEstate.agentName}, the ${extraction.realEstate.agentRole || 'site contact'}, to ask a question or arrange a showing.`
     : '';
   const action = listingIntent === 'rental'
-    ? extraction.kind === 'vacation-rental'
+    ? boardWizardListingIsShortTermRental(extraction)
       ? 'Open the original rental listing to confirm current price, availability, fees, cancellation terms, house rules, and booking details.'
       : 'Open the original rental listing to confirm current rent, availability, lease terms, deposits, fees, application requirements, and contact details.'
     : 'Confirm current price, status, disclosures, fees, showing availability, and contact details on the original listing.';

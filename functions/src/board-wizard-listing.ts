@@ -117,6 +117,13 @@ export function extractBoardWizardListing(
     return null;
   }
   const document = dom.window.document;
+  const capeMayListing = isCapeMayRentalsPropertyUrl(inputUrl || baseUrl);
+  const capeMayProperty = capeMayListing
+    ? document.querySelector('article.property')
+    : null;
+  if (capeMayListing
+    && (!capeMayProperty?.querySelector('.property-title')
+      || !capeMayProperty.querySelector('.property-detail-content'))) return null;
   const loftyEmbeddedNode = extractLoftyEmbeddedListingNode(document, inputUrl || baseUrl);
   const expRealtyEmbeddedNode = extractExpRealtyEmbeddedListingNode(document, inputUrl || baseUrl);
   const jsonNodes = [
@@ -142,6 +149,7 @@ export function extractBoardWizardListing(
   const primaryNode = primary?.node || {};
   const nestedAbout = recordValue(primaryNode.about);
   const listingName = firstText(
+    capeMayProperty?.querySelector('.property-title')?.textContent,
     nestedAbout.name,
     primaryNode.name,
     metaContent(document, 'property', 'og:title'),
@@ -166,16 +174,26 @@ export function extractBoardWizardListing(
     metaContent(document, 'property', 'og:description'),
   );
   const description = kind === 'real-estate'
-    ? firstText(extractSectionText(document, 'Property Description'), metadataDescription)
+    ? firstText(capeMayProperty?.querySelector('.property-desc .property-content')?.textContent,
+      extractSectionText(document, 'Property Description'), metadataDescription)
     : metadataDescription;
+  const capeMayDetails = capeMayProperty ? extractListingLabelValues(capeMayProperty) : [];
   const address = formatAddress(primaryNode.address)
     || formatAddress(nestedAbout.address)
     || firstText(primaryNode.contentLocation, nestedAbout.contentLocation)
+    || (capeMayProperty && /^\d+[A-Za-z-]*\s+\S/.test(listingName)
+      ? [listingName, labeledValue(capeMayDetails, 'Location')].filter(Boolean).join(', ')
+      : '')
     || (kind === 'real-estate' && looksLikeStreetAddress(listingName) ? listingName : '');
   const pageText = cleanText(document.body?.textContent || '').slice(0, 80_000);
   const realEstate = kind === 'real-estate'
-    ? extractRealEstateDetails(document, primaryNode, nestedAbout, pageText, baseUrl)
+    ? extractRealEstateDetails(document, primaryNode, nestedAbout, pageText, baseUrl, capeMayProperty || undefined)
     : emptyRealEstateDetails();
+  if (capeMayProperty) {
+    const categories = realEstate.propertyType.split(',').map((category) => category.trim());
+    realEstate.propertyType = categories.find((category) => /\b(?:house|condo|townhouse|townhome|apartment|cottage|villa|cabin|duplex|bungalow|studio)\b/i.test(category))
+      || realEstate.propertyType;
+  }
   const pageImages = extractListingImages({
     document,
     nodes: [primaryNode, nestedAbout, ...relatedNodes],
@@ -189,7 +207,12 @@ export function extractBoardWizardListing(
     baseUrl,
     listingName,
   });
-  const images = mergeListingImages(embeddedImages, pageImages, BOARD_WIZARD_SOURCE_GALLERY_LIMIT);
+  const propertyGalleryImages = capeMayProperty
+    ? extractPropertyLightboxImages(capeMayProperty, baseUrl, listingName)
+    : [];
+  const images = propertyGalleryImages.length
+    ? propertyGalleryImages
+    : mergeListingImages(embeddedImages, pageImages, BOARD_WIZARD_SOURCE_GALLERY_LIMIT);
   const offers = recordValue(primaryNode.offers);
   const aggregateRating = recordValue(primaryNode.aggregateRating);
   const geo = recordValue(primaryNode.geo);
@@ -203,14 +226,20 @@ export function extractBoardWizardListing(
     description: cleanText(description).slice(0, 6000),
     address: cleanText(address).slice(0, 300),
     host: extractHost(primaryNode, pageText),
-    price: normalizeCurrency(firstText(formatOfferPrice(offers), realEstateFieldPrice(document))),
+    price: normalizeCurrency(firstText(formatOfferPrice(offers), realEstateFieldPrice(capeMayProperty || document))),
     rating: firstText(aggregateRating.ratingValue, primaryNode.ratingValue),
     facts: mergeTextValues(
-      realEstateFacts(realEstate),
+      [...realEstateFacts(realEstate), ...(capeMayProperty
+        ? [labeledValue(capeMayDetails, 'Maximum occupancy')].filter(Boolean).map((value) => `${value} guests`)
+        : [])],
       extractListingFacts(primaryNode, nestedAbout, pageText),
       16,
     ),
-    amenities: boldTrailListing
+    amenities: capeMayProperty
+      ? mergeTextValues(Array.from(capeMayProperty.querySelectorAll('.property-feature .has'))
+        .map((element) => cleanText(element.textContent || '')),
+      extractAmenities(primaryNode, nestedAbout, `${description} ${pageText}`), 24)
+      : boldTrailListing
       ? extractBoldTrailAmenities(document)
       : extractAmenities(primaryNode, nestedAbout, `${description} ${pageText}`),
     images,
@@ -228,6 +257,10 @@ export function isBoardWizardListingPageUrl(value: string): boolean {
 
 export function isBoardWizardZillowListingPageUrl(value: string): boolean {
   return safeHostname(value).includes('zillow.') && isStrongListingUrl(value);
+}
+
+export function boardWizardListingIsShortTermRental(extraction: BoardWizardListingExtraction): boolean {
+  return extraction.kind === 'vacation-rental' || isCapeMayRentalsPropertyUrl(extraction.sourceUrl);
 }
 
 /**
@@ -394,7 +427,7 @@ export function buildBoardWizardListingBatch(options: {
   const extraction = options.extraction;
   const listingIntent = normalizeBoardWizardListingIntent(options.listingIntent);
   const rental = listingIntent === 'rental' || (listingIntent === 'auto' && extraction.kind === 'vacation-rental');
-  const shortTermRental = rental && extraction.kind === 'vacation-rental';
+  const shortTermRental = rental && boardWizardListingIsShortTermRental(extraction);
   const furnishingsIncluded = boardWizardListingFurnishingsIncluded(extraction);
   const count = Math.max(1, Math.min(100, Math.round(options.count) || 1));
   const imageUrls = extraction.images.map((image) => image.url).slice(0, BOARD_WIZARD_SOURCE_GALLERY_LIMIT);
@@ -1276,6 +1309,22 @@ function extractListingImages(options: {
   return result;
 }
 
+function extractPropertyLightboxImages(
+  property: Element,
+  baseUrl: string,
+  listingName: string,
+): BoardWizardListingImage[] {
+  const images = Array.from(property.querySelectorAll('.property-images .images a[href]'))
+    .map((anchor, index) => ({
+      url: absoluteImageUrl(anchor.getAttribute('href') || '', baseUrl),
+      alt: firstText(anchor.querySelector('img')?.getAttribute('alt'), `${listingName} photo ${index + 1}`),
+      evidence: 'listing-gallery' as const,
+    }))
+    .filter((image) => /\.(?:jpe?g|png|webp|heic)(?:[?#]|$)/i.test(image.url)
+      && !NOISE_MEDIA.test(image.url));
+  return mergeListingImages(images, [], BOARD_WIZARD_SOURCE_GALLERY_LIMIT);
+}
+
 function imageValues(value: unknown): string[] {
   if (typeof value === 'string') return [value];
   if (Array.isArray(value)) return value.flatMap(imageValues);
@@ -1544,8 +1593,9 @@ function extractRealEstateDetails(
   about: JsonRecord,
   pageText: string,
   baseUrl: string,
+  detailScope: Document | Element = document,
 ): BoardWizardRealEstateDetails {
-  const pairs = extractListingLabelValues(document);
+  const pairs = extractListingLabelValues(detailScope);
   const fullBathrooms = firstText(
     labeledValue(pairs, 'Full Bathrooms', 'Full Baths'),
     primary.numberOfBathrooms,
@@ -1625,7 +1675,7 @@ function extractRealEstateDetails(
   };
 }
 
-function extractListingLabelValues(document: Document): ListingLabelValue[] {
+function extractListingLabelValues(document: Document | Element): ListingLabelValue[] {
   const pairs: ListingLabelValue[] = [];
   const add = (label: string, value: string): void => {
     const cleanLabel = cleanText(label).replace(/:$/, '');
@@ -1643,6 +1693,10 @@ function extractListingLabelValues(document: Document): ListingLabelValue[] {
     const labelElement = item.querySelector('.info-title');
     const valueElement = item.querySelector('.info-data');
     if (labelElement && valueElement) add(labelElement.textContent || '', valueElement.textContent || '');
+  }
+  for (const label of Array.from(document.querySelectorAll('.property-detail .detail-field-label'))) {
+    const value = label.nextElementSibling;
+    if (value?.matches('.detail-field-value')) add(label.textContent || '', value.textContent || '');
   }
   for (const row of Array.from(document.querySelectorAll('tr, [role="row"]'))) {
     const cells = Array.from(row.querySelectorAll(':scope > th, :scope > td, :scope > [role="cell"], :scope > [role="gridcell"]'));
@@ -1718,7 +1772,7 @@ function extractSectionText(document: Document, headingText: string): string {
   return '';
 }
 
-function realEstateFieldPrice(document: Document): string {
+function realEstateFieldPrice(document: Document | Element): string {
   return labeledValue(extractListingLabelValues(document), 'Price');
 }
 
@@ -1833,6 +1887,7 @@ function listingOverviewSubtitle(extraction: BoardWizardListingExtraction, kindL
 }
 
 function combinedBathroomCount(fullBathrooms: string, halfBathrooms: string): string {
+  if (!fullBathrooms && !halfBathrooms) return '';
   const full = Number(fullBathrooms);
   const half = Number(halfBathrooms);
   if (!Number.isFinite(full)) return '';
@@ -1947,6 +2002,7 @@ function formatAddress(value: unknown): string {
 }
 
 function listingKindFromUrl(value: string): BoardWizardListingKind | null {
+  if (isCapeMayRentalsPropertyUrl(value)) return 'real-estate';
   if (isCustomDomainRealEstateListingUrl(value)) return 'real-estate';
   const hostname = safeHostname(value);
   if (VACATION_HOSTS.test(hostname)) return 'vacation-rental';
@@ -1958,6 +2014,7 @@ function listingKindFromUrl(value: string): BoardWizardListingKind | null {
 function isStrongListingUrl(value: string): boolean {
   try {
     const url = new URL(value);
+    if (isCapeMayRentalsPropertyUrl(url.toString())) return true;
     if (isCustomDomainRealEstateListingUrl(url.toString())) return true;
     const kind = listingKindFromUrl(url.toString());
     if (!kind) return false;
@@ -1972,6 +2029,16 @@ function isStrongListingUrl(value: string): boolean {
     }
     if (/(?:^|\/)(?:search|vacation-rentals|category|browse|s\/homes)(?:\/|$)/i.test(url.pathname)) return false;
     return url.pathname.split('/').filter(Boolean).length >= 2;
+  } catch {
+    return false;
+  }
+}
+
+function isCapeMayRentalsPropertyUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return /^(?:www\.)?capemayrentals\.com$/i.test(url.hostname)
+      && /^\/frontier\/properties\/[a-z0-9-]+\/?$/i.test(url.pathname);
   } catch {
     return false;
   }

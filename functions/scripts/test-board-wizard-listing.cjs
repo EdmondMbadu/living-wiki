@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const {
   BOARD_WIZARD_SOURCE_GALLERY_LIMIT,
+  boardWizardListingIsShortTermRental,
   boardWizardListingFurnishingsIncluded,
   buildBoardWizardListingBatch,
   extractBoardWizardListing,
@@ -23,6 +24,67 @@ assert.equal(isBoardWizardZillowListingPageUrl('https://www.zillow.com/homedetai
 assert.equal(isBoardWizardZillowListingPageUrl('https://www.airbnb.com/rooms/1684310791539108474'), false);
 assert.equal(isLikelyBoardWizardRealEstateUrl('https://cmc.exprealty.com/property/26-261262-example'), true);
 assert.equal(isLikelyBoardWizardRealEstateUrl('https://www.airbnb.com/rooms/1684310791539108474'), false);
+const capeMayListingUrl = 'https://www.capemayrentals.com/frontier/properties/1512-new-york-avenue/';
+assert.equal(isBoardWizardListingPageUrl(capeMayListingUrl), true);
+assert.equal(isLikelyBoardWizardRealEstateUrl(capeMayListingUrl), true);
+assert.equal(isBoardWizardListingPageUrl('https://www.capemayrentals.com/frontier/properties/'), false);
+assert.equal(isBoardWizardListingPageUrl('https://www.capemayrentals.com/frontier/listings/house-large/'), false);
+assert.equal(isBoardWizardListingPageUrl('https://example.com/frontier/properties/1512-new-york-avenue/'), false);
+const capeMayHtml = `<!doctype html><html><head>
+  <title>1512 New York Avenue &#8212; Cape May Rentals</title>
+  <meta name="description" content="Generic vacation rentals site summary">
+  <meta property="og:image" content="https://i0.wp.com/www.capemayrentals.com/frontier/wp-content/uploads/photo-1.jpg">
+  <script type="application/ld+json">${JSON.stringify({
+    '@type': 'RealEstateListing', name: '1512 New York Avenue &#8212; Cape May Rentals',
+    description: 'Generic vacation rentals site summary',
+  })}</script>
+</head><body><article class="property">
+  <h1 class="property-title">1512 New York Avenue</h1>
+  <div class="property-images"><div class="images">
+    <a data-lightbox-gallery="property-1" href="https://i0.wp.com/www.capemayrentals.com/frontier/wp-content/uploads/photo-1.jpg?fit=1000%2C684"><img alt="" src="https://i0.wp.com/www.capemayrentals.com/frontier/wp-content/uploads/photo-1.jpg?resize=300%2C200"></a>
+    <a data-lightbox-gallery="property-1" href="https://i0.wp.com/www.capemayrentals.com/frontier/wp-content/uploads/photo-2.jpg?fit=1000%2C684"><img alt="" src="https://i0.wp.com/www.capemayrentals.com/frontier/wp-content/uploads/photo-2.jpg?resize=300%2C200"></a>
+    <a data-lightbox-gallery="property-1" href="https://i0.wp.com/www.capemayrentals.com/frontier/wp-content/uploads/photo-3.jpg?fit=1000%2C684"><img alt="" src="https://i0.wp.com/www.capemayrentals.com/frontier/wp-content/uploads/photo-3.jpg?resize=300%2C200"></a>
+  </div></div>
+  <div class="property-detail"><div class="property-detail-content"><div class="detail-field">
+    <span class="detail-field-label">Type</span><span class="detail-field-value">Accessible, House 5+ BR, Pet Friendly</span>
+    <span class="detail-field-label">Location</span><span class="detail-field-value">Cape May</span>
+    <span class="detail-field-label">Price</span><span class="detail-field-value">1000-14000 per nt/wk</span>
+    <span class="detail-field-label">Bedrooms</span><span class="detail-field-value">7</span>
+    <span class="detail-field-label">Bathrooms</span><span class="detail-field-value">5.5</span>
+    <span class="detail-field-label">Maximum occupancy</span><span class="detail-field-value">18</span>
+  </div></div></div>
+  <div class="property-desc"><div class="property-content">Cape Breeze sleeps up to 18 and is seven houses from the beach.</div></div>
+  <div class="property-feature"><div class="has">Full Kitchen</div><div class="has">Pet Friendly</div></div>
+</article><aside class="related"><a data-lightbox-gallery="other-property" href="https://www.capemayrentals.com/other-property.jpg"><img alt="Other property photo" src="https://www.capemayrentals.com/other-property.jpg"></a></aside></body></html>`;
+const capeMayListing = extractBoardWizardListing(capeMayListingUrl, capeMayListingUrl, capeMayHtml);
+assert.ok(capeMayListing, 'Cape May property detail pages should extract as listings');
+assert.equal(capeMayListing.listingName, '1512 New York Avenue');
+assert.equal(capeMayListing.address, '1512 New York Avenue, Cape May');
+assert.equal(capeMayListing.description, 'Cape Breeze sleeps up to 18 and is seven houses from the beach.');
+assert.equal(capeMayListing.price, '1000-14000 per nt/wk');
+assert.equal(capeMayListing.realEstate.propertyType, 'House 5+ BR');
+assert.equal(capeMayListing.realEstate.bedrooms, '7');
+assert.equal(capeMayListing.realEstate.bathrooms, '5.5');
+assert.ok(capeMayListing.facts.includes('18 guests'));
+assert.ok(capeMayListing.amenities.includes('Full Kitchen'));
+assert.equal(capeMayListing.images.length, 3, 'only the active property gallery should be retained');
+assert.ok(capeMayListing.images.every((image) => image.url.includes('/frontier/wp-content/uploads/')));
+assert.equal(boardWizardListingIsShortTermRental(capeMayListing), true);
+assert.equal(boardWizardListingPreview(capeMayListing, 'sale').kind, 'real-estate');
+assert.equal(boardWizardListingPreview(capeMayListing, 'rental').kind, 'rental');
+const capeMayRentalBatch = buildBoardWizardListingBatch({
+  extraction: capeMayListing, targetBoardTitle: '', count: 10, listingIntent: 'rental',
+});
+assert.ok(capeMayRentalBatch.cards.some((card) => card.title === 'Check availability & book'));
+assert.ok(capeMayRentalBatch.cards.every((card) => !/lease terms|application requirements/i.test(card.notes || '')));
+assert.equal(extractBoardWizardListing(capeMayListingUrl, capeMayListingUrl,
+  '<html><head><title>Missing property</title></head><body>Generic site shell</body></html>'), null,
+'a shell without the property detail must not be treated as a verified listing');
+const capeMayWithoutSchema = extractBoardWizardListing(capeMayListingUrl, capeMayListingUrl,
+  capeMayHtml.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, ''));
+assert.ok(capeMayWithoutSchema, 'the visible property page should work even if Yoast schema disappears');
+assert.equal(capeMayWithoutSchema.realEstate.bathrooms, '5.5');
+assert.equal(capeMayWithoutSchema.images.length, 3);
 const expAddressListingUrl = 'https://www.exprealty.com/las-vegas-nv-real-estate/sun-city-las-vegas/3140-darby-falls-dr';
 assert.equal(isBoardWizardListingPageUrl(expAddressListingUrl), true, 'new eXp address routes must be classified as individual listings');
 assert.equal(isBoardWizardListingPageUrl('https://www.exprealty.com/las-vegas-nv-real-estate/sun-city-las-vegas'), false, 'eXp area pages must not be classified as individual listings');
@@ -971,6 +1033,20 @@ const vacationRentalStory = buildBoardWizardListingMarketingBatchFromAnalyses({
 });
 assert.equal(vacationRentalStory.cards.at(-1).title, 'Check availability & book');
 assert.match(vacationRentalStory.cards.at(-1).notes, /cancellation terms.*house rules.*booking details/i);
+const capeMayRentalStory = buildBoardWizardListingMarketingBatchFromAnalyses({
+  extraction: capeMayListing,
+  targetBoardTitle: '',
+  count: 5,
+  narrationSecondsPerCard: 15,
+  style: 'warm',
+  listingIntent: 'rental',
+  analyses: capeMayListing.images.map((image, index) => ({
+    index, sceneType: index === 0 ? 'living' : index === 1 ? 'kitchen' : 'bedroom',
+    roomType: image.alt, features: [], qualityScore: 0.8, heroScore: 0.8, confidence: 0.8,
+  })),
+});
+assert.equal(capeMayRentalStory.cards.at(-1).title, 'Check availability & book');
+assert.match(capeMayRentalStory.cards.at(-1).notes, /cancellation terms.*house rules.*booking details/i);
 
 const expReaderMarkdown = `Title: 3721 Pacific Avenue, Wildwood, NJ, 08260
 
