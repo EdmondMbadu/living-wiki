@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { readFileSync } = require('node:fs');
 const { script } = require('../../tests/fixtures/london-eagles-tour.json');
+const coordinateScript = readFileSync(require('node:path').join(__dirname, '../../tests/fixtures/london-eagles-tour-with-coordinates.txt'), 'utf8');
 const { parseTourItinerary, tourItineraryInputError, TOUR_SOURCE_MAX_LENGTH } = require('../lib/board-wizard-tour-source');
 const { buildTourItineraryBatch } = require('../lib/board-wizard-tour-itinerary');
 const { finalizeBoardWizardCopy } = require('../lib/board-wizard-copy-quality');
@@ -47,6 +48,35 @@ test('Jim’s full nine-stop tour preserves every narration and separates direct
   }
 });
 
+test('authored London coordinates override hotel-biased place matches and keep the intentional final return', () => {
+  const source = parseTourItinerary(coordinateScript);
+  assert.equal(tourItineraryInputError(coordinateScript, source), '');
+  assert.equal(source.items.length, 9);
+  assert.deepEqual(source.items.map(stop => [stop.lat, stop.lng]), [
+    [51.51078, -0.07830], [51.51025, -0.07897], [51.50954, -0.07935],
+    [51.50803, -0.07872], [51.50731, -0.07675], [51.50689, -0.07492],
+    [51.50713, -0.07108], [51.50985, -0.07617], [51.51078, -0.07830],
+  ]);
+  assert.equal(source.items[3].address, 'Tower of London, Tower Hill, London EC3N 4AB, United Kingdom.');
+  assert.ok(!source.items[3].guideScript.includes('Latitude:'));
+  assert.equal(source.items[8].returnToIndex, 0);
+  const initial = buildTourItineraryBatch(source, 'walking-tour', options);
+  const hotelMatch = { ...initial, cards: initial.cards.map(card => ({ ...card,
+    placeId: 'hotel', googleMapsUrl: 'https://maps.google.com/hotel', imageUrl: 'https://example.com/hotel.jpg',
+    tour: { ...card.tour, lat: 51.5108822, lng: -0.0781026, address: 'DoubleTree hotel' },
+  })) };
+  const repaired = buildTourItineraryBatch(source, 'walking-tour', options, hotelMatch);
+  assert.deepEqual(repaired.cards.map(card => [card.tour.lat, card.tour.lng]), source.items.map(stop => [stop.lat, stop.lng]));
+  for (const index of [3, 4, 5]) {
+    assert.equal(repaired.cards[index].placeId, '');
+    assert.equal(repaired.cards[index].imageUrl, '');
+    assert.ok(repaired.cards[index].googleMapsUrl.includes(`${source.items[index].lat}%2C${source.items[index].lng}`));
+    assert.ok(repaired.cards[index].place_query.includes(source.items[index].address));
+  }
+  assert.equal(repaired.cards[8].placeId, repaired.cards[0].placeId);
+  assert.equal(repaired.cards[8].tour.legToNext, null);
+});
+
 test('place enrichment cannot rewrite the script, remove the return card, or move it to another hotel', () => {
   const source = parseTourItinerary(script);
   const batch = buildTourItineraryBatch(source, 'walking-tour', options);
@@ -85,6 +115,8 @@ test('invalid, oversized, and incomplete scripts fail explicitly instead of bein
     ['1. First\nNarration.\n2. Last', /narration for stop 2/],
     [`1. First\nNarration.\nNext: ${'x'.repeat(261)}\n2. Last\nClosing.`, /260/],
     ['1. First\nNarration.\n2. Last\nClosing.\nNext: Missing destination', /final stop/],
+    ['1. First\nLatitude: 51.51\nNarration.\n2. Last\nClosing.', /Latitude and Longitude pair/],
+    ['1. First\nLatitude:\nLongitude: -0.07\nNarration.\n2. Last\nClosing.', /Latitude and Longitude pair/],
   ];
   for (const [text, expected] of errors) assert.match(tourItineraryInputError(text), expected);
   assert.equal(parseTourItinerary('A historical walking tour around London.'), null);
@@ -155,5 +187,17 @@ test('the callable imports the complete tour, enriches all stops, and assembles 
     assert.equal(records.length, 1);
     assert.equal(records[0].generated_count, 9);
     assert.deepEqual(unexpected, []);
+    routes.length = 0;
+    const withCoordinates = await generateBoardWizardBatch.run({ auth: { uid: 'author' }, data: {
+      mode: 'walking-tour', prompt: coordinateScript, count: 9, countMode: 'fixed', mediaMode: 'images',
+      narrationSecondsPerCard: 15, tourOptions: options,
+    } });
+    assert.deepEqual(withCoordinates.cards.map(card => [card.tour.lat, card.tour.lng]),
+      parseTourItinerary(coordinateScript).items.map(stop => [stop.lat, stop.lng]));
+    assert.equal(routes.length, 8);
+    assert.deepEqual(routes[3].origin.location.latLng, { latitude: 51.50803, longitude: -0.07872 });
+    assert.deepEqual(routes[3].destination.location.latLng, { latitude: 51.50731, longitude: -0.07675 });
+    assert.deepEqual(routes[7].destination.location.latLng, { latitude: 51.51078, longitude: -0.0783 });
+    assert.ok(withCoordinates.cards.slice(1, 8).every(card => card.tour.lat !== withCoordinates.cards[0].tour.lat));
   } finally { mock.restoreAll(); }
 });

@@ -11,6 +11,10 @@ export type TourSourceStop = {
   arrivalInstruction: string;
   nextInstruction: string;
   durationText: string;
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  coordinateError: string;
   returnToIndex: number | null;
 };
 export type TourItinerarySource = {
@@ -42,10 +46,19 @@ export function parseTourItinerary(value: string): TourItinerarySource | null {
     const narration: string[] = [];
     const arrival: string[] = [];
     const next: string[] = [];
+    let address = '';
+    let latitude: string | null = null;
+    let longitude: string | null = null;
     let inNext = false;
     for (const raw of block.lines) {
       const line = clean(raw);
       if (!line) continue;
+      const addressLine = line.match(/^Address(?:\s+landmark)?\s*:\s*(.+)$/i);
+      if (addressLine) { address = addressLine[1]; continue; }
+      const latitudeLine = line.match(/^Latitude\s*:\s*(.*)$/i);
+      if (latitudeLine) { latitude = latitudeLine[1]; continue; }
+      const longitudeLine = line.match(/^Longitude\s*:\s*(.*)$/i);
+      if (longitudeLine) { longitude = longitudeLine[1]; continue; }
       const transition = line.match(/^Next\s*:\s*(.*)$/i);
       if (transition) { inNext = true; next.push(transition[1]); }
       else if (inNext) next.push(line);
@@ -54,11 +67,18 @@ export function parseTourItinerary(value: string): TourItinerarySource | null {
     }
     const nextInstruction = clean(next.join(' '));
     const guideScript = clean(narration.join(' '));
+    const lat = latitude !== null && /^[-+]?\d+(?:\.\d+)?$/.test(latitude) ? Number(latitude) : null;
+    const lng = longitude !== null && /^[-+]?\d+(?:\.\d+)?$/.test(longitude) ? Number(longitude) : null;
+    const coordinateError = latitude !== null || longitude !== null
+      ? lat === null || lng === null || Math.abs(lat) > 90 || Math.abs(lng) > 180
+        ? `Stop ${block.rank} needs a valid Latitude and Longitude pair.` : ''
+      : '';
     return {
       rank: block.rank, heading: block.heading, title: parts?.[1] ?? block.heading,
       subtitle: parts?.[2] ?? '', body: clean([...arrival, guideScript].join(' ')), guideScript,
       arrivalInstruction: clean(arrival.join(' ')), nextInstruction,
       durationText: nextInstruction.match(/\b\d+(?:\s*[–—-]\s*\d+)?\s*(?:minutes?|mins?|hours?|hrs?)\b/i)?.[0] ?? '',
+      address, lat, lng, coordinateError,
       returnToIndex: null,
     };
   });
@@ -86,6 +106,7 @@ export function tourItineraryInputError(value: string, source = parseTourItinera
   if (!source) return '';
   if (source.items.length > 100) return 'A tour can contain up to 100 stops. Split this itinerary into separate tours.';
   for (const [index, stop] of source.items.entries()) {
+    if (stop.coordinateError) return stop.coordinateError;
     if (stop.rank !== index + 1) return 'Number your tour stops consecutively from 1, without gaps or repeated numbers.';
     if (!stop.guideScript) return `Add the narration for stop ${stop.rank}, or describe the tour without numbered script headings to have it written for you.`;
     if (stop.title.length > 80 || stop.subtitle.length > 120) return `Shorten the heading for stop ${stop.rank} to 80 characters and its subtitle to 120 characters.`;

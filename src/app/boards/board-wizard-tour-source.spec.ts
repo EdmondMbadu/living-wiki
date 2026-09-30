@@ -18,6 +18,14 @@ describe('authored tour itinerary import', () => {
     expect(source.items[0].durationText).toBe('2–3 minutes');
   });
 
+  it('treats supplied coordinates as stop metadata instead of spoken narration', () => {
+    const source = parseTourItinerary('1. Hotel\nAddress: 7 Pepys Street, London\nLatitude: 51.51078\nLongitude: -0.07830\nWelcome.\nNext: Walk to the bridge.\n2. Bridge\nLatitude: 51.50689\nLongitude: -0.07492\nLook at the Thames.')!;
+    expect(source.items.map(stop => [stop.lat, stop.lng])).toEqual([[51.51078, -0.07830], [51.50689, -0.07492]]);
+    expect(source.items[0].address).toBe('7 Pepys Street, London');
+    expect(source.items[0].guideScript).toBe('Welcome.');
+    expect(tourItineraryInputError('1. Hotel\nLatitude: 51.5\nWelcome.\n2. Bridge\nLook around.')).toContain('Latitude and Longitude');
+  });
+
   it('updates the tour count from the source and retains oversized input for correction', () => {
     const c: any = Object.create(BoardsComponent.prototype);
     Object.assign(c, { isTourWizardMode: () => true, wizardPrompt: signal(''),

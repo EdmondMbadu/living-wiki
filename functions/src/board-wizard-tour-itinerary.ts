@@ -20,6 +20,18 @@ export function buildTourItineraryBatch(
   const cards = source.items.map((item, index): GeneratedBoardWizardCard => {
     const existing = enriched?.cards[index];
     const place = source.items[item.returnToIndex ?? index];
+    const authoredLat = item.lat ?? place.lat;
+    const authoredLng = item.lng ?? place.lng;
+    const resolvedLat = existing?.tour?.lat;
+    const resolvedLng = existing?.tour?.lng;
+    // Large landmarks can have a centroid away from the visitor entrance. A match
+    // farther than 250 m is still too far to identify this authored stop reliably.
+    const placeMismatch = authoredLat !== null && authoredLng !== null
+      && typeof resolvedLat === 'number' && typeof resolvedLng === 'number'
+      && Math.hypot(
+        (resolvedLat - authoredLat) * 111_320,
+        (resolvedLng - authoredLng) * 111_320 * Math.cos(authoredLat * Math.PI / 180),
+      ) > 250;
     const next = source.items[index + 1];
     const instruction = next ? item.nextInstruction || `${tourMode === 'walking' ? 'Walk' : 'Drive'} to ${next.title}.` : '';
     return {
@@ -28,13 +40,19 @@ export function buildTourItineraryBatch(
       type: 'place', scope: 'place', status: 'planned', rating: 4,
       tags: ['tour-stop', 'source-item', `stop-${item.rank}`],
       rank: item.rank, entity_name: place.title, entity_type: 'place', image_intent: 'place', media_kind: 'none',
-      image_context: start.title,
-      image_query: `${place.title} ${start.title} exterior`.slice(0, 180),
-      place_query: `${place.title} ${start.title}`.slice(0, 240),
+      imageUrl: placeMismatch ? '' : existing?.imageUrl,
+      placeId: placeMismatch ? '' : existing?.placeId,
+      googleMapsUrl: placeMismatch
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${authoredLat},${authoredLng}`)}`
+        : existing?.googleMapsUrl,
+      image_context: place.address || start.title,
+      image_query: `${place.title} ${place.address || start.title} exterior`.slice(0, 180),
+      place_query: (place.address ? `${place.title}, ${place.address}` : `${place.title} ${start.title}`).slice(0, 240),
       short_summary: (item.arrivalInstruction || item.subtitle || item.guideScript).slice(0, 160),
       tour: {
-        sequence: item.rank, lat: existing?.tour?.lat ?? null, lng: existing?.tour?.lng ?? null,
-        address: existing?.tour?.address ?? '', guideScript: item.guideScript,
+        sequence: item.rank, lat: authoredLat ?? existing?.tour?.lat ?? null,
+        lng: authoredLng ?? existing?.tour?.lng ?? null,
+        address: item.address || place.address || existing?.tour?.address || '', guideScript: item.guideScript,
         legToNext: next ? {
           distanceText: existing?.tour?.legToNext?.distanceText ?? '',
           durationText: item.durationText || existing?.tour?.legToNext?.durationText || '',
@@ -53,7 +71,8 @@ export function buildTourItineraryBatch(
     const card = cards[index];
     cards[index] = { ...card, placeId: origin.placeId, googleMapsUrl: origin.googleMapsUrl,
       imageUrl: origin.imageUrl || card.imageUrl,
-      tour: { ...card.tour!, lat: origin.tour!.lat, lng: origin.tour!.lng, address: origin.tour!.address } };
+      tour: { ...card.tour!, lat: item.lat ?? origin.tour!.lat, lng: item.lng ?? origin.tour!.lng,
+        address: item.address || origin.tour!.address } };
   }
   return {
     board: { ...enriched?.board, title,
