@@ -25787,6 +25787,14 @@
     "source": "Languages",
     "file": "src/app/language-switcher/language-switcher.html"
   },
+  "listingPhotoUploadRights": {
+    "source": "By uploading, you confirm you own these photos or have permission to upload, process, and publicly share them in your TalkThru without violating anyone’s rights or privacy.",
+    "file": "src/app/boards/listing-photo-source.html"
+  },
+  "listingPhotoUploadRightsTitle": {
+    "source": "Before you upload",
+    "file": "src/app/boards/listing-photo-source.html"
+  },
   "scanLiveCard": {
     "source": "Scan to open this card in Live view and hear its narration.",
     "file": "src/app/boards/card-share-dialog.html"

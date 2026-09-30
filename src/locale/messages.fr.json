@@ -6448,6 +6448,8 @@
     "authStorySignInTitle": "Bienvenue dans votre monde.",
     "duplicateBoardMenu": "Dupliquer le tableau",
     "languageSwitcher.menuLabel": "Langues",
+    "listingPhotoUploadRights": "En important des photos, vous confirmez en être propriétaire ou avoir l’autorisation de les importer, de les traiter et de les partager publiquement dans votre TalkThru, sans porter atteinte aux droits ou à la vie privée d’autrui.",
+    "listingPhotoUploadRightsTitle": "Avant d’importer vos photos",
     "scanLiveCard": "Scannez pour ouvrir cette carte en vue Live et écouter sa narration.",
     "scanTalkingCard": "Scannez pour ouvrir cette carte interactive en vue Live et démarrer une conversation.",
     "tapToHearCard": "Touchez pour écouter cette carte",

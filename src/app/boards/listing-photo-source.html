@@ -12,6 +12,13 @@
   </div>
   @if (source() === 'upload') {
     <p class="help" i18n>We’ll use your photos instead of the listing gallery. AI will identify the spaces and write their stories. Property facts still come from the listing URL.</p>
+    <div class="photo-rights-notice">
+      <span class="material-symbols-outlined photo-rights-notice__icon" aria-hidden="true">verified_user</span>
+      <div>
+        <strong i18n="@@listingPhotoUploadRightsTitle">Before you upload</strong>
+        <p i18n="@@listingPhotoUploadRights">By uploading, you confirm you own these photos or have permission to upload, process, and publicly share them in your TalkThru without violating anyone’s rights or privacy.</p>
+      </div>
+    </div>
     <label class="upload-button" [class.is-disabled]="loading() || photos().length >= 24">
       <span class="material-symbols-outlined" aria-hidden="true">upload</span>
       {{ photos().length ? templateText.message1 : templateText.message2 }}

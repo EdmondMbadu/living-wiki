@@ -6448,6 +6448,8 @@
     "authStorySignInTitle": "あなたの世界へ、おかえりなさい。",
     "duplicateBoardMenu": "ボードを複製",
     "languageSwitcher.menuLabel": "言語",
+    "listingPhotoUploadRights": "写真をアップロードすることで、写真を所有しているか、他者の権利やプライバシーを侵害せずにTalkThruでアップロード、処理、公開する許可を得ていることを確認します。",
+    "listingPhotoUploadRightsTitle": "アップロードする前に",
     "scanLiveCard": "スキャンすると、このカードがライブ表示で開き、ナレーションを聴けます。",
     "scanTalkingCard": "スキャンすると、このトーキングカードがライブ表示で開き、会話を始められます。",
     "tapToHearCard": "タップしてこのカードを聴く",
