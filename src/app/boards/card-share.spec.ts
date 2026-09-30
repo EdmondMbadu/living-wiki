@@ -1,4 +1,4 @@
-import { canShareCardPublicly, findCardPath, narratedLiveCard, publicCardUrl } from './card-share';
+import { canShareCardPublicly, directLiveCard, findCardPath, publicCardUrl } from './card-share';
 
 describe('card sharing', () => {
   it('builds a stable public link from IDs and encodes special characters', () => {
@@ -22,7 +22,7 @@ describe('card sharing', () => {
     expect(canShareCardPublicly('public', false, true)).toBeFalse();
   });
 
-  it('opens only a top-level narratable card in Live view', () => {
+  it('opens top-level narrated and talking cards in Live view', () => {
     const cards = [
       { id: 'narrated', title: 'Kitchen', notes: 'Welcome to the kitchen.' },
       { id: 'silent', title: '' },
@@ -30,10 +30,10 @@ describe('card sharing', () => {
       { id: 'hidden', title: 'Secret', authorOnly: true },
       { id: 'parent', title: 'Parent', relatedCards: [{ id: 'nested', title: 'Nested' }] },
     ];
-    expect(narratedLiveCard(cards, 'narrated')).toBe(cards[0]);
-    expect(narratedLiveCard(cards, 'silent')).toBeNull();
-    expect(narratedLiveCard(cards, 'talking')).toBeNull();
-    expect(narratedLiveCard(cards, 'hidden')).toBeNull();
-    expect(narratedLiveCard(cards, 'nested')).toBeNull();
+    expect(directLiveCard(cards, 'narrated')).toBe(cards[0]);
+    expect(directLiveCard(cards, 'silent')).toBeNull();
+    expect(directLiveCard(cards, 'talking')).toBe(cards[2]);
+    expect(directLiveCard(cards, 'hidden')).toBeNull();
+    expect(directLiveCard(cards, 'nested')).toBeNull();
   });
 });

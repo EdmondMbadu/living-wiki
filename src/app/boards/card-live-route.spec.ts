@@ -69,6 +69,22 @@ describe('shared card Live route', () => {
     expect(component.syncStackNarrationAfterFrameChange).toHaveBeenCalledWith({ autoAdvance: true, forceNarration: true });
   });
 
+  it('opens the talking card in Live view ready for the visitor to start a conversation', () => {
+    const component = harness('talking', [
+      { id: 'first', title: 'First' },
+      { id: 'talking', title: 'Ask me', conversation: { atlasId: 'agent' } },
+    ]);
+    component.isTalkingCard = (card: any) => !!card?.conversation?.atlasId;
+
+    component.syncRequestedCardRoute();
+
+    expect(component.stackDirectView()).toBeTrue();
+    expect(component.stackFrameIndex()).toBe(2);
+    expect(component.stackTourNarrationConsent()).toBeFalse();
+    expect(component.stackNarrationNeedsGesture()).toBeFalse();
+    expect(component.startStackPlayback).not.toHaveBeenCalled();
+  });
+
   it('leaves cards without Live narration in the focused card view', () => {
     const component = harness('silent', [{ id: 'silent', title: '' }]);
 

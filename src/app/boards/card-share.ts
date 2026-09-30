@@ -27,10 +27,10 @@ export function publicCardUrl(boardId: string, cardId: string): string {
   return `${publicBoardQrUrl(boardId)}?card=${encodeURIComponent(cardId)}`;
 }
 
-/** Only top-level cards with an actual Live voice script can open in Live view. */
-export function narratedLiveCard<T extends ShareableCard>(cards: readonly T[], cardId: string): T | null {
+/** Only top-level cards with narration or a conversation can open directly in Live view. */
+export function directLiveCard<T extends ShareableCard>(cards: readonly T[], cardId: string): T | null {
   const card = cards.find((candidate) => candidate.id === cardId);
-  return card && !card.authorOnly && !card.conversation?.atlasId && canonicalCardNarration(card).trim()
+  return card && !card.authorOnly && (card.conversation?.atlasId || canonicalCardNarration(card).trim())
     ? card
     : null;
 }

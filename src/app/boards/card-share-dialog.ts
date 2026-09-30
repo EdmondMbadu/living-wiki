@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, ViewChild, computed, input, output, signal } from '@angular/core';
 import { generateQrSvg, generateQrSvgDataUrl } from '../qr-code';
-import { canShareCardPublicly, findCardPath, narratedLiveCard, publicCardUrl, type ShareableBoard } from './card-share';
+import { canShareCardPublicly, directLiveCard, findCardPath, publicCardUrl, type ShareableBoard } from './card-share';
 import { trapCardDialogFocus } from './card-dialog-focus';
 
 @Component({
@@ -18,9 +18,10 @@ export class CardShareDialogComponent implements AfterViewInit, OnDestroy {
     return board ? findCardPath(board.cards, this.target().cardId) : null;
   });
   readonly title = computed(() => this.path()?.card.title || 'card');
+  readonly opensTalkingCard = computed(() => this.opensLive() && !!this.path()?.card.conversation?.atlasId);
   readonly opensLive = computed(() => {
     const board = this.board();
-    return !!board && !!narratedLiveCard(board.cards, this.target().cardId);
+    return !!board && !!directLiveCard(board.cards, this.target().cardId);
   });
   readonly allowed = computed(() => {
     const board = this.board();

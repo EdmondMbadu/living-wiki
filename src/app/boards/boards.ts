@@ -62,7 +62,7 @@ import { generateQrSvgDataUrl } from '../qr-code';
 import { publicBoardQrUrl } from '../board-qr-code';
 import { CardShareDialogComponent } from './card-share-dialog';
 import { CardFocusDialogComponent } from './card-focus-dialog';
-import { narratedLiveCard } from './card-share';
+import { directLiveCard } from './card-share';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 import { WorkspaceSidebarComponent } from '../workspace-sidebar/workspace-sidebar';
 import {
@@ -19058,7 +19058,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     if (!board || !this.boardRouteLoadState().complete) return;
 
-    const card = narratedLiveCard(board.cards, cardId);
+    const card = directLiveCard(board.cards, cardId);
     if (!card) {
       this.cardLiveRouteKey = '';
       this.stackNarrationNeedsGesture.set(false);
@@ -19081,6 +19081,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     this.stackFrameIndex.set(frameIndex);
     this.stackCardPhotoIndex.set(0);
+    if (this.isTalkingCard(card)) {
+      this.stackTourNarrationConsent.set(false);
+      this.stackNarrationNeedsGesture.set(false);
+      return;
+    }
     this.stackTourNarrationConsent.set(true);
     // A scanned QR link has no browser user gesture. Keep Play available until
     // audio really starts; tapping it unlocks the narrator on this same card.
