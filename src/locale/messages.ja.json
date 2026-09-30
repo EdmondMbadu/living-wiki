@@ -6449,6 +6449,7 @@
     "duplicateBoardMenu": "ボードを複製",
     "languageSwitcher.menuLabel": "言語",
     "scanLiveCard": "スキャンすると、このカードがライブ表示で開き、ナレーションを聴けます。",
+    "scanTalkingCard": "スキャンすると、このトーキングカードがライブ表示で開き、会話を始められます。",
     "tapToHearCard": "タップしてこのカードを聴く",
     "tourWizardEditHelp": "旅程はそのまま保持されます。各スポットを編集するか、元の原稿を更新してルートを変更できます。",
     "tourWizardEditSource": "元の旅程を編集",

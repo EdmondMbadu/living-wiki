@@ -6449,6 +6449,7 @@
     "duplicateBoardMenu": "Dupliquer le tableau",
     "languageSwitcher.menuLabel": "Langues",
     "scanLiveCard": "Scannez pour ouvrir cette carte en vue Live et écouter sa narration.",
+    "scanTalkingCard": "Scannez pour ouvrir cette carte interactive en vue Live et démarrer une conversation.",
     "tapToHearCard": "Touchez pour écouter cette carte",
     "tourWizardEditHelp": "Votre itinéraire est préservé. Modifiez chaque étape ou le texte original pour changer le parcours.",
     "tourWizardEditSource": "Modifier l’itinéraire original",

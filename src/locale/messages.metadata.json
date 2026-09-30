@@ -25791,6 +25791,10 @@
     "source": "Scan to open this card in Live view and hear its narration.",
     "file": "src/app/boards/card-share-dialog.html"
   },
+  "scanTalkingCard": {
+    "source": "Scan to open this Talking Card in Live view and start a conversation.",
+    "file": "src/app/boards/card-share-dialog.html"
+  },
   "tapToHearCard": {
     "source": "Tap to hear this card",
     "file": "src/app/boards/boards.html"
