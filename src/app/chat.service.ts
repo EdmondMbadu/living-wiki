@@ -616,6 +616,7 @@ export class ChatService {
   }
 
   async createElevenLabsVoiceSession(options: {
+    experience?: 'talking-card';
     boardId?: string | null;
     atlasId?: string | null;
     atlasName?: string | null;
@@ -633,6 +634,7 @@ export class ChatService {
 
     const createVoiceSession = httpsCallable<
       {
+        experience?: 'talking-card';
         boardId?: string | null;
         atlasId?: string | null;
         atlasName?: string | null;
@@ -648,6 +650,7 @@ export class ChatService {
     >(this.functions, 'createElevenLabsVoiceSession');
 
     const { data } = await createVoiceSession({
+      experience: options.experience,
       boardId: options.boardId ?? null,
       atlasId: options.atlasId ?? null,
       atlasName: options.atlasName ?? null,

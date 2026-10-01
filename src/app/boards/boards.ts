@@ -109,6 +109,7 @@ import {
   type BoardTranslationLanguage,
   type BoardTranslationResult,
 } from './board-translation';
+import { browserNarrationVoice, narrationUnavailableNotice } from './narration-voice';
 import { cardsForPublishedExperience, cardsVisibleToBoardViewer } from './board-card-visibility';
 import {
   BOARD_WIZARD_PASTE_MAX_LENGTH,
@@ -19650,10 +19651,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     if (!audioUrl) {
-      this.tourAudioNotice.set(null);
       if (this.startStackBrowserNarration(frame, text, token, autoAdvance, startedAt, frameKey)) {
         return;
       }
+      this.tourAudioNotice.set(narrationUnavailableNotice(narrationLanguage));
       this.stackActiveFrameDurationMs.set(this.stackFrameDurationMs);
       if (autoAdvance && this.stackPlaying()) {
         this.scheduleStackFrameAdvance(this.stackFrameDurationMs, token);
@@ -19690,12 +19691,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         return;
       }
       this.stopTourSpeech();
-      this.tourAudioNotice.set(null);
       if (this.startStackBrowserNarration(frame, text, token, autoAdvance, startedAt)) {
         return;
       }
+      this.tourAudioNotice.set(narrationUnavailableNotice(narrationLanguage));
       this.stackActiveFrameDurationMs.set(this.stackFrameDurationMs);
-      this.tourAudioNotice.set('The narration could not play this part of the tour. Continuing.');
       if (autoAdvance && this.stackPlaying()) {
         this.scheduleStackFrameAdvance(this.stackFrameDurationMs, token);
       }
@@ -19740,11 +19740,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
     const utterance = new SpeechSynthesisUtterance(text.slice(0, 3600));
     const language = ({ en: 'en-US', fr: 'fr-FR', ja: 'ja-JP', pt: 'pt-BR' } as const)[this.boardSpeechLanguage()];
-    const languageRoot = language.split('-')[0]?.toLowerCase();
     const voices = window.speechSynthesis.getVoices();
-    utterance.voice = voices.find((voice) => voice.lang.toLowerCase() === language.toLowerCase())
-      ?? voices.find((voice) => voice.lang.toLowerCase().startsWith(`${languageRoot}-`))
-      ?? null;
+    utterance.voice = browserNarrationVoice(voices, this.boardSpeechLanguage());
+    if (this.boardSpeechLanguage() !== 'en' && !utterance.voice) return false;
     utterance.lang = utterance.voice?.lang || language;
     utterance.rate = 0.96;
     utterance.pitch = 1;

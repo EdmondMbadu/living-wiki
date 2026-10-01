@@ -360,6 +360,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       } as const;
       const [session, client] = await Promise.all([
         this.chatService.createElevenLabsVoiceSession({
+          experience: 'talking-card',
           boardId: this.boardId(),
           atlasId: atlas.id,
           atlasName: atlas.name,
@@ -459,7 +460,16 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       this.stopVoiceMeter();
       this.voiceStatus.set('error');
       this.voiceMode.set(null);
-      this.errorMessage.set(error instanceof Error ? error.message : $localize`Voice mode could not start.`);
+      const unavailableByLanguage = {
+        fr: 'La conversation vocale en français n’est pas encore disponible. Vous pouvez toujours écrire votre question.',
+        ja: '日本語の音声会話はまだ利用できません。質問を入力して続けられます。',
+        pt: 'A conversa por voz em português ainda não está disponível. Você pode digitar sua pergunta.',
+      } as const;
+      const language = this.contentLanguage();
+      const errorCode = error && typeof error === 'object' && 'code' in error ? error.code : null;
+      this.errorMessage.set(errorCode === 'functions/failed-precondition' && language !== 'en'
+        ? unavailableByLanguage[language]
+        : error instanceof Error ? error.message : $localize`Voice mode could not start.`);
     }
   }
 
