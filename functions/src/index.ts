@@ -31,7 +31,7 @@ import sgMail from '@sendgrid/mail';
 import Stripe from 'stripe';
 import stackNarratorVoiceCatalog from './stack-narrator-voices.json';
 import { selectAtlasRealtimeVoice } from './atlas-realtime-voice';
-import { voiceMatchesNativeLocale } from './native-voice';
+import { selectNativeVoice } from './native-voice';
 import { agentNativeLanguageReadiness } from './agent-language';
 import {
   buildAtlasIdentityInstruction,
@@ -17092,6 +17092,8 @@ async function resolveElevenLabsVoiceForPreference(
   preference: ElevenLabsVoicePreference,
   cacheKey = elevenLabsVoicePreferenceCacheKey(preference),
   requiredNativeLanguage?: BoardTranslationLanguage,
+  preferredVoiceId?: string,
+  requiredModelId?: string,
 ): Promise<ElevenLabsResolvedVoice | null> {
   if (!preference.languageCode && !preference.language && !preference.country) {
     return null;
@@ -17109,16 +17111,7 @@ async function resolveElevenLabsVoiceForPreference(
   }
 
   const searchStartedAt = Date.now();
-  const nativeSearchTerms = requiredNativeLanguage
-    ? [
-        elevenLabsLanguageSearchName(preference.languageCode, preference.language),
-        ...elevenLabsAccentSearchTerms(preference.country, preference.languageCode),
-        `${preference.language ?? ''} ${preference.country ?? ''}`.trim(),
-      ]
-    : [];
-  const searchTerms = Array.from(new Set((requiredNativeLanguage
-    ? nativeSearchTerms
-    : buildElevenLabsVoiceSearchTerms(preference)).filter(Boolean))).slice(0, requiredNativeLanguage ? 5 : 4);
+  const searchTerms = buildElevenLabsVoiceSearchTerms(preference).slice(0, 4);
   const candidates = new Map<string, ElevenLabsVoiceRecord>();
   const collectVoices = (voices: ElevenLabsVoiceRecord[]): void => {
     for (const voice of voices) {
@@ -17128,11 +17121,10 @@ async function resolveElevenLabsVoiceForPreference(
   };
 
   if (requiredNativeLanguage) {
-    const results = await Promise.all([
-      fetchElevenLabsVoices(apiKey, '', elevenLabsVoiceSearchDeadlineMs, requiredNativeLanguage),
-      ...searchTerms.map((term) => fetchElevenLabsVoices(apiKey, term, elevenLabsVoiceSearchDeadlineMs)),
-    ]);
-    results.forEach(collectVoices);
+    // The v2 language filter and text search use the voice's primary labels.
+    // Many account voices are labelled English but have verified Portuguese,
+    // French, or Japanese samples, so enumerate the account instead.
+    collectVoices(await fetchElevenLabsAvailableVoices(apiKey, elevenLabsVoiceSearchDeadlineMs));
   } else {
     for (const term of searchTerms) {
       if (Date.now() - searchStartedAt > elevenLabsVoiceSearchDeadlineMs) {
@@ -17151,9 +17143,30 @@ async function resolveElevenLabsVoiceForPreference(
     }
   }
 
+  if (requiredNativeLanguage && requiredNativeLanguage !== 'en') {
+    const selected = selectNativeVoice(
+      [...candidates.values()], requiredNativeLanguage, requiredModelId, preferredVoiceId,
+    );
+    const selectedId = selected ? textValue(selected.voice_id, 120) : null;
+    const result = selectedId ? {
+      voiceId: selectedId,
+      name: textValue(selected?.name, 120) ?? 'ElevenLabs voice',
+      accent: preference.accent,
+      score: 100,
+    } : null;
+    logger.info('Resolved native ElevenLabs voice from account inventory.', {
+      language: requiredNativeLanguage,
+      modelId: requiredModelId ?? null,
+      candidateCount: candidates.size,
+      selectedVoiceId: selectedId,
+      elapsedMs: Date.now() - searchStartedAt,
+    });
+    cacheElevenLabsVoice(cacheKey, result);
+    return result;
+  }
+
   let best: ElevenLabsResolvedVoice | null = null;
   for (const voice of candidates.values()) {
-    if (requiredNativeLanguage && !voiceMatchesNativeLocale(voice, requiredNativeLanguage)) continue;
     const scored = scoreElevenLabsVoice(voice, preference);
     if (!scored) {
       continue;
@@ -17277,6 +17290,35 @@ async function fetchElevenLabsVoices(apiKey: string, search: string, timeoutMs: 
 
   const data = await response.json().catch(() => null) as { voices?: unknown } | null;
   return Array.isArray(data?.voices) ? data.voices as ElevenLabsVoiceRecord[] : [];
+}
+
+async function fetchElevenLabsAvailableVoices(apiKey: string, timeoutMs: number): Promise<ElevenLabsVoiceRecord[]> {
+  const deadline = Date.now() + timeoutMs;
+  const voices: ElevenLabsVoiceRecord[] = [];
+  let nextPageToken: string | null = null;
+  for (let page = 0; page < 20; page += 1) {
+    const remainingMs = deadline - Date.now();
+    if (remainingMs <= 0) break;
+    const params = new URLSearchParams({ page_size: '100', include_total_count: 'false' });
+    if (nextPageToken) params.set('next_page_token', nextPageToken);
+    try {
+      const response = await fetchWithTimeout(`https://api.elevenlabs.io/v2/voices?${params}`, {
+        headers: { 'xi-api-key': apiKey },
+      }, remainingMs);
+      if (!response.ok) {
+        logger.warn('ElevenLabs account voice listing failed.', { status: response.status, page });
+        break;
+      }
+      const data = await response.json() as { voices?: unknown; has_more?: unknown; next_page_token?: unknown };
+      if (Array.isArray(data.voices)) voices.push(...data.voices as ElevenLabsVoiceRecord[]);
+      nextPageToken = typeof data.next_page_token === 'string' && data.next_page_token ? data.next_page_token : null;
+      if (data.has_more !== true || !nextPageToken) break;
+    } catch (error) {
+      logger.warn('ElevenLabs account voice listing failed.', { page, error: error instanceof Error ? error.message : String(error) });
+      break;
+    }
+  }
+  return voices;
 }
 
 function scoreElevenLabsVoice(
@@ -22291,7 +22333,12 @@ export const synthesizeChatAnswerSpeech = onCall(
       } as const;
       try {
         const matchingVoice = await resolveElevenLabsVoiceForPreference(
-          apiKey, preference[requestedContentLanguage], `native-narration:${requestedContentLanguage}`, requestedContentLanguage,
+          apiKey,
+          preference[requestedContentLanguage],
+          `native-narration:${requestedContentLanguage}:${primaryVoiceId}`,
+          requestedContentLanguage,
+          primaryVoiceId,
+          tourGuideSpeechModel,
         );
         if (!matchingVoice) throw new HttpsError('failed-precondition', `No verified native ${preference[requestedContentLanguage].language} narrator is available in the ElevenLabs account.`);
         primaryVoiceId = matchingVoice.voiceId;

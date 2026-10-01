@@ -14,7 +14,7 @@ export function agentNativeLanguageReadiness(config: unknown, language: Exclude<
   const conversation = record(agent['conversation_config']);
   const defaultAgent = record(conversation['agent']);
   const presets = record(conversation['language_presets']);
-  const overrides = record(record(agent['platform_settings'])['overrides']);
+  const overrides = record(record(record(agent['platform_settings'])['overrides'])['conversation_config_override']);
   return {
     supported: defaultAgent['language'] === language || Object.prototype.hasOwnProperty.call(presets, language),
     languageOverride: record(overrides['agent'])['language'] === true,

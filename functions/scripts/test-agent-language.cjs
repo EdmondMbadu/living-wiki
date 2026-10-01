@@ -3,7 +3,7 @@ const { agentNativeLanguageReadiness } = require('../lib/agent-language.js');
 
 const configured = {
   conversation_config: { agent: { language: 'en' }, language_presets: { pt: {}, fr: {}, ja: {} } },
-  platform_settings: { overrides: { agent: { language: true }, tts: { voice_id: true } } },
+  platform_settings: { overrides: { conversation_config_override: { agent: { language: true }, tts: { voice_id: true } } } },
 };
 assert.deepEqual(agentNativeLanguageReadiness(configured, 'pt'), {
   supported: true, languageOverride: true, voiceOverride: true,
