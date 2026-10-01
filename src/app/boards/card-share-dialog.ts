@@ -10,6 +10,7 @@ import { trapCardDialogFocus } from './card-dialog-focus';
 export class CardShareDialogComponent implements AfterViewInit, OnDestroy {
   readonly boards = input.required<readonly ShareableBoard[]>();
   readonly target = input.required<{ boardId: string; cardId: string }>();
+  readonly contentLanguage = input<'en' | 'fr' | 'ja' | 'pt' | null>(null);
   readonly closed = output<void>();
   readonly feedback = signal<string | null>(null);
   readonly board = computed(() => this.boards().find((board) => board.id === this.target().boardId) ?? null);
@@ -28,7 +29,8 @@ export class CardShareDialogComponent implements AfterViewInit, OnDestroy {
     const path = this.path();
     return !!board && !!path && canShareCardPublicly(board.visibility, board.teamDraft, path.authorOnly);
   });
-  readonly url = computed(() => this.allowed() ? publicCardUrl(this.target().boardId, this.target().cardId) : '');
+  readonly url = computed(() => this.allowed()
+    ? publicCardUrl(this.target().boardId, this.target().cardId, this.contentLanguage()) : '');
   readonly qrImage = computed(() => this.url() ? generateQrSvgDataUrl(this.url()) : '');
   @ViewChild('closeButton') private closeButton?: ElementRef<HTMLButtonElement>;
 

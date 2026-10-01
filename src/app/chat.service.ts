@@ -95,6 +95,7 @@ export type ElevenLabsVoiceSessionResponse = {
   timings?: Record<string, number>;
   voiceOverrideEnabled?: boolean | null;
   firstMessageOverrideEnabled?: boolean | null;
+  languageOverrideEnabled?: boolean | null;
   voiceId?: string | null;
   voiceName?: string | null;
   voiceAccent?: string | null;

@@ -33,6 +33,9 @@ describe('Talking Card model', () => {
   it('uses an accessible default call to action', () => {
     expect(talkingCardCtaLabel(null)).toBe('Talk to me');
     expect(talkingCardCtaLabel({ version: 1, provider: 'atlas', atlasId: 'a', openingMessage: '' })).toBe('Talk to me');
+    expect(talkingCardCtaLabel(null, 'pt')).toBe('Fale comigo');
+    expect(talkingCardCtaLabel(null, 'fr')).toBe('Parlez-moi');
+    expect(talkingCardCtaLabel(null, 'ja')).toBe('話しかける');
   });
 
   it('turns the avatar title into an unambiguous question invitation', () => {
@@ -40,6 +43,7 @@ describe('Talking Card model', () => {
     expect(talkingCardQuestionLabel('Ask Edmond')).toBe('Ask Edmond a question');
     expect(talkingCardQuestionLabel('Ask Jenny any questions')).toBe('Ask Jenny a question');
     expect(talkingCardQuestionLabel('')).toBe('Ask the virtual agent a question');
+    expect(talkingCardQuestionLabel('Ask Jenny', 'pt')).toBe('Faça uma pergunta ao agente virtual');
   });
 
   it('normalizes scheduling and additional links while rejecting unsafe URLs', () => {

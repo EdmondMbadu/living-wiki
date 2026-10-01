@@ -43,5 +43,14 @@ assert.equal(buildStoredTourHandoffFallback(cards[0], cards[1], 'walking'), expe
 assert.equal(effectiveStoredTourHandoffText(cards[0], cards[1], 'walking'), expected);
 assert.ok(allowedStoredTourHandoffTexts(board).has(expected));
 assert.ok(!allowedStoredTourHandoffTexts(board).has('Read an unrelated arbitrary message.'));
+for (const [language, opening] of [
+  ['fr', 'Prochaine étape :'],
+  ['ja', '次の立ち寄り先：'],
+  ['pt', 'Próxima parada:'],
+]) {
+  const localized = buildStoredTourHandoffFallback(cards[0], cards[1], 'walking', language);
+  assert.ok(localized.startsWith(opening));
+  assert.ok(allowedStoredTourHandoffTexts(board, language).has(localized));
+}
 
 console.log('Tour handoff checks passed.');

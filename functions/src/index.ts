@@ -80,6 +80,8 @@ import {
 import { createYouTubeEmbedVerifier, type YouTubeEmbedVerifier } from './youtube-embed-verifier';
 import { extractYouTubeWebSearchResults } from './youtube-web-search';
 import {
+  BOARD_TRANSLATION_SCHEMA_VERSION,
+  boardTranslationSegmentsComplete,
   extractBoardTranslationSource,
   isBoardTranslationLanguage,
   type BoardTranslationLanguage,
@@ -330,6 +332,9 @@ const elevenLabsTtsVoiceOverridesEnabled = defineString('ELEVENLABS_TTS_VOICE_OV
   default: 'false',
 });
 const elevenLabsFirstMessageOverridesEnabled = defineString('ELEVENLABS_FIRST_MESSAGE_OVERRIDES_ENABLED', {
+  default: 'false',
+});
+const elevenLabsLanguageOverridesEnabled = defineString('ELEVENLABS_LANGUAGE_OVERRIDES_ENABLED', {
   default: 'false',
 });
 export const googlePlacesApiKey = defineSecret('GOOGLE_PLACES_API_KEY');
@@ -7495,6 +7500,8 @@ export const translateBoard = onCall(
         targetLanguage,
         sourceLanguage: source.sourceLanguage,
         fingerprint: source.fingerprint,
+        schemaVersion: BOARD_TRANSLATION_SCHEMA_VERSION,
+        expectedSegmentCount: 0,
         segments: source.segments,
         cached: true,
         changed: false,
@@ -7509,12 +7516,14 @@ export const translateBoard = onCall(
     const cachedData = cached.data() as Record<string, unknown> | undefined;
     if (cached.exists
       && cachedData?.['status'] === 'ready'
-      && cachedData['fingerprint'] === source.fingerprint) {
+      && cachedData['fingerprint'] === source.fingerprint
+      && boardTranslationSegmentsComplete(source.segments, cachedData['segments'])) {
       return boardTranslationCallableResponse(
         boardId,
         targetLanguage,
         source.sourceLanguage,
         source.fingerprint,
+        source.segments.length,
         cachedData['segments'],
         true,
         cachedData['changed'] === true,
@@ -7527,7 +7536,8 @@ export const translateBoard = onCall(
     const acquired = await db.runTransaction(async (transaction) => {
       const snapshot = await transaction.get(cacheRef);
       const value = snapshot.data() as Record<string, unknown> | undefined;
-      if (value?.['status'] === 'ready' && value['fingerprint'] === source.fingerprint) {
+      if (value?.['status'] === 'ready' && value['fingerprint'] === source.fingerprint
+        && boardTranslationSegmentsComplete(source.segments, value['segments'])) {
         return 'ready';
       }
       const existingLease = typeof value?.['lease_expires_at_ms'] === 'number'
@@ -7558,6 +7568,7 @@ export const translateBoard = onCall(
         targetLanguage,
         source.sourceLanguage,
         source.fingerprint,
+        source.segments.length,
         ready.data()?.['segments'],
         true,
         ready.data()?.['changed'] === true,
@@ -7568,12 +7579,14 @@ export const translateBoard = onCall(
         await new Promise((resolve) => setTimeout(resolve, 1_200));
         const ready = await cacheRef.get();
         const value = ready.data() as Record<string, unknown> | undefined;
-        if (value?.['status'] === 'ready' && value['fingerprint'] === source.fingerprint) {
+        if (value?.['status'] === 'ready' && value['fingerprint'] === source.fingerprint
+          && boardTranslationSegmentsComplete(source.segments, value['segments'])) {
           return boardTranslationCallableResponse(
             boardId,
             targetLanguage,
             source.sourceLanguage,
             source.fingerprint,
+            source.segments.length,
             value['segments'],
             true,
             value['changed'] === true,
@@ -7611,6 +7624,7 @@ export const translateBoard = onCall(
         targetLanguage,
         source.sourceLanguage,
         source.fingerprint,
+        source.segments.length,
         segments,
         false,
         changed,
@@ -7673,6 +7687,7 @@ function boardTranslationCallableResponse(
   targetLanguage: BoardTranslationLanguage,
   sourceLanguage: BoardTranslationLanguage,
   fingerprint: string,
+  expectedSegmentCount: number,
   value: unknown,
   cached: boolean,
   changed: boolean,
@@ -7681,6 +7696,8 @@ function boardTranslationCallableResponse(
   targetLanguage: BoardTranslationLanguage;
   sourceLanguage: BoardTranslationLanguage;
   fingerprint: string;
+  schemaVersion: number;
+  expectedSegmentCount: number;
   segments: BoardTranslationSegment[];
   cached: boolean;
   changed: boolean;
@@ -7688,12 +7705,19 @@ function boardTranslationCallableResponse(
   const segments = Array.isArray(value)
     ? value.flatMap((item) => {
         const record = item && typeof item === 'object' ? item as Record<string, unknown> : {};
-        const key = stringOrEmpty(record['key']).slice(0, 180);
+        const key = stringOrEmpty(record['key']).slice(0, 256);
         const text = stringOrEmpty(record['text']).slice(0, 16_000);
         return key && text ? [{ key, text }] : [];
       })
     : [];
-  return { boardId, targetLanguage, sourceLanguage, fingerprint, segments, cached, changed };
+  if (segments.length !== expectedSegmentCount) {
+    throw new HttpsError('unavailable', 'This board translation is incomplete. Please try again.');
+  }
+  return {
+    boardId, targetLanguage, sourceLanguage, fingerprint,
+    schemaVersion: BOARD_TRANSLATION_SCHEMA_VERSION,
+    expectedSegmentCount, segments, cached, changed,
+  };
 }
 
 export const shortenStackScript = onCall(
@@ -16838,6 +16862,7 @@ export const createElevenLabsVoiceSession = onCall(
     const voicePreference = normalizeElevenLabsVoicePreference(request.data);
     const voiceOverrideEnabled = isTruthyParam(elevenLabsTtsVoiceOverridesEnabled.value());
     const firstMessageOverrideEnabled = elevenLabsFirstMessageOverridesEnabled.value().trim().toLowerCase() !== 'false';
+    const languageOverrideEnabled = isTruthyParam(elevenLabsLanguageOverridesEnabled.value());
     const atlasVoice = listingVoice
       ? { provider_voice_id: listingVoice.providerVoiceId || null, name: listingVoice.config['voice_name'] || 'Team listing voice', source: 'team' }
       : atlasId ? await loadAtlasSpeechVoiceConfig(atlasId) : null;
@@ -16921,6 +16946,7 @@ export const createElevenLabsVoiceSession = onCall(
       anonymousVisitorIdPresent: Boolean(anonymousVisitorId),
       voiceOverrideEnabled,
       firstMessageOverrideEnabled,
+      languageOverrideEnabled,
       selectedVoiceId: selectedVoice?.voiceId ?? null,
       selectedVoiceName: selectedVoice?.name ?? null,
       selectedVoiceSource: selectedVoice?.source ?? 'agent-default',
@@ -16955,6 +16981,7 @@ export const createElevenLabsVoiceSession = onCall(
       userId: visitorId,
       voiceOverrideEnabled,
       firstMessageOverrideEnabled,
+      languageOverrideEnabled,
       timings,
       voiceId: selectedVoice?.voiceId ?? null,
       voiceName: selectedVoice?.name ?? null,
@@ -21349,8 +21376,13 @@ function personalNarrationTextsFromCard(value: unknown): Set<string> {
     if (normalized) allowed.add(normalized);
   };
   add(card['notes']);
+  add(card['stackNarration']);
   add(card['shortSummary']);
   add(card['subtitle']);
+  add(card['title']);
+  if (typeof card['title'] === 'string' && card['title'].trim()) {
+    add(`${card['title'].trim()}.`);
+  }
 
   const tour = card['tour'] && typeof card['tour'] === 'object'
     ? card['tour'] as Record<string, unknown>
@@ -21364,12 +21396,16 @@ function personalNarrationTextsFromCard(value: unknown): Set<string> {
 
   const title = String(card['title'] ?? '').trim();
   const detail = String(card['shortSummary'] ?? card['subtitle'] ?? card['notes'] ?? '').trim();
-  const firstSentence = detail.match(/^(.{1,320}?[.!?])(?:\s|$)/)?.[1] ?? detail.slice(0, 280);
+  const firstSentence = detail.match(/^(.{1,320}?[.!?。！？])(?:\s|$)/u)?.[1] ?? detail.slice(0, 280);
   add(`${title}. ${firstSentence.trim()}`.trim().slice(0, 420));
   return allowed;
 }
 
-function boardAllowsNarrationText(board: Record<string, unknown>, text: string): boolean {
+function boardAllowsNarrationText(
+  board: Record<string, unknown>,
+  text: string,
+  language: BoardTranslationLanguage = 'en',
+): boolean {
   const requestedText = normalizeNarrationAuthorizationText(text);
   if (!requestedText) return false;
   if (normalizeNarrationAuthorizationText(board['trailerVideoScript']) === requestedText) return true;
@@ -21377,9 +21413,55 @@ function boardAllowsNarrationText(board: Record<string, unknown>, text: string):
   if (board['cards'].some((card) => personalNarrationTextsFromCard(card).has(requestedText))) {
     return true;
   }
-  return Array.from(allowedStoredTourHandoffTexts(board)).some(
+  return Array.from(allowedStoredTourHandoffTexts(board, language)).some(
     (handoff) => normalizeNarrationAuthorizationText(handoff) === requestedText,
   );
+}
+
+async function boardAllowsCachedTranslatedNarration(
+  boardId: string,
+  board: Record<string, unknown>,
+  language: BoardTranslationLanguage,
+  text: string,
+  cardId: string,
+): Promise<boolean> {
+  const cards = Array.isArray(board['cards']) ? board['cards'] as Array<Record<string, unknown>> : [];
+  if (cardId && !cards.some((card) => card['id'] === cardId && card['authorOnly'] !== true)) return false;
+  let source;
+  try {
+    source = extractBoardTranslationSource(board);
+  } catch {
+    return false;
+  }
+  const cacheId = createHash('sha256').update(`${boardId}:${language}`).digest('hex');
+  const cached = (await db.collection('board_translations').doc(cacheId).get()).data();
+  if (cached?.['status'] !== 'ready' || cached['fingerprint'] !== source.fingerprint
+    || !boardTranslationSegmentsComplete(source.segments, cached['segments'])) return false;
+
+  const translated = structuredClone(board);
+  const translatedCards = Array.isArray(translated['cards'])
+    ? translated['cards'] as Array<Record<string, unknown>> : [];
+  for (const segment of cached['segments'] as BoardTranslationSegment[]) {
+    const parts = segment.key.split('.');
+    if (parts[0] !== 'cardsById') continue;
+    const card = translatedCards.find((candidate) => candidate['id'] === parts[1]);
+    if (!card || card['authorOnly'] === true) continue;
+    let target: Record<string, unknown> = card;
+    for (const part of parts.slice(2, -1)) {
+      const next = target[part];
+      if (!next || typeof next !== 'object' || Array.isArray(next)) {
+        target = {};
+        break;
+      }
+      target = next as Record<string, unknown>;
+    }
+    const field = parts.at(-1)!;
+    if (typeof target[field] === 'string'
+      || field === 'shortSummary' && target[field] === undefined && typeof target['subtitle'] === 'string') {
+      target[field] = segment.text;
+    }
+  }
+  return boardAllowsNarrationText(translated, text, language);
 }
 
 export const getPersonalNarratorVoice = onCall(
@@ -21999,6 +22081,12 @@ export const synthesizeChatAnswerSpeech = onCall(
           ? 'full'
           : 'recap';
     const requestedNarratorId = String(request.data?.narratorVoiceId ?? '').trim();
+    const requestedContentLanguage = request.data?.contentLanguage === undefined
+      ? 'en'
+      : request.data?.contentLanguage;
+    if (!isBoardTranslationLanguage(requestedContentLanguage)) {
+      throw new HttpsError('invalid-argument', 'Choose a supported narration language.');
+    }
     const requestedAtlasId = normalizeAtlasId(request.data?.atlasId);
     const boardId = String(request.data?.boardId ?? '').trim();
     const requestedCardId = String(request.data?.cardId ?? '').trim().slice(0, 160);
@@ -22067,8 +22155,11 @@ export const synthesizeChatAnswerSpeech = onCall(
     if (isPersonalNarrator) {
       const teamBinding = boardId ? await teamVoiceBinding(boardId, request.auth?.uid || null) : null;
       if (teamBinding) {
+        const approvedText = boardAllowsNarrationText(teamBinding.board, text)
+          || requestedMode === 'tour' && await boardAllowsCachedTranslatedNarration(
+            boardId, teamBinding.board, requestedContentLanguage, text, requestedCardId);
         if (!teamBinding.providerVoiceId || teamBinding.board['stackNarratorVoiceId'] !== requestedNarratorId
-          || !(boardAllowsNarrationText(teamBinding.board, text)
+          || !(approvedText
             || requestedMode === 'stack-trailer' && stackTrailerNarrationMatchesPreparedScript(teamBinding.board['trailerVideoScript'], text))) {
           throw new HttpsError('permission-denied', 'This team voice is unavailable or the text is not part of the approved listing.');
         }
@@ -22084,9 +22175,12 @@ export const synthesizeChatAnswerSpeech = onCall(
         }
         personalVoiceOwnerId = String(board['owner_user_id'] ?? '').trim();
         const isOwner = !!request.auth?.uid && request.auth.uid === personalVoiceOwnerId;
+        const approvedPublicText = boardAllowsNarrationText(board, text)
+          || requestedMode === 'tour' && await boardAllowsCachedTranslatedNarration(
+            boardId, board, requestedContentLanguage, text, requestedCardId);
         const canUsePublicNarration = isLinkReadableVisibility(board['visibility'])
           && board['stackNarratorVoiceId'] === requestedNarratorId
-          && boardAllowsNarrationText(board, text);
+          && approvedPublicText;
         if (!personalVoiceOwnerId || (!isOwner && !canUsePublicNarration)) {
           throw new HttpsError('permission-denied', 'This personal narrator is not available for that text.');
         }
@@ -22117,7 +22211,24 @@ export const synthesizeChatAnswerSpeech = onCall(
       throw new HttpsError('failed-precondition', 'ElevenLabs API key is not configured.');
     }
 
-    const primaryVoiceId = requestedNarratorVoiceId || chatAnswerVoiceId;
+    let primaryVoiceId = requestedNarratorVoiceId || chatAnswerVoiceId;
+    if (requestedMode === 'tour' && !isPersonalNarrator && requestedContentLanguage !== 'en'
+      && (!requestedNarratorId || requestedNarratorId === 'warm-storyteller')) {
+      const preference = {
+        fr: { languageCode: 'fr', language: 'French', country: 'France', accent: null },
+        ja: { languageCode: 'ja', language: 'Japanese', country: 'Japan', accent: null },
+        pt: { languageCode: 'pt', language: 'Portuguese', country: 'Brazil', accent: null },
+      } as const;
+      try {
+        const matchingVoice = await resolveElevenLabsVoiceForPreference(apiKey, preference[requestedContentLanguage]);
+        if (matchingVoice) primaryVoiceId = matchingVoice.voiceId;
+      } catch (error) {
+        logger.warn('Language-matched tour voice lookup failed; using the selected narrator.', {
+          contentLanguage: requestedContentLanguage,
+          errorMessage: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
     // Premade voices expose a provider-hosted preview_url. Instant voice clones
     // often do not, so personal previews must use the normal TTS path below.
     if (shouldUseProviderVoicePreviewUrl(requestedMode, isPersonalNarrator)) {
@@ -22200,7 +22311,7 @@ export const synthesizeChatAnswerSpeech = onCall(
 
     for (const voiceId of voiceIds) {
       const textHash = createHash('sha256')
-        .update(`${voiceId}:${personalVoiceRevision}:${speechModel}:${speechVersion}:${narrationCacheMode}:${JSON.stringify(voiceSettings)}:${text}`)
+        .update(`${voiceId}:${personalVoiceRevision}:${speechModel}:${speechVersion}:${narrationCacheMode}:${requestedContentLanguage}:${JSON.stringify(voiceSettings)}:${text}`)
         .digest('hex');
       const storagePath = isPersonalNarrator
         ? `chat-answer-speech/personal/${personalVoiceOwnerId}/${personalVoiceId}/r${personalVoiceRevision}/${narrationCacheMode}/${speechVersion}/${textHash}.mp3`
@@ -22383,6 +22494,8 @@ export const synthesizeChatAnswerSpeech = onCall(
             body: JSON.stringify({
               text,
               model_id: speechModel,
+              // multilingual_v2 infers language from the translated text; its
+              // language_code parameter is unsupported by ElevenLabs.
               voice_settings: voiceSettings,
             }),
           },
@@ -22421,6 +22534,7 @@ export const synthesizeChatAnswerSpeech = onCall(
               modelId: speechModel,
               mode: narrationCacheMode,
               requestedMode,
+              contentLanguage: requestedContentLanguage,
               textHash,
             },
           },

@@ -106,6 +106,19 @@ describe('TalkingCardConversationComponent', () => {
     expect(talkingCardScopedQuestion(`  ${question}  `)).toBe(question);
   });
 
+  it('requests the selected language for typed and voice conversations', () => {
+    const languages = [
+      ['pt', 'Brazilian Portuguese'],
+      ['fr', 'French'],
+      ['ja', 'Japanese'],
+    ] as const;
+    for (const [code, name] of languages) {
+      expect(talkingCardScopedQuestion('What is nearby?', '', code)).toContain(`Answer in ${name}`);
+      expect(buildTalkingCardVoiceContext(atlas, {}, '', code).instruction)
+        .toContain(`Speak and answer in ${name} throughout this conversation`);
+    }
+  });
+
   it('adds the property reference to voice context as untrusted facts', () => {
     const context = buildTalkingCardVoiceContext(atlas, {}, 'Kitchen — Renovated in 2025');
 

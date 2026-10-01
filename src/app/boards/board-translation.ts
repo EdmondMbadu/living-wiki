@@ -10,6 +10,8 @@ export interface BoardTranslationResult {
   targetLanguage: BoardTranslationLanguage;
   sourceLanguage: BoardTranslationLanguage;
   fingerprint: string;
+  schemaVersion: number;
+  expectedSegmentCount: number;
   segments: BoardTranslationSegment[];
   cached: boolean;
   changed: boolean;
@@ -26,6 +28,8 @@ export const BOARD_TRANSLATION_LANGUAGES: ReadonlyArray<{
   { id: 'pt', label: $localize`Português (Brasil)`, shortLabel: 'PT' },
 ];
 
+export const BOARD_TRANSLATION_SCHEMA_VERSION = 2;
+
 export function isBoardTranslationLanguage(value: unknown): value is BoardTranslationLanguage {
   return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt';
 }
@@ -39,24 +43,34 @@ export function normalizeBoardTranslationResult(value: unknown): BoardTranslatio
   if (!boardId
     || !isBoardTranslationLanguage(targetLanguage)
     || !isBoardTranslationLanguage(sourceLanguage)
-    || !fingerprint) {
+    || !fingerprint
+    || record['schemaVersion'] !== BOARD_TRANSLATION_SCHEMA_VERSION
+    || !Number.isInteger(record['expectedSegmentCount'])
+    || (record['expectedSegmentCount'] as number) < 0) {
     return null;
   }
 
   const segments = Array.isArray(record['segments'])
     ? record['segments'].flatMap((value) => {
         const segment = objectRecord(value);
-        const key = stringValue(segment['key']).slice(0, 180);
+        const key = stringValue(segment['key']).slice(0, 256);
         const text = stringValue(segment['text']).slice(0, 16_000);
         return validTranslationPath(key) && text ? [{ key, text }] : [];
       })
     : [];
+
+  if (segments.length !== record['expectedSegmentCount']
+    || new Set(segments.map((segment) => segment.key)).size !== segments.length) {
+    return null;
+  }
 
   return {
     boardId,
     targetLanguage,
     sourceLanguage,
     fingerprint,
+    schemaVersion: BOARD_TRANSLATION_SCHEMA_VERSION,
+    expectedSegmentCount: segments.length,
     segments,
     cached: record['cached'] === true,
     changed: record['changed'] === true,
@@ -79,12 +93,18 @@ export function boardTranslationLanguageName(language: BoardTranslationLanguage)
 }
 
 function validTranslationPath(path: string): boolean {
-  return /^(?:board\.(?:title|description|backNote|stackCtaLabel|tourMeta\.(?:paceOrRouteStyle|extras\.\d+)|learningQuiz\.(?:title|description|questions\.\d+\.(?:sourceCardTitle|prompt|explanation|options\.\d+\.text)))|cards\.\d+\.(?:title|subtitle|notes|stackNarration|shortSummary|availability|productCategory|tags\.\d+|conversation\.(?:openingMessage|ctaLabel|actions\.\d+\.(?:label|description))|tour\.(?:guideScript|legToNext\.(?:instruction|navScript))))$/u.test(path);
+  return /^(?:board\.(?:title|description|backNote|stackCtaLabel|tourMeta\.(?:paceOrRouteStyle|extras\.\d+)|learningQuiz\.(?:title|description|questions\.\d+\.(?:sourceCardTitle|prompt|explanation|options\.\d+\.text)))|cardsById\.[A-Za-z0-9_-]{1,160}\.(?:title|subtitle|notes|stackNarration|shortSummary|availability|productCategory|conversation\.(?:openingMessage|ctaLabel|starters\.\d+|actions\.\d+\.(?:label|description))|tour\.(?:guideScript|legToNext\.(?:instruction|navScript))))$/u.test(path);
 }
 
 function setExistingStringPath(value: unknown, rawPath: string[], text: string): void {
-  const path = rawPath[0] === 'board' ? rawPath.slice(1) : rawPath;
+  const path = rawPath[0] === 'board' ? rawPath.slice(1) : rawPath[0] === 'cardsById' ? rawPath.slice(2) : rawPath;
   let target: unknown = value;
+  if (rawPath[0] === 'cardsById') {
+    const cards = objectRecord(value)['cards'];
+    if (!Array.isArray(cards)) return;
+    target = cards.find((card) => objectRecord(card)['id'] === rawPath[1]);
+    if (!target) return;
+  }
   for (let index = 0; index < path.length - 1; index += 1) {
     const key = path[index];
     if (Array.isArray(target)) {

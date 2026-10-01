@@ -36,6 +36,21 @@ describe('Tour handoffs', () => {
     );
   });
 
+  it('uses the selected language for generated handoffs', () => {
+    const fromCard = {
+      id: 'first', title: 'First stop',
+      tour: { legToNext: { durationText: '3 min', distanceText: '0.2 mi', toCardId: nextCard.id } },
+    };
+    expect(buildTourHandoffFallback(fromCard, nextCard, 'walking', 'pt'))
+      .toContain('Próxima parada: Inverness Town House.');
+    expect(buildTourHandoffFallback(fromCard, nextCard, 'walking', 'fr'))
+      .toContain('Prochaine étape : Inverness Town House.');
+    const japanese = buildTourHandoffFallback(fromCard, nextCard, 'walking', 'ja');
+    expect(japanese).toContain('次の立ち寄り先：Inverness Town House。');
+    expect(japanese).toContain('徒歩で約3 分');
+    expect(japanese).not.toContain('Next stop');
+  });
+
   it('uses a curated handoff when it targets the actual next stop', () => {
     const fromCard = {
       id: 'flora',

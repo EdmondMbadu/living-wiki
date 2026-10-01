@@ -48,14 +48,17 @@ const board = {
 
 const source = extractBoardTranslationSource(board);
 const contactSource = extractBoardTranslationSource({ cards: [
-  {title:'Setup', notes:'Author instructions.', authorOnly:true},
-  {title:'Contact', notes:'Contact Alex.', stackNarration:'Call Alex for a viewing.', contactDetails:{phone:'2125550100'}},
+  {id:'setup', title:'Setup', notes:'Author instructions.', authorOnly:true},
+  {id:'contact', title:'Contact', notes:'Contact Alex.', stackNarration:'Call Alex for a viewing.', contactDetails:{phone:'2125550100'}},
 ] });
-assert.ok(!contactSource.segments.some(segment => segment.key.startsWith('cards.0.')));
-assert.ok(contactSource.segments.some(segment => segment.key === 'cards.1.stackNarration'));
+assert.ok(!contactSource.segments.some(segment => segment.key.startsWith('cardsById.setup.')));
+assert.ok(contactSource.segments.some(segment => segment.key === 'cardsById.contact.stackNarration'));
 assert.ok(!contactSource.segments.some(segment => segment.text === '2125550100'));
 assert.ok(source.segments.some((segment) => segment.key === 'board.title'));
-assert.ok(source.segments.some((segment) => segment.key === 'cards.0.tour.legToNext.navScript'));
+assert.ok(source.segments.some((segment) => segment.key === 'cardsById.card-1.tour.legToNext.navScript'));
+assert.equal(source.segments.find((segment) => segment.key === 'cardsById.card-1.shortSummary')?.text,
+  'Historic waterfront plaza');
+assert.ok(!source.segments.some((segment) => segment.key.includes('.tags.')));
 assert.ok(source.segments.some((segment) => segment.key === 'board.learningQuiz.questions.0.options.0.text'));
 assert.ok(!source.segments.some((segment) => segment.text.includes('maps.google.com')));
 assert.ok(!source.segments.some((segment) => segment.text.includes('///candy.sage.sticks')));
@@ -68,16 +71,23 @@ changedBoard.cards[0].notes = 'Meet at the fountain.';
 assert.notEqual(source.fingerprint, extractBoardTranslationSource(changedBoard).fingerprint);
 
 const translated = normalizeTranslatedBoardSegments(source.segments, [
+  ...source.segments.map((segment) => ({ ...segment })),
   { key: 'board.title', text: 'Lieux de Cannery Row' },
-  { key: 'cards.0.title', text: 'Place Steinbeck' },
+  { key: 'cardsById.card-1.title', text: 'Place Steinbeck' },
   { key: 'not.allowed', text: 'ignored' },
 ]);
 assert.equal(translated.find((segment) => segment.key === 'board.title').text, 'Lieux de Cannery Row');
 assert.equal(
-  translated.find((segment) => segment.key === 'cards.0.subtitle').text,
+  translated.find((segment) => segment.key === 'cardsById.card-1.subtitle').text,
   'Historic waterfront plaza',
 );
 assert.equal(translated.length, source.segments.length);
+assert.throws(() => normalizeTranslatedBoardSegments(source.segments, [
+  { key: 'board.title', text: 'Lieux de Cannery Row' },
+]), /omitted/);
+
+const manyCards = extractBoardTranslationSource({cards:Array.from({length:251},(_,index)=>({id:`card-${index}`, title:`Stop ${index}`}))});
+assert.ok(manyCards.segments.some((segment)=>segment.key==='cardsById.card-250.title'));
 
 assert.equal(detectBoardSourceLanguage('これは日本語のボードです。'), 'ja');
 assert.equal(

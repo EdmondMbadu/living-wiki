@@ -162,11 +162,26 @@ export function normalizeBoardCardConversation(value: unknown): BoardCardConvers
   };
 }
 
-export function talkingCardCtaLabel(conversation: BoardCardConversation | null | undefined): string {
-  return conversation?.ctaLabel?.trim() || 'Talk to me';
+export function talkingCardCtaLabel(
+  conversation: BoardCardConversation | null | undefined,
+  language: 'en' | 'fr' | 'ja' | 'pt' = 'en',
+): string {
+  return conversation?.ctaLabel?.trim() || {
+    en: 'Talk to me', fr: 'Parlez-moi', ja: '話しかける', pt: 'Fale comigo',
+  }[language];
 }
 
-export function talkingCardQuestionLabel(title: string | null | undefined): string {
+export function talkingCardQuestionLabel(
+  title: string | null | undefined,
+  language: 'en' | 'fr' | 'ja' | 'pt' = 'en',
+): string {
+  if (language !== 'en') {
+    return {
+      fr: 'Posez une question à l’agent virtuel',
+      ja: 'バーチャルエージェントに質問する',
+      pt: 'Faça uma pergunta ao agente virtual',
+    }[language];
+  }
   const normalizedTitle = (title ?? '').replace(/\s+/g, ' ').trim();
   const subject = normalizedTitle
     .replace(/^ask\s+/i, '')

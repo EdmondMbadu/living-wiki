@@ -15,8 +15,8 @@ export interface BoardTranslationSource {
 }
 
 const maximumBoardTranslationCharacters = 100_000;
-const maximumBoardTranslationCards = 250;
 const maximumFieldCharacters = 8_000;
+export const BOARD_TRANSLATION_SCHEMA_VERSION = 2;
 
 export function isBoardTranslationLanguage(value: unknown): value is BoardTranslationLanguage {
   return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt';
@@ -37,22 +37,37 @@ export function extractBoardTranslationSource(value: unknown): BoardTranslationS
     addSegment(segments, `board.tourMeta.extras.${index}`, extra);
   });
 
-  arrayOrEmpty(board['cards']).slice(0, maximumBoardTranslationCards).forEach((value, index) => {
+  const cardIds = new Set<string>();
+  arrayOrEmpty(board['cards']).forEach((value) => {
     const card = recordOrEmpty(value);
     if (card['authorOnly'] === true) return;
-    const prefix = `cards.${index}`;
+    const cardId = typeof card['id'] === 'string' ? card['id'].trim() : '';
+    if (!/^[A-Za-z0-9_-]{1,160}$/u.test(cardId) || cardIds.has(cardId)) {
+      throw new Error('Every published card needs a unique ID before this board can be translated.');
+    }
+    cardIds.add(cardId);
+    const prefix = `cardsById.${cardId}`;
     addSegment(segments, `${prefix}.title`, card['title']);
     addSegment(segments, `${prefix}.subtitle`, card['subtitle']);
     addSegment(segments, `${prefix}.notes`, card['notes']);
     addSegment(segments, `${prefix}.stackNarration`, card['stackNarration']);
-    addSegment(segments, `${prefix}.shortSummary`, card['shortSummary']);
+    // The client materializes a missing shortSummary from subtitle. Translate
+    // that displayed fallback too, or narration can read its English copy.
+    addSegment(segments, `${prefix}.shortSummary`,
+      typeof card['shortSummary'] === 'string' ? card['shortSummary'] : card['subtitle']);
     addSegment(segments, `${prefix}.availability`, card['availability']);
     addSegment(segments, `${prefix}.productCategory`, card['productCategory']);
-    addSegment(segments, `${prefix}.conversation.openingMessage`, recordOrEmpty(card['conversation'])['openingMessage']);
-    arrayOrEmpty(card['tags']).forEach((tag, tagIndex) => {
-      addSegment(segments, `${prefix}.tags.${tagIndex}`, tag);
+    const conversation = recordOrEmpty(card['conversation']);
+    addSegment(segments, `${prefix}.conversation.openingMessage`, conversation['openingMessage']);
+    addSegment(segments, `${prefix}.conversation.ctaLabel`, conversation['ctaLabel']);
+    arrayOrEmpty(conversation['starters']).forEach((starter, starterIndex) => {
+      addSegment(segments, `${prefix}.conversation.starters.${starterIndex}`, starter);
     });
-
+    arrayOrEmpty(conversation['actions']).forEach((actionValue, actionIndex) => {
+      const action = recordOrEmpty(actionValue);
+      addSegment(segments, `${prefix}.conversation.actions.${actionIndex}.label`, action['label']);
+      addSegment(segments, `${prefix}.conversation.actions.${actionIndex}.description`, action['description']);
+    });
     const tour = recordOrEmpty(card['tour']);
     addSegment(segments, `${prefix}.tour.guideScript`, tour['guideScript']);
     const leg = recordOrEmpty(tour['legToNext']);
@@ -84,7 +99,7 @@ export function extractBoardTranslationSource(value: unknown): BoardTranslationS
   }
 
   const fingerprint = createHash('sha256')
-    .update(JSON.stringify(segments))
+    .update(`${BOARD_TRANSLATION_SCHEMA_VERSION}:${JSON.stringify(segments)}`)
     .digest('hex');
 
   return {
@@ -108,10 +123,38 @@ export function normalizeTranslatedBoardSegments(
       translations.set(key, text.slice(0, maximumFieldCharacters * 2));
     }
   }
-  return source.map((segment) => ({
-    key: segment.key,
-    text: translations.get(segment.key) ?? segment.text,
-  }));
+  const missing = source.filter((segment) => !translations.has(segment.key));
+  if (missing.length) {
+    throw new Error(`Translation omitted ${missing.length} of ${source.length} text fields.`);
+  }
+  return source.map((segment) => ({ key: segment.key, text: translations.get(segment.key)! }));
+}
+
+export function missingBoardTranslationSegments(
+  source: readonly BoardTranslationSegment[],
+  translated: readonly BoardTranslationSegment[],
+): BoardTranslationSegment[] {
+  const present = new Set(translated.filter((segment) => typeof segment.text === 'string' && segment.text.trim())
+    .map((segment) => segment.key));
+  return source.filter((segment) => !present.has(segment.key));
+}
+
+export function boardTranslationSegmentsComplete(
+  source: readonly BoardTranslationSegment[],
+  value: unknown,
+): value is BoardTranslationSegment[] {
+  if (!Array.isArray(value) || value.length !== source.length) return false;
+  const expected = new Set(source.map((segment) => segment.key));
+  const seen = new Set<string>();
+  for (const segment of value) {
+    if (!segment || typeof segment !== 'object') return false;
+    const key = (segment as BoardTranslationSegment).key;
+    const text = (segment as BoardTranslationSegment).text;
+    if (typeof key !== 'string' || typeof text !== 'string' || !text.trim()
+      || !expected.has(key) || seen.has(key)) return false;
+    seen.add(key);
+  }
+  return true;
 }
 
 export function detectBoardSourceLanguage(text: string): BoardTranslationLanguage {

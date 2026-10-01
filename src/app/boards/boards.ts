@@ -2504,13 +2504,18 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly talkingConversationCard = computed(() => {
     const cardId = this.talkingConversationCardId();
     if (!cardId) return null;
+    const selectedCard = this.selectedBoard()?.cards.find((card) => card.id === cardId);
+    if (selectedCard) return selectedCard;
     return this.boards().flatMap((board) => board.cards).find((card) => card.id === cardId) ?? null;
   });
   readonly talkingConversationBoard = computed(() => {
     const cardId = this.talkingConversationCardId();
     if (!cardId) return null;
+    const selected = this.selectedBoard();
+    if (selected?.cards.some((card) => card.id === cardId)) return selected;
     return this.boards().find((board) => board.cards.some((card) => card.id === cardId)) ?? null;
   });
+  readonly talkingConversationLanguage = computed(() => this.boardSpeechLanguage());
   readonly talkingConversationContact = computed(() => {
     const card = this.talkingConversationCard();
     const board = this.talkingConversationBoard();
@@ -3152,13 +3157,15 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     };
   });
   readonly boardTranslationActive = computed(() => {
+    return this.boardTranslationReady() && this.boardTranslationResult()?.changed === true;
+  });
+  readonly boardTranslationReady = computed(() => {
     const board = this.originalSelectedBoard();
     const result = this.boardTranslationResult();
     return !!board
       && !!result
       && result.boardId === board.id
       && result.targetLanguage === this.boardTranslationTarget()
-      && result.changed
       && this.boardTranslationVersion() === board.updatedAt;
   });
   readonly selectedBoard = computed(() => {
@@ -4132,10 +4139,17 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       if (!this.stackAutoplayRequested() || !this.stackDirectView() || !this.selectedBoard()) {
         return;
       }
+      if (this.boardTranslationTarget() && !this.boardTranslationReady()) return;
       // Consume the request once so a visitor can still pause the Stack later.
       this.stackAutoplayRequested.set(false);
       this.stackTourNarrationConsent.set(true);
       this.startStackPlayback();
+    });
+
+    effect(() => {
+      if (!this.stackDirectView() || !this.boardTranslationReady()) return;
+      const board = this.selectedBoard();
+      if (board) this.applyStackCoverState(board);
     });
 
     effect(() => {
@@ -8314,11 +8328,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   talkingCardButtonLabel(card: Pick<BoardCard, 'conversation'>): string {
-    return talkingCardCtaLabel(card.conversation);
+    return talkingCardCtaLabel(card.conversation, this.boardSpeechLanguage());
   }
 
   talkingCardQuestionLabel(card: Pick<BoardCard, 'title'>): string {
-    return talkingCardQuestionLabel(card.title);
+    return talkingCardQuestionLabel(card.title, this.boardSpeechLanguage());
   }
 
   talkingCardActionLinks(card: Pick<BoardCard, 'conversation'>): TalkingCardAction[] {
@@ -11380,6 +11394,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         frame.card,
         frame.nextCard,
         this.selectedBoard()?.kind === 'driving-tour' ? 'driving' : 'walking',
+        this.boardSpeechLanguage(),
       );
     }
     return frame.card.tour?.guideScript || frame.card.notes || frame.card.subtitle;
@@ -11409,6 +11424,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       text,
       this.selectedBoard()?.stackNarratorVoiceId,
       this.selectedBoard()?.id,
+      'tour',
+      frame.card.id,
     );
     if (audioUrl) {
       const audio = new Audio(audioUrl);
@@ -11710,7 +11727,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const normalizedNarratorVoiceId = narratorVoiceId
       ? normalizeStackNarratorVoiceId(narratorVoiceId)
       : '';
-    const requestKey = this.narrationAudioRequestKey(key, normalizedNarratorVoiceId);
+    const contentLanguage = this.boardSpeechLanguage();
+    const requestKey = this.narrationAudioRequestKey(key, normalizedNarratorVoiceId, text, contentLanguage);
     const cached = this.tourAudioUrls.get(requestKey);
     if (cached) {
       return cached;
@@ -11728,7 +11746,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const promise = (async () => {
       try {
         const callable = httpsCallable<
-          { text: string; question?: string | null; anonymousVisitorId?: string | null; mode?: 'recap' | 'full' | 'tour' | 'stack-video' | 'stack-trailer' | 'voice-preview'; narratorVoiceId?: string | null; boardId?: string | null; cardId?: string | null },
+          { text: string; question?: string | null; anonymousVisitorId?: string | null; mode?: 'recap' | 'full' | 'tour' | 'stack-video' | 'stack-trailer' | 'voice-preview'; narratorVoiceId?: string | null; boardId?: string | null; cardId?: string | null; contentLanguage?: BoardTranslationLanguage },
           TourSpeechResponse
         >(functions, 'synthesizeChatAnswerSpeech', { timeout: 120_000 });
         const response = await callable({
@@ -11739,6 +11757,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           narratorVoiceId: normalizedNarratorVoiceId || null,
           boardId: boardId || null,
           cardId: cardId || null,
+          contentLanguage,
         });
         const audioUrl = response.data.audioUrl || (response.data.audioBase64 ? this.audioUrlFromBase64(response.data.audioBase64, response.data.contentType || 'audio/mpeg') : '');
         if (audioUrl) {
@@ -11769,8 +11788,21 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     return promise;
   }
 
-  private narrationAudioRequestKey(key: string, narratorVoiceId?: string): string {
-    return `${narratorVoiceId || 'default'}:${key}`;
+  private boardSpeechLanguage(): BoardTranslationLanguage {
+    const result = this.boardTranslationResult();
+    if (result && result.boardId === this.selectedBoard()?.id) {
+      return this.boardTranslationReady() ? result.targetLanguage : result.sourceLanguage;
+    }
+    return 'en';
+  }
+
+  private narrationAudioRequestKey(
+    key: string,
+    narratorVoiceId?: string,
+    text = '',
+    language: BoardTranslationLanguage = this.boardSpeechLanguage(),
+  ): string {
+    return `${narratorVoiceId || 'default'}:${language}:${key}:${text}`;
   }
 
   private tourAudioKey(frame: TourDeckFrame): string {
@@ -14691,7 +14723,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       const callable = httpsCallable<
         { boardId: string; targetLanguage: BoardTranslationLanguage },
         unknown
-      >(this.functions, 'translateBoard');
+      >(this.functions, 'translateBoard', { timeout: 300_000 });
       const response = await callable({ boardId: board.id, targetLanguage });
       const result = normalizeBoardTranslationResult(response.data);
       if (!result || result.boardId !== board.id || result.targetLanguage !== targetLanguage) {
@@ -15256,14 +15288,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       ui: supportedLocale(this.localeId).language,
     });
     const translation = this.boardTranslationResult();
-    if (this.boardTranslationActive()
-      && translation?.boardId === board.id
-      && translation.targetLanguage !== translation.sourceLanguage) {
+    if (this.boardTranslationReady()
+      && translation?.boardId === board.id) {
       publicQuery.set('lang', translation.targetLanguage);
     }
     const path = isLinkReadableVisibility(board.visibility)
       ? `/share/board/${encodeURIComponent(board.id)}?${publicQuery.toString()}`
-      : this.boardPagePath(board);
+      : `${this.boardPagePath(board)}${this.boardTranslationReady() && translation?.boardId === board.id
+        ? `?contentLang=${translation?.targetLanguage}` : ''}`;
     if (isLinkReadableVisibility(board.visibility)) {
       return `${PUBLIC_APP_URL}${path}`;
     }
@@ -15331,7 +15363,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   stackShareUrl(board: Board): string {
     if (!isLinkReadableVisibility(board.visibility)) {
-      return `${this.boardPageUrl(board)}?view=stack`;
+      const translation = this.boardTranslationResult();
+      const language = this.boardTranslationReady() && translation?.boardId === board.id
+        ? translation.targetLanguage : null;
+      return `${this.boardPageUrl(board)}?view=stack${language ? `&contentLang=${language}` : ''}`;
     }
     const separator = this.boardShareUrl(board).includes('?') ? '&' : '?';
     return `${this.boardShareUrl(board)}${separator}view=stack`;
@@ -15692,8 +15727,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     await this.unlockStackNarrationAudio();
     this.stackTourNarrationConsent.set(true);
     this.stackDirectView.set(true);
-    this.startStackPlayback();
-    void this.router.navigate(this.boardViewRoute(board), { queryParams: { view: 'stack', autoplay: '1' } });
+    if (!this.boardTranslationTarget() || this.boardTranslationReady()) this.startStackPlayback();
+    void this.router.navigate(this.boardViewRoute(board), {
+      queryParams: { view: 'stack', autoplay: '1', contentLang: this.boardTranslationTarget() },
+    });
   }
 
   async openLiveCardVersion(board: Board, event?: Event): Promise<void> {
@@ -15706,8 +15743,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     await this.unlockStackNarrationAudio();
     this.stackTourNarrationConsent.set(true);
     this.stackDirectView.set(true);
-    this.startStackPlayback();
-    void this.router.navigate(this.boardViewRoute(board), { queryParams: { view: 'stack', autoplay: '1' } });
+    if (!this.boardTranslationTarget() || this.boardTranslationReady()) this.startStackPlayback();
+    void this.router.navigate(this.boardViewRoute(board), {
+      queryParams: { view: 'stack', autoplay: '1', contentLang: this.boardTranslationTarget() },
+    });
   }
 
   closeStackView(board: Board): void {
@@ -15715,7 +15754,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stopStackPlayback();
     this.stackDirectView.set(false);
     this.stackShareDialogOpen.set(false);
-    void this.router.navigate(this.boardViewRoute(board));
+    void this.router.navigate(this.boardViewRoute(board), {
+      queryParams: { contentLang: this.boardTranslationTarget() },
+    });
   }
 
   closeStackStudio(): void {
@@ -17359,6 +17400,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   boardQrUrl(board: Board): string {
     // A team's editable working copy stays private even after its public board
     // is published. Its QR must still point to that public board, never localhost.
+    if (this.boardTranslationReady() && this.boardTranslationResult()?.boardId === board.id
+      && isLinkReadableVisibility(board.visibility)) return this.boardShareUrl(board);
     return isLinkReadableVisibility(board.visibility) || !!board.teamId
       ? publicBoardQrUrl(board.id)
       : this.stackShareUrl(board);
@@ -17507,7 +17550,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   stackHandoffTeaser(frame: StackFrame = this.stackCurrentFrame()): string {
-    return frame.kind === 'handoff' ? tourHandoffDestinationTeaser(frame.nextCard) : '';
+    return frame.kind === 'handoff' ? tourHandoffDestinationTeaser(frame.nextCard, this.boardSpeechLanguage()) : '';
   }
 
   stackHandoffMeta(frame: StackFrame = this.stackCurrentFrame()): string {
@@ -17552,6 +17595,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     return this.tourAudioLoadingKey() === this.narrationAudioRequestKey(
       this.stackCardAudioKey(card),
       this.stackNarratorVoiceId(),
+      this.stackCardNarrationText(card),
     );
   }
 
@@ -17686,6 +17730,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     return !!frame && this.tourAudioLoadingKey() === this.narrationAudioRequestKey(
       this.tourAudioKey(frame),
       this.stackNarratorVoiceId(),
+      this.stackNarrationTextForTourFrame(frame),
     );
   }
 
@@ -19182,6 +19227,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     this.stackStudioOpen.set(false);
     if (options.deferPlayback) return;
+    if (this.boardTranslationTarget() && !this.boardTranslationReady()) return;
     if (this.stackAutoplayRequested() || this.stackNarrationSession.isUnlocked()) {
       this.stackTourNarrationConsent.set(true);
       this.startStackPlayback();
@@ -19451,6 +19497,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private startStackPlayback(): void {
+    if (this.stackDirectView() && this.boardTranslationTarget() && !this.boardTranslationReady()) return;
     if (this.stackPlaying()) {
       return;
     }
@@ -19589,12 +19636,17 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
 
     const startedAt = Date.now();
+    const narrationLanguage = this.boardSpeechLanguage();
     const frameKey = this.stackTourFrameKey(frame);
     this.stackActiveFrameDurationMs.set(120_000);
     const audioKey = frame.card.tour ? this.tourAudioKey(frame) : this.stackCardAudioKey(frame.card);
     const boardId = this.stackBoard()?.id || this.selectedBoard()?.id;
-    const audioUrl = await this.ensureTourAudioUrl(audioKey, text, this.stackNarratorVoiceId(), boardId);
-    if (!this.isStackNarrationCurrent(token, frameKey)) {
+    const audioUrl = await this.ensureTourAudioUrl(audioKey, text, this.stackNarratorVoiceId(), boardId, 'tour', frame.card.id);
+    const currentTourFrame = this.stackTourFrameFromStackFrame(this.stackCurrentFrame());
+    if (!this.isStackNarrationCurrent(token, frameKey)
+      || this.boardSpeechLanguage() !== narrationLanguage
+      || !currentTourFrame
+      || this.stackNarrationTextForTourFrame(currentTourFrame) !== text) {
       return;
     }
     if (!audioUrl) {
@@ -19687,7 +19739,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
 
     const utterance = new SpeechSynthesisUtterance(text.slice(0, 3600));
-    const language = navigator.language || 'en-US';
+    const language = ({ en: 'en-US', fr: 'fr-FR', ja: 'ja-JP', pt: 'pt-BR' } as const)[this.boardSpeechLanguage()];
     const languageRoot = language.split('-')[0]?.toLowerCase();
     const voices = window.speechSynthesis.getVoices();
     utterance.voice = voices.find((voice) => voice.lang.toLowerCase() === language.toLowerCase())
@@ -19735,6 +19787,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           frame.card,
           frame.nextCard,
           this.selectedBoard()?.kind === 'driving-tour' ? 'driving' : 'walking',
+          this.boardSpeechLanguage(),
         )
       : frame.card.tour?.guideScript || this.stackCardNarrationText(frame.card);
   }
@@ -19757,7 +19810,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.stackNarratorVoiceId(),
       boardId,
       'tour',
-      undefined,
+      tourFrame.card.id,
       false,
       true,
     );

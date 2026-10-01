@@ -23,8 +23,13 @@ export type ShareableBoard = {
   cards: ShareableCard[];
 };
 
-export function publicCardUrl(boardId: string, cardId: string): string {
-  return `${publicBoardQrUrl(boardId)}?card=${encodeURIComponent(cardId)}`;
+export function publicCardUrl(boardId: string, cardId: string, contentLanguage?: 'en' | 'fr' | 'ja' | 'pt' | null): string {
+  const baseUrl = publicBoardQrUrl(boardId);
+  const localizedUrl = contentLanguage && contentLanguage !== 'en'
+    ? baseUrl.replace('https://www.livingwiki.com/', `https://www.livingwiki.com/${contentLanguage}/`)
+    : baseUrl;
+  return `${localizedUrl}?card=${encodeURIComponent(cardId)}`
+    + (contentLanguage ? `&contentLang=${contentLanguage}` : '');
 }
 
 /** Only top-level cards with narration or a conversation can open directly in Live view. */

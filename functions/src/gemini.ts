@@ -23,6 +23,7 @@ import {
   normalizeBoardNarrationSeconds,
 } from './board-narration-length';
 import {
+  missingBoardTranslationSegments,
   normalizeTranslatedBoardSegments,
   type BoardTranslationLanguage,
   type BoardTranslationSegment,
@@ -1239,39 +1240,52 @@ export async function translateBoardTextSegments(
       const batchIndex = nextBatchIndex;
       nextBatchIndex += 1;
       const batch = batches[batchIndex];
-      const response = await generateContentWithRetry({
-        model,
-        contents: [
-          `Translate every text value into natural, fluent ${languageName[targetLanguage]}.`,
-          'This is user-facing content from a LivingWiki board.',
-          'Return exactly one object for every input key and keep each key byte-for-byte unchanged.',
-          'Translate meaning faithfully without summarizing, censoring, embellishing, or adding facts.',
-          'Keep URLs, email addresses, @handles, hashtags, prices, measurements, catalog numbers, emoji, and what3words addresses unchanged.',
-          'Keep product, artist, person, venue, and place names in their established form unless that name has a standard form in the target language.',
-          'Preserve paragraph breaks. Return JSON only.',
-          JSON.stringify(batch),
-        ].join('\n\n'),
-        config: {
-          responseMimeType: 'application/json',
-          responseJsonSchema: boardTranslationSchema,
-          temperature: 0,
-          maxOutputTokens: 16_384,
-          thinkingConfig: { thinkingBudget: 0 },
-        },
-      });
-      const parsed = parseJsonResponse<unknown>(response.text ?? '[]');
-      const candidates = Array.isArray(parsed)
-        ? parsed.map((value) => {
-            const record = value && typeof value === 'object'
-              ? value as Record<string, unknown>
-              : {};
-            return {
-              key: typeof record['key'] === 'string' ? record['key'] : '',
-              text: typeof record['text'] === 'string' ? record['text'] : '',
-            };
-          })
-        : [];
-      translatedBatches[batchIndex] = normalizeTranslatedBoardSegments(batch, candidates);
+      const translated: BoardTranslationSegment[] = [];
+      let remaining = batch;
+      // A model can return valid JSON while omitting later fields. Retry only
+      // those fields in smaller requests; never cache the source English text.
+      for (let attempt = 0; attempt < 3 && remaining.length; attempt += 1) {
+        const retryGroups = attempt === 0
+          ? [remaining]
+          : Array.from({ length: Math.ceil(remaining.length / 20) }, (_item, index) =>
+              remaining.slice(index * 20, (index + 1) * 20));
+        for (const group of retryGroups) {
+          const response = await generateContentWithRetry({
+            model,
+            contents: [
+              `Translate every text value into natural, fluent ${languageName[targetLanguage]}.`,
+              'This is user-facing content from a LivingWiki board.',
+              'Return exactly one object for every input key and keep each key byte-for-byte unchanged.',
+              'Translate meaning faithfully without summarizing, censoring, embellishing, or adding facts.',
+              'Keep URLs, email addresses, @handles, hashtags, prices, measurements, catalog numbers, emoji, and what3words addresses unchanged.',
+              'Keep product, artist, person, venue, and place names in their established form unless that name has a standard form in the target language.',
+              'Preserve paragraph breaks. Return JSON only.',
+              JSON.stringify(group),
+            ].join('\n\n'),
+            config: {
+              responseMimeType: 'application/json',
+              responseJsonSchema: boardTranslationSchema,
+              temperature: 0,
+              maxOutputTokens: 16_384,
+              thinkingConfig: { thinkingBudget: 0 },
+            },
+          });
+          const parsed = parseJsonResponse<unknown>(response.text ?? '[]');
+          if (Array.isArray(parsed)) {
+            translated.push(...parsed.map((value) => {
+              const record = value && typeof value === 'object'
+                ? value as Record<string, unknown>
+                : {};
+              return {
+                key: typeof record['key'] === 'string' ? record['key'] : '',
+                text: typeof record['text'] === 'string' ? record['text'] : '',
+              };
+            }));
+          }
+        }
+        remaining = missingBoardTranslationSegments(batch, translated);
+      }
+      translatedBatches[batchIndex] = normalizeTranslatedBoardSegments(batch, translated);
     }
   });
 

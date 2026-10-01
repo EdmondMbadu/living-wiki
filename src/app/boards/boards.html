@@ -8,6 +8,7 @@
   }
   @if (stackDirectView()) {
     @if (selectedBoard(); as board) {
+      @if (!boardTranslationTarget() || boardTranslationReady()) {
       <section
         class="stack-viewer-page"
         [style.--board-accent]="toneAccent(board.tone)"
@@ -405,6 +406,19 @@
           </button>
         </main>
       </section>
+      } @else {
+        <section class="stack-viewer-page stack-viewer-page--loading" role="status">
+          <span class="material-symbols-outlined">translate</span>
+          <strong i18n>Loading Stack</strong>
+          @if (boardTranslationError(); as translationError) {
+            <small>{{ translationError }}</small>
+            <div class="mt-5 flex flex-wrap justify-center gap-3">
+              <button type="button" class="rounded-full bg-white px-5 py-2 text-sm font-bold text-black" (click)="selectBoardTranslation(boardTranslationTarget() || 'en', $event)" i18n>Try again</button>
+              <button type="button" class="rounded-full border border-white px-5 py-2 text-sm font-bold text-white" (click)="closeStackView(board)" i18n>Back to board</button>
+            </div>
+          }
+        </section>
+      }
     } @else if (privateBoardBlocked()) {
       <section class="stack-viewer-page stack-viewer-page--loading">
         <span class="material-symbols-outlined">lock</span>
@@ -11568,6 +11582,7 @@
     <app-card-share-dialog
       [boards]="boards()"
       [target]="shareTarget"
+      [contentLanguage]="boardTranslationReady() && boardTranslationResult()?.boardId === shareTarget.boardId ? boardTranslationResult()!.targetLanguage : null"
       (closed)="closeCardShare()"
     />
   }
@@ -11616,6 +11631,7 @@
       [actions]="talkingCardActionLinks(talkingCard)"
       [starterQuestions]="talkingCardStarterQuestions(talkingCard)"
       [boardContext]="talkingCardBoardContext(talkingConversationBoard(), talkingCard)"
+      [contentLanguage]="talkingConversationLanguage()"
       [contactName]="talkingConversationContact()?.name || ''"
       [contactPhoneHref]="talkingConversationContact()?.phoneHref || ''"
       [contactEmailHref]="talkingConversationContact()?.emailHref || ''"
