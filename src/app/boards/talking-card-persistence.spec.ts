@@ -41,7 +41,89 @@ function harness(saved: boolean): any {
   return { component, board, completeSave };
 }
 
+function ordinaryBoardHarness(saved = true): any {
+  const context = harness(saved);
+  const { component, board } = context;
+  // Exercise the same card normalization used when loading saved boards.
+  delete component.cardFromRecord;
+  Object.assign(component, {
+    cardTypes: [{ id: 'note' }],
+    cardScopes: [{ id: 'place' }],
+    cardStatuses: [{ id: 'saved' }],
+    listingTalkingCardSetup: () => null,
+  });
+  board.title = 'An Introduction to Wet AMD';
+  board.cards = [
+    component.cardFromRecord({ id: 'intro', title: 'Introduction', type: 'note' }),
+    component.cardFromRecord({ id: 'information', title: 'Learn more', type: 'note' }),
+  ];
+  return context;
+}
+
 describe('Talking Card board persistence', () => {
+  for (const placement of ['start', 'end'] as const) {
+    it(`saves a Talking Card at the ${placement} of an ordinary board and reloads its conversation`, async () => {
+      const { component, board, completeSave } = ordinaryBoardHarness();
+      const originalCards = [...board.cards];
+      const value: TalkingCardEditorResult = {
+        ...result, placement, title: 'Patient guide', subtitle: 'Ask a question',
+        openingMessage: 'What would you like to learn about?', ctaLabel: 'Ask the guide',
+        imageUrl: 'https://example.com/guide.jpg',
+        actions: [{ id: 'learn-more', kind: 'link', label: 'Learn more', url: 'https://example.com/information' }],
+      };
+
+      await component.addTalkingCard(value);
+
+      const [savedBoard, intent] = component.persistAndReplaceBoard.calls.mostRecent().args;
+      expect(intent).toBe('cards');
+      expect(savedBoard.id).toBe(board.id);
+      expect(savedBoard.cards.map((card: any) => card.id)).toEqual(
+        placement === 'end' ? ['intro', 'information', 'guide'] : ['guide', 'intro', 'information'],
+      );
+      expect(savedBoard.cards.filter((card: any) => card.id !== 'guide')).toEqual(originalCards);
+      const reloaded = component.cardFromRecord(JSON.parse(JSON.stringify(savedBoard.cards.find((card: any) => card.id === 'guide'))));
+      expect(component.isTalkingCard(reloaded)).toBeTrue();
+      expect(reloaded.conversation).toEqual({
+        version: 1, provider: 'atlas', atlasId: value.atlasId,
+        openingMessage: value.openingMessage, ctaLabel: value.ctaLabel, actions: value.actions,
+      });
+      expect(reloaded.imageUrls).toEqual([value.imageUrl]);
+      expect(reloaded.authorOnly).toBeFalse();
+      expect(completeSave).toHaveBeenCalledWith();
+      expect(component.closeTalkingCardEditor).toHaveBeenCalled();
+    });
+  }
+
+  it('edits an existing ordinary Talking Card without duplicating it or moving it', async () => {
+    const { component, board } = ordinaryBoardHarness();
+    const originalCards = [...board.cards];
+    const existing = component.cardFromRecord({
+      id: 'guide', title: 'Patient guide', type: 'note',
+      conversation: { provider: 'atlas', atlasId: 'original-avatar', openingMessage: 'Welcome', starters: ['Where do I start?'] },
+    });
+    board.cards = [originalCards[0], existing, originalCards[1]];
+
+    await component.addTalkingCard({ ...result, cardId: 'guide', title: 'Updated guide', placement: 'keep' });
+
+    const savedBoard = component.persistAndReplaceBoard.calls.mostRecent().args[0];
+    expect(savedBoard.cards.map((card: any) => card.id)).toEqual(['intro', 'guide', 'information']);
+    expect(savedBoard.cards[1].title).toBe('Updated guide');
+    expect(savedBoard.cards[1].conversation.atlasId).toBe(result.atlasId);
+    expect(savedBoard.cards[1].conversation.starters).toEqual(['Where do I start?']);
+    expect(savedBoard.cards.filter((card: any) => card.id !== 'guide')).toEqual(originalCards);
+  });
+
+  it('keeps the ordinary board and editor intact if adding the card fails', async () => {
+    const { component, board, completeSave } = ordinaryBoardHarness(false);
+    const originalCards = [...board.cards];
+
+    await component.addTalkingCard(result);
+
+    expect(component.boards()[0].cards).toEqual(originalCards);
+    expect(component.closeTalkingCardEditor).not.toHaveBeenCalled();
+    expect(completeSave).toHaveBeenCalledWith(jasmine.stringMatching(/could not be saved/i));
+  });
+
   it('does not claim completion or replace local state when Firestore save fails', async () => {
     const { component, board, completeSave } = harness(false);
 

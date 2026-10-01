@@ -12379,6 +12379,10 @@
     "source": "Failed to save chat guide.",
     "file": "src/app/atlas-manage/atlas-manage.ts"
   },
+  "4974532965584002117": {
+    "source": "Let visitors ask your virtual agent questions by text or voice.",
+    "file": "src/app/boards/card-creation.ts"
+  },
   "497516847475509949": {
     "source": "All Files",
     "file": "src/app/library/library.html"

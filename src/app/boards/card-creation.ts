@@ -19,6 +19,7 @@ export const CARD_CREATION_OPTIONS: ReadonlyArray<{
   icon: string;
 }> = [
   { kind: 'general', title: $localize`General card`, description: $localize`Describe a place, idea, memory, recommendation, or anything else.`, icon: 'sticky_note_2' },
+  { kind: 'talking', title: $localize`Talking Card`, description: $localize`Let visitors ask your virtual agent questions by text or voice.`, icon: 'record_voice_over' },
   { kind: 'intro', title: $localize`Intro card`, description: $localize`Welcome visitors and introduce the story in your own words.`, icon: 'waving_hand' },
   { kind: 'contact', title: $localize`Contact card`, description: $localize`Share a name, phone number, email, and optional organization.`, icon: 'contact_mail' },
   { kind: 'qr-code', title: $localize`QR code card`, description: $localize`Add a QR code people can scan.`, icon: 'qr_code_2' },
