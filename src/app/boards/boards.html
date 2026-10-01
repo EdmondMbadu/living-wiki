@@ -633,19 +633,19 @@
             <div class="boards-profile__utilities">
               <div class="boards-profile__actions">
                 @if (canShareBoardsProfile()) {
-                  <button type="button" class="boards-ghost-action boards-profile__copy" (click)="copyBoardsProfileUrl()" i18n>
-                    <span class="material-symbols-outlined">content_copy</span>
-                    Copy link
+                  <button type="button" class="boards-ghost-action boards-profile__copy" (click)="copyBoardsProfileUrl()">
+                    <span class="material-symbols-outlined" aria-hidden="true">content_copy</span>
+                    <span i18n>Copy link</span>
                   </button>
-                  <button type="button" class="boards-ghost-action" (click)="nativeShareBoardsProfile()" i18n>
-                    <span class="material-symbols-outlined">ios_share</span>
-                    Share
+                  <button type="button" class="boards-ghost-action" (click)="nativeShareBoardsProfile()">
+                    <span class="material-symbols-outlined" aria-hidden="true">ios_share</span>
+                    <span i18n>Share</span>
                   </button>
                 }
                 @if (canCreateCollection()) {
-                  <button type="button" class="boards-ghost-action" (click)="openCreateCollection()" i18n>
-                    <span class="material-symbols-outlined">collections_bookmark</span>
-                    New collection
+                  <button type="button" class="boards-ghost-action" (click)="openCreateCollection()">
+                    <span class="material-symbols-outlined" aria-hidden="true">collections_bookmark</span>
+                    <span i18n>New collection</span>
                   </button>
                 }
               </div>
@@ -911,36 +911,36 @@
           [class.boards-tabbar__item--active]="activeGalleryTab() === 'boards'"
           class="boards-tabbar__item"
           (click)="setGalleryTab('boards')"
-         i18n>
-          <span class="material-symbols-outlined">grid_on</span>
-          Boards
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">grid_on</span>
+          <span i18n>Boards</span>
         </button>
         <button
           type="button"
           [class.boards-tabbar__item--active]="activeGalleryTab() === 'cards'"
           class="boards-tabbar__item"
           (click)="setGalleryTab('cards')"
-         i18n>
-          <span class="material-symbols-outlined">crop_square</span>
-          Cards
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">crop_square</span>
+          <span i18n>Cards</span>
         </button>
         <button
           type="button"
           [class.boards-tabbar__item--active]="activeGalleryTab() === 'favorites'"
           class="boards-tabbar__item"
           (click)="setGalleryTab('favorites')"
-         i18n>
-          <span class="material-symbols-outlined">kid_star</span>
-          Favorites
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">kid_star</span>
+          <span i18n>Favorites</span>
         </button>
         <button
           type="button"
           [class.boards-tabbar__item--active]="activeGalleryTab() === 'collections'"
           class="boards-tabbar__item"
           (click)="setGalleryTab('collections')"
-         i18n>
-          <span class="material-symbols-outlined">collections_bookmark</span>
-          Collections
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">collections_bookmark</span>
+          <span i18n>Collections</span>
         </button>
         @if (!publicOwnerKey() || canCreateBoard()) {
           <button
@@ -948,9 +948,9 @@
             [class.boards-tabbar__item--active]="activeGalleryTab() === 'private'"
             class="boards-tabbar__item"
             (click)="setGalleryTab('private')"
-           i18n>
-            <span class="material-symbols-outlined">lock</span>
-            Private &amp; unlisted
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+            <span i18n>Private &amp; unlisted</span>
           </button>
         }
       </nav>

@@ -7,6 +7,10 @@
     "source": "cities",
     "file": "src/app/public-wikis/public-wikis.ts"
   },
+  "1006894004797771010": {
+    "source": "Private & unlisted",
+    "file": "src/app/boards/boards.html"
+  },
   "1008353818027938074": {
     "source": "Citations to your wiki sources",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -635,10 +639,6 @@
     "source": "Square found. Take a photo to finish the card.",
     "file": "src/app/boards/boards.ts"
   },
-  "1209166730082434032": {
-    "source": "{$START_TAG_SPAN}lock{$CLOSE_TAG_SPAN} Private & unlisted ",
-    "file": "src/app/boards/boards.html"
-  },
   "1209515042620743127": {
     "source": "Narrated",
     "file": "src/app/video-library/video-library.ts"
@@ -834,10 +834,6 @@
   "1272995608934298753": {
     "source": "Share destinations",
     "file": "src/app/answer-card/answer-card.html"
-  },
-  "1273957161894133283": {
-    "source": "{$START_TAG_SPAN}group{$CLOSE_TAG_SPAN} Admin users ",
-    "file": "src/app/account-menu/account-menu.html"
   },
   "1280874996029392343": {
     "source": "No pending invitations",
@@ -1418,10 +1414,6 @@
   "1446895467891973582": {
     "source": "Make people want the full board",
     "file": "src/app/boards/boards.html"
-  },
-  "1447044937964335249": {
-    "source": "{$START_TAG_SPAN}dashboard_customize{$CLOSE_TAG_SPAN} Boards ",
-    "file": "src/app/account-menu/account-menu.html"
   },
   "1450781010211330262": {
     "source": "Refine with AI",
@@ -2351,10 +2343,6 @@
     "source": "Plan cancelled. Invited guests will be notified.",
     "file": "src/app/boards/boards.ts"
   },
-  "1722023764276093379": {
-    "source": "{$START_TAG_SPAN}kid_star{$CLOSE_TAG_SPAN} Favorites ",
-    "file": "src/app/boards/boards.html"
-  },
   "1722720927781110014": {
     "source": "Shape every photo",
     "file": "src/app/boards/boards.ts"
@@ -2745,7 +2733,7 @@
   },
   "1872858477415600352": {
     "source": "Admin users",
-    "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+    "file": "src/app/account-menu/account-menu.html"
   },
   "1873124902182690569": {
     "source": "Your voice preview could not be played.",
@@ -4406,10 +4394,6 @@
   "2410017780321259514": {
     "source": "{$START_TAG_SPAN}open_in_new{$CLOSE_TAG_SPAN} Open",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
-  },
-  "2411447789073961570": {
-    "source": "{$START_TAG_SPAN}account_circle{$CLOSE_TAG_SPAN} Profile ",
-    "file": "src/app/account-menu/account-menu.html"
   },
   "2411888447644977106": {
     "source": " Share {$START_TAG_SPAN}ios_share{$CLOSE_TAG_SPAN}",
@@ -6371,10 +6355,6 @@
     "source": " Make mine {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
     "file": "src/app/public-wikis/public-wikis.html"
   },
-  "3075552657750688847": {
-    "source": "{$START_TAG_SPAN}collections_bookmark{$CLOSE_TAG_SPAN} Collections ",
-    "file": "src/app/boards/boards.html"
-  },
   "3076687427621376223": {
     "source": "Organization",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -6822,10 +6802,6 @@
   "3207515771220354317": {
     "source": "Checking this square with what3words…",
     "file": "src/app/boards/boards.ts"
-  },
-  "3208120397015630895": {
-    "source": "{$START_TAG_SPAN}groups{$CLOSE_TAG_SPAN} My teams ",
-    "file": "src/app/account-menu/account-menu.html"
   },
   "3209147967327365855": {
     "source": "Shown prominently in recap emails.",
@@ -8921,7 +8897,7 @@
   },
   "3854363836178152005": {
     "source": "Create team",
-    "file": "src/app/teams/teams.ts"
+    "file": "src/app/account-menu/account-menu.html"
   },
   "3856871798218441572": {
     "source": "Your free account includes one personal voice. Upgrade to add more reusable voices.",
@@ -9994,10 +9970,6 @@
   "4205499764643937535": {
     "source": "Listing voice",
     "file": "src/app/teams/teams.html"
-  },
-  "4207619348446992506": {
-    "source": "{$START_TAG_SPAN}collections_bookmark{$CLOSE_TAG_SPAN} New collection ",
-    "file": "src/app/boards/boards.html"
   },
   "4207694300948617247": {
     "source": "Unpublishing or archiving makes this visitor link unavailable.",
@@ -11451,10 +11423,6 @@
     "source": "Make quiz",
     "file": "src/app/answer-card/answer-card.ts"
   },
-  "4661988833780528014": {
-    "source": "{$START_TAG_SPAN}crop_square{$CLOSE_TAG_SPAN} Cards ",
-    "file": "src/app/boards/boards.html"
-  },
   "466217285601692470": {
     "source": "Admin only",
     "file": "src/app/business-detail/business-activity.html"
@@ -12257,7 +12225,7 @@
   },
   "4915431133669985304": {
     "source": "Profile",
-    "file": "src/app/business/business.html"
+    "file": "src/app/account-menu/account-menu.html"
   },
   "4918496402143101585": {
     "source": "Narration needed",
@@ -12285,7 +12253,7 @@
   },
   "4930506384627295710": {
     "source": "Settings",
-    "file": "src/app/green-jobs/green-jobs.html"
+    "file": "src/app/account-menu/account-menu.html"
   },
   "4933518608647304326": {
     "source": "Revenue growth in Q3...",
@@ -13217,7 +13185,7 @@
   },
   "5249573116861036420": {
     "source": "My Wikis",
-    "file": "src/app/profile/profile.html"
+    "file": "src/app/account-menu/account-menu.html"
   },
   "5252177656057140505": {
     "source": "Enable inbound SMS webhook",
@@ -13674,10 +13642,6 @@
   "5380158799846603442": {
     "source": "Opens the complete board",
     "file": "src/app/boards/boards.html"
-  },
-  "5381573709660761877": {
-    "source": "{$START_TAG_SPAN}school{$CLOSE_TAG_SPAN} University Board Factory ",
-    "file": "src/app/account-menu/account-menu.html"
   },
   "5381580243787883372": {
     "source": "What are the latest updates about {city}?",
@@ -14477,7 +14441,7 @@
   },
   "5651791510773453829": {
     "source": "City Board Factory",
-    "file": "src/app/admin-users/admin-users.html"
+    "file": "src/app/account-menu/account-menu.html"
   },
   "5653202483299129380": {
     "source": "Weather",
@@ -15541,7 +15505,7 @@
   },
   "5968366500418000730": {
     "source": "Collections",
-    "file": "src/app/boards/boards.ts"
+    "file": "src/app/boards/boards.html"
   },
   "5970183308560831415": {
     "source": " The representative can publish this listing and access its private contacts. Voice choice is independent. ",
@@ -15762,10 +15726,6 @@
   "6037529224193160408": {
     "source": "AI-generated voices can sound realistic. Make sure you have permission before cloning or impersonating a real person.",
     "file": "src/app/atlas-persona/atlas-persona.html"
-  },
-  "6037563492813031683": {
-    "source": "{$START_TAG_SPAN}notifications{$CLOSE_TAG_SPAN} Notifications {$START_BLOCK_IF}{$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
-    "file": "src/app/account-menu/account-menu.html"
   },
   "6038495246592729376": {
     "source": "{$START_TAG_SPAN}{$CLOSE_TAG_SPAN} Your expertise. Brought to life.",
@@ -19093,7 +19053,7 @@
   },
   "7107218117130409950": {
     "source": "Boards",
-    "file": "src/app/boards/boards.html"
+    "file": "src/app/account-menu/account-menu.html"
   },
   "7107440557099021468": {
     "source": "Create a new voice",
@@ -19121,7 +19081,7 @@
   },
   "7119466532064939023": {
     "source": "University Board Factory",
-    "file": "src/app/admin-users/admin-users.html"
+    "file": "src/app/account-menu/account-menu.html"
   },
   "7120070233402299142": {
     "source": "Founding-business launch badge",
@@ -19615,10 +19575,6 @@
     "source": "Visitor actions",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
-  "7284318737681797324": {
-    "source": "{$START_TAG_SPAN}settings{$CLOSE_TAG_SPAN} Settings ",
-    "file": "src/app/account-menu/account-menu.html"
-  },
   "7286060912306083632": {
     "source": "{$TAG_INPUT} An agent",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -20095,10 +20051,6 @@
     "source": "Jukebox",
     "file": "src/app/boards/boards.ts"
   },
-  "7444976732511668808": {
-    "source": "{$START_TAG_SPAN}grid_on{$CLOSE_TAG_SPAN} Boards ",
-    "file": "src/app/boards/boards.html"
-  },
   "7447652123016023050": {
     "source": " LivingWiki looks at the actual pictures and drafts one editable card per photo. {$INTERPOLATION} ",
     "file": "src/app/boards/boards.html"
@@ -20225,7 +20177,7 @@
   },
   "7484031895091620784": {
     "source": "{$START_TAG_SPAN}content_copy{$CLOSE_TAG_SPAN} Copy link ",
-    "file": "src/app/boards/boards.html"
+    "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
   },
   "7485002198437155576": {
     "source": "Solar, wind, geothermal, and battery storage installations globally — capacity, growth rates, policy incentives, and cost curves compiled from public energy data.",
@@ -20854,10 +20806,6 @@
   "7698352861001306786": {
     "source": "history, champion, 1934",
     "file": "src/app/boards/boards.html"
-  },
-  "7698807073517524374": {
-    "source": "{$START_TAG_SPAN}factory{$CLOSE_TAG_SPAN} City Board Factory ",
-    "file": "src/app/account-menu/account-menu.html"
   },
   "7699728201176067014": {
     "source": "Logo URL fallback",
@@ -22587,10 +22535,6 @@
     "source": "Wiki Reader",
     "file": "src/app/workspace-navigation/workspace-navigation.ts"
   },
-  "825196162496122810": {
-    "source": "{$START_TAG_SPAN}group{$CLOSE_TAG_SPAN} Friends ",
-    "file": "src/app/account-menu/account-menu.html"
-  },
   "8253627305850813394": {
     "source": "Join LivingWiki {city}",
     "file": "src/app/chat/chat.ts"
@@ -23869,7 +23813,7 @@
   },
   "8707887448880467422": {
     "source": "Friends",
-    "file": "src/app/boards/boards.html"
+    "file": "src/app/account-menu/account-menu.html"
   },
   "8708309041028579154": {
     "source": "Quiz results",
@@ -25219,10 +25163,6 @@
     "source": "{$START_TAG_SPAN}{$CLOSE_TAG_SPAN} City places ",
     "file": "src/app/city-places/city-places.html"
   },
-  "9094222027961743557": {
-    "source": "{$START_TAG_SPAN}group_add{$CLOSE_TAG_SPAN} Create team ",
-    "file": "src/app/account-menu/account-menu.html"
-  },
   "9094663081716470240": {
     "source": "Failed to add admin.",
     "file": "src/app/atlas-manage/atlas-manage.ts"
@@ -25529,7 +25469,7 @@
   },
   "920707969278930052": {
     "source": "My teams",
-    "file": "src/app/teams/teams.html"
+    "file": "src/app/account-menu/account-menu.html"
   },
   "9208062061277346632": {
     "source": "Idea",
@@ -25634,10 +25574,6 @@
   "939904289010667839": {
     "source": "Could not save this gem. Please retry.",
     "file": "src/app/off-grids/off-grid-detail.ts"
-  },
-  "9401498095936883": {
-    "source": "{$START_TAG_SPAN}dashboard{$CLOSE_TAG_SPAN} My Wikis ",
-    "file": "src/app/account-menu/account-menu.html"
   },
   "940472453304494514": {
     "source": "For the individual agent",
