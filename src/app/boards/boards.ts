@@ -23075,9 +23075,20 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   private boardSaveErrorMessage(error: unknown): string {
     const code = error instanceof FirebaseError ? error.code :
       error && typeof error === 'object' && 'code' in error ? String(error.code) : '';
-    if (code.endsWith('permission-denied')) return 'Firebase denied the save (permission-denied). Check board ownership, visibility, and content limits.';
+    const message = error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+      ? error.message : '';
+    // Firestore can report oversized documents as invalid-argument, not just
+    // resource-exhausted. Only diagnose size when the server message confirms it.
+    const exceededSize = /(?:exceeds?|exceeded|too (?:large|big)|longer than|maximum (?:allowed )?(?:\w+ )?size)/i.test(message);
+    if (exceededSize && /\b(?:document|entity)\b.*\bsize\b|\bsize\b.*\b(?:document|entity)\b/i.test(message)) {
+      return 'This board exceeds Firebase’s 1 MiB (1,048,576 bytes) limit for a saved board. Shorten long card text or split the cards across smaller boards, then save again.';
+    }
+    if (exceededSize && /\b(?:field|property)\b.*\b(?:bytes|size)\b/i.test(message)) {
+      return 'One field on this board exceeds Firebase’s field size limit. Shorten long card text or remove embedded image data, then save again.';
+    }
+    if (code.endsWith('permission-denied')) return `Firebase denied the save (permission-denied). Check board ownership and visibility. If you edited the board text, titles allow ${FIRESTORE_BOARD_TITLE_MAX_LENGTH} characters and descriptions allow ${FIRESTORE_BOARD_DESCRIPTION_MAX_LENGTH.toLocaleString('en-US')}.`;
     if (code.endsWith('unauthenticated')) return 'Your session expired. Sign in again, then retry the save.';
-    if (code.endsWith('resource-exhausted')) return 'Firebase reached a size or quota limit. Reduce board content or try again later.';
+    if (code.endsWith('resource-exhausted')) return 'Firebase reached a resource or quota limit (resource-exhausted). Try again later. If it continues, share this code with support.';
     if (code.endsWith('unavailable') || code.endsWith('deadline-exceeded')) return 'Could not reach Firebase. Check your connection and retry the save.';
     if (code) return `Firebase save failed (${code}). Please retry or share this code with support.`;
     if (error instanceof Error && error.message && !code) return error.message;

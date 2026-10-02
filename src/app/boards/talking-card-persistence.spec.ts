@@ -1,4 +1,5 @@
 import { signal } from '@angular/core';
+import { FirebaseError } from 'firebase/app';
 import type { TalkingCardEditorResult } from './talking-card';
 import { BoardsComponent } from './boards';
 
@@ -142,6 +143,60 @@ describe('Talking Card board persistence', () => {
     await component.addTalkingCard(result);
     expect(completeSave).toHaveBeenCalledWith(error);
     expect(component.closeTalkingCardEditor).not.toHaveBeenCalled();
+  });
+
+  for (const error of [
+    new FirebaseError('invalid-argument', 'Document boards/board cannot be written because its size (1100000 bytes) exceeds the maximum allowed size (1048576 bytes).'),
+    new FirebaseError('resource-exhausted', 'The document size exceeds the maximum allowed size.'),
+    { code: 'functions/invalid-argument', message: 'maximum entity size is 1048576 bytes' },
+  ]) {
+    it(`explains the board size limit in the Talking Card modal for ${error.code}`, async () => {
+      const { component, completeSave } = harness(false);
+      const message = component.boardSaveErrorMessage(error);
+      expect(message).toContain('1 MiB (1,048,576 bytes)');
+      expect(message).toContain('split the cards across smaller boards');
+      expect(message).not.toContain('connection');
+      component.boardsSyncError.set(message);
+
+      await component.addTalkingCard(result);
+
+      expect(completeSave).toHaveBeenCalledWith(message);
+      expect(component.closeTalkingCardEditor).not.toHaveBeenCalled();
+    });
+  }
+
+  it('explains an oversized field without calling it a total board size failure', () => {
+    const { component } = harness(false);
+    const message = component.boardSaveErrorMessage(new FirebaseError(
+      'invalid-argument', 'The value of property "cards" is longer than 1048487 bytes.',
+    ));
+    expect(message).toContain('One field on this board');
+    expect(message).toContain('Shorten long card text');
+    expect(message).not.toContain('1,048,576');
+  });
+
+  it('does not misdiagnose a quota failure as oversized content', () => {
+    const { component } = harness(false);
+    const message = component.boardSaveErrorMessage(new FirebaseError('resource-exhausted', 'Quota exceeded.'));
+    expect(message).toContain('quota limit (resource-exhausted)');
+    expect(message).toContain('Try again later');
+    expect(message).not.toContain('Shorten');
+    expect(message).not.toContain('1 MiB');
+  });
+
+  it('keeps unrelated invalid arguments separate from size failures', () => {
+    const { component } = harness(false);
+    expect(component.boardSaveErrorMessage(new FirebaseError('invalid-argument', 'Invalid document path.')))
+      .toContain('Firebase save failed (invalid-argument)');
+  });
+
+  it('includes current text limits in a rule denial without asserting that size caused it', () => {
+    const { component } = harness(false);
+    const message = component.boardSaveErrorMessage(new FirebaseError('permission-denied', 'Missing or insufficient permissions.'));
+    expect(message).toContain('Check board ownership and visibility');
+    expect(message).toContain('If you edited the board text');
+    expect(message).toContain('titles allow 240 characters');
+    expect(message).toContain('descriptions allow 5,000');
   });
 
   for (const visibility of ['public', 'unlisted']) {

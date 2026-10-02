@@ -23,6 +23,7 @@ A small Word document can therefore coincide with this failure without causing i
 - Board titles now support 240 characters (previously 90); descriptions support 5,000 (previously 240). The board editors, normalization, Firebase rules, nested board-title metadata, board copies, Kiwi edits, and team title saves use the expanded limits. Shared JSON constants and a rule synchronization test prevent drift.
 - Card updates validate changed title/description/cover fields. Unchanged historical text beyond even the expanded limits still does not block adding a Talking Card. Ownership checks, plan gates, card-count limits, and media invalidation requirements remain in effect.
 - The modal preserves the actual board-save error and its draft.
+- Confirmed oversized board errors now explain Firebase's 1 MiB board limit and suggest shortening card text or splitting the board. Oversized fields receive a separate message. Quota errors no longer imply that the board is too large; rule denials list the current title/description limits without claiming they caused the denial.
 - UI changes are limited to visibility wording and matching title/description input limits. The generated modal layout is a proposal, not an implemented redesign.
 
 ## Verification
@@ -35,6 +36,7 @@ A small Word document can therefore coincide with this failure without causing i
 - 30 additional targeted browser tests passed for board text normalization, copying, Studio persistence, and Talking Card saves.
 - Kiwi policy tests passed with long create/edit/design text.
 - Angular development build passed.
+- 16 Talking Card persistence browser tests passed after refining size diagnostics, including `invalid-argument` and `resource-exhausted` size failures, oversized fields, quota failures, unrelated invalid arguments, and propagation into the open modal.
 
 No live Jim-session reproduction or live microphone/provider test was possible from the supplied evidence.
 
