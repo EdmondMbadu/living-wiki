@@ -3703,10 +3703,6 @@
     "source": "A simple flow that puts your{$LINE_BREAK} expertise at the heart of the experience.",
     "file": "src/app/talkthrus/talkthrus.html"
   },
-  "2197575147488613343": {
-    "source": "A public board requires a public avatar. Keep the board private if you do not want to publish this avatar.",
-    "file": "src/app/talking-card-editor/talking-card-editor.html"
-  },
   "219825243880527209": {
     "source": "Explore every {$INTERPOLATION} board",
     "file": "src/app/chat/chat.html"
@@ -10431,6 +10427,10 @@
     "source": " {$INTERPOLATION} {$INTERPOLATION_1} and {$INTERPOLATION_2} {$INTERPOLATION_3} exported to {$INTERPOLATION_4}. ",
     "file": "src/app/boards/boards.html"
   },
+  "4346619086722097207": {
+    "source": "List this avatar in the public directory (optional).",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "4347714126505139135": {
     "source": "Sign in to LivingWiki first. Your Spotify password is always handled by Spotify.",
     "file": "src/app/spotify-player/spotify-player.html"
@@ -10770,10 +10770,6 @@
   "4471242384722989552": {
     "source": "Generate a card picture",
     "file": "src/app/boards/boards.html"
-  },
-  "447161094872344618": {
-    "source": "Make this avatar public. Visitors can chat with its persona and knowledge and find it in the public directory.",
-    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "4473257852654026111": {
     "source": "Read {name}’s complete take",
@@ -18678,6 +18674,10 @@
   "6990424485062673905": {
     "source": "Set location",
     "file": "src/app/off-grids/off-grid-detail.html"
+  },
+  "6993779924536938322": {
+    "source": "Visitors can talk to this avatar through your shared board without listing it in the public directory. Private boards remain accessible only to their owner.",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "6994128529778512071": {
     "source": "Local time",

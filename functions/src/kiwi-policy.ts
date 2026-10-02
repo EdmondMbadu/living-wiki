@@ -1,3 +1,4 @@
+import boardContentLimits from './board-content-limits.json';
 /** Pure, deliberately small edit surface for Kiwi. Never apply model JSON to a board directly. */
 export type KiwiCardDraft = {
   title: string;
@@ -98,7 +99,7 @@ export function normalizeKiwiAction(value: unknown): KiwiAction | null {
   if (!source) return null;
   const kind = text(source['kind'], 30);
   if (kind === 'create_board') {
-    const title = text(source['title'], 90);
+    const title = text(source['title'], boardContentLimits.title);
     const visibility = text(source['visibility'], 20);
     if (!title || !['public', 'unlisted', 'private'].includes(visibility)) return null;
     const requestedTone = text(source['tone'], 20);
@@ -106,7 +107,7 @@ export function normalizeKiwiAction(value: unknown): KiwiAction | null {
       ? source['cards'].slice(0, 20).map(cardDraft).filter((card): card is KiwiCardDraft => !!card)
       : [];
     return {
-      kind, title, description: text(source['description'], 240),
+      kind, title, description: text(source['description'], boardContentLimits.description),
       tone: tones.includes(requestedTone as KiwiTone) ? requestedTone as KiwiTone : 'teal',
       visibility: visibility as 'public' | 'unlisted' | 'private', cards,
     };
@@ -121,8 +122,8 @@ export function normalizeKiwiAction(value: unknown): KiwiAction | null {
   if (kind === 'update_board' || kind === 'design_board') {
     const requestedTone = text(source['tone'], 20);
     const tone = tones.includes(requestedTone as KiwiTone) ? requestedTone as KiwiTone : undefined;
-    const title = optionalText(source, 'title', 90);
-    const description = optionalText(source, 'description', 240);
+    const title = optionalText(source, 'title', boardContentLimits.title);
+    const description = optionalText(source, 'description', boardContentLimits.description);
     const cards = kind === 'design_board' && Array.isArray(source['cards'])
       ? source['cards'].slice(0, 12).map(cardDraft).filter((card): card is KiwiCardDraft => !!card) : [];
     if (title === '' || (title === undefined && description === undefined && !tone && cards.length === 0)) return null;

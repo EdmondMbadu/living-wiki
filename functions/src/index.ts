@@ -121,6 +121,8 @@ export { getTeamInsights, submitTeamContact, manageTeamContacts, getTeamConversa
 // Team call verification is deferred. Do not export teamVoiceWebhook until its
 // provider and secret are configured; full deploys validate every exported endpoint.
 import { issueTeamVoiceSession, teamVoiceBinding, teamWorkingBoard } from './team-voice';
+import { loadTalkingCardAtlas } from './talking-card-access';
+export { getTalkingCardAvatar } from './talking-card-access';
 import { requireVoiceGrant, saveGeneratedTeamBoard } from './teams';
 export { exportBoardToDocx } from './board-doc-export';
 import { handleAnswerCardShare, handleBoardShare, handleTravelCardShare } from './answer-card-share';
@@ -16839,7 +16841,7 @@ export const createElevenLabsVoiceSession = onCall(
     let atlasRecord: Record<string, unknown> | null = null;
     let checkpoint = Date.now();
     if (atlasId) {
-      const { atlas } = await loadAtlasForVoiceAccess(atlasId, uid);
+      const atlas = await loadTalkingCardAtlas(atlasId, uid, request.data);
       atlasRecord = atlas;
       atlasName = textValue(atlas.name, 120) || atlasName;
     }
@@ -17011,6 +17013,8 @@ export const createElevenLabsVoiceSession = onCall(
       voiceAccent: selectedVoice?.accent ?? voicePreference.accent,
       dynamicVariables: {
         atlas_id: atlasId ?? '',
+        board_id: requestedTeamBoardId,
+        card_id: textValue(request.data?.cardId, 180) || '',
         atlas_name: atlasName ?? '',
         answer_mode: atlasRecord?.['default_answer_mode'] === 'internet' ? 'internet' : 'wiki',
         visitor_id: visitorId,
@@ -19297,7 +19301,9 @@ export const sendVoiceConversationSummary = onCall(
     }
 
     const atlasId = normalizeAtlasId(request.data?.atlasId);
-    const atlas = await loadAnswerCardAtlas(atlasId, requesterUid);
+    const atlas = source === 'talking_card' && atlasId
+      ? await loadTalkingCardAtlas(atlasId, requesterUid, request.data)
+      : await loadAnswerCardAtlas(atlasId, requesterUid);
     const talkingCardContext = source === 'talking_card'
       ? await loadTalkingCardSummaryContext({
           boardId: request.data?.boardId,
@@ -22739,7 +22745,7 @@ export const askPublicAtlas = onCall(
       throw new HttpsError('invalid-argument', 'question is required.');
     }
 
-    const atlas = await loadPublicAtlasById(atlasId);
+    const atlas = await loadTalkingCardAtlas(atlasId, request.auth?.uid ?? null, request.data);
     const visitor = getPublicChatVisitorContext(request);
 
     if (visitor.kind === 'authenticated' && visitor.visitorUserId === atlas.user_id) {

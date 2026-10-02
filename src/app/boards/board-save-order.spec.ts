@@ -44,7 +44,7 @@ describe('board save ordering', () => {
       createdAt: 'old', updatedAt: 'old',
     });
     const source = {
-      id: 'original', ownerUserId: 'edmond', title: 'A'.repeat(90), kind: 'walking-tour', visibility: 'public',
+      id: 'original', ownerUserId: 'edmond', title: 'A'.repeat(240), kind: 'walking-tour', visibility: 'public',
       customSlug: 'original-slug', atlasId: 'atlas', generatedForAtlasId: 'atlas', likeCount: 12,
       forkedFromBoardId: 'someone-else', forkedFromTitle: 'Old', forkedFromOwnerUserId: 'other', forkedFromOwnerName: 'Other',
       socialVideoUrl: 'old.mp4', trailerVideoUrl: 'old-trailer.mp4',
@@ -66,7 +66,7 @@ describe('board save ordering', () => {
 
     await component.duplicateBoard(source);
 
-    expect(persisted.title).toBe(`${'A'.repeat(83)} (copy)`);
+    expect(persisted.title).toBe(`${'A'.repeat(233)} (copy)`);
     expect(persisted.id).not.toBe(source.id);
     expect(persisted.visibility).toBe('public');
     expect(persisted.customSlug).toBe('');

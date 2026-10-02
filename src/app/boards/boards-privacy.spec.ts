@@ -338,6 +338,7 @@ describe('unlisted board access and sharing', () => {
 
   it('uses normal production share, QR, custom alias, and video links without enabling forks', () => {
     const component = harness();
+    component.boardTranslationReady = () => false;
     const board = savedBoard(component, { visibility: 'unlisted', custom_slug: 'link-only-story', socialVideoUrl: 'https://example.test/video.mp4' });
     expect(component.boardShareUrl(board)).toContain('https://www.livingwiki.com/share/board/board-1');
     expect(component.boardPageUrl(board)).toContain('/boards/link-only-story');
@@ -361,11 +362,11 @@ describe('unlisted board access and sharing', () => {
     expect(board.visibility).toBe('unlisted');
   });
 
-  it('rejects sharing private Talking Card knowledge as Unlisted before writing or uploading', async () => {
+  it("rejects sharing another owner's private Talking Card knowledge as Unlisted", async () => {
     const component = harness();
     const board = savedBoard(component, { visibility: 'unlisted', cards: [{ id: 'agent', title: 'Agent', conversation: { atlasId: 'private-agent', provider: 'atlas' } }] });
-    component.atlasService = { getAccessibleAtlasById: jasmine.createSpy('avatar').and.resolveTo({ is_public: false }) };
-    await expectAsync(component.prepareBoardForFirestore(board, 'owner')).toBeRejectedWithError(/private or unavailable Talking Card/);
+    component.atlasService = { getAccessibleAtlasById: jasmine.createSpy('avatar').and.resolveTo({ is_public: false, user_id: 'another-owner' }) };
+    await expectAsync(component.prepareBoardForFirestore(board, 'owner')).toBeRejectedWithError(/unavailable or belongs to another owner/);
   });
 });
 

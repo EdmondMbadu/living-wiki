@@ -676,6 +676,19 @@ export class AtlasService {
     return ref.id;
   }
 
+  async getTalkingCardAvatar(atlasId: string, boardId: string, cardId: string): Promise<AtlasItem | null> {
+    const directlyAccessible = await this.getAccessibleAtlasById(atlasId);
+    if (directlyAccessible || !this.functions || !boardId || !cardId) return directlyAccessible;
+    try {
+      const getAvatar = httpsCallable<{ atlasId: string; boardId: string; cardId: string },
+        { atlas: Record<string, unknown> }>(this.functions, 'getTalkingCardAvatar');
+      const { data } = await getAvatar({ atlasId, boardId, cardId });
+      return this.hydrateAtlas(data.atlas);
+    } catch {
+      return null;
+    }
+  }
+
   async getAccessibleAtlasById(atlasId: string): Promise<AtlasItem | null> {
     if (!this.firestore || !atlasId.trim()) return null;
     try {

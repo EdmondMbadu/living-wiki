@@ -78,11 +78,16 @@ describe('boardCityMetadataForFirestore', () => {
 
 describe('boardDescriptionForFirestore', () => {
   it('normalizes generated copy to the Firestore board-description limit', () => {
-    const value = `  A   Zillow listing ${'with useful source context '.repeat(20)}  `;
+    const value = `  A   Zillow listing ${'with useful source context '.repeat(400)}  `;
     const normalized = boardDescriptionForFirestore(value);
 
     expect(normalized.length).toBe(FIRESTORE_BOARD_DESCRIPTION_MAX_LENGTH);
     expect(normalized).not.toContain('  ');
+  });
+
+  it('preserves a longer description instead of silently cutting it to 240 characters', () => {
+    const value = 'Historic sites and background. '.repeat(100).trim();
+    expect(boardDescriptionForFirestore(value)).toBe(value);
   });
 
   it('returns an empty string for non-text values', () => {

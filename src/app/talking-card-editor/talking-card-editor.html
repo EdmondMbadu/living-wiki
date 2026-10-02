@@ -30,12 +30,12 @@
     }
 
     <div class="talking-editor__body">
-      @if (needsPublication() && (mode() === 'new' || selectedAtlas())) {
+      @if (canListAvatar() && (mode() === 'new' || selectedAtlas())) {
         <label class="talking-editor__check">
           <input id="talking-avatar-publication" type="checkbox" [ngModel]="publishAvatar()" (ngModelChange)="publishAvatar.set($event)" />
-          <span i18n>Make this avatar public. Visitors can chat with its persona and knowledge and find it in the public directory.</span>
+          <span i18n>List this avatar in the public directory (optional).</span>
         </label>
-        <p class="talking-editor__notice" i18n>A public board requires a public avatar. Keep the board private if you do not want to publish this avatar.</p>
+        <p class="talking-editor__notice" i18n>Visitors can talk to this avatar through your shared board without listing it in the public directory. Private boards remain accessible only to their owner.</p>
       }
       @if (isRealEstateSetup()) {
         <section class="talking-editor__real-estate" aria-labelledby="real-estate-agent-profile-heading">

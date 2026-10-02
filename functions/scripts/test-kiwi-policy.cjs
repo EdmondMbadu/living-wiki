@@ -97,3 +97,13 @@ test('board design adds distinct cards while preserving existing cards and owner
   assert.deepEqual(next.cards.map((card) => card.id), ['existing', 'new-id-1', 'new-id-2']);
   assert.equal(board.cards.length, 1);
 });
+
+test('Kiwi board create/edit/design actions preserve the expanded text limits', () => {
+  const title = 'T'.repeat(240);
+  const description = 'D'.repeat(5000);
+  for (const kind of ['create_board', 'update_board', 'design_board']) {
+    const action = normalizeKiwiAction({ kind, boardId: 'board-1', title, description, visibility: 'public' });
+    assert.equal(action.title, title);
+    assert.equal(action.description, description);
+  }
+});

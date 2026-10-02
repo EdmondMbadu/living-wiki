@@ -1,3 +1,4 @@
+import boardContentLimits from './board-content-limits.json';
 /** Pure team policy and projection helpers. Keep this module independent of Firebase. */
 export type TeamRole = 'admin' | 'member';
 export type TeamListingStatus = 'draft' | 'published' | 'unpublished' | 'archived';
@@ -223,7 +224,7 @@ export function publicTeamBoard(
 export function teamListingSummary(board: TeamRecord): TeamRecord {
   return {
     id: board['id'],
-    title: teamText(board['title'], 90),
+    title: teamText(board['title'], boardContentLimits.title),
     description: teamText(board['description'], 280),
     imageUrl: teamText(board['imageUrl'], 2000),
     status: board['team_status'] || 'draft',

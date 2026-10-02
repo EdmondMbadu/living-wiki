@@ -1,3 +1,4 @@
+import boardContentLimits from './board-content-limits.json';
 import { GoogleGenAI } from '@google/genai';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { defineSecret, defineString } from 'firebase-functions/params';
@@ -161,8 +162,8 @@ function publicCopy(source: Data, boardId: string, uid: string, profile: Data, n
     forkedFromBoardId: source['id'], forkedFromTitle: source['title'],
     forkedFromOwnerUserId: source['owner_user_id'],
     forkedFromOwnerName: value(source['owner_display_name'], 100),
-    title: value(source['title'], 90) || 'Board copy',
-    description: value(source['description'], 240), kind: 'standard',
+    title: value(source['title'], boardContentLimits.title) || 'Board copy',
+    description: value(source['description'], boardContentLimits.description), kind: 'standard',
     tone: value(source['tone'], 20) || 'teal', icon: value(source['icon'], 64) || 'auto_stories',
     visibility: 'public', visibility_schema_version: 1, imageUrl: publicImage(source['imageUrl']), stickers: [],
     sortOrder: -Date.now(), backNote: '', insideCardsDisplay: 'nested', showCardNumbers: true,

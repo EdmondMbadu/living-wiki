@@ -1,3 +1,5 @@
+import boardContentLimits from '../../../functions/src/board-content-limits.json';
+
 /**
  * Firestore rejects `undefined` anywhere in a document, including nested card
  * objects. Remove undefined object properties and array entries immediately
@@ -54,12 +56,13 @@ export function boardCityMetadataForFirestore(
   return metadata;
 }
 
-export const FIRESTORE_BOARD_DESCRIPTION_MAX_LENGTH = 240;
+export const FIRESTORE_BOARD_TITLE_MAX_LENGTH = boardContentLimits.title;
+export const FIRESTORE_BOARD_DESCRIPTION_MAX_LENGTH = boardContentLimits.description;
 
 /**
  * Keep every board-writing path aligned with the Firestore board validator.
  * Generators and importers may retain longer source copy for cards, but the
- * board-level description is deliberately compact and capped by the rules.
+ * board-level description can retain up to 5,000 characters, matching the rules.
  */
 export function boardDescriptionForFirestore(value: unknown): string {
   return (typeof value === 'string' ? value : '')

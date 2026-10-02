@@ -24,6 +24,7 @@ import {
 const projectId = 'demo-living-wiki';
 const ownerUid = 'board-owner';
 let testEnvironment;
+const boardContentLimits = JSON.parse(await readFile(new URL('../../functions/src/board-content-limits.json', import.meta.url), 'utf8'));
 const voiceCatalog = JSON.parse(await readFile(new URL('../../functions/src/stack-narrator-voices.json', import.meta.url), 'utf8'));
 const firestoreRules = await readFile(new URL('../../firestore.rules', import.meta.url), 'utf8');
 const videoPersistenceSource = await readFile(new URL('../../src/app/boards/board-video-persistence.ts', import.meta.url), 'utf8');
@@ -240,11 +241,11 @@ test('personal board description boundary matches the client persistence contrac
   const database = testEnvironment.authenticatedContext(ownerUid).firestore();
   await assertSucceeds(setDoc(
     doc(database, 'boards', 'description-at-limit'),
-    personalWizardBoard({ id: 'description-at-limit', description: 'x'.repeat(240) }),
+    personalWizardBoard({ id: 'description-at-limit', description: 'x'.repeat(5000) }),
   ));
   await assertFails(setDoc(
     doc(database, 'boards', 'description-over-limit'),
-    personalWizardBoard({ id: 'description-over-limit', description: 'x'.repeat(241) }),
+    personalWizardBoard({ id: 'description-over-limit', description: 'x'.repeat(5001) }),
   ));
 });
 
@@ -527,7 +528,7 @@ for (const visibility of ['public', 'unlisted', 'private']) {
     for (const invalid of [
       { owner_user_id: 'outsider' }, { cards: [{ id: 'unauthorized-card-edit' }] }, { custom_slug: 'forged' },
       { atlas_id: 'forged' }, { team_id: 'forged' }, { imageUrl: 123 }, { imageUrl: 'x'.repeat(2501) },
-      { title: '' }, { title: 'x'.repeat(91) }, { description: 'x'.repeat(241) }, { backNote: 'x'.repeat(301) },
+      { title: '' }, { title: 'x'.repeat(241) }, { description: 'x'.repeat(5001) }, { backNote: 'x'.repeat(301) },
       { icon: 'x'.repeat(65) }, { tone: 'invalid' }, { logoUrl: 'x'.repeat(2001) },
       { logoLinkUrl: 'x'.repeat(241) }, { stackCtaLabel: 'x'.repeat(49) }, { stackCtaUrl: 'x'.repeat(241) },
       { stickers: Array(49).fill('star') }, { photoStudioDraft: true }, { visibility: 'invalid' },
@@ -1587,3 +1588,81 @@ test('legacy full saves cannot accidentally convert Unlisted to Public, while cu
   await assertSucceeds(updateDoc(reference, { visibility: 'unlisted', updated_at_iso: new Date().toISOString(), server_updated_at: serverTimestamp() }));
   await assertSucceeds(updateDoc(reference, { visibility: 'public', updated_at_iso: new Date().toISOString(), server_updated_at: serverTimestamp() }));
 });
+
+for (const visibility of ['public', 'unlisted', 'private']) {
+  for (const kind of ['standard', 'walking-tour']) {
+    test(`adding a Talking Card preserves historical fields on a ${visibility} ${kind} board`, async () => {
+      const stored = personalWizardBoard({ visibility, kind, title: 'An older board title. '.repeat(20),
+        description: 'Historical description. '.repeat(300), imageUrl: 'https://example.com/old.jpg',
+        server_updated_at: new Date(), legacy_field: 'preserve', cards: [{ id: 'original', title: 'Original card' }] });
+      await testEnvironment.withSecurityRulesDisabled(async c => {
+        await setDoc(doc(c.firestore(), 'users', ownerUid), { pricingPlan: 'creator', subscriptionStatus: 'active' });
+        await setDoc(doc(c.firestore(), 'boards', stored.id), stored);
+      });
+      const reference = doc(testEnvironment.authenticatedContext(ownerUid).firestore(), 'boards', stored.id);
+      const added = { id: 'guide', title: 'Guide', conversation: {
+        version: 1, provider: 'atlas', atlasId: 'private-guide', openingMessage: 'Ask me a question.', ctaLabel: 'Talk to me',
+      } };
+      const patch = { ...boardStudioPatch({ ...stored, cards: [...stored.cards, added],
+        socialVideoRenderVersion: '', socialLandscapeVideoRenderVersion: '', trailerVideoRenderVersion: '',
+        trailerLandscapeVideoRenderVersion: '', trailerVideoSourceFingerprint: '', updated_at_iso: new Date().toISOString(),
+      }, 'cards'), server_updated_at: serverTimestamp() };
+      await assertSucceeds(updateDoc(reference, patch));
+      const saved = (await getDoc(reference)).data();
+      assert.deepEqual(saved.cards, [...stored.cards, added]);
+      for (const field of ['description', 'title', 'kind', 'visibility', 'legacy_field']) assert.equal(saved[field], stored[field]);
+      await assertFails(updateDoc(reference, { ...patch, description: 'New over-limit description. '.repeat(300) }));
+      await assertFails(updateDoc(reference, { ...patch, title: 'New over-limit title. '.repeat(20) }));
+      await assertFails(updateDoc(doc(testEnvironment.authenticatedContext('outsider').firestore(), 'boards', stored.id), patch));
+    });
+  }
+}
+
+
+test('every board save rule uses the shared title and description limits', () => {
+  const boardRules = firestoreRules.split('match /boards/{boardId}')[1].split('\n    match /')[0];
+  const titleLimits = [...boardRules.matchAll(/(?:request\.resource\.data\.title\.size\(\) <= |validDetailsString\('title', )(\d+)/g)].map(match => Number(match[1]));
+  const descriptionLimits = [...boardRules.matchAll(/(?:request\.resource\.data\.description\.size\(\) <= |validDetailsString\('description', )(\d+)/g)].map(match => Number(match[1]));
+  assert.ok(titleLimits.length > 0 && descriptionLimits.length > 0);
+  assert.deepEqual([...new Set(titleLimits)], [boardContentLimits.title]);
+  assert.deepEqual([...new Set(descriptionLimits)], [boardContentLimits.description]);
+});
+
+for (const visibility of ['public', 'unlisted', 'private']) {
+  for (const kind of ['standard', 'walking-tour']) {
+    test(`long titles and descriptions save with a Talking Card on a ${visibility} ${kind} board`, async () => {
+      await testEnvironment.withSecurityRulesDisabled(async c => {
+        await setDoc(doc(c.firestore(), 'users', ownerUid), { pricingPlan: 'creator', subscriptionStatus: 'active' });
+      });
+      const stored = personalWizardBoard({ visibility, kind, title: 'T'.repeat(boardContentLimits.title),
+        description: 'D'.repeat(boardContentLimits.description) });
+      const reference = doc(testEnvironment.authenticatedContext(ownerUid).firestore(), 'boards', stored.id);
+      await assertSucceeds(setDoc(reference, stored));
+      const guide = { id: 'talking-guide', title: 'Guide', conversation: {
+        provider: 'atlas', atlasId: 'private-guide', openingMessage: 'Ask me about the board.',
+      } };
+      const edited = { ...stored, cards: [guide], updated_at_iso: new Date().toISOString(),
+        socialVideoRenderVersion: '', socialLandscapeVideoRenderVersion: '', trailerVideoRenderVersion: '',
+        trailerLandscapeVideoRenderVersion: '', trailerVideoSourceFingerprint: '',
+        showCardNumbers: true, insideCardsDisplay: 'nested', photoStudioDraft: false };
+      for (const saveKind of ['cards', 'script', 'cover', 'settings']) {
+        await assertSucceeds(updateDoc(reference, {
+          ...boardStudioPatch(edited, saveKind), server_updated_at: serverTimestamp(),
+        }));
+      }
+      await assertSucceeds(updateDoc(reference, { ...boardDetailsPatch(edited, {
+        ...edited, title: 'N'.repeat(boardContentLimits.title), description: 'E'.repeat(boardContentLimits.description),
+      }), server_updated_at: serverTimestamp() }));
+      const saved = (await getDoc(reference)).data();
+      assert.equal(saved.title, 'N'.repeat(boardContentLimits.title));
+      assert.equal(saved.description, 'E'.repeat(boardContentLimits.description));
+      assert.deepEqual(saved.cards, [guide]);
+      await assertFails(updateDoc(reference, { ...boardDetailsPatch(saved, {
+        ...saved, title: 'x'.repeat(boardContentLimits.title + 1), updated_at_iso: new Date().toISOString(),
+      }), server_updated_at: serverTimestamp() }));
+      await assertFails(updateDoc(reference, { ...boardDetailsPatch(saved, {
+        ...saved, description: 'x'.repeat(boardContentLimits.description + 1), updated_at_iso: new Date().toISOString(),
+      }), server_updated_at: serverTimestamp() }));
+    });
+  }
+}

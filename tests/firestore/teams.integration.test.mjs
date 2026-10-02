@@ -100,6 +100,18 @@ async function save(
   return (await command(uid, 'saveListing', { teamId, boardId, board, revision })).board;
 }
 
+test('saving a Talking Card on a team listing preserves long board text', async () => {
+  const { teamId } = await create('owner');
+  const title = 'T'.repeat(240);
+  const description = 'D'.repeat(5000);
+  const first = await save(teamId, 'owner', 'long-listing', { title, description, cards: [] });
+  const guide = { id: 'guide', title: 'Guide', conversation: { provider: 'atlas', atlasId: 'owned-guide' } };
+  const saved = await save(teamId, 'owner', 'long-listing', { ...first, cards: [guide] }, first.team_revision);
+  assert.equal(saved.title, title);
+  assert.equal(saved.description, description);
+  assert.equal((await db.doc(`teams/${teamId}/listings/long-listing`).get()).data().title, title);
+});
+
 test('concurrent creation enforces one team, is idempotent, and never grants platform admin', async () => {
   const results = await Promise.allSettled([
     create('owner', 'request-a', 'team-a'),

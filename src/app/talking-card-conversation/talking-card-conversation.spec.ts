@@ -36,7 +36,7 @@ describe('TalkingCardConversationComponent', () => {
     },
   };
   const atlasService = {
-    getAccessibleAtlasById: jasmine.createSpy('getAccessibleAtlasById').and.resolveTo(atlas),
+    getTalkingCardAvatar: jasmine.createSpy('getTalkingCardAvatar').and.resolveTo(atlas),
     canAdminAtlas: jasmine.createSpy('canAdminAtlas').and.returnValue(false),
   };
   const chatService = {
@@ -58,8 +58,8 @@ describe('TalkingCardConversationComponent', () => {
   };
 
   beforeEach(async () => {
-    atlasService.getAccessibleAtlasById.calls.reset();
-    atlasService.getAccessibleAtlasById.and.resolveTo(atlas);
+    atlasService.getTalkingCardAvatar.calls.reset();
+    atlasService.getTalkingCardAvatar.and.resolveTo(atlas);
     chatService.askScoped.calls.reset();
     chatService.askPublic.calls.reset();
     chatService.createElevenLabsVoiceSession.calls.reset();

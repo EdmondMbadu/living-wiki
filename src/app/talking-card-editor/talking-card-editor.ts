@@ -242,11 +242,11 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       .slice(0, 12);
   });
   readonly publicBoard = computed(() => this.boardVisibility() === 'public');
-  readonly needsPublication = computed(() => {
+  readonly canListAvatar = computed(() => {
     const atlas = this.mode() === 'new'
       ? this.availableAtlases().find((candidate) => candidate.id === this.createdAtlasId())
       : this.selectedAtlas();
-    return this.publicBoard() && atlas?.is_public !== true;
+    return atlas?.is_public !== true && (this.mode() === 'new' || (!!atlas && this.atlasService.isAtlasOwner(atlas)));
   });
   readonly selectedAtlasEditable = computed(() => {
     const atlas = this.selectedAtlas();
@@ -267,7 +267,6 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   readonly canSave = computed(() => {
     if (this.saving() || this.imageProcessing() || this.voiceConfigLoading() || this.personalVoiceCreating()) return false;
     if (!this.openingMessage().trim() || !!this.actionFormMessage()) return false;
-    if (this.needsPublication() && !this.publishAvatar()) return false;
     if (this.isEditing() && !this.name().trim()) return false;
     if (this.mode() === 'existing') {
       return !!this.selectedAtlas();
@@ -990,8 +989,10 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
           if (this.documentsService.uploadError()) {
             throw new Error(this.documentsService.uploadError() || 'One or more knowledge files could not be uploaded.');
           }
+          this.documentFiles.set([]);
+          await this.persistDraftNow();
         }
-        if (this.publicBoard() && this.publishAvatar() && resumedAtlas?.is_public !== true) {
+        if (this.publishAvatar() && resumedAtlas?.is_public !== true) {
           this.saveStage.set('Publishing avatar…');
           await this.atlasService.updateAtlas(atlasId, { is_public: true });
         }
@@ -1002,7 +1003,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
           imageUrl = await this.atlasService.uploadTalkingCardAvatarImage(atlas.id, imageFile);
           this.uploadedImageUrl.set(imageUrl);
         }
-        if (this.needsPublication() && this.publishAvatar()) {
+        if (this.canListAvatar() && this.publishAvatar()) {
           await this.atlasService.updateAtlas(atlas.id, { is_public: true });
         }
         if (this.atlasService.canAdminAtlas(atlas)) {
@@ -1034,6 +1035,8 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
           if (this.documentsService.uploadError()) {
             throw new Error(this.documentsService.uploadError() || 'One or more knowledge files could not be uploaded.');
           }
+          this.documentFiles.set([]);
+          await this.persistDraftNow();
         }
       }
 

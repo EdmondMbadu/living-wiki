@@ -1,3 +1,4 @@
+import boardContentLimits from './board-content-limits.json';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, type Transaction } from 'firebase-admin/firestore';
@@ -603,7 +604,7 @@ function boardContent(value: unknown): TeamRecord {
   const clean = Object.fromEntries(
     Object.entries(input).filter(([key]) => !PROTECTED_BOARD_KEYS.has(key) && !key.startsWith('_')),
   );
-  const title = teamText(clean['title'], 90);
+  const title = teamText(clean['title'], boardContentLimits.title);
   if (!title) fail('Give your listing a title.');
   const cards = clean['cards'];
   if (!Array.isArray(cards) || cards.length > 200) fail('A listing can contain up to 200 cards.');

@@ -135,6 +135,26 @@ describe('Talking Card board persistence', () => {
     expect(completeSave).toHaveBeenCalledWith(jasmine.stringMatching(/could not be saved/i));
   });
 
+  it('preserves the underlying Firebase error in the modal instead of blaming the connection', async () => {
+    const { component, completeSave } = harness(false);
+    const error = 'Firebase denied the save (permission-denied). Check board ownership, visibility, and content limits.';
+    component.boardsSyncError.set(error);
+    await component.addTalkingCard(result);
+    expect(completeSave).toHaveBeenCalledWith(error);
+    expect(component.closeTalkingCardEditor).not.toHaveBeenCalled();
+  });
+
+  for (const visibility of ['public', 'unlisted']) {
+    it(`allows a ${visibility} board to use its owner's private avatar`, async () => {
+      const { component, board } = ordinaryBoardHarness();
+      board.visibility = visibility;
+      board.ownerUserId = 'owner';
+      board.cards.push({ id: 'guide', conversation: { atlasId: 'private-avatar' } });
+      component.atlasService = { getAccessibleAtlasById: jasmine.createSpy().and.resolveTo({ user_id: 'owner', is_public: false }) };
+      await expectAsync(component.assertBoardVisitorKnowledge(board)).toBeResolved();
+    });
+  }
+
   it('closes the editor only after Firestore confirms the Talking Card save', async () => {
     const { component, completeSave } = harness(true);
 

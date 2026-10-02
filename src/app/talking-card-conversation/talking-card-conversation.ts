@@ -254,7 +254,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   async ngOnInit(): Promise<void> {
     const opening = this.openingMessage().trim();
     if (opening) this.messages.set([{ id: this.id(), role: 'agent', text: opening }]);
-    const atlas = await this.atlasService.getAccessibleAtlasById(this.atlasId());
+    const atlas = await this.atlasService.getTalkingCardAvatar(this.atlasId(), this.boardId(), this.cardId());
     this.atlas.set(atlas);
     this.unavailable.set(!atlas);
     this.loadingAtlas.set(false);
@@ -284,6 +284,8 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
             threadId: this.threadId,
             anonymousVisitorId: this.anonymousVisitorId(),
             answerMode: 'wiki',
+            boardId: this.boardId(),
+            cardId: this.cardId(),
           });
       if (!response?.answer) {
         throw new Error(this.chatService.submitError() || 'The avatar could not answer right now.');
@@ -362,6 +364,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
         this.chatService.createElevenLabsVoiceSession({
           experience: 'talking-card',
           boardId: this.boardId(),
+          cardId: this.cardId(),
           atlasId: atlas.id,
           atlasName: atlas.name,
           anonymousVisitorId: this.anonymousVisitorId(),

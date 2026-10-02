@@ -994,9 +994,9 @@ service cloud.firestore {
             ])
             && request.resource.data.title is string
             && request.resource.data.title.size() >= 1
-            && request.resource.data.title.size() <= 90
+            && request.resource.data.title.size() <= 240
             && request.resource.data.description is string
-            && request.resource.data.description.size() <= 240
+            && request.resource.data.description.size() <= 5000
             && request.resource.data.visibility in ['public', 'unlisted', 'private']
             && (
               request.resource.data.visibility in ['public', 'unlisted']
@@ -1047,13 +1047,11 @@ service cloud.firestore {
               || isPlatformAdmin()
               || hasActivePersonalWikiPlan()
             )
-            && request.resource.data.title is string
-            && request.resource.data.title.size() >= 1
-            && request.resource.data.title.size() <= 90
-            && request.resource.data.description is string
-            && request.resource.data.description.size() <= 240
-            && request.resource.data.imageUrl is string
-            && request.resource.data.imageUrl.size() <= 2500
+            && validDetailsString('title', 240)
+            && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['title'])
+              || request.resource.data.title.size() >= 1)
+            && validDetailsString('description', 5000)
+            && validDetailsString('imageUrl', 2500)
             && request.resource.data.cards is list
             && request.resource.data.cards.size() <= 200
             && request.resource.data.socialVideoRenderVersion == ''
@@ -1093,9 +1091,9 @@ service cloud.firestore {
             || isPlatformAdmin() || hasActivePersonalWikiPlan())
           && (!changed.hasAny(['photoStudioDraft'])
             || (data.photoStudioDraft == false && data.visibility in ['public', 'unlisted']))
-          && validDetailsString('title', 90)
+          && validDetailsString('title', 240)
           && (!changed.hasAny(['title']) || data.title.size() >= 1)
-          && validDetailsString('description', 240)
+          && validDetailsString('description', 5000)
           && validDetailsString('backNote', 300)
           && validDetailsString('icon', 64)
           && (!changed.hasAny(['tone']) || data.tone in ['teal', 'coral', 'yellow', 'green', 'blue', 'sky', 'purple'])
@@ -1141,7 +1139,7 @@ service cloud.firestore {
         )
         && (
           !affectedKeys.hasAny(['parentBoardTitle'])
-          || (request.resource.data.parentBoardTitle is string && request.resource.data.parentBoardTitle.size() <= 90)
+          || (request.resource.data.parentBoardTitle is string && request.resource.data.parentBoardTitle.size() <= 240)
         )
         && (
           !affectedKeys.hasAny(['stackNarratorVoiceId'])
@@ -1211,7 +1209,7 @@ service cloud.firestore {
         && hasNoCityPublishingMetadata(request.resource.data)
         && request.resource.data.title is string
         && request.resource.data.title.size() >= 1
-        && request.resource.data.title.size() <= 90
+        && request.resource.data.title.size() <= 240
         && request.resource.data.cards is list
         && request.resource.data.cards.size() <= 200
         && (
@@ -1234,7 +1232,7 @@ service cloud.firestore {
         && hasNoCityPublishingMetadata(request.resource.data)
         && request.resource.data.title is string
         && request.resource.data.title.size() >= 1
-        && request.resource.data.title.size() <= 90
+        && request.resource.data.title.size() <= 240
         && request.resource.data.cards is list
         && request.resource.data.cards.size() <= 200
         && (
@@ -1288,9 +1286,9 @@ service cloud.firestore {
         )
         && request.resource.data.title is string
         && request.resource.data.title.size() >= 1
-        && request.resource.data.title.size() <= 90
+        && request.resource.data.title.size() <= 240
         && request.resource.data.description is string
-        && request.resource.data.description.size() <= 240
+        && request.resource.data.description.size() <= 5000
         && request.resource.data.backNote is string
         && request.resource.data.backNote.size() <= 300
         && request.resource.data.icon is string
@@ -1441,9 +1439,9 @@ service cloud.firestore {
         && request.resource.data.kind in ['standard', 'off-grid', 'walking-tour', 'driving-tour']
         && request.resource.data.title is string
         && request.resource.data.title.size() >= 1
-        && request.resource.data.title.size() <= 90
+        && request.resource.data.title.size() <= 240
         && request.resource.data.description is string
-        && request.resource.data.description.size() <= 240
+        && request.resource.data.description.size() <= 5000
         && request.resource.data.icon is string
         && request.resource.data.icon.size() <= 64
         && request.resource.data.tone in ['teal', 'coral', 'yellow', 'green', 'blue', 'sky', 'purple']
@@ -1614,9 +1612,9 @@ service cloud.firestore {
             ])
             && request.resource.data.title is string
             && request.resource.data.title.size() >= 1
-            && request.resource.data.title.size() <= 90
+            && request.resource.data.title.size() <= 240
             && request.resource.data.description is string
-            && request.resource.data.description.size() <= 240
+            && request.resource.data.description.size() <= 5000
             && request.resource.data.visibility in ['public', 'unlisted', 'private']
             && (
               request.resource.data.visibility in ['public', 'unlisted']
@@ -1667,13 +1665,11 @@ service cloud.firestore {
               || isPlatformAdmin()
               || hasActivePersonalWikiPlan()
             )
-            && request.resource.data.title is string
-            && request.resource.data.title.size() >= 1
-            && request.resource.data.title.size() <= 90
-            && request.resource.data.description is string
-            && request.resource.data.description.size() <= 240
-            && request.resource.data.imageUrl is string
-            && request.resource.data.imageUrl.size() <= 2500
+            && validDetailsString('title', 240)
+            && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['title'])
+              || request.resource.data.title.size() >= 1)
+            && validDetailsString('description', 5000)
+            && validDetailsString('imageUrl', 2500)
             && request.resource.data.cards is list
             && request.resource.data.cards.size() <= 200
             && request.resource.data.socialVideoRenderVersion == ''
@@ -1857,7 +1853,7 @@ service cloud.firestore {
         )
         && (
           !request.resource.data.keys().hasAny(['parentBoardTitle'])
-          || (request.resource.data.parentBoardTitle is string && request.resource.data.parentBoardTitle.size() <= 90)
+          || (request.resource.data.parentBoardTitle is string && request.resource.data.parentBoardTitle.size() <= 240)
         )
         && (
           !request.resource.data.keys().hasAny(['parentCardTitle'])
@@ -1879,9 +1875,9 @@ service cloud.firestore {
         )
         && request.resource.data.title is string
         && request.resource.data.title.size() >= 1
-        && request.resource.data.title.size() <= 90
+        && request.resource.data.title.size() <= 240
         && request.resource.data.description is string
-        && request.resource.data.description.size() <= 240
+        && request.resource.data.description.size() <= 5000
         && request.resource.data.backNote is string
         && request.resource.data.backNote.size() <= 300
         && request.resource.data.icon is string

@@ -251,6 +251,8 @@ import {
 import {
   boardCityMetadataForFirestore,
   boardDescriptionForFirestore,
+  FIRESTORE_BOARD_TITLE_MAX_LENGTH,
+  FIRESTORE_BOARD_DESCRIPTION_MAX_LENGTH,
   omitUndefinedDeep,
 } from './firestore-payload';
 import { cardsForNewBoardInside, legacyMemoryImages, relatedCardCollectionLabel, upsertNestedCard } from './related-cards';
@@ -1713,6 +1715,8 @@ type BoardLoadContext = {
   styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './real-estate-wizard-modal.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
 })
 export class BoardsComponent implements AfterViewInit, OnDestroy {
+  readonly boardTitleMaxLength = FIRESTORE_BOARD_TITLE_MAX_LENGTH;
+  readonly boardDescriptionMaxLength = FIRESTORE_BOARD_DESCRIPTION_MAX_LENGTH;
   readonly templateText = {
     message1: $localize`Interested in this home?`,
     message2: $localize`Want to get in touch?`,
@@ -8224,9 +8228,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   private async persistTalkingCardAndFinish(nextBoard: Board): Promise<void> {
     if (!await this.persistAndReplaceBoard(nextBoard, 'cards')) {
       await this.failTalkingCardSave(
-        nextBoard.teamId
-          ? this.boardsSyncError() || 'Your Talking Card could not be saved. Check your team access and try again.'
-          : 'Your Talking Card could not be saved to Firebase. Check your connection and try again.',
+        this.boardsSyncError() || 'Your Talking Card could not be saved. Please retry.',
       );
       return;
     }
@@ -14832,7 +14834,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         return [id, child] as const;
       }));
       const suffix = ' (copy)';
-      const title = `${source.title.trim().slice(0, 90 - suffix.length).trimEnd()}${suffix}`;
+      const title = `${source.title.trim().slice(0, FIRESTORE_BOARD_TITLE_MAX_LENGTH - suffix.length).trimEnd()}${suffix}`;
       const copy = this.buildBoardCopy(source, new Date().toISOString(), title, false, new Map(children));
       const persisted = await this.persistBoard(copy);
       this.boards.update((boards) => [persisted, ...boards]);
@@ -20720,12 +20722,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const fallback = this.buildLocalWizardBatch();
     return {
       board: {
-        title: this.stringValue(boardData['title'], fallback.board.title, 90),
+        title: this.stringValue(boardData['title'], fallback.board.title, FIRESTORE_BOARD_TITLE_MAX_LENGTH),
         description: boardDescriptionForFirestore(
           this.stringValue(boardData['description'], fallback.board.description, 500),
         ),
         icon: resolveBoardIcon(this.stringValue(boardData['icon'], fallback.board.icon, 64), {
-          title: this.stringValue(boardData['title'], fallback.board.title, 90),
+          title: this.stringValue(boardData['title'], fallback.board.title, FIRESTORE_BOARD_TITLE_MAX_LENGTH),
           description: this.stringValue(boardData['description'], fallback.board.description, 500),
           kind: this.isBoardKind(boardData['kind']) ? boardData['kind'] : fallback.board.kind,
         }),
@@ -23296,8 +23298,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       };
       inspect(board.cards);
       const atlases = await Promise.all([...atlasIds].map((id) => this.atlasService.getAccessibleAtlasById(id)));
-      if (atlases.some((atlas) => !atlas?.is_public)) {
-        throw new Error('This board contains private or unavailable Talking Card knowledge. Publish its avatar or remove the card before choosing Public or Unlisted.');
+      if (atlases.some((atlas) => !atlas || (!atlas.is_public && atlas.user_id !== board.ownerUserId))) {
+        throw new Error('A Talking Card avatar is unavailable or belongs to another owner. Choose your own avatar or a public avatar before sharing this board.');
       }
     }
   }

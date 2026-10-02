@@ -7516,7 +7516,7 @@
                             <span i18n>Board title</span>
                             <input
                               type="text"
-                              maxlength="120"
+                              [attr.maxlength]="boardTitleMaxLength"
                               [value]="stackScriptBoardTitle()"
                               (input)="updateStackScriptBoardTitle($any($event.target).value)"
                             />
@@ -7525,7 +7525,7 @@
                             <span i18n>Board description</span>
                             <textarea
                               rows="3"
-                              maxlength="1000"
+                              [attr.maxlength]="boardDescriptionMaxLength"
                               [value]="stackScriptBoardDescription()"
                               (input)="updateStackScriptBoardDescription($any($event.target).value)"
                             ></textarea>
@@ -8343,11 +8343,11 @@
                       <div class="stack-preview-editor__fields">
                         <label>
                           <span i18n>Title</span>
-                          <input type="text" maxlength="120" [value]="stackScriptBoardTitle()" (input)="updateStackScriptBoardTitle($any($event.target).value)" />
+                          <input type="text" [attr.maxlength]="boardTitleMaxLength" [value]="stackScriptBoardTitle()" (input)="updateStackScriptBoardTitle($any($event.target).value)" />
                         </label>
                         <label>
                           <span i18n>Description <small>Optional</small></span>
-                          <textarea rows="2" maxlength="1000" [value]="stackScriptBoardDescription()" (input)="updateStackScriptBoardDescription($any($event.target).value)" placeholder="Add a short opening line" i18n-placeholder></textarea>
+                          <textarea rows="2" [attr.maxlength]="boardDescriptionMaxLength" [value]="stackScriptBoardDescription()" (input)="updateStackScriptBoardDescription($any($event.target).value)" placeholder="Add a short opening line" i18n-placeholder></textarea>
                         </label>
                       </div>
                       <div class="stack-preview-editor__media-actions">
@@ -9337,7 +9337,7 @@
             <input
               type="text"
               required
-              maxlength="72"
+              [attr.maxlength]="boardTitleMaxLength"
               autocomplete="off"
               [value]="boardSettingsDraft().title"
               [disabled]="boardSettingsSaving()"
@@ -9349,7 +9349,7 @@
             <span i18n>Description</span>
             <textarea
               rows="3"
-              maxlength="180"
+              [attr.maxlength]="boardDescriptionMaxLength"
               [value]="boardSettingsDraft().description"
               [disabled]="boardSettingsSaving()"
               (input)="updateBoardSettingsDraft('description', $any($event.target).value)"
@@ -9542,7 +9542,7 @@
             <input
               type="text"
               required
-              maxlength="72"
+              [attr.maxlength]="boardTitleMaxLength"
               placeholder="Places I like to eat"
               [value]="boardDraft().title"
               (input)="updateBoardDraft('title', $any($event.target).value)"
@@ -9552,7 +9552,7 @@
             <span i18n>Subtitle</span>
             <textarea
               rows="3"
-              maxlength="180"
+              [attr.maxlength]="boardDescriptionMaxLength"
               placeholder="What belongs in this collection?"
               [value]="boardDraft().description"
               (input)="updateBoardDraft('description', $any($event.target).value)"

@@ -539,6 +539,8 @@ export class ChatService {
     question: string,
     atlasId: string,
     options?: {
+      boardId?: string | null;
+      cardId?: string | null;
       threadId?: string | null;
       anonymousVisitorId?: string | null;
       topicIds?: string[];
@@ -558,6 +560,8 @@ export class ChatService {
         {
           question: string;
           atlasId: string;
+          boardId?: string | null;
+          cardId?: string | null;
           threadId?: string | null;
           anonymousVisitorId?: string | null;
           topicIds?: string[];
@@ -570,6 +574,8 @@ export class ChatService {
       const { data } = await askPublicAtlas({
         question,
         atlasId,
+        boardId: options?.boardId ?? null,
+        cardId: options?.cardId ?? null,
         threadId: options?.threadId ?? null,
         anonymousVisitorId: options?.anonymousVisitorId ?? null,
         topicIds: options?.topicIds,
@@ -618,6 +624,7 @@ export class ChatService {
   async createElevenLabsVoiceSession(options: {
     experience?: 'talking-card';
     boardId?: string | null;
+    cardId?: string | null;
     atlasId?: string | null;
     atlasName?: string | null;
     anonymousVisitorId?: string | null;
@@ -636,6 +643,7 @@ export class ChatService {
       {
         experience?: 'talking-card';
         boardId?: string | null;
+        cardId?: string | null;
         atlasId?: string | null;
         atlasName?: string | null;
         anonymousVisitorId?: string | null;
@@ -652,6 +660,7 @@ export class ChatService {
     const { data } = await createVoiceSession({
       experience: options.experience,
       boardId: options.boardId ?? null,
+      cardId: options.cardId ?? null,
       atlasId: options.atlasId ?? null,
       atlasName: options.atlasName ?? null,
       anonymousVisitorId: options.anonymousVisitorId ?? null,

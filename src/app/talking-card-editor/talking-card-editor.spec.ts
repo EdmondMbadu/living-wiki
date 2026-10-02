@@ -296,90 +296,90 @@ describe('TalkingCardEditorComponent', () => {
     expect(draftStore.delete).toHaveBeenCalledWith('board:listing-board-save:listing-agent-setup');
   });
 
-  for (const realEstate of [false, true]) {
-    it(`requires an explicit publication choice for a new ${realEstate ? 'property guide' : 'avatar'} on a public board`, async () => {
-      const fixture = TestBed.createComponent(TalkingCardEditorComponent);
-      fixture.componentRef.setInput('boardId', 'public-board');
-      fixture.componentRef.setInput('boardVisibility', 'public');
-      if (realEstate) {
-        fixture.componentRef.setInput('prefill', {
-          experience: 'real-estate',
-          name: 'Edmond Mbadu',
-          personaPrompt: 'Answer from the property context.',
-          openingMessage: 'Ask me about this home.',
+  for (const visibility of ['public', 'unlisted', 'private'] as const) {
+    for (const realEstate of [false, true]) {
+      it(`creates a private ${realEstate ? 'property guide' : 'avatar'} on a ${visibility} board without directory publication`, async () => {
+        const fixture = TestBed.createComponent(TalkingCardEditorComponent);
+        fixture.componentRef.setInput('boardId', 'board-private-avatar');
+        fixture.componentRef.setInput('boardVisibility', visibility);
+        if (realEstate) fixture.componentRef.setInput('prefill', {
+          experience: 'real-estate', name: 'Edmond Mbadu',
+          personaPrompt: 'Answer from the property context.', openingMessage: 'Ask me about this home.',
         });
-      }
-      fixture.detectChanges();
-      await fixture.whenStable();
-      fixture.componentInstance.setMode('new');
-      fixture.componentInstance.name.set('Edmond Mbadu');
-      fixture.componentInstance.personaPrompt.set('Answer from the property context.');
-      fixture.detectChanges();
-      await fixture.whenStable();
-      const publication = fixture.nativeElement.querySelector('#talking-avatar-publication') as HTMLInputElement;
-
-      expect(publication.checked).toBeFalse();
-      expect(fixture.componentInstance.canSave()).toBeFalse();
-      await fixture.componentInstance.save();
-      expect(atlasService.createTalkingCardAtlas).not.toHaveBeenCalled();
-      expect(atlasService.updateAtlas).not.toHaveBeenCalled();
-
-      publication.click();
-      fixture.detectChanges();
-      await fixture.whenStable();
-      expect(fixture.componentInstance.canSave()).toBeTrue();
-      await fixture.componentInstance.save();
-
-      expect(atlasService.createTalkingCardAtlas).toHaveBeenCalledWith(jasmine.objectContaining({ isPublic: false }));
-      expect(atlasService.updateAtlas).toHaveBeenCalledWith('new-avatar', { is_public: true });
-    });
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.componentInstance.setMode('new');
+        fixture.componentInstance.name.set('Edmond Mbadu');
+        fixture.componentInstance.personaPrompt.set('Answer from the property context.');
+        fixture.detectChanges();
+        expect(fixture.componentInstance.publishAvatar()).toBeFalse();
+        expect(fixture.componentInstance.canSave()).toBeTrue();
+        await fixture.componentInstance.save();
+        expect(atlasService.createTalkingCardAtlas).toHaveBeenCalledWith(jasmine.objectContaining({ isPublic: false }));
+        expect(atlasService.updateAtlas).not.toHaveBeenCalledWith('new-avatar', { is_public: true });
+      });
+    }
   }
 
-  it('does not automatically publish a reused private property-guide avatar', async () => {
+  it('allows optional directory publication on an unlisted board', async () => {
+    const fixture = TestBed.createComponent(TalkingCardEditorComponent);
+    fixture.componentRef.setInput('boardVisibility', 'unlisted');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.componentInstance.setMode('new');
+    fixture.componentInstance.name.set('New guide');
+    fixture.componentInstance.personaPrompt.set('Answer from the documents.');
+    fixture.componentInstance.publishAvatar.set(true);
+    await fixture.componentInstance.save();
+    expect(atlasService.updateAtlas).toHaveBeenCalledWith('new-avatar', { is_public: true });
+  });
+
+  it('reuses a private property guide without automatically publishing it', async () => {
     const fixture = TestBed.createComponent(TalkingCardEditorComponent);
     fixture.componentRef.setInput('boardId', 'public-listing');
     fixture.componentRef.setInput('boardVisibility', 'public');
     fixture.componentRef.setInput('prefill', {
-      experience: 'real-estate',
-      preferredAtlasId: 'james',
-      name: 'James Madison',
-      personaPrompt: 'Answer from the property context.',
-      openingMessage: 'Ask me about this home.',
+      experience: 'real-estate', preferredAtlasId: 'james', name: 'James Madison',
+      personaPrompt: 'Answer from the property context.', openingMessage: 'Ask me about this home.',
     });
     fixture.detectChanges();
     await fixture.whenStable();
-    fixture.detectChanges();
-
     expect(fixture.componentInstance.mode()).toBe('existing');
-    expect(fixture.componentInstance.publishAvatar()).toBeFalse();
-    expect(fixture.componentInstance.canSave()).toBeFalse();
-    expect(fixture.nativeElement.querySelector('#talking-avatar-publication')).not.toBeNull();
+    expect(fixture.componentInstance.canSave()).toBeTrue();
     await fixture.componentInstance.save();
-    expect(atlasService.updateAtlas).not.toHaveBeenCalled();
-
-    fixture.componentInstance.publishAvatar.set(true);
-    await fixture.componentInstance.save();
-    expect(atlasService.updateAtlas).toHaveBeenCalledWith('james', { is_public: true });
+    expect(atlasService.updateAtlas).not.toHaveBeenCalledWith('james', { is_public: true });
   });
 
-  it('requires a new publication choice after switching from a public avatar to creating one', async () => {
+  it('clears optional publication when switching to a new avatar', async () => {
     const fixture = TestBed.createComponent(TalkingCardEditorComponent);
     fixture.componentRef.setInput('boardVisibility', 'public');
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.componentInstance.selectExistingAtlas('george');
     await fixture.whenStable();
-    expect(fixture.componentInstance.needsPublication()).toBeFalse();
     fixture.componentInstance.publishAvatar.set(true);
-
     fixture.componentInstance.setMode('new');
     fixture.componentInstance.personaPrompt.set('A new private avatar.');
-
-    expect(fixture.componentInstance.needsPublication()).toBeTrue();
     expect(fixture.componentInstance.publishAvatar()).toBeFalse();
-    expect(fixture.componentInstance.canSave()).toBeFalse();
-    await fixture.componentInstance.save();
-    expect(atlasService.createTalkingCardAtlas).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.canSave()).toBeTrue();
+  });
+
+  it('does not reupload successful knowledge documents when the board save is retried', async () => {
+    const fixture = TestBed.createComponent(TalkingCardEditorComponent);
+    fixture.componentRef.setInput('boardId', 'retry-documents');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component.setMode('new');
+    component.name.set('Guide');
+    component.personaPrompt.set('Answer from the uploaded guide.');
+    component.documentFiles.set([new File(['A short document'], 'guide.docx')]);
+    await component.save();
+    await component.completeSave('Firebase denied the board save.');
+    await component.save();
+    expect(documentsService.uploadFiles).toHaveBeenCalledTimes(1);
+    expect(atlasService.createTalkingCardAtlas).toHaveBeenCalledTimes(1);
+    expect(component.documentFiles()).toEqual([]);
   });
 
   it('keeps the editor retryable and preserves its draft when board persistence fails', async () => {
@@ -449,9 +449,9 @@ describe('TalkingCardEditorComponent', () => {
     expect(fixture.componentInstance.personaPrompt()).toContain('Executive Realty Services');
     expect(fixture.componentInstance.personaPrompt()).not.toContain('Phone:');
     expect(fixture.componentInstance.publishAvatar()).toBeFalse();
-    expect(fixture.componentInstance.canSave()).toBeFalse();
+    expect(fixture.componentInstance.canSave()).toBeTrue();
     await fixture.componentInstance.save();
-    expect(atlasService.createTalkingCardAtlas).not.toHaveBeenCalled();
+    expect(atlasService.createTalkingCardAtlas).toHaveBeenCalledWith(jasmine.objectContaining({ isPublic: false }));
     expect(atlasService.updateAtlas).not.toHaveBeenCalled();
   });
 
