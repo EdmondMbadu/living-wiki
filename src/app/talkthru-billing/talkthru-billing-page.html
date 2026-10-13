@@ -1,0 +1,89 @@
+<main class="tt-billing">
+  <a class="tt-back" routerLink="/talkthrus" i18n>← TalkThrus</a>
+  <p class="tt-eyebrow" i18n>Your TalkThru plan</p>
+  <h1 i18n>Plan &amp; billing</h1>
+
+  @if (!loaded()) {
+    <p class="tt-muted" role="status" i18n>Loading your plan…</p>
+  } @else if (status(); as current) {
+    <section class="tt-card" aria-labelledby="tt-plan-name">
+      <div class="tt-card-head">
+        <div>
+          <h2 id="tt-plan-name">{{ planName() }}</h2>
+          @if (statusLine()) { <p class="tt-status" [class.warn]="subscription()?.status === 'past_due'">{{ statusLine() }}</p> }
+        </div>
+        <div class="tt-usage">
+          <span class="tt-usage-label" i18n>Live TalkThrus</span>
+          <strong>{{ usageLine() }}</strong>
+        </div>
+      </div>
+
+      @if (current.pausedBoardIds.length) {
+        <p class="tt-paused" i18n>Paused listings: {{ current.pausedBoardIds.length }}. They’re over your plan, so they’re private for now. Nothing was deleted, and they come back automatically when you upgrade.</p>
+      }
+
+      <div class="tt-actions">
+        @if (primaryAction() === 'start') {
+          <button type="button" class="tt-primary" (click)="choosePlan()" i18n>Start your free month <span aria-hidden="true">→</span></button>
+        } @else if (primaryAction() === 'upgrade') {
+          <button type="button" class="tt-primary" (click)="choosePlan()" i18n>Upgrade to Agent Pro <span aria-hidden="true">→</span></button>
+        }
+        <button type="button" class="tt-secondary" (click)="createTalkThru()" i18n>Create a TalkThru</button>
+        @if (current.canManageBilling) {
+          <button type="button" class="tt-secondary" (click)="manageBilling()" [disabled]="billing.redirecting()" i18n>Manage billing</button>
+        }
+      </div>
+      @if (current.canManageBilling) {
+        <p class="tt-muted small" i18n>Billing opens Stripe, where you can change plans, update your card, download invoices or cancel.</p>
+      }
+    </section>
+
+    @if (teams.activeMemberships().length) {
+      <section class="tt-card" aria-labelledby="tt-teams-title">
+        <h2 id="tt-teams-title" i18n>Team plans</h2>
+        <p class="tt-muted" i18n>Agency &amp; Team plans are managed on each team’s page.</p>
+        <ul class="tt-team-list">
+          @for (team of teams.activeMemberships(); track team.teamId) {
+            <li><a [routerLink]="['/teams', team.teamId]">{{ team.name }}</a></li>
+          }
+        </ul>
+      </section>
+    }
+  }
+
+  @if (isAdmin()) {
+    <section class="tt-card tt-admin" aria-labelledby="tt-stripe-title">
+      <h2 id="tt-stripe-title">Stripe setup <small>admin</small></h2>
+      <p class="tt-muted">Checks the TalkThru products, prices, billing portals and webhook events in the Stripe account these functions use. Fixing creates only what is missing and is safe to repeat.</p>
+      <div class="tt-actions">
+        <button type="button" class="tt-secondary" (click)="runStripeSetup(false)" [disabled]="setupBusy()">{{ setupBusy() ? 'Working…' : 'Check Stripe' }}</button>
+        <button type="button" class="tt-primary" (click)="runStripeSetup(true)" [disabled]="setupBusy()">Set up / fix Stripe</button>
+      </div>
+      @if (setupReport(); as report) {
+        <div class="tt-report" role="status">
+          <p><span class="tt-badge" [class.ok]="report.ready">{{ report.ready ? 'Ready' : 'Needs attention' }}</span> {{ report.mode === 'live' ? 'Live' : 'Test' }} mode · {{ report.applied ? 'applied' : 'checked only' }}</p>
+          <dl>
+            <dt>Webhook</dt>
+            <dd>{{ report.webhook.status === 'ok' ? 'All events enabled' : report.webhook.status === 'updated' ? 'Missing events were added' : report.webhook.status === 'missing' ? 'No endpoint for stripeBusinessWebhook' : 'Missing: ' + report.webhook.missingEvents.join(', ') }}</dd>
+            <dt>Billing portals</dt>
+            <dd>{{ report.portals.personal && report.portals.team ? 'Personal and team portals set' : 'Not set up yet' }}</dd>
+            @if (report.created.length) {
+              <dt>Created now</dt>
+              <dd>{{ report.created.join(', ') }}</dd>
+            }
+          </dl>
+          @if (report.problems.length) {
+            <ul class="tt-problems">
+              @for (problem of report.problems; track problem) { <li>{{ problem }}</li> }
+            </ul>
+          }
+        </div>
+      }
+      @if (setupError()) { <p class="tt-error" role="alert">{{ setupError() }}</p> }
+    </section>
+  }
+
+  @if (error()) {
+    <p class="tt-error" role="alert">{{ error() }} <button type="button" (click)="load(true)" i18n>Try again</button></p>
+  }
+</main>

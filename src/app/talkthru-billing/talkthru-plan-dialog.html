@@ -1,0 +1,106 @@
+<dialog #panel class="tt-dialog-shell" aria-labelledby="tt-dialog-title" (cancel)="onCancel($event)" (click)="onBackdrop($event)">
+  @if (prompt(); as request) {
+    <section class="tt-dialog">
+      <button type="button" class="tt-close" (click)="close()" [disabled]="billing.redirecting()" aria-label="Close" i18n-aria-label>×</button>
+      <p class="tt-eyebrow" i18n>TalkThru plans</p>
+      <h2 id="tt-dialog-title">{{ headline() }}</h2>
+      <p class="tt-lede">{{ lede() }}</p>
+
+      <div class="tt-cycle" role="radiogroup" aria-label="Billing period" i18n-aria-label>
+        <button type="button" role="radio" [attr.aria-checked]="cycle() === 'monthly'" [class.on]="cycle() === 'monthly'" (click)="cycle.set('monthly')" i18n>Monthly</button>
+        <button type="button" role="radio" [attr.aria-checked]="cycle() === 'annual'" [class.on]="cycle() === 'annual'" (click)="cycle.set('annual')"><span i18n>Annual</span> <small i18n>2 months free</small></button>
+      </div>
+
+      @if (isTeam()) {
+        @if (team(); as teamStatus) {
+          @if (!teamStatus.canManage) {
+            <p class="tt-callout" i18n>Ask a team admin to start or change the team plan.</p>
+          }
+          @if (tooManyAgents()) {
+            <p class="tt-callout" i18n>Teams with more than 25 agents get a custom plan. Use “Let’s talk” on the TalkThrus page and we’ll set it up with you.</p>
+          }
+          @if (request.reason !== 'team_seats') {
+            <div class="tt-seats">
+              <div>
+                <strong i18n>Agents on the plan</strong>
+                <small i18n>Your team has {{ teamStatus.activeMembers }} members and {{ teamStatus.pendingInvites }} pending invitations. Minimum {{ minSeats() }}.</small>
+              </div>
+              <div class="tt-stepper">
+                <button type="button" (click)="chooseSeats(seats() - 1)" [disabled]="seats() <= minSeats()" aria-label="Fewer agents" i18n-aria-label>−</button>
+                <output aria-live="polite">{{ seats() }}</output>
+                <button type="button" (click)="chooseSeats(seats() + 1)" [disabled]="seats() >= maxSeats" aria-label="More agents" i18n-aria-label>+</button>
+              </div>
+            </div>
+            <p class="tt-tiers" i18n>$25 per agent for agents 1–10, $19 for each agent after that. Annual: $250 and $190.</p>
+          }
+        } @else {
+          <p class="tt-loading" role="status" i18n>Loading your team’s plan…</p>
+        }
+      } @else {
+        <div class="tt-plans" role="radiogroup" aria-label="Plan" i18n-aria-label>
+          @for (option of planOptions(); track option.key) {
+            <button
+              type="button"
+              role="radio"
+              class="tt-plan"
+              [class.on]="selectedPlan() === option.key"
+              [attr.aria-checked]="selectedPlan() === option.key"
+              [disabled]="!!option.disabledReason"
+              (click)="selectedPlan.set(option.key)"
+            >
+              <span class="tt-plan-head">
+                <strong>{{ option.name }}</strong>
+                <span class="tt-plan-price">{{ planPrice(option.key) }}<small>{{ cycleSuffix() }}</small></span>
+              </span>
+              <span class="tt-plan-summary">{{ option.disabledReason || option.summary }}</span>
+              <ul>
+                @for (feature of option.features; track feature) {
+                  <li>{{ feature }}</li>
+                }
+              </ul>
+            </button>
+          }
+        </div>
+      }
+
+      @if (request.reason === 'team_seats') {
+        <div class="tt-summary">
+          <p i18n>Seats can be added or removed in Billing. Changes are prorated automatically.</p>
+        </div>
+        @if (error()) { <p class="tt-error" role="alert">{{ error() }}</p> }
+        <div class="tt-actions">
+          <button type="button" class="tt-primary" (click)="manageBilling()" [disabled]="billing.redirecting() || !team()?.canManageBilling">{{ seatsButtonLabel() }}</button>
+          <button type="button" class="tt-secondary" (click)="close()" [disabled]="billing.redirecting()" i18n>Not now</button>
+        </div>
+      } @else {
+        <div class="tt-summary" aria-live="polite">
+          @if (liveSubscription(); as current) {
+            <p><strong>{{ selectedName() }} · {{ priceLabel() }}</strong></p>
+            <p i18n>Your card on file is used. Any difference is prorated on your next invoice.</p>
+          } @else if (trialEligible()) {
+            <p><strong i18n>$0 today</strong> · <span i18n>then {{ priceLabel() }} starting {{ firstChargeDate() }}</span></p>
+            <p i18n>First month free · cancel anytime. We’ll remind you before your first charge.</p>
+          } @else {
+            <p><strong>{{ selectedName() }} · {{ priceLabel() }}</strong></p>
+            <p i18n>Your free month has already been used on this account. Cancel anytime.</p>
+          }
+        </div>
+        @if (error()) { <p class="tt-error" role="alert">{{ error() }}</p> }
+        <div class="tt-actions">
+          <button type="button" class="tt-primary" (click)="submit()" [disabled]="!canSubmit()">{{ primaryLabel() }} <span aria-hidden="true">→</span></button>
+          <button type="button" class="tt-secondary" (click)="close()" [disabled]="billing.redirecting()" i18n>Not now</button>
+        </div>
+        @if (!liveSubscription()) {
+          <p class="tt-fineprint" i18n>You’ll add a card on Stripe’s secure checkout. Cancel anytime from Billing before the free month ends and you won’t be charged.</p>
+        }
+      }
+    </section>
+  }
+</dialog>
+
+@if (billing.notice(); as notice) {
+  <div class="tt-toast" [class.error]="notice.kind === 'error'" [attr.role]="notice.kind === 'error' ? 'alert' : 'status'">
+    <span>{{ notice.message }}</span>
+    <button type="button" (click)="dismissNotice()" aria-label="Dismiss" i18n-aria-label>×</button>
+  </div>
+}

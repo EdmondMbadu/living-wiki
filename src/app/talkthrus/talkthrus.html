@@ -8,8 +8,9 @@
       <a href="/talkthrus#experience" i18n>The experience</a>
       <a href="/talkthrus#how" i18n>How it works</a>
       <a href="/talkthrus#teams" i18n>For agencies</a>
+      <a href="/talkthrus#pricing" i18n>Pricing</a>
     </nav>
-    <a class="button dark top-cta" href="/talkthrus#signup" i18n>Get started <span aria-hidden="true">↗</span></a>
+    <a class="button dark top-cta" href="/talkthrus#pricing" i18n>Get started <span aria-hidden="true">↗</span></a>
   </header>
 
   <main id="main">
@@ -21,7 +22,7 @@
           <p class="intro" i18n>Turn your listing photos into a personal, narrated TalkThru. Your voice. Your local knowledge. The details that make a buyer feel at home.</p>
           <div class="hero-actions">
             <a class="button gold" [href]="exampleUrl" target="_blank" rel="noopener noreferrer" i18n>Experience a TalkThru <span aria-hidden="true">↗</span></a>
-            <a class="text-link" href="/talkthrus#signup" i18n>Bring your listing to life <span aria-hidden="true">↗</span></a>
+            <a class="text-link" href="/talkthrus#pricing" i18n>Bring your listing to life <span aria-hidden="true">↗</span></a>
           </div>
           <p class="hero-note"><span aria-hidden="true">▥</span><span i18n>The technology brings it together.<br><strong>You make it personal.</strong></span></p>
         </div>
@@ -52,7 +53,7 @@
           @if (selectedPreview() === i) {
             <div class="preview-panel" role="tabpanel" [attr.id]="'preview-panel-' + i" [attr.aria-labelledby]="'preview-tab-' + i">
               <div class="preview-art"><img [src]="preview.image" [alt]="preview.alt"></div>
-              <div class="preview-copy"><p class="eyebrow green">{{ preview.step }}</p><h3>{{ preview.heading }}</h3><p>{{ preview.body }}</p><a class="inline-link" href="/talkthrus#signup" i18n>I’d like this for my listings <span aria-hidden="true">→</span></a><div class="preview-live"><strong i18n>See it. Hear it. Explore it.</strong><a [href]="exampleUrl" target="_blank" rel="noopener noreferrer" i18n>Open the live TalkThru ↗</a><small i18n>Opens the full experience on LivingWiki in a new tab.</small></div></div>
+              <div class="preview-copy"><p class="eyebrow green">{{ preview.step }}</p><h3>{{ preview.heading }}</h3><p>{{ preview.body }}</p><a class="inline-link" href="/talkthrus#pricing" i18n>I’d like this for my listings <span aria-hidden="true">→</span></a><div class="preview-live"><strong i18n>See it. Hear it. Explore it.</strong><a [href]="exampleUrl" target="_blank" rel="noopener noreferrer" i18n>Open the live TalkThru ↗</a><small i18n>Opens the full experience on LivingWiki in a new tab.</small></div></div>
             </div>
           }
         }
@@ -64,16 +65,109 @@
       <div class="steps"><article><div class="step-top"><span>01</span><span aria-hidden="true">↗</span></div><h3 i18n>Start with your listing.</h3><p i18n>Bring in your property details and photos. Arrange them into a natural flow through the home.</p></article><article><div class="step-top"><span>02</span><span aria-hidden="true">♩</span></div><h3 i18n>Make it sound like you.</h3><p i18n>Add your voice and personal insights. Highlight the moments, features, and details you’d point out in person.</p></article><article><div class="step-top"><span>03</span><span aria-hidden="true">↗</span></div><h3 i18n>Invite buyers inside.</h3><p i18n>Share your TalkThru with prospective buyers and let your listing start a more personal conversation.</p></article></div>
     </section>
 
-    <section class="teams" id="teams" aria-labelledby="teams-title"><div class="wrap"><p class="eyebrow" i18n>For agents &amp; agencies</p><div class="teams-heading"><h2 id="teams-title" i18n>A stronger presence.<br><em>A personal voice.</em></h2><p i18n>Whether you’re building your own business or leading a team, let the people who know your listings best tell their stories.</p></div><div class="team-cards"><article><p class="eyebrow green" i18n>For the individual agent</p><h3 i18n>Make your expertise part of every listing.</h3><p i18n>Give buyers a sense of who you are and what you see in the property, before the first conversation.</p><a href="/talkthrus#signup" i18n>Get started as an agent <span aria-hidden="true">→</span></a></article><article><p class="eyebrow green" i18n>For the agency</p><h3 i18n>Bring out every agent’s individual strengths.</h3><p i18n>Introduce a more personal listing experience across your team while keeping each agent’s voice front and center.</p><a href="/talkthrus#signup" i18n>Explore TalkThrus for your team <span aria-hidden="true">→</span></a></article></div></div></section>
+    <section class="teams" id="teams" aria-labelledby="teams-title"><div class="wrap"><p class="eyebrow" i18n>For agents &amp; agencies</p><div class="teams-heading"><h2 id="teams-title" i18n>A stronger presence.<br><em>A personal voice.</em></h2><p i18n>Whether you’re building your own business or leading a team, let the people who know your listings best tell their stories.</p></div><div class="team-cards"><article><p class="eyebrow green" i18n>For the individual agent</p><h3 i18n>Make your expertise part of every listing.</h3><p i18n>Give buyers a sense of who you are and what you see in the property, before the first conversation.</p><a href="/talkthrus#pricing" i18n>Get started as an agent <span aria-hidden="true">→</span></a></article><article><p class="eyebrow green" i18n>For the agency</p><h3 i18n>Bring out every agent’s individual strengths.</h3><p i18n>Introduce a more personal listing experience across your team while keeping each agent’s voice front and center.</p><a href="/talkthrus#pricing" i18n>Explore TalkThrus for your team <span aria-hidden="true">→</span></a></article></div></div></section>
+
+    <section class="pricing" id="pricing" aria-labelledby="pricing-title">
+      <div class="wrap">
+        <div class="pricing-heading">
+          <p class="eyebrow green" i18n>TalkThru plans</p>
+          <h2 id="pricing-title" i18n>Every listing deserves your voice.<br><em>Pricing that keeps it that way.</em></h2>
+          <p class="pricing-intro" i18n>Start with a listing you already know. Narrate as many as you like. Bring your whole team along for less per agent.</p>
+          <div class="pricing-badges">
+            <span class="pricing-badge" i18n><span aria-hidden="true">✦</span> Your first TalkThru is free, no card required</span>
+            <span class="pricing-badge gold" i18n><span aria-hidden="true">✦</span> First month free on every plan · cancel anytime</span>
+          </div>
+          <div class="cycle-toggle" role="radiogroup" aria-label="Billing period" i18n-aria-label>
+            <button type="button" role="radio" [attr.aria-checked]="cycle() === 'monthly'" [class.active]="cycle() === 'monthly'" (click)="cycle.set('monthly')" i18n>Monthly</button>
+            <button type="button" role="radio" [attr.aria-checked]="cycle() === 'annual'" [class.active]="cycle() === 'annual'" (click)="cycle.set('annual')"><span i18n>Annual</span> <small i18n>2 months free</small></button>
+          </div>
+        </div>
+
+        <div class="plan-grid">
+          <article class="plan" aria-labelledby="plan-solo">
+            <p class="eyebrow green" id="plan-solo" i18n>Solo Agent</p>
+            <p class="plan-pitch" i18n>Put your voice on your next few listings and see how buyers respond.</p>
+            <p class="plan-price"><strong>{{ planPrice('solo') }}</strong><span>{{ cycleSuffix() }}</span></p>
+            <p class="plan-unit" i18n>Per agent</p>
+            <p class="plan-trial" i18n>First month free · cancel anytime</p>
+            <ul class="plan-features">
+              <li i18n>Up to 10 active TalkThrus at a time</li>
+              <li i18n>Photo-to-story builder with your own Personal Voice narration</li>
+              <li i18n>Your headshot, contact card and branding on every TalkThru</li>
+              <li i18n>Share link and QR code for open houses and yard signs</li>
+              <li i18n>View counts for every TalkThru</li>
+              <li i18n>Standard setup support</li>
+            </ul>
+            <div class="plan-cta">
+              <button type="button" class="button dark" (click)="startIndividual('solo')" [disabled]="ctaBusy() === 'solo'" i18n>Start free <span aria-hidden="true">→</span></button>
+              <button type="button" class="plan-alt" (click)="startFreeMonth('solo')" i18n>Or start your free month now</button>
+            </div>
+          </article>
+
+          <article class="plan featured" aria-labelledby="plan-pro">
+            <p class="eyebrow" id="plan-pro" i18n>Agent Pro</p>
+            <p class="plan-flag" i18n><span aria-hidden="true">★</span> Most popular</p>
+            <p class="plan-pitch" i18n>Every listing, every channel, and a clear view of what buyers lingered on.</p>
+            <p class="plan-price"><strong>{{ planPrice('pro') }}</strong><span>{{ cycleSuffix() }}</span></p>
+            <p class="plan-unit" i18n>Per agent</p>
+            <p class="plan-trial" i18n>First month free · cancel anytime</p>
+            <ul class="plan-features">
+              <li i18n>Everything in Solo Agent</li>
+              <li i18n>Unlimited active TalkThrus</li>
+              <li i18n>Video export for Reels, Instagram and YouTube</li>
+              <li i18n>Multilingual TalkThrus: your narration in 30+ languages, still in your voice</li>
+              <li i18n>Buyer engagement insights: which rooms got replayed</li>
+              <li i18n>Neighborhood cards from LivingWiki local guides</li>
+              <li i18n>Priority support</li>
+            </ul>
+            <div class="plan-cta">
+              <button type="button" class="button gold" (click)="startIndividual('pro')" [disabled]="ctaBusy() === 'pro'" i18n>Bring your listings to life <span aria-hidden="true">→</span></button>
+              <button type="button" class="plan-alt" (click)="startFreeMonth('pro')" i18n>Or start your free month now</button>
+            </div>
+          </article>
+
+          <article class="plan" aria-labelledby="plan-team">
+            <p class="eyebrow green" id="plan-team" i18n>Agency &amp; Team</p>
+            <p class="plan-pitch" i18n>A personal listing experience across your team, with each agent’s voice front and center.</p>
+            <p class="plan-price"><strong>{{ teamTiers().first }}</strong><span>{{ teamSuffix() }}</span></p>
+            <p class="plan-unit" i18n>Minimum 3 agents</p>
+            <p class="plan-trial" i18n>First month free · cancel anytime</p>
+            <div class="tier-grid" role="list" aria-label="Price per agent by team size" i18n-aria-label>
+              <div role="listitem"><small i18n>Agents 1–10</small><strong>{{ teamTiers().first }}</strong></div>
+              <div role="listitem"><small i18n>Agents 11–25</small><strong>{{ teamTiers().second }}</strong></div>
+              <div role="listitem"><small i18n>26+ agents</small><strong i18n>Let’s talk</strong></div>
+            </div>
+            <ul class="plan-features">
+              <li i18n>Everything in Agent Pro, for every agent</li>
+              <li i18n>Agency branding alongside each agent’s own voice</li>
+              <li i18n>Team dashboard and shared listing library</li>
+              <li i18n>Team-wide engagement reporting</li>
+              <li i18n>Live onboarding sessions for your agents</li>
+              <li i18n>Dedicated partner support</li>
+            </ul>
+            <div class="plan-cta">
+              <button type="button" class="button dark" (click)="startTeam()" [disabled]="ctaBusy() === 'team'" i18n>Explore for your team <span aria-hidden="true">→</span></button>
+              <a class="plan-alt" href="/talkthrus#signup" i18n>26+ agents? Let’s talk</a>
+            </div>
+          </article>
+        </div>
+
+        <ul class="pricing-notes">
+          <li i18n><strong>Annual plans:</strong> 2 months free</li>
+          <li i18n><strong>Switch plans</strong> any time as your listings grow</li>
+          <li i18n><strong>Teams:</strong> every seat gets unlimited TalkThrus</li>
+        </ul>
+      </div>
+    </section>
 
     <section class="signup wrap" id="signup" aria-labelledby="signup-title">
-      <div class="signup-copy"><p class="eyebrow green" i18n>Let’s bring your listings to life</p><h2 id="signup-title" i18n>Your next listing<br>deserves <em>your voice.</em></h2><p i18n>Sign up to get started with LivingWiki TalkThrus. Tell us a little about yourself so we can help you take the next step.</p><ul><li i18n>For independent agents and agency teams</li><li i18n>Start with a property you already know</li><li i18n>Your insights stay at the center</li></ul></div>
+      <div class="signup-copy"><p class="eyebrow green" i18n>Let’s bring your listings to life</p><h2 id="signup-title" i18n>Your next listing<br>deserves <em>your voice.</em></h2><p i18n>Leading more than 25 agents, or have questions before you start? Tell us a little about yourself and we’ll reach out.</p><ul><li i18n>For independent agents and agency teams</li><li i18n>Start with a property you already know</li><li i18n>Your insights stay at the center</li></ul></div>
       <div class="signup-card">
         @if (submitted()) {
           <div class="thank-you" role="status"><span aria-hidden="true">✓</span><h3 i18n>Thanks for your interest.</h3><p i18n>We’ve received your details and will follow up about your TalkThru.</p><a [href]="exampleUrl" target="_blank" rel="noopener noreferrer" i18n>Explore the example TalkThru ↗</a></div>
         } @else {
           <form (ngSubmit)="submit()" #signupForm="ngForm">
-            <h3 i18n>Let’s get you started.</h3><p class="form-sub" i18n>A more personal listing experience starts here.</p>
+            <h3 i18n>Let’s talk.</h3><p class="form-sub" i18n>A more personal listing experience starts here.</p>
             <fieldset><legend i18n>I’m interested as</legend><div class="role-options"><label i18n><input type="radio" name="role" value="agent" [(ngModel)]="role"> An agent</label><label i18n><input type="radio" name="role" value="agency" [(ngModel)]="role"> An agency / team</label></div></fieldset>
             <div class="form-grid"><label i18n>Your name<input required autocomplete="name" maxlength="120" placeholder="Full name" name="name" [(ngModel)]="name" i18n-placeholder></label><label i18n>Work email<input required type="email" autocomplete="email" maxlength="254" placeholder="you@agency.com" name="email" [(ngModel)]="email" i18n-placeholder></label></div>
             <label i18n>Agency or brokerage<input required autocomplete="organization" maxlength="160" placeholder="Your agency name" name="agency" [(ngModel)]="agency" i18n-placeholder></label>

@@ -24,6 +24,12 @@ import { MobileMenuComponent } from '../mobile-menu/mobile-menu';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 import { PersonalVoiceService, type PersonalVoice } from '../personal-voice.service';
 import { TeamsService } from './teams.service';
+import {
+  TalkThruBillingService,
+  talkThruDaysLeft,
+  talkThruErrorMessage,
+  talkThruSubscriptionLive,
+} from '../talkthru-billing/talkthru-billing.service';
 import { TeamContactComponent } from './team-contact';
 import { TeamMemberAvatarComponent } from './team-member-avatar';
 import { BoardsComponent } from '../boards/boards';
@@ -195,6 +201,7 @@ export class TeamsComponent {
     'directory',
   );
   readonly teamId = signal('');
+  readonly billing = inject(TalkThruBillingService);
   readonly dashboard = signal<TeamDashboard | null>(null);
   readonly publicPage = signal<PublicTeamPage | null>(null);
   readonly publicListings = signal<TeamListing[]>([]);
@@ -257,6 +264,42 @@ export class TeamsComponent {
   readonly conversationsCursor = signal<string | null>(null);
   readonly currentTeam = computed(() => this.dashboard()?.team ?? null);
   readonly isAdmin = computed(() => this.dashboard()?.role === 'admin');
+  readonly teamPlan = computed(() => this.billing.teams()[this.teamId()] ?? null);
+  readonly teamPlanLive = computed(() => talkThruSubscriptionLive(this.teamPlan()?.subscription));
+  readonly teamPlanLine = computed(() => {
+    const plan = this.teamPlan();
+    const subscription = plan?.subscription;
+    if (!plan) return '';
+    if (!subscription || !this.teamPlanLive()) {
+      return $localize`Free team plan · ${this.publishedCount()}:published: of ${plan.freePublishedLimit}:limit: published listing`;
+    }
+    const seats = $localize`${subscription.seats}:seats: seats`;
+    if (subscription.status === 'past_due') return $localize`Agency & Team · ${seats}:seats: · payment issue, update the card in Billing`;
+    if (subscription.status === 'trialing') {
+      const days = talkThruDaysLeft(subscription.trialEndsAt) ?? 0;
+      return subscription.cancelAtPeriodEnd
+        ? $localize`Agency & Team · free month · ${days}:days: days left · won’t renew`
+        : $localize`Agency & Team · free month · ${days}:days: days left · ${seats}:seats:`;
+    }
+    return subscription.cancelAtPeriodEnd
+      ? $localize`Agency & Team · ${seats}:seats: · cancelled, ends at period end`
+      : $localize`Agency & Team · ${seats}:seats:`;
+  });
+  openTeamPlan(): void {
+    const teamId = this.teamId();
+    if (!teamId) return;
+    this.billing.prompt({ reason: 'team_choose', teamId, returnPath: `/teams/${teamId}` });
+  }
+  async manageTeamBilling(): Promise<void> {
+    const teamId = this.teamId();
+    if (!teamId) return;
+    this.error.set('');
+    try {
+      await this.billing.openPortal(`/teams/${teamId}`, teamId);
+    } catch (error) {
+      this.error.set(talkThruErrorMessage(error, $localize`Billing could not be opened. Please try again.`));
+    }
+  }
   readonly isOwner = computed(() => this.currentTeam()?.owner_id === this.auth.uid());
   readonly isPublic = computed(() => this.mode() === 'public');
   readonly members = computed(() => this.dashboard()?.members || []);
@@ -440,6 +483,20 @@ export class TeamsComponent {
         const result = await this.teams.dashboard(teamId);
         if (sequence !== this.loadSequence) return;
         this.dashboard.set(result);
+        void this.billing.teamStatus(teamId, true);
+        const requestedPlan = this.route.snapshot.queryParamMap.get('plan');
+        if (requestedPlan === 'team') {
+          const cycle = this.route.snapshot.queryParamMap.get('cycle') === 'annual' ? 'annual' : 'monthly';
+          if (result.role === 'admin' && result.team.status === 'active') {
+            this.billing.prompt({ reason: 'team_choose', teamId, returnPath: `/teams/${teamId}`, preferredCycle: cycle });
+          }
+          void this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { plan: null, cycle: null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
+        }
         if (path === 'teams/:teamId/create-listing' && result.team.status === 'active')
           this.openListingWizard();
         void this.loadMetrics();
@@ -641,6 +698,7 @@ export class TeamsComponent {
     }
   }
   memberName(uid: string): string {
+    if (uid === 'system:billing') return $localize`Billing`;
     return this.members().find((member) => member.uid === uid)?.name || 'Needs reassignment';
   }
   memberPhoto(uid: string): string {

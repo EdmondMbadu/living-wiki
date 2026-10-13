@@ -1,8 +1,21 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Meta } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { httpsCallable } from 'firebase/functions';
+import { AuthService } from '../auth.service';
 import { getFirebaseFunctions } from '../firebase.client';
+import { TalkThruBillingService } from '../talkthru-billing/talkthru-billing.service';
+import {
+  formatUsd,
+  individualPlanCents,
+  TALKTHRU_PLAN_CATALOG,
+  type TalkThruBillingCycle,
+  type TalkThruIndividualPlanKey,
+} from '../talkthru-billing/talkthru-plans';
+import { TeamsService } from '../teams/teams.service';
+
+const createListingPath = '/boards?create=real-estate';
 
 const exampleUrl = 'https://www.livingwiki.com/boards/charming-beach-condo-wildwood-nj';
 
@@ -21,9 +34,21 @@ const previews = [
 export class TalkThrusComponent {
   readonly templateText = {
     message1: $localize`Sending…`,
-    message2: $localize`Sign up for TalkThrus`,
+    message2: $localize`Send my details`,
   };
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly billing = inject(TalkThruBillingService);
+  private readonly teams = inject(TeamsService);
   readonly exampleUrl = exampleUrl;
+  readonly cycle = signal<TalkThruBillingCycle>('monthly');
+  readonly ctaBusy = signal('');
+  readonly teamTiers = computed(() => {
+    const [first, second] = TALKTHRU_PLAN_CATALOG.team.tiers[this.cycle()];
+    return { first: formatUsd(first.unitCents), second: formatUsd(second.unitCents) };
+  });
+  readonly cycleSuffix = computed(() => this.cycle() === 'annual' ? $localize`/yr` : $localize`/mo`);
+  readonly teamSuffix = computed(() => this.cycle() === 'annual' ? $localize`/agent/yr` : $localize`/agent/mo`);
   readonly previews = previews;
   readonly selectedPreview = signal(0);
   readonly sending = signal(false);
@@ -40,6 +65,66 @@ export class TalkThrusComponent {
 
   constructor() {
     inject(Meta).updateTag({ name: 'description', content: $localize`Turn real estate listing photos into a personal, narrated TalkThru. Your voice, your insights, and a more human connection with buyers.` });
+  }
+
+  planPrice(plan: TalkThruIndividualPlanKey): string {
+    return formatUsd(individualPlanCents(plan, this.cycle()));
+  }
+
+  /** Start free: build the first TalkThru with no card. Remembers the plan they looked at. */
+  async startIndividual(plan: TalkThruIndividualPlanKey): Promise<void> {
+    if (this.ctaBusy()) return;
+    this.ctaBusy.set(plan);
+    try {
+      this.billing.rememberPlanIntent(plan);
+      await this.auth.waitForReady();
+      if (!this.auth.isAuthenticated()) {
+        await this.router.navigate(['/create-account'], { queryParams: { redirectTo: createListingPath } });
+        return;
+      }
+      const status = await this.billing.ensureStatus(true);
+      const atLimit = !!status && status.activeLimit !== null && status.activeCount >= status.activeLimit;
+      if (atLimit) {
+        this.billing.prompt({ reason: 'choose', returnPath: createListingPath, preferredPlan: plan, preferredCycle: this.cycle() });
+        return;
+      }
+      await this.router.navigate(['/boards'], { queryParams: { create: 'real-estate' } });
+    } finally {
+      this.ctaBusy.set('');
+    }
+  }
+
+  /** Skip the free listing and start the free month now. */
+  async startFreeMonth(plan: TalkThruIndividualPlanKey): Promise<void> {
+    this.billing.rememberPlanIntent(plan);
+    await this.auth.waitForReady();
+    if (!this.auth.isAuthenticated()) {
+      await this.router.navigate(['/create-account'], {
+        queryParams: { redirectTo: `/talkthrus/billing?plan=${plan}&cycle=${this.cycle()}` },
+      });
+      return;
+    }
+    this.billing.prompt({ reason: 'choose', returnPath: '/talkthrus/billing', preferredPlan: plan, preferredCycle: this.cycle() });
+  }
+
+  async startTeam(): Promise<void> {
+    if (this.ctaBusy()) return;
+    this.ctaBusy.set('team');
+    try {
+      await this.auth.waitForReady();
+      if (!this.auth.isAuthenticated()) {
+        await this.router.navigate(['/create-account'], { queryParams: { redirectTo: '/teams/new' } });
+        return;
+      }
+      const adminTeam = this.teams.activeMemberships().find((team) => team.role === 'admin');
+      if (adminTeam) {
+        await this.router.navigate(['/teams', adminTeam.teamId], { queryParams: { plan: 'team', cycle: this.cycle() } });
+        return;
+      }
+      await this.router.navigateByUrl(this.teams.memberships().length ? '/teams' : '/teams/new');
+    } finally {
+      this.ctaBusy.set('');
+    }
   }
 
   async submit(): Promise<void> {

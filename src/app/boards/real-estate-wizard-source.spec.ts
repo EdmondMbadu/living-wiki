@@ -174,6 +174,10 @@ describe('Real estate doorway defaults', () => {
       wizardCountMode: signal('auto'),
       wizardNarrationSecondsPerCard: signal(30),
       wizardNarrationLengthCustomized: signal(false),
+      teamContextId: signal(''),
+      wizardLockedTargetBoardId: signal(null),
+      talkThruBilling: { canCreatePersonalTalkThru: async () => true },
+      authService: { isAuthenticated: () => true },
     });
   }
   it('does not inherit hidden visual and card-type choices from another board', () => {

@@ -251,6 +251,10 @@
     "source": "What kind of listing is this?",
     "file": "src/app/kiwi/kiwi.html"
   },
+  "1087211811764018048": {
+    "source": "TalkThru plans",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
+  },
   "1087243376159383787": {
     "source": "Your selected cards were added without replacing the cards already there.",
     "file": "src/app/boards/boards.html"
@@ -270,6 +274,10 @@
   "109197379396910463": {
     "source": "{$START_TAG_SPAN}add{$CLOSE_TAG_SPAN} Create collection ",
     "file": "src/app/board-collection-list/board-collection-list.html"
+  },
+  "1093562462520852403": {
+    "source": "Free team plan · {$published} of {$limit} published listing",
+    "file": "src/app/teams/teams.ts"
   },
   "1095153295814886559": {
     "source": "See them on the board",
@@ -350,6 +358,10 @@
   "1116518477652216323": {
     "source": "Creating blank stories…",
     "file": "src/app/boards/boards.ts"
+  },
+  "1116548583521793231": {
+    "source": "/agent/yr",
+    "file": "src/app/talkthrus/talkthrus.ts"
   },
   "1116830208388068531": {
     "source": "Account Action",
@@ -715,6 +727,10 @@
     "source": "Business claim",
     "file": "src/app/business-claim/business-claim.html"
   },
+  "1232390516767487561": {
+    "source": "Or start your free month now",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "1232976216028093926": {
     "source": "Philly",
     "file": "src/app/answer-card/answer-card.html"
@@ -786,6 +802,10 @@
   "1257771812305584813": {
     "source": "{$START_TAG_SPAN}grid_view{$CLOSE_TAG_SPAN} Manage cards {$START_TAG_SPAN}expand_more{$CLOSE_TAG_SPAN}",
     "file": "src/app/boards/boards.html"
+  },
+  "1257881461685150600": {
+    "source": "$0 today",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
   },
   "126085745782511695": {
     "source": "You can send this without an account. To keep future recaps together,",
@@ -963,6 +983,10 @@
     "source": "Story flow",
     "file": "src/app/boards/boards.ts"
   },
+  "1313313848910847486": {
+    "source": "Agent Pro for every agent, with your agency’s branding alongside each agent’s voice.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "1314346269344840886": {
     "source": "Ask Kiwi",
     "file": "src/app/kiwi/kiwi.html"
@@ -974,6 +998,10 @@
   "1314858263667858980": {
     "source": "Discover Articles",
     "file": "src/app/web-scraper/web-scraper.ts"
+  },
+  "1315496979540089147": {
+    "source": "Your first TalkThru is free, with no card required.",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
   },
   "1315625787188038913": {
     "source": "Video library controls",
@@ -1199,6 +1227,10 @@
     "source": "{$START_TAG_SPAN}add{$CLOSE_TAG_SPAN} Create board ",
     "file": "src/app/boards/boards.html"
   },
+  "1399787377206035354": {
+    "source": "/agent/mo",
+    "file": "src/app/talkthrus/talkthrus.ts"
+  },
   "1400206541876776916": {
     "source": "Feature ",
     "file": "src/app/city-board-collection/city-board-collection.ts"
@@ -1250,6 +1282,10 @@
   "1408549847184459558": {
     "source": "This will claim the existing place profile rather than creating a duplicate listing.",
     "file": "src/app/business-claim/business-claim.html"
+  },
+  "1410330243060448300": {
+    "source": "Your headshot, contact card and branding on every TalkThru",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "1410451104176546762": {
     "source": "{$INTERPOLATION} Wikis available in this workspace.",
@@ -1587,6 +1623,14 @@
     "source": "{$START_TAG_SPAN}my_location{$CLOSE_TAG_SPAN} Try finding my square again ",
     "file": "src/app/boards/boards.html"
   },
+  "1487328228419923295": {
+    "source": "Explore for your team {$START_TAG_SPAN}→{$CLOSE_TAG_SPAN}",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "1487695533598619532": {
+    "source": "then {$INTERPOLATION} starting {$INTERPOLATION_1}",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
+  },
   "1490988816086465877": {
     "source": "About your team{$START_TAG_TEXTAREA}{$CLOSE_TAG_TEXTAREA}",
     "file": "src/app/teams/teams.html"
@@ -1746,6 +1790,10 @@
   "1533034111725290854": {
     "source": "You are already friends.",
     "file": "src/app/boards/boards.ts"
+  },
+  "1534067791148467637": {
+    "source": "Price per agent by team size",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "1534251170802139695": {
     "source": "Final screen saved",
@@ -1935,6 +1983,10 @@
     "source": "Queen Village",
     "file": "src/app/membership/membership.html"
   },
+  "157440101019465923": {
+    "source": "Your Personal Voice narration",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "1574448164364998047": {
     "source": "Homes",
     "file": "src/app/public-wikis/public-wikis.ts"
@@ -1962,6 +2014,10 @@
   "1577004790492422015": {
     "source": "Email newsletter",
     "file": "src/app/board-insights/board-insights.ts"
+  },
+  "1578138389769697015": {
+    "source": "Start the Agency & Team plan to publish every agent’s listings.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "1578572469729926875": {
     "source": "Heritage",
@@ -2074,6 +2130,10 @@
   "1608928840506952606": {
     "source": "What sounds good? {$START_SMALL_TEXT}(optional){$CLOSE_SMALL_TEXT}",
     "file": "src/app/boards/boards.html"
+  },
+  "1612838216021921804": {
+    "source": "Agency & Team plan",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "1613103031683776529": {
     "source": "area km²",
@@ -2267,6 +2327,10 @@
     "source": "At the beginning",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
+  "1690039118017619813": {
+    "source": "More agents",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
+  },
   "1691261770947793611": {
     "source": "Trips",
     "file": "src/app/boards/boards.ts"
@@ -2330,6 +2394,10 @@
   "1711637338791541973": {
     "source": "{$START_TAG_SPAN}storefront{$CLOSE_TAG_SPAN} Business ",
     "file": "src/app/public-wikis/public-wikis.html"
+  },
+  "1717944657826721850": {
+    "source": "Add seats in Billing",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "1719845314236454726": {
     "source": "Type during voice conversation",
@@ -2426,6 +2494,10 @@
   "1739953488662118514": {
     "source": "Founding-member pricing",
     "file": "src/app/membership/membership.ts"
+  },
+  "174323413893606214": {
+    "source": "Opening Billing…",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "1744587461905705029": {
     "source": "Loading your businesses...",
@@ -2594,6 +2666,10 @@
   "1812220939161135824": {
     "source": "PDF, DOC/DOCX, PPT/PPTX, TXT, PNG/JPG, and supported Google Drive files",
     "file": "src/app/landing/landing.ts"
+  },
+  "18130150280455712": {
+    "source": "Team-wide engagement reporting",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "1813367237187000587": {
     "source": "{$START_TAG_SPAN}auto_awesome{$CLOSE_TAG_SPAN} Build cards ",
@@ -2867,6 +2943,10 @@
     "source": "{$START_TAG_SPAN}more_horiz{$CLOSE_TAG_SPAN} More sharing options ",
     "file": "src/app/boards/boards.html"
   },
+  "1912827995458599701": {
+    "source": "Start free {$START_TAG_SPAN}→{$CLOSE_TAG_SPAN}",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "1914853322914971772": {
     "source": "Ask the wiki where a new reader should begin.",
     "file": "src/app/chat/chat.ts"
@@ -3111,6 +3191,10 @@
     "source": "{$START_TAG_SPAN}close{$CLOSE_TAG_SPAN} Remove ",
     "file": "src/app/boards/boards.html"
   },
+  "1994920038281642012": {
+    "source": "We couldn’t confirm your checkout yet. If you completed payment, your plan will appear shortly.",
+    "file": "src/app/talkthru-billing/talkthru-billing.service.ts"
+  },
   "1995670864145649528": {
     "source": "{$INTERPOLATION} queued",
     "file": "src/app/web-scraper/web-scraper.html"
@@ -3167,6 +3251,10 @@
     "source": "Longitude must be a number between -180 and 180.",
     "file": "src/app/atlas-manage/atlas-manage.ts"
   },
+  "2014279908777263484": {
+    "source": "{$START_TAG_STRONG}Annual plans:{$CLOSE_TAG_STRONG} 2 months free",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "2015134930602256591": {
     "source": "From the source card",
     "file": "src/app/boards/boards.html"
@@ -3210,6 +3298,10 @@
   "2024244562720066554": {
     "source": "Create preview",
     "file": "src/app/boards/boards.ts"
+  },
+  "2025141451027316786": {
+    "source": "Turn every listing into a narrated video for Reels, Instagram and YouTube.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "2026225553315845494": {
     "source": "Return to Stack Studio to create a narrated video with any included voice. A paid plan is only required when you create and use your own Personal Voice.",
@@ -3839,6 +3931,10 @@
     "source": "Francais",
     "file": "src/app/business-claim/business-claim.ts"
   },
+  "2243878590494665148": {
+    "source": "Your TalkThru plan",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.html"
+  },
   "2244471832629453998": {
     "source": "Workspace",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -3870,6 +3966,10 @@
   "2255982207540575585": {
     "source": "{$START_TAG_SPAN}movie_filter{$CLOSE_TAG_SPAN} Copy trailer MP4",
     "file": "src/app/boards/boards.html"
+  },
+  "2256819362289279320": {
+    "source": "A team admin can start the team plan.",
+    "file": "src/app/teams/teams.html"
   },
   "2259422000636908838": {
     "source": "Surface in curated local paths like hidden coffee, founder-friendly blocks, weekend plans, or places locals actually recommend.",
@@ -4114,6 +4214,10 @@
   "2331596293423574821": {
     "source": "Wiki Article",
     "file": "src/app/wiki/wiki.html"
+  },
+  "23322632678081055": {
+    "source": "{$seats} seats",
+    "file": "src/app/teams/teams.ts"
   },
   "2333217804782040044": {
     "source": "We could not confirm the payment yet. If your card was charged, refresh in a moment or contact support.",
@@ -4394,6 +4498,10 @@
   "2411888447644977106": {
     "source": " Share {$START_TAG_SPAN}ios_share{$CLOSE_TAG_SPAN}",
     "file": "src/app/city-places/city-places.html"
+  },
+  "2412666659459837516": {
+    "source": "Your current plan",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "2413222857032107156": {
     "source": "Sign in before inviting friends.",
@@ -4715,6 +4823,10 @@
     "source": "{$START_TAG_SPAN}refresh{$CLOSE_TAG_SPAN} Re-read page ",
     "file": "src/app/boards/boards.html"
   },
+  "2532307425821733812": {
+    "source": "Start the team’s free month",
+    "file": "src/app/teams/teams.html"
+  },
   "2533964875250017939": {
     "source": "The invitation you opened",
     "file": "src/app/teams/teams.html"
@@ -4762,6 +4874,10 @@
   "2547019822509993435": {
     "source": "Top 500 podcasts mapped by genre, audience, ad rates, and influence — with the business model of podcasting analyzed through public data.",
     "file": "src/app/public-wiki-catalog.ts"
+  },
+  "2547753230479794664": {
+    "source": "Manage billing",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.html"
   },
   "2548992742539187875": {
     "source": "Choose Public or Unlisted before creating a promo image.",
@@ -5007,6 +5123,10 @@
     "source": "My Trove | LivingWiki",
     "file": "src/app/app.routes.ts"
   },
+  "2613370900091678558": {
+    "source": "Agency & Team · {$seats}",
+    "file": "src/app/teams/teams.ts"
+  },
   "2614607010577950577": {
     "source": "Overview",
     "file": "src/app/business-detail/business-detail.html"
@@ -5131,6 +5251,10 @@
     "source": "Edit Talking Card ",
     "file": "src/app/boards/boards.ts"
   },
+  "2652333598738292867": {
+    "source": "Your team has {$INTERPOLATION} members and {$INTERPOLATION_1} pending invitations. Minimum {$INTERPOLATION_2}.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
+  },
   "2654156322168132923": {
     "source": "{$START_TAG_SPAN}leaderboard{$CLOSE_TAG_SPAN} Leaderboard ",
     "file": "src/app/boards/boards.html"
@@ -5150,6 +5274,10 @@
   "2659625723096392929": {
     "source": "Create a full board inside this card",
     "file": "src/app/boards/boards.ts"
+  },
+  "2661843600778582615": {
+    "source": "Your free TalkThru is live.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "2662473127373876354": {
     "source": " photo ",
@@ -5295,6 +5423,10 @@
     "source": "Public board",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.ts"
   },
+  "2714817523957761649": {
+    "source": "Agents on the plan",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
+  },
   "271632545074842397": {
     "source": "Answer mode",
     "file": "src/app/chat/chat.ts"
@@ -5314,6 +5446,10 @@
   "2721614974061129816": {
     "source": "Selected test ",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
+  "2722748121517932642": {
+    "source": "Agency branding alongside each agent’s own voice",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "2723568921149709894": {
     "source": "We sent the conversation summary and transcript to",
@@ -6175,6 +6311,10 @@
     "source": " Population ",
     "file": "src/app/public-wikis/public-wikis.html"
   },
+  "3009763677871222266": {
+    "source": "Upgrade to Agent Pro {$START_TAG_SPAN}→{$CLOSE_TAG_SPAN}",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.html"
+  },
   "300981336830029371": {
     "source": "Choose a board type",
     "file": "src/app/boards/boards.html"
@@ -6363,6 +6503,10 @@
     "source": "Instagram",
     "file": "src/app/answer-card/answer-card.html"
   },
+  "3081250409954151350": {
+    "source": "Your plan’s live TalkThrus are in use. Choose a plan to publish this one.",
+    "file": "src/app/boards/boards.ts"
+  },
   "3082304621919543349": {
     "source": "Try another search, or mark a place you love.",
     "file": "src/app/off-grids/off-grid-copy.ts"
@@ -6370,6 +6514,10 @@
   "3083188390404062028": {
     "source": "{$START_TAG_SPAN}download{$CLOSE_TAG_SPAN}Downloads directly to this device—no Google permissions",
     "file": "src/app/boards/boards.html"
+  },
+  "3083395944824371014": {
+    "source": "Team plan",
+    "file": "src/app/teams/teams.html"
   },
   "3083436517363670542": {
     "source": "Hotel",
@@ -6519,6 +6667,10 @@
     "source": "Could not render the additional QR PNG.",
     "file": "src/app/business-detail/business-detail.ts"
   },
+  "3131307992142430281": {
+    "source": "Team plans",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.html"
+  },
   "3133472824237616509": {
     "source": "{$START_TAG_SPAN}chat{$CLOSE_TAG_SPAN} Chat ",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -6606,6 +6758,10 @@
   "3151634115987524057": {
     "source": "Review the board at your own pace, or test what you remember with a short quiz.",
     "file": "src/app/boards/boards.html"
+  },
+  "3151947942860997859": {
+    "source": "Your account already includes this plan. You’re all set.",
+    "file": "src/app/talkthru-billing/talkthru-billing.service.ts"
   },
   "3153802600204818440": {
     "source": "Date and time",
@@ -6955,6 +7111,10 @@
     "source": "Rendering your promo image…",
     "file": "src/app/boards/board-promo-image-dialog.html"
   },
+  "3259486107191649048": {
+    "source": "Start my free month",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "3260083096227792176": {
     "source": "AI tone",
     "file": "src/app/business-claim/business-claim.html"
@@ -6974,6 +7134,10 @@
   "3263593297683861243": {
     "source": "Useful sequences for making your time in the city count.",
     "file": "src/app/city-board-collection.util.ts"
+  },
+  "3264239740206200382": {
+    "source": "Free month · {$days} days left · ends {$date} and won’t renew",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
   },
   "3265258875362223842": {
     "source": "Voice name",
@@ -7070,6 +7234,10 @@
   "3284651014360368284": {
     "source": "Tour viewing options",
     "file": "src/app/boards/boards.html"
+  },
+  "328578787550604845": {
+    "source": "Your plan is updated. Any prorated difference appears on your next invoice.",
+    "file": "src/app/talkthru-billing/talkthru-billing.service.ts"
   },
   "3286872174390014041": {
     "source": "Choose icon",
@@ -7899,6 +8067,10 @@
     "source": "That voice preview could not be played.",
     "file": "src/app/atlas-persona/atlas-persona.ts"
   },
+  "353323665054120147": {
+    "source": "Video export comes with Agent Pro.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "3534178432926775489": {
     "source": "The original stays available while we prepare it.",
     "file": "src/app/boards/boards.html"
@@ -8359,6 +8531,10 @@
     "source": "Founding-business status",
     "file": "src/app/business/business.ts"
   },
+  "3678416282422080960": {
+    "source": "Put your voice on your next few listings and see how buyers respond.",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "3680676956196795841": {
     "source": "Copy quiz link",
     "file": "src/app/boards/boards.html"
@@ -8447,6 +8623,10 @@
     "source": "Subscribe to {$INTERPOLATION}",
     "file": "src/app/atlas-landing/atlas-landing.html"
   },
+  "3708464660612961384": {
+    "source": "{$count} live · unlimited",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
+  },
   "3709340974541267923": {
     "source": "Bringing your people and listings together.",
     "file": "src/app/teams/teams.html"
@@ -8527,6 +8707,10 @@
     "source": "Choose who gets to discover it.",
     "file": "src/app/off-grids/off-grid-editor.html"
   },
+  "3731161007898265223": {
+    "source": "Agent Pro",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "3732245029674921034": {
     "source": "Back to Wiki settings",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -8543,6 +8727,10 @@
     "source": "Questions begin with your card details. Edit anything before learners see it.",
     "file": "src/app/boards/boards.html"
   },
+  "3736443952621974689": {
+    "source": "Ask a team admin to start or change the team plan.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
+  },
   "3737489810259216721": {
     "source": "Only Happens Here: 10 Traditions",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
@@ -8551,6 +8739,10 @@
     "source": "Membership",
     "file": "src/app/teams/teams.html"
   },
+  "3740661248242356350": {
+    "source": "Send my details",
+    "file": "src/app/talkthrus/talkthrus.ts"
+  },
   "3742863368496525721": {
     "source": "Make team admin",
     "file": "src/app/teams/teams.ts"
@@ -8558,6 +8750,10 @@
   "3742867855774244619": {
     "source": "A gem waiting for its story.",
     "file": "src/app/off-grids/off-grid-copy.ts"
+  },
+  "3745223847280240225": {
+    "source": "Annual",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
   },
   "3745403738156959252": {
     "source": " and its source board card",
@@ -8851,6 +9047,10 @@
     "source": "Creating your board",
     "file": "src/app/kiwi/kiwi.ts"
   },
+  "3836322407229237486": {
+    "source": "Every listing deserves your voice.{$LINE_BREAK}{$START_EMPHASISED_TEXT}Pricing that keeps it that way.{$CLOSE_EMPHASISED_TEXT}",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "3837019738313777797": {
     "source": "Board settings",
     "file": "src/app/boards/boards.html"
@@ -8890,6 +9090,10 @@
   "3851745112741873737": {
     "source": "Sending file to LivingWiki before indexing starts.",
     "file": "src/app/library/library.html"
+  },
+  "3852579538005872614": {
+    "source": "Up to 10 live TalkThrus",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "3854363836178152005": {
     "source": "Create team",
@@ -9023,6 +9227,10 @@
     "source": "Open Philly Answer Card",
     "file": "src/app/shared-chat/shared-chat.html"
   },
+  "390540552323653834": {
+    "source": "Loading your team’s plan…",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
+  },
   "3906110511741159929": {
     "source": "We store the content you upload or submit, including files, URLs, extracted text, generated wiki content, chat threads, and source citations tied to your atlas.",
     "file": "src/app/legal/legal.ts"
@@ -9034,6 +9242,10 @@
   "3907065043559352015": {
     "source": "Failed cities",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "3908225287825385623": {
+    "source": "Agents 11–25",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "3909234480211706957": {
     "source": "Delete is available for empty Wikis.",
@@ -9359,6 +9571,10 @@
     "source": "Downloads the MP4 and opens the selected composer. Attach it for in-feed autoplay.",
     "file": "src/app/boards/boards.ts"
   },
+  "4006024859693716857": {
+    "source": "{$price}/yr",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "4013681269990540326": {
     "source": "Featured placement in a neighborhood guide",
     "file": "src/app/business/business.ts"
@@ -9639,6 +9855,10 @@
     "source": "Students enjoying food together",
     "file": "src/app/membership/membership.html"
   },
+  "4108212781302711643": {
+    "source": "Share link and QR code",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "4109755214985264235": {
     "source": "A Covanta/Reworld incinerator, regional sewage plant, and scrap-metal operations stack into one poor, majority-minority neighborhood.",
     "file": "src/app/fence-line/fence-line.ts"
@@ -9799,9 +10019,17 @@
     "source": "Loading text settings...",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "4152554053400105784": {
+    "source": "Live onboarding sessions for your agents",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "4152585639974219997": {
     "source": "Visible on public page",
     "file": "src/app/teams/teams.ts"
+  },
+  "4153557894858935010": {
+    "source": "Cancelled · access until {$date}",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
   },
   "4155395024816191514": {
     "source": "The Card Wizard could not prepare this related card.",
@@ -10071,6 +10299,10 @@
     "source": "Update URL",
     "file": "src/app/custom-public-url-dialog/custom-public-url-dialog.ts"
   },
+  "4232263166117580688": {
+    "source": "billed annually",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
+  },
   "4234045903237306456": {
     "source": "{$START_TAG_SPAN}refresh{$CLOSE_TAG_SPAN} Try again ",
     "file": "src/app/boards/board-promo-image-dialog.html"
@@ -10266,6 +10498,10 @@
   "4294892175268000576": {
     "source": "Avatar is answering",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
+  "4295971430122250380": {
+    "source": "Agents 1–10",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "4297233554822243036": {
     "source": "Only Public boards notify your friends.",
@@ -10627,6 +10863,10 @@
     "source": " Refreshing Philly green jobs… ",
     "file": "src/app/green-jobs/green-jobs.html"
   },
+  "4412691380662907997": {
+    "source": "Solo Agent",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "4416215897351482429": {
     "source": "Received {$INTERPOLATION}",
     "file": "src/app/admin-users/talkthru-interests-admin.html"
@@ -10686,6 +10926,10 @@
   "4434683071029451536": {
     "source": "Watch Kiwi fill this board in. You can edit it while it works.",
     "file": "src/app/kiwi/kiwi.ts"
+  },
+  "4437458740258571869": {
+    "source": "{$START_TAG_SPAN}★{$CLOSE_TAG_SPAN} Most popular",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "4440081753597585133": {
     "source": "LinkedIn",
@@ -10811,6 +11055,10 @@
     "source": "Separate multiple addresses with commas. Guests can respond without an account.",
     "file": "src/app/boards/boards.html"
   },
+  "4487460955192301429": {
+    "source": "/yr",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "4488872451087750079": {
     "source": "Close email form",
     "file": "src/app/boards/boards.html"
@@ -10818,6 +11066,10 @@
   "4489024129911784899": {
     "source": "Facebook opened with your quiz link.",
     "file": "src/app/boards/boards.ts"
+  },
+  "4489613560234308407": {
+    "source": "Your first month is free. Cancel anytime.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "4492166930951826461": {
     "source": "Spotify could not change playback.",
@@ -10982,6 +11234,10 @@
   "4536580068218685874": {
     "source": "Choose the balance once. You can still edit any card before saving.",
     "file": "src/app/boards/boards.html"
+  },
+  "4536707824403611943": {
+    "source": "We couldn’t charge your card. Update it in Billing to keep your plan.",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
   },
   "4538300872340685410": {
     "source": "A photo. An exact pin. A story worth sharing.",
@@ -11550,6 +11806,10 @@
   "4705279671123705507": {
     "source": "cover photo",
     "file": "src/app/teams/teams.ts"
+  },
+  "4705319944955997731": {
+    "source": "First month free · cancel anytime. We’ll remind you before your first charge.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
   },
   "4706944862243942841": {
     "source": "Included voices",
@@ -12199,6 +12459,10 @@
     "source": "Latest pull",
     "file": "src/app/green-jobs/green-jobs.html"
   },
+  "4909919808333723129": {
+    "source": "Fewer agents",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
+  },
   "4910344034642417881": {
     "source": " Your Local Insider {$START_TAG_SPAN}Any City. Any Language.{$CLOSE_TAG_SPAN}",
     "file": "src/app/business-claim/business-claim.html"
@@ -12355,6 +12619,10 @@
     "source": "Conversation recap",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
+  "49702063302044335": {
+    "source": "{$START_TAG_STRONG}Switch plans{$CLOSE_TAG_STRONG} any time as your listings grow",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "497118371911193143": {
     "source": "Community reviews",
     "file": "src/app/city-places/city-places.html"
@@ -12402,10 +12670,6 @@
   "4986758570132961662": {
     "source": "{$START_TAG_SPAN}lock{$CLOSE_TAG_SPAN}OAuth only—LivingWiki never receives your Spotify password.",
     "file": "src/app/spotify-player/spotify-player.html"
-  },
-  "4988607178049350188": {
-    "source": "Sign up to get started with LivingWiki TalkThrus. Tell us a little about yourself so we can help you take the next step.",
-    "file": "src/app/talkthrus/talkthrus.html"
   },
   "4989395106592883421": {
     "source": "Failed to load topic details.",
@@ -12695,6 +12959,10 @@
     "source": "Sort friends",
     "file": "src/app/boards/boards.html"
   },
+  "5090209836643637979": {
+    "source": "Loading your plan…",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.html"
+  },
   "509090351011426949": {
     "source": "Update available",
     "file": "src/app/video-library/video-library.html"
@@ -12754,6 +13022,14 @@
   "5106510708893142193": {
     "source": "Export as beautiful cards or MP4 videos for social media in one click.",
     "file": "src/app/membership/membership.ts"
+  },
+  "5106742840542240817": {
+    "source": "Unlimited live TalkThrus",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
+  "5108724123940741139": {
+    "source": "Every listing, every channel, and a clear view of what buyers lingered on.",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "5108938333454440103": {
     "source": "Listen with Spotify",
@@ -12830,6 +13106,10 @@
   "5129324138930675609": {
     "source": "Public contact is not published yet",
     "file": "src/app/business-detail/business-detail.ts"
+  },
+  "512976605230382635": {
+    "source": "Team dashboard and shared listing library",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "5131027828260892872": {
     "source": "Public business email{$TAG_INPUT}",
@@ -12966,6 +13246,10 @@
   "517030919058496055": {
     "source": "Selected included voice",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
+  "5170385541850303682": {
+    "source": "Agency & Team · {$seats} · payment issue, update the card in Billing",
+    "file": "src/app/teams/teams.ts"
   },
   "5170990160218179574": {
     "source": "Share page ready",
@@ -13547,6 +13831,10 @@
     "source": "Pending invitation",
     "file": "src/app/boards/boards.html"
   },
+  "5358838120063821972": {
+    "source": "billed monthly",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
+  },
   "5359499080571758775": {
     "source": "Search all listings or representatives",
     "file": "src/app/teams/teams.html"
@@ -13763,6 +14051,10 @@
     "source": "Private team profile",
     "file": "src/app/teams/teams.ts"
   },
+  "5439242970477787820": {
+    "source": "Billing period",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
+  },
   "5439408062315196541": {
     "source": "Understand who is finding this board, where they came from, and what they explore.",
     "file": "src/app/board-insights/board-insights.html"
@@ -13855,6 +14147,10 @@
     "source": "Test recipient",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "5468707112764744608": {
+    "source": "Agent Pro gives you unlimited listings, plus video export.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "5470706554452951501": {
     "source": "Country code",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -13914,6 +14210,10 @@
   "5491638977429836032": {
     "source": "Best Sushi in Philly",
     "file": "src/app/membership/membership.html"
+  },
+  "5494869083452886725": {
+    "source": "Photo-to-story builder with your own Personal Voice narration",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "5496021206221109109": {
     "source": "Your private voice remains in your library; visitors only hear it when this guide speaks.",
@@ -14231,6 +14531,14 @@
     "source": "Your plan",
     "file": "src/app/chat/chat.ts"
   },
+  "5582836200806481677": {
+    "source": "Seats can be added or removed in Billing. Changes are prorated automatically.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
+  },
+  "5583523900474090294": {
+    "source": "View counts for every TalkThru",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "5584107564920356978": {
     "source": "Dessert",
     "file": "src/app/business-badge-icons.ts"
@@ -14242,6 +14550,10 @@
   "5584821962052747543": {
     "source": "Share this gem",
     "file": "src/app/off-grids/off-grid-copy.ts"
+  },
+  "5585105568388063115": {
+    "source": "{$START_TAG_SPAN}✦{$CLOSE_TAG_SPAN} First month free on every plan · cancel anytime",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "5585336786825601578": {
     "source": " Manage every claimed business attached to {$INTERPOLATION}. Open the public page, edit details, or claim a new business from one place. ",
@@ -14287,6 +14599,10 @@
     "source": "Friend request sent.",
     "file": "src/app/boards/boards.ts"
   },
+  "5595301637513839011": {
+    "source": "Your plan is active. Thank you!",
+    "file": "src/app/talkthru-billing/talkthru-billing.service.ts"
+  },
   "5596014307827570537": {
     "source": "We need to confirm {$INTERPOLATION} before granting access to a team.",
     "file": "src/app/teams/teams.html"
@@ -14314,6 +14630,10 @@
   "5603970865625901336": {
     "source": "Give me the key facts about {topic}.",
     "file": "src/app/chat/chat.ts"
+  },
+  "5605123772636494177": {
+    "source": "Plan",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
   },
   "5607669932062416162": {
     "source": "Default",
@@ -14619,6 +14939,10 @@
     "source": "A visual story guided by the person{$LINE_BREAK} who knows the property.",
     "file": "src/app/talkthrus/talkthrus.html"
   },
+  "5692943605449589092": {
+    "source": "{$count} of {$limit} live",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
+  },
   "5694132955521032124": {
     "source": "{$START_TAG_SPAN}2{$CLOSE_TAG_SPAN} Preview",
     "file": "src/app/boards/boards.html"
@@ -14742,6 +15066,10 @@
   "5730731256330221398": {
     "source": "Business Page",
     "file": "src/app/workspace-navigation/workspace-navigation.ts"
+  },
+  "5735986233623386917": {
+    "source": "Agency & Team",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "5736481176444461852": {
     "source": "About Us",
@@ -14975,6 +15303,10 @@
     "source": "{$START_TAG_SPAN}●{$CLOSE_TAG_SPAN} A little off the beaten path",
     "file": "src/app/off-grids/off-grids.html"
   },
+  "5799105277243625034": {
+    "source": "Start with a listing you already know. Narrate as many as you like. Bring your whole team along for less per agent.",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "5799706567832871523": {
     "source": "Use one more card",
     "file": "src/app/boards/boards.html"
@@ -15039,6 +15371,10 @@
     "source": "Confirm that this is your own voice and that you consent to creating the voice model.",
     "file": "src/app/boards/boards.ts"
   },
+  "5819800998583694069": {
+    "source": "Solo Agent · complimentary",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
+  },
   "5821114259687970064": {
     "source": "Extracting knowledge",
     "file": "src/app/marketing/marketing.ts"
@@ -15078,6 +15414,10 @@
   "5830827866261911339": {
     "source": "Latitude {$START_TAG_SPAN}(optional · for the map){$CLOSE_TAG_SPAN}",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "5832128376291749362": {
+    "source": "Switch to {$plan}",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "5836116249544998271": {
     "source": " Modeled live estimate {$INTERPOLATION} ",
@@ -15211,6 +15551,14 @@
     "source": "You may not use LivingWiki to violate the law, infringe intellectual property or privacy rights, distribute harmful material, interfere with the service, or attempt unauthorized access.",
     "file": "src/app/legal/legal.ts"
   },
+  "5875130684997376720": {
+    "source": "Billing",
+    "file": "src/app/teams/teams.ts"
+  },
+  "5875694258267143947": {
+    "source": "Choose a plan to publish more listings. Your first month is free, and you can cancel anytime.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "5876509115002255508": {
     "source": "What matters now",
     "file": "src/app/chat/chat.ts"
@@ -15315,6 +15663,10 @@
     "source": "Loading gems",
     "file": "src/app/off-grids/off-grids.html"
   },
+  "5910236429067216872": {
+    "source": "Bring your listings to life {$START_TAG_SPAN}→{$CLOSE_TAG_SPAN}",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "5911629878274755333": {
     "source": "{$INTERPOLATION} sources",
     "file": "src/app/chat/chat.html"
@@ -15347,6 +15699,10 @@
     "source": "New Card",
     "file": "src/app/boards/boards.html"
   },
+  "5921750383346879011": {
+    "source": "Start your free month {$START_TAG_SPAN}→{$CLOSE_TAG_SPAN}",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.html"
+  },
   "5922127287100253967": {
     "source": "Cities coming online",
     "file": "src/app/business/business.html"
@@ -15354,6 +15710,10 @@
   "5925509353518968307": {
     "source": "Move earlier",
     "file": "src/app/boards/boards.html"
+  },
+  "5927044521843720826": {
+    "source": "Share link and QR code for open houses and yard signs",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "5927768693427090187": {
     "source": "Your private Gems board is ready",
@@ -15466,10 +15826,6 @@
   "5962319588931300494": {
     "source": "Contact ",
     "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
-  },
-  "5963074322668130600": {
-    "source": "Let’s get you started.",
-    "file": "src/app/talkthrus/talkthrus.html"
   },
   "5963692520522864034": {
     "source": "Choose Personal Plus or Professional to keep LivingWiki spaces private. Public boards and narrated Stack video exports remain free.",
@@ -15823,6 +16179,10 @@
     "source": "To ",
     "file": "src/app/boards/boards.ts"
   },
+  "6069089524302317336": {
+    "source": "Paused listings: {$INTERPOLATION}. They’re over your plan, so they’re private for now. Nothing was deleted, and they come back automatically when you upgrade.",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.html"
+  },
   "6069774338805555320": {
     "source": "{$START_TAG_SPAN}arrow_back{$CLOSE_TAG_SPAN} Back to chat ",
     "file": "src/app/city-places/city-places.html"
@@ -16006,10 +16366,6 @@
   "614027880250747579": {
     "source": "Preparing…",
     "file": "src/app/boards/board-promo-image-dialog.ts"
-  },
-  "6140665324949533363": {
-    "source": "Sign up for TalkThrus",
-    "file": "src/app/talkthrus/talkthrus.ts"
   },
   "6144154546407086739": {
     "source": "Public Wiki | LivingWiki",
@@ -16303,6 +16659,10 @@
     "source": "Cities & Regions",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "6220284286666775266": {
+    "source": "Your team plan is full.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "6223895326152306799": {
     "source": "Could not cancel this plan.",
     "file": "src/app/boards/boards.ts"
@@ -16334,6 +16694,10 @@
   "6228516837221569422": {
     "source": "LivingWiki answers are generated from available source material, public records, uploaded documents, verified local sources, and user-submitted updates, and may require human review.",
     "file": "src/app/atlas-landing/atlas-landing.html"
+  },
+  "6228541566546891654": {
+    "source": "Teams with more than 25 agents get a custom plan. Use “Let’s talk” on the TalkThrus page and we’ll set it up with you.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
   },
   "6230354897495591191": {
     "source": "Change custom address",
@@ -16767,6 +17131,10 @@
     "source": " {$INTERPOLATION} · Ask a team admin for a new invitation if you still need access. ",
     "file": "src/app/teams/teams.html"
   },
+  "6366521789814140499": {
+    "source": "Add seats in Billing, then send the invitation again. New seats are prorated.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "6367751413467188072": {
     "source": "Market",
     "file": "src/app/business-claim/business-claim.html"
@@ -17002,6 +17370,10 @@
   "6437071410205851907": {
     "source": "This stop could not be added to the tour.",
     "file": "src/app/boards/boards.ts"
+  },
+  "6438202528059491102": {
+    "source": "You’ve reached {$limit} live TalkThrus.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "6438287125181219979": {
     "source": "Turn a scenic drive into mapped stops, navigation legs, and narration.",
@@ -17879,6 +18251,10 @@
     "source": "Field guide",
     "file": "src/app/chat/chat.ts"
   },
+  "6720628054325774232": {
+    "source": "Your plan’s live TalkThrus are in use. Choose a plan to publish this one. Your draft is saved.",
+    "file": "src/app/boards/boards.ts"
+  },
   "6720628286473993634": {
     "source": "Ready to edit",
     "file": "src/app/boards/boards.ts"
@@ -17995,6 +18371,10 @@
     "source": "Cover saved",
     "file": "src/app/boards/boards.ts"
   },
+  "6752506103017319599": {
+    "source": "Leading more than 25 agents, or have questions before you start? Tell us a little about yourself and we’ll reach out.",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "6752604898701886526": {
     "source": "Live view",
     "file": "src/app/boards/boards.html"
@@ -18018,6 +18398,10 @@
   "676246940122041564": {
     "source": "Create Board Trailer in 2 formats",
     "file": "src/app/boards/boards.ts"
+  },
+  "6762743264882388498": {
+    "source": "Monthly",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
   },
   "6763931073785777715": {
     "source": "Record now",
@@ -18427,6 +18811,10 @@
     "source": "Stack actions",
     "file": "src/app/boards/boards.html"
   },
+  "6913187836954058848": {
+    "source": "$25 per agent for agents 1–10, $19 for each agent after that. Annual: $250 and $190.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
+  },
   "691393787629960958": {
     "source": " Add one of your real estate TalkThrus to this team. The imported listing starts as a private draft. ",
     "file": "src/app/teams/teams.html"
@@ -18446,6 +18834,10 @@
   "6917980283016202377": {
     "source": " After verification, you will return to the business setup page to finish payment, AI tone, and document upload. ",
     "file": "src/app/verify-email/verify-email.html"
+  },
+  "6919365293707149005": {
+    "source": "← TalkThrus",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.html"
   },
   "6920114174446900740": {
     "source": "Add a video",
@@ -18670,6 +19062,10 @@
   "6987000622952787976": {
     "source": "Saving voice…",
     "file": "src/app/atlas-persona/atlas-persona.ts"
+  },
+  "6989778076179206800": {
+    "source": "Plan & billing",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.html"
   },
   "6990424485062673905": {
     "source": "Set location",
@@ -18995,6 +19391,14 @@
     "source": " You’re signed in as {$INTERPOLATION}. Switch to the account this invitation was sent to. ",
     "file": "src/app/teams/teams.html"
   },
+  "7080323813407887882": {
+    "source": "Your card on file is used. Any difference is prorated on your next invoice.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
+  },
+  "7081887281699448094": {
+    "source": "Video export for Reels, Instagram and YouTube",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "7084009720055916740": {
     "source": "Searching Wikimedia Commons...",
     "file": "src/app/boards/boards.ts"
@@ -19027,6 +19431,10 @@
     "source": "Introduce yourself, highlight what you love about the home, and invite the buyer to contact you.",
     "file": "src/app/boards/boards.html"
   },
+  "7098620213960902222": {
+    "source": "Video export is not included",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "7098767805293925166": {
     "source": "System prompt *",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -19046,6 +19454,10 @@
   "7103736748230764046": {
     "source": "Could not discard this draft. Please try again.",
     "file": "src/app/boards/boards.ts"
+  },
+  "7104381287143033967": {
+    "source": "TalkThru plan",
+    "file": "src/app/account-menu/account-menu.html"
   },
   "7105094143478666959": {
     "source": "Create walking tours, road trips & day plans that are easy to share.",
@@ -19097,7 +19509,7 @@
   },
   "7123805572728356738": {
     "source": "Create a TalkThru",
-    "file": "src/app/teams/teams.html"
+    "file": "src/app/talkthru-billing/talkthru-billing-page.html"
   },
   "7123880690640095355": {
     "source": "Choose a name with at least two characters.",
@@ -19130,6 +19542,10 @@
   "7132564289660728319": {
     "source": "Filter voices",
     "file": "src/app/boards/boards.html"
+  },
+  "7135176251254623680": {
+    "source": "Put your voice on your next few listings.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "7136018875175606726": {
     "source": "in",
@@ -19198,6 +19614,10 @@
   "715829129657726771": {
     "source": "한국어",
     "file": "src/app/business/business.ts"
+  },
+  "7159003283225028144": {
+    "source": "Buyer engagement insights: which rooms got replayed",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "7159284789577381829": {
     "source": "Your video logo",
@@ -19314,6 +19734,10 @@
   "719636184357791187": {
     "source": "Real estate team | LivingWiki",
     "file": "src/app/app.routes.ts"
+  },
+  "7196877536437765404": {
+    "source": "Everything in Solo Agent",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "7197267056736387478": {
     "source": "Open the live chat and voice assistant for {$INTERPOLATION}",
@@ -19775,6 +20199,10 @@
     "source": "LivingWiki pages are not just for cities.",
     "file": "src/app/public-wikis/public-wikis.html"
   },
+  "7345119465861946773": {
+    "source": "26+ agents? Let’s talk",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "7345156790690988499": {
     "source": " {$INTERPOLATION} of {$INTERPOLATION_1} shown ",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -19782,6 +20210,10 @@
   "7347130830291696610": {
     "source": "Card added to {$INTERPOLATION}",
     "file": "src/app/boards/boards.html"
+  },
+  "7347789063461193661": {
+    "source": "Your free month has started. You won’t be charged until {$date}.",
+    "file": "src/app/talkthru-billing/talkthru-billing.service.ts"
   },
   "7348299236124287511": {
     "source": " Wiki is still available.",
@@ -19922,6 +20354,10 @@
   "7396365326609607164": {
     "source": "Paste it anywhere",
     "file": "src/app/boards/boards.html"
+  },
+  "7396385333443908029": {
+    "source": "A personal listing experience across your team, with each agent’s voice front and center.",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "7396401662440041726": {
     "source": "Useful when the destination is easier to show than describe.",
@@ -20111,6 +20547,10 @@
     "source": "The History of the Internet",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "746257856782524040": {
+    "source": "TalkThru plan | LivingWiki",
+    "file": "src/app/app.routes.ts"
+  },
   "7463266716630636396": {
     "source": "Choose board experience",
     "file": "src/app/boards/boards.html"
@@ -20154,6 +20594,10 @@
   "7476562538515476043": {
     "source": "Tour guide speaking",
     "file": "src/app/boards/boards.ts"
+  },
+  "7476984826304350709": {
+    "source": "Live TalkThrus",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.html"
   },
   "7477094447930855311": {
     "source": "A little about us",
@@ -20238,6 +20682,10 @@
   "7506455858671592716": {
     "source": "Download script and images",
     "file": "src/app/boards/boards.html"
+  },
+  "7507216847685712331": {
+    "source": "Neighborhood cards from LivingWiki local guides",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "7507746824658234201": {
     "source": "Account-owned setup",
@@ -20350,6 +20798,10 @@
   "7540381902346070209": {
     "source": "{$START_TAG_SPAN}location_on{$CLOSE_TAG_SPAN} Off Grids",
     "file": "src/app/off-grids/off-grid-detail.html"
+  },
+  "7540581508934389507": {
+    "source": "Free month · {$days} days left · first charge on {$date} ({$cycle})",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
   },
   "7542707314247149145": {
     "source": "Public listing QR code",
@@ -20554,6 +21006,10 @@
   "7614019480958666088": {
     "source": "Public LivingWiki boards",
     "file": "src/app/boards/boards.ts"
+  },
+  "7615492152746387229": {
+    "source": "Multilingual TalkThrus: your narration in 30+ languages, still in your voice",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "7616796438484689723": {
     "source": "The habits and everyday places that reveal how the city really works.",
@@ -21035,9 +21491,17 @@
     "source": " ~{$INTERPOLATION} tokens · estimated ${$INTERPOLATION_1} ",
     "file": "src/app/web-scraper/web-scraper.html"
   },
+  "7766551298635483854": {
+    "source": "You’ll add a card on Stripe’s secure checkout. Cancel anytime from Billing before the free month ends and you won’t be charged.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
+  },
   "7767537721040748251": {
     "source": "Your existing voice remains available. Replace it here, or upgrade to add more voices.",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
+  "7769211561805415115": {
+    "source": "Up to 10 active TalkThrus at a time",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "7770974812608545646": {
     "source": " Choose what this Wiki is about and whether the subject speaks as “I” or is described by a guide. ",
@@ -21455,6 +21919,10 @@
     "source": "Word document",
     "file": "src/app/boards/boards.html"
   },
+  "7899350452655441577": {
+    "source": "Everything in Agent Pro, for every agent",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "7901425420980302199": {
     "source": " tone",
     "file": "src/app/boards/boards.ts"
@@ -21602,6 +22070,10 @@
   "7934833136974560675": {
     "source": "Retry",
     "file": "src/app/teams/teams.html"
+  },
+  "7936024932951020825": {
+    "source": "Agency & Team · free month · {$days} days left · won’t renew",
+    "file": "src/app/teams/teams.ts"
   },
   "7936419772245091810": {
     "source": "Quiz complete",
@@ -21769,6 +22241,10 @@
   },
   "7996215583086527268": {
     "source": "Uploading… ",
+    "file": "src/app/boards/boards.ts"
+  },
+  "7996354847649312615": {
+    "source": "Video export is included in Agent Pro.",
     "file": "src/app/boards/boards.ts"
   },
   "7997823658928238553": {
@@ -22467,6 +22943,10 @@
     "source": "Food as a way to understand the place—not a ranking.",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
   },
+  "8216720405388690803": {
+    "source": "Agency & Team · free month · {$days} days left · {$seats}",
+    "file": "src/app/teams/teams.ts"
+  },
   "8218838315276535589": {
     "source": "Search listings or agents",
     "file": "src/app/teams/teams.html"
@@ -22486,6 +22966,10 @@
   "8225018754533371665": {
     "source": "Loading activity…",
     "file": "src/app/teams/teams.ts"
+  },
+  "8226146197519356571": {
+    "source": "Unlimited active TalkThrus",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "822756730690661877": {
     "source": "{$START_TAG_SPAN}hub{$CLOSE_TAG_SPAN}Name, role, and portrait also update the shared avatar profile.",
@@ -22538,6 +23022,10 @@
   "8251803503418061079": {
     "source": "Wiki Reader",
     "file": "src/app/workspace-navigation/workspace-navigation.ts"
+  },
+  "8253530480435489018": {
+    "source": "Per agent",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "8253627305850813394": {
     "source": "Join LivingWiki {city}",
@@ -22958,6 +23446,10 @@
   "8396464908757909108": {
     "source": "{$START_TAG_SPAN}link{$CLOSE_TAG_SPAN} Set custom URL ",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
+  },
+  "8398563139722852164": {
+    "source": "Agent Pro · included with your team plan",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
   },
   "8399090583546402149": {
     "source": " Make this gem private ",
@@ -23383,6 +23875,10 @@
     "source": "Sign in to save a score to this leaderboard.",
     "file": "src/app/boards/boards.html"
   },
+  "8538523400738663869": {
+    "source": "Checkout was cancelled. Nothing was charged.",
+    "file": "src/app/talkthru-billing/talkthru-billing.service.ts"
+  },
   "8538970503769683051": {
     "source": "Unlike board",
     "file": "src/app/boards/boards.ts"
@@ -23458,6 +23954,10 @@
   "8564202903947049539": {
     "source": "Play",
     "file": "src/app/boards/boards.ts"
+  },
+  "8567551807175882631": {
+    "source": "Your plan couldn’t be loaded. Check your connection and try again.",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
   },
   "8567835674811345385": {
     "source": "Generation scope",
@@ -23615,6 +24115,10 @@
     "source": "Edit Final Card",
     "file": "src/app/boards/boards.html"
   },
+  "8637508752870642576": {
+    "source": "Agency & Team plans are managed on each team’s page.",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.html"
+  },
   "8638122479556610178": {
     "source": "Location is unavailable. Drop a pin or enter coordinates.",
     "file": "src/app/off-grids/off-grid-editor.ts"
@@ -23634,6 +24138,10 @@
   "8641397813875605477": {
     "source": "LivingWiki stats",
     "file": "src/app/membership/membership.html"
+  },
+  "8643252652311805046": {
+    "source": "Your free month has already been used on this account. Cancel anytime.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
   },
   "8644257483386995954": {
     "source": "Why does {topic} matter?",
@@ -23698,6 +24206,10 @@
   "8667665916832796867": {
     "source": "Creating",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "8669980563036664376": {
+    "source": "{$START_TAG_STRONG}Teams:{$CLOSE_TAG_STRONG} every seat gets unlimited TalkThrus",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "867176748195969642": {
     "source": "Harvard University",
@@ -23787,6 +24299,10 @@
     "source": "Generate titles and stories",
     "file": "src/app/boards/boards.ts"
   },
+  "8698717146994259280": {
+    "source": "{$price}/mo",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "8699429647938596937": {
     "source": "See views, referrals, clicks, and tracked campaigns.",
     "file": "src/app/custom-public-url-dialog/custom-public-url-dialog.html"
@@ -23846,6 +24362,10 @@
   "8719913816091229559": {
     "source": "200+ conversation minutes after checkout",
     "file": "src/app/business-claim/business-claim.ts"
+  },
+  "8720093607726336341": {
+    "source": "Open this page in your browser to continue.",
+    "file": "src/app/talkthru-billing/talkthru-billing.service.ts"
   },
   "8721861281513890587": {
     "source": "Properties",
@@ -24014,6 +24534,10 @@
   "8775821175228591887": {
     "source": "Open my profile",
     "file": "src/app/teams/teams.html"
+  },
+  "8776969332314654037": {
+    "source": "Your team’s free TalkThru is live.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "8777391064214384605": {
     "source": "Undergraduate enrollment",
@@ -24243,6 +24767,10 @@
     "source": "Text invite",
     "file": "src/app/boards/boards.html"
   },
+  "883225603593837541": {
+    "source": "Something went wrong. Please try again.",
+    "file": "src/app/talkthru-billing/talkthru-billing.service.ts"
+  },
   "8834228810080046799": {
     "source": "Close cards inside ",
     "file": "src/app/boards/boards.ts"
@@ -24258,6 +24786,10 @@
   "883556328826362515": {
     "source": "Role / professional title{$TAG_INPUT}",
     "file": "src/app/teams/teams.html"
+  },
+  "8837328434218058390": {
+    "source": "26+ agents",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "8838644041016899774": {
     "source": "LivingWiki menu",
@@ -24335,6 +24867,10 @@
     "source": "Coffee shop interior",
     "file": "src/app/membership/membership.html"
   },
+  "8855389947205084153": {
+    "source": "Every listing, every channel.",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
   "885696039304603939": {
     "source": "No existing pending claim was found online. You can submit this draft when the details are ready.",
     "file": "src/app/business-claim/business-claim.html"
@@ -24394,6 +24930,10 @@
   "8868675063237380115": {
     "source": "Unpublished changes",
     "file": "src/app/teams/teams.html"
+  },
+  "8870266842868466460": {
+    "source": "Minimum 3 agents",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "8876752408632821792": {
     "source": "Surface the unresolved or most-discussed questions.",
@@ -24457,7 +24997,7 @@
   },
   "8904229641264030782": {
     "source": "Standard setup support",
-    "file": "src/app/business/business.ts"
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "8905995985388209337": {
     "source": "Accept",
@@ -24582,6 +25122,10 @@
   "8927946881206503091": {
     "source": "Text conversation",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
+  "8928201843115674511": {
+    "source": "Billing could not be opened. Please try again.",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
   },
   "8928816882866356838": {
     "source": "Public",
@@ -24754,6 +25298,10 @@
   "8972121014195206811": {
     "source": "Sign in to explore this Wiki",
     "file": "src/app/atlas-landing/atlas-landing.html"
+  },
+  "8973720683826476810": {
+    "source": "2 months free",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.html"
   },
   "8974390036560961851": {
     "source": "Loading account…",
@@ -25063,6 +25611,10 @@
     "source": "From the Answer",
     "file": "src/app/answer-card/answer-card.html"
   },
+  "9053201700789604207": {
+    "source": "Agent Pro · admin access",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
+  },
   "9053986821199463396": {
     "source": "{$INTERPOLATION} new · {$INTERPOLATION_1} active · {$INTERPOLATION_2} archived (loaded)",
     "file": "src/app/admin-users/talkthru-interests-admin.html"
@@ -25078,6 +25630,10 @@
   "9055797751000418086": {
     "source": "3. Invite & Share",
     "file": "src/app/membership/membership.html"
+  },
+  "9056063351161752574": {
+    "source": "First month free · cancel anytime",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "905931306056454056": {
     "source": "Keep a few gems for later",
@@ -25131,6 +25687,10 @@
     "source": "Quick, friendly energy for memorable local discoveries.",
     "file": "src/app/boards/stack-audio.ts"
   },
+  "9077145885828606707": {
+    "source": "Billing opens Stripe, where you can change plans, update your card, download invoices or cancel.",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.html"
+  },
   "9079818226311204704": {
     "source": "No TalkThru signups match this view.",
     "file": "src/app/admin-users/talkthru-interests-admin.html"
@@ -25178,6 +25738,10 @@
   "909803704751416076": {
     "source": "Your call-in number:",
     "file": "src/app/chat/chat.ts"
+  },
+  "9098152328983851571": {
+    "source": "Continue to checkout",
+    "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
   "9100845762063552144": {
     "source": " Philly home ",
@@ -25267,6 +25831,10 @@
     "source": "Invitations {$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}",
     "file": "src/app/notifications/notifications.html"
   },
+  "9134459907153690948": {
+    "source": "Renews {$date} · {$cycle}",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
+  },
   "9136661697586768173": {
     "source": "Preview saved voice",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -25335,9 +25903,17 @@
     "source": "Documentary",
     "file": "src/app/boards/board-narration-style.ts"
   },
+  "9160547948808925817": {
+    "source": "Agent Pro · complimentary",
+    "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
+  },
   "9161393570809301161": {
     "source": "Open directions",
     "file": "src/app/boards/boards.html"
+  },
+  "9162000400449771447": {
+    "source": "{$START_TAG_SPAN}✦{$CLOSE_TAG_SPAN} Your first TalkThru is free, no card required",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "9162350905253460360": {
     "source": "Ship Channel pollution",
@@ -25351,6 +25927,10 @@
     "source": "I verified my email",
     "file": "src/app/verify-email/verify-email.ts"
   },
+  "9164834527037596197": {
+    "source": "Dedicated partner support",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "9165197669339156579": {
     "source": "Not tracked yet",
     "file": "src/app/teams/teams.ts"
@@ -25358,6 +25938,10 @@
   "916581608141208398": {
     "source": "This chat is unavailable",
     "file": "src/app/chat/chat.html"
+  },
+  "916995495995123604": {
+    "source": "Agency & Team · {$seats} · cancelled, ends at period end",
+    "file": "src/app/teams/teams.ts"
   },
   "9170355400595062971": {
     "source": "Seconds per card",
@@ -25442,6 +26026,10 @@
   "919434885297935720": {
     "source": "{$START_TAG_SPAN}visibility_lock{$CLOSE_TAG_SPAN} Author only ",
     "file": "src/app/boards/boards.html"
+  },
+  "9194833291292967992": {
+    "source": "Let’s talk.",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "9196192237799080414": {
     "source": "Search collection boards",
@@ -25734,6 +26322,10 @@
   "990607633277692258": {
     "source": "Encrypted at rest and in transit.",
     "file": "src/app/marketing/marketing.ts"
+  },
+  "991527710238769640": {
+    "source": "We’re finishing your checkout. Your plan will appear in a moment.",
+    "file": "src/app/talkthru-billing/talkthru-billing.service.ts"
   },
   "99319995922500877": {
     "source": " Choose a different time ",

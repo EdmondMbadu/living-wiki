@@ -1,4 +1,6 @@
 import { BoardVisibilityControlComponent } from '../board-visibility-control';
+import { TalkThruBillingService } from '../talkthru-billing/talkthru-billing.service';
+import { isTalkThruBoardLike } from '../talkthru-billing/talkthru-plans';
 import { isLinkReadableVisibility, type BoardVisibility } from '../board-visibility';
 import { canonicalCardNarration, withSavedNarration, invalidatedNarrationMedia } from '../../../functions/src/card-narration';
 import { isPlatformBrowser } from '@angular/common';
@@ -2194,6 +2196,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   private readonly personalVoiceService = inject(PersonalVoiceService);
   private readonly route = inject(ActivatedRoute);
   readonly teams = inject(TeamsService);
+  private readonly talkThruBilling = inject(TalkThruBillingService);
   readonly teamContextId = signal(this.route.snapshot.paramMap.get('teamId') || '');
   readonly teamEditorMembers = signal<TeamMember[]>([]);
   readonly teamContextName = computed(() => this.teams.memberships().find(team => team.teamId === this.teamContextId())?.name || 'Team workspace');
@@ -3770,7 +3773,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       ?? !!this.authService.uid(),
   );
   readonly videoBrandingEligible = computed(() =>
-    !!this.teamContextId() || this.authService.isAdmin() || this.authService.hasActivePersonalWikiPlan(),
+    !!this.teamContextId() || this.authService.isAdmin() || this.authService.hasActivePersonalWikiPlan()
+      || this.talkThruBilling.videoExportEnabled(),
   );
   readonly stackVideoBrandingSummary = computed(() => {
     const mode = this.stackVideoBrandingMode();
@@ -4929,6 +4933,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     void this.ensureCitiesLoaded();
     this.resetBoardWizard();
     this.wizardOpen.set(true);
+    // Warm the plan so a TalkThru choice can be checked without a wait.
+    if (!this.teamContextId()) void this.talkThruBilling.ensureStatus();
   }
 
   private prefillRequestedListingUrl(value: string | null): void {
@@ -5116,6 +5122,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     entryIntent: BoardWizardEntryIntent = 'default',
   ): void {
     this.wizardEntryIntent.set(entryIntent);
+    if ((entryIntent === 'real-estate' || entryIntent === 'rental')
+      && !this.teamContextId()
+      && !this.wizardLockedTargetBoardId()) {
+      void this.guardPersonalTalkThruCreation(entryIntent);
+    }
     this.wizardSaveDestination.set('board');
     this.wizardVisibility.set('public');
     this.wizardPhotoStudioNotice.set('');
@@ -6356,6 +6367,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       void this.enrichWizardVideos(previewCards, batch);
     } catch (error) {
       this.wizardError.set(this.wizardGenerationErrorMessage(error));
+      this.talkThruBilling.handlePlanRequiredError(
+        error,
+        `/boards?create=${this.wizardEntryIntent() === 'rental' ? 'rental' : 'real-estate'}`,
+      );
       if (previousResult && previousPreviewCards.length) {
         this.wizardResult.set(previousResult);
         this.wizardPreviewCards.set(previousPreviewCards);
@@ -6372,6 +6387,49 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         window.clearInterval(interval);
       }
     }
+  }
+
+  /** A new personal TalkThru must fit the plan; otherwise offer the plan picker instead of the wizard. */
+  private async guardPersonalTalkThruCreation(entryIntent: BoardWizardEntryIntent): Promise<void> {
+    if (!this.authService.isAuthenticated()) return;
+    if (await this.talkThruBilling.canCreatePersonalTalkThru(true)) return;
+    // The person may have moved on while the plan loaded.
+    if (!this.wizardOpen() || this.wizardEntryIntent() !== entryIntent || this.wizardStep() === 'preview') return;
+    await this.closeBoardWizard();
+    this.talkThruBilling.prompt({ reason: 'listing_limit', returnPath: `/boards?create=${entryIntent}` });
+  }
+
+  private wizardCreatesPersonalTalkThru(): boolean {
+    const intent = this.wizardEntryIntent();
+    return (intent === 'real-estate' || intent === 'rental')
+      && !this.teamContextId()
+      && !this.wizardLockedTargetBoardId()
+      && (this.wizardTargetBoardId() === 'new' || !this.wizardTargetBoardId());
+  }
+
+  /** True when a private personal TalkThru is about to go Public or Unlisted. */
+  private talkThruGoingLive(board: Board | null | undefined, nextVisibility: BoardVisibility): board is Board {
+    return !!board && !board.teamId && !board.parentBoardId && isTalkThruBoardLike(board)
+      && !isLinkReadableVisibility(board.visibility) && isLinkReadableVisibility(nextVisibility);
+  }
+
+  /** A TalkThru going live must fit the plan; otherwise offer the plan picker. */
+  private async talkThruGoLiveAllowed(board: Board): Promise<boolean> {
+    if (await this.talkThruBilling.canCreatePersonalTalkThru(true)) return true;
+    this.talkThruBilling.prompt({ reason: 'listing_limit', returnPath: `/boards/${board.id}` });
+    return false;
+  }
+
+  /** Personal TalkThru videos are part of Agent Pro; other boards never wait on this. */
+  private talkThruVideoNeedsPlanCheck(board: Board): boolean {
+    return !board.teamId && isTalkThruBoardLike(board) && !this.talkThruBilling.videoExportEnabled();
+  }
+
+  private async talkThruVideoExportAllowed(board: Board): Promise<boolean> {
+    if (await this.talkThruBilling.canExportVideo()) return true;
+    this.setStackShareMessage($localize`Video export is included in Agent Pro.`, false);
+    this.talkThruBilling.prompt({ reason: 'video_export', returnPath: `/boards/${board.id}` });
+    return false;
   }
 
   wizardHasBillingError(): boolean {
@@ -6991,6 +7049,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.wizardError.set($localize`Fix the what3words address before saving. Use exactly three words separated by periods.`);
       return;
     }
+    if (this.wizardCreatesPersonalTalkThru()
+      && isLinkReadableVisibility(this.wizardVisibility())
+      && !(await this.talkThruBilling.canCreatePersonalTalkThru())) {
+      this.wizardError.set($localize`Your plan’s live TalkThrus are in use. Choose a plan to publish this one. Your draft is saved.`);
+      this.talkThruBilling.prompt({ reason: 'listing_limit', returnPath: '/boards' });
+      return;
+    }
     this.wizardSaving.set(true);
     this.wizardError.set(null);
 
@@ -7335,6 +7400,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.redirectToPrivateBoardsPricing();
       return;
     }
+    if (this.talkThruGoingLive(current, visibility) && !(await this.talkThruGoLiveAllowed(current))) {
+      this.boardSettingsError.set($localize`Your plan’s live TalkThrus are in use. Choose a plan to publish this one.`);
+      return;
+    }
     const showCardNumbersChanged = this.boardShowsCardNumbers(current) !== draft.showCardNumbers;
     const insideCardsDisplayChanged = this.boardInsideDisplay(current) !== draft.insideCardsDisplay;
     const contentChanged = title !== current.title
@@ -7548,6 +7617,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       && !editingBoardForVisibility?.teamId
       && !this.isNearbyGemsBoard(editingBoardForVisibility)) {
       this.redirectToPrivateBoardsPricing();
+      return;
+    }
+    if (this.talkThruGoingLive(editingBoardForVisibility, draft.visibility)
+      && !(await this.talkThruGoLiveAllowed(editingBoardForVisibility))) {
+      this.boardsSyncError.set($localize`Your plan’s live TalkThrus are in use. Choose a plan to publish this one.`);
       return;
     }
 
@@ -17760,6 +17834,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.setStackShareMessage('Make your own copy of this board before creating a new video.', false);
       return;
     }
+    if (this.talkThruVideoNeedsPlanCheck(board) && !(await this.talkThruVideoExportAllowed(board))) return;
     if (board.visibility === 'private') {
       this.openStackShareDialog(board);
       this.stackShareMode.set('video');
@@ -18075,6 +18150,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.setStackShareMessage('Only the board owner can create a Board Trailer.', false);
       return;
     }
+    if (this.talkThruVideoNeedsPlanCheck(board) && !(await this.talkThruVideoExportAllowed(board))) return;
     const uid = this.authService.uid();
     if (!uid || !this.storage) {
       this.setStackShareMessage('Sign in to create a Board Trailer.', false);
@@ -18280,6 +18356,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.setStackShareMessage('Only the board owner can create a video.', false);
       return;
     }
+    if (this.talkThruVideoNeedsPlanCheck(board) && !(await this.talkThruVideoExportAllowed(board))) return;
     const uid = this.authService.uid();
     if (!uid || !this.storage) {
       this.setStackShareMessage('Sign in to create a video.', false);

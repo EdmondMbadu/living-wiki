@@ -464,6 +464,24 @@
           </nav>
         </section>
 
+        @if (!isPublic() && currentTeam()?.status === 'active') {
+          @if (teamPlan(); as plan) {
+            <section class="team-plan-strip" [class.warn]="plan.subscription?.status === 'past_due'" aria-label="Team plan" i18n-aria-label>
+              <span class="material-symbols-outlined" aria-hidden="true">workspace_premium</span>
+              <span class="team-plan-strip__text">{{ teamPlanLine() }}</span>
+              @if (isAdmin()) {
+                @if (!teamPlanLive()) {
+                  <button type="button" class="button button--primary" (click)="openTeamPlan()" i18n>Start the team’s free month</button>
+                } @else if (plan.canManageBilling) {
+                  <button type="button" class="button" (click)="manageTeamBilling()" [disabled]="billing.redirecting()" i18n>Manage billing</button>
+                }
+              } @else if (!teamPlanLive()) {
+                <span class="team-plan-strip__hint" i18n>A team admin can start the team plan.</span>
+              }
+            </section>
+          }
+        }
+
         @if (!isPublic() && isAdmin() && currentTeam()?.status === 'active' && !listings().length) {
           <section class="setup-strip">
             <strong i18n>Make this space yours</strong

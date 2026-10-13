@@ -29,6 +29,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, type DocumentReference } from 'firebase-admin/firestore';
 import sgMail from '@sendgrid/mail';
 import Stripe from 'stripe';
+import { allowedCheckoutOrigins, getStripeClient, stripeSecretKey, stripeWebhookSecret } from './stripe-client';
 import stackNarratorVoiceCatalog from './stack-narrator-voices.json';
 import { selectAtlasRealtimeVoice } from './atlas-realtime-voice';
 import { selectNativeVoice } from './native-voice';
@@ -123,7 +124,16 @@ export { getTeamInsights, submitTeamContact, manageTeamContacts, getTeamConversa
 import { issueTeamVoiceSession, teamVoiceBinding, teamWorkingBoard } from './team-voice';
 import { loadTalkingCardAtlas } from './talking-card-access';
 export { getTalkingCardAvatar } from './talking-card-access';
-import { requireVoiceGrant, saveGeneratedTeamBoard } from './teams';
+export { talkThruBillingCommand, enforceTalkThruListingLimit } from './talkthru-billing';
+import {
+  handleTalkThruCheckoutCompleted,
+  handleTalkThruInvoicePaymentFailed,
+  handleTalkThruTrialWillEnd,
+  syncTalkThruSubscriptionById,
+} from './talkthru-billing';
+import { talkThruSendgridApiKey } from './talkthru-billing-email';
+import { assertTalkThruCreationAllowed } from './talkthru-billing-access';
+import { isActiveTeamMember, requireVoiceGrant, saveGeneratedTeamBoard } from './teams';
 export { exportBoardToDocx } from './board-doc-export';
 import { handleAnswerCardShare, handleBoardShare, handleTravelCardShare } from './answer-card-share';
 import { buildDirectBoardShareEmail, safeBoardShareImageUrl } from './board-share-email';
@@ -347,8 +357,6 @@ const youtubeDataApiKey = defineSecret('YOUTUBE_DATA_API_KEY');
 const googleCustomSearchCx = process.env.GOOGLE_CUSTOM_SEARCH_CX ?? '';
 const spotifyClientId = process.env.SPOTIFY_CLIENT_ID ?? '';
 const spotifyClientSecret = defineSecret('SPOTIFY_CLIENT_SECRET');
-const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');
-const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET');
 const stripePersonalPlusMonthlyPriceId = defineString('STRIPE_PRICE_PERSONAL_PLUS_MONTHLY', { default: '' });
 const stripePersonalPlusAnnualPriceId = defineString('STRIPE_PRICE_PERSONAL_PLUS_ANNUAL', { default: '' });
 const stripeCreatorMonthlyPriceId = defineString('STRIPE_PRICE_CREATOR_MONTHLY', { default: '' });
@@ -580,28 +588,6 @@ const membershipCheckoutPlans: Record<MembershipCheckoutPlanKey, {
     name: 'LivingWiki Lifetime Launch Membership',
   },
 };
-
-const allowedCheckoutOrigins = new Set([
-  'http://localhost:4200',
-  'http://127.0.0.1:4200',
-  'http://localhost:4201',
-  'http://127.0.0.1:4201',
-  'https://livingwiki.com',
-  'https://www.livingwiki.com',
-  'https://living-atlas-7622a.web.app',
-  'https://living-atlas-7622a.firebaseapp.com',
-]);
-
-let stripeClient: Stripe | null = null;
-
-function getStripeClient(): Stripe {
-  const secret = stripeSecretKey.value();
-  if (!secret) {
-    throw new HttpsError('failed-precondition', 'Stripe is not configured.');
-  }
-  stripeClient ??= new Stripe(secret);
-  return stripeClient;
-}
 
 function normalizeBusinessCheckoutPlan(value: unknown): BusinessCheckoutPlanKey | null {
   if (typeof value !== 'string') {
@@ -1286,7 +1272,7 @@ export const confirmBusinessCheckoutSession = onCall(
 );
 
 export const stripeBusinessWebhook = onRequest(
-  { region: callableRegion, secrets: [stripeSecretKey, stripeWebhookSecret] },
+  { region: callableRegion, secrets: [stripeSecretKey, stripeWebhookSecret, talkThruSendgridApiKey] },
   async (request, response) => {
     if (request.method !== 'POST') {
       response.status(405).send('Method Not Allowed');
@@ -1320,6 +1306,8 @@ export const stripeBusinessWebhook = onRequest(
             await markUserCheckoutPaid(session);
           } else if (session.metadata?.source === 'membership_launch') {
             await markMembershipCheckoutPaid(session);
+          } else if (session.metadata?.source === 'talkthru') {
+            await handleTalkThruCheckoutCompleted(session);
           }
           break;
         }
@@ -1327,6 +1315,10 @@ export const stripeBusinessWebhook = onRequest(
         case 'customer.subscription.updated':
         case 'customer.subscription.deleted': {
           const subscription = event.data.object as Stripe.Subscription;
+          if (subscription.metadata?.source === 'talkthru') {
+            await syncTalkThruSubscriptionById(subscription.id);
+            break;
+          }
           await Promise.all([
             updateBusinessRecordsForSubscription(subscription.id, getSubscriptionUpdate(subscription)),
             updateUserRecordsForSubscription(subscription.id, getUserSubscriptionUpdate(subscription)),
@@ -1361,10 +1353,16 @@ export const stripeBusinessWebhook = onRequest(
           ]);
           break;
         }
+        case 'customer.subscription.trial_will_end': {
+          await handleTalkThruTrialWillEnd(event.data.object as Stripe.Subscription);
+          break;
+        }
         case 'invoice.payment_failed':
         case 'invoice.payment_action_required': {
           const invoice = event.data.object as Stripe.Invoice;
           const subscriptionId = getInvoiceSubscriptionId(invoice);
+          // TalkThru plans: refresh the plan and email the customer (once per invoice).
+          if (await handleTalkThruInvoicePaymentFailed(invoice, subscriptionId ?? '')) break;
           const paymentStatus = event.type === 'invoice.payment_action_required' ? 'payment_action_required' : 'payment_failed';
           await Promise.all([
             updateBusinessRecordsForSubscription(subscriptionId ?? '', {
@@ -7903,6 +7901,14 @@ export const generateBoardWizardBatch = onCall(
     }
     if (listingIntent !== 'auto' && (!usesUrlSource || !url)) {
       throw new HttpsError('invalid-argument', 'Provide a public property listing URL before creating a TalkThru.');
+    }
+    // A new personal TalkThru must fit the owner's plan before any generation
+    // work. Team drafts are free; teams are limited when they publish.
+    if (listingIntent !== 'auto' && !targetBoardId && data.imageOnly !== true) {
+      const wizardTeamId = listingPhotoScope.teamId;
+      if (!wizardTeamId || !(await isActiveTeamMember(wizardTeamId, userId))) {
+        await assertTalkThruCreationAllowed(userId);
+      }
     }
     const submittedSourceManifest = url
       ? normalizeBoardWizardSourceManifest(data.sourceManifest, url)

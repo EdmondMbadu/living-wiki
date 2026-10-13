@@ -5,10 +5,11 @@ import { ThemeService } from './theme.service';
 import { WorkspaceNavigationOverlayComponent } from './workspace-navigation/workspace-navigation-overlay';
 import { InvitationAlertComponent } from './notifications/invitation-alert';
 import { KiwiComponent } from './kiwi/kiwi';
+import { TalkThruPlanDialogComponent } from './talkthru-billing/talkthru-plan-dialog';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SpotifyPlayerComponent, WorkspaceNavigationOverlayComponent, InvitationAlertComponent, KiwiComponent],
+  imports: [RouterOutlet, SpotifyPlayerComponent, WorkspaceNavigationOverlayComponent, InvitationAlertComponent, KiwiComponent, TalkThruPlanDialogComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

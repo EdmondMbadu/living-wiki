@@ -11,3 +11,5 @@ firebase deploy --only functions:submitTalkThruInterest --project living-atlas-7
 npm run build:hosting
 firebase deploy --only hosting --project living-atlas-7622a
 ```
+
+Pricing, checkout and plan limits are documented in [talkthru-billing.md](talkthru-billing.md).

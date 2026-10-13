@@ -28,6 +28,7 @@ import {
   TEAM_MAX_MEMBERS,
   type TeamRecord,
 } from './team-model';
+import { assertTeamCanPublishListing, assertTeamSeatsAvailable } from './talkthru-billing-access';
 
 const options = { region: 'us-central1', cors: true };
 const hash = (value: string) => createHash('sha256').update(value).digest('hex');
@@ -330,6 +331,13 @@ async function inviteMembers(teamId: string, uid: string, data: TeamRecord) {
       (members as FirebaseFirestore.QuerySnapshot).docs.map((doc) => doc.data()['email']),
     );
     const pending = entries.filter((entry) => !memberEmails.has(entry.email));
+    // Paid teams invite within the seats they bought (reads stay before writes).
+    await assertTeamSeatsAvailable(
+      tx,
+      teamId,
+      (members as FirebaseFirestore.QuerySnapshot).size,
+      pending.map((entry) => entry.email),
+    );
     const rateData = (rate as FirebaseFirestore.DocumentSnapshot).data();
     const day = new Date(now).toISOString().slice(0, 10);
     const count = rateData?.['day'] === day ? Number(rateData?.['count']) || 0 : 0;
@@ -775,6 +783,8 @@ async function listingAction(teamId: string, uid: string, data: TeamRecord) {
       throw new HttpsError('aborted', 'The listing changed. Refresh before publishing.');
     if (!canPublishTeamListing(member['role'], uid, source))
       throw new HttpsError('permission-denied', 'Only the representative or an admin can publish.');
+    // Free teams keep one listing live; more need the Agency & Team plan.
+    await assertTeamCanPublishListing(teamId, boardId, uid);
     // Older clients updating an unlisted listing must preserve its audience.
     publishedVisibility = data.operation === 'publishUnlisted' ? 'unlisted'
       : data.visibility || (source['published_visibility'] === 'unlisted' ? 'unlisted' : 'public');
@@ -907,6 +917,58 @@ async function listingAction(teamId: string, uid: string, data: TeamRecord) {
     await storage.bucket().deleteFiles({ prefix: `public-team-media/${teamId}/${boardId}/` });
   }
   return result;
+}
+
+/**
+ * When a team's paid plan ends, keep the most recently updated published
+ * listings within the free allowance and unpublish the rest, exactly like a
+ * manual Unpublish. Admins can publish them again after restarting the plan.
+ */
+export async function unpublishTeamListingsOverFreeLimit(teamId: string, keep: number): Promise<string[]> {
+  const published = await teamRef(teamId).collection('listings').where('status', '==', 'published').get();
+  const ordered = published.docs
+    .map((doc) => ({ id: doc.id, updatedAt: String(doc.data()['updatedAt'] || '') }))
+    .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.id.localeCompare(right.id));
+  const unpublished: string[] = [];
+  for (const { id: boardId } of ordered.slice(Math.max(0, keep))) {
+    const done = await db.runTransaction(async (tx) => {
+      const [teamSnap, doc] = await tx.getAll(teamRef(teamId), listingRef(boardId));
+      const team = teamSnap.data();
+      const board = doc.data();
+      if (!team || !board || board['team_id'] !== teamId || board['team_status'] !== 'published') return false;
+      const now = new Date().toISOString();
+      const next: TeamRecord = {
+        ...board,
+        team_status: 'unpublished',
+        updated_at_iso: now,
+        team_revision: (Number(board['team_revision']) || 0) + 1,
+      };
+      tx.set(listingRef(boardId).collection('revisions').doc(String(next['team_revision'])), next);
+      tx.set(listingRef(boardId), next);
+      tx.set(teamRef(teamId).collection('listings').doc(boardId), teamListingSummary(next));
+      tx.set(db.collection('boards').doc(boardId), privateTombstone(next));
+      tx.delete(db.collection('public_team_listings').doc(boardId));
+      tx.delete(db.collection('team_published_configs').doc(boardId));
+      audit(tx, teamId, 'system:billing', 'listing.unpublish.billing', boardId);
+      return true;
+    });
+    if (done) unpublished.push(boardId);
+  }
+  if (unpublished.length) {
+    const team = (await teamRef(teamId).get()).data();
+    const ownerId = String(team?.['owner_id'] || '');
+    if (ownerId) {
+      await db.collection('users').doc(ownerId).collection('team_notifications').add({
+        type: 'team_update',
+        teamId,
+        message: `Your team plan ended, so ${unpublished.length} listing${unpublished.length === 1 ? ' was' : 's were'} unpublished. Restart the plan to publish ${unpublished.length === 1 ? 'it' : 'them'} again.`,
+        target: '',
+        read: false,
+        createdAt: new Date().toISOString(),
+      });
+    }
+  }
+  return unpublished;
 }
 
 export async function requireVoiceGrant(

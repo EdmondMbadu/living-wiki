@@ -25,6 +25,7 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import { getBlob, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { AuthService } from '../auth.service';
+import { TalkThruBillingService } from '../talkthru-billing/talkthru-billing.service';
 import { getFirebaseFirestore, getFirebaseFunctions, getFirebaseStorage } from '../firebase.client';
 import type {
   PublicTeamPage,
@@ -41,6 +42,7 @@ export type TeamAccountLoadState = 'idle' | 'loading' | 'ready' | 'error';
 @Injectable({ providedIn: 'root' })
 export class TeamsService {
   private readonly auth = inject(AuthService);
+  private readonly billing = inject(TalkThruBillingService);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly firestore: Firestore | null = this.browser ? getFirebaseFirestore() : null;
   private readonly destroy = inject(DestroyRef);
@@ -247,11 +249,19 @@ export class TeamsService {
     data: Record<string, unknown> = {},
   ): Promise<T> {
     if (!this.browser) throw new Error('Open this page in your browser to continue.');
-    return (
-      await httpsCallable<Record<string, unknown>, T>(getFirebaseFunctions(), 'teamCommand', {
-        timeout: action === 'allowance' || action === 'inbox' ? 15_000 : 120_000,
-      })({ ...data, action })
-    ).data;
+    try {
+      return (
+        await httpsCallable<Record<string, unknown>, T>(getFirebaseFunctions(), 'teamCommand', {
+          timeout: action === 'allowance' || action === 'inbox' ? 15_000 : 120_000,
+        })({ ...data, action })
+      ).data;
+    } catch (error) {
+      // Publishing past the free listing or inviting past the paid seats opens
+      // the plan picker; the caller still shows the message.
+      const teamId = typeof data['teamId'] === 'string' ? data['teamId'] : '';
+      this.billing.handlePlanRequiredError(error, teamId ? `/teams/${teamId}` : '/teams');
+      throw error;
+    }
   }
   async dashboard(teamId: string): Promise<TeamDashboard> {
     const data = await this.command<TeamDashboard>('dashboard', { teamId });
