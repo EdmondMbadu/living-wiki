@@ -225,3 +225,7 @@ footer { padding: 33px 0; border-top: 1px solid var(--line); }
   .cycle-toggle { width: 100%; }
   .cycle-toggle button { flex: 1; min-width: 0; }
 }
+.plan-card-note { justify-self: center; margin: -2px 0 0; color: #66736b; font-size: 12px; }
+.plan.featured .plan-card-note { color: #c2cec5; }
+.plan-alt:disabled { opacity: .5; cursor: progress; }
+.pricing-error { margin: 24px auto 0; max-width: 560px; color: #9d312d; text-align: center; font-size: 14px; }

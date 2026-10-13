@@ -32,6 +32,7 @@ export class TalkThruBillingPageComponent implements OnInit {
   readonly setupReport = signal<TalkThruStripeSetupReport | null>(null);
   readonly setupBusy = signal(false);
   readonly setupError = signal('');
+  readonly openingCheckout = $localize`Opening secure checkout…`;
   readonly status = this.billing.personal;
   readonly loaded = signal(false);
   readonly error = signal('');
@@ -97,6 +98,27 @@ export class TalkThruBillingPageComponent implements OnInit {
     const params = this.route.snapshot.queryParamMap;
     const plan = params.get('plan');
     const cycle = params.get('cycle');
+    const checkout = params.get('checkout');
+    if (checkout === 'solo' || checkout === 'pro') {
+      // They chose a paid plan before creating their account: continue to Stripe.
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { checkout: null, cycle: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+      try {
+        await this.billing.startCheckout({
+          plan: checkout,
+          billingCycle: cycle === 'annual' ? 'annual' : 'monthly',
+          returnPath: '/boards?create=real-estate',
+        });
+        if (!this.billing.redirecting()) await this.router.navigateByUrl('/boards?create=real-estate');
+      } catch (error) {
+        this.error.set(talkThruErrorMessage(error, $localize`Checkout could not be started. Please try again.`));
+      }
+      return;
+    }
     if (plan === 'solo' || plan === 'pro') {
       this.billing.prompt({
         reason: 'choose',

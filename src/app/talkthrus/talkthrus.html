@@ -99,8 +99,9 @@
               <li i18n>Standard setup support</li>
             </ul>
             <div class="plan-cta">
-              <button type="button" class="button dark" (click)="startIndividual('solo')" [disabled]="ctaBusy() === 'solo'" i18n>Start free <span aria-hidden="true">→</span></button>
-              <button type="button" class="plan-alt" (click)="startFreeMonth('solo')" i18n>Or start your free month now</button>
+              <button type="button" class="button dark" (click)="subscribe('solo')" [disabled]="!!ctaBusy()" i18n>Start free <span aria-hidden="true">→</span></button>
+              <p class="plan-card-note" i18n>$0 today · card required · cancel anytime</p>
+              <button type="button" class="plan-alt" (click)="tryFree()" [disabled]="!!ctaBusy()" i18n>Or make one TalkThru free, no card needed</button>
             </div>
           </article>
 
@@ -121,8 +122,9 @@
               <li i18n>Priority support</li>
             </ul>
             <div class="plan-cta">
-              <button type="button" class="button gold" (click)="startIndividual('pro')" [disabled]="ctaBusy() === 'pro'" i18n>Bring your listings to life <span aria-hidden="true">→</span></button>
-              <button type="button" class="plan-alt" (click)="startFreeMonth('pro')" i18n>Or start your free month now</button>
+              <button type="button" class="button gold" (click)="subscribe('pro')" [disabled]="!!ctaBusy()" i18n>Bring your listings to life <span aria-hidden="true">→</span></button>
+              <p class="plan-card-note" i18n>$0 today · card required · cancel anytime</p>
+              <button type="button" class="plan-alt" (click)="tryFree()" [disabled]="!!ctaBusy()" i18n>Or make one TalkThru free, no card needed</button>
             </div>
           </article>
 
@@ -146,12 +148,14 @@
               <li i18n>Dedicated partner support</li>
             </ul>
             <div class="plan-cta">
-              <button type="button" class="button dark" (click)="startTeam()" [disabled]="ctaBusy() === 'team'" i18n>Explore for your team <span aria-hidden="true">→</span></button>
+              <button type="button" class="button dark" (click)="startTeam()" [disabled]="!!ctaBusy()" i18n>Explore for your team <span aria-hidden="true">→</span></button>
+              <p class="plan-card-note" i18n>$0 today · card required · cancel anytime</p>
               <a class="plan-alt" href="/talkthrus#signup" i18n>26+ agents? Let’s talk</a>
             </div>
           </article>
         </div>
 
+        @if (ctaError()) { <p class="pricing-error" role="alert">{{ ctaError() }}</p> }
         <ul class="pricing-notes">
           <li i18n><strong>Annual plans:</strong> 2 months free</li>
           <li i18n><strong>Switch plans</strong> any time as your listings grow</li>

@@ -727,10 +727,6 @@
     "source": "Business claim",
     "file": "src/app/business-claim/business-claim.html"
   },
-  "1232390516767487561": {
-    "source": "Or start your free month now",
-    "file": "src/app/talkthrus/talkthrus.html"
-  },
   "1232976216028093926": {
     "source": "Philly",
     "file": "src/app/answer-card/answer-card.html"
@@ -2562,6 +2558,10 @@
   "1760083344176902188": {
     "source": "Creating link...",
     "file": "src/app/chat/chat.ts"
+  },
+  "1764870169538132277": {
+    "source": "$0 today · card required · cancel anytime",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "1765116960127244636": {
     "source": "Close Kiwi",
@@ -8498,6 +8498,10 @@
   "3657960137137772710": {
     "source": "{$START_TAG_STRONG}Clean dataset:{$CLOSE_TAG_STRONG} keep jobs and pathways separate, store one record per opportunity, and add dedupe/expiry rules as the source list grows.",
     "file": "src/app/green-jobs/green-jobs.html"
+  },
+  "3661488721836091144": {
+    "source": "Or make one TalkThru free, no card needed",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "3663980452003154242": {
     "source": "{count} ratings",

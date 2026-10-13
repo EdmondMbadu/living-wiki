@@ -3,6 +3,9 @@
   <p class="tt-eyebrow" i18n>Your TalkThru plan</p>
   <h1 i18n>Plan &amp; billing</h1>
 
+  @if (billing.redirecting()) {
+    <p class="tt-muted" role="status">{{ openingCheckout }}</p>
+  }
   @if (!loaded()) {
     <p class="tt-muted" role="status" i18n>Loading your plan…</p>
   } @else if (status(); as current) {

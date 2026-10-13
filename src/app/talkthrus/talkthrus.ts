@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { httpsCallable } from 'firebase/functions';
 import { AuthService } from '../auth.service';
 import { getFirebaseFunctions } from '../firebase.client';
-import { TalkThruBillingService } from '../talkthru-billing/talkthru-billing.service';
+import { TalkThruBillingService, talkThruErrorMessage } from '../talkthru-billing/talkthru-billing.service';
 import {
   formatUsd,
   individualPlanCents,
@@ -43,6 +43,7 @@ export class TalkThrusComponent {
   readonly exampleUrl = exampleUrl;
   readonly cycle = signal<TalkThruBillingCycle>('monthly');
   readonly ctaBusy = signal('');
+  readonly ctaError = signal('');
   readonly teamTiers = computed(() => {
     const [first, second] = TALKTHRU_PLAN_CATALOG.team.tiers[this.cycle()];
     return { first: formatUsd(first.unitCents), second: formatUsd(second.unitCents) };
@@ -71,40 +72,53 @@ export class TalkThrusComponent {
     return formatUsd(individualPlanCents(plan, this.cycle()));
   }
 
-  /** Start free: build the first TalkThru with no card. Remembers the plan they looked at. */
-  async startIndividual(plan: TalkThruIndividualPlanKey): Promise<void> {
+  /**
+   * Paid plans go straight to Stripe Checkout: card on file, first month free.
+   * Stripe returns to the listing wizard, so they build their first TalkThru next.
+   */
+  async subscribe(plan: TalkThruIndividualPlanKey): Promise<void> {
     if (this.ctaBusy()) return;
+    this.ctaError.set('');
     this.ctaBusy.set(plan);
     try {
       this.billing.rememberPlanIntent(plan);
+      await this.auth.waitForReady();
+      if (!this.auth.isAuthenticated()) {
+        await this.router.navigate(['/create-account'], {
+          queryParams: { redirectTo: `/talkthrus/billing?checkout=${plan}&cycle=${this.cycle()}` },
+        });
+        return;
+      }
+      // Redirects to Stripe; for someone already on a plan it switches in place.
+      await this.billing.startCheckout({ plan, billingCycle: this.cycle(), returnPath: createListingPath });
+      if (!this.billing.redirecting()) await this.router.navigateByUrl(createListingPath);
+    } catch (error) {
+      this.ctaError.set(talkThruErrorMessage(error, $localize`Checkout could not be started. Please try again.`));
+    } finally {
+      if (!this.billing.redirecting()) this.ctaBusy.set('');
+    }
+  }
+
+  /** The free path: one TalkThru, no card. At the limit it offers the plans instead. */
+  async tryFree(): Promise<void> {
+    if (this.ctaBusy()) return;
+    this.ctaError.set('');
+    this.ctaBusy.set('free');
+    try {
       await this.auth.waitForReady();
       if (!this.auth.isAuthenticated()) {
         await this.router.navigate(['/create-account'], { queryParams: { redirectTo: createListingPath } });
         return;
       }
       const status = await this.billing.ensureStatus(true);
-      const atLimit = !!status && status.activeLimit !== null && status.activeCount >= status.activeLimit;
-      if (atLimit) {
-        this.billing.prompt({ reason: 'choose', returnPath: createListingPath, preferredPlan: plan, preferredCycle: this.cycle() });
+      if (status && status.activeLimit !== null && status.activeCount >= status.activeLimit) {
+        this.billing.prompt({ reason: 'listing_limit', returnPath: createListingPath, preferredCycle: this.cycle() });
         return;
       }
-      await this.router.navigate(['/boards'], { queryParams: { create: 'real-estate' } });
+      await this.router.navigateByUrl(createListingPath);
     } finally {
       this.ctaBusy.set('');
     }
-  }
-
-  /** Skip the free listing and start the free month now. */
-  async startFreeMonth(plan: TalkThruIndividualPlanKey): Promise<void> {
-    this.billing.rememberPlanIntent(plan);
-    await this.auth.waitForReady();
-    if (!this.auth.isAuthenticated()) {
-      await this.router.navigate(['/create-account'], {
-        queryParams: { redirectTo: `/talkthrus/billing?plan=${plan}&cycle=${this.cycle()}` },
-      });
-      return;
-    }
-    this.billing.prompt({ reason: 'choose', returnPath: '/talkthrus/billing', preferredPlan: plan, preferredCycle: this.cycle() });
   }
 
   async startTeam(): Promise<void> {
