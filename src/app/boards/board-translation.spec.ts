@@ -75,6 +75,15 @@ describe('board translation overlay', () => {
     })?.segments).toEqual([{ key: 'board.title', text: 'Lugares' }]);
   });
 
+  it('accepts Spanish board translations', () => {
+    expect(isBoardTranslationLanguage('es')).toBeTrue();
+    expect(normalizeBoardTranslationResult({
+      boardId: 'board-1', targetLanguage: 'es', sourceLanguage: 'en',
+      fingerprint: 'fingerprint', schemaVersion: 2, expectedSegmentCount: 1,
+      segments: [{ key: 'board.title', text: 'Lugares' }],
+    })?.targetLanguage).toBe('es');
+  });
+
   it('matches cards by ID after author-only cards are filtered', () => {
     const board = { cards: [{ id: 'public-card', title: 'The house' }] };
     expect(applyBoardTranslation(board, [

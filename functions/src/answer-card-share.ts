@@ -265,8 +265,8 @@ function parseBoardSharePath(url: string): {
   rawVideo: boolean;
   videoKind: 'video' | 'trailer' | null;
   videoRatio: 'vertical' | 'landscape';
-  uiLanguage: 'en' | 'fr' | 'ja' | 'pt';
-  contentLanguage: 'en' | 'fr' | 'ja' | 'pt' | null;
+  uiLanguage: 'en' | 'fr' | 'ja' | 'pt' | 'es';
+  contentLanguage: 'en' | 'fr' | 'ja' | 'pt' | 'es' | null;
 } | null {
   const [path, query = ''] = url.split('?');
   const match = (path ?? '').match(/\/share\/board\/([A-Za-z0-9_-]{8,128})(?:\/(og\.png|video|video\/player|video\.mp4|trailer|trailer\/player|trailer\.mp4))?\/?$/);
@@ -292,8 +292,8 @@ function parseBoardSharePath(url: string): {
   };
 }
 
-function boardShareLanguage(value: string | null): 'en' | 'fr' | 'ja' | 'pt' | null {
-  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt' ? value : null;
+function boardShareLanguage(value: string | null): 'en' | 'fr' | 'ja' | 'pt' | 'es' | null {
+  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt' || value === 'es' ? value : null;
 }
 
 async function proxyBoardVideo(req: Request, res: Response, board: BoardShare, kind: 'video' | 'trailer', ratio: 'vertical' | 'landscape'): Promise<void> {
@@ -843,8 +843,8 @@ function buildBoardSharePageHtml(
   board: BoardShare,
   stack: boolean,
   quiz: boolean,
-  uiLanguage: 'en' | 'fr' | 'ja' | 'pt' = 'en',
-  contentLanguage: 'en' | 'fr' | 'ja' | 'pt' | null = null,
+  uiLanguage: 'en' | 'fr' | 'ja' | 'pt' | 'es' = 'en',
+  contentLanguage: 'en' | 'fr' | 'ja' | 'pt' | 'es' | null = null,
 ): string {
   const sharedQuiz = quiz ? board.quiz : null;
   const title = sharedQuiz?.title || board.title;

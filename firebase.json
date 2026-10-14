@@ -107,13 +107,21 @@
         "destination": "/pt/index.csr.html"
       },
       {
+        "source": "/es",
+        "destination": "/es/index.html"
+      },
+      {
+        "source": "/es/**",
+        "destination": "/es/index.csr.html"
+      },
+      {
         "source": "**",
         "destination": "/index.csr.html"
       }
     ],
     "headers": [
       {
-        "source": "/{,fr/,ja/,pt/}notifications{,/**}",
+        "source": "/{,fr/,ja/,pt/,es/}notifications{,/**}",
         "headers": [
           {
             "key": "Cache-Control",
@@ -158,7 +166,16 @@
         ]
       },
       {
-        "source": "/{,fr/,ja/,pt/}boards{,/**}",
+        "source": "/es/teams{,/**}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache,max-age=0,must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/{,fr/,ja/,pt/,es/}boards{,/**}",
         "headers": [
           {
             "key": "Cache-Control",
@@ -176,7 +193,7 @@
         ]
       },
       {
-        "source": "/{,fr/,ja/,pt/}runtime-config.js",
+        "source": "/{,fr/,ja/,pt/,es/}runtime-config.js",
         "headers": [
           {
             "key": "Cache-Control",

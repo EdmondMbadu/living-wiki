@@ -1,7 +1,7 @@
 export interface SupportedLocale {
-  readonly id: 'en-US' | 'fr' | 'ja' | 'pt-BR';
-  readonly language: 'en' | 'fr' | 'ja' | 'pt';
-  readonly subPath: '' | 'fr' | 'ja' | 'pt';
+  readonly id: 'en-US' | 'fr' | 'ja' | 'pt-BR' | 'es-419';
+  readonly language: 'en' | 'fr' | 'ja' | 'pt' | 'es';
+  readonly subPath: '' | 'fr' | 'ja' | 'pt' | 'es';
   readonly label: string;
   readonly direction: 'ltr';
 }
@@ -11,6 +11,7 @@ export const SUPPORTED_LOCALES: readonly SupportedLocale[] = [
   { id: 'fr', language: 'fr', subPath: 'fr', label: 'Français', direction: 'ltr' },
   { id: 'ja', language: 'ja', subPath: 'ja', label: '日本語', direction: 'ltr' },
   { id: 'pt-BR', language: 'pt', subPath: 'pt', label: 'Português (Brasil)', direction: 'ltr' },
+  { id: 'es-419', language: 'es', subPath: 'es', label: 'Español', direction: 'ltr' },
 ];
 
 export const DEFAULT_LOCALE = SUPPORTED_LOCALES[0];

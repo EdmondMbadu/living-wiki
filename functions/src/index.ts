@@ -22342,6 +22342,7 @@ export const synthesizeChatAnswerSpeech = onCall(
         fr: { languageCode: 'fr', language: 'French', country: 'France', accent: null },
         ja: { languageCode: 'ja', language: 'Japanese', country: 'Japan', accent: null },
         pt: { languageCode: 'pt', language: 'Portuguese', country: 'Brazil', accent: null },
+        es: { languageCode: 'es', language: 'Spanish', country: 'Mexico', accent: null },
       } as const;
       try {
         const matchingVoice = await resolveElevenLabsVoiceForPreference(

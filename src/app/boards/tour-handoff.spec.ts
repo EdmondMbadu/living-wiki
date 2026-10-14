@@ -43,6 +43,10 @@ describe('Tour handoffs', () => {
     };
     expect(buildTourHandoffFallback(fromCard, nextCard, 'walking', 'pt'))
       .toContain('Próxima parada: Inverness Town House.');
+    const spanish = buildTourHandoffFallback(fromCard, nextCard, 'walking', 'es');
+    expect(spanish).toMatch(/^Próxima parada: Inverness Town House\. /);
+    expect(spanish).toContain('Deberías llegar en unos 3 min a pie, a aproximadamente 0.2 mi. Nos vemos allí.');
+    expect(spanish).not.toContain('Next stop');
     expect(buildTourHandoffFallback(fromCard, nextCard, 'walking', 'fr'))
       .toContain('Prochaine étape : Inverness Town House.');
     const japanese = buildTourHandoffFallback(fromCard, nextCard, 'walking', 'ja');

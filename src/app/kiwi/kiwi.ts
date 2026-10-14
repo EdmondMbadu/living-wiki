@@ -1179,7 +1179,8 @@ export class KiwiComponent {
   }
 
   private errorText(error: unknown, fallback: string): string {
-    if (this.localeId === 'pt-BR') return fallback;
+    // Server errors are written in English; Portuguese and Spanish show the localized fallback.
+    if (this.localeId === 'pt-BR' || this.localeId === 'es-419') return fallback;
     const message = error instanceof Error ? error.message : '';
     return message.includes(': ') ? message.slice(message.indexOf(': ') + 2) : message || fallback;
   }

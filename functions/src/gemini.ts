@@ -1216,6 +1216,7 @@ export async function translateBoardTextSegments(
     fr: 'French',
     ja: 'Japanese',
     pt: 'Brazilian Portuguese',
+    es: 'neutral Latin American Spanish',
   };
   const batches: BoardTranslationSegment[][] = [];
   let currentBatch: BoardTranslationSegment[] = [];

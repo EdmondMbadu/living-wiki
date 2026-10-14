@@ -10,6 +10,9 @@ const nativeLocale: Record<Exclude<BoardTranslationLanguage, 'en'>, {
   fr: { locale: 'fr-fr', language: 'french', accent: /franc(e|ais|aise)|paris/i },
   ja: { locale: 'ja-jp', language: 'japanese', accent: /japan|tokyo/i },
   pt: { locale: 'pt-br', language: 'portuguese', accent: /brazil|brasil/i },
+  // Latin American Spanish is preferred (scored higher), but any verified
+  // Spanish voice qualifies so narration never disappears for want of one.
+  es: { locale: 'es-mx', language: 'spanish', accent: /latin|mexic|colomb|argentin|chil|peru|venezuel|caribbean|cuba|puerto|neutral|american/i },
 };
 
 // A multilingual model can read translated text with the wrong accent. Only a
@@ -35,7 +38,8 @@ export function voiceMatchesNativeLocale(
       : language === 'fr'
         ? /quebec|canad|acadian|belg|swiss|african/.test(accent)
         : false;
-    return sameLanguage && !clearlyDifferentRegion && (locale === target.locale || target.accent.test(accent));
+    return sameLanguage && !clearlyDifferentRegion
+      && (language === 'es' || locale === target.locale || target.accent.test(accent));
   });
 }
 

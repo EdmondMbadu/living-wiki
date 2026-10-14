@@ -9,6 +9,7 @@
     "start:fr": "ng serve --configuration fr",
     "start:ja": "ng serve --configuration ja",
     "start:pt": "ng serve --configuration pt",
+    "start:es": "ng serve --configuration es",
     "build": "ng build",
     "i18n:mark": "node scripts/mark-angular-i18n.mjs && node scripts/mark-typescript-i18n.mjs && node scripts/mark-dynamic-template-i18n.mjs && node scripts/mark-dynamic-template-i18n.mjs --lowercase && node scripts/mark-chat-ui-i18n.mjs",
     "i18n:extract": "node scripts/extract-angular-i18n.mjs",

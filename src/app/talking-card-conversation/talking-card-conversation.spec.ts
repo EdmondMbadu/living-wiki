@@ -111,6 +111,7 @@ describe('TalkingCardConversationComponent', () => {
       ['pt', 'Brazilian Portuguese'],
       ['fr', 'French'],
       ['ja', 'Japanese'],
+      ['es', 'Latin American Spanish'],
     ] as const;
     for (const [code, name] of languages) {
       expect(talkingCardScopedQuestion('What is nearby?', '', code)).toContain(`Answer in ${name}`);

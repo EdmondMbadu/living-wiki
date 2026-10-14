@@ -8,6 +8,9 @@ describe('card sharing', () => {
     expect(publicCardUrl('board-1', 'talking', 'pt')).toBe(
       'https://www.livingwiki.com/pt/boards/board-1?card=talking&contentLang=pt',
     );
+    expect(publicCardUrl('board-1', 'talking', 'es')).toBe(
+      'https://www.livingwiki.com/es/boards/board-1?card=talking&contentLang=es',
+    );
   });
 
   it('finds nested cards and inherits author-only visibility from parents', () => {

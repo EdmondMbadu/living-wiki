@@ -7,6 +7,7 @@ const targets = [
   ['fr', 'messages.fr.json'],
   ['ja', 'messages.ja.json'],
   ['pt-BR', 'messages.pt-BR.json'],
+  ['es-419', 'messages.es-419.json'],
 ];
 const placeholderPattern = /\{\$[^}]+\}|\{[A-Za-z][A-Za-z0-9_]*\}/g;
 

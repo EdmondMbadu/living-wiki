@@ -26,6 +26,10 @@
           "pt-BR": {
             "translation": "src/locale/messages.pt-BR.json",
             "subPath": "pt"
+          },
+          "es-419": {
+            "translation": "src/locale/messages.es-419.json",
+            "subPath": "es"
           }
         }
       },
@@ -97,6 +101,11 @@
               "localize": [
                 "pt-BR"
               ]
+            },
+            "es": {
+              "localize": [
+                "es-419"
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -118,6 +127,9 @@
             },
             "pt": {
               "buildTarget": "living-atlast:build:development,pt"
+            },
+            "es": {
+              "buildTarget": "living-atlast:build:development,es"
             }
           },
           "defaultConfiguration": "development"

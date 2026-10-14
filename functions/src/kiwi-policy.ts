@@ -159,7 +159,23 @@ export function normalizeKiwiAction(value: unknown): KiwiAction | null {
 }
 
 export function kiwiActionSummary(action: KiwiAction, boardTitle?: string, locale = 'en'): string {
-  const board = boardTitle || (locale === 'pt-BR' ? 'o quadro' : 'the board');
+  const board = boardTitle || (locale === 'pt-BR' ? 'o quadro' : locale === 'es-419' ? 'el tablero' : 'the board');
+  if (locale === 'es-419') {
+    const visibility = action.kind === 'create_board'
+      ? { public: 'público', unlisted: 'no listado', private: 'privado' }[action.visibility] : '';
+    const cards = (count: number) => `${count} ${count === 1 ? 'tarjeta' : 'tarjetas'}`;
+    switch (action.kind) {
+      case 'create_board': return `Crear el tablero ${visibility} “${action.title}” con ${cards(action.cards.length)}`;
+      case 'copy_board': return `Crear tu propia copia pública de “${board}”`;
+      case 'email_board': return `Enviar “${board}” por correo a ${action.email}`;
+      case 'update_board': return `Actualizar “${board}”${action.title ? ` a “${action.title}”` : ''}`;
+      case 'design_board': return `Rediseñar “${board}” y agregar ${cards(action.cards.length)}`;
+      case 'add_card': return `Agregar “${action.card.title}” a “${board}”`;
+      case 'update_card': return `Editar una tarjeta de “${board}”`;
+      case 'remove_card': return `Quitar una tarjeta de “${board}”`;
+      case 'reorder_card': return `Mover una tarjeta a la posición ${action.position} en “${board}”`;
+    }
+  }
   if (locale === 'pt-BR') {
     const visibility = action.kind === 'create_board'
       ? { public: 'público', unlisted: 'não listado', private: 'privado' }[action.visibility] : '';
@@ -194,6 +210,14 @@ export function kiwiActionDetails(action: KiwiAction, board?: RecordValue | null
     ? board['cards'].find((item: unknown) => object(item)?.['id'] === action.cardId) as RecordValue | undefined
     : undefined;
   const localizedValue = (key: string, input: unknown) => {
+    if (locale === 'es-419') {
+      const spanish: Record<string, Record<string, string>> = {
+        tone: { teal: 'verde azulado', coral: 'coral', yellow: 'amarillo', green: 'verde', blue: 'azul', sky: 'celeste', purple: 'morado' },
+        visibility: { public: 'público', unlisted: 'no listado', private: 'privado' },
+        type: { place: 'lugar', food: 'comida', memory: 'recuerdo', idea: 'idea', shop: 'tienda', note: 'nota' },
+      };
+      return spanish[key]?.[String(input)] ?? String(input);
+    }
     if (locale !== 'pt-BR') return String(input);
     const labels: Record<string, Record<string, string>> = {
       tone: { teal: 'verde-azulado', coral: 'coral', yellow: 'amarelo', green: 'verde', blue: 'azul', sky: 'azul-claro', purple: 'roxo' },
@@ -206,7 +230,27 @@ export function kiwiActionDetails(action: KiwiAction, board?: RecordValue | null
     .filter((key) => Object.hasOwn(source, key))
     .map((key) => `${locale === 'pt-BR'
       ? ({ title: 'Título', description: 'Descrição', tone: 'Cor', subtitle: 'Subtítulo', notes: 'Texto', type: 'Tipo' }[key] ?? key)
+      : locale === 'es-419'
+        ? ({ title: 'Título', description: 'Descripción', tone: 'Color', subtitle: 'Subtítulo', notes: 'Texto', type: 'Tipo' }[key] ?? key)
       : key === 'notes' ? 'Text' : key[0].toUpperCase() + key.slice(1)}: ${localizedValue(key, source[key])}`);
+  if (locale === 'es-419') {
+    switch (action.kind) {
+      case 'create_board': return [
+        `Título: ${action.title}`, `Descripción: ${action.description || '(ninguna)'}`,
+        `Color: ${localizedValue('tone', action.tone)}`, `Visibilidad: ${localizedValue('visibility', action.visibility)}`,
+        ...action.cards.map((card, index) => `${index + 1}. ${card.title}${card.subtitle ? ` — ${card.subtitle}` : ''}${card.notes ? `\n${card.notes}` : ''}`),
+      ];
+      case 'copy_board': return ['Copiar los textos públicos y las imágenes a un tablero nuevo en tu cuenta.'];
+      case 'email_board': return [`Destinatario: ${action.email}`, `Tablero: ${String(board?.['title'] || action.boardId)}`];
+      case 'update_board': return fields(action, ['title', 'description', 'tone']);
+      case 'design_board': return [...fields(action, ['title', 'description', 'tone']),
+        ...action.cards.map((card, index) => `${index + 1}. ${card.title}${card.subtitle ? ` — ${card.subtitle}` : ''}${card.notes ? `\n${card.notes}` : ''}`)];
+      case 'add_card': return fields(action.card, ['title', 'subtitle', 'notes', 'type']);
+      case 'update_card': return [`Tarjeta: ${String(existingCard?.['title'] || action.cardId)}`, ...fields(action, ['title', 'subtitle', 'notes', 'type'])];
+      case 'remove_card': return [`Quitar: ${String(existingCard?.['title'] || action.cardId)}`];
+      case 'reorder_card': return [`Mover: ${String(existingCard?.['title'] || action.cardId)}`, `Posición: ${action.position}`];
+    }
+  }
   if (locale === 'pt-BR') {
     switch (action.kind) {
       case 'create_board': return [

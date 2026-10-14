@@ -37,6 +37,18 @@ test('Kiwi proposals use Brazilian Portuguese when requested', () => {
     ['Título: Meu bairro', 'Descrição: (nenhuma)', 'Cor: verde-azulado', 'Visibilidade: público']);
 });
 
+test('Kiwi proposals use Spanish when requested', () => {
+  const action = normalizeKiwiAction({ kind: 'create_board', title: 'Mi barrio', visibility: 'unlisted', tone: 'sky',
+    cards: [{ title: 'Plaza central', notes: 'Un lugar para pasear' }, { title: 'Mercado' }] });
+  assert.ok(action && action.kind === 'create_board');
+  assert.equal(kiwiActionSummary(action, action.title, 'es-419'),
+    'Crear el tablero no listado “Mi barrio” con 2 tarjetas');
+  assert.deepEqual(kiwiActionDetails(action, null, 'es-419').slice(0, 4),
+    ['Título: Mi barrio', 'Descripción: (ninguna)', 'Color: celeste', 'Visibilidad: no listado']);
+  assert.equal(kiwiActionSummary({ kind: 'remove_card', boardId: 'b', cardId: 'c' }, undefined, 'es-419'),
+    'Quitar una tarjeta de “el tablero”');
+});
+
 test('model output is restricted to named board and card fields', () => {
   const action = normalizeKiwiAction({
     kind: 'update_card', boardId: 'board-1', cardId: 'card-1', title: 'New title',

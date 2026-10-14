@@ -3,7 +3,7 @@ import type { BoardTranslationLanguage } from './board-translation';
 export function browserNarrationVoice<T extends { lang: string }>(
   voices: readonly T[], language: BoardTranslationLanguage,
 ): T | null {
-  const locale = ({ en: 'en-US', fr: 'fr-FR', ja: 'ja-JP', pt: 'pt-BR' } as const)[language];
+  const locale = ({ en: 'en-US', fr: 'fr-FR', ja: 'ja-JP', pt: 'pt-BR', es: 'es-US' } as const)[language];
   const normalize = (value: string) => value.toLowerCase().replace('_', '-');
   return voices.find((voice) => normalize(voice.lang) === locale.toLowerCase())
     ?? voices.find((voice) => normalize(voice.lang).startsWith(`${language}-`))
@@ -16,5 +16,6 @@ export function narrationUnavailableNotice(language: BoardTranslationLanguage): 
     fr: 'La narration dans cette langue est indisponible. Vous pouvez toujours lire la fiche traduite.',
     ja: 'この言語の音声ガイドは利用できません。翻訳されたカードは引き続き読めます。',
     pt: 'A narração neste idioma não está disponível. Você ainda pode ler o cartão traduzido.',
+    es: 'La narración no está disponible en este idioma. Aún puedes leer la tarjeta traducida.',
   } as const)[language];
 }

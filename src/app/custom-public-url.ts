@@ -16,6 +16,7 @@ const RESERVED_CUSTOM_PUBLIC_URLS = new Set([
   'collections',
   'create',
   'edit',
+  'es',
   'fr',
   'friends',
   'go',

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-export type BoardTranslationLanguage = 'en' | 'fr' | 'ja' | 'pt';
+export type BoardTranslationLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es';
 
 export interface BoardTranslationSegment {
   key: string;
@@ -19,7 +19,7 @@ const maximumFieldCharacters = 8_000;
 export const BOARD_TRANSLATION_SCHEMA_VERSION = 2;
 
 export function isBoardTranslationLanguage(value: unknown): value is BoardTranslationLanguage {
-  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt';
+  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt' || value === 'es';
 }
 
 export function extractBoardTranslationSource(value: unknown): BoardTranslationSource {
@@ -169,7 +169,17 @@ export function detectBoardSourceLanguage(text: string): BoardTranslationLanguag
   const portugueseSignals = normalized.match(
     /(?:[ãõ]|\b(?:não|uma|você|vocês|com|para|pelo|pela|pelos|pelas|também|está|estão|sobre|seu|sua|seus|suas|os|as|dos|das)\b)/gu,
   )?.length ?? 0;
+  // Words and marks that are Spanish but not Portuguese or French, so the
+  // three Romance languages do not steal each other's boards.
+  const spanishSignals = normalized.match(
+    // Unicode-aware word edges: \b treats accented letters as non-word characters.
+    /(?:[ñ¿¡]|(?<!\p{L})(?:el|los|las|del|una|unos|unas|usted|ustedes|también|pero|muy|está|están|este|esta|estos|estas|hay|y|que|por|con|para|su|sus|al)(?!\p{L}))/gu,
+  )?.length ?? 0;
   const wordCount = Math.max(1, normalized.split(/\s+/u).filter(Boolean).length);
+  if (spanishSignals >= 3 && spanishSignals / wordCount >= 0.04
+    && spanishSignals > portugueseSignals && spanishSignals > frenchSignals) {
+    return 'es';
+  }
   if (portugueseSignals >= 3 && portugueseSignals / wordCount >= 0.025 && portugueseSignals > frenchSignals) {
     return 'pt';
   }

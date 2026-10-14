@@ -19818,7 +19818,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
 
     const utterance = new SpeechSynthesisUtterance(text.slice(0, 3600));
-    const language = ({ en: 'en-US', fr: 'fr-FR', ja: 'ja-JP', pt: 'pt-BR' } as const)[this.boardSpeechLanguage()];
+    const language = ({ en: 'en-US', fr: 'fr-FR', ja: 'ja-JP', pt: 'pt-BR', es: 'es-US' } as const)[this.boardSpeechLanguage()];
     const voices = window.speechSynthesis.getVoices();
     utterance.voice = browserNarrationVoice(voices, this.boardSpeechLanguage());
     if (this.boardSpeechLanguage() !== 'en' && !utterance.voice) return false;

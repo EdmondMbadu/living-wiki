@@ -1,4 +1,4 @@
-export type BoardTranslationLanguage = 'en' | 'fr' | 'ja' | 'pt';
+export type BoardTranslationLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es';
 
 export interface BoardTranslationSegment {
   key: string;
@@ -26,12 +26,13 @@ export const BOARD_TRANSLATION_LANGUAGES: ReadonlyArray<{
   { id: 'fr', label: $localize`Français`, shortLabel: 'FR' },
   { id: 'ja', label: $localize`日本語`, shortLabel: '日本語' },
   { id: 'pt', label: $localize`Português (Brasil)`, shortLabel: 'PT' },
+  { id: 'es', label: $localize`Español`, shortLabel: 'ES' },
 ];
 
 export const BOARD_TRANSLATION_SCHEMA_VERSION = 2;
 
 export function isBoardTranslationLanguage(value: unknown): value is BoardTranslationLanguage {
-  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt';
+  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt' || value === 'es';
 }
 
 export function normalizeBoardTranslationResult(value: unknown): BoardTranslationResult | null {

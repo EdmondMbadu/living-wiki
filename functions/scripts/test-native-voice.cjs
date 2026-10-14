@@ -18,4 +18,14 @@ const accountVoices = [
 assert.equal(selectNativeVoice(accountVoices, 'pt', 'eleven_multilingual_v2')?.voice_id, 'portuguese');
 assert.equal(selectNativeVoice(accountVoices, 'pt', 'eleven_multilingual_v2', 'portuguese')?.voice_id, 'portuguese');
 assert.equal(selectNativeVoice(accountVoices, 'ja', 'eleven_multilingual_v2'), null);
+// Spanish: any verified Spanish voice qualifies; Latin American voices are preferred.
+assert.equal(voiceMatchesNativeLocale({ verified_languages: [{ language: 'es', locale: 'es-MX', accent: 'mexican' }] }, 'es'), true);
+assert.equal(voiceMatchesNativeLocale({ verified_languages: [{ language: 'es', locale: 'es-ES', accent: 'castilian' }] }, 'es'), true);
+assert.equal(voiceMatchesNativeLocale({ verified_languages: [{ language: 'pt', locale: 'pt-BR' }] }, 'es'), false);
+const spanishVoices = [
+  { voice_id: 'spain', labels: { language: 'es', use_case: 'narrative_story' }, verified_languages: [{ language: 'es', locale: 'es-ES', accent: 'castilian', model_id: 'eleven_multilingual_v2' }] },
+  { voice_id: 'latam', labels: { language: 'es' }, verified_languages: [{ language: 'es', locale: 'es-MX', accent: 'latin american', model_id: 'eleven_multilingual_v2' }] },
+];
+assert.equal(selectNativeVoice(spanishVoices, 'es', 'eleven_multilingual_v2')?.voice_id, 'latam');
+assert.equal(selectNativeVoice([spanishVoices[0]], 'es', 'eleven_multilingual_v2')?.voice_id, 'spain');
 console.log('Native voice locale checks passed.');

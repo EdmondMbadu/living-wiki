@@ -4,16 +4,16 @@ LivingWiki is an Angular app prepared for Firebase Hosting, with the Firebase We
 
 ## Development server
 
-To build and serve English, French, Japanese, and Brazilian Portuguese together at `localhost:4200`, run:
+To build and serve English, French, Japanese, Brazilian Portuguese, and Latin American Spanish together at `localhost:4200`, run:
 
 ```bash
 npm start
 ```
 
-The localized server mirrors Firebase's locale fallbacks, so `/`, `/fr/`, `/ja/`, and `/pt/` can be
+The localized server mirrors Firebase's locale fallbacks, so `/`, `/fr/`, `/ja/`, `/pt/`, and `/es/` can be
 tested from the same origin. For faster English-only development with automatic reload, run
 `npm run start:dev`. Single-locale development builds are also available through
-`npm run start:fr`, `npm run start:ja`, and `npm run start:pt`.
+`npm run start:fr`, `npm run start:ja`, `npm run start:pt`, and `npm run start:es`.
 
 ## Code scaffolding
 
@@ -41,7 +41,7 @@ This will compile your project and store the build artifacts in the `dist/` dire
 
 ## Internationalization
 
-English is served at `/`, French at `/fr/`, Japanese at `/ja/`, and Brazilian Portuguese at `/pt/`. Angular builds one
+English is served at `/`, French at `/fr/`, Japanese at `/ja/`, Brazilian Portuguese at `/pt/`, and Latin American Spanish (`es-419`) at `/es/`. Angular builds one
 compile-time localized application per locale, so routing, SSR/prerendered HTML, page titles,
 accessibility text, and locale-aware date/number formatting all use the same locale.
 
@@ -50,14 +50,18 @@ When adding or changing visible copy:
 ```bash
 npm run i18n:mark
 npm run i18n:extract
-# update src/locale/messages.fr.json, messages.ja.json, and messages.pt-BR.json
+# update src/locale/messages.fr.json, messages.ja.json, messages.pt-BR.json, and messages.es-419.json
 npm run i18n:check
 npm run build
 ```
 
-Use `npm run start:fr`, `npm run start:ja`, or `npm run start:pt` for a single localized development build. The
+Use `npm run start:fr`, `npm run start:ja`, `npm run start:pt`, or `npm run start:es` for a single localized development build. The
 production build fails on missing or duplicate translations, and `i18n:check` additionally
 rejects stale message IDs or changed placeholders.
+
+Spanish copy is neutral Latin American Spanish (`es-419`) and addresses the reader with *tú*
+(never *usted* or *vosotros*). Product names such as LivingWiki, TalkThru, Kiwi, and plan names
+stay in English. `python3 scripts/translate-angular-catalog.py es-419` drafts any missing entries.
 
 To add another language, add it to `src/app/i18n/locales.ts`, `angular.json`, the catalog
 checker/translation target list, and Firebase's locale fallback rewrites. Then create a complete

@@ -100,5 +100,20 @@ assert.equal(
   'pt',
 );
 assert.equal(isBoardTranslationLanguage('pt'), true);
+assert.equal(isBoardTranslationLanguage('es'), true);
+assert.equal(
+  detectBoardSourceLanguage('Un recorrido por los barrios de la ciudad con las mejores historias del lugar y muy buena comida.'),
+  'es',
+);
+assert.equal(detectBoardSourceLanguage('¿Dónde está la playa? ¡Vamos!'), 'es');
+// Portuguese and French boards are not mistaken for Spanish.
+assert.equal(
+  detectBoardSourceLanguage('Você pode conhecer os bairros da cidade e também descobrir sua história.'),
+  'pt',
+);
+assert.equal(
+  detectBoardSourceLanguage('Une promenade dans la ville avec les meilleurs lieux et des histoires locales.'),
+  'fr',
+);
 
 console.log('Board translation extraction and validation tests passed.');

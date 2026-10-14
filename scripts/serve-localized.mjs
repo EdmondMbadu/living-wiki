@@ -42,6 +42,8 @@ function localeFallback(pathname) {
   if (pathname.startsWith('/ja/')) return 'ja/index.csr.html';
   if (pathname === '/pt' || pathname === '/pt/') return 'pt/index.html';
   if (pathname.startsWith('/pt/')) return 'pt/index.csr.html';
+  if (pathname === '/es' || pathname === '/es/') return 'es/index.html';
+  if (pathname.startsWith('/es/')) return 'es/index.csr.html';
   if (pathname === '/') return 'index.html';
   return 'index.csr.html';
 }
@@ -128,7 +130,7 @@ if (occupiedHost) {
     })));
 
     console.log(`LivingWiki localized server: http://${displayHost}:${port}`);
-    console.log('English: /  French: /fr/  Japanese: /ja/  Portuguese: /pt/');
+    console.log('English: /  French: /fr/  Japanese: /ja/  Portuguese: /pt/  Spanish: /es/');
   } catch (error) {
     await Promise.all(servers.map((server) => new Promise((resolve) => {
       if (!server.listening) return resolve();

@@ -1,5 +1,5 @@
 export type TourHandoffMode = 'walking' | 'driving';
-export type TourHandoffLanguage = 'en' | 'fr' | 'ja' | 'pt';
+export type TourHandoffLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es';
 
 export type TourHandoffLegLike = {
   durationText?: string | null;
@@ -86,7 +86,7 @@ export function buildTourHandoffFallback(
 ): string {
   const leg = fromCard.tour?.legToNext;
   const title = cleanHandoffText(nextCard.title, 180)
-    || ({ en: 'the next stop', fr: 'la prochaine étape', ja: '次の立ち寄り先', pt: 'a próxima parada' } as const)[language];
+    || ({ en: 'the next stop', fr: 'la prochaine étape', ja: '次の立ち寄り先', pt: 'a próxima parada', es: 'la próxima parada' } as const)[language];
   const teaser = tourHandoffDestinationTeaser(nextCard, language);
   const rawDuration = cleanHandoffText(leg?.durationText, 32);
   const duration = language === 'ja'
@@ -98,6 +98,7 @@ export function buildTourHandoffFallback(
     fr: { next: 'Prochaine étape :', onFoot: 'à pied', driving: 'en voiture', ending: 'Je vous y retrouve.' },
     ja: { next: '次の立ち寄り先：', onFoot: '徒歩', driving: '車', ending: 'そこでお会いしましょう。' },
     pt: { next: 'Próxima parada:', onFoot: 'a pé', driving: 'de carro', ending: 'Encontro você lá.' },
+    es: { next: 'Próxima parada:', onFoot: 'a pie', driving: 'en auto', ending: 'Nos vemos allí.' },
   } as const;
   const label = labels[language];
   const sentences = [`${label.next}${language === 'ja' ? '' : ' '}${withTerminalPunctuation(title, language)}`];
@@ -110,11 +111,14 @@ export function buildTourHandoffFallback(
         ? `Vous devriez y arriver en environ ${duration} ${travelMode}${distance ? `, sur environ ${distance}` : ''}.`
         : language === 'pt'
           ? `Você deve chegar em cerca de ${duration} ${travelMode}${distance ? `, a aproximadamente ${distance}` : ''}.`
+          : language === 'es'
+            ? `Deberías llegar en unos ${duration} ${travelMode}${distance ? `, a aproximadamente ${distance}` : ''}.`
           : `You should reach it in about ${duration} ${travelMode}${distance ? `, around ${distance}` : ''}.`);
   } else if (distance) {
     sentences.push(language === 'ja' ? `距離は約${distance}です。`
       : language === 'fr' ? `C'est à environ ${distance}.`
         : language === 'pt' ? `Fica a aproximadamente ${distance} daqui.`
+          : language === 'es' ? `Queda a aproximadamente ${distance}.`
           : `It is about ${distance} away.`);
   }
   sentences.push(label.ending);

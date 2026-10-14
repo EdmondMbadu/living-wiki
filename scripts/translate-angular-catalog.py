@@ -48,6 +48,9 @@ TARGETS = {
     "fr": ("fr", WORKSPACE / "src/locale/messages.fr.json"),
     "ja": ("ja", WORKSPACE / "src/locale/messages.ja.json"),
     "pt-BR": ("pb", WORKSPACE / "src/locale/messages.pt-BR.json"),
+    # Spanish was translated by hand-reviewed AI with a glossary; existing
+    # entries are kept, so this only fills strings added later.
+    "es-419": ("es", WORKSPACE / "src/locale/messages.es-419.json"),
 }
 MANUAL_OVERRIDES = {
     "fr": {
@@ -404,6 +407,7 @@ MANUAL_OVERRIDES = {
 
 # Legal copy needs a meaning-preserving translation rather than isolated
 # sentence-level machine output.
+MANUAL_OVERRIDES["es-419"] = {}
 MANUAL_OVERRIDES["pt-BR"].update({
     "Privacy": "Privacidade",
     "Terms": "Termos",
@@ -556,7 +560,7 @@ def normalize_product_terms(source: str, translated: str, target: str) -> str:
 
 def main() -> None:
     if len(sys.argv) != 2 or sys.argv[1] not in TARGETS:
-        raise SystemExit("usage: translate-angular-catalog.py <fr|ja|pt-BR>")
+        raise SystemExit("usage: translate-angular-catalog.py <fr|ja|pt-BR|es-419>")
 
     target = sys.argv[1]
     locale, output_path = TARGETS[target]
