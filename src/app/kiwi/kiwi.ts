@@ -1121,7 +1121,7 @@ export class KiwiComponent {
       }
       this.conversation = conversation;
       const { teamId, boardId } = this.scope();
-      conversation.sendContextualUpdate(`The user is in ${teamId ? 'team workspace ' + teamId : 'their personal workspace'}${boardId ? ', viewing board ' + boardId : ''}. The user calls you ${this.name()}. Use kiwi_request for board/card operations, including real estate and rental TalkThru creation; the app will ask for a public listing URL and open the specialized wizard. Use kiwi_apply only after explicit approval.${this.localeId === 'pt-BR' ? ' Speak to the user in natural Brazilian Portuguese. Keep tool names and structured identifiers in English.' : ''}`,
+      conversation.sendContextualUpdate(`The user is in ${teamId ? 'team workspace ' + teamId : 'their personal workspace'}${boardId ? ', viewing board ' + boardId : ''}. The user calls you ${this.name()}. Use kiwi_request for board/card operations, including real estate and rental TalkThru creation; the app will ask for a public listing URL and open the specialized wizard. Use kiwi_apply only after explicit approval.${this.localeId === 'pt-BR' ? ' Speak to the user in natural Brazilian Portuguese. Keep tool names and structured identifiers in English.' : this.localeId === 'es-419' ? ' Speak to the user in natural, neutral Latin American Spanish, using tú. Keep tool names and structured identifiers in English.' : ''}`,
         { contextId: 'kiwi-current-workspace' });
     } catch (error) {
       if (attempt !== this.voiceAttempt) return;
