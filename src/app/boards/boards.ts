@@ -105,6 +105,7 @@ import {
 import {
   applyBoardTranslation,
   BOARD_TRANSLATION_LANGUAGES,
+  boardTranslationLanguageForRoute,
   boardTranslationLanguageName,
   isBoardTranslationLanguage,
   normalizeBoardTranslationResult,
@@ -2236,6 +2237,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   private tourMapMarkers: unknown[] = [];
   private tourMapPolylines: unknown[] = [];
   private tourAudio: HTMLAudioElement | null = null;
+  private tourSpeechRequestRun = 0;
   private get stackNarrationAudio(): HTMLAudioElement | null {
     return this.stackNarrationSession.audio;
   }
@@ -4112,14 +4114,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       }
       this.tourBoardView.set(view === 'cards' ? 'cards' : 'route');
       const contentLanguage = params.get('contentLang');
-      this.boardTranslationTarget.set(
-        isBoardTranslationLanguage(contentLanguage) ? contentLanguage : null,
-      );
-      if (!isBoardTranslationLanguage(contentLanguage)) {
-        this.boardTranslationResult.set(null);
-        this.boardTranslationVersion.set('');
-        this.boardTranslationError.set(null);
-      }
+      this.syncBoardTranslationLanguage(contentLanguage);
       this.boardLearnDirectRequested = params.get('learn') === 'quiz';
       if (!this.boardLearnDirectRequested) {
         this.boardLearnDirectOpenedFor = '';
@@ -11487,7 +11482,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   async speakTourFrame(frame = this.tourCurrentFrame()): Promise<void> {
-    if (!this.isBrowser || !frame) {
+    if (!this.isBrowser || !frame || (this.boardTranslationTarget() && !this.boardTranslationReady())) {
       return;
     }
     const text = this.tourFrameNarration(frame);
@@ -11495,6 +11490,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.stopTourSpeech();
+    const run = this.tourSpeechRequestRun;
+    const boardId = this.selectedBoard()?.id;
+    const language = this.boardSpeechLanguage();
     this.tourAudioNotice.set(null);
     const audioUrl = await this.ensureTourAudioUrl(
       this.tourAudioKey(frame),
@@ -11504,6 +11502,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       'tour',
       frame.card.id,
     );
+    if (run !== this.tourSpeechRequestRun
+      || boardId !== this.selectedBoard()?.id
+      || language !== this.boardSpeechLanguage()
+      || (this.boardTranslationTarget() && !this.boardTranslationReady())) return;
     if (audioUrl) {
       const audio = new Audio(audioUrl);
       this.tourAudio = audio;
@@ -11541,6 +11543,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   stopTourSpeech(): void {
+    this.tourSpeechRequestRun += 1;
     if (this.tourAudio) {
       this.tourAudio.pause();
       this.tourAudio.currentTime = 0;
@@ -14744,11 +14747,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    if (this.boardTranslationResult()?.targetLanguage !== language) {
-      this.boardTranslationResult.set(null);
-      this.boardTranslationVersion.set('');
-    }
-    this.boardTranslationTarget.set(language);
+    this.syncBoardTranslationLanguage(language);
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { contentLang: language },
@@ -14761,6 +14760,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     event?.preventDefault();
     event?.stopPropagation();
     this.closeBoardTranslationMenu();
+    this.stopStackPlayback();
     this.boardTranslationRun += 1;
     this.boardTranslationRequestKey = '';
     this.boardTranslationTarget.set(null);
@@ -14770,9 +14770,25 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.boardTranslationLoading.set(false);
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { contentLang: null },
+      queryParams: { contentLang: 'original' },
       queryParamsHandling: 'merge',
     });
+  }
+
+  private syncBoardTranslationLanguage(contentLanguage: string | null): void {
+    // Team working copies must remain editable in their authored language.
+    const target = boardTranslationLanguageForRoute(
+      contentLanguage, this.teamContextId() ? 'en-US' : this.localeId,
+    );
+    if (target === this.boardTranslationTarget()) return;
+    this.stopStackPlayback();
+    this.boardTranslationRun += 1;
+    this.boardTranslationRequestKey = '';
+    this.boardTranslationTarget.set(target);
+    this.boardTranslationResult.set(null);
+    this.boardTranslationVersion.set('');
+    this.boardTranslationError.set(null);
+    this.boardTranslationLoading.set(false);
   }
 
   private async syncRequestedBoardTranslation(): Promise<void> {
@@ -15806,7 +15822,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stackDirectView.set(true);
     if (!this.boardTranslationTarget() || this.boardTranslationReady()) this.startStackPlayback();
     void this.router.navigate(this.boardViewRoute(board), {
-      queryParams: { view: 'stack', autoplay: '1', contentLang: this.boardTranslationTarget() },
+      queryParams: { view: 'stack', autoplay: '1', contentLang: this.boardTranslationTarget() ?? 'original' },
     });
   }
 
@@ -15822,7 +15838,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stackDirectView.set(true);
     if (!this.boardTranslationTarget() || this.boardTranslationReady()) this.startStackPlayback();
     void this.router.navigate(this.boardViewRoute(board), {
-      queryParams: { view: 'stack', autoplay: '1', contentLang: this.boardTranslationTarget() },
+      queryParams: { view: 'stack', autoplay: '1', contentLang: this.boardTranslationTarget() ?? 'original' },
     });
   }
 
@@ -15832,7 +15848,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stackDirectView.set(false);
     this.stackShareDialogOpen.set(false);
     void this.router.navigate(this.boardViewRoute(board), {
-      queryParams: { contentLang: this.boardTranslationTarget() },
+      queryParams: { contentLang: this.boardTranslationTarget() ?? 'original' },
     });
   }
 

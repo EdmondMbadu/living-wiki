@@ -1,10 +1,33 @@
 import {
   applyBoardTranslation,
+  BOARD_TRANSLATION_LANGUAGES,
+  boardTranslationLanguageForRoute,
   isBoardTranslationLanguage,
   normalizeBoardTranslationResult,
 } from './board-translation';
+import { supportedLocale } from '../i18n/locales';
 
 describe('board translation overlay', () => {
+  it('uses the same native language names as the site language switcher', () => {
+    for (const language of BOARD_TRANSLATION_LANGUAGES) {
+      expect(language.label).toBe(supportedLocale(language.id).label);
+    }
+  });
+  for (const [locale, language] of [['fr', 'fr'], ['ja', 'ja'], ['pt-BR', 'pt'], ['es-419', 'es']] as const) {
+    it(`translates plain ${locale} board links and honors explicit content choices`, () => {
+      expect(boardTranslationLanguageForRoute(null, locale)).toBe(language);
+      expect(boardTranslationLanguageForRoute('unsupported', locale)).toBe(language);
+      expect(boardTranslationLanguageForRoute('original', locale)).toBeNull();
+      expect(boardTranslationLanguageForRoute('en', locale)).toBe('en');
+    });
+  }
+
+  it('keeps English links in their authored language and allows explicit translations', () => {
+    expect(boardTranslationLanguageForRoute(null, 'en-US')).toBeNull();
+    expect(boardTranslationLanguageForRoute('es', 'en-US')).toBe('es');
+    expect(boardTranslationLanguageForRoute('fr', 'es-419')).toBe('fr');
+  });
+
   it('changes only approved text fields and preserves links and exact locations', () => {
     const board = {
       title: 'Places',

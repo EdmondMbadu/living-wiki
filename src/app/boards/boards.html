@@ -4988,6 +4988,7 @@
         } @else if (wizardStep() === 'configure') {
           <form class="boards-form boards-wizard boards-wizard--configure" (submit)="submitWizardConfigure($event)">
             @if (wizardEntryIntent() === 'real-estate') {
+              @defer (on immediate) {
               <app-real-estate-wizard-source
                 [listingUrl]="wizardUrl()" (listingUrlChange)="wizardUrl.set($event)"
                 [narrationStyle]="wizardNarrationStyle()" (narrationStyleChange)="wizardNarrationStyle.set($event)"
@@ -5000,6 +5001,7 @@
                   (selected)="onWizardPhotosSelected($event)" (removed)="removeWizardPhoto($event)" (coverChanged)="makeWizardPhotoCover($event)"
                 />
               </app-real-estate-wizard-source>
+              }
             } @else {
             @if (wizardMode() === 'describe') {
               <ol class="boards-wizard-steps" aria-label="Board creation progress" i18n-aria-label>
@@ -5702,11 +5704,13 @@
                   }
                 </label>
                 @if (wizardIsTalkThruListing()) {
+                  @defer (on immediate) {
                   <app-listing-photo-source
                     [source]="wizardListingPhotoSource()" (sourceChange)="wizardListingPhotoSource.set($event)"
                     [photos]="wizardPhotos()" [loading]="wizardPhotosLoading() || wizardListingPhotoUploading()" [error]="wizardPhotoError()"
                     (selected)="onWizardPhotosSelected($event)" (removed)="removeWizardPhoto($event)" (coverChanged)="makeWizardPhotoCover($event)"
                   />
+                  }
                 }
                 @if (wizardEntryIntent() !== 'real-estate') {
                   <label>
@@ -10959,6 +10963,7 @@
 }
 
 @if (collectionCreateOpen()) {
+  @defer (on immediate) {
   <app-board-collection-create
     [choices]="collectionBoardChoices()"
     [loadingChoices]="collectionChoicesLoading()"
@@ -10970,9 +10975,11 @@
     (closed)="closeCreateCollection()"
     (created)="onCollectionCreated($event)"
   ></app-board-collection-create>
+  }
 }
 
 @if (customUrlBoard(); as customBoard) {
+  @defer (on immediate) {
   <app-custom-public-url-dialog
     resourceType="board"
     [resourceId]="customBoard.id"
@@ -10984,6 +10991,7 @@
     (closed)="closeCustomUrlDialog()"
     (saved)="handleCustomUrlSaved($event)"
   ></app-custom-public-url-dialog>
+  }
 }
 
 @if (boardPromoImageBoard(); as promoBoard) {

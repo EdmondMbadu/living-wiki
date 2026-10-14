@@ -45,6 +45,20 @@ English is served at `/`, French at `/fr/`, Japanese at `/ja/`, Brazilian Portug
 compile-time localized application per locale, so routing, SSR/prerendered HTML, page titles,
 accessibility text, and locale-aware date/number formatting all use the same locale.
 
+Board views in `/fr/`, `/ja/`, `/pt/`, and `/es/` automatically request a content
+translation in that language, including narration scripts. Live narration waits for
+the translation and uses audio cached separately by language. `?contentLang=en`,
+`fr`, `ja`, `pt`, or `es` overrides the content language; `?contentLang=original`
+keeps the authored content and is preserved when entering or leaving Live view.
+Team working copies keep their authored language by default so they remain editable.
+
+To verify actual translation and speech generation for one public board (uses live
+services and may incur translation/audio charges):
+
+```bash
+node scripts/verify-board-language-live.mjs BOARD_ID /tmp/board-language-report.json
+```
+
 When adding or changing visible copy:
 
 ```bash

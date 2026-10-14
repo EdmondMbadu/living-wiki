@@ -12,5 +12,10 @@ describe('browser narration voice', () => {
 
   it('does not substitute an English voice for translated speech', () => {
     expect(browserNarrationVoice(voices, 'fr')).toBeNull();
+    for (const language of ['fr', 'ja', 'pt', 'es'] as const) {
+      expect(browserNarrationVoice([{ lang: 'en-US' }], language)).toBeNull();
+      const matching = { lang: ({ fr: 'fr-FR', ja: 'ja-JP', pt: 'pt-BR', es: 'es-MX' } as const)[language] };
+      expect(browserNarrationVoice([{ lang: 'en-US' }, matching], language)).toBe(matching);
+    }
   });
 });

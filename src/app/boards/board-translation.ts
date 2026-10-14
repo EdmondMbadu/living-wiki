@@ -1,3 +1,5 @@
+import { supportedLocale } from '../i18n/locales';
+
 export type BoardTranslationLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es';
 
 export interface BoardTranslationSegment {
@@ -22,17 +24,29 @@ export const BOARD_TRANSLATION_LANGUAGES: ReadonlyArray<{
   label: string;
   shortLabel: string;
 }> = [
-  { id: 'en', label: $localize`English`, shortLabel: 'EN' },
-  { id: 'fr', label: $localize`Français`, shortLabel: 'FR' },
-  { id: 'ja', label: $localize`日本語`, shortLabel: '日本語' },
-  { id: 'pt', label: $localize`Português (Brasil)`, shortLabel: 'PT' },
-  { id: 'es', label: $localize`Español`, shortLabel: 'ES' },
+  // Use the same native language names as the site switcher in every locale.
+  { id: 'en', label: 'English', shortLabel: 'EN' },
+  { id: 'fr', label: 'Français', shortLabel: 'FR' },
+  { id: 'ja', label: '日本語', shortLabel: '日本語' },
+  { id: 'pt', label: 'Português (Brasil)', shortLabel: 'PT' },
+  { id: 'es', label: 'Español', shortLabel: 'ES' },
 ];
 
 export const BOARD_TRANSLATION_SCHEMA_VERSION = 2;
 
 export function isBoardTranslationLanguage(value: unknown): value is BoardTranslationLanguage {
   return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt' || value === 'es';
+}
+
+/** Localized board links translate their content unless the reader requests the original. */
+export function boardTranslationLanguageForRoute(
+  contentLanguage: string | null,
+  localeId: string,
+): BoardTranslationLanguage | null {
+  if (contentLanguage === 'original') return null;
+  if (isBoardTranslationLanguage(contentLanguage)) return contentLanguage;
+  const language = supportedLocale(localeId).language;
+  return language === 'en' ? null : language;
 }
 
 export function normalizeBoardTranslationResult(value: unknown): BoardTranslationResult | null {
