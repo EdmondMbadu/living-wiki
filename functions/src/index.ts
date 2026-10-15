@@ -1,3 +1,4 @@
+export { avatarQaCommand, runAvatarQaCase, recoverAvatarQaCases } from './avatar-qa';
 import { isLinkReadableVisibility } from './board-visibility';
 import { normalizeKiwiAction } from './kiwi-policy';
 import { removeHiddenBoardFromDiscovery } from './board-discovery';

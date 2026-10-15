@@ -148,6 +148,13 @@ export const routes: Routes = [
     data: { userCollection: true, customCollection: true },
   },
   {
+    path: 'manage/boards/:boardId/cards/:cardId/qa',
+    loadComponent: () => import('./avatar-qa/avatar-qa').then(m => m.AvatarQaComponent),
+    canActivate: [authGuard],
+    title: 'Avatar QA | LivingWiki',
+    canDeactivate: [(component: { canLeave(): boolean }) => component.canLeave()],
+  },
+  {
     path: 'manage/boards/:boardId/insights',
     loadComponent: () => import('./board-insights/board-insights').then((m) => m.BoardInsightsComponent),
     title: $localize`Board Insights | LivingWiki`,

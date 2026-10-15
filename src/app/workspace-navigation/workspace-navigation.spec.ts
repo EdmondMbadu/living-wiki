@@ -52,6 +52,7 @@ describe('WorkspaceNavigationService', () => {
     expect(service.primaryItems().map((item) => item.label)).toEqual([
       'Home',
       'Discover',
+      'Off Grids',
       'My City Las Vegas',
       'My Boards',
       'My Songs',
@@ -103,6 +104,13 @@ describe('WorkspaceNavigationService', () => {
 
     expect(service.isActive('songs')).toBeTrue();
     expect(service.isActive('boards')).toBeFalse();
+  });
+
+  it('keeps My Boards active in the avatar QA workspace', async () => {
+    const service = TestBed.inject(WorkspaceNavigationService);
+    await TestBed.inject(Router).navigateByUrl('/manage/boards/board-1/cards/card-1/qa');
+    expect(service.isActive('boards')).toBeTrue();
+    expect(service.isActive('home')).toBeFalse();
   });
 
   it('keeps Home active without competing with the Saved Boards anchor', async () => {

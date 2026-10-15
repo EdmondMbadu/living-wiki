@@ -1711,6 +1711,11 @@ export async function runPublicAtlasQuery(params: {
   startNewThread?: boolean;
   anonymousQuestionLimit?: number | null;
   visitor: PublicChatVisitorContext;
+  /** Server-only sandbox: same answer path, isolated history, no visitor records or analytics. */
+  qaSandbox?: {
+    history: Array<{ role: 'user' | 'assistant'; text: string }>;
+    capture: (exchange: { answerMode: 'wiki' | 'internet' }) => void;
+  };
 }): Promise<{
   blocked: boolean;
   answer: string;
@@ -1726,13 +1731,19 @@ export async function runPublicAtlasQuery(params: {
   remainingQuestions: number | null;
   requiresSignIn: boolean;
 }> {
+  const recordExchange = async (exchange: Parameters<typeof recordPublicChatThreadExchange>[0]) => {
+    if (params.qaSandbox) params.qaSandbox.capture({ answerMode: exchange.answerMode });
+    else await recordPublicChatThreadExchange(exchange);
+  };
   const timer = createChatQueryTimer();
   const trimmedQuestion = params.question.trim();
   if (!trimmedQuestion) {
     throw new Error('Question is required.');
   }
 
-  const thread = await ensureActivePublicChatThread({
+  const thread = params.qaSandbox
+    ? { id: 'qa-sandbox', questionCount: params.qaSandbox.history.filter(m => m.role === 'user').length, reusedExisting: false }
+    : await ensureActivePublicChatThread({
     atlasId: params.atlasId,
     atlasOwnerUserId: params.atlasOwnerUserId,
     threadId: params.threadId ?? null,
@@ -1774,7 +1785,8 @@ export async function runPublicAtlasQuery(params: {
 
   const broadQuestion = isBroadSynthesisQuestion(trimmedQuestion);
   const [threadHistory, atlasChatContext] = await Promise.all([
-    thread.reusedExisting
+    params.qaSandbox ? Promise.resolve(params.qaSandbox.history.slice(-maxHistoryMessagesForAnswer))
+      : thread.reusedExisting
       ? loadRecentPublicChatThreadMessages(thread.id, maxHistoryMessagesForAnswer)
       : Promise.resolve([] as Awaited<ReturnType<typeof loadRecentPublicChatThreadMessages>>),
     loadAtlasChatContext(params.atlasId),
@@ -1797,7 +1809,7 @@ export async function runPublicAtlasQuery(params: {
     });
     timer.mark('presentation_ms');
 
-    await recordPublicChatThreadExchange({
+    await recordExchange({
       threadId: thread.id,
       atlasId: params.atlasId,
       atlasOwnerUserId: params.atlasOwnerUserId,
@@ -1860,7 +1872,7 @@ export async function runPublicAtlasQuery(params: {
     });
     timer.mark('presentation_ms');
 
-    await recordPublicChatThreadExchange({
+    await recordExchange({
       threadId: thread.id,
       atlasId: params.atlasId,
       atlasOwnerUserId: params.atlasOwnerUserId,
@@ -1966,7 +1978,7 @@ export async function runPublicAtlasQuery(params: {
     });
     timer.mark('presentation_ms');
 
-    await recordPublicChatThreadExchange({
+    await recordExchange({
       threadId: thread.id,
       atlasId: params.atlasId,
       atlasOwnerUserId: params.atlasOwnerUserId,
@@ -2057,7 +2069,7 @@ export async function runPublicAtlasQuery(params: {
     });
     timer.mark('presentation_ms');
 
-    await recordPublicChatThreadExchange({
+    await recordExchange({
       threadId: thread.id,
       atlasId: params.atlasId,
       atlasOwnerUserId: params.atlasOwnerUserId,
@@ -2108,7 +2120,7 @@ export async function runPublicAtlasQuery(params: {
   });
   timer.mark('presentation_ms');
 
-  await recordPublicChatThreadExchange({
+  await recordExchange({
     threadId: thread.id,
     atlasId: params.atlasId,
     atlasOwnerUserId: params.atlasOwnerUserId,

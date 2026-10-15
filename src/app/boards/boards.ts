@@ -8399,6 +8399,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       && shouldOfferListingTalkingCardSetup(board);
   }
 
+  canOpenAvatarQa(board: Board, card: BoardCard): boolean {
+    if (!this.authService.uid() || !this.isTalkingCard(card) || board.teamId || card.tags.includes('listing-agent-guide')) return false;
+    const atlas = this.atlasService.atlases().find(item => item.id === card.conversation?.atlasId);
+    return atlas ? this.atlasService.canAdminAtlas(atlas) : this.canEditBoard(board);
+  }
+
   talkingCardButtonLabel(card: Pick<BoardCard, 'conversation'>): string {
     return talkingCardCtaLabel(card.conversation, this.boardSpeechLanguage());
   }

@@ -3342,6 +3342,11 @@
                       <span class="detail-card__like-count">{{ cardLikeCount(cardHostBoard(board, card), card) }}</span>
                     </button>
                   }
+                  @if (canOpenAvatarQa(cardHostBoard(board, card), card)) {
+                    <a class="detail-card__qa" [routerLink]="['/manage/boards', cardHostBoard(board, card).id, 'cards', card.id, 'qa']" aria-label="Open avatar QA" title="Avatar QA" (click)="$event.stopPropagation()">
+                      <span class="material-symbols-outlined" aria-hidden="true">fact_check</span><span>QA</span>
+                    </a>
+                  }
                   @if (!isListingTalkingCardPlaceholder(card) && (!exploredRelatedCardParent() || !isLegacyMemoryRelatedCard(card))) {
                     <div
                       class="card-action-menu detail-card__action-menu"

@@ -52,6 +52,7 @@ describe('WorkspaceSidebarComponent', () => {
     expect(labels).toEqual([
       'Home',
       'Discover',
+      'Off Grids',
       'My City Las Vegas',
       'My Boards',
       'My Songs',

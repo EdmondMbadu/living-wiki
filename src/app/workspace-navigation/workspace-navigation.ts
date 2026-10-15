@@ -200,7 +200,7 @@ export class WorkspaceNavigationService {
       case 'saved':
         return path === '/home' && url.includes('#mobile-saved');
       case 'boards':
-        return path === '/boards' || path.startsWith('/boards/u/') || /^\/boards\/[^/]+$/.test(path);
+        return path === '/boards' || path.startsWith('/manage/boards/') || path.startsWith('/boards/u/') || /^\/boards\/[^/]+$/.test(path);
       case 'teams':
         return path === '/teams' || path.startsWith('/teams/');
       case 'songs':
