@@ -41,6 +41,7 @@ export class TalkThrusComponent {
   private readonly billing = inject(TalkThruBillingService);
   private readonly teams = inject(TeamsService);
   readonly exampleUrl = exampleUrl;
+  readonly videoError = signal(false);
   readonly cycle = signal<TalkThruBillingCycle>('monthly');
   readonly ctaBusy = signal('');
   readonly ctaError = signal('');

@@ -1059,6 +1059,10 @@
     "source": "The review area stays here so the main action is always visible.",
     "file": "src/app/city-places/city-places.html"
   },
+  "1335753484434774532": {
+    "source": "Watch the introduction",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "133927534522374429": {
     "source": "Loading results",
     "file": "src/app/boards/boards.html"
@@ -3430,6 +3434,10 @@
   "2061795547777281673": {
     "source": "Create a real estate TalkThru. Everyone on the team can help refine its cards before it goes public.",
     "file": "src/app/teams/teams.ts"
+  },
+  "2064480782922116750": {
+    "source": "See what{$LINE_BREAK}{$START_EMPHASISED_TEXT}your voice can do.{$CLOSE_EMPHASISED_TEXT}",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "2064732578312319126": {
     "source": "Find what ",
@@ -6574,10 +6582,6 @@
   "3099882906994173432": {
     "source": "Linked",
     "file": "src/app/profile/profile.html"
-  },
-  "3100557475755122025": {
-    "source": "TalkThrus for real estate",
-    "file": "src/app/talkthrus/talkthrus.html"
   },
   "3102471880983634397": {
     "source": " The linked atlas could not be found or is no longer public. ",
@@ -9957,7 +9961,7 @@
   },
   "4134147244760971282": {
     "source": "Français",
-    "file": "src/app/boards/board-translation.ts"
+    "file": "src/app/business/business.ts"
   },
   "4134262242877689961": {
     "source": " The world, undistorted. ",
@@ -10090,6 +10094,10 @@
   "4171633446942314681": {
     "source": "Business profile connected to this account.",
     "file": "src/app/profile/profile.ts"
+  },
+  "4173003823596800185": {
+    "source": "Your browser does not support video playback. Use the link below to open the video.",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "4174166172034954831": {
     "source": "Search avatars by name…",
@@ -13355,6 +13363,10 @@
     "source": "Your voice library could not be loaded.",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
+  "5201304859223535581": {
+    "source": "{$START_TAG_SPAN}▶{$CLOSE_TAG_SPAN} Watch the video {$START_TAG_SPAN_1}0:22{$CLOSE_TAG_SPAN}",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "5207635742003539443": {
     "source": "Sign in",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -15525,7 +15537,7 @@
   },
   "5866254605255506989": {
     "source": "English",
-    "file": "src/app/boards/board-translation.ts"
+    "file": "src/app/business/business.ts"
   },
   "5866626248243309531": {
     "source": "Welcome message",
@@ -17674,6 +17686,10 @@
   "6531844032461828473": {
     "source": "Choose several photos now or come back anytime. The first photo is the card cover.",
     "file": "src/app/boards/boards.html"
+  },
+  "6533560757238011181": {
+    "source": "Explore a live TalkThru {$START_TAG_SPAN}↗{$CLOSE_TAG_SPAN}",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "6533954713514425634": {
     "source": "Portugues",
@@ -20785,7 +20801,7 @@
   },
   "7535527225967694107": {
     "source": "Español",
-    "file": "src/app/boards/board-translation.ts"
+    "file": "src/app/business/business.ts"
   },
   "7537838472520273433": {
     "source": "Elon Musk: The Complete Timeline",
@@ -20859,6 +20875,10 @@
     "source": "Public access",
     "file": "src/app/landing/landing.ts"
   },
+  "756206296000064447": {
+    "source": "TalkThrus — Your listings. Your voice. By LivingWiki",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "7562277910853127034": {
     "source": "Everything you need to discover, create & share.",
     "file": "src/app/membership/membership.html"
@@ -20886,6 +20906,10 @@
   "7565716024468232322": {
     "source": "Links",
     "file": "src/app/profile/profile.ts"
+  },
+  "7566696731767849531": {
+    "source": "The video couldn’t load. Try opening it directly using the link below.",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "7567952289321192271": {
     "source": "Card opens and destination clicks will appear here.",
@@ -20962,6 +20986,10 @@
   "7597895918260601209": {
     "source": "Uploading your property photos",
     "file": "src/app/boards/boards.ts"
+  },
+  "7598744822969908490": {
+    "source": "22-second introduction · English audio and captions",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "76042004992103026": {
     "source": "Sort boards",
@@ -21734,6 +21762,10 @@
   "7841157802205255106": {
     "source": "All {$INTERPOLATION}",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
+  "7841234010641528602": {
+    "source": "Open the video {$START_TAG_SPAN}↗{$CLOSE_TAG_SPAN}",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "7841237137284744976": {
     "source": "Search by name, accent, or style. Previewing does not change your selection.",
@@ -25294,6 +25326,10 @@
   "8969236416679568161": {
     "source": "Welcome! Here’s what I’d love you to notice as you explore this board…",
     "file": "src/app/boards/boards.html"
+  },
+  "8969922446952982765": {
+    "source": "A quick introduction to more personal property listings. Your photos, your perspective, and a voice buyers can connect with.",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "8971516712821636286": {
     "source": "Select it again to retry.",
