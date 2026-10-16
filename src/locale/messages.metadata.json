@@ -13323,6 +13323,10 @@
     "source": "Anyone opening this link lands on the normal board. The tags only help you understand where the visit came from.",
     "file": "src/app/board-insights/board-insights.html"
   },
+  "5189343771174940270": {
+    "source": "About TalkThrus",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "5189509831397342156": {
     "source": "Paste one or more places with exactly three words separated by periods.",
     "file": "src/app/boards/boards.ts"
@@ -13982,6 +13986,10 @@
   "53974858342710350": {
     "source": "Video branding could not be loaded.",
     "file": "src/app/boards/boards.ts"
+  },
+  "5400669377990252375": {
+    "source": "From Philadelphia{$LINE_BREAK}to Las Vegas.",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "5401235049169008975": {
     "source": "Open source page",
@@ -17171,6 +17179,10 @@
     "source": "What should I know right now about {city}?",
     "file": "src/app/chat/chat.ts"
   },
+  "6379393829798725596": {
+    "source": "Advanced analytics",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "6380922926275044250": {
     "source": "Open my boards",
     "file": "src/app/video-library/video-library.html"
@@ -18735,6 +18747,10 @@
     "source": "{$START_TAG_SPAN}auto_awesome_motion{$CLOSE_TAG_SPAN} Studio ",
     "file": "src/app/boards/boards.html"
   },
+  "687958141412090753": {
+    "source": "We’re a dynamic team of builders and creative thinkers working between Philadelphia and Las Vegas. We bring local perspective, curiosity, and a love of storytelling to everything we create.",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "6883930691020393717": {
     "source": "Opens",
     "file": "src/app/board-insights/board-insights.html"
@@ -19634,10 +19650,6 @@
   "715829129657726771": {
     "source": "한국어",
     "file": "src/app/business/business.ts"
-  },
-  "7159003283225028144": {
-    "source": "Buyer engagement insights: which rooms got replayed",
-    "file": "src/app/talkthrus/talkthrus.html"
   },
   "7159284789577381829": {
     "source": "Your video logo",
@@ -21130,6 +21142,10 @@
   "7641551525689160081": {
     "source": "Search reviewed places...",
     "file": "src/app/city-places/city-places.html"
+  },
+  "7642320582858034542": {
+    "source": "As part of LivingWiki, TalkThrus helps people bring places to life through their own voice and insights. We believe useful technology should make sharing what you know feel simple and personal.",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "7644584255987445630": {
     "source": "Finding and validating image...",
@@ -23358,6 +23374,10 @@
   "8355575292156070625": {
     "source": "Forgot Password | LivingWiki",
     "file": "src/app/app.routes.ts"
+  },
+  "8358242905246118175": {
+    "source": "Built with human imagination. Powered by Gemini and GPT.",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "8359345125759588259": {
     "source": "Describe the picture you want.",

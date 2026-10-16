@@ -147,6 +147,12 @@ h1, h2, h3, p { margin-top: 0; }
 .thank-you p { color: #59685f; }
 .thank-you a { text-decoration: underline; }
 footer { padding: 33px 0; border-top: 1px solid var(--line); }
+.footer-about { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; padding-block: 30px 48px; margin-bottom: 30px; border-bottom: 1px solid var(--line); }
+.footer-about .eyebrow { margin-bottom: 18px; }
+.talkthrus-page .footer-about h2 { margin-bottom: 0; font-size: clamp(34px, 4vw, 48px); }
+.footer-about-copy { color: var(--muted); }
+.footer-about-copy p { margin-bottom: 18px; }
+.footer-about-copy .footer-ai-credit { margin-bottom: 0; color: var(--ink); font-size: 13px; font-weight: 700; }
 .footer-inner { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
 .footer-inner p { margin: 0; color: #67746c; }
 .footer-inner small { color: #738078; }
@@ -157,6 +163,7 @@ footer { padding: 33px 0; border-top: 1px solid var(--line); }
   .hero-inner { gap: 30px; }
   .hero h1 { font-size: clamp(44px, 5.2vw, 62px); }
   .signup { gap: 35px; }
+  .footer-about { gap: 35px; }
   .preview-copy { padding: 30px; }
 }
 @media (max-width: 900px) {
@@ -196,6 +203,7 @@ footer { padding: 33px 0; border-top: 1px solid var(--line); }
   .steps { gap: 30px; margin-top: 40px; }
   .team-cards { gap: 15px; }
   .signup { padding-block: 80px; }
+  .footer-about { grid-template-columns: 1fr; gap: 24px; padding-block: 20px 35px; }
   .footer-inner { flex-wrap: wrap; }
 }
 @media (max-width: 420px) {
