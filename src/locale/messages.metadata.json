@@ -3863,6 +3863,10 @@
     "source": "Local search insights",
     "file": "src/app/business/business.ts"
   },
+  "2215156395101401794": {
+    "source": "Your listings.{$LINE_BREAK}{$START_EMPHASISED_TEXT}Your voice.{$CLOSE_EMPHASISED_TEXT}",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "2218041540137295821": {
     "source": "Describe the voice",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -23603,10 +23607,6 @@
     "source": "Use a Twilio SMS-capable number, or a Vapi setup that exposes Twilio SMS webhooks.",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
-  "8427706428229838178": {
-    "source": "Every home has{$LINE_BREAK}a story.{$LINE_BREAK}{$START_EMPHASISED_TEXT}Tell it in your voice.{$CLOSE_EMPHASISED_TEXT}",
-    "file": "src/app/talkthrus/talkthrus.html"
-  },
   "8430737794384598679": {
     "source": "Start with an idea, something you have, or a place to explore.",
     "file": "src/app/boards/boards.html"
@@ -25998,6 +25998,10 @@
   "916995495995123604": {
     "source": "Agency & Team · {$seats} · cancelled, ends at period end",
     "file": "src/app/teams/teams.ts"
+  },
+  "9170056381503463723": {
+    "source": "Every home has a story.{$LINE_BREAK}{$START_EMPHASISED_TEXT}Tell it in your voice.{$CLOSE_EMPHASISED_TEXT}",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "9170355400595062971": {
     "source": "Seconds per card",
