@@ -1,6 +1,6 @@
 import { kiwiListingIntent, kiwiListingUrl } from './kiwi-listing-request';
 
-describe('Kiwi property TalkThru requests', () => {
+describe('Picamo property TalkThru requests', () => {
   it('recognizes sale and rental creation without sending generic boards to the property wizard', () => {
     expect(kiwiListingIntent('Create a real estate TalkThru')).toBe('sale');
     expect(kiwiListingIntent('Please make a rental board')).toBe('rental');

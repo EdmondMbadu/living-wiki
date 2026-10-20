@@ -83,9 +83,17 @@
     "source": "Song title",
     "file": "src/app/boards/boards.html"
   },
+  "1025667444082396309": {
+    "source": "Send draft change to Picamo",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "1027044922348826261": {
     "source": "Move to end",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
+  "1028658563361784443": {
+    "source": "Ask Picamo to change this draft",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "1028752668047290227": {
     "source": "Open published board",
@@ -443,6 +451,10 @@
     "source": "Subscribe",
     "file": "src/app/atlas-landing/atlas-landing.html"
   },
+  "1146504259091811465": {
+    "source": "Picamo is working",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "1147262194510626564": {
     "source": "Deep Search",
     "file": "src/app/landing/landing.html"
@@ -518,10 +530,6 @@
   "1164625214886901365": {
     "source": "boards",
     "file": "src/app/board-collection-list/board-collection-list.ts"
-  },
-  "1167075079547749521": {
-    "source": "Sign in to talk with Kiwi",
-    "file": "src/app/kiwi/kiwi.html"
   },
   "1167578344164606559": {
     "source": "Listing agent",
@@ -983,10 +991,6 @@
     "source": "Agent Pro for every agent, with your agency’s branding alongside each agent’s voice.",
     "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
-  "1314346269344840886": {
-    "source": "Ask Kiwi",
-    "file": "src/app/kiwi/kiwi.html"
-  },
   "1314562873676673298": {
     "source": "Saving…",
     "file": "src/app/atlas-persona/atlas-persona.ts"
@@ -1134,10 +1138,6 @@
   "1370922594157390261": {
     "source": "Travel to next stop",
     "file": "src/app/boards/boards.html"
-  },
-  "1371083284945530351": {
-    "source": "The cards are appearing as Kiwi finishes them.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "1371294121452865029": {
     "source": " Icon choices appear on both sides of the printed badge. ",
@@ -1618,6 +1618,10 @@
   "1486625977314947145": {
     "source": "{$START_TAG_SPAN}deselect{$CLOSE_TAG_SPAN} Clear ",
     "file": "src/app/boards/boards.html"
+  },
+  "1486777959591582781": {
+    "source": "Picamo conversation",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "1487226710079462152": {
     "source": "{$START_TAG_SPAN}my_location{$CLOSE_TAG_SPAN} Try finding my square again ",
@@ -2227,10 +2231,6 @@
     "source": "{$START_TAG_SPAN}ios_share{$CLOSE_TAG_SPAN} Share board ",
     "file": "src/app/city-places/city-places.html"
   },
-  "165122417211249958": {
-    "source": "Kiwi is still adding photos. Wait until the board draft is ready.",
-    "file": "src/app/kiwi/kiwi.ts"
-  },
   "1652785484698054486": {
     "source": "{$START_TAG_SPAN}auto_awesome{$CLOSE_TAG_SPAN} Recommended ",
     "file": "src/app/boards/boards.html"
@@ -2274,10 +2274,6 @@
   "1665702714657962278": {
     "source": "{$START_TAG_SPAN}progress_activity{$CLOSE_TAG_SPAN} Loading the board factory… ",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
-  },
-  "1666626815935471474": {
-    "source": "Send to Kiwi",
-    "file": "src/app/kiwi/kiwi.html"
   },
   "1670921036890550007": {
     "source": "Open Source Files to watch indexing continue in the background.",
@@ -2523,6 +2519,10 @@
     "source": "{$INTERPOLATION} board{$INTERPOLATION_1} · no AI, search, or Places calls occur during preflight.",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
+  "1748341431516821168": {
+    "source": "Picamo is preparing the changes you requested.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "1750555739180809831": {
     "source": "Voice",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -2530,6 +2530,10 @@
   "1751217126295384319": {
     "source": " Keep gem ",
     "file": "src/app/off-grids/off-grid-editor.html"
+  },
+  "1752572562303739185": {
+    "source": "Send to Picamo",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "1754318090325966221": {
     "source": "Adding listing…",
@@ -2567,9 +2571,9 @@
     "source": "$0 today · card required · cancel anytime",
     "file": "src/app/talkthrus/talkthrus.html"
   },
-  "1765116960127244636": {
-    "source": "Close Kiwi",
-    "file": "src/app/kiwi/kiwi.html"
+  "1764995089188303915": {
+    "source": "Meet Picamo",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "1766606672964991995": {
     "source": "Delete empty Wiki",
@@ -2606,6 +2610,10 @@
   "1790189562963571363": {
     "source": "the source page",
     "file": "src/app/boards/boards.ts"
+  },
+  "1791192917344726161": {
+    "source": "Picamo is researching your idea and writing the cards. This can take a minute.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "1793201614434705102": {
     "source": "Claim Your Business | LivingWiki",
@@ -3023,10 +3031,6 @@
     "source": "Saving branding…",
     "file": "src/app/boards/boards.html"
   },
-  "1940524904664826794": {
-    "source": "MAKE KIWI YOURS",
-    "file": "src/app/kiwi/kiwi.html"
-  },
   "1941826266604410300": {
     "source": "City sources",
     "file": "src/app/chat/chat.html"
@@ -3230,10 +3234,6 @@
   "2007323441879121120": {
     "source": "{$INTERPOLATION} tracked views",
     "file": "src/app/board-insights/board-insights.html"
-  },
-  "2009013035635343658": {
-    "source": "Speak naturally. Kiwi will answer out loud.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "2010559760074651549": {
     "source": "LW",
@@ -3754,10 +3754,6 @@
   "2180782545249146660": {
     "source": "Short description{$TAG_INPUT}",
     "file": "src/app/teams/teams.html"
-  },
-  "2181376417745960977": {
-    "source": "Kiwi is applying your approved change.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "2184619916211262318": {
     "source": "Copy URL",
@@ -4315,10 +4311,6 @@
     "source": "10 Dishes That Explain [City]",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
   },
-  "2358858457733001409": {
-    "source": "End Kiwi voice conversation",
-    "file": "src/app/kiwi/kiwi.ts"
-  },
   "2359345457686408441": {
     "source": "{$START_TAG_SPAN}photo_library{$CLOSE_TAG_SPAN} Photo memories",
     "file": "src/app/boards/boards.html"
@@ -4370,6 +4362,10 @@
   "2375260419993138758": {
     "source": "URL",
     "file": "src/app/boards/boards.ts"
+  },
+  "237577239806903661": {
+    "source": "Ask Picamo",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "2376976528139589176": {
     "source": "Choose Public or Unlisted first.",
@@ -4983,6 +4979,10 @@
     "source": "Use the standard voice, select one from the library, or create a new voice from a description.",
     "file": "src/app/atlas-persona/atlas-persona.html"
   },
+  "2579387381932730692": {
+    "source": "Chat with Picamo",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "257957744178192367": {
     "source": "Start talking",
     "file": "src/app/kiwi/kiwi.ts"
@@ -4994,10 +4994,6 @@
   "2580023614957355751": {
     "source": "How many to scrape?",
     "file": "src/app/web-scraper/web-scraper.html"
-  },
-  "2583072641255766710": {
-    "source": "Kiwi is working",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "2585937137819085192": {
     "source": " {$INTERPOLATION} of {$INTERPOLATION_1} processed · {$INTERPOLATION_2} created · {$INTERPOLATION_3} failed · {$INTERPOLATION_4} skipped ",
@@ -5591,6 +5587,10 @@
     "source": "Study cards",
     "file": "src/app/boards/boards.html"
   },
+  "2766798257293971421": {
+    "source": "Picamo could not answer. Please try again.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "2767388688945920668": {
     "source": "Preview video size",
     "file": "src/app/boards/boards.html"
@@ -5871,10 +5871,6 @@
     "source": "{$START_TAG_SPAN}add{$CLOSE_TAG_SPAN} New TalkThru ",
     "file": "src/app/teams/teams.html"
   },
-  "286515092776899760": {
-    "source": "Kiwi saved this board, but the latest version could not be loaded. Refresh to try again.",
-    "file": "src/app/boards/boards.ts"
-  },
   "2865481469418611290": {
     "source": " Choose a topic from the left to read the compiled knowledge. ",
     "file": "src/app/wiki/wiki.html"
@@ -6031,6 +6027,10 @@
     "source": "Address {$START_SMALL_TEXT}(found automatically){$CLOSE_SMALL_TEXT}",
     "file": "src/app/boards/boards.html"
   },
+  "2932316606521727698": {
+    "source": "Picamo voice was interrupted. Please try again.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "293344152000220895": {
     "source": "will be removed from My Videos. Its source board will not be deleted.",
     "file": "src/app/video-library/video-library.html"
@@ -6094,6 +6094,10 @@
   "2944449439955980766": {
     "source": "Email ",
     "file": "src/app/boards/boards.ts"
+  },
+  "2944581950938768695": {
+    "source": "Ask a question or tell Picamo what you would like to change. You can review any proposed action before it is saved.",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "2947303945244189223": {
     "source": "Add docs",
@@ -6671,6 +6675,10 @@
     "source": "Don’t Just Search. Let’s Go. | LivingWiki",
     "file": "src/app/membership/membership.ts"
   },
+  "3127552806282514231": {
+    "source": "Watch Picamo fill this board in. You can edit it while it works.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "3128911811072399567": {
     "source": " {$INTERPOLATION} ready/retry · {$INTERPOLATION_1} skipped/created ",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -6711,9 +6719,17 @@
     "source": "Dymaxion (Fuller) projection world map",
     "file": "src/app/dymaxion/dymaxion.html"
   },
+  "3138507348023631738": {
+    "source": "Your board is saved. Picamo is checking that it opens correctly.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "3139754275290221887": {
     "source": "Agent contact",
     "file": "src/app/boards/boards.html"
+  },
+  "3140005667328310358": {
+    "source": "Close Picamo",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "3140845098662020693": {
     "source": "Open wiki",
@@ -6774,6 +6790,10 @@
   "3151947942860997859": {
     "source": "Your account already includes this plan. You’re all set.",
     "file": "src/app/talkthru-billing/talkthru-billing.service.ts"
+  },
+  "3152753149494333063": {
+    "source": "Start talking with Picamo",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "3153802600204818440": {
     "source": "Date and time",
@@ -7191,6 +7211,10 @@
     "source": "Local rating",
     "file": "src/app/city-places/city-places.html"
   },
+  "3269863581027014491": {
+    "source": "MAKE PICAMO YOURS",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "32725357558423761": {
     "source": "Edit in account admin",
     "file": "src/app/business-detail/business-detail.html"
@@ -7519,6 +7543,10 @@
     "source": "Photo ready. Finding your exact square…",
     "file": "src/app/boards/boards.ts"
   },
+  "3367385207284031545": {
+    "source": "The cards are appearing as Picamo finishes them.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "336762689849256767": {
     "source": "Deleting All...",
     "file": "src/app/library/library.ts"
@@ -7666,10 +7694,6 @@
   "3409234041657436398": {
     "source": "No active article.",
     "file": "src/app/web-scraper/web-scraper.html"
-  },
-  "3409249961872976902": {
-    "source": "Kiwi is preparing the changes you requested.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "3411313811577590245": {
     "source": "Your score is ready, but it could not be saved.",
@@ -7927,10 +7951,6 @@
     "source": "AI can make mistakes. Verify important information.",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
-  "3483890004709455338": {
-    "source": "Kiwi is generating an image for this card.",
-    "file": "src/app/kiwi/kiwi.ts"
-  },
   "3484473240362271233": {
     "source": "Everything in Local",
     "file": "src/app/business/business.ts"
@@ -8054,6 +8074,10 @@
   "3526205892584451052": {
     "source": "image",
     "file": "src/app/boards/boards.ts"
+  },
+  "3526672235203630202": {
+    "source": "Picamo is looking for photo choices for this card.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "3526705040409139369": {
     "source": "Place details and photo are ready.",
@@ -8190,6 +8214,10 @@
   "3562725676235882728": {
     "source": "Indexed sources",
     "file": "src/app/atlas-landing/atlas-landing.html"
+  },
+  "3562804051868439862": {
+    "source": "Picamo voice could not start. Check microphone access and try again.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "3562867245345985676": {
     "source": "Your private encyclopedia evolves with every page read.",
@@ -8370,10 +8398,6 @@
   "3625662732626423036": {
     "source": "Your next listing.{$LINE_BREAK}Your next great story.",
     "file": "src/app/talkthrus/talkthrus.html"
-  },
-  "3625905116474120776": {
-    "source": "Kiwi is saving the cards and images. Please wait.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "362602485713967339": {
     "source": "Start with the public collection.",
@@ -8626,10 +8650,6 @@
   "3703255391482358148": {
     "source": "Verified Local Favorite badge",
     "file": "src/app/business/business.ts"
-  },
-  "3705728984588120913": {
-    "source": "Kiwi, the LivingWiki assistant",
-    "file": "src/app/kiwi/kiwi.html"
   },
   "3705789926162159144": {
     "source": "Each LivingWiki is designed to organize public information into something browsable and conversational.",
@@ -8975,10 +8995,6 @@
     "source": "Your photos stay in their selected order while the board is created.",
     "file": "src/app/boards/boards.ts"
   },
-  "3808893800325991284": {
-    "source": "Kiwi is looking for photo choices for this card.",
-    "file": "src/app/kiwi/kiwi.ts"
-  },
   "3810441463388899470": {
     "source": "Synthesizing answer",
     "file": "src/app/chat/chat.ts"
@@ -9070,10 +9086,6 @@
   "3837019738313777797": {
     "source": "Board settings",
     "file": "src/app/boards/boards.html"
-  },
-  "3839655753349706116": {
-    "source": "Kiwi voice could not start. Check microphone access and try again.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "3841989706323728259": {
     "source": "Not available",
@@ -9202,6 +9214,10 @@
   "3892382309537536060": {
     "source": "Route needs attention",
     "file": "src/app/boards/boards.ts"
+  },
+  "3893001007120517596": {
+    "source": "Talk to Picamo",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "3893119223050551800": {
     "source": "1 indexed source ready",
@@ -9499,10 +9515,6 @@
     "source": " {$INTERPOLATION} verified · {$INTERPOLATION_1} link-ready ",
     "file": "src/app/boards/boards.html"
   },
-  "3981899387890553740": {
-    "source": "Kiwi needs more detail to finish this draft. Tell it what to add in the box below.",
-    "file": "src/app/kiwi/kiwi.ts"
-  },
   "3982114395494196376": {
     "source": "Free things",
     "file": "src/app/city-board-collection.util.ts"
@@ -9514,10 +9526,6 @@
   "398425368296312850": {
     "source": "The Electric Vehicle Market",
     "file": "src/app/public-wiki-catalog.ts"
-  },
-  "3984547773363516564": {
-    "source": "Kiwi could not connect. Please refresh after the service is available.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "3985063625595050205": {
     "source": "{$INTERPOLATION}/{$INTERPOLATION_1} score",
@@ -9534,6 +9542,10 @@
   "3988695357691364512": {
     "source": "Board stickers",
     "file": "src/app/boards/boards.html"
+  },
+  "3990937293936097228": {
+    "source": "Picamo is preparing the first cards…",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "3991785467197894133": {
     "source": "Monthly local-search insight summary",
@@ -9635,6 +9647,10 @@
     "source": "© 2026 LivingWiki",
     "file": "src/app/talkthrus/talkthrus.html"
   },
+  "4032690017315819219": {
+    "source": "Message Picamo…",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "4033376118828871613": {
     "source": "Discovering...",
     "file": "src/app/web-scraper/web-scraper.ts"
@@ -9714,10 +9730,6 @@
   "4062365002194208944": {
     "source": "Hide board inside",
     "file": "src/app/boards/boards.ts"
-  },
-  "4064992231359184724": {
-    "source": "Kiwi could not answer. Please try again.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "4066116150050313924": {
     "source": "I’d like this for my listings {$START_TAG_SPAN}→{$CLOSE_TAG_SPAN}",
@@ -10139,6 +10151,10 @@
     "source": "Promo image preview for ",
     "file": "src/app/boards/board-promo-image-dialog.ts"
   },
+  "4184894907390560653": {
+    "source": "Picamo is generating an image for this card.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "4185869000566723355": {
     "source": "{$START_TAG_SPAN}arrow_back{$CLOSE_TAG_SPAN} All cards ",
     "file": "src/app/boards/boards.html"
@@ -10534,6 +10550,10 @@
   "4298843972406017764": {
     "source": "Tour stop navigation",
     "file": "src/app/boards/boards.html"
+  },
+  "4299747088909139234": {
+    "source": "Add a card here or ask Picamo to fill the board.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "4302912603848458571": {
     "source": "Editing preview",
@@ -10931,6 +10951,10 @@
     "source": "Post my score",
     "file": "src/app/boards/boards.html"
   },
+  "4429287077020526680": {
+    "source": "The change could not be saved. Ask Picamo to review it again.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "4432323840080012813": {
     "source": "Ready for upload",
     "file": "src/app/library/library.ts"
@@ -10942,10 +10966,6 @@
   "4434103319779741144": {
     "source": " Delete gem",
     "file": "src/app/off-grids/off-grid-editor.html"
-  },
-  "4434683071029451536": {
-    "source": "Watch Kiwi fill this board in. You can edit it while it works.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "4437458740258571869": {
     "source": "{$START_TAG_SPAN}★{$CLOSE_TAG_SPAN} Most popular",
@@ -11402,10 +11422,6 @@
   "4569977374738300624": {
     "source": "{$START_TAG_SPAN}add{$CLOSE_TAG_SPAN} Add card ",
     "file": "src/app/boards/boards.html"
-  },
-  "4570303801940461014": {
-    "source": "Start talking with Kiwi",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "4571340292558416119": {
     "source": "Enter a secure public HTTPS link before testing it.",
@@ -12107,10 +12123,6 @@
     "source": "Enter a valid email address or leave invitations empty.",
     "file": "src/app/boards/boards.ts"
   },
-  "4787205055465657706": {
-    "source": "Make things happen with Kiwi",
-    "file": "src/app/kiwi/kiwi.html"
-  },
   "4787985446248861347": {
     "source": "Build the voice of your AI.",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -12142,10 +12154,6 @@
   "4795194748464599130": {
     "source": "Create university",
     "file": "src/app/atlas-manage/atlas-manage.ts"
-  },
-  "4796942466741663350": {
-    "source": "Kiwi could not prepare this board for review. Please try again.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "4797026336287705114": {
     "source": "Featured line for the About section, shown prominently on the public page.",
@@ -12975,9 +12983,17 @@
     "source": "Failed to delete atlas.",
     "file": "src/app/atlas-manage/atlas-manage.ts"
   },
+  "508682935245576738": {
+    "source": "What Picamo heard",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "5087058532570032397": {
     "source": "Sort friends",
     "file": "src/app/boards/boards.html"
+  },
+  "508905406447983366": {
+    "source": "Make things happen with Picamo",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "5090209836643637979": {
     "source": "Loading your plan…",
@@ -13030,6 +13046,10 @@
   "5100890377770507807": {
     "source": "{$START_TAG_SPAN}videocam{$CLOSE_TAG_SPAN}Add a PinTalk ",
     "file": "src/app/off-grids/off-grid-editor.html"
+  },
+  "510290730254570587": {
+    "source": "Picamo is checking the cards and images.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "5103910017747954236": {
     "source": "The Mental Health Knowledge Base",
@@ -13659,10 +13679,6 @@
     "source": "SMS",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
-  "5301037233762434697": {
-    "source": "Send draft change to Kiwi",
-    "file": "src/app/kiwi/kiwi.html"
-  },
   "5302198636542786241": {
     "source": "Generation jobs",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
@@ -13998,10 +14014,6 @@
   "5401235049169008975": {
     "source": "Open source page",
     "file": "src/app/green-jobs/green-jobs.html"
-  },
-  "5402003255038231328": {
-    "source": "Paste the public listing URL below. Kiwi will open the TalkThru setup with the link filled in. You can choose listing photos or upload your own there.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "5402963251231965741": {
     "source": "Countertop or host stand",
@@ -14947,10 +14959,6 @@
     "source": "Video library",
     "file": "src/app/video-library/video-library.html"
   },
-  "5689525689878723988": {
-    "source": "Kiwi voice was interrupted. Please try again.",
-    "file": "src/app/kiwi/kiwi.ts"
-  },
   "5689763011510805195": {
     "source": "Ask about your boards, plan something new, or just talk.",
     "file": "src/app/kiwi/kiwi.html"
@@ -15094,6 +15102,10 @@
   "5730731256330221398": {
     "source": "Business Page",
     "file": "src/app/workspace-navigation/workspace-navigation.ts"
+  },
+  "5733510431353914647": {
+    "source": "The board was saved. Picamo is checking that it opens in your workspace.",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "5735986233623386917": {
     "source": "Agency & Team",
@@ -15367,6 +15379,10 @@
     "source": "Stop narration",
     "file": "src/app/boards/boards.html"
   },
+  "5810094407110358654": {
+    "source": "Picamo is applying your approved change.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "5810424447294668942": {
     "source": "The dishes, rooms, and rituals that explain how the city eats.",
     "file": "src/app/city-board-collection.util.ts"
@@ -15378,6 +15394,10 @@
   "5811627065765740256": {
     "source": "Loading TalkThru signups...",
     "file": "src/app/admin-users/talkthru-interests-admin.html"
+  },
+  "5812757767031617128": {
+    "source": "Speak naturally. Picamo will answer out loud.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "5813867925497374051": {
     "source": "Map",
@@ -15682,6 +15702,10 @@
   "590616917486584580": {
     "source": "Make cover",
     "file": "src/app/boards/boards.html"
+  },
+  "5906521765276463677": {
+    "source": "Picamo needs more detail to finish this draft. Tell it what to add in the box below.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "590685240033023104": {
     "source": "Wiki not found",
@@ -16126,10 +16150,6 @@
   "6041115344061899387": {
     "source": "Rename",
     "file": "src/app/atlas-manage/atlas-manage.html"
-  },
-  "6041823268838478090": {
-    "source": "Ask a question or tell Kiwi what you would like to change. You can review any proposed action before it is saved.",
-    "file": "src/app/kiwi/kiwi.html"
   },
   "6041841516937148382": {
     "source": "Average score",
@@ -16927,10 +16947,6 @@
     "source": "This collection is ready for its first card.",
     "file": "src/app/boards/boards.html"
   },
-  "629307586215351432": {
-    "source": "The change could not be saved. Ask Kiwi to review it again.",
-    "file": "src/app/kiwi/kiwi.ts"
-  },
   "6293525535958609566": {
     "source": "From {$INTERPOLATION} · Links and locations are unchanged.",
     "file": "src/app/boards/boards.html"
@@ -16946,10 +16962,6 @@
   "6297950127540572260": {
     "source": "Member",
     "file": "src/app/boards/boards.ts"
-  },
-  "6298875749049762823": {
-    "source": "Message Kiwi…",
-    "file": "src/app/kiwi/kiwi.html"
   },
   "6300268466755202647": {
     "source": "Recommended narrator voices",
@@ -17067,6 +17079,10 @@
     "source": "Training, apprenticeships, and on-ramps into green-sector work.",
     "file": "src/app/green-jobs/green-jobs.html"
   },
+  "6329814932302388096": {
+    "source": "Picamo is saving the cards and images. Please wait.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "6331019180732690752": {
     "source": "Upgrade required to create new Wikis.",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -17074,10 +17090,6 @@
   "6331874851023588058": {
     "source": "Ask a question…",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
-  },
-  "6333224079504068113": {
-    "source": "Ask Kiwi to change this draft",
-    "file": "src/app/kiwi/kiwi.html"
   },
   "6333335057236774263": {
     "source": "Saved",
@@ -17379,6 +17391,10 @@
     "source": "Business name",
     "file": "src/app/business-claim/business-claim.html"
   },
+  "6427444351626583402": {
+    "source": "Sign in to talk with Picamo",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "6428471696911424036": {
     "source": " Copy coordinates ",
     "file": "src/app/off-grids/off-grid-detail.html"
@@ -17506,10 +17522,6 @@
   "6469648340622611172": {
     "source": "Clear separation of evidence and inference",
     "file": "src/app/atlas-persona/atlas-persona.html"
-  },
-  "6473169274458483011": {
-    "source": "Kiwi conversation",
-    "file": "src/app/kiwi/kiwi.html"
   },
   "6475890840151608970": {
     "source": "{$START_TAG_SPAN}record_voice_over{$CLOSE_TAG_SPAN} Voice ",
@@ -17867,6 +17879,10 @@
     "source": "The address is recognized and can still be linked.",
     "file": "src/app/boards/boards.ts"
   },
+  "6578362371707420395": {
+    "source": "Picamo saved this board, but the latest version could not be loaded. Refresh to try again.",
+    "file": "src/app/boards/boards.ts"
+  },
   "657996528857278086": {
     "source": "Badge icons",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -18074,10 +18090,6 @@
   "6636276505664212270": {
     "source": "Bio, story, and direct shares",
     "file": "src/app/board-insights/board-insights.ts"
-  },
-  "6637027603082765717": {
-    "source": "Add a card here or ask Kiwi to fill the board.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "6639704447199699389": {
     "source": "Making your copy…",
@@ -18366,10 +18378,6 @@
   "6742436077456555516": {
     "source": "US East Coast",
     "file": "src/app/dymaxion/dymaxion.ts"
-  },
-  "674356033328533655": {
-    "source": "Your board is saved. Kiwi is checking that it opens correctly.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "674409688001095544": {
     "source": "Your Private and Unlisted boards appear here. They stay off your public profile.",
@@ -19175,10 +19183,6 @@
     "source": "Map unavailable",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
   },
-  "7015894173355804324": {
-    "source": "Kiwi is finding photos for the cards.",
-    "file": "src/app/kiwi/kiwi.ts"
-  },
   "701721694157980584": {
     "source": "Taco",
     "file": "src/app/business-badge-icons.ts"
@@ -19410,10 +19414,6 @@
   "7072823105002215393": {
     "source": "MLS# {$INTERPOLATION}",
     "file": "src/app/boards/boards.html"
-  },
-  "7073286584947304114": {
-    "source": "What Kiwi heard",
-    "file": "src/app/kiwi/kiwi.html"
   },
   "7073446703871720208": {
     "source": "{$START_TAG_SPAN}play_circle{$CLOSE_TAG_SPAN} {$INTERPOLATION} PinTalk{$INTERPOLATION_1} ready",
@@ -19959,6 +19959,10 @@
     "source": "Spotify could not create this playlist.",
     "file": "src/app/spotify-playback.service.ts"
   },
+  "7245498160825812": {
+    "source": "End Picamo voice conversation",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "7246435269238158783": {
     "source": "Public atlases and chats",
     "file": "src/app/legal/legal.ts"
@@ -20139,10 +20143,6 @@
     "source": "7 Hidden{$LINE_BREAK}Waterfalls{$LINE_BREAK}in Oregon",
     "file": "src/app/membership/membership.html"
   },
-  "7314905458057713298": {
-    "source": "Voice is unavailable in this browser. Choose Chat to type to Kiwi.",
-    "file": "src/app/kiwi/kiwi.html"
-  },
   "7315215537261754171": {
     "source": "Add portrait",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
@@ -20318,6 +20318,10 @@
   "7366879854446681438": {
     "source": "communities",
     "file": "src/app/fence-line/fence-line.html"
+  },
+  "7367180934532451391": {
+    "source": "Picamo is finding photos for the cards.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "7367441547058881583": {
     "source": " The selected voice is no longer shared. Choose a voice before publishing. ",
@@ -20691,6 +20695,10 @@
     "source": "Search this area",
     "file": "src/app/off-grids/off-grid-copy.ts"
   },
+  "7500016854456276990": {
+    "source": "Paste the public listing URL below. Picamo will open the TalkThru setup with the link filled in. You can choose listing photos or upload your own there.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "7500958067353650400": {
     "source": "Apply change",
     "file": "src/app/kiwi/kiwi.ts"
@@ -20790,10 +20798,6 @@
   "7524295457674216642": {
     "source": "Retry analytics",
     "file": "src/app/teams/teams.ts"
-  },
-  "7526606655315459236": {
-    "source": "Kiwi is checking the cards and images.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "7527242895095482156": {
     "source": "This board is already in {$INTERPOLATION}",
@@ -21027,10 +21031,6 @@
     "source": "Populate card",
     "file": "src/app/boards/boards.ts"
   },
-  "7612994818215701421": {
-    "source": "Talk to Kiwi",
-    "file": "src/app/kiwi/kiwi.ts"
-  },
   "7613002732374642088": {
     "source": " The full prompt is saved. Each live reply uses the first {$INTERPOLATION} characters for a fast response. ",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -21086,6 +21086,10 @@
   "7624253360292333318": {
     "source": "Talk to me",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
+  "7626967948298343282": {
+    "source": "Voice is unavailable in this browser. Choose Chat to type to Picamo.",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "7627028118209120249": {
     "source": "Search city, state, status, or issue",
@@ -21346,10 +21350,6 @@
   "7707526167408214550": {
     "source": "Your saved personality and wiki sources",
     "file": "src/app/atlas-persona/atlas-persona.html"
-  },
-  "7707551450697404314": {
-    "source": "Kiwi is researching your idea and writing the cards. This can take a minute.",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "7710508469345502569": {
     "source": "Neighborhood sponsor view",
@@ -22335,6 +22335,10 @@
     "source": "Add source files and LivingWiki will compile pages, citations, and chat answers.",
     "file": "src/app/wiki-home/wiki-home.ts"
   },
+  "8014820019115671433": {
+    "source": "Picamo is still adding photos. Wait until the board draft is ready.",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "8018560153410717088": {
     "source": "Tracking is ready",
     "file": "src/app/board-insights/board-insights.html"
@@ -22922,10 +22926,6 @@
   "8193904348671731346": {
     "source": "Why it belongs here, accessibility notes, or what to notice",
     "file": "src/app/boards/boards.html"
-  },
-  "8196946147334377881": {
-    "source": "Meet Kiwi",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "8197309704375996966": {
     "source": "Failed to rename atlas.",
@@ -23599,6 +23599,10 @@
     "source": "Voice conversation",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
+  "8422341725616218157": {
+    "source": "Picamo, the LivingWiki assistant",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "8422875188929347819": {
     "source": "Sharing",
     "file": "src/app/boards/boards.html"
@@ -23654,6 +23658,10 @@
   "8446492080158291471": {
     "source": "Posts and direct shares",
     "file": "src/app/board-insights/board-insights.ts"
+  },
+  "8446771203203746755": {
+    "source": "Picamo could not prepare this board for review. Please try again.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "8446830788702838598": {
     "source": "{$TAG_INPUT} Keep me signed in ",
@@ -23742,6 +23750,10 @@
   "8475597964057322709": {
     "source": "Climate & Sustainability",
     "file": "src/app/public-wiki-catalog.ts"
+  },
+  "8475603999284422956": {
+    "source": "Picamo could not connect. Please refresh after the service is available.",
+    "file": "src/app/kiwi/kiwi.ts"
   },
   "8475628499088702825": {
     "source": "One created team per account. You can join other teams.",
@@ -24431,10 +24443,6 @@
     "source": "Name your gem{$TAG_INPUT}",
     "file": "src/app/off-grids/off-grid-editor.html"
   },
-  "8725408259071730095": {
-    "source": "Kiwi is preparing the first cards…",
-    "file": "src/app/kiwi/kiwi.ts"
-  },
   "8727178487027768435": {
     "source": "Share the challenge",
     "file": "src/app/boards/boards.html"
@@ -24454,10 +24462,6 @@
   "8733303577029379560": {
     "source": "Rich detail and context",
     "file": "src/app/boards/board-narration-length.ts"
-  },
-  "8733412987646865129": {
-    "source": "The board was saved. Kiwi is checking that it opens in your workspace.",
-    "file": "src/app/kiwi/kiwi.html"
   },
   "8733613577368150346": {
     "source": "A small adventure",
@@ -24598,6 +24602,10 @@
   "8777876005321924624": {
     "source": "Contact {$INTERPOLATION}",
     "file": "src/app/boards/boards.html"
+  },
+  "877836472726198940": {
+    "source": "Ask Picamo to change this draft…",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "87794999272632427": {
     "source": "Could not disconnect Spotify.",
@@ -25475,10 +25483,6 @@
     "source": "{$START_TAG_SPAN}open_in_new{$CLOSE_TAG_SPAN} View board ",
     "file": "src/app/board-insights/board-insights.html"
   },
-  "900013225411341720": {
-    "source": "Ask Kiwi to change this draft…",
-    "file": "src/app/kiwi/kiwi.html"
-  },
   "9001012306537203684": {
     "source": "You are George Washington. Speak as a measured, thoughtful statesman...",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -25546,10 +25550,6 @@
   "9019779151642071529": {
     "source": "Delete thread {title}",
     "file": "src/app/chat/chat.ts"
-  },
-  "901985994189501149": {
-    "source": "Chat with Kiwi",
-    "file": "src/app/kiwi/kiwi.html"
   },
   "9020088253532548946": {
     "source": "Show us the gem · up to 90 seconds",

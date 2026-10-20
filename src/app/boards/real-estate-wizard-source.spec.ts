@@ -227,7 +227,7 @@ describe('Real estate doorway defaults', () => {
   }
 });
 
-describe('Kiwi listing URL prefill', () => {
+describe('Picamo listing URL prefill', () => {
   it('fills the property source field from a public link and ignores invalid links', () => {
     const page = Object.assign(Object.create(BoardsComponent.prototype), { wizardUrl: signal('') });
     page.prefillRequestedListingUrl('https://example.com/homes/123');
@@ -262,7 +262,7 @@ describe('Kiwi listing URL prefill', () => {
     }));
   });
 
-  it('returns to the owner profile when a Kiwi-launched property wizard is closed', async () => {
+  it('returns to the owner profile when a Picamo-launched property wizard is closed', async () => {
     const navigateByUrl = jasmine.createSpy('navigateByUrl').and.resolveTo(true);
     const page: any = Object.assign(Object.create(BoardsComponent.prototype), {
       wizardPhotoStoryMode: () => false,

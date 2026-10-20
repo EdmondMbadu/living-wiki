@@ -258,7 +258,7 @@ describe('board privacy and video creation', () => {
 });
 
 describe('public owner gallery', () => {
-  it('reloads a handle-based profile by owner ID so Kiwi boards with a different stored handle appear', async () => {
+  it('reloads a handle-based profile by owner ID so Picamo boards with a different stored handle appear', async () => {
     const component = harness();
     component.boards.set([{ id: 'older', ownerUserId: 'edmond-uid', ownerPublicSlug: 'edmond-mbadu' }]);
     component.publicOwnerUid = signal(null);

@@ -1,6 +1,6 @@
 export type KiwiListingIntent = 'sale' | 'rental' | 'choose';
 
-/** Keep property creation out of Kiwi's generic describe-a-board pipeline. */
+/** Keep property creation out of Picamo's generic describe-a-board pipeline. */
 export function kiwiListingIntent(request: string): KiwiListingIntent | null {
   const creating = /\b(create|make|build|design|draft|start|set up|turn|convert|want|would like)\b/i.test(request);
   const subject = /\b(board|talk\s*thru|walkthrough|tour|listing)\b/i.test(request);

@@ -3690,7 +3690,7 @@ export const shareBoardByEmail = onCall(
   },
 );
 
-/** A reviewed Kiwi proposal uses the existing board email template, quota, and sender rules. */
+/** A reviewed Picamo proposal uses the existing board email template, quota, and sender rules. */
 export const kiwiEmail = onCall(
   { region: callableRegion, cors: true, secrets: [sendgridApiKey] },
   async (request) => {
@@ -3700,7 +3700,7 @@ export const kiwiEmail = onCall(
       throw new HttpsError('failed-precondition', 'Verify your email address before emailing a board.');
     const proposalId = typeof request.data?.proposalId === 'string' ? request.data.proposalId.trim() : '';
     if (!/^[A-Za-z0-9_-]{1,180}$/.test(proposalId))
-      throw new HttpsError('invalid-argument', 'Choose a valid Kiwi proposal.');
+      throw new HttpsError('invalid-argument', 'Choose a valid Picamo proposal.');
     const ref = db.collection('users').doc(uid).collection('kiwi_actions').doc(proposalId);
     const selected = await db.runTransaction(async (tx) => {
       const snapshot = await tx.get(ref);
@@ -3716,11 +3716,11 @@ export const kiwiEmail = onCall(
       const boardSnapshot = await tx.get(db.collection('boards').doc(action.boardId));
       const board = boardSnapshot.data() as Record<string, unknown> | undefined;
       if (!board || board.owner_user_id !== uid)
-        throw new HttpsError('permission-denied', 'Only the board owner can email this board with Kiwi.');
+        throw new HttpsError('permission-denied', 'Only the board owner can email this board with Picamo.');
       if (!isLinkReadableVisibility(board.visibility))
         throw new HttpsError('failed-precondition', 'Private boards cannot be emailed.');
       if (board.updated_at_iso !== proposal.baseUpdatedAt)
-        throw new HttpsError('aborted', 'The board changed after Kiwi prepared the email. Ask Kiwi to review it again.');
+        throw new HttpsError('aborted', 'The board changed after Picamo prepared the email. Ask Picamo to review it again.');
       tx.update(ref, { status: 'sending', sendingAt: FieldValue.serverTimestamp() });
       return { alreadySent: false, action, board };
     });
@@ -3751,7 +3751,7 @@ export const kiwiEmail = onCall(
       await sendBoardFriendEmail({ recipientEmail: action.email, ...email });
       delivered = true;
       await ref.update({ status: 'applied', appliedAt: FieldValue.serverTimestamp() });
-      logger.info('Board shared by Kiwi email.', { boardId: action.boardId, senderUserId: uid });
+      logger.info('Board shared by Picamo email.', { boardId: action.boardId, senderUserId: uid });
       return { sent: true };
     } catch (error) {
       if (!delivered) {

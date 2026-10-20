@@ -23,17 +23,17 @@
             <p>{{ signedIn() ? ui.hereToHelp : ui.yourAssistant }}</p>
           </div>
         </div>
-        <button type="button" class="kiwi-icon-button kiwi-panel__close" (click)="close()" aria-label="Close Kiwi" i18n-aria-label>
+        <button type="button" class="kiwi-icon-button kiwi-panel__close" (click)="close()" aria-label="Close Picamo" i18n-aria-label>
           <span class="material-symbols-outlined" aria-hidden="true">close</span>
         </button>
       </header>
 
       @if (!signedIn()) {
         <div class="kiwi-panel__guest">
-          <img src="/assets/kiwi/mascot.png" alt="Kiwi, the LivingWiki assistant"  i18n-alt/>
-          <h3 i18n>Make things happen with Kiwi</h3>
+          <img src="/assets/kiwi/mascot.png" alt="Picamo, the LivingWiki assistant"  i18n-alt/>
+          <h3 i18n>Make things happen with Picamo</h3>
           <p i18n>Sign in to talk, create a board, and edit your own boards and cards.</p>
-          <a class="kiwi-primary" routerLink="/sign-in" [queryParams]="signInRedirect()" (click)="close()" i18n>Sign in to talk with Kiwi</a>
+          <a class="kiwi-primary" routerLink="/sign-in" [queryParams]="signInRedirect()" (click)="close()" i18n>Sign in to talk with Picamo</a>
         </div>
       } @else {
         <div class="kiwi-modes" role="tablist" aria-label="Conversation mode" i18n-aria-label>
@@ -51,7 +51,7 @@
             <div><strong>{{ status.title }}</strong><p>{{ status.detail }}</p></div>
           </div>
         }
-        <div class="kiwi-panel__conversation" role="log" aria-live="polite" aria-label="Kiwi conversation" i18n-aria-label>
+        <div class="kiwi-panel__conversation" role="log" aria-live="polite" aria-label="Picamo conversation" i18n-aria-label>
           @if (mode() === 'voice') {
             <div class="kiwi-voice-stage" [class.kiwi-voice-stage--active]="voiceActive()">
               <button type="button" class="kiwi-voice-orb" [class.kiwi-voice-orb--listening]="listening()" [class.kiwi-voice-orb--speaking]="speaking()" (click)="toggleVoiceSession()" [disabled]="!voiceAvailable" [attr.aria-label]="voiceActive() ? ui.endVoiceConversation : ui.startTalkingWithKiwi">
@@ -67,17 +67,17 @@
                   <span class="material-symbols-outlined" aria-hidden="true">{{ voiceActive() ? 'call_end' : 'mic' }}</span>
                   {{ voiceActive() ? ui.endConversation : ui.startTalking }}
                 </button>
-                @if (voiceTranscript()) { <div class="kiwi-live-transcript" aria-label="What Kiwi heard" i18n-aria-label>{{ voiceTranscript() }}</div> }
+                @if (voiceTranscript()) { <div class="kiwi-live-transcript" aria-label="What Picamo heard" i18n-aria-label>{{ voiceTranscript() }}</div> }
               } @else {
-                <p class="kiwi-voice-stage__unavailable" i18n>Voice is unavailable in this browser. Choose Chat to type to Kiwi.</p>
+                <p class="kiwi-voice-stage__unavailable" i18n>Voice is unavailable in this browser. Choose Chat to type to Picamo.</p>
               }
             </div>
           }
           @if (!messages().length) {
             <div class="kiwi-welcome" [class.kiwi-welcome--chat]="mode() === 'chat'">
               @if (mode() === 'chat') {
-                <h3 i18n>Chat with Kiwi</h3>
-                <p i18n>Ask a question or tell Kiwi what you would like to change. You can review any proposed action before it is saved.</p>
+                <h3 i18n>Chat with Picamo</h3>
+                <p i18n>Ask a question or tell Picamo what you would like to change. You can review any proposed action before it is saved.</p>
               } @else {
                 <p i18n>Ask about your boards, plan something new, or just talk.</p>
               }
@@ -128,10 +128,10 @@
         }
         @if (mode() === 'chat') {
           <div class="kiwi-composer">
-            <label class="sr-only" for="kiwi-request" i18n>Ask Kiwi</label>
-            <textarea id="kiwi-request" rows="2" maxlength="4000" placeholder="Message Kiwi…" [value]="draft()" (input)="setDraft($event)" (keydown)="onComposerKeydown($event)" [disabled]="busy() || applying()" i18n-placeholder></textarea>
+            <label class="sr-only" for="kiwi-request" i18n>Ask Picamo</label>
+            <textarea id="kiwi-request" rows="2" maxlength="4000" placeholder="Message Picamo…" [value]="draft()" (input)="setDraft($event)" (keydown)="onComposerKeydown($event)" [disabled]="busy() || applying()" i18n-placeholder></textarea>
             <div class="kiwi-composer__actions">
-              <button type="button" class="kiwi-send" (click)="send()" [disabled]="!draft().trim() || busy() || applying()" aria-label="Send to Kiwi" i18n-aria-label>
+              <button type="button" class="kiwi-send" (click)="send()" [disabled]="!draft().trim() || busy() || applying()" aria-label="Send to Picamo" i18n-aria-label>
                 <span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span>
               </button>
             </div>
@@ -142,7 +142,7 @@
           <div class="kiwi-settings-backdrop" (click)="closeSettings()" aria-hidden="true"></div>
           <div class="kiwi-settings" role="dialog" aria-modal="true" aria-labelledby="kiwi-settings-title">
             <header class="kiwi-settings__header">
-              <div><small i18n>MAKE KIWI YOURS</small><h3 id="kiwi-settings-title" i18n>Name &amp; voice</h3></div>
+              <div><small i18n>MAKE PICAMO YOURS</small><h3 id="kiwi-settings-title" i18n>Name &amp; voice</h3></div>
               <button type="button" class="kiwi-icon-button" (click)="closeSettings()" aria-label="Close name and voice settings" i18n-aria-label><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
             </header>
             <div class="kiwi-settings__body">
@@ -186,7 +186,7 @@
         @if (error()) { <p class="kiwi-error kiwi-studio__error" role="alert">{{ error() }}</p> }
         <div class="kiwi-studio__body">
           <div class="kiwi-studio__intro"><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span><p>{{ studioReady() ? ui.reviewAndEdit : busy() || imageLoading() ? ui.watchKiwi : ui.needsMoreDetail }}</p></div>
-          @if (boardAwaitingOpen()) { <p class="kiwi-studio__saved-notice" role="status" i18n>The board was saved. Kiwi is checking that it opens in your workspace.</p> }
+          @if (boardAwaitingOpen()) { <p class="kiwi-studio__saved-notice" role="status" i18n>The board was saved. Picamo is checking that it opens in your workspace.</p> }
           <fieldset class="kiwi-studio__editing" [disabled]="!!boardAwaitingOpen()">
           <div class="kiwi-studio__meta">
             <label i18n>Board title<input type="text" maxlength="90" [value]="board.title" (input)="setStudioField('title', $event)" /></label>
@@ -237,7 +237,7 @@
         <footer class="kiwi-studio__footer">
           <div class="kiwi-studio__conversation">
             <div class="kiwi-studio__voice"><button type="button" (click)="toggleVoiceSession()" [disabled]="!voiceAvailable" [attr.aria-label]="voiceActive() ? ui.endKiwiVoiceConversation : ui.talkToKiwi"><span class="material-symbols-outlined" aria-hidden="true">{{ voiceActive() ? 'graphic_eq' : 'mic' }}</span></button><span>{{ voiceStatus() }}</span></div>
-            <div class="kiwi-studio__chat"><label class="sr-only" for="kiwi-studio-message" i18n>Ask Kiwi to change this draft</label><input id="kiwi-studio-message" type="text" maxlength="4000" placeholder="Ask Kiwi to change this draft…" [value]="studioMessage()" (input)="setStudioMessage($event)" (keydown)="onStudioMessageKeydown($event)" [disabled]="!voiceActive() && (busy() || applying())"  i18n-placeholder/><button type="button" (click)="sendStudioMessage()" [disabled]="!studioMessage().trim() || (!voiceActive() && (busy() || applying()))" aria-label="Send draft change to Kiwi" i18n-aria-label><span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span></button></div>
+            <div class="kiwi-studio__chat"><label class="sr-only" for="kiwi-studio-message" i18n>Ask Picamo to change this draft</label><input id="kiwi-studio-message" type="text" maxlength="4000" placeholder="Ask Picamo to change this draft…" [value]="studioMessage()" (input)="setStudioMessage($event)" (keydown)="onStudioMessageKeydown($event)" [disabled]="!voiceActive() && (busy() || applying())"  i18n-placeholder/><button type="button" (click)="sendStudioMessage()" [disabled]="!studioMessage().trim() || (!voiceActive() && (busy() || applying()))" aria-label="Send draft change to Picamo" i18n-aria-label><span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span></button></div>
           </div>
           <button type="button" class="kiwi-primary" (click)="apply()" [disabled]="!proposal() || !studioReady() || imageLoading() || !board.cards.length || !studioHasImage() || applying() || busy()">{{ applying() ? (boardAwaitingOpen() ? ui.opening : ui.creating) : boardAwaitingOpen() ? ui.openSavedBoard : ui.createBoard }}</button>
         </footer>

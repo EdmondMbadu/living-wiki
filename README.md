@@ -74,7 +74,7 @@ production build fails on missing or duplicate translations, and `i18n:check` ad
 rejects stale message IDs or changed placeholders.
 
 Spanish copy is neutral Latin American Spanish (`es-419`) and addresses the reader with *tú*
-(never *usted* or *vosotros*). Product names such as LivingWiki, TalkThru, Kiwi, and plan names
+(never *usted* or *vosotros*). Product names such as LivingWiki, TalkThru, Picamo, and plan names
 stay in English. `python3 scripts/translate-angular-catalog.py es-419` drafts any missing entries.
 
 To add another language, add it to `src/app/i18n/locales.ts`, `angular.json`, the catalog

@@ -1,6 +1,6 @@
-# Kiwi realtime voice
+# Picamo realtime voice
 
-Kiwi uses its own ElevenLabs agent (`agent_7401m3a84gbde8hvd5emmmnckexw`). It is separate from the shared Talking Card agent. The Firebase callable `kiwiVoiceSession` issues a short-lived signed WebSocket URL to a signed-in user. The browser keeps one `@elevenlabs/client` voice conversation open and sends the saved assistant name and voice preference into that session.
+Picamo uses its own ElevenLabs agent (`agent_7401m3a84gbde8hvd5emmmnckexw`). It is separate from the shared Talking Card agent. The Firebase callable `kiwiVoiceSession` issues a short-lived signed WebSocket URL to a signed-in user. The browser keeps one `@elevenlabs/client` voice conversation open and sends the saved assistant name and voice preference into that session.
 
 The agent has two client tools:
 
@@ -9,7 +9,7 @@ The agent has two client tools:
 
 The voice connection stays active while `kiwiTalk` streams a visible board draft. `kiwiTalk` stores a pending proposal; nothing is written to a board until `kiwiApply` runs. Chat mode continues to use `kiwiTalk` directly. Voice choice previews still use `kiwiSpeak`.
 
-For new boards, Kiwi defaults to **Describe it** and asks for a subject when none is supplied. The draft shows its cards as they stream in. It searches for relevant card images using the existing board image search and creates labeled original illustrations through `generateBoardCardImage` when a match is unavailable. At most six missing images are generated automatically; users can retry individual cards. The Create button waits for image processing and requires at least one image. Generated images are uploaded under the signed-in user's board media path on approval, then `kiwiApply` stores their URLs in the board and card records. Empty card lists are rejected server-side. Real estate requests open the listing wizard for source URLs and real property photos; More board types opens the existing wizard.
+For new boards, Picamo defaults to **Describe it** and asks for a subject when none is supplied. The draft shows its cards as they stream in. It searches for relevant card images using the existing board image search and creates labeled original illustrations through `generateBoardCardImage` when a match is unavailable. At most six missing images are generated automatically; users can retry individual cards. The Create button waits for image processing and requires at least one image. Generated images are uploaded under the signed-in user's board media path on approval, then `kiwiApply` stores their URLs in the board and card records. Empty card lists are rejected server-side. Real estate requests open the listing wizard for source URLs and real property photos; More board types opens the existing wizard.
 
 Production Firebase needs `ELEVENLABS_KIWI_AGENT_ID` set to the agent ID above and the existing `ELEVENLABS_API_KEY` secret. `functions/.env.living-atlas-7622a` is ignored by Git and has the production agent ID on the deployment host.
 

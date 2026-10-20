@@ -3,9 +3,22 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { WorkspaceNavigationService } from '../workspace-navigation/workspace-navigation';
-import { KiwiComponent } from './kiwi';
+import { assistantDisplayName, KiwiComponent } from './kiwi';
 
-describe('Kiwi conversation interface', () => {
+describe('Picamo name migration', () => {
+  it('uses Picamo for guests and existing accounts with the former default name', () => {
+    for (const name of [undefined, '', 'Kiwi', ' kiwi ', 'KIWI']) {
+      expect(assistantDisplayName(name)).toBe('Picamo');
+    }
+  });
+
+  it('preserves an assistant name chosen by the user', () => {
+    expect(assistantDisplayName('Cleo')).toBe('Cleo');
+    expect(assistantDisplayName('Picamo')).toBe('Picamo');
+  });
+});
+
+describe('Picamo conversation interface', () => {
   beforeEach(async () => {
     window.__LIVING_ATLAS_CONFIG__ = { firebase: {
       apiKey: 'test-key', appId: 'test-app', projectId: 'demo-kiwi', authDomain: 'demo-kiwi.firebaseapp.com',
@@ -37,7 +50,7 @@ describe('Kiwi conversation interface', () => {
     fixture.componentInstance.setMode('chat');
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('#kiwi-request')).not.toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('Chat with Kiwi');
+    expect(fixture.nativeElement.textContent).toContain('Chat with Picamo');
   });
 
   it('starts and ends a voice conversation from the prominent control', () => {
@@ -49,13 +62,13 @@ describe('Kiwi conversation interface', () => {
     fixture.componentInstance.toggleVoiceSession();
     fixture.detectChanges();
     expect(fixture.componentInstance.voiceActive()).toBeTrue();
-    expect(fixture.componentInstance.voiceStatus()).toBe('Connecting to Kiwi…');
+    expect(fixture.componentInstance.voiceStatus()).toBe('Connecting to Picamo…');
     expect(fixture.nativeElement.textContent).toContain('End conversation');
 
     fixture.componentInstance.toggleVoiceSession();
     fixture.detectChanges();
     expect(fixture.componentInstance.voiceActive()).toBeFalse();
-    expect(fixture.componentInstance.voiceStatus()).toBe('Talk with Kiwi');
+    expect(fixture.componentInstance.voiceStatus()).toBe('Talk with Picamo');
   });
 
   it('opens name and voice settings, previews voice choices, and stops an active conversation', () => {
@@ -135,7 +148,7 @@ describe('Kiwi conversation interface', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it('renders streamed cards and preserves a title the user edits while Kiwi continues', () => {
+  it('renders streamed cards and preserves a title the user edits while Picamo continues', () => {
     const fixture = TestBed.createComponent(KiwiComponent);
     spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
     const kiwi = fixture.componentInstance;
@@ -197,7 +210,7 @@ describe('Kiwi conversation interface', () => {
     expect(fixture.nativeElement.textContent).toContain('AI illustration');
   });
 
-  it('keeps Kiwi work visible above the voice conversation and clears it when finished', () => {
+  it('keeps Picamo work visible above the voice conversation and clears it when finished', () => {
     const fixture = TestBed.createComponent(KiwiComponent);
     spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
     const kiwi = fixture.componentInstance;
@@ -206,7 +219,7 @@ describe('Kiwi conversation interface', () => {
     fixture.detectChanges();
 
     const status = fixture.nativeElement.querySelector('.kiwi-work-status--panel') as HTMLElement;
-    expect(status.textContent).toContain('Kiwi is working');
+    expect(status.textContent).toContain('Picamo is working');
     expect(status.compareDocumentPosition(fixture.nativeElement.querySelector('.kiwi-panel__conversation'))
       & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
@@ -262,7 +275,7 @@ describe('Kiwi conversation interface', () => {
     expect(fixture.nativeElement.querySelector('.kiwi-work-status--studio').textContent)
       .toContain('Finding photos for your cards…');
     expect(fixture.nativeElement.querySelector('.kiwi-studio__intro').textContent)
-      .toContain('Watch Kiwi fill this board in');
+      .toContain('Watch Picamo fill this board in');
 
     kiwi.imageChoosing.set(0);
     fixture.detectChanges();

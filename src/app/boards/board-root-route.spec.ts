@@ -24,7 +24,7 @@ describe('boards root route', () => {
     })).toBeFalse();
   });
 
-  it('keeps Kiwi property handoffs on the launch route until the wizard opens', () => {
+  it('keeps Picamo property handoffs on the launch route until the wizard opens', () => {
     expect(shouldCanonicalizeBoardsRootRoute({ ...context, createQuery: 'real-estate' })).toBeFalse();
     expect(shouldCanonicalizeBoardsRootRoute({ ...context, createQuery: 'rental' })).toBeFalse();
   });

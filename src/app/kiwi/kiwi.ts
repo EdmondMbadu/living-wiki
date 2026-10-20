@@ -12,6 +12,11 @@ import { KiwiBoardRefreshService } from './kiwi-board-refresh.service';
 import kiwiVoices from '../../../functions/src/kiwi-voices.json';
 import { kiwiListingIntent, kiwiListingUrl, type KiwiListingIntent } from './kiwi-listing-request';
 
+export function assistantDisplayName(name?: string): string {
+  const stored = name?.trim();
+  return !stored || stored.toLowerCase() === 'kiwi' ? 'Picamo' : stored;
+}
+
 type KiwiMessage = { id: number; role: 'user' | 'assistant'; text: string };
 type KiwiCardDraft = { title: string; subtitle: string; notes: string; type: string; imageUrl?: string; imageSource?: 'search' | 'generated' };
 type KiwiBoardDraft = { kind: 'create_board'; title: string; description: string; tone: string; visibility: string; cards: KiwiCardDraft[] };
@@ -33,14 +38,14 @@ export class KiwiComponent {
   readonly ui = {
     openPrefix: $localize`Open `,
     askPrefix: $localize`Ask `,
-    meetKiwi: $localize`Meet Kiwi`,
+    meetKiwi: $localize`Meet Picamo`,
     assistantPrefix: $localize`Assistant `,
     editPrefix: $localize`Edit name and voice of `,
     hereToHelp: $localize`Here to talk and help`,
     yourAssistant: $localize`Your LivingWiki assistant`,
     endVoiceConversation: $localize`End voice conversation`,
-    startTalkingWithKiwi: $localize`Start talking with Kiwi`,
-    speakNaturally: $localize`Speak naturally. Kiwi will answer out loud.`,
+    startTalkingWithKiwi: $localize`Start talking with Picamo`,
+    speakNaturally: $localize`Speak naturally. Picamo will answer out loud.`,
     haveConversation: $localize`Have a conversation with your LivingWiki assistant.`,
     voicePrefix: $localize`Voice: `,
     endConversation: $localize`End conversation`,
@@ -58,8 +63,8 @@ export class KiwiComponent {
     readyToReview: $localize`READY TO REVIEW`,
     takingShape: $localize`TAKING SHAPE`,
     reviewAndEdit: $localize`Review and edit anything before you create it.`,
-    watchKiwi: $localize`Watch Kiwi fill this board in. You can edit it while it works.`,
-    needsMoreDetail: $localize`Kiwi needs more detail to finish this draft. Tell it what to add in the box below.`,
+    watchKiwi: $localize`Watch Picamo fill this board in. You can edit it while it works.`,
+    needsMoreDetail: $localize`Picamo needs more detail to finish this draft. Tell it what to add in the box below.`,
     untitledCard: $localize`Untitled card`,
     removeCardPrefix: $localize`Remove card `,
     photoForPrefix: $localize`Photo for `,
@@ -73,10 +78,10 @@ export class KiwiComponent {
     photoChoicesForPrefix: $localize`Photo choices for `,
     usePrefix: $localize`Use `,
     readyForFirstCard: $localize`This board is ready for its first card.`,
-    preparingCards: $localize`Kiwi is preparing the first cards…`,
-    addCardPrompt: $localize`Add a card here or ask Kiwi to fill the board.`,
-    endKiwiVoiceConversation: $localize`End Kiwi voice conversation`,
-    talkToKiwi: $localize`Talk to Kiwi`,
+    preparingCards: $localize`Picamo is preparing the first cards…`,
+    addCardPrompt: $localize`Add a card here or ask Picamo to fill the board.`,
+    endKiwiVoiceConversation: $localize`End Picamo voice conversation`,
+    talkToKiwi: $localize`Talk to Picamo`,
     opening: $localize`Opening…`,
     creating: $localize`Creating…`,
     openSavedBoard: $localize`Open saved board`,
@@ -121,8 +126,8 @@ export class KiwiComponent {
   private proposalTeamId = '';
 
   readonly open = signal(false);
-  readonly name = signal('Kiwi');
-  readonly nameDraft = signal('Kiwi');
+  readonly name = signal('Picamo');
+  readonly nameDraft = signal('Picamo');
   readonly voices = kiwiVoices;
   readonly voiceId = signal(kiwiVoices[0].id);
   readonly voiceDraft = signal(kiwiVoices[0].id);
@@ -156,26 +161,26 @@ export class KiwiComponent {
   readonly imageGenerating = signal<number | null>(null);
   readonly workStatus = computed(() => {
     if (this.applying()) return this.boardAwaitingOpen()
-      ? { title: $localize`Opening your board`, detail: $localize`Your board is saved. Kiwi is checking that it opens correctly.` }
+      ? { title: $localize`Opening your board`, detail: $localize`Your board is saved. Picamo is checking that it opens correctly.` }
       : this.proposal()?.kind === 'create_board'
-        ? { title: $localize`Saving your board`, detail: $localize`Kiwi is saving the cards and images. Please wait.` }
-        : { title: $localize`Saving your change`, detail: $localize`Kiwi is applying your approved change.` };
+        ? { title: $localize`Saving your board`, detail: $localize`Picamo is saving the cards and images. Please wait.` }
+        : { title: $localize`Saving your change`, detail: $localize`Picamo is applying your approved change.` };
     if (this.busy() && this.boardBuildPhase() === 'research')
-      return { title: $localize`Creating your board`, detail: $localize`Kiwi is researching your idea and writing the cards. This can take a minute.` };
+      return { title: $localize`Creating your board`, detail: $localize`Picamo is researching your idea and writing the cards. This can take a minute.` };
     if (this.busy() && this.boardBuildPhase() === 'cards')
-      return { title: $localize`Adding cards to your draft`, detail: $localize`The cards are appearing as Kiwi finishes them.` };
+      return { title: $localize`Adding cards to your draft`, detail: $localize`The cards are appearing as Picamo finishes them.` };
     if (this.busy() && this.boardBuildPhase() === 'review')
-      return { title: $localize`Preparing your board for review`, detail: $localize`Kiwi is checking the cards and images.` };
+      return { title: $localize`Preparing your board for review`, detail: $localize`Picamo is checking the cards and images.` };
     if (this.busy() && this.planningCreation())
-      return { title: $localize`Updating your board draft`, detail: $localize`Kiwi is preparing the changes you requested.` };
+      return { title: $localize`Updating your board draft`, detail: $localize`Picamo is preparing the changes you requested.` };
     if (this.imageGenerating() !== null)
-      return { title: $localize`Creating an illustration`, detail: $localize`Kiwi is generating an image for this card.` };
+      return { title: $localize`Creating an illustration`, detail: $localize`Picamo is generating an image for this card.` };
     if (this.imageChoosing() !== null)
-      return { title: $localize`Searching for card photos`, detail: $localize`Kiwi is looking for photo choices for this card.` };
+      return { title: $localize`Searching for card photos`, detail: $localize`Picamo is looking for photo choices for this card.` };
     if (this.imageLoading())
-      return { title: $localize`Adding images to your board`, detail: this.imageNotice() || $localize`Kiwi is finding photos for the cards.` };
+      return { title: $localize`Adding images to your board`, detail: this.imageNotice() || $localize`Picamo is finding photos for the cards.` };
     if (this.busy())
-      return { title: $localize`Kiwi is working`, detail: $localize`Preparing a response. Please wait.` };
+      return { title: $localize`Picamo is working`, detail: $localize`Preparing a response. Please wait.` };
     return null;
   });
   readonly studioMessage = signal('');
@@ -197,10 +202,10 @@ export class KiwiComponent {
   readonly voiceStatus = computed(() => {
     switch (this.voicePhase()) {
       case 'listening': return 'Listening…';
-      case 'thinking': return 'Connecting to Kiwi…';
-      case 'speaking': return 'Kiwi is speaking…';
+      case 'thinking': return 'Connecting to Picamo…';
+      case 'speaking': return 'Picamo is speaking…';
       case 'review': return 'Review the proposed change below';
-      default: return 'Talk with Kiwi';
+      default: return 'Talk with Picamo';
     }
   });
 
@@ -209,8 +214,8 @@ export class KiwiComponent {
       const uid = this.auth.uid();
       if (!uid) {
         this.stopVoiceSession();
-        this.name.set('Kiwi');
-        this.nameDraft.set('Kiwi');
+        this.name.set('Picamo');
+        this.nameDraft.set('Picamo');
         this.voiceId.set(kiwiVoices[0].id);
         this.voiceDraft.set(kiwiVoices[0].id);
         this.settingsOpen.set(false);
@@ -323,8 +328,8 @@ export class KiwiComponent {
       const callable = httpsCallable<Record<string, never>, { name: string; voiceId?: string }>(this.functions, 'kiwiPreferences');
       const { data } = await callable({});
       if (this.auth.uid() === uid) {
-        this.name.set(data.name || 'Kiwi');
-        this.nameDraft.set(data.name || 'Kiwi');
+        this.name.set(assistantDisplayName(data.name));
+        this.nameDraft.set(assistantDisplayName(data.name));
         const selectedVoice = this.voices.find((voice) => voice.id === data.voiceId)?.id || this.voices[0].id;
         this.voiceId.set(selectedVoice);
         this.voiceDraft.set(selectedVoice);
@@ -333,7 +338,7 @@ export class KiwiComponent {
     } catch {
       if (this.auth.uid() === uid) {
         this.loadedForUid = uid;
-        if (this.open()) this.error.set($localize`Kiwi could not connect. Please refresh after the service is available.`);
+        if (this.open()) this.error.set($localize`Picamo could not connect. Please refresh after the service is available.`);
       }
     } finally { if (this.loadingNameForUid === uid) this.loadingNameForUid = ''; }
   }
@@ -367,7 +372,7 @@ export class KiwiComponent {
       const callable = httpsCallable<{ operation: string; name: string; voiceId: string },
         { name: string; voiceId: string }>(this.functions, 'kiwiPreferences');
       const { data } = await callable({ operation: 'setPreferences', name: next, voiceId: this.voiceDraft() });
-      this.name.set(data.name);
+      this.name.set(assistantDisplayName(data.name));
       this.voiceId.set(data.voiceId);
       this.closeSettings();
     } catch (error) {
@@ -484,7 +489,7 @@ export class KiwiComponent {
     this.listingUrlDraft.set(kiwiListingUrl(request) || '');
     const reply = intent === 'choose'
       ? $localize`Is this property for sale or for rent?`
-      : $localize`Paste the public listing URL below. Kiwi will open the TalkThru setup with the link filled in. You can choose listing photos or upload your own there.`;
+      : $localize`Paste the public listing URL below. Picamo will open the TalkThru setup with the link filled in. You can choose listing photos or upload your own there.`;
     this.messages.update((items) => [...items, { id: this.nextMessageId++, role: 'assistant', text: reply }]);
     this.conversation?.sendContextualUpdate(reply, { contextId: 'kiwi-last-action' });
   }
@@ -837,7 +842,7 @@ export class KiwiComponent {
     } catch (error) {
       if (sequence !== this.streamSequence || controller.signal.aborted) return;
       if (this.planningCreation()) this.imageNotice.set('');
-      this.error.set(this.errorText(error, $localize`Kiwi could not answer. Please try again.`));
+      this.error.set(this.errorText(error, $localize`Picamo could not answer. Please try again.`));
       if (fromVoiceTool && this.conversation) this.conversation.sendContextualUpdate(
         'The requested change failed. Tell the user and offer to retry.', { contextId: 'kiwi-last-action' });
     } finally {
@@ -906,7 +911,7 @@ export class KiwiComponent {
       draft: { ...draft, cards: draft.cards.map((card) => ({ ...card,
         imageUrl: card.imageUrl?.startsWith('data:') ? '' : card.imageUrl })) } });
     if (sequence !== this.streamSequence) return;
-    if (!staged.proposal) throw new Error($localize`Kiwi could not prepare this board for review. Please try again.`);
+    if (!staged.proposal) throw new Error($localize`Picamo could not prepare this board for review. Please try again.`);
     this.proposal.set(staged.proposal);
     this.proposalTeamId = teamId;
     if (staged.proposal.draft) this.mergeStudioDraft(staged.proposal.draft);
@@ -923,7 +928,7 @@ export class KiwiComponent {
     const proposal = this.proposal();
     if (!proposal || this.applying() || !this.functions) return;
     if (proposal.kind === 'create_board' && this.imageLoading()) {
-      this.error.set($localize`Kiwi is still adding photos. Wait until the board draft is ready.`);
+      this.error.set($localize`Picamo is still adding photos. Wait until the board draft is ready.`);
       return;
     }
     this.voiceTranscript.set('');
@@ -983,7 +988,7 @@ export class KiwiComponent {
       if (this.conversation) this.conversation.sendContextualUpdate(
         confirmation, { contextId: 'kiwi-last-action' });
     } catch (error) {
-      this.error.set(this.errorText(error, $localize`The change could not be saved. Ask Kiwi to review it again.`));
+      this.error.set(this.errorText(error, $localize`The change could not be saved. Ask Picamo to review it again.`));
     } finally {
       this.applying.set(false);
     }
@@ -1062,7 +1067,7 @@ export class KiwiComponent {
             }
             void this.send(request, true);
             return specialized
-              ? 'The property or tour flow is opening on screen. If Kiwi asks for a listing URL, ask the user to paste it into the visible field.'
+              ? 'The property or tour flow is opening on screen. If Picamo asks for a listing URL, ask the user to paste it into the visible field.'
               : 'The request is being prepared on screen. The user will review it before it is saved.';
           },
           kiwi_apply: () => {
@@ -1112,7 +1117,7 @@ export class KiwiComponent {
         },
         onError: (message) => {
           if (attempt !== this.voiceAttempt) return;
-          this.error.set(String(message || $localize`Kiwi voice was interrupted. Please try again.`));
+          this.error.set(String(message || $localize`Picamo voice was interrupted. Please try again.`));
         },
       });
       if (attempt !== this.voiceAttempt || !this.voiceActive()) {
@@ -1126,7 +1131,7 @@ export class KiwiComponent {
     } catch (error) {
       if (attempt !== this.voiceAttempt) return;
       this.stopVoiceSession();
-      this.error.set(this.errorText(error, $localize`Kiwi voice could not start. Check microphone access and try again.`));
+      this.error.set(this.errorText(error, $localize`Picamo voice could not start. Check microphone access and try again.`));
     }
   }
 
@@ -1181,7 +1186,7 @@ export class KiwiComponent {
   private errorText(error: unknown, fallback: string): string {
     // Server errors are written in English; Portuguese and Spanish show the localized fallback.
     if (this.localeId === 'pt-BR' || this.localeId === 'es-419') return fallback;
-    const message = error instanceof Error ? error.message : '';
+    const message = error instanceof Error ? error.message.replace(/\bKiwi\b/g, 'Picamo') : '';
     return message.includes(': ') ? message.slice(message.indexOf(': ') + 2) : message || fallback;
   }
 

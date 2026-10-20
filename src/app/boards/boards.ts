@@ -22509,7 +22509,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
       // Older profile URLs contain only a handle. Resolve its owner from the
       // first page, then page by owner ID so boards with a different stored
-      // handle (including boards made by Kiwi) appear on the same profile.
+      // handle (including boards made by Picamo) appear on the same profile.
       if (publicOwnerRouteActive && publicOwnerSlug && !publicOwnerUid && loaded.length) {
         await this.resolvePublicOwnerRouteUid(loadSequence);
         if (loadSequence !== this.boardLoadSequence) return;
@@ -22929,7 +22929,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           : items.map((item, index) => index === existing ? board : item);
       });
     } catch {
-      this.boardsSyncError.set($localize`Kiwi saved this board, but the latest version could not be loaded. Refresh to try again.`);
+      this.boardsSyncError.set($localize`Picamo saved this board, but the latest version could not be loaded. Refresh to try again.`);
     }
   }
 

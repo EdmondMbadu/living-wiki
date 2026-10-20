@@ -1,5 +1,5 @@
 import boardContentLimits from './board-content-limits.json';
-/** Pure, deliberately small edit surface for Kiwi. Never apply model JSON to a board directly. */
+/** Pure, deliberately small edit surface for Picamo. Never apply model JSON to a board directly. */
 export type KiwiCardDraft = {
   title: string;
   subtitle: string;

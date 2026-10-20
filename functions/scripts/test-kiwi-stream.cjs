@@ -20,4 +20,4 @@ const complete = streamedBoardPreview(response);
 assert.deepEqual(complete.cards.map((card) => card.title), ['Soup', 'Salad']);
 assert.equal(complete.cards[0].notes, 'With herbs');
 assert.equal(streamedBoardPreview('{"action":{"kind":"update_board","cards":[]}'), null);
-console.log('Kiwi progressive board parsing passed.');
+console.log('Picamo progressive board parsing passed.');

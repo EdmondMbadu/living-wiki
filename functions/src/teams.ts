@@ -649,7 +649,7 @@ async function saveListing(teamId: string, uid: string, data: TeamRecord, kiwiAc
     const current = currentDoc.data();
     if (kiwiRef && kiwiDoc?.data()?.['status'] === 'applied') return { board: current };
     if (kiwiRef && kiwiDoc?.data()?.['status'] !== 'pending')
-      throw new HttpsError('failed-precondition', 'This Kiwi proposal is no longer pending.');
+      throw new HttpsError('failed-precondition', 'This Picamo proposal is no longer pending.');
     const baseRef = listingRef(boardId)
       .collection('revisions')
       .doc(String(Number(data.revision) || 0));
@@ -732,7 +732,7 @@ export async function saveGeneratedTeamBoard(uid: string, board: TeamRecord, pat
   });
 }
 
-/** Kiwi uses the same membership, revision, media, and audit path as the team editor. */
+/** Picamo uses the same membership, revision, media, and audit path as the team editor. */
 export async function saveKiwiTeamBoard(
   uid: string,
   teamId: string,

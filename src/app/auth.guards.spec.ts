@@ -38,7 +38,7 @@ describe('boardsRootRedirectGuard', () => {
     expect(runGuard({ create: 'gems' })).toBeTrue();
   });
 
-  it('allows Kiwi property handoffs to reach the boards wizard', () => {
+  it('allows Picamo property handoffs to reach the boards wizard', () => {
     expect(runGuard({ create: 'real-estate', listingUrl: 'https://example.com/home' })).toBeTrue();
     expect(runGuard({ create: 'rental', listingUrl: 'https://example.com/stay' })).toBeTrue();
   });

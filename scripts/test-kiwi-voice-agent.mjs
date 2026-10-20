@@ -7,7 +7,7 @@ if (!apiKey || !agentId) throw new Error('Provide the ElevenLabs key on stdin an
 const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?${new URLSearchParams({ agent_id: agentId, environment: 'production' })}`, {
   headers: { 'xi-api-key': apiKey }, signal: AbortSignal.timeout(12000),
 });
-if (!response.ok) throw new Error(`Could not issue a Kiwi session: ${response.status}`);
+if (!response.ok) throw new Error(`Could not issue a Picamo session: ${response.status}`);
 const { signed_url: signedUrl } = await response.json();
 if (typeof signedUrl !== 'string') throw new Error('No signed URL returned.');
 let sawTool = false;
@@ -17,7 +17,7 @@ let resolveDone;
 const done = new Promise((resolve) => { resolveDone = resolve; });
 const conversation = await Conversation.startSession({
   signedUrl, connectionType: 'websocket', textOnly: true,
-  dynamicVariables: { assistant_name: 'Kiwi' },
+  dynamicVariables: { assistant_name: 'Picamo' },
   clientTools: {
     kiwi_request: ({ request }) => {
       sawTool = typeof request === 'string' && /board/i.test(request);
@@ -25,7 +25,7 @@ const conversation = await Conversation.startSession({
       resolveDone();
       return 'The board proposal is being prepared on screen.';
     },
-    kiwi_apply: () => { throw new Error('Kiwi must not save without approval.'); },
+    kiwi_apply: () => { throw new Error('Picamo must not save without approval.'); },
   },
   onMessage: ({ role, message }) => {
     if (role === 'agent' && String(message).trim()) {
@@ -45,10 +45,10 @@ conversation.sendUserMessage('Please make a private board about my favorite walk
 let timeout;
 try {
   await Promise.race([done, new Promise((_, reject) => {
-    timeout = setTimeout(() => reject(new Error('Kiwi did not call kiwi_request within 20 seconds.')), 20000);
+    timeout = setTimeout(() => reject(new Error('Picamo did not call kiwi_request within 20 seconds.')), 20000);
   })]);
 } finally { clearTimeout(timeout); }
 await new Promise((resolve) => setTimeout(resolve, 1200));
 await conversation.endSession();
 if (!sawTool || !sawAgent) throw new Error(`Incomplete response: tool=${sawTool}, agent=${sawAgent}`);
-console.log('Kiwi voice agent smoke test passed.');
+console.log('Picamo voice agent smoke test passed.');

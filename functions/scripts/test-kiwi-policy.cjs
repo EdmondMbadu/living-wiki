@@ -27,7 +27,7 @@ test('team board edits require matching team and active draft status', () => {
   assert.equal(kiwiCanEditTeamBoard('team-a', { ...board, team_status: 'archived' }), false);
 });
 
-test('Kiwi proposals use Brazilian Portuguese when requested', () => {
+test('Picamo proposals use Brazilian Portuguese when requested', () => {
   const action = normalizeKiwiAction({ kind: 'create_board', title: 'Meu bairro', visibility: 'public',
     cards: [{ title: 'Praça central', notes: 'Um lugar para passear' }] });
   assert.ok(action && action.kind === 'create_board');
@@ -37,7 +37,7 @@ test('Kiwi proposals use Brazilian Portuguese when requested', () => {
     ['Título: Meu bairro', 'Descrição: (nenhuma)', 'Cor: verde-azulado', 'Visibilidade: público']);
 });
 
-test('Kiwi proposals use Spanish when requested', () => {
+test('Picamo proposals use Spanish when requested', () => {
   const action = normalizeKiwiAction({ kind: 'create_board', title: 'Mi barrio', visibility: 'unlisted', tone: 'sky',
     cards: [{ title: 'Plaza central', notes: 'Un lugar para pasear' }, { title: 'Mercado' }] });
   assert.ok(action && action.kind === 'create_board');
@@ -62,7 +62,7 @@ test('model output is restricted to named board and card fields', () => {
   assert.equal(normalizeKiwiAction({ kind: 'email_board', boardId: 'board-1', email: 'invalid email' }), null);
 });
 
-test('Kiwi accepts remote card photos and rejects local or unsafe URLs', () => {
+test('Picamo accepts remote card photos and rejects local or unsafe URLs', () => {
   const photo = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Tea.jpg/1400px-Tea.jpg';
   assert.equal(kiwiCardImageUrl(photo), photo);
   assert.equal(kiwiCardImageUrl('https://example.com/tea.jpg'), 'https://example.com/tea.jpg');
@@ -110,7 +110,7 @@ test('board design adds distinct cards while preserving existing cards and owner
   assert.equal(board.cards.length, 1);
 });
 
-test('Kiwi board create/edit/design actions preserve the expanded text limits', () => {
+test('Picamo board create/edit/design actions preserve the expanded text limits', () => {
   const title = 'T'.repeat(240);
   const description = 'D'.repeat(5000);
   for (const kind of ['create_board', 'update_board', 'design_board']) {
