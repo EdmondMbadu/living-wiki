@@ -6475,6 +6475,10 @@
     "source": "No Failed Sources",
     "file": "src/app/library/library.ts"
   },
+  "3063626342971336704": {
+    "source": "38-second introduction · English audio and captions",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "3069422820744216221": {
     "source": "Admin name",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -13370,10 +13374,6 @@
   "520033374999204969": {
     "source": "Your voice library could not be loaded.",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
-  },
-  "5201304859223535581": {
-    "source": "{$START_TAG_SPAN}▶{$CLOSE_TAG_SPAN} Watch the video {$START_TAG_SPAN_1}0:22{$CLOSE_TAG_SPAN}",
-    "file": "src/app/talkthrus/talkthrus.html"
   },
   "5207635742003539443": {
     "source": "Sign in",
@@ -20999,10 +20999,6 @@
     "source": "Uploading your property photos",
     "file": "src/app/boards/boards.ts"
   },
-  "7598744822969908490": {
-    "source": "22-second introduction · English audio and captions",
-    "file": "src/app/talkthrus/talkthrus.html"
-  },
   "76042004992103026": {
     "source": "Sort boards",
     "file": "src/app/boards/boards.html"
@@ -22438,6 +22434,10 @@
   "8045832601562366161": {
     "source": "Failed to clear the persona prompt.",
     "file": "src/app/atlas-persona/atlas-persona.ts"
+  },
+  "804622247712700473": {
+    "source": "{$START_TAG_SPAN}▶{$CLOSE_TAG_SPAN} Watch the video {$START_TAG_SPAN_1}0:38{$CLOSE_TAG_SPAN}",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "8048861536796983212": {
     "source": "Make every video your own",
