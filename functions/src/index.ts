@@ -1,6 +1,7 @@
 export { avatarQaCommand, runAvatarQaCase, recoverAvatarQaCases } from './avatar-qa';
 import { isLinkReadableVisibility } from './board-visibility';
 import { normalizeKiwiAction } from './kiwi-policy';
+import { cityGuidePersonaPrompt, resolveCityGuide } from './city-guide';
 import { removeHiddenBoardFromDiscovery } from './board-discovery';
 import { finalizeBoardWizardCopy, BOARD_COPY_VERSION } from './board-wizard-copy-quality';
 import { repairBoardWizardCopy } from './gemini';
@@ -5213,7 +5214,7 @@ async function generateAtlasNewsletterContent(params: {
       atlasSlug,
       prompt: params.config.prompt,
     }),
-    personaPrompt: typeof params.atlas.persona_prompt === 'string' ? params.atlas.persona_prompt : null,
+    personaPrompt: cityGuidePersonaPrompt(params.atlas, typeof params.atlas.persona_prompt === 'string' ? params.atlas.persona_prompt : null),
   });
   const markdown = response.answer.trim();
   const title = markdown
@@ -16750,16 +16751,17 @@ export const cleanupDeletedAtlasVoice = onDocumentDeleted(
 );
 
 function atlasRuntimeIdentity(atlas: Record<string, unknown>) {
-  const guide = atlas['chat_guide'] && typeof atlas['chat_guide'] === 'object'
+  const guide = resolveCityGuide(atlas) || (atlas['chat_guide'] && typeof atlas['chat_guide'] === 'object'
     ? atlas['chat_guide'] as Record<string, unknown>
-    : null;
+    : null);
   const guideName = textValue(guide?.['name'], 80);
   const atlasName = textValue(atlas['name'], 120);
   const wikiType = normalizeAtlasWikiType(atlas['wiki_type'], {
     hasCityConfig: !!atlas['city_config'] && typeof atlas['city_config'] === 'object',
     hasUniversityConfig: !!atlas['university_config'] && typeof atlas['university_config'] === 'object',
   });
-  const configuredPerspective = normalizeAtlasResponsePerspective(atlas['response_perspective']);
+  const configuredPerspective = guide?.['name'] === 'Picamo' && guide?.['city_persona_override'] !== true
+    ? 'third_person' : normalizeAtlasResponsePerspective(atlas['response_perspective']);
   const identity = buildAtlasIdentityInstruction({
     atlasName,
     guideName,
@@ -16770,9 +16772,9 @@ function atlasRuntimeIdentity(atlas: Record<string, unknown>) {
 }
 
 function atlasRuntimePersonaInstruction(atlas: Record<string, unknown>): string {
-  const guide = atlas['chat_guide'] && typeof atlas['chat_guide'] === 'object'
+  const guide = resolveCityGuide(atlas) || (atlas['chat_guide'] && typeof atlas['chat_guide'] === 'object'
     ? atlas['chat_guide'] as Record<string, unknown>
-    : null;
+    : null);
   const guideName = textValue(guide?.['name'], 80) ?? '';
   const guideLabel = textValue(guide?.['label'], 120) ?? '';
   const guidePrompt = guideName
@@ -16782,9 +16784,9 @@ function atlasRuntimePersonaInstruction(atlas: Record<string, unknown>): string 
         'Stay accurate and source-aware; never fabricate personal memories, citations, dates, or facts.',
       ].join(' ')
     : '';
-  const persona = typeof atlas['persona_prompt'] === 'string'
+  const persona = cityGuidePersonaPrompt(atlas, typeof atlas['persona_prompt'] === 'string'
     ? atlas['persona_prompt'].trim()
-    : '';
+    : '');
   const identityInstruction = atlasRuntimeIdentity(atlas).instruction;
   const personaBudget = Math.max(0, 8000 - identityInstruction.length - 2);
   const personaAndGuide = [guidePrompt, persona].filter(Boolean).join('\n\n').slice(0, personaBudget);
@@ -17047,9 +17049,9 @@ export const createElevenLabsVoiceSession = onCall(
         // it migrates from city-only variables to subject-aware Wiki variables.
         city_context_instruction: runtimeWikiContextInstruction,
         atlas_guide_name: textValue(
-          atlasRecord?.['chat_guide'] && typeof atlasRecord['chat_guide'] === 'object'
+          resolveCityGuide(atlasRecord)?.name || (atlasRecord?.['chat_guide'] && typeof atlasRecord['chat_guide'] === 'object'
             ? (atlasRecord['chat_guide'] as Record<string, unknown>)['name']
-            : null,
+            : null),
           80,
         ) ?? '',
       },

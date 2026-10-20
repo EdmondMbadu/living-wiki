@@ -1,4 +1,4 @@
-<div class="mt-5 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--soft-fill)]">
+<div class="mt-5 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--soft-fill)]" [class.chat-map--compact]="compact">
   <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3">
     <div class="flex min-w-0 items-center gap-2">
       <span class="chat-map-glyph chat-map-glyph--map" aria-hidden="true"></span>
@@ -19,7 +19,7 @@
         <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[var(--surface)] px-5 text-center">
           <span class="chat-map-glyph chat-map-glyph--off" aria-hidden="true"></span>
           <p class="text-sm font-semibold text-[var(--text)]" i18n>Map preview unavailable</p>
-          <p class="max-w-md text-xs leading-5 text-[var(--muted)]" i18n>Open a place from the list.</p>
+          @if (!compact) { <p class="max-w-md text-xs leading-5 text-[var(--muted)]" i18n>Open a place from the list.</p> }
         </div>
       }
     </div>
@@ -57,4 +57,7 @@
       </div>
     </aside>
   </div>
+  @if (compact && displayLocations()[0]; as city) {
+    <a class="chat-map-city-link" [href]="mapLink(city)" target="_blank" rel="noopener noreferrer">{{ city.name }} <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span></a>
+  }
 </div>

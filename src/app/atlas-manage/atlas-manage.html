@@ -1354,6 +1354,12 @@
               @if (chatGuideDraft(atlas); as guideDraft) {
                 <div class="border-t border-[var(--line)] bg-[var(--soft-fill)] px-5 py-4">
                   <div class="grid gap-4">
+                    @if (atlas.wiki_type === 'city' || atlas.city_config?.enabled) {
+                      <label class="flex items-start gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4">
+                        <input type="checkbox" class="mt-1" [checked]="guideDraft.city_persona_override" (change)="updateChatGuideDraft(atlas.id, 'city_persona_override', $any($event.target).checked)" />
+                        <span><strong class="block text-sm" i18n>Use a custom city persona</strong><span class="mt-1 block text-xs text-[var(--muted)]" i18n>City pages use Picamo by default. Enable this to use the guide and persona configured below.</span></span>
+                      </label>
+                    }
                     @if (guideDraft.banner_url) {
                       <div class="overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--surface)]">
                         <img [src]="guideDraft.banner_url" alt="" class="h-32 w-full object-cover" />

@@ -2,6 +2,7 @@ import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { answerFromArticles, answerQuestion, answerWithGoogleSearch, compileKnowledgeEntries, compileWikiArticles, mergeWikiArticle, planArticleMerge, streamAnswerWithGoogleSearch, summarizeTopic } from './gemini';
 import { buildAtlasIdentityInstruction, normalizeAtlasResponsePerspective, normalizeAtlasWikiType } from './atlas-identity';
+import { cityGuidePersonaPrompt, resolveCityGuide } from './city-guide';
 import { db, storage } from './firebase';
 import { extractBlocksFromBuffer, extractBlocksFromUrl } from './extractors';
 import {
@@ -805,11 +806,13 @@ async function loadAtlasChatContext(atlasId: string | null): Promise<{
       persona_prompt?: unknown;
       chat_guide?: unknown;
       city_config?: {
+        enabled?: unknown;
         city_name?: unknown;
         region_name?: unknown;
         country_code?: unknown;
       } | null;
       university_config?: {
+        enabled?: unknown;
         official_name?: unknown;
         city?: unknown;
         state?: unknown;
@@ -818,10 +821,10 @@ async function loadAtlasChatContext(atlasId: string | null): Promise<{
         data_year?: unknown;
       } | null;
     } | undefined;
-    const raw = typeof data?.persona_prompt === 'string' ? data.persona_prompt.trim() : '';
-    const guide = data?.chat_guide && typeof data.chat_guide === 'object'
+    const raw = cityGuidePersonaPrompt(data, typeof data?.persona_prompt === 'string' ? data.persona_prompt : '');
+    const guide = resolveCityGuide(data) || (data?.chat_guide && typeof data.chat_guide === 'object'
       ? data.chat_guide as Record<string, unknown>
-      : null;
+      : null);
     const guideName = typeof guide?.name === 'string' ? guide.name.trim() : '';
     const guideLabel = typeof guide?.label === 'string' ? guide.label.trim() : '';
     const guidePrompt = guideName
@@ -855,7 +858,8 @@ async function loadAtlasChatContext(atlasId: string | null): Promise<{
       hasCityConfig: !!cityConfig && typeof cityConfig === 'object',
       hasUniversityConfig: !!universityConfig && typeof universityConfig === 'object',
     });
-    const configuredPerspective = normalizeAtlasResponsePerspective(data?.response_perspective);
+    const configuredPerspective = guide?.name === 'Picamo' && guide?.city_persona_override !== true
+      ? 'third_person' : normalizeAtlasResponsePerspective(data?.response_perspective);
     const identity = buildAtlasIdentityInstruction({
       atlasName,
       guideName: guideName || null,

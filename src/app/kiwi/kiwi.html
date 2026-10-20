@@ -1,16 +1,16 @@
 @if (!hidden()) {
-  <button class="kiwi-launcher" type="button" (click)="toggle()" [attr.aria-expanded]="open()" aria-controls="kiwi-panel" [attr.aria-label]="ui.openPrefix + name()">
-    <img src="/assets/kiwi/mascot.png" alt="" aria-hidden="true" />
-    <span>{{ signedIn() ? ui.askPrefix + name() : ui.meetKiwi }}</span>
+  <button class="kiwi-launcher" [class.kiwi-launcher--city]="!!cityChat.context()" type="button" (click)="toggle()" [attr.aria-expanded]="cityChat.context() ? null : open()" [attr.aria-controls]="cityChat.context() ? 'city-guide-composer' : 'kiwi-panel'" [attr.aria-label]="cityChat.context() ? ui.askPrefix + cityChat.context()!.name : ui.openPrefix + name()">
+    <img [src]="cityChat.context()?.avatarUrl || '/assets/picamo/avatar.webp'" alt="" aria-hidden="true" />
+    <span>{{ cityChat.context() ? ui.askPrefix + cityChat.context()!.name : signedIn() ? ui.askPrefix + name() : ui.meetKiwi }}</span>
     <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
   </button>
 
-  @if (open()) {
+  @if (open() && !cityChat.context()) {
     <div class="kiwi-backdrop" (click)="close()" aria-hidden="true"></div>
     <section id="kiwi-panel" class="kiwi-panel" role="dialog" [attr.aria-modal]="studioOpen() ? 'false' : 'true'" [attr.aria-label]="ui.assistantPrefix + name()">
       <header class="kiwi-panel__header">
         <div class="kiwi-panel__identity">
-          <img src="/assets/kiwi/mascot.png" alt="" aria-hidden="true" />
+          <img src="/assets/picamo/avatar.webp" alt="" aria-hidden="true" />
           <div>
             <div class="kiwi-panel__name-row">
               <h2>{{ name() }}</h2>
@@ -30,7 +30,7 @@
 
       @if (!signedIn()) {
         <div class="kiwi-panel__guest">
-          <img src="/assets/kiwi/mascot.png" alt="Picamo, the LivingWiki assistant"  i18n-alt/>
+          <img src="/assets/picamo/avatar.webp" alt="Picamo, the LivingWiki assistant"  i18n-alt/>
           <h3 i18n>Make things happen with Picamo</h3>
           <p i18n>Sign in to talk, create a board, and edit your own boards and cards.</p>
           <a class="kiwi-primary" routerLink="/sign-in" [queryParams]="signInRedirect()" (click)="close()" i18n>Sign in to talk with Picamo</a>
@@ -56,7 +56,7 @@
             <div class="kiwi-voice-stage" [class.kiwi-voice-stage--active]="voiceActive()">
               <button type="button" class="kiwi-voice-orb" [class.kiwi-voice-orb--listening]="listening()" [class.kiwi-voice-orb--speaking]="speaking()" (click)="toggleVoiceSession()" [disabled]="!voiceAvailable" [attr.aria-label]="voiceActive() ? ui.endVoiceConversation : ui.startTalkingWithKiwi">
                 <span class="kiwi-voice-orb__halo" aria-hidden="true"></span>
-                <img src="/assets/kiwi/mascot.png" alt="" aria-hidden="true" />
+                <img src="/assets/picamo/avatar.webp" alt="" aria-hidden="true" />
                 <span class="kiwi-voice-orb__mic material-symbols-outlined" aria-hidden="true">{{ voiceActive() ? 'graphic_eq' : 'mic' }}</span>
               </button>
               <h3>{{ voiceStatus() }}</h3>
@@ -174,7 +174,7 @@
     @if (studioOpen() && studioDraft(); as board) {
       <section class="kiwi-studio" role="dialog" aria-modal="true" aria-labelledby="kiwi-studio-title">
         <header class="kiwi-studio__header">
-          <div class="kiwi-studio__heading"><img src="/assets/kiwi/mascot.png" alt="" aria-hidden="true" /><div><small>{{ studioReady() ? ui.readyToReview : ui.takingShape }}</small><h2 id="kiwi-studio-title" i18n>Your board draft</h2></div></div>
+          <div class="kiwi-studio__heading"><img src="/assets/picamo/avatar.webp" alt="" aria-hidden="true" /><div><small>{{ studioReady() ? ui.readyToReview : ui.takingShape }}</small><h2 id="kiwi-studio-title" i18n>Your board draft</h2></div></div>
           <button type="button" class="kiwi-icon-button" (click)="studioOpen.set(false)" aria-label="Close board draft" i18n-aria-label><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
         </header>
         @if (workStatus(); as status) {

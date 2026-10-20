@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, HostListener, LOCALE_ID, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
+import { Component, HostListener, LOCALE_ID, PLATFORM_ID, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc } from 'firebase/firestore';
@@ -11,6 +11,7 @@ import { WorkspaceNavigationService } from '../workspace-navigation/workspace-na
 import { KiwiBoardRefreshService } from './kiwi-board-refresh.service';
 import kiwiVoices from '../../../functions/src/kiwi-voices.json';
 import { kiwiListingIntent, kiwiListingUrl, type KiwiListingIntent } from './kiwi-listing-request';
+import { PicamoCityChatService } from './picamo-city-chat.service';
 
 export function assistantDisplayName(name?: string): string {
   const stored = name?.trim();
@@ -35,6 +36,7 @@ type BoardBuildPhase = 'research' | 'cards' | 'review' | null;
   styleUrl: './kiwi.css',
 })
 export class KiwiComponent {
+  readonly cityChat = inject(PicamoCityChatService);
   readonly ui = {
     openPrefix: $localize`Open `,
     askPrefix: $localize`Ask `,
@@ -211,6 +213,9 @@ export class KiwiComponent {
 
   constructor() {
     effect(() => {
+      if (this.cityChat.context()) untracked(() => this.close());
+    });
+    effect(() => {
       const uid = this.auth.uid();
       if (!uid) {
         this.stopVoiceSession();
@@ -258,6 +263,8 @@ export class KiwiComponent {
   onEscape(): void { if (this.settingsOpen()) this.closeSettings(); else if (this.studioOpen()) this.studioOpen.set(false); else if (this.open()) this.close(); }
 
   toggle(): void {
+    const city = this.cityChat.context();
+    if (city) { city.focus(); return; }
     if (this.open()) { this.close(); return; }
     this.open.set(true);
     this.error.set('');

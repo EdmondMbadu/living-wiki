@@ -144,6 +144,7 @@ export interface UniversityAtlasConfig {
 }
 
 export interface AtlasChatGuideConfig {
+  city_persona_override?: boolean;
   name: string | null;
   label: string | null;
   image_url: string | null;

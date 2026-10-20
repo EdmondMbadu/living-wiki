@@ -238,6 +238,8 @@
 @keyframes kiwi-spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 640px) {
+  .kiwi-launcher.kiwi-launcher--city { left: max(.85rem, env(safe-area-inset-left)); right: auto; bottom: calc(.85rem + env(safe-area-inset-bottom)); min-width: 0; width: 3.3rem; height: 3.3rem; padding: 0.25rem; }
+  .kiwi-launcher--city > span { display: none; }
   .kiwi-launcher { right: .85rem; bottom: calc(4.85rem + env(safe-area-inset-bottom)); height: 3.25rem; min-width: 8.75rem; padding-right: .75rem; }
   .kiwi-launcher img { width: 2.65rem; height: 2.65rem; }
   .kiwi-panel { inset: auto 0 0; width: 100%; max-height: min(88dvh, 48rem); border-radius: 1.5rem 1.5rem 0 0; }

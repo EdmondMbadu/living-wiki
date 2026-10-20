@@ -1,5 +1,6 @@
 <div
   class="min-h-screen bg-[var(--bg)] text-[var(--text)] selection:bg-[var(--accent)] selection:text-[#3c0800]"
+  [class.picamo-city]="isPicamoCity()"
   [attr.lang]="selectedPageLanguageCode()"
   [attr.dir]="pageTextDirection()"
 >
@@ -49,7 +50,7 @@
           (click)="newChat()"
         >
           <span class="material-symbols-outlined text-[1.1rem]">edit_square</span>
-          <span>{{ uiText('newChat') }}</span>
+          <span>{{ isPicamoCity() ? cityGuideText.ask : uiText('newChat') }}</span>
         </button>
       }
 
@@ -64,14 +65,24 @@
           @for (city of sidebarCityWikis(); track city.slug || city.title) {
             <a
               [routerLink]="cityWikiRouterLink(city)"
+              [class.chat-city-sidebar__city--active]="isCurrentSidebarCity(city)"
+              [attr.aria-current]="isCurrentSidebarCity(city) ? 'page' : null"
               class="group flex min-h-[4.25rem] w-full items-center gap-3 rounded-[1.1rem] border border-[var(--line)] bg-[var(--soft-fill)] px-3 py-3 text-[var(--text)] no-underline shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-[var(--soft-fill-strong)]"
             >
               <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--surface)] text-[var(--accent)] shadow-sm">
-                <span class="material-symbols-outlined text-[1.2rem]">location_city</span>
+                @if (citySidebarImage(city); as image) {
+                  <img class="chat-city-sidebar__thumbnail" [src]="image" alt="" loading="lazy" />
+                } @else {
+                  <span class="material-symbols-outlined text-[1.2rem]">location_city</span>
+                }
               </span>
               <span class="min-w-0 flex-1">
                 <span class="block truncate text-[0.98rem] font-black tracking-[-0.02em]">{{ cityWikiLocationLabel(city) }}</span>
-                <span class="mt-1 inline-flex rounded-full border border-[var(--line)] bg-[var(--surface)] px-2 py-0.5 text-[0.62rem] font-black uppercase tracking-[0.14em] text-[var(--muted)]">{{ cityWikiStatusLabel(city) }}</span>
+                @if (cityGuide() && city.countryLabel) {
+                  <span class="chat-city-sidebar__country">{{ city.countryLabel }}</span>
+                } @else {
+                  <span class="mt-1 inline-flex rounded-full border border-[var(--line)] bg-[var(--surface)] px-2 py-0.5 text-[0.62rem] font-black uppercase tracking-[0.14em] text-[var(--muted)]">{{ cityWikiStatusLabel(city) }}</span>
+                }
               </span>
               <span class="material-symbols-outlined shrink-0 rounded-full border border-[var(--line)] bg-[var(--surface)] p-1 text-[1rem] text-[var(--muted)] transition group-hover:translate-x-0.5 group-hover:border-[var(--accent)]/30 group-hover:text-[var(--accent)]">chevron_right</span>
             </a>
@@ -722,8 +733,14 @@
                       <span class="chat-city-landing-hero__wash" aria-hidden="true"></span>
                       <div class="chat-city-landing-hero__content">
                         <p class="chat-city-landing-hero__eyebrow">{{ landingHeroEyebrow() }}</p>
-                        <h2>{{ currentWikiName() || uiText('askThisWiki') }}</h2>
-                        <p class="chat-city-landing-hero__tagline">{{ landingHeroTagline() }}</p>
+                        @if (isPicamoCity()) {
+                          <h2 class="picamo-city-title"><span>{{ cityGuideText.knows }}</span><strong>{{ currentWikiName() }}.</strong></h2>
+                          <p class="chat-city-landing-hero__tagline">{{ cityCampaignTagline() }}</p>
+                          <p class="picamo-city-introduction">{{ cityGuideText.introduction }}</p>
+                        } @else {
+                          <h2>{{ currentWikiName() || uiText('askThisWiki') }}</h2>
+                          <p class="chat-city-landing-hero__tagline">{{ landingHeroTagline() }}</p>
+                        }
 
                         @if (cityHeroFacts().length) {
                           <div class="chat-city-landing-hero__facts" [attr.aria-label]="templateText.message8 + currentWikiName()">
@@ -744,6 +761,9 @@
                           </div>
                         }
                       </div>
+                      @if (isPicamoCity()) {
+                        <img class="picamo-city-mascot" [src]="picamoCityAsset" width="662" height="900" alt="Picamo welcoming you with a city map" i18n-alt fetchpriority="high" />
+                      }
                     </section>
                   } @else {
                   <div class="chat-city-hero-sticker mt-3">
@@ -809,9 +829,16 @@
                   <p class="chat-hero-sub mt-2">{{ heroPromptText() }}</p>
                 }
 
-                <div class="mt-5 w-full max-w-3xl" [class.chat-city-landing-composer]="isCityLandingPage()">
+                <div class="mt-5 w-full max-w-3xl" [attr.id]="cityGuide() ? 'city-guide-composer' : null" [class.chat-city-landing-composer]="isCityLandingPage()">
                   @if (isCityLandingPage()) {
-                    <h3 class="chat-city-landing-composer__title" i18n>What would you like to know?</h3>
+                    @if (isPicamoCity()) {
+                      <div class="picamo-composer-heading">
+                        <img src="/assets/picamo/avatar.webp" width="52" height="52" alt="" />
+                        <div><p>{{ cityGuideText.ask }}</p><h3 class="chat-city-landing-composer__title">{{ cityGuideText.explore }}</h3></div>
+                      </div>
+                    } @else {
+                      <h3 class="chat-city-landing-composer__title" i18n>What would you like to know?</h3>
+                    }
                   }
                   <div class="chat-premium-composer" [class.chat-premium-composer--landing]="isCityLandingPage()">
                     <textarea
@@ -823,7 +850,17 @@
                       [placeholder]="composerPlaceholder()"
                       [disabled]="showSignInCta() || isPublicPageLoading() || publicNotFound()"
                       class="chat-premium-composer__textarea"
+                      [attr.aria-label]="isPicamoCity() ? cityGuideText.ask : composerPlaceholder()"
                     ></textarea>
+                    @if (isPicamoCity()) {
+                      <div class="picamo-starter-prompts" aria-label="Ideas to explore" i18n-aria-label>
+                        @for (starter of cityStarterPrompts(); track starter.title) {
+                          <button type="button" (click)="usePrompt(starter.prompt)" [disabled]="showSignInCta() || isPublicPageLoading() || publicNotFound()">
+                            <span class="material-symbols-outlined" aria-hidden="true">search</span>{{ starter.title }}
+                          </button>
+                        }
+                      </div>
+                    }
                     <div class="chat-premium-composer__bar">
                       <div class="chat-premium-composer__bar-left">
                         @if (canUseAnswerModeToggle()) {
@@ -923,13 +960,15 @@
                   <section class="city-board-shelf" [attr.aria-label]="cityBoardsHeading()">
                     <header class="city-board-shelf__header">
                       <div>
-                        @if (!isCityLandingPage()) {
+                        @if (isPicamoCity()) {
+                          <span class="city-board-shelf__eyebrow picamo-picks"><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span>{{ cityGuideText.picks }}</span>
+                        } @else if (!isCityLandingPage()) {
                           <span class="city-board-shelf__eyebrow">
                             <span class="material-symbols-outlined" aria-hidden="true">explore</span>
                             <span>{{ boardShelfEyebrow() }}</span>
                           </span>
                         }
-                        <h2>{{ isCityLandingPage() ? ('Explore ' + currentWikiName()) : cityBoardsHeading() }}</h2>
+                        <h2>{{ isCityLandingPage() ? cityExploreHeading() : cityBoardsHeading() }}</h2>
                         <p>{{ boardShelfDescription() }}</p>
                       </div>
                       @if (!cityBoardsLoading() && cityBoards().length > 0 && cityBoardsCollectionLink(); as collectionLink) {
@@ -1730,6 +1769,14 @@
 	          <section class="chat-city-activity__panel">
 	            <h2 i18n>Local activity</h2>
 
+                @if (isPicamoCity()) {
+                  @defer (on viewport) {
+                    <app-chat-location-map [locations]="cityMapLocations()" [compact]="true" [zoom]="11" [mapTitle]="currentWikiName()"></app-chat-location-map>
+                  } @placeholder {
+                    <div class="picamo-map-placeholder" aria-hidden="true"></div>
+                  }
+                }
+
 	            <div class="chat-city-activity__review-head">
 	              <div>
 	                <span>{{ uiText('reviewedLocations') }}</span>
@@ -1740,11 +1787,11 @@
 	              </a>
 	            </div>
 
-	            @if (reviewedPlacesLoading()) {
+	            @if (!isPicamoCity() && reviewedPlacesLoading()) {
 	              <div class="chat-city-activity__loading" aria-live="polite">
 	                <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--muted)] border-t-transparent"></span>
 	              </div>
-	            } @else if (reviewedPlacesPreview().length === 0) {
+	            } @else if (!isPicamoCity() && reviewedPlacesPreview().length === 0) {
 	              <a class="chat-city-activity__empty" [routerLink]="placesLink()">
 	                <span class="chat-city-activity__empty-mark material-symbols-outlined" aria-hidden="true">rate_review</span>
 	                <strong>{{ uiText('noLocalReviewsYet') }}</strong>
@@ -1765,7 +1812,19 @@
 	              </div>
 	            }
 
-	            @if (cityBoards().length) {
+	            @if (isPicamoCity()) {
+                  <section class="picamo-local-curiosity">
+                    <h3>{{ cityGuideText.curiosity }}</h3>
+                    @if (visibleCityBoards()[0]; as board) {
+                      <a class="picamo-local-curiosity__board" [routerLink]="['/boards', board.id]">
+                        @if (board.imageUrl) { <span class="picamo-local-curiosity__media"><img [src]="board.imageUrl" alt="" loading="lazy" /></span> }
+                        <strong>{{ board.title }}</strong>
+                        @if (board.description) { <p>{{ truncate(board.description, 120) }}</p> }
+                      </a>
+                    }
+                    <button type="button" (click)="usePrompt(cityStarterPrompts()[1].prompt); focusCityComposer()">{{ cityGuideText.exploreWith }} <span aria-hidden="true">→</span></button>
+                  </section>
+                } @else if (cityBoards().length) {
 	              <div class="chat-city-activity__trending">
 	                <p>{{ uiText('trendingNow') }}</p>
 	                @for (board of cityBoards().slice(0, 2); track board.id) {

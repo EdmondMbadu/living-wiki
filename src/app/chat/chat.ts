@@ -43,6 +43,8 @@ import {
 import { CITY_ATLAS_TEMPLATES } from '../city-atlas-templates';
 import { formatAssistantMessageHtml } from './message-format.util';
 import { VoiceFluidVisualComponent } from './voice-fluid-visual';
+import { PICAMO_CITY_GUIDE, resolveCityGuide } from '../../../functions/src/city-guide';
+import { PicamoCityChatService } from '../kiwi/picamo-city-chat.service';
 
 interface ChatMessage {
   id: string;
@@ -419,9 +421,56 @@ const VOICE_LANGUAGES: VoiceLanguageOption[] = [
     VoiceFluidVisualComponent,
   ],
   templateUrl: './chat.html',
-  styleUrl: './chat.css',
+  styleUrls: ['./chat.css', './picamo-city.css'],
 })
 export class ChatComponent implements AfterViewChecked, OnDestroy {
+  readonly picamoCityAsset = PICAMO_CITY_GUIDE;
+  readonly cityGuideText = {
+    knows: $localize`Picamo Knows`,
+    ask: $localize`Ask Picamo`,
+    explore: $localize`What would you like to explore?`,
+    introduction: $localize`Your curious guide to the city, powered by LivingWiki.`,
+    tagline: $localize`Local stories. Hidden gems. Endless curiosity.`,
+    vegasTagline: $localize`Bright lights. Local stories. Unexpected discoveries.`,
+    capeMayTagline: $localize`Victorian charm. Seaside stories.`,
+    miamiTagline: $localize`Big color. Bold culture.`,
+    phillyTagline: $localize`Historic streets. Neighborhood stories.`,
+    dinner: $localize`A local dinner spot`,
+    hidden: $localize`Hidden gems`,
+    beyondStrip: $localize`Beyond the Strip`,
+    afternoon: $localize`Plan my afternoon`,
+    picks: $localize`Picamo Picks`,
+    curiosity: $localize`A little local curiosity`,
+    exploreWith: $localize`Explore with Picamo`,
+    guideLabel: $localize`Your curious city guide`,
+  };
+  readonly cityGuide = computed(() => !this.businessPageContext() ? resolveCityGuide(this.currentWikiAtlas()) : null);
+  readonly isPicamoCity = computed(() => this.cityGuide()?.name === 'Picamo' && !this.cityGuide()?.city_persona_override);
+  readonly cityCampaignTagline = computed(() => {
+    const name = this.currentWikiName().toLowerCase();
+    if (name.includes('las vegas')) return this.cityGuideText.vegasTagline;
+    if (name.includes('cape may')) return this.cityGuideText.capeMayTagline;
+    if (name.includes('miami')) return this.cityGuideText.miamiTagline;
+    if (name.includes('philadelphia') || name.includes('philly')) return this.cityGuideText.phillyTagline;
+    return this.cityGuideText.tagline;
+  });
+  readonly cityStarterPrompts = computed(() => {
+    const city = this.currentWikiName();
+    return [
+      { title: this.cityGuideText.dinner, prompt: $localize`Help me find a local dinner spot in ${city}:CITY:. Share a few source-backed options and ask about my budget or preferences if needed.` },
+      { title: city.toLowerCase().includes('las vegas') ? this.cityGuideText.beyondStrip : this.cityGuideText.hidden,
+        prompt: $localize`What can I discover beyond the best-known tourist sights in ${city}:CITY:? Suggest a few interesting neighborhoods or places with sources.` },
+      { title: this.cityGuideText.afternoon, prompt: $localize`Help me plan an afternoon exploring ${city}:CITY:. Ask what I enjoy and how I will get around before suggesting an itinerary.` },
+    ];
+  });
+  readonly cityExploreHeading = computed(() => {
+    const city = this.currentWikiName();
+    return this.isPicamoCity() ? $localize`Explore ${city}:CITY: with Picamo` : `Explore ${city}`;
+  });
+  readonly cityMapLocations = computed<MappableLocation[]>(() => [{
+    name: this.currentWikiName(),
+    search_query: [this.currentWikiName(), this.currentWikiAtlas()?.city_config?.region_name, this.currentWikiCountry()].filter(Boolean).join(', '),
+  }]);
   readonly templateText = {
     message1: $localize`Browse all campus and college-town collections`,
     message2: $localize`Browse featured collections and topics`,
@@ -439,6 +488,7 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
   };
   private readonly localeId = inject(LOCALE_ID);
   private readonly authService = inject(AuthService);
+  private readonly picamoCityChat = inject(PicamoCityChatService);
   private readonly atlasService = inject(AtlasService);
   private readonly answerCardService = inject(AnswerCardService);
   private readonly answerQuizService = inject(AnswerQuizService);
@@ -674,6 +724,7 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
     return this.isPublicView()
       && !this.businessPageContext()
       && (atlas?.city_config?.enabled === true
+        || atlas?.wiki_type === 'city'
         || atlas?.wiki_type === 'university'
         || atlas?.university_config?.enabled === true);
   });
@@ -771,7 +822,7 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
     this.voiceSessionGreeting(this.selectedVoiceLanguage() ?? undefined),
   );
   readonly realtimeVoiceParticipantName = computed(() =>
-    this.currentWikiName()
+    this.cityGuide()?.name || this.currentWikiName()
     || this.currentWikiGuide()?.name?.trim()
     || this.uiText('myLivingWiki'),
   );
@@ -821,6 +872,14 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
   });
   readonly sidebarCityWikis = computed(() => {
     const currentSlug = (this.routeSlug() ?? this.currentWikiAtlas()?.slug ?? '').trim().toLowerCase();
+    if (this.cityGuide()) {
+      const cities = this.publicCityWikis().filter(wiki => wiki.status === 'live');
+      return [...cities].sort((a, b) => {
+        const rank = (wiki: PublicWikiCatalogItem) => wiki.slug === currentSlug ? -1
+          : /las.vegas|miami|cape.may|philly|philadelphia/i.test(`${wiki.title} ${wiki.slug}`) ? 0 : 1;
+        return rank(a) - rank(b);
+      }).slice(0, 4);
+    }
     return this.publicCityWikis()
       .filter((wiki) => (wiki.slug ?? '').trim().toLowerCase() !== currentSlug)
       .slice(0, 1);
@@ -867,7 +926,9 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
     return this.uiText('askPublicAtlas');
   });
   readonly composerPlaceholder = computed(() =>
-    this.canUseAnswerModeToggle()
+    this.isPicamoCity() && !this.showSignInCta()
+      ? $localize`Ask me about ${this.currentWikiName()}:CITY: — neighborhoods, food, things to do, or hidden gems…`
+      : this.canUseAnswerModeToggle()
       ? this.isInternetMode()
         ? this.localInternetPlaceholder()
         : this.uiText('messageLivingWiki')
@@ -1055,7 +1116,7 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
   });
   readonly canShowPlaceReviews = computed(() => {
     const atlas = this.currentWikiAtlas();
-    return !!atlas?.id && atlas.city_config?.enabled === true && !this.publicNotFound();
+    return !!atlas?.id && (atlas.city_config?.enabled === true || atlas.wiki_type === 'city') && !this.publicNotFound();
   });
   readonly reviewedPlacesCountLabel = computed(() => {
     const count = this.reviewedPlaces().length;
@@ -1074,6 +1135,8 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
   });
   readonly revealJoinPhoneNumber = computed(() => !!this.currentWikiVoicePhoneNumber() && (!!this.subscribeSuccess() || this.isSignedIn()));
   readonly currentWikiGuide = computed(() => {
+    const cityGuide = this.cityGuide();
+    if (cityGuide) return this.isPicamoCity() ? { ...cityGuide, label: this.cityGuideText.guideLabel } : cityGuide;
     const guide = this.currentWikiAtlas()?.chat_guide;
     const hasGuide = !!guide?.name?.trim() || !!guide?.label?.trim() || !!guide?.image_url?.trim() || !!guide?.banner_url?.trim();
     return hasGuide ? guide : null;
@@ -3435,6 +3498,14 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
   }
 
   constructor() {
+    effect((onCleanup) => {
+      const guide = this.cityGuide();
+      if (!guide || !this.isPublicView() || !this.isCityLandingPage()) return;
+      onCleanup(this.picamoCityChat.connect({
+        name: guide.name || 'Picamo', avatarUrl: guide.image_url || '/assets/picamo/avatar.webp',
+        focus: () => this.focusCityComposer(),
+      }));
+    });
     void this.loadSidebarCityWikis();
 
     effect((onCleanup) => {
@@ -4895,6 +4966,17 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
 
   private voiceSessionGreeting(language?: VoiceLanguageOption): string {
     const city = this.currentWikiName();
+    const guide = this.cityGuide();
+    if (guide?.name) {
+      const name = guide.name;
+      switch (language?.code) {
+        case 'fr': return `Bonjour, je suis ${name}, votre guide de ${city}. Que souhaitez-vous explorer ?`;
+        case 'es': return `Hola, soy ${name}, tu guía de ${city}. ¿Qué te gustaría explorar?`;
+        case 'pt': case 'pt-br': return `Olá, sou ${name}, seu guia de ${city}. O que você gostaria de explorar?`;
+        case 'ja': return `こんにちは、${city}のガイド、${name}です。何を探検したいですか？`;
+        case 'en': case undefined: return `Hi, I'm ${name}, your curious guide to ${city}. What would you like to explore?`;
+      }
+    }
     if (!city) {
       return language?.greeting
         ?? 'Hi, I’m your LivingWiki voice guide. Ask me anything and I’ll answer out loud.';
@@ -5275,7 +5357,28 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
     this.messageActionMenuId.set(null);
     this.pendingDeleteHistoryItem.set(null);
     this.answerMode.set(this.defaultAnswerMode(this.currentWikiAtlas()));
-    queueMicrotask(() => this.autoGrowComposer());
+    queueMicrotask(() => {
+      this.autoGrowComposer();
+      if (this.cityGuide()) this.focusCityComposer();
+    });
+  }
+
+  focusCityComposer(): void {
+    if (this.showSignInCta()) { void this.goToSignIn(); return; }
+    const input = this.composerInput?.nativeElement;
+    const bounds = input?.getBoundingClientRect();
+    if (bounds && (bounds.top < 80 || bounds.bottom > window.innerHeight)) {
+      input?.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }
+    input?.focus({ preventScroll: true });
+  }
+
+  citySidebarImage(wiki: PublicWikiCatalogItem): string {
+    return wiki.heroUrl || wiki.fallbackHeroUrl || '';
+  }
+
+  isCurrentSidebarCity(wiki: PublicWikiCatalogItem): boolean {
+    return !!wiki.slug && wiki.slug === this.routeSlug();
   }
 
   async loadHistoryItem(item: ChatHistoryItem): Promise<void> {

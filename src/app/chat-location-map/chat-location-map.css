@@ -6,6 +6,13 @@
   height: 0.92rem;
 }
 
+.chat-map--compact { position: relative; margin-top: 1rem; border-radius: 0.85rem; }
+.chat-map--compact > div:first-child, .chat-map--compact .chat-map-sidebar { display: none; }
+.chat-map--compact .chat-map-layout { display: block; min-height: 11rem; }
+.chat-map--compact .chat-map-layout > div, .chat-map--compact [class*="min-h-"] { min-height: 11rem; }
+.chat-map-city-link { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.6rem 0.75rem; color: var(--text); font-size: 0.75rem; font-weight: 650; text-decoration: none; }
+.chat-map-city-link .material-symbols-outlined { color: var(--accent); font-size: 0.9rem; }
+
 .chat-map-glyph--map {
   border: 1.5px solid var(--accent);
   border-radius: 0.2rem;

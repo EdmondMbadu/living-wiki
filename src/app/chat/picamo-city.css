@@ -1,0 +1,95 @@
+/* Picamo's city campaign keeps the existing city conversation and discovery surfaces. */
+.picamo-city { --picamo-forest: #075438; --picamo-sun: #ffd45a; }
+.picamo-city .chat-city-sidebar { overflow-y: auto; }
+.picamo-city .chat-city-sidebar > :not(.chat-city-sidebar__threads) { flex-shrink: 0; }
+.picamo-city .chat-city-sidebar-card { min-height: 4.5rem; }
+.picamo-city .chat-city-sidebar-card .chat-city-sidebar-card__name { color: var(--text); }
+.picamo-city .chat-city-sidebar__explore .group > .min-w-0 > span:first-child { white-space: normal; font-size: 0.86rem; line-height: 1.25; }
+.picamo-city .chat-city-sidebar__explore .group { min-height: 3.6rem; padding: 0.45rem 0.25rem; gap: 0.7rem; }
+.picamo-city .chat-city-sidebar__city--active { background: color-mix(in srgb, var(--accent) 8%, var(--surface)) !important; }
+.picamo-city .chat-city-sidebar__explore .group > span:first-child { overflow: hidden; border-radius: 0.65rem; }
+.chat-city-sidebar__thumbnail { width: 100%; height: 100%; object-fit: cover; }
+.chat-city-sidebar__country { display: block; margin-top: 0.15rem; color: var(--muted); font-size: 0.72rem; font-weight: 500; }
+.picamo-city .chat-city-sidebar__threads { min-height: 6rem; }
+.picamo-city .chat-city-landing-container { max-width: 82rem; padding: 1rem 1.4rem 3rem; }
+.picamo-city .chat-city-landing-hero { max-width: none; min-height: 23rem; border-radius: 1.15rem; }
+.picamo-city .chat-city-landing-hero__content { position: relative; z-index: 2; width: 69%; min-height: 23rem; padding: 2rem 2.25rem 4rem; }
+.picamo-city .chat-city-landing-hero__wash { background: linear-gradient(90deg, rgba(2, 44, 31, 0.97), rgba(3, 44, 32, 0.83) 40%, rgba(3, 31, 24, 0.24) 73%, rgba(3, 31, 24, 0.08)); }
+.picamo-city .chat-city-landing-hero h2.picamo-city-title { margin: 0.6rem 0 0; font-family: 'Inter Tight', Inter, Arial, sans-serif; font-size: clamp(2.1rem, 4.2vw, 4.65rem); font-weight: 850; letter-spacing: -0.055em; line-height: 1.01; text-wrap: balance; }
+.picamo-city-title span, .picamo-city-title strong { display: block; }
+.picamo-city-title strong { color: var(--picamo-sun); font-weight: 850; overflow-wrap: anywhere; }
+.picamo-city .chat-city-landing-hero__tagline { max-width: 35rem; margin-top: 0.6rem; font-size: clamp(0.87rem, 1.2vw, 1.15rem); font-weight: 730; line-height: 1.35; }
+.picamo-city-introduction { max-width: 31rem; margin: 0.35rem 0 0; color: #f1f6ee; font-size: 0.83rem; line-height: 1.45; }
+.picamo-city .chat-city-landing-hero__facts { margin-top: 1rem; gap: 0.6rem 1rem; }
+.picamo-city .chat-city-landing-hero__topics { margin-top: 0.8rem; }
+.picamo-city-mascot { position: absolute; z-index: 1; right: 3%; bottom: 1.2rem; width: 28%; height: auto; max-height: 94%; object-fit: contain; object-position: bottom; filter: drop-shadow(0 12px 15px #011c2350); pointer-events: none; }
+.picamo-city .chat-city-landing-composer { width: calc(100% - 5rem); max-width: 64rem !important; margin-top: -2.5rem !important; border-radius: 1.15rem; padding: 0.7rem 1.1rem 0.55rem; }
+.picamo-composer-heading { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.25rem; }
+.picamo-composer-heading > img { width: 3rem; height: 3.1rem; object-fit: contain; }
+.picamo-composer-heading p { margin: 0 0 0.1rem; color: color-mix(in srgb, var(--accent) 70%, var(--text)); font-size: 0.75rem; font-weight: 750; }
+.picamo-city .picamo-composer-heading h3 { margin: 0; font-size: clamp(1.05rem, 1.5vw, 1.4rem); }
+.picamo-city .chat-premium-composer--landing { background: var(--surface); }
+.picamo-city .chat-premium-composer__textarea { min-height: 2.5rem; padding: 0.8rem 0.85rem 0.3rem; font-size: 0.88rem; }
+.picamo-starter-prompts { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.45rem 0.65rem 0.2rem; }
+.picamo-starter-prompts button { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2rem; border: 1px solid var(--line); border-radius: 999px; padding: 0.35rem 0.7rem; background: var(--surface); color: var(--muted); font-size: 0.68rem; line-height: 1.25; transition: background 150ms, border-color 150ms; }
+.picamo-starter-prompts button:hover { background: var(--soft-fill); border-color: var(--accent); color: var(--text); }
+.picamo-starter-prompts button:disabled { opacity: 0.5; cursor: not-allowed; }
+.picamo-starter-prompts .material-symbols-outlined { font-size: 0.95rem; }
+.picamo-city button:focus-visible, .picamo-city a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.picamo-city .city-board-shelf { margin-top: 1rem; }
+.picamo-city .city-board-shelf__header { margin-bottom: 0.15rem; gap: 1rem; }
+.picamo-city .city-board-shelf__header h2 { font-size: clamp(1.35rem, 2vw, 2rem); line-height: 1.2; }
+.picamo-city .picamo-picks { display: inline-flex; align-items: center; gap: 0.3rem; margin-bottom: 0.25rem; color: color-mix(in srgb, var(--accent) 75%, var(--text)); font-size: 0.63rem; font-weight: 850; letter-spacing: 0.12em; text-transform: uppercase; }
+.picamo-picks .material-symbols-outlined { color: #b47e00; font-size: 1rem; }
+.picamo-city .chat-city-activity { overflow-y: auto; padding-bottom: 6rem; }
+.picamo-map-placeholder { min-height: 14rem; margin-top: 1rem; border: 1px solid var(--line); border-radius: 0.85rem; background: var(--soft-fill); }
+.picamo-city .chat-city-activity__review-head { margin-top: 0.85rem; align-items: center; }
+.picamo-city .chat-city-activity__review-head > div { flex-direction: row-reverse; align-items: center; gap: 0.5rem; }
+.picamo-city .chat-city-activity__review-head strong { font-family: inherit; font-size: 1rem; font-weight: 700; }
+.picamo-local-curiosity { margin-top: 1.5rem; border-top: 1px solid var(--line); padding-top: 1.3rem; }
+.picamo-local-curiosity h3 { margin: 0 0 0.85rem; color: var(--text); font-family: Georgia, serif; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.025em; }
+.picamo-local-curiosity__board { display: block; color: var(--text); text-decoration: none; }
+.picamo-local-curiosity__media { position: relative; display: block; overflow: hidden; width: 100%; aspect-ratio: 1.7; margin-bottom: 0.6rem; border-radius: 0.7rem; }
+.picamo-local-curiosity__board img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.picamo-local-curiosity__board strong { display: block; font-family: Georgia, serif; font-size: 0.95rem; line-height: 1.35; }
+.picamo-local-curiosity__board p { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.75rem; line-height: 1.5; }
+.picamo-local-curiosity > button { display: inline-flex; align-items: center; gap: 0.6rem; min-height: 2.75rem; padding: 0.5rem 0; color: color-mix(in srgb, var(--accent) 75%, var(--text)); font-size: 0.75rem; font-weight: 750; text-align: left; }
+@media (min-width: 1600px) {
+  .picamo-city .chat-city-sidebar { width: 15.5rem; }
+  .picamo-city .chat-city-activity { width: 16rem; }
+  .picamo-city .chat-city-landing-hero { min-height: 23rem; }
+  .picamo-city .chat-city-landing-hero__content { min-height: 23rem; }
+}
+@media (min-width: 1280px) and (max-width: 1450px) {
+  .picamo-city .chat-city-sidebar { width: 13rem; padding-inline: 1rem; }
+  .picamo-city .chat-city-activity { width: 14rem; }
+  .picamo-city .chat-city-landing-hero__content { padding-inline: 1.4rem; }
+  .picamo-city .chat-city-landing-hero h2.picamo-city-title { font-size: 2.6rem; }
+  .picamo-city .chat-city-landing-composer { width: calc(100% - 2.5rem); }
+}
+@media (max-width: 767px) {
+  .picamo-city .chat-city-nav .chat-nav-icon.hidden { display: none; }
+  .picamo-city .chat-city-landing-container { padding: 0.75rem 0.65rem 5.5rem; }
+  .picamo-city .chat-city-landing-hero { min-height: 29rem; }
+  .picamo-city .chat-city-landing-hero__content { width: 100%; min-height: 29rem; justify-content: flex-start; padding: 1.4rem 1.2rem 12.5rem; }
+  .picamo-city .chat-city-landing-hero h2.picamo-city-title { max-width: 100%; font-size: clamp(2.2rem, 9.5vw, 3.8rem); }
+  .picamo-city .chat-city-landing-hero__tagline { max-width: 100%; font-size: 0.9rem; }
+  .picamo-city .picamo-city-introduction { max-width: 90%; font-size: 0.75rem; }
+  .picamo-city .chat-city-landing-hero__facts { max-width: 55%; gap: 0.45rem; margin-top: 0.85rem; }
+  .picamo-city .chat-city-landing-hero__facts > span { font-size: 0.65rem; }
+  .picamo-city .chat-city-landing-hero__topics { max-width: 58%; gap: 0.3rem; }
+  .picamo-city .chat-city-landing-hero__topics span { font-size: 0.6rem; padding: 0.25rem 0.5rem; }
+  .picamo-city-mascot { width: auto; height: 12rem; right: 4%; bottom: 2.5rem; max-width: 44%; }
+  .picamo-city .chat-city-landing-composer { width: calc(100% - 1rem); max-width: none !important; margin-top: -2rem !important; padding: 0.65rem 0.65rem 0.5rem; }
+  .picamo-composer-heading { gap: 0.45rem; }
+  .picamo-composer-heading > img { width: 2.5rem; height: 2.7rem; }
+  .picamo-city .picamo-composer-heading h3 { font-size: 1.08rem; }
+  .picamo-city .chat-premium-composer__textarea { min-height: 3rem; font-size: 0.82rem; }
+  .picamo-starter-prompts { gap: 0.35rem; padding: 0.3rem 0.45rem; }
+  .picamo-starter-prompts button { min-height: 2.25rem; font-size: 0.65rem; padding: 0.3rem 0.55rem; }
+  .picamo-city .city-board-shelf__header { align-items: flex-start; flex-wrap: wrap; margin-top: 1.25rem; }
+  .picamo-city .city-board-shelf__header h2 { font-size: 1.45rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .picamo-city *, .picamo-city *::before, .picamo-city *::after { scroll-behavior: auto !important; transition-duration: 0s !important; }
+}

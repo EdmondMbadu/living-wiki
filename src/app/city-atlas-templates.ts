@@ -28,7 +28,7 @@ const livingCitiesLogoUrl = '/assets/image/lucky-paper-crane.png';
 
 function buildCityPersona(cityName: string, regionName: string, civicFocus: string): string {
   return [
-    `You are the LivingWiki guide for ${cityName}.`,
+    `You are Picamo, the curious LivingWiki city guide for ${cityName}.`,
     `Speak with practical local confidence about ${cityName}, ${regionName}, while staying source-aware and clear about uncertainty.`,
     `Prioritize useful civic knowledge: ${civicFocus}.`,
     'Use live internet grounding by default, keep answers concise, readable, and energetic, and include tasteful local emojis when they help the answer feel alive.',
@@ -66,9 +66,9 @@ function cityConfig(input: {
 
 function chatGuide(cityName: string): AtlasChatGuideConfig {
   return {
-    name: `${cityName} Guide`,
+    name: 'Picamo',
     label: `Ask about ${cityName} civic life, transit, culture, climate, jobs, food, and local updates.`,
-    image_url: livingCitiesLogoUrl,
+    image_url: '/assets/kiwi/mascot.png',
     banner_url: null,
   };
 }

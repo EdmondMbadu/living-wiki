@@ -4,6 +4,7 @@ import { provideRouter, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { WorkspaceNavigationService } from '../workspace-navigation/workspace-navigation';
 import { assistantDisplayName, KiwiComponent } from './kiwi';
+import { PicamoCityChatService } from './picamo-city-chat.service';
 
 describe('Picamo name migration', () => {
   it('uses Picamo for guests and existing accounts with the former default name', () => {
@@ -34,6 +35,21 @@ describe('Picamo conversation interface', () => {
 
   afterEach(() => {
     TestBed.resetTestingModule();
+  });
+
+  it('opens the existing city composer instead of a separate account conversation', () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    const focus = jasmine.createSpy('focus city conversation');
+    TestBed.inject(PicamoCityChatService).connect({ name: 'Picamo', avatarUrl: '/assets/kiwi/mascot.png', focus });
+    fixture.detectChanges();
+    const launcher = fixture.nativeElement.querySelector('.kiwi-launcher') as HTMLButtonElement;
+    expect(launcher.textContent).toContain('Ask Picamo');
+    launcher.click();
+    fixture.detectChanges();
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(fixture.nativeElement.querySelector('#kiwi-panel')).toBeNull();
+    expect(launcher.getAttribute('aria-controls')).toBe('city-guide-composer');
   });
 
   it('starts in Talk mode and keeps board actions out of the mode chooser', () => {

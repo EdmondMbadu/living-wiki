@@ -4,6 +4,14 @@ Picamo is mounted in the app shell, so the launcher appears on desktop and mobil
 
 The former default name, Kiwi, is displayed as Picamo for existing accounts. Custom assistant names are preserved. Internal `kiwi` service, tool, storage, and component identifiers remain stable for compatibility.
 
+## City pages
+
+Picamo is the default city-page host, with a skyline hero, a transparent map-holding character, city-specific starter questions, Picamo Picks and local discovery. The same design applies to every city, including legacy guides such as Philadelphia's Benjamin Franklin. In the admin Chat guide settings, explicitly enabling **Use a custom city persona** saves `chat_guide.city_persona_override: true` and restores that city's configured guide, portrait and persona prompt. University and other wiki types retain their own presentation. Text chat and realtime voice resolve the same default and override through `functions/src/city-guide.ts`. Deploy hosting and the updated chat/voice functions together for production.
+
+While a city conversation is mounted, the floating Ask Picamo launcher focuses that conversation instead of starting the account assistant. Existing messages, city scope, authentication limits, language choices and voice controls remain in the city's existing chat flow. Leaving the city restores the account assistant. The right-rail map loads only when visible and retains an external map link if the preview is unavailable.
+
+The city hero asset is `public/assets/picamo/city-guide.webp` (662 × 900, transparent WebP), generated with the built-in image tool from the existing character. Prompt: preserve Picamo's cream folded-paper body, emerald eyes, leaf crest and backpack; show a full-body welcoming pose holding a generic city map without lettering, on a transparent background. A generic map lets the same asset serve every city without inventing local geography.
+
 ## Current abilities
 
 - Choose Talk or Chat. Talk is the primary mode: on browsers with Web Speech recognition, Picamo collects interim and final transcript segments, waits for 2.4 seconds of quiet before sending the turn, and offers an explicit **I’m done speaking** control. Picamo then answers using ElevenLabs natural speech and listens again until the user ends the conversation. Chat offers a text composer. Proposed writes pause voice mode for on-screen review. The edit button opens a modal to rename Picamo and choose from four previewable voices.

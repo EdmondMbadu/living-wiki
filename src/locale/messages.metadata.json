@@ -575,6 +575,10 @@
     "source": "Connections to nearby places, guides, and events",
     "file": "src/app/business/business.ts"
   },
+  "1182082994944331966": {
+    "source": "Help me plan an afternoon exploring {$CITY}. Ask what I enjoy and how I will get around before suggesting an itinerary.",
+    "file": "src/app/chat/chat.ts"
+  },
   "1182705793282199411": {
     "source": " Backfill only cities missing population, or refresh all city population metadata from configured sources. ",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -1835,6 +1839,10 @@
     "source": "Choose a JPG, PNG, WebP or HEIC photo under 10 MB.",
     "file": "src/app/off-grids/off-grid-editor.ts"
   },
+  "1537930879075202732": {
+    "source": "Picamo Knows",
+    "file": "src/app/chat/chat.ts"
+  },
   "1539149300231141451": {
     "source": "Opens the full experience on LivingWiki in a new tab.",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -2595,6 +2603,10 @@
     "source": "Distance",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
   },
+  "1783274354133696514": {
+    "source": "A local dinner spot",
+    "file": "src/app/chat/chat.ts"
+  },
   "1785042287152969295": {
     "source": "Loading city points",
     "file": "src/app/dymaxion/dymaxion.html"
@@ -2998,6 +3010,10 @@
   "1921382469302609256": {
     "source": "Upgrade to create",
     "file": "src/app/wiki-home/wiki-home.html"
+  },
+  "1921881655736235019": {
+    "source": "Victorian charm. Seaside stories.",
+    "file": "src/app/chat/chat.ts"
   },
   "1926476900474818041": {
     "source": "Talk Drop video",
@@ -4207,6 +4223,10 @@
     "source": " {$INTERPOLATION} wiki pages ",
     "file": "src/app/library/library.html"
   },
+  "2329870065281813283": {
+    "source": "Plan my afternoon",
+    "file": "src/app/chat/chat.ts"
+  },
   "2330577642930707695": {
     "source": " Cancel ",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -4406,6 +4426,10 @@
   "2391484290961058846": {
     "source": "{$START_TAG_SPAN}upload{$CLOSE_TAG_SPAN} Upload {$TAG_INPUT}",
     "file": "src/app/boards/boards.html"
+  },
+  "2392061189761817426": {
+    "source": "What would you like to explore?",
+    "file": "src/app/chat/chat.ts"
   },
   "2392488717875840729": {
     "source": "User",
@@ -5159,6 +5183,10 @@
     "source": "Optional context",
     "file": "src/app/boards/boards.html"
   },
+  "2622867303257484280": {
+    "source": "Use a custom city persona",
+    "file": "src/app/atlas-manage/atlas-manage.html"
+  },
   "2623616617160923620": {
     "source": "Leave blank{$TAG_INPUT}",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -5706,6 +5734,10 @@
   "2805234652895137114": {
     "source": "{$START_TAG_SPAN}waving_hand{$CLOSE_TAG_SPAN} Let’s connect ",
     "file": "src/app/boards/boards.html"
+  },
+  "2806539517442477486": {
+    "source": "Picamo Picks",
+    "file": "src/app/chat/chat.ts"
   },
   "2806878392329574752": {
     "source": "Immersive card-by-card experience",
@@ -6455,6 +6487,10 @@
     "source": " {$INTERPOLATION} / {$INTERPOLATION_1} shown ",
     "file": "src/app/dymaxion/dymaxion.html"
   },
+  "304932951059312334": {
+    "source": "A little local curiosity",
+    "file": "src/app/chat/chat.ts"
+  },
   "3056026914723825652": {
     "source": "Send / retry emails",
     "file": "src/app/admin-users/talkthru-interests-admin.html"
@@ -6554,6 +6590,10 @@
   "3085105099065898392": {
     "source": "Open ",
     "file": "src/app/boards/boards.ts"
+  },
+  "3085717359841288720": {
+    "source": "Picamo welcoming you with a city map",
+    "file": "src/app/chat/chat.html"
   },
   "3086749883613379075": {
     "source": "Public wiki",
@@ -8599,6 +8639,10 @@
     "source": "Call the {city} guide",
     "file": "src/app/chat/chat.ts"
   },
+  "3684442444105337821": {
+    "source": "Bright lights. Local stories. Unexpected discoveries.",
+    "file": "src/app/chat/chat.ts"
+  },
   "3684767307617144490": {
     "source": "Save chat guide",
     "file": "src/app/atlas-manage/atlas-manage.ts"
@@ -8698,6 +8742,10 @@
   "3715596725146409911": {
     "source": "Owner",
     "file": "src/app/business-claim/business-claim.html"
+  },
+  "3716085167058393986": {
+    "source": "Your curious city guide",
+    "file": "src/app/chat/chat.ts"
   },
   "3717329523593529128": {
     "source": "Story Light",
@@ -11227,6 +11275,10 @@
     "source": "Trending Figures",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "4523925949639920708": {
+    "source": "Beyond the Strip",
+    "file": "src/app/chat/chat.ts"
+  },
   "4525653509874500052": {
     "source": "All members",
     "file": "src/app/teams/teams.html"
@@ -11951,6 +12003,10 @@
     "source": "Trending now",
     "file": "src/app/chat/chat.ts"
   },
+  "4737344169455137644": {
+    "source": "Your curious guide to the city, powered by LivingWiki.",
+    "file": "src/app/chat/chat.ts"
+  },
   "4739165261986327591": {
     "source": "Current U.S. immigration policy, border data, visa categories, asylum process, and the policy debate — facts and data, not opinion.",
     "file": "src/app/public-wiki-catalog.ts"
@@ -12158,6 +12214,10 @@
   "4797026336287705114": {
     "source": "Featured line for the About section, shown prominently on the public page.",
     "file": "src/app/atlas-landing/atlas-landing.html"
+  },
+  "4797995938757696414": {
+    "source": "Historic streets. Neighborhood stories.",
+    "file": "src/app/chat/chat.ts"
   },
   "4799178979576697091": {
     "source": "QR destination URL",
@@ -12414,6 +12474,10 @@
   "4880123671474933811": {
     "source": "Loading wiki…",
     "file": "src/app/atlas-persona/atlas-persona.html"
+  },
+  "488342695991737068": {
+    "source": "Explore {$CITY} with Picamo",
+    "file": "src/app/chat/chat.ts"
   },
   "4884802212263764569": {
     "source": "This card may have been removed or is not available to you.",
@@ -17943,6 +18007,10 @@
     "source": "Features",
     "file": "src/app/marketing/marketing.ts"
   },
+  "6599502543614908604": {
+    "source": "Local stories. Hidden gems. Endless curiosity.",
+    "file": "src/app/chat/chat.ts"
+  },
   "6600301109682902994": {
     "source": "livingwiki.com/team/{$INTERPOLATION}",
     "file": "src/app/teams/teams.html"
@@ -18887,6 +18955,10 @@
     "source": "← TalkThrus",
     "file": "src/app/talkthru-billing/talkthru-billing-page.html"
   },
+  "6919578376876374833": {
+    "source": "Hidden gems",
+    "file": "src/app/chat/chat.ts"
+  },
   "6920114174446900740": {
     "source": "Add a video",
     "file": "src/app/atlas-landing/atlas-landing.ts"
@@ -19338,6 +19410,10 @@
   "7051535332948231705": {
     "source": " Refresh official city metrics, inspect the stored snapshot, and validate what the public landing page will render. ",
     "file": "src/app/city-pulse-admin/city-pulse-admin.html"
+  },
+  "7053939170775022336": {
+    "source": "Ask me about {$CITY} — neighborhoods, food, things to do, or hidden gems…",
+    "file": "src/app/chat/chat.ts"
   },
   "7054091192371222228": {
     "source": " of ",
@@ -20583,6 +20659,10 @@
     "source": "Wait for the photo to finish uploading.",
     "file": "src/app/off-grids/off-grid-editor.ts"
   },
+  "7460680215922314170": {
+    "source": "Help me find a local dinner spot in {$CITY}. Share a few source-backed options and ask about my budget or preferences if needed.",
+    "file": "src/app/chat/chat.ts"
+  },
   "7461110657103736564": {
     "source": "The History of the Internet",
     "file": "src/app/public-wiki-catalog.ts"
@@ -21002,6 +21082,10 @@
   "7597895918260601209": {
     "source": "Uploading your property photos",
     "file": "src/app/boards/boards.ts"
+  },
+  "7599036233077218153": {
+    "source": "Explore with Picamo",
+    "file": "src/app/chat/chat.ts"
   },
   "76042004992103026": {
     "source": "Sort boards",
@@ -22547,6 +22631,10 @@
     "source": "Visitor chat threads will appear here.",
     "file": "src/app/business-detail/business-activity.ts"
   },
+  "8085551784539554543": {
+    "source": "Ideas to explore",
+    "file": "src/app/chat/chat.html"
+  },
   "8086498641154381691": {
     "source": "Type a song title, artist, album, Spotify link, or a short description...",
     "file": "src/app/boards/boards.html"
@@ -23254,6 +23342,10 @@
   "8308540020306715001": {
     "source": "Give this related card a title before saving.",
     "file": "src/app/boards/boards.ts"
+  },
+  "8310461998993458665": {
+    "source": "Big color. Bold culture.",
+    "file": "src/app/chat/chat.ts"
   },
   "8313470300978955171": {
     "source": "What are the key open questions about {city}?",
@@ -24251,6 +24343,10 @@
     "source": "02 / MAKE IT PERSONAL",
     "file": "src/app/talkthrus/talkthrus.ts"
   },
+  "866237075528261323": {
+    "source": "What can I discover beyond the best-known tourist sights in {$CITY}? Suggest a few interesting neighborhoods or places with sources.",
+    "file": "src/app/chat/chat.ts"
+  },
   "8663654851415695862": {
     "source": "Posting…",
     "file": "src/app/boards/boards.html"
@@ -24994,6 +25090,10 @@
   "8870266842868466460": {
     "source": "Minimum 3 agents",
     "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "8870332246921097559": {
+    "source": "City pages use Picamo by default. Enable this to use the guide and persona configured below.",
+    "file": "src/app/atlas-manage/atlas-manage.html"
   },
   "8876752408632821792": {
     "source": "Surface the unresolved or most-discussed questions.",

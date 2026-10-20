@@ -35,6 +35,7 @@ interface NewsletterDraft {
 }
 
 interface ChatGuideDraft {
+  city_persona_override: boolean;
   label: string;
   name: string;
   image_url: string;
@@ -818,6 +819,7 @@ export class AtlasManageComponent {
 
   chatGuideSummary(atlas: AtlasItem): string {
     const guide = atlas.chat_guide;
+    if ((atlas.wiki_type === 'city' || atlas.city_config?.enabled) && !guide?.city_persona_override) return 'Picamo';
     if (!guide?.name && !guide?.label && !guide?.image_url && !guide?.banner_url) {
       return 'No guide shown';
     }
@@ -2886,6 +2888,7 @@ export class AtlasManageComponent {
   private toChatGuideDraft(atlas: AtlasItem | null): ChatGuideDraft {
     const guide = atlas?.chat_guide;
     return {
+      city_persona_override: guide?.city_persona_override === true,
       label: guide?.label?.trim() ?? '',
       name: guide?.name?.trim() ?? '',
       image_url: guide?.image_url?.trim() ?? '',
@@ -2951,6 +2954,7 @@ export class AtlasManageComponent {
       name: name || null,
       image_url: imageUrl || null,
       banner_url: bannerUrl || null,
+      ...(draft.city_persona_override ? { city_persona_override: true } : {}),
     };
   }
 

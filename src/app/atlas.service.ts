@@ -1772,6 +1772,7 @@ export class AtlasService {
       label,
       image_url: imageUrl,
       banner_url: bannerUrl,
+      ...(value.city_persona_override === true ? { city_persona_override: true } : {}),
     };
   }
 

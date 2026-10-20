@@ -22,6 +22,8 @@ export class ChatLocationMapComponent implements OnChanges {
   private renderScheduled = false;
 
   @Input() locations: MappableLocation[] = [];
+  @Input() compact = false;
+  @Input() zoom = 14;
   @ViewChild('mapCanvas') set mapCanvasRef(ref: ElementRef<HTMLElement> | undefined) {
     this.mapCanvas = ref;
     if (ref) {
@@ -31,7 +33,7 @@ export class ChatLocationMapComponent implements OnChanges {
 
   private mapCanvas?: ElementRef<HTMLElement>;
 
-  readonly mapTitle = $localize`Places mentioned`;
+  @Input() mapTitle = $localize`Places mentioned`;
   readonly isLoading = signal(false);
   readonly error = signal<string | null>(null);
   readonly resolvedLocations = signal<ResolvedMappableLocation[]>([]);
@@ -130,7 +132,7 @@ export class ChatLocationMapComponent implements OnChanges {
 
       const map = new google.maps.Map(canvas, {
         center: resolved[0].position,
-        zoom: resolved.length === 1 ? 14 : 12,
+        zoom: resolved.length === 1 ? this.zoom : 12,
         mapId: this.googleMapsService.mapId(),
         disableDefaultUI: true,
         zoomControl: true,
