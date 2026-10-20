@@ -19,6 +19,7 @@
           <section class="qa-heading">
             <div><span class="qa-eyebrow">Conversation quality assurance</span><h1>Avatar QA</h1><p>{{ workspace.target.avatarName }} <span>·</span> {{ workspace.target.boardTitle }}</p></div>
             <div class="qa-actions">
+              <button type="button" (click)="helpOpen.set(true)"><span class="material-symbols-outlined" aria-hidden="true">help</span>How to test</button>
               <button type="button" (click)="exportEvidence()" [disabled]="busy() || !run() || running()"><span class="material-symbols-outlined" aria-hidden="true">download</span>Export evidence</button>
               @if (anyRunning()) {
                 <button class="qa-primary" type="button" (click)="tab.set('history')"><span class="material-symbols-outlined qa-spin" aria-hidden="true">progress_activity</span>View active run</button>
@@ -34,6 +35,28 @@
           </nav>
           @if (dirty()) { <aside class="qa-alert qa-alert--warning"><span>Unsaved answer-library changes. Save before running tests.</span><button type="button" (click)="save()" [disabled]="busy()">Save library</button><button type="button" (click)="discard()" [disabled]="busy()">Discard edits</button></aside> }
           @if (run()?.stale) { <aside class="qa-alert qa-alert--warning"><span class="material-symbols-outlined" aria-hidden="true">update</span>The avatar, knowledge, or answer key has changed. This run is historical evidence; retest the current configuration.</aside> }
+
+          @if (tab() === 'overview' || tab() === 'library') {
+            <section class="qa-starter" aria-labelledby="qa-starter-title">
+              <div class="qa-starter-intro">
+                <span class="qa-eyebrow">A focused check for this avatar</span>
+                <h2 id="qa-starter-title">Start with the questions that matter.</h2>
+                <p>Upload a small test file for {{ workspace.target.avatarName }}. Choose the facts and boundaries you want to check; testing every avatar is optional.</p>
+                <div class="qa-actions">
+                  <button type="button" class="qa-primary" (click)="openImport()"><span class="material-symbols-outlined" aria-hidden="true">upload_file</span>Upload test file</button>
+                  <a class="qa-file-button" [href]="example().url" [attr.download]="example().name"><span class="material-symbols-outlined" aria-hidden="true">download</span>Download example</a>
+                  <button type="button" (click)="template()">Blank template</button>
+                </div>
+                <small>{{ example().label }} · {{ example().description }}. Review against your sources before use.</small>
+              </div>
+              <ol class="qa-starter-steps">
+                <li><span>1</span><div><strong>Prepare & upload</strong><p>Download the example, adapt it, then choose your JSON file.</p></div></li>
+                <li><span>2</span><div><strong>Review & save</strong><p>Check the imported questions, reference answers, and sources.</p></div></li>
+                <li><span>3</span><div><strong>Run & inspect</strong><p>Run tests, then compare actual answers in Test conversations.</p></div></li>
+              </ol>
+              <p class="qa-starter-note"><span class="material-symbols-outlined" aria-hidden="true">info</span><span>Current tests check exact wording. A correct paraphrase or extra citation can fail. English text only; voice is not tested.</span></p>
+            </section>
+          }
 
           @if (tab() === 'overview') {
             <section class="qa-metrics" aria-label="QA summary">
@@ -69,9 +92,8 @@
             </section>
           }
           @if (tab() === 'library') {
-            <section class="qa-panel"><div class="qa-panel-title"><div><h2>Answer library</h2><p>{{ references().length }} reference answers · Revision {{ workspace.revision }} · Maximum 100 entries</p></div><div class="qa-actions"><button type="button" (click)="importOpen.set(!importOpen())">Import JSON</button><button type="button" (click)="edit()" [disabled]="references().length >= 100">+ Add answer</button><button type="button" class="qa-primary" (click)="save()" [disabled]="!dirty() || busy()">Save library</button></div></div>
+            <section class="qa-panel"><div class="qa-panel-title"><div><h2>Answer library</h2><p>{{ references().length }} reference answers · Revision {{ workspace.revision }} · Maximum 100 entries</p></div><div class="qa-actions"><button type="button" (click)="openImport()">Upload / paste JSON</button><button type="button" (click)="edit()" [disabled]="references().length >= 100">+ Add answer</button><button type="button" class="qa-primary" (click)="save()" [disabled]="!dirty() || busy()">Save library</button></div></div>
               <div class="qa-source-import"><label>Import an attached answer key<select [ngModel]="selectedDocument()" (ngModelChange)="selectedDocument.set($event)"><option value="">Choose an indexed document</option>@for (document of workspace.documents; track document.id) { <option [value]="document.id" [disabled]="document.status !== 'indexed'">{{ document.filename }} · {{ document.status }}</option> }</select></label><button type="button" (click)="importDocument()" [disabled]="busy() || !selectedDocument()">{{ busy() ? 'Working…' : 'Extract draft answers' }}</button><p>Extraction uses AI to identify pairs, verifies answer text against the source, and imports drafts. Review every answer and category before saving.</p></div>
-              @if (importOpen()) { <div class="qa-import"><label>Answer-key JSON<textarea rows="8" [ngModel]="importText()" (ngModelChange)="importText.set($event)" placeholder="Paste a JSON array using the downloadable template"></textarea></label><div class="qa-actions"><button type="button" (click)="template()">Download template</button><label class="qa-file-button">Choose JSON file<input type="file" accept=".json,application/json" (change)="readFile($event)" /></label><button type="button" (click)="importJson()" [disabled]="busy()">Add imported entries</button></div></div> }
               <div class="qa-library">@for (reference of references(); track reference.id) { <article><header><div><strong>{{ reference.id }}</strong><span class="qa-badge">{{ reference.category }}</span><span class="qa-badge" [class.qa-badge--warn]="reference.approval === 'draft'">{{ reference.approval === 'draft' ? 'Draft · pending approval' : 'Approval recorded' }}</span></div><div><button type="button" (click)="edit(reference)">Edit</button><button class="qa-text-button" type="button" (click)="remove(reference)">Remove</button></div></header><h3>{{ reference.question }}</h3><p class="qa-verbatim">{{ reference.expectedAnswer }}</p><small>Source: {{ reference.source }}@if (reference.approval === 'approved') { · {{ reference.approvedBy }} · {{ reference.approvedOn }} }@if (reference.followUps.length) { · {{ reference.followUps.length }} follow-up(s) }</small></article> } @empty { <div class="qa-empty"><span class="material-symbols-outlined" aria-hidden="true">menu_book</span><h3>Start with your reference answers</h3><p>Extract an attached answer key, import JSON, or add a question and its expected response.</p><button type="button" (click)="edit()">Add first answer</button></div> }</div>
             </section>
           }
@@ -88,6 +110,56 @@
   </div>
 </div>
 
+@if (importOpen()) {
+  <div class="qa-overlay">
+    <section class="qa-dialog qa-dialog--import" role="dialog" aria-modal="true" aria-labelledby="qa-import-title" aria-describedby="qa-import-description" tabindex="-1">
+      <header><div><span class="qa-eyebrow">Step 1 · Prepare your questions</span><h2 id="qa-import-title">Upload a test file</h2></div><button type="button" aria-label="Close test-file upload" (click)="closeImport()">×</button></header>
+      <div class="qa-import-body">
+      <p id="qa-import-description">Add questions and reference answers for {{ data()?.target?.avatarName }}. Preview them here before adding them to the library.</p>
+      <div class="qa-upload-box">
+        <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+        <label for="qa-test-file">Choose a JSON test file</label>
+        <input id="qa-test-file" type="file" accept=".json,application/json" (change)="readFile($event)" aria-describedby="qa-file-limits" />
+        <small id="qa-file-limits">Up to 500 KB · 100 scenarios maximum · Up to 5 questions per scenario</small>
+      </div>
+      <div class="qa-example-row"><div><strong>Need a starting point?</strong><small>{{ example().description }}. Example answers are drafts, not verified passing responses.</small></div><a class="qa-file-button" [href]="example().url" [attr.download]="example().name">Download example</a></div>
+      <details class="qa-paste-json"><summary>Or paste JSON instead</summary><label>Test-file JSON<textarea rows="7" spellcheck="false" [ngModel]="importText()" (ngModelChange)="updateImportText($event)" [disabled]="importReading()" placeholder="Paste the JSON array from your test file"></textarea></label></details>
+      @if (importReading()) { <p role="status">Reading your file…</p> }
+      @if (importError() || importPreview().error) { <p class="qa-dialog-error" role="alert">{{ importError() || importPreview().error }}</p> }
+      @if (importPreview(); as preview) {
+        @if (preview.entries.length) {
+          <section class="qa-import-preview" aria-label="Test-file preview" aria-live="polite">
+            <div class="qa-import-summary"><div><h3>Ready to review</h3><small>{{ importFilename() || 'Pasted JSON' }}</small></div><span>{{ preview.entries.length }} scenarios · {{ preview.turns }} questions</span></div>
+            <ul>@for (entry of preview.entries; track entry.id) { <li><span class="qa-badge">{{ entry.id }}</span><div><strong>{{ entry.question }}</strong><small>{{ entry.category }} · {{ entry.followUps.length }} follow-ups · {{ entry.approval === 'approved' ? 'Approval recorded' : 'Draft' }}</small></div></li> }</ul>
+            @if (preview.drafts) { <p>{{ preview.drafts }} draft reference(s). Drafts can be tested, but they block review readiness until approval is recorded.</p> }
+          </section>
+        }
+      }
+      <p class="qa-import-reminder">Adding these tests does not change the avatar’s script or start a run. Review the reference answers, then save the library. Existing answers will be kept.</p>
+      </div>
+      <footer><button type="button" (click)="closeImport()">Cancel</button><button type="button" class="qa-primary" (click)="importJson()" [disabled]="busy() || importReading() || !importPreview().entries.length || !!importPreview().error || !!importError()">Add {{ importPreview().entries.length || '' }} scenarios to library</button></footer>
+    </section>
+  </div>
+}
+@if (helpOpen()) {
+  <div class="qa-overlay">
+    <section class="qa-dialog qa-dialog--help" role="dialog" aria-modal="true" aria-labelledby="qa-help-title" tabindex="-1">
+      <header><div><span class="qa-eyebrow">Your first focused test</span><h2 id="qa-help-title">How to test this avatar</h2></div><button type="button" aria-label="Close testing guide" (click)="helpOpen.set(false)">×</button></header>
+      <p>QA asks {{ data()?.target?.avatarName }} your test questions and records the actual answers. Start with a few facts and boundaries that matter for this avatar.</p>
+      <ol class="qa-help-steps">
+        <li><strong>Download the example.</strong> Edit the questions, expected answers, and sources. For your first suite, try 3–10 scenarios. The example answers are drafts based on a script, not observed successful responses.</li>
+        <li><strong>Upload and preview.</strong> Choose a JSON file or paste its contents. Invalid entries and duplicate IDs are flagged before anything is added.</li>
+        <li><strong>Review and save the library.</strong> Use Edit to inspect each answer. Keep unreviewed answers as drafts; record an approver and date only when approval actually exists.</li>
+        <li><strong>Run tests.</strong> Once saved, select Run tests and confirm the questions are synthetic. Each scenario starts a fresh English text conversation; follow-ups keep that scenario’s history. Runs consume live AI-provider usage.</li>
+        <li><strong>Read the actual responses.</strong> Open Test conversations to compare expected and actual answers, inspect citations, and record a review. Fix the avatar’s script or knowledge where needed, then rerun.</li>
+      </ol>
+      <aside class="qa-help-callout"><strong>Exact wording, not a judgment of meaning</strong><p>The complete answer must match the reference, including punctuation and any Sources line. Only outer whitespace is ignored. A correct paraphrase can fail, and internet fallback fails the reference-only check. Read the actual response before deciding what needs fixing.</p></aside>
+      <details><summary>What goes in the JSON file?</summary><p>Use an array of test entries. The example and blank template have the right structure.</p><dl class="qa-help-fields"><dt>id</dt><dd>A unique reference such as GIST-001. Use letters, numbers, hyphens, or underscores.</dd><dt>question</dt><dd>The visitor’s question, up to 1,000 characters.</dd><dt>expectedAnswer</dt><dd>The complete reference response, up to 6,000 characters.</dd><dt>category</dt><dd>education, boundary, urgent, or emergency. Mismatches in urgent or emergency are marked critical.</dd><dt>source</dt><dd>The document, script section, or version supporting the answer.</dd><dt>approval</dt><dd>draft by default. approved requires approvedBy and a valid approvedOn date in YYYY-MM-DD format.</dd><dt>followUps</dt><dd>An optional array of up to four additional question and expectedAnswer pairs.</dd></dl><button type="button" (click)="template()">Download blank template</button></details>
+      <p class="qa-import-reminder">These checks cover English text only. They do not test audio or translations, train the avatar, or automatically prevent a live response. Drafts and failed tests block review readiness; a passing run still needs human review. Use synthetic questions without private or identifying information.</p>
+      <footer><button type="button" class="qa-primary" (click)="helpOpen.set(false)">Got it</button></footer>
+    </section>
+  </div>
+}
 @if (editing()) {
   <div class="qa-overlay"><section class="qa-dialog" role="dialog" aria-modal="true" aria-labelledby="qa-edit-title" tabindex="-1"><header><h2 id="qa-edit-title">{{ originalId ? 'Edit reference answer' : 'Add reference answer' }}</h2><button type="button" aria-label="Close answer editor" (click)="editing.set(false)">×</button></header>
     @if (error()) { <p class="qa-dialog-error" role="alert">{{ error() }}</p> }

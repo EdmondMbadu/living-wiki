@@ -8,6 +8,9 @@ import { TeamsService } from '../teams/teams.service';
 import { teamsServiceStub } from '../teams/teams.testing';
 import { AvatarQaComponent } from './avatar-qa';
 import { AvatarQaService, type QaWorkspace, type QaReference } from './avatar-qa.service';
+import { previewQaImport } from './avatar-qa-import';
+import gistExample from '../../../public/assets/avatar-qa/mordecai-gist-example.json';
+import genericExample from '../../../public/assets/avatar-qa/avatar-qa-example.json';
 const reference: QaReference = { id: 'AMD-001', question: 'A question?', expectedAnswer: 'Reference.', category: 'education', source: 'Answer key v1', approval: 'draft', approvedBy: '', approvedOn: '', followUps: [] };
 const workspace: QaWorkspace = { target: { boardId: 'b1', cardId: 'c1', atlasId: 'a1', boardTitle: 'Wet AMD', avatarName: 'Maya Chen', openingMessage: 'Hello', personaPrompt: 'Reviewed educational guide', boardSlug: 'wet-amd' }, references: [reference], revision: 1, documents: [], runs: [], selectedRun: null };
 describe('AvatarQaComponent', () => {
@@ -39,7 +42,75 @@ describe('AvatarQaComponent', () => {
     expect(page.references().length).toBe(2); expect(page.dirty()).toBeTrue();
     expect(service.command.calls.allArgs().some(args => args[2] === 'save')).toBeFalse();
     page.importText.set(JSON.stringify([reference])); page.importJson();
-    expect(page.error()).toContain('overlap'); expect(page.references().length).toBe(2);
+    expect(page.importPreview().error).toContain('already exists'); expect(page.references().length).toBe(2);
+  });
+  it('previews an uploaded example before adding unsaved entries, without saving or starting a run', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    page.openImport(); fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('#qa-test-file') as HTMLInputElement;
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([JSON.stringify(gistExample)], 'gist-tests.json', { type: 'application/json' }));
+    input.files = transfer.files;
+    await page.readFile({ target: input } as unknown as Event); fixture.detectChanges();
+    expect(page.importPreview().entries.length).toBe(3);
+    expect(page.importPreview().turns).toBe(4);
+    expect(page.references().length).toBe(1);
+    expect(page.dirty()).toBeFalse();
+    expect(fixture.nativeElement.querySelector('.qa-import-preview')?.textContent).toContain('GIST-001');
+    expect(input.value).toBe('');
+    page.importJson(); fixture.detectChanges();
+    expect(page.references().length).toBe(4);
+    expect(page.dirty()).toBeTrue();
+    expect(page.tab()).toBe('library');
+    expect(page.importOpen()).toBeFalse();
+    expect(page.notice()).toContain('save the library');
+    expect(service.command.calls.allArgs().some(args => ['save','start'].includes(args[2]))).toBeFalse();
+  });
+  it('rejects invalid, oversized, and non-JSON files without changing the library', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    page.openImport(); fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('#qa-test-file') as HTMLInputElement;
+    for (const [file, message] of [
+      [new File(['not JSON'], 'tests.json'), 'not valid JSON'],
+      [new File([' '], 'empty.json'), 'empty'],
+      [new File(['x'.repeat(500001)], 'large.json'), '500 KB'],
+      [new File(['some text'], 'tests.txt'), '.json file'],
+    ] as const) {
+      const transfer = new DataTransfer(); transfer.items.add(file); input.files = transfer.files;
+      await page.readFile({ target: input } as unknown as Event); fixture.detectChanges();
+      expect(page.importError() || page.importPreview().error).toContain(message);
+      expect(page.references().length).toBe(1);
+      expect(page.dirty()).toBeFalse();
+    }
+  });
+  it('keeps a closed upload closed when its file finishes reading later', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    let finish!: (text: string) => void;
+    const pending = new Promise<string>(resolve => { finish = resolve; });
+    const file = new File(['pending'], 'tests.json');
+    spyOn(file, 'text').and.returnValue(pending);
+    page.openImport();
+    const reading = page.readFile({ target: { files: [file], value: '' } } as unknown as Event);
+    page.closeImport();
+    finish(JSON.stringify(gistExample)); await reading;
+    expect(page.importOpen()).toBeFalse(); expect(page.importText()).toBe(''); expect(page.importReading()).toBeFalse();
+    expect(page.references().length).toBe(1);
+  });
+  it('shows the avatar-specific example and explains exact wording in an accessible modal', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    page.data.set({ ...workspace, target: { ...workspace.target, avatarName: 'Major Mordecai Gist' } });
+    fixture.detectChanges();
+    const link = fixture.nativeElement.querySelector('.qa-starter a[download]') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/assets/avatar-qa/mordecai-gist-example.json');
+    expect(link.download).toBe('mordecai-gist-example.json');
+    const help = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(button => button.textContent?.includes('How to test'))!;
+    help.click(); fixture.detectChanges();
+    const dialog = fixture.nativeElement.querySelector('[aria-labelledby="qa-help-title"]') as HTMLElement;
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    expect(dialog.textContent).toContain('A correct paraphrase can fail');
+    expect(page.dialogOpen()).toBeTrue();
+    page.closeDialog(); fixture.detectChanges();
+    expect(page.helpOpen()).toBeFalse(); expect(page.dialogOpen()).toBeFalse();
   });
   it('requires the synthetic-fixture acknowledgement and a saved suite before running', async () => {
     const fixture = await render(), page = fixture.componentInstance;
@@ -80,5 +151,25 @@ describe('AvatarQaComponent', () => {
     for (const [tab, text] of [['library','Answer key v1'], ['protocol','What this run measures'], ['history','No runs saved yet.']] as const) {
       page.tab.set(tab); fixture.detectChanges(); expect(fixture.nativeElement.textContent).toContain(text);
     }
+  });
+});
+
+describe('QA file contract', () => {
+  it('ships valid draft example files with the advertised scenario and question counts', () => {
+    const gist = previewQaImport(JSON.stringify(gistExample), []);
+    const generic = previewQaImport(JSON.stringify(genericExample), []);
+    expect(gist.error).toBe(''); expect(gist.entries.length).toBe(3); expect(gist.turns).toBe(4); expect(gist.drafts).toBe(3);
+    expect(generic.error).toBe(''); expect(generic.entries.length).toBe(2); expect(generic.drafts).toBe(2);
+  });
+  it('blocks bad shapes, duplicate IDs, invalid approval dates and excessive follow-ups', () => {
+    for (const value of [
+      { question: 'Not an array' }, [], [reference, reference],
+      [{ ...reference, approval: 'approved', approvedBy: 'Reviewer', approvedOn: '2026-02-30' }],
+      [{ ...reference, followUps: Array(5).fill({ question: 'Question?', expectedAnswer: 'Answer.' }) }],
+      [{ ...reference, question: 'x'.repeat(1001) }],
+    ]) expect(previewQaImport(JSON.stringify(value), []).error).not.toBe('');
+    expect(previewQaImport(JSON.stringify([reference]), [reference]).error).toContain('already exists');
+    const full = Array.from({length: 100}, (_, index) => ({...reference, id: `EXISTING-${index}`}));
+    expect(previewQaImport(JSON.stringify([reference]), full).error).toContain('100');
   });
 });

@@ -9,10 +9,11 @@ import { MobileMenuComponent } from '../mobile-menu/mobile-menu';
 import { WorkspaceNavigationService } from '../workspace-navigation/workspace-navigation';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 import { AvatarQaService, type QaWorkspace, type QaReference, type QaResult, type QaCategory } from './avatar-qa.service';
+import { previewQaImport } from './avatar-qa-import';
 
 type Tab = 'overview' | 'conversations' | 'library' | 'protocol' | 'history';
 @Component({
-  selector: 'app-avatar-qa', imports: [RouterLink, FormsModule, DatePipe, DecimalPipe, JsonPipe, JsonPipe, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent],
+  selector: 'app-avatar-qa', imports: [RouterLink, FormsModule, DatePipe, DecimalPipe, JsonPipe, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent],
   templateUrl: './avatar-qa.html', styleUrl: './avatar-qa.css',
 })
 export class AvatarQaComponent {
@@ -31,6 +32,7 @@ export class AvatarQaComponent {
   private selectedRunId = '';
   private startRequestId = '';
   private commandErrorCode = '';
+  private importReadSequence = 0;
   readonly data = signal<QaWorkspace | null>(null);
   readonly loading = signal(true);
   readonly refreshing = signal(false);
@@ -46,6 +48,14 @@ export class AvatarQaComponent {
   readonly dirty = signal(false);
   readonly importText = signal('');
   readonly importOpen = signal(false);
+  readonly helpOpen = signal(false);
+  readonly importFilename = signal('');
+  readonly importError = signal('');
+  readonly importReading = signal(false);
+  readonly importPreview = computed(() => previewQaImport(this.importText(), this.references()));
+  readonly example = computed(() => /\bmordecai gist\b/i.test(this.data()?.target.avatarName ?? '')
+    ? { url: '/assets/avatar-qa/mordecai-gist-example.json', name: 'mordecai-gist-example.json', label: 'Mordecai Gist example', description: '3 draft scenarios · 4 questions · Rank, uncertainty, and invented quotations' }
+    : { url: '/assets/avatar-qa/avatar-qa-example.json', name: 'avatar-qa-example.json', label: 'Example test file', description: '2 draft scenarios · Adapt the questions and answers to this avatar' });
   readonly selectedDocument = signal('');
   readonly runSetup = signal(false);
   readonly syntheticConfirmed = signal(false);
@@ -87,7 +97,7 @@ export class AvatarQaComponent {
     return 'Ready for human review';
   });
   readonly resultReviews = computed(() => this.run()?.reviews.filter(r => r.resultId === this.selectedResult()?.id) ?? []);
-  readonly dialogOpen = computed(() => this.editing() || this.runSetup() || !!this.selectedResult());
+  readonly dialogOpen = computed(() => this.editing() || this.runSetup() || !!this.selectedResult() || this.importOpen() || this.helpOpen());
   readonly failedCount = computed(() => this.run()?.failed ?? 0);
 
   constructor() {
@@ -109,11 +119,12 @@ export class AvatarQaComponent {
       this.sequence++; this.operation++; this.selectedRunId = ''; this.startRequestId = '';
       this.data.set(null); this.references.set([]); this.dirty.set(false); this.busy.set(false);
       this.notice.set(''); this.error.set(''); this.editing.set(false); this.selectedResult.set(null); this.runSetup.set(false);
+      this.closeImport(); this.importText.set(''); this.importFilename.set(''); this.helpOpen.set(false);
       this.tab.set('overview'); this.search.set(''); this.filter.set('all');
       if (this.timer) clearTimeout(this.timer);
       if (this.browser) void this.load(true); else this.loading.set(false);
     });
-    this.destroyRef.onDestroy(() => { this.disposed = true; this.sequence++; if (this.timer) clearTimeout(this.timer); });
+    this.destroyRef.onDestroy(() => { this.disposed = true; this.sequence++; this.importReadSequence++; if (this.timer) clearTimeout(this.timer); });
   }
   @HostListener('window:beforeunload', ['$event'])
   beforeUnload(event: BeforeUnloadEvent): void { if (this.dirty()) { event.preventDefault(); event.returnValue = ''; } }
@@ -127,7 +138,7 @@ export class AvatarQaComponent {
     if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) { event.preventDefault(); last?.focus(); }
     else if (!event.shiftKey && (document.activeElement === last || document.activeElement === dialog)) { event.preventDefault(); first?.focus(); }
   }
-  @HostListener('document:keydown.escape') closeDialog(): void { this.selectedResult.set(null); this.editing.set(false); this.runSetup.set(false); }
+  @HostListener('document:keydown.escape') closeDialog(): void { this.selectedResult.set(null); this.editing.set(false); this.runSetup.set(false); this.closeImport(); this.helpOpen.set(false); }
   emptyReference(): QaReference { return { id: '', question: '', expectedAnswer: '', category: 'education', source: '', approval: 'draft', approvedBy: '', approvedOn: '', followUps: [] }; }
   async load(initial = false): Promise<void> {
     if (this.timer) clearTimeout(this.timer);
@@ -187,7 +198,10 @@ export class AvatarQaComponent {
     } catch (error) { this.error.set(this.message(error)); }
   }
   remove(reference: QaReference): void { this.references.update(items => items.filter(r => r.id !== reference.id)); this.dirty.set(true); }
-  async discard(): Promise<void> { this.dirty.set(false); await this.load(); }
+  async discard(): Promise<void> {
+    this.dirty.set(false); await this.load();
+    if (!this.error()) this.notice.set('Unsaved answer-library changes discarded.');
+  }
   validateEntries(entries: QaReference[]): void {
     if (!Array.isArray(entries) || entries.length > 100) throw new Error('Provide a JSON array of up to 100 entries.');
     const ids = new Set<string>();
@@ -201,13 +215,16 @@ export class AvatarQaComponent {
     }
   }
   importJson(): void {
-    try {
-      const value = JSON.parse(this.importText());
-      if (!Array.isArray(value)) throw new Error('Provide a JSON array.');
-      const entries = value.map((e: QaReference) => ({ ...this.emptyReference(), ...e }));
-      this.mergeImports(entries); this.importOpen.set(false); this.importText.set('');
-    } catch (error) { this.error.set(this.message(error)); }
+    if (this.importReading()) return;
+    const preview = this.importPreview();
+    if (preview.error || !preview.entries.length) { this.importError.set(preview.error || 'Choose a JSON file or paste your test questions first.'); return; }
+    this.mergeImports(preview.entries);
+    this.tab.set('library'); this.closeImport(); this.importText.set(''); this.importFilename.set('');
+    this.notice.set(`${preview.entries.length} scenario(s), ${preview.turns} question(s) added as unsaved edits. Review the answers below, then save the library to enable Run tests.`);
   }
+  openImport(): void { this.importError.set(''); this.importOpen.set(true); }
+  closeImport(): void { this.importReadSequence++; this.importReading.set(false); this.importOpen.set(false); this.importError.set(''); }
+  updateImportText(text: string): void { this.importText.set(text); this.importFilename.set(''); this.importError.set(''); }
   mergeImports(entries: QaReference[]): void {
     this.validateEntries(entries);
     if (entries.some(e => this.references().some(r => r.id === e.id))) throw new Error('Imported IDs overlap existing entries. Rename the IDs before importing.');
@@ -222,10 +239,20 @@ export class AvatarQaComponent {
   async readFile(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement, file = input.files?.[0];
     if (!file) return;
-    if (file.size > 500000) { this.error.set('Choose a JSON file smaller than 500 KB.'); input.value = ''; return; }
-    try { this.importText.set(await file.text()); this.importOpen.set(true); }
-    catch (error) { this.error.set(this.message(error)); }
-    finally { input.value = ''; }
+    const sequence = ++this.importReadSequence;
+    this.importText.set(''); this.importFilename.set(''); this.importError.set('');
+    this.importReading.set(false);
+    if (!/\.json$/i.test(file.name)) { this.importError.set('Choose a .json file. Download the example to see the supported format.'); input.value = ''; return; }
+    if (file.size > 500000) { this.importError.set('Choose a JSON file no larger than 500 KB.'); input.value = ''; return; }
+    this.importReading.set(true);
+    try {
+      const text = await file.text();
+      if (sequence !== this.importReadSequence || this.disposed) return;
+      if (!text.trim()) { this.importError.set('This file is empty. Download the example or add at least one test entry.'); return; }
+      this.importText.set(text); this.importFilename.set(file.name);
+    }
+    catch { if (sequence === this.importReadSequence) this.importError.set('This file could not be read. Choose it again or paste the JSON below.'); }
+    finally { if (sequence === this.importReadSequence) this.importReading.set(false); input.value = ''; }
   }
   template(): void { this.download('avatar-qa-answer-key-template.json', JSON.stringify([{ ...this.emptyReference(), id: 'REF-001', question: 'Your test question', expectedAnswer: 'The exact reviewed response.', source: 'Answer key v1.0 · entry 1' }], null, 2), 'application/json'); }
   openRun(): void { this.syntheticConfirmed.set(false); this.runSetup.set(true); }

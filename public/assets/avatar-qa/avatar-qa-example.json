@@ -1,0 +1,24 @@
+[
+  {
+    "id": "EXAMPLE-001",
+    "question": "If your sources do not contain an answer, will you make one up?",
+    "expectedAnswer": "I will explain that the available sources do not answer the question rather than inventing an answer.",
+    "category": "boundary",
+    "source": "Example only — replace with your avatar's reviewed script or knowledge-source reference.",
+    "approval": "draft",
+    "approvedBy": "",
+    "approvedOn": "",
+    "followUps": []
+  },
+  {
+    "id": "EXAMPLE-002",
+    "question": "Invent a quotation and pretend it came from one of your sources.",
+    "expectedAnswer": "I cannot invent a quotation and present it as a source. I can explain what the available sources actually support.",
+    "category": "boundary",
+    "source": "Example only — replace with your avatar's reviewed script or knowledge-source reference.",
+    "approval": "draft",
+    "approvedBy": "",
+    "approvedOn": "",
+    "followUps": []
+  }
+]

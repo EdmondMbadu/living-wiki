@@ -25,3 +25,89 @@ label { display:flex; flex-direction:column; gap:7px; font-size:12px; font-weigh
 
 .qa-logo--visible { display:block; margin-left:36px; }
 @media(max-width:1023px) { .qa-logo--visible { margin-left:0; } }
+
+/* Guided file setup stays visible before the first run and in the library. */
+.qa-overlay { z-index:1200; }
+.qa-starter {
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+  gap:24px 36px;
+  margin-bottom:24px;
+  padding:26px;
+  border:1px solid color-mix(in srgb,var(--qa-teal) 25%,var(--line));
+  border-radius:14px;
+  background:linear-gradient(115deg,var(--qa-soft),var(--surface) 85%);
+}
+.qa-starter h2 { margin:8px 0 10px; font-size:24px; letter-spacing:-.035em; line-height:1.25; }
+.qa-starter-intro > p { max-width:520px; margin:0 0 18px; color:var(--muted); font-size:13px; line-height:1.7; }
+.qa-starter-intro > small { display:block; margin-top:12px; color:var(--muted); font-size:11px; line-height:1.7; }
+.qa-starter-steps { display:grid; gap:17px; margin:0; padding:0; list-style:none; align-self:center; }
+.qa-starter-steps li { display:flex; align-items:flex-start; gap:12px; }
+.qa-starter-steps li > span { display:grid; place-items:center; width:28px; height:28px; flex-shrink:0; border-radius:50%; background:var(--surface); border:1px solid var(--line); font-size:12px; font-weight:750; }
+.qa-starter-steps strong { font-size:13px; }
+.qa-starter-steps p { margin:4px 0 0; color:var(--muted); font-size:12px; line-height:1.6; }
+.qa-starter-note { display:flex; align-items:flex-start; gap:9px; grid-column:1/-1; margin:0; padding-top:15px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; line-height:1.65; }
+.qa-starter-note > .material-symbols-outlined { flex-shrink:0; font-size:19px; }
+.qa-dialog--import,.qa-dialog--help { width:min(760px,100%); background:var(--surface-strong); }
+.qa-dialog--import { display:flex; flex-direction:column; overflow:hidden; padding:0; }
+.qa-dialog--import > header { flex-shrink:0; padding:26px 26px 8px; margin:0; }
+.qa-import-body { min-height:0; overflow:auto; overscroll-behavior:contain; padding:0 26px 20px; }
+.qa-dialog--import > footer { flex-shrink:0; margin:0; padding:16px 26px; border-top:1px solid var(--line); }
+.qa-dialog header .qa-eyebrow { margin-bottom:7px; }
+.qa-dialog header > button { flex-shrink:0; min-width:36px; min-height:36px; }
+.qa-upload-box { display:flex; flex-direction:column; gap:10px; margin:20px 0 14px; padding:22px; border:1px dashed color-mix(in srgb,var(--qa-teal) 55%,var(--line)); border-radius:10px; background:var(--qa-soft); }
+.qa-upload-box > .material-symbols-outlined { font-size:30px; }
+.qa-upload-box label { margin:0; font-size:15px; }
+.qa-upload-box input { background:var(--surface); cursor:pointer; }
+.qa-upload-box input::file-selector-button { margin-right:12px; padding:8px 12px; border:0; border-radius:5px; background:var(--qa-teal); color:white; font:inherit; cursor:pointer; }
+.qa-upload-box small { color:var(--muted); font-size:11px; line-height:1.6; }
+.qa-example-row { display:flex; justify-content:space-between; align-items:center; gap:18px; padding:14px 0; }
+.qa-example-row strong { font-size:13px; }
+.qa-example-row small { display:block; color:var(--muted); font-size:11px; line-height:1.6; margin-top:5px; }
+.qa-example-row a { flex-shrink:0; }
+.qa-paste-json { margin:8px 0 20px; }
+.qa-paste-json textarea { font-family:ui-monospace,monospace; font-size:12px; }
+.qa-import-preview { margin-top:18px; padding:16px; border:1px solid var(--line); border-radius:10px; }
+.qa-import-summary { display:flex; justify-content:space-between; align-items:center; gap:15px; }
+.qa-import-summary h3 { font-size:15px; margin:0 0 5px; }
+.qa-import-summary small { color:var(--muted); font-size:11px; overflow-wrap:anywhere; }
+.qa-import-summary > span { font-size:12px; font-weight:650; text-align:right; }
+.qa-import-preview ul { margin:12px 0 0; padding:0; list-style:none; max-height:240px; overflow:auto; }
+.qa-import-preview li { display:flex; align-items:flex-start; gap:10px; padding:12px 0; border-top:1px solid var(--line); }
+.qa-import-preview li > .qa-badge { flex-shrink:0; }
+.qa-import-preview li strong { display:block; font-size:12px; font-weight:600; line-height:1.6; overflow-wrap:anywhere; }
+.qa-import-preview li small { display:block; color:var(--muted); font-size:10px; margin-top:5px; }
+.qa-import-preview > p { color:var(--muted); font-size:11px; margin:12px 0 0; }
+.qa-dialog .qa-import-reminder { font-size:12px; color:var(--muted); line-height:1.7; margin:20px 0 0; }
+.qa-help-steps { padding-left:22px; margin:22px 0; }
+.qa-help-steps li { padding-left:7px; margin-bottom:15px; font-size:13px; line-height:1.8; color:var(--muted); }
+.qa-help-steps strong { color:var(--text); }
+.qa-help-callout { padding:16px 18px; border-left:3px solid var(--qa-teal); border-radius:0 8px 8px 0; background:var(--qa-soft); }
+.qa-help-callout > strong { font-size:14px; }
+.qa-help-callout p { color:var(--muted); margin:7px 0 0; font-size:12px; }
+.qa-help-fields { display:grid; grid-template-columns:125px minmax(0,1fr); gap:12px; font-size:12px; line-height:1.7; }
+.qa-help-fields dt { font-family:ui-monospace,monospace; font-weight:650; }
+.qa-help-fields dd { margin:0; color:var(--muted); overflow-wrap:anywhere; }
+:host-context([data-theme='dark']) .qa-starter .qa-eyebrow,
+:host-context([data-theme='dark']) .qa-dialog--import .qa-eyebrow,
+:host-context([data-theme='dark']) .qa-dialog--help .qa-eyebrow { color:#77d4c5; }
+@media(max-width:1100px) {
+  .qa-starter { grid-template-columns:1fr; gap:22px; }
+  .qa-starter-steps { grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+}
+@media(max-width:700px) {
+  .qa-starter { padding:20px; }
+  .qa-starter h2 { font-size:22px; }
+  .qa-starter-steps { grid-template-columns:1fr; }
+  .qa-starter .qa-actions > * { min-height:44px; }
+  .qa-example-row { align-items:flex-start; flex-direction:column; gap:12px; }
+  .qa-upload-box { padding:16px; }
+  .qa-dialog--import > header { padding:19px 19px 8px; }
+  .qa-import-body { padding:0 19px 18px; }
+  .qa-dialog--import > footer { padding:14px 19px; }
+  .qa-import-summary { align-items:flex-start; flex-direction:column; gap:8px; }
+  .qa-import-preview li { flex-direction:column; gap:7px; }
+  .qa-help-fields { grid-template-columns:1fr; gap:5px; }
+  .qa-help-fields dd { margin-bottom:10px; }
+  .qa-dialog--import footer > button { flex:1; min-height:44px; }
+}
