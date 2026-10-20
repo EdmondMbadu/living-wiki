@@ -5,10 +5,16 @@
     <div class="mobile-home-surface">
     <header class="mobile-home-header">
       <app-mobile-menu activePage="home"></app-mobile-menu>
-      <a routerLink="/home" class="mobile-brand" aria-label="LivingWiki home" i18n-aria-label>
-        <img src="/assets/image/lucky-paper-crane.png" alt="" />
-        <span><b>Living</b>Wiki</span>
-      </a>
+      <div class="picamo-home-brand-lockup">
+        <a routerLink="/home" class="mobile-brand" aria-label="LivingWiki home" i18n-aria-label>
+          <img src="/assets/image/lucky-paper-crane.png" alt="" />
+          <span><b>Living</b>Wiki</span>
+        </a>
+        <button type="button" class="picamo-brand-companion" (click)="picamoAssistant.open()" [attr.aria-label]="picamoText.meet">
+          <img [src]="picamoAvatar" width="40" height="48" alt="" />
+          <span>{{ picamoText.yourGuide }}</span>
+        </button>
+      </div>
 
       <div class="mobile-head-actions">
         <app-language-switcher></app-language-switcher>
@@ -27,7 +33,8 @@
         <span i18n>Find what </span><em i18n>lights you up.</em>
       </p>
 
-      <section id="mobile-city" class="mobile-city-block mobile-city-block--top">
+      <section id="mobile-city" class="mobile-city-block mobile-city-block--top picamo-home-hero">
+        <div class="picamo-home-welcome">
         <div class="mobile-city-row">
           @if (mobileDirectoryPreference(); as selectedWiki) {
             <span class="mobile-selected-city-picture">
@@ -45,7 +52,8 @@
             </span>
           }
           <div class="mobile-city-identity">
-            <span class="mobile-city-label" i18n>Your place</span>
+            <span class="mobile-city-label">{{ picamoText.yourPlace }}</span>
+            <p class="picamo-home-knows">{{ mobileDirectoryPreference() ? picamoText.knows : picamoText.letsExplore }}</p>
             <div class="mobile-city-identity__line">
               <button
                 type="button"
@@ -62,6 +70,13 @@
                 <button type="button" class="mobile-city-clear" (click)="clearHomeDirectoryPreference()" i18n>Clear</button>
               }
             </div>
+            <p class="picamo-home-introduction">{{ picamoText.ready }}</p>
+          </div>
+        </div>
+          <div class="picamo-home-art" aria-hidden="true">
+            @if (mobileDirectoryPreference()?.heroUrl; as skyline) { <img class="picamo-home-art__skyline" [src]="skyline" alt="" /> }
+            <span class="picamo-home-art__wash"></span>
+            <img class="picamo-home-art__mascot" [src]="picamoArtwork" width="662" height="900" alt="" fetchpriority="high" />
           </div>
         </div>
 
@@ -172,7 +187,7 @@
             <a [routerLink]="preferenceLink" class="mobile-talk-action">
               <span class="material-symbols-outlined">graphic_eq</span>
               <span>
-                <b i18n>Open {{ mobileDirectoryPreferenceName() }}</b>
+                <b>{{ picamoText.exploreWith }} <span aria-hidden="true">→</span></b>
               </span>
             </a>
             <a
@@ -201,8 +216,8 @@
         <div class="mobile-discover-head">
           <span class="material-symbols-outlined">travel_explore</span>
           <div>
-            <p i18n>Discover</p>
-            <h2 i18n>Boards from around LivingWiki</h2>
+            <p>{{ picamoText.picks }}</p>
+            <h2>{{ picamoText.curiosity }}</h2>
           </div>
           <a routerLink="/discover" class="mobile-rail-view-all" i18n>View all</a>
         </div>
@@ -631,7 +646,7 @@
   </div>
   } @else {
 
-  <div class="legacy-public-page">
+  <div class="legacy-public-page" [class.public-with-workspace]="isSignedIn()">
   <div class="relative flex min-h-screen flex-col" [class.md:h-screen]="isSignedIn()" [class.md:flex-row]="isSignedIn()" [class.md:overflow-hidden]="isSignedIn()">
   @if (isSignedIn()) {
     <app-workspace-sidebar active="home" [rail]="true"></app-workspace-sidebar>
@@ -640,15 +655,21 @@
   <div class="min-w-0 flex-1" [class.overflow-y-auto]="isSignedIn()">
   <nav class="public-editorial-nav theme-nav sticky top-0 z-50 w-full border-b backdrop-blur-2xl">
     <div class="public-editorial-nav__inner">
-      <a routerLink="/home" class="public-editorial-nav__brand" (click)="showSignedInHome()">
-        <span class="public-livingwiki-brand">
-          <img src="/assets/image/lucky-paper-crane.png" alt="" />
-          <span><b>Living</b>Wiki</span>
-        </span>
-      </a>
+      <div class="picamo-public-brand-lockup">
+        <a routerLink="/home" class="public-editorial-nav__brand" (click)="showSignedInHome()">
+          <span class="public-livingwiki-brand">
+            <img src="/assets/image/lucky-paper-crane.png" alt="" />
+            <span><b>Living</b>Wiki</span>
+          </span>
+        </a>
+        <button type="button" class="picamo-brand-companion" (click)="picamoAssistant.open()" [attr.aria-label]="picamoText.meet">
+          <img [src]="picamoAvatar" width="40" height="48" alt="" />
+          <span>{{ picamoText.meet }}</span>
+        </button>
+      </div>
 
       <div class="public-editorial-nav__links" aria-label="Primary navigation" i18n-aria-label>
-        <a href="#public-directory" i18n>Explore</a>
+        <a href="public-wikis#public-directory" (click)="$event.preventDefault(); explorePublicDirectory()" i18n>Explore</a>
         <a routerLink="/dymaxion" i18n>Map</a>
         <a routerLink="/business" i18n>For business</a>
         <a routerLink="/pricing" i18n>Pricing</a>
@@ -664,23 +685,25 @@
   </nav>
 
   <main>
-    <section class="public-landing-hero">
+    <section class="public-landing-hero picamo-public-hero">
       <div class="public-landing-hero__inner">
         <div class="public-landing-hero__copy">
-          <p class="public-landing-eyebrow" i18n>Public knowledge, made living</p>
-          <h1 i18n>Find what<br />lights you up.</h1>
+          <p class="public-landing-eyebrow" i18n>Meet Picamo. Your LivingWiki guide.</p>
+          <h1><span i18n>Find what </span><em i18n>lights you up.</em></h1>
           <p class="public-landing-hero__lede" i18n>
-            Ask a city. Explore a campus. Discover the boards people make about the places and ideas they know.
+            I’m Picamo. Ask a city, explore a campus, or discover the places and ideas people know best.
           </p>
           <div class="public-landing-hero__actions">
-            <a href="#public-directory" class="public-landing-primary-cta" i18n>Explore LivingWiki</a>
+            <a href="public-wikis#public-directory" (click)="$event.preventDefault(); explorePublicDirectory()" class="public-landing-primary-cta">{{ picamoText.exploreWith }} <span aria-hidden="true">→</span></a>
             <button type="button" (click)="openProductVideo()" class="public-landing-video-cta">
               <span class="material-symbols-outlined">play_arrow</span>
               <span i18n>See how it works</span>
             </button>
           </div>
+          <p class="picamo-public-reassurance"><span aria-hidden="true">✦</span><span i18n>A curious guide. A world worth exploring.</span></p>
         </div>
 
+        <div class="picamo-public-visual">
         <div class="public-landing-collage" aria-label="Featured LivingWiki pages" i18n-aria-label>
           @if (landingSpotlightWikis()[0]; as spotlight) {
             <a [routerLink]="spotlight.link || '/chat'" class="public-landing-collage__primary">
@@ -711,9 +734,13 @@
             <strong>{{ liveCount() }}</strong> public LivingWiki pages
           </div>
         </div>
+          <img class="picamo-public-mascot" [src]="picamoArtwork" width="662" height="900" alt="Picamo welcomes you with a map and a wave" i18n-alt fetchpriority="high" />
+          <button type="button" class="picamo-public-invitation" (click)="picamoAssistant.open()">{{ picamoText.invitation }}</button>
+        </div>
 
         <div class="public-landing-search">
           <label class="public-landing-search__field">
+            <img class="picamo-search-avatar" [src]="picamoAvatar" width="48" height="52" alt="" />
             <span class="material-symbols-outlined">search</span>
             <input
               type="text"

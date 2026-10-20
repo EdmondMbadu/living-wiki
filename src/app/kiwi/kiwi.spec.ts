@@ -5,6 +5,7 @@ import { AuthService } from '../auth.service';
 import { WorkspaceNavigationService } from '../workspace-navigation/workspace-navigation';
 import { assistantDisplayName, KiwiComponent } from './kiwi';
 import { PicamoCityChatService } from './picamo-city-chat.service';
+import { PicamoAssistantService } from './picamo-assistant.service';
 
 describe('Picamo name migration', () => {
   it('uses Picamo for guests and existing accounts with the former default name', () => {
@@ -50,6 +51,31 @@ describe('Picamo conversation interface', () => {
     expect(focus).toHaveBeenCalledTimes(1);
     expect(fixture.nativeElement.querySelector('#kiwi-panel')).toBeNull();
     expect(launcher.getAttribute('aria-controls')).toBe('city-guide-composer');
+  });
+
+  it('opens from welcome-page invitations and keeps an already open conversation open', () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    fixture.detectChanges();
+    const invitations = TestBed.inject(PicamoAssistantService);
+    invitations.open();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#kiwi-panel')).not.toBeNull();
+    invitations.open();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#kiwi-panel')).not.toBeNull();
+  });
+
+  it('routes welcome-page invitations to an active city conversation', () => {
+    const fixture = TestBed.createComponent(KiwiComponent);
+    spyOn<any>(fixture.componentInstance, 'loadName').and.resolveTo();
+    const focus = jasmine.createSpy('focus city conversation');
+    TestBed.inject(PicamoCityChatService).connect({ name: 'Picamo', avatarUrl: '/assets/picamo/avatar.webp', focus });
+    fixture.detectChanges();
+    TestBed.inject(PicamoAssistantService).open();
+    fixture.detectChanges();
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(fixture.nativeElement.querySelector('#kiwi-panel')).toBeNull();
   });
 
   it('starts in Talk mode and keeps board actions out of the mode chooser', () => {

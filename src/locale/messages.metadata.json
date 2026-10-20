@@ -479,6 +479,10 @@
     "source": " {$INTERPOLATION} cards · about {$INTERPOLATION_1} seconds and {$INTERPOLATION_2} words per card ",
     "file": "src/app/boards/boards.html"
   },
+  "115222842937666241": {
+    "source": "Picamo welcomes you with a map and a wave",
+    "file": "src/app/public-wikis/public-wikis.html"
+  },
   "1153362258318924333": {
     "source": "Video search stopped. The remaining cards kept their images.",
     "file": "src/app/boards/boards.ts"
@@ -662,6 +666,10 @@
   "1208734690079942041": {
     "source": "Square found. Take a photo to finish the card.",
     "file": "src/app/boards/boards.ts"
+  },
+  "1209491603374137409": {
+    "source": "Meet Picamo. Your LivingWiki guide.",
+    "file": "src/app/public-wikis/public-wikis.html"
   },
   "1209515042620743127": {
     "source": "Narrated",
@@ -8446,6 +8454,10 @@
   "3628049544035375454": {
     "source": "Only the board owner can edit this board.",
     "file": "src/app/boards/boards.ts"
+  },
+  "3628407173016406851": {
+    "source": "Your guide, Picamo",
+    "file": "src/app/public-wikis/public-wikis.ts"
   },
   "3628592485712345651": {
     "source": "Your email is already verified. You can continue now.",
@@ -17091,6 +17103,10 @@
     "source": "Both included",
     "file": "src/app/boards/boards.html"
   },
+  "6316893118281915263": {
+    "source": "Ready to find your next discovery? Let’s explore together.",
+    "file": "src/app/public-wikis/public-wikis.ts"
+  },
   "6317003864425652093": {
     "source": "Donald Trump: Policies & Impact",
     "file": "src/app/public-wiki-catalog.ts"
@@ -17102,6 +17118,10 @@
   "6321629750851370838": {
     "source": "Playback",
     "file": "src/app/business-detail/business-activity.ts"
+  },
+  "6321957465468514923": {
+    "source": "Where shall we explore?",
+    "file": "src/app/public-wikis/public-wikis.ts"
   },
   "6322721202828359216": {
     "source": "Your password has been reset. Sign in with your new password.",
@@ -19983,6 +20003,10 @@
     "source": "LivingWiki TalkThrus home",
     "file": "src/app/talkthrus/talkthrus.html"
   },
+  "7225328279437687571": {
+    "source": "A little curiosity goes a long way.",
+    "file": "src/app/public-wikis/public-wikis.ts"
+  },
   "7226342991757433031": {
     "source": "Failed to read the persona file.",
     "file": "src/app/atlas-persona/atlas-persona.ts"
@@ -20798,6 +20822,10 @@
   "7504664347340394522": {
     "source": "Starting point hidden",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
+  },
+  "7504992203933879978": {
+    "source": " I’m Picamo. Ask a city, explore a campus, or discover the places and ideas people know best. ",
+    "file": "src/app/public-wikis/public-wikis.html"
   },
   "7506348746709759533": {
     "source": "Add at least an email address or phone number.",
@@ -22615,6 +22643,10 @@
     "source": "Beach Holiday Condo TalkThru listing example",
     "file": "src/app/talkthrus/talkthrus.ts"
   },
+  "8069695868522523891": {
+    "source": "A curious guide. A world worth exploring.",
+    "file": "src/app/public-wikis/public-wikis.html"
+  },
   "8070084528136607468": {
     "source": "Interested in this home?",
     "file": "src/app/boards/listing-live-closing.html"
@@ -23191,6 +23223,10 @@
     "source": "{$START_TAG_SPAN}check_circle{$CLOSE_TAG_SPAN}This address is available.",
     "file": "src/app/custom-public-url-dialog/custom-public-url-dialog.html"
   },
+  "8262093510871901269": {
+    "source": "Let’s explore",
+    "file": "src/app/public-wikis/public-wikis.ts"
+  },
   "8264702528227770819": {
     "source": " Next card {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
     "file": "src/app/boards/boards.html"
@@ -23282,6 +23318,10 @@
   "8290203044625924178": {
     "source": "Portland's sustainability ecosystem — urban planning, transit, climate action, food systems, and the green economy of the Pacific Northwest.",
     "file": "src/app/city-atlas-templates.ts"
+  },
+  "8292592409740512463": {
+    "source": "Your place. Your guide.",
+    "file": "src/app/public-wikis/public-wikis.ts"
   },
   "8294329065677540747": {
     "source": "The recording stopped unexpectedly. Please try again.",

@@ -36,6 +36,8 @@ import { LanguageSwitcherComponent } from '../language-switcher/language-switche
 import { MobileMenuComponent } from '../mobile-menu/mobile-menu';
 import type { VideoLibraryItem } from '../video-library/video-library.models';
 import { isPropertyBoardContent } from '../boards/property-board';
+import { PicamoAssistantService } from '../kiwi/picamo-assistant.service';
+import { PICAMO_AVATAR, PICAMO_CITY_GUIDE } from '../../../functions/src/city-guide';
 
 const CITIES_CATEGORY = 'Cities';
 const UNIVERSITIES_CATEGORY = 'Universities';
@@ -677,9 +679,24 @@ interface PublicWikiFeelingSticker {
     MobileMenuComponent,
   ],
   templateUrl: './public-wikis.html',
-  styleUrl: './public-wikis.css',
+  styleUrls: ['./public-wikis.css', './picamo-welcome.css'],
 })
 export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy {
+  readonly picamoAssistant = inject(PicamoAssistantService);
+  readonly picamoAvatar = PICAMO_AVATAR;
+  readonly picamoArtwork = PICAMO_CITY_GUIDE;
+  readonly picamoText = {
+    knows: $localize`Picamo Knows`,
+    letsExplore: $localize`Let’s explore`,
+    yourGuide: $localize`Your guide, Picamo`,
+    meet: $localize`Meet Picamo`,
+    yourPlace: $localize`Your place. Your guide.`,
+    ready: $localize`Ready to find your next discovery? Let’s explore together.`,
+    exploreWith: $localize`Explore with Picamo`,
+    picks: $localize`Picamo Picks`,
+    curiosity: $localize`A little curiosity goes a long way.`,
+    invitation: $localize`Where shall we explore?`,
+  };
   readonly templateText = {
     message1: $localize`Change`,
     message2: $localize`Choose`,
@@ -1444,6 +1461,14 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
 
     window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
     requestAnimationFrame(scrollToTarget);
+  }
+
+  explorePublicDirectory(): void {
+    if (!this.isBrowser) return;
+    document.getElementById('public-directory')?.scrollIntoView({
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      block: 'start',
+    });
   }
 
   private scrollHomeTargetIntoView(targetId: string): void {

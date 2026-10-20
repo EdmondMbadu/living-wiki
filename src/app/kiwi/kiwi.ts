@@ -12,6 +12,7 @@ import { KiwiBoardRefreshService } from './kiwi-board-refresh.service';
 import kiwiVoices from '../../../functions/src/kiwi-voices.json';
 import { kiwiListingIntent, kiwiListingUrl, type KiwiListingIntent } from './kiwi-listing-request';
 import { PicamoCityChatService } from './picamo-city-chat.service';
+import { PicamoAssistantService } from './picamo-assistant.service';
 
 export function assistantDisplayName(name?: string): string {
   const stored = name?.trim();
@@ -37,6 +38,7 @@ type BoardBuildPhase = 'research' | 'cards' | 'review' | null;
 })
 export class KiwiComponent {
   readonly cityChat = inject(PicamoCityChatService);
+  private readonly assistantInvitations = inject(PicamoAssistantService);
   readonly ui = {
     openPrefix: $localize`Open `,
     askPrefix: $localize`Ask `,
@@ -213,6 +215,9 @@ export class KiwiComponent {
 
   constructor() {
     effect(() => {
+      if (this.assistantInvitations.openRequests()) untracked(() => this.showAssistant());
+    });
+    effect(() => {
       if (this.cityChat.context()) untracked(() => this.close());
     });
     effect(() => {
@@ -274,6 +279,12 @@ export class KiwiComponent {
         ? this.mode() === 'voice' ? '.kiwi-voice-action' : '#kiwi-request'
         : '.kiwi-panel__guest a')?.focus();
     });
+  }
+
+  showAssistant(): void {
+    const city = this.cityChat.context();
+    if (city) { city.focus(); return; }
+    if (!this.open()) this.toggle();
   }
 
   close(): void {
