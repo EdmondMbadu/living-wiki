@@ -22342,6 +22342,8 @@ export const synthesizeChatAnswerSpeech = onCall(
     const requiresNativeNarration = ['tour', 'stack-video'].includes(requestedMode) && requestedContentLanguage !== 'en';
     if (requiresNativeNarration) {
       const preference = {
+        de: { languageCode: 'de', language: 'German', country: 'Germany', accent: null },
+        zh: { languageCode: 'zh', language: 'Chinese', country: 'China', accent: 'Mandarin' },
         fr: { languageCode: 'fr', language: 'French', country: 'France', accent: null },
         ja: { languageCode: 'ja', language: 'Japanese', country: 'Japan', accent: null },
         pt: { languageCode: 'pt', language: 'Portuguese', country: 'Brazil', accent: null },

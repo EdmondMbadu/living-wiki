@@ -13,7 +13,7 @@ describe('board translation overlay', () => {
       expect(language.label).toBe(supportedLocale(language.id).label);
     }
   });
-  for (const [locale, language] of [['fr', 'fr'], ['ja', 'ja'], ['pt-BR', 'pt'], ['es-419', 'es']] as const) {
+  for (const [locale, language] of [['fr', 'fr'], ['ja', 'ja'], ['pt-BR', 'pt'], ['es-419', 'es'], ['de', 'de'], ['zh-Hans', 'zh']] as const) {
     it(`translates plain ${locale} board links and honors explicit content choices`, () => {
       expect(boardTranslationLanguageForRoute(null, locale)).toBe(language);
       expect(boardTranslationLanguageForRoute('unsupported', locale)).toBe(language);
@@ -71,7 +71,7 @@ describe('board translation overlay', () => {
       targetLanguage: 'ja',
       sourceLanguage: 'en',
       fingerprint: 'fingerprint',
-      schemaVersion: 2,
+      schemaVersion: 3,
       expectedSegmentCount: 1,
       cached: true,
       changed: true,
@@ -92,7 +92,7 @@ describe('board translation overlay', () => {
       targetLanguage: 'pt',
       sourceLanguage: 'en',
       fingerprint: 'fingerprint',
-      schemaVersion: 2,
+      schemaVersion: 3,
       expectedSegmentCount: 1,
       segments: [{ key: 'board.title', text: 'Lugares' }],
     })?.segments).toEqual([{ key: 'board.title', text: 'Lugares' }]);
@@ -102,7 +102,7 @@ describe('board translation overlay', () => {
     expect(isBoardTranslationLanguage('es')).toBeTrue();
     expect(normalizeBoardTranslationResult({
       boardId: 'board-1', targetLanguage: 'es', sourceLanguage: 'en',
-      fingerprint: 'fingerprint', schemaVersion: 2, expectedSegmentCount: 1,
+      fingerprint: 'fingerprint', schemaVersion: 3, expectedSegmentCount: 1,
       segments: [{ key: 'board.title', text: 'Lugares' }],
     })?.targetLanguage).toBe('es');
   });
@@ -114,7 +114,7 @@ describe('board translation overlay', () => {
     ]).cards[0].title).toBe('A casa');
     expect(normalizeBoardTranslationResult({
       boardId: 'board-1', targetLanguage: 'pt', sourceLanguage: 'en',
-      fingerprint: 'fingerprint', schemaVersion: 2, expectedSegmentCount: 2,
+      fingerprint: 'fingerprint', schemaVersion: 3, expectedSegmentCount: 2,
       segments: [{ key: 'board.title', text: 'A casa' }],
     })).toBeNull();
   });

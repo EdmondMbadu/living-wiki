@@ -45,6 +45,8 @@ ICON_NAMES = {
 }
 
 TARGETS = {
+    "de": ("de", WORKSPACE / "src/locale/messages.de.json"),
+    "zh-Hans": ("zh", WORKSPACE / "src/locale/messages.zh-Hans.json"),
     "fr": ("fr", WORKSPACE / "src/locale/messages.fr.json"),
     "ja": ("ja", WORKSPACE / "src/locale/messages.ja.json"),
     "pt-BR": ("pb", WORKSPACE / "src/locale/messages.pt-BR.json"),
@@ -53,6 +55,84 @@ TARGETS = {
     "es-419": ("es", WORKSPACE / "src/locale/messages.es-419.json"),
 }
 MANUAL_OVERRIDES = {
+    "de": {
+        "Home": "Startseite", "Discover": "Entdecken", "Boards": "Boards",
+        "Board": "Board", "Cards": "Karten", "Card": "Karte",
+        "My Boards": "Meine Boards", "My City": "Meine Stadt", "Teams": "Teams",
+        "New Card": "Neue Karte", "New card": "Neue Karte", "Add card": "Karte hinzufügen",
+        "New board": "Neues Board", "Create board": "Board erstellen",
+        "Back to boards": "Zurück zu den Boards", "No cards yet": "Noch keine Karten",
+        "Live view": "Live-Ansicht", "Live": "Live", "Stack Studio": "Stack Studio",
+        "Translate": "Übersetzen", "Translate this board": "Dieses Board übersetzen",
+        "Translate board content": "Board-Inhalte übersetzen", "Original": "Original",
+        "Show the board as written": "Board in der Originalsprache anzeigen",
+        "Original links and locations stay unchanged.": "Ursprüngliche Links und Standorte bleiben unverändert.",
+        "Change language": "Sprache ändern", "Languages": "Sprachen", "Language": "Sprache",
+        "English": "English", "Português (Brasil)": "Português (Brasil)",
+        "Share this card": "Diese Karte teilen", "Share card": "Karte teilen",
+        "Share board": "Board teilen", "Share Stack": "Stack teilen",
+        "Copy link": "Link kopieren", "Card link": "Kartenlink",
+        "Download PNG": "PNG herunterladen", "Download SVG": "SVG herunterladen",
+        "Open board": "Board öffnen", "Listen to card": "Karte vorlesen",
+        "Narration": "Sprachausgabe", "Read more": "Weiterlesen", "Let’s go": "Los geht’s",
+        "Sign In": "Anmelden", "Sign in": "Anmelden", "Sign out": "Abmelden",
+        "Create Account": "Konto erstellen", "Continue with Google": "Mit Google fortfahren",
+        "Search": "Suchen", "Settings": "Einstellungen", "Save": "Speichern",
+        "Cancel": "Abbrechen", "Close": "Schließen", "Delete": "Löschen",
+        "Remove": "Entfernen", "Edit": "Bearbeiten", "Next": "Weiter", "Back": "Zurück",
+        "Loading...": "Wird geladen…", "Loading": "Wird geladen", "Working...": "Wird verarbeitet…",
+        "Light mode": "Heller Modus", "Dark mode": "Dunkler Modus",
+        "Public LivingWiki Pages": "Öffentliche LivingWiki-Seiten",
+        "Public LivingWiki pages": "Öffentliche LivingWiki-Seiten",
+        "City LivingWiki pages": "LivingWiki-Seiten der Städte",
+        "Find what lights you up.": "Entdecken Sie, was Sie begeistert.",
+        "Find what{$LINE_BREAK}lights you up.": "Entdecken Sie,{$LINE_BREAK}was Sie begeistert.",
+        "Create a LivingWiki": "LivingWiki erstellen", "Explore LivingWiki": "LivingWiki entdecken",
+        "Featured LivingWiki pages": "Ausgewählte LivingWiki-Seiten",
+        "Public knowledge, made living": "Öffentliches Wissen wird lebendig",
+        "See how it works": "So funktioniert es", "Source": "Quelle",
+        "Scan to open this card in Live view and hear its narration.": "Scannen Sie den QR-Code, um diese Karte in der Live-Ansicht zu öffnen und die Sprachausgabe zu hören.",
+        "Scan to open this Talking Card in Live view and start a conversation.": "Scannen Sie den QR-Code, um diese Talking Card in der Live-Ansicht zu öffnen und ein Gespräch zu beginnen.",
+        "We could not translate this board right now. Please try again.": "Dieses Board konnte gerade nicht übersetzt werden. Bitte versuchen Sie es erneut.",
+        "Translation is temporarily busy. Please try again in a little while.": "Die Übersetzung ist vorübergehend ausgelastet. Bitte versuchen Sie es etwas später erneut.",
+        "This board cannot be translated from this view.": "Dieses Board kann in dieser Ansicht nicht übersetzt werden.",
+    },
+    "zh-Hans": {
+        "Home": "首页", "Discover": "发现", "Boards": "看板", "Board": "看板",
+        "Cards": "卡片", "Card": "卡片", "My Boards": "我的看板", "My City": "我的城市",
+        "Teams": "团队", "New Card": "新建卡片", "New card": "新建卡片",
+        "Add card": "添加卡片", "New board": "新建看板", "Create board": "创建看板",
+        "Back to boards": "返回看板列表", "No cards yet": "暂无卡片",
+        "Live view": "沉浸式浏览", "Live": "沉浸式浏览", "Stack Studio": "Stack Studio",
+        "Translate": "翻译", "Translate this board": "翻译此看板", "Translate board content": "翻译看板内容",
+        "Original": "原文", "Show the board as written": "显示看板原文",
+        "Original links and locations stay unchanged.": "原有链接和地点保持不变。",
+        "Change language": "切换语言", "Languages": "语言", "Language": "语言",
+        "English": "English", "Português (Brasil)": "Português (Brasil)",
+        "Share this card": "分享此卡片", "Share card": "分享卡片", "Share board": "分享看板",
+        "Share Stack": "分享 Stack", "Copy link": "复制链接", "Card link": "卡片链接",
+        "Download PNG": "下载 PNG", "Download SVG": "下载 SVG", "Open board": "打开看板",
+        "Listen to card": "收听卡片讲解", "Narration": "语音讲解", "Read more": "阅读更多",
+        "Let’s go": "出发", "Sign In": "登录", "Sign in": "登录", "Sign out": "退出登录",
+        "Create Account": "创建账户", "Continue with Google": "使用 Google 继续",
+        "Search": "搜索", "Settings": "设置", "Save": "保存", "Cancel": "取消",
+        "Close": "关闭", "Delete": "删除", "Remove": "移除", "Edit": "编辑",
+        "Next": "下一步", "Back": "返回", "Loading...": "加载中…", "Loading": "加载中",
+        "Working...": "处理中…", "Light mode": "浅色模式", "Dark mode": "深色模式",
+        "Public LivingWiki Pages": "公开的 LivingWiki 页面",
+        "Public LivingWiki pages": "公开的 LivingWiki 页面",
+        "City LivingWiki pages": "城市 LivingWiki 页面",
+        "Find what lights you up.": "发现让您充满热情的事物。",
+        "Find what{$LINE_BREAK}lights you up.": "发现让您{$LINE_BREAK}充满热情的事物。",
+        "Create a LivingWiki": "创建 LivingWiki", "Explore LivingWiki": "探索 LivingWiki",
+        "Featured LivingWiki pages": "精选 LivingWiki 页面", "Public knowledge, made living": "让公共知识鲜活起来",
+        "See how it works": "了解使用方式", "Source": "来源",
+        "Scan to open this card in Live view and hear its narration.": "扫描二维码，在沉浸式浏览中打开此卡片并收听语音讲解。",
+        "Scan to open this Talking Card in Live view and start a conversation.": "扫描二维码，在沉浸式浏览中打开此 Talking Card 并开始对话。",
+        "We could not translate this board right now. Please try again.": "暂时无法翻译此看板，请重试。",
+        "Translation is temporarily busy. Please try again in a little while.": "翻译服务暂时繁忙，请稍后重试。",
+        "This board cannot be translated from this view.": "无法在当前视图中翻译此看板。",
+    },
     "fr": {
         "Public LivingWiki Pages": "Pages LivingWiki publiques",
         "Public LivingWiki pages": "Pages LivingWiki publiques",
@@ -457,6 +537,104 @@ MANUAL_OVERRIDES["pt-BR"].update({
     "To the fullest extent permitted by law, we are not liable for indirect, incidental, special, consequential, or punitive damages, or for loss of data, profits, or business arising from use of the service.": "Na máxima medida permitida por lei, não nos responsabilizamos por danos indiretos, incidentais, especiais, consequenciais ou punitivos, nem por perda de dados, lucros ou negócios decorrentes do uso do serviço.",
 })
 
+# Reviewed product terminology shared by both new locales. Keep overrides outside
+# the model cache so regenerating a catalog never discards editorial corrections.
+for _locale, _entries in json.loads((WORKSPACE / "scripts/locale-overrides.de-zh.json").read_text()).items():
+    MANUAL_OVERRIDES[_locale].update(_entries)
+
+
+def review_product_copy(source: str, translated: str, locale: str) -> str:
+    if locale not in ("de", "zh-Hans"):
+        return translated
+    source_parts = PLACEHOLDER.split(source)
+    target_parts = PLACEHOLDER.split(translated)
+    reviewed = {key.casefold(): value for key, value in MANUAL_OVERRIDES[locale].items()}
+    if len(source_parts) == len(target_parts):
+        for index, part in enumerate(source_parts):
+            icon = (part.strip() in ICON_NAMES and index > 0 and index + 1 < len(source_parts)
+                    and source_parts[index - 1].startswith("{$START_TAG_")
+                    and source_parts[index + 1].startswith("{$CLOSE_TAG_"))
+            if icon:
+                target_parts[index] = part
+            elif not PLACEHOLDER.fullmatch(part) and part.strip().casefold() in reviewed:
+                leading = part[:len(part) - len(part.lstrip())]
+                trailing = part[len(part.rstrip()):]
+                target_parts[index] = leading + reviewed[part.strip().casefold()] + trailing
+        translated = "".join(target_parts)
+    if re.search(r"\bboards?\b", source, re.IGNORECASE):
+        if locale == "zh-Hans":
+            translated = re.sub(r"董事会|董事局|棋盘|木板|板卡|板子", "看板", translated)
+            # Avoid changing 模板 (template), 面板 (panel), or 版权 (copyright).
+            for old, new in {"一块板": "一个看板", "这个板": "这个看板", "该板": "该看板",
+                             "我的板": "我的看板", "你的板": "您的看板", "板上": "看板上"}.items():
+                translated = re.sub(r"(?<!看)" + re.escape(old), new, translated)
+        else:
+            translated = re.sub(r"\b(?:Bretter[n]?|Vorstände[n]?)\b", "Boards", translated, flags=re.IGNORECASE)
+            translated = re.sub(r"\b(?:Bretts|Vorstands|Vorstandes)\b", "Boards", translated, flags=re.IGNORECASE)
+            translated = re.sub(r"\b(?:Brett|Vorstand|Bord|Platine)\b", "Board", translated, flags=re.IGNORECASE)
+            translated = re.sub(r"\beinen Board\b", "ein Board", translated)
+    if re.search(r"\bcards?\b", source, re.IGNORECASE) and not re.search(r"credit|debit|payment|bank", source, re.IGNORECASE):
+        if locale == "zh-Hans":
+            translated = translated.replace("纸牌", "卡片").replace("扑克牌", "卡片")
+            translated = translated.replace("一张牌", "一张卡片").replace("张牌", "张卡片")
+        else:
+            translated = re.sub(r"\bSpielkarten?\b", "Karten", translated)
+    if locale == "zh-Hans" and re.search(r"sign(?:ing)? in|sign up", source, re.IGNORECASE):
+        translated = translated.replace("签名", "登录").replace("签入", "登录")
+    if "Talking Card" in source:
+        translated = translated.replace("聊天卡片", "Talking Card").replace("聊天卡", "Talking Card").replace("Sprechkarte", "Talking Card")
+    if "Talk Drop" in source:
+        translated = translated.replace("空谈", "Talk Drop")
+    return translated
+
+
+def prepare_batch_cache(messages: dict[str, str], locale: str, cache: dict[str, str]) -> None:
+    """Run the same offline model in batches, without legacy Stanza tokenizers.
+
+    UI fragments are already bounded by Angular placeholders. This also handles
+    Argos packages whose bundled tokenizer format predates the installed Stanza.
+    """
+    import ctranslate2
+    from argostranslate import package
+    code = TARGETS[locale][0]
+    model_package = next((item for item in package.get_installed_packages()
+                          if item.from_code == "en" and item.to_code == code), None)
+    if model_package is None:
+        raise RuntimeError(f"Install the Argos en-to-{code} package before generating {locale}.")
+    engine = ctranslate2.Translator(str(model_package.package_path / "model"), device="cpu",
+                                   inter_threads=1, intra_threads=2)
+
+    def translate_batch(parts: list[str]) -> list[str]:
+        result = engine.translate_batch(
+            [model_package.tokenizer.encode(part) for part in parts],
+            target_prefix=[[model_package.target_prefix]] * len(parts) if model_package.target_prefix else None,
+            replace_unknowns=True, max_batch_size=1024, batch_type="tokens", beam_size=4,
+            num_hypotheses=1, length_penalty=0.2, max_decoding_length=1024,
+        )
+        values = [model_package.tokenizer.decode(item.hypotheses[0]).lstrip(" ") for item in result]
+        if model_package.target_prefix:
+            values = [value.removeprefix(model_package.target_prefix) for value in values]
+        return values
+
+    # A rare fragment missing from the precomputed cache still uses this same
+    # offline engine, never a different external translation service.
+    translate.translate = lambda text, _source, _target: translate_batch([text])[0]
+    parts: dict[str, None] = {}
+    for message in messages.values():
+        for fragment in PLACEHOLDER.split(message):
+            if PLACEHOLDER.fullmatch(fragment):
+                continue
+            for piece in PROTECTED.split(fragment.strip()):
+                piece = piece.strip()
+                if piece and LETTER.search(piece) and not PROTECTED.fullmatch(piece) and piece not in cache:
+                    parts[piece] = None
+    pending = list(parts)
+    for start in range(0, len(pending), 96):
+        group = pending[start:start + 96]
+        cache.update(zip(group, translate_batch(group)))
+        print(f"{locale}: prepared {min(start + 96, len(pending))}/{len(pending)} fragments", flush=True)
+
+
 def translate_piece(piece: str, target: str, cache: dict[str, str]) -> str:
     if not LETTER.search(piece):
         return piece
@@ -559,8 +737,8 @@ def normalize_product_terms(source: str, translated: str, target: str) -> str:
 
 
 def main() -> None:
-    if len(sys.argv) != 2 or sys.argv[1] not in TARGETS:
-        raise SystemExit("usage: translate-angular-catalog.py <fr|ja|pt-BR|es-419>")
+    if len(sys.argv) not in (2, 3) or sys.argv[1] not in TARGETS or (len(sys.argv) == 3 and sys.argv[2] != "--batch"):
+        raise SystemExit("usage: translate-angular-catalog.py <fr|ja|pt-BR|es-419|de|zh-Hans> [--batch]")
 
     target = sys.argv[1]
     locale, output_path = TARGETS[target]
@@ -570,10 +748,13 @@ def main() -> None:
     cache_path = Path(f"/tmp/livingwiki-translation-cache-{target}.json")
     cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
     translated: dict[str, str] = {}
+    if "--batch" in sys.argv:
+        prepare_batch_cache({key: value for key, value in source_messages.items() if key not in existing}, target, cache)
 
     for index, (message_id, message) in enumerate(source_messages.items(), start=1):
         target_message = manual_override(message, target) or existing.get(message_id) or translate_message(message, locale, cache)
         target_message = normalize_product_terms(message, target_message, target)
+        target_message = review_product_copy(message, target_message, target)
         if placeholders(target_message) != placeholders(message):
             raise RuntimeError(f"Placeholder mismatch for {message_id}: {message!r} -> {target_message!r}")
         translated[message_id] = target_message

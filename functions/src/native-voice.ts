@@ -7,6 +7,8 @@ const nativeLocale: Record<Exclude<BoardTranslationLanguage, 'en'>, {
   language: string;
   accent: RegExp;
 }> = {
+  de: { locale: 'de-de', language: 'german', accent: /german|deutsch|germany/i },
+  zh: { locale: 'zh-cn', language: 'chinese', accent: /mandarin|putonghua|mainland|standard chinese/i },
   fr: { locale: 'fr-fr', language: 'french', accent: /franc(e|ais|aise)|paris/i },
   ja: { locale: 'ja-jp', language: 'japanese', accent: /japan|tokyo/i },
   pt: { locale: 'pt-br', language: 'portuguese', accent: /brazil|brasil/i },
@@ -38,8 +40,17 @@ export function voiceMatchesNativeLocale(
       : language === 'fr'
         ? /quebec|canad|acadian|belg|swiss|african/.test(accent)
         : false;
+    if (language === 'zh') {
+      const mandarinLanguage = spokenLanguage === 'mandarin' || /^cmn(?:-|$)/.test(locale);
+      const differentDialect = /canton|yue|hokkien|taiwan|traditional/i.test(`${locale} ${accent}`)
+        || /^(?:zh|cmn)-(?:hk|tw|mo)(?:-|$)/.test(locale);
+      const verifiedMandarin = mandarinLanguage || locale === 'zh-cn' || locale === 'zh-hans'
+        || target.accent.test(accent);
+      return (sameLanguage || mandarinLanguage) && !differentDialect && verifiedMandarin;
+    }
     return sameLanguage && !clearlyDifferentRegion
-      && (language === 'es' || locale === target.locale || target.accent.test(accent));
+      && (language === 'es' || language === 'de' && locale.startsWith('de-')
+        || locale === target.locale || target.accent.test(accent));
   });
 }
 

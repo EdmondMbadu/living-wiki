@@ -35,7 +35,10 @@
     "university-boards:audit-job": "node scripts/audit-university-board-job.mjs",
     "university-boards:validate-artifact": "node scripts/validate-university-board-artifact.mjs",
     "university-boards:resume-free": "node scripts/resume-free-university-board-catalog.mjs",
-    "serve:ssr:living-atlast": "node dist/living-atlast/server/server.mjs"
+    "serve:ssr:living-atlast": "node dist/living-atlast/server/server.mjs",
+    "start:de": "ng serve --configuration de",
+    "start:zh": "ng serve --configuration zh",
+    "test:languages": "ng test --configuration=language-support --watch=false --browsers=ChromeHeadless"
   },
   "prettier": {
     "printWidth": 100,

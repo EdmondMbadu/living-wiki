@@ -115,13 +115,29 @@
         "destination": "/es/index.csr.html"
       },
       {
+        "source": "/de",
+        "destination": "/de/index.html"
+      },
+      {
+        "source": "/de/**",
+        "destination": "/de/index.csr.html"
+      },
+      {
+        "source": "/zh",
+        "destination": "/zh/index.html"
+      },
+      {
+        "source": "/zh/**",
+        "destination": "/zh/index.csr.html"
+      },
+      {
         "source": "**",
         "destination": "/index.csr.html"
       }
     ],
     "headers": [
       {
-        "source": "/{,fr/,ja/,pt/,es/}notifications{,/**}",
+        "source": "/{,fr/,ja/,pt/,es/,de/,zh/}notifications{,/**}",
         "headers": [
           {
             "key": "Cache-Control",
@@ -175,7 +191,7 @@
         ]
       },
       {
-        "source": "/{,fr/,ja/,pt/,es/}boards{,/**}",
+        "source": "/{,fr/,ja/,pt/,es/,de/,zh/}boards{,/**}",
         "headers": [
           {
             "key": "Cache-Control",
@@ -193,7 +209,25 @@
         ]
       },
       {
-        "source": "/{,fr/,ja/,pt/,es/}runtime-config.js",
+        "source": "/{,fr/,ja/,pt/,es/,de/,zh/}runtime-config.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache,max-age=0,must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/de/teams{,/**}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache,max-age=0,must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/zh/teams{,/**}",
         "headers": [
           {
             "key": "Cache-Control",

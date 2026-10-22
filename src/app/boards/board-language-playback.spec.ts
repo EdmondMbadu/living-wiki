@@ -24,7 +24,7 @@ describe('localized board narration', () => {
     return component;
   }
 
-  for (const [locale, language] of [['fr', 'fr'], ['ja', 'ja'], ['pt-BR', 'pt'], ['es-419', 'es']]) {
+  for (const [locale, language] of [['fr', 'fr'], ['ja', 'ja'], ['pt-BR', 'pt'], ['es-419', 'es'], ['de', 'de'], ['zh-Hans', 'zh']]) {
     it(`uses ${language} for a plain localized board, cancels old audio, and separates its cache`, async () => {
       const c = harness(locale);
       c.syncBoardTranslationLanguage(null);

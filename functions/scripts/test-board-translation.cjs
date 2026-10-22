@@ -117,3 +117,11 @@ assert.equal(
 );
 
 console.log('Board translation extraction and validation tests passed.');
+
+for (const language of ['en', 'fr', 'ja', 'pt', 'es', 'de', 'zh']) assert.equal(isBoardTranslationLanguage(language), true);
+assert.equal(isBoardTranslationLanguage('zh-Hans'), false, 'API uses zh, independent of Angular locale ID');
+assert.equal(detectBoardSourceLanguage('这个博物馆的展览介绍了城市的历史和文化。'), 'zh');
+assert.equal(detectBoardSourceLanguage('中国历史博物馆'), 'zh');
+assert.equal(detectBoardSourceLanguage('中国の歴史を紹介する日本語の展示です。'), 'ja');
+assert.equal(detectBoardSourceLanguage('Das Museum ist für die Besucher geöffnet und die Ausstellung zeigt die Geschichte der Stadt.'), 'de');
+assert.equal(extractBoardTranslationSource({title:'中文展览',cards:[{id:'a',notes:'这里介绍了城市的历史。'}]}).sourceLanguage,'zh');

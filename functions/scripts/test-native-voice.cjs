@@ -29,3 +29,21 @@ const spanishVoices = [
 assert.equal(selectNativeVoice(spanishVoices, 'es', 'eleven_multilingual_v2')?.voice_id, 'latam');
 assert.equal(selectNativeVoice([spanishVoices[0]], 'es', 'eleven_multilingual_v2')?.voice_id, 'spain');
 console.log('Native voice locale checks passed.');
+
+const native = (language, locale, accent = '', model_id = 'eleven_multilingual_v2') => ({ verified_languages: [{ language, locale, accent, model_id }] });
+assert.equal(voiceMatchesNativeLocale(native('de','de-DE'), 'de', 'eleven_multilingual_v2'), true);
+assert.equal(voiceMatchesNativeLocale(native('de','de-AT'), 'de', 'eleven_multilingual_v2'), true);
+assert.equal(voiceMatchesNativeLocale(native('zh','zh-CN','mandarin'), 'zh', 'eleven_multilingual_v2'), true);
+assert.equal(voiceMatchesNativeLocale(native('Mandarin','cmn-CN'), 'zh', 'eleven_multilingual_v2'), true);
+assert.equal(voiceMatchesNativeLocale(native('Mandarin',''), 'zh', 'eleven_multilingual_v2'), true);
+assert.equal(voiceMatchesNativeLocale(native('zh','zh-Hans'), 'zh', 'eleven_multilingual_v2'), true);
+assert.equal(voiceMatchesNativeLocale(native('zh','zh-HK','cantonese'), 'zh'), false);
+assert.equal(voiceMatchesNativeLocale(native('zh','zh-TW','Mandarin'), 'zh'), false);
+assert.equal(voiceMatchesNativeLocale(native('Mandarin','cmn-TW'), 'zh'), false);
+assert.equal(voiceMatchesNativeLocale(native('ja','ja-JP'), 'zh'), false);
+assert.equal(voiceMatchesNativeLocale(native('zh','zh-CN','mandarin','other-model'), 'zh','eleven_multilingual_v2'), false);
+assert.equal(voiceMatchesNativeLocale(native('en','en-US'), 'de'), false);
+for (const language of ['de','zh']) {
+ const matching = { voice_id: language, ...native(language, language === 'de' ? 'de-DE' : 'zh-CN') };
+ assert.equal(selectNativeVoice([...accountVoices,matching],language,'eleven_multilingual_v2')?.voice_id,language);
+}

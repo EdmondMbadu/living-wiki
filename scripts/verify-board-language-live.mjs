@@ -19,8 +19,8 @@ const app = initializeApp(config, 'board-language-verification');
 const firestore = getFirestore(app);
 const functions = getFunctions(app, 'us-central1');
 const report = [];
-const languages = process.argv[4]?.split(',') ?? ['es', 'fr', 'ja', 'pt', 'en'];
-assert(languages.length && languages.every(language => ['en', 'es', 'fr', 'ja', 'pt'].includes(language)));
+const languages = process.argv[4]?.split(',') ?? ['es', 'fr', 'ja', 'pt', 'en', 'de', 'zh'];
+assert(languages.length && languages.every(language => ['en', 'es', 'fr', 'ja', 'pt', 'de', 'zh'].includes(language)));
 try {
   const snapshot = await getDoc(doc(firestore, 'boards', boardId));
   assert(snapshot.exists(), 'Public board must exist and be readable.');

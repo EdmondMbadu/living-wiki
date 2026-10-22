@@ -8,6 +8,8 @@ const targets = [
   ['ja', 'messages.ja.json'],
   ['pt-BR', 'messages.pt-BR.json'],
   ['es-419', 'messages.es-419.json'],
+  ['de', 'messages.de.json'],
+  ['zh-Hans', 'messages.zh-Hans.json'],
 ];
 const placeholderPattern = /\{\$[^}]+\}|\{[A-Za-z][A-Za-z0-9_]*\}/g;
 
@@ -28,6 +30,10 @@ for (const [locale, filename] of targets) {
   }
 
   for (const id of sourceIds) {
+    if (typeof target.translations[id] !== 'string'
+      || (source.translations[id].trim() && !target.translations[id].trim())) {
+      throw new Error(`${filename}: empty or invalid translation for ${id}`);
+    }
     const expected = placeholders(source.translations[id]);
     const actual = placeholders(target.translations[id]);
     if (JSON.stringify(expected) !== JSON.stringify(actual)) {

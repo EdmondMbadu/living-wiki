@@ -1144,7 +1144,7 @@ export class KiwiComponent {
       }
       this.conversation = conversation;
       const { teamId, boardId } = this.scope();
-      conversation.sendContextualUpdate(`The user is in ${teamId ? 'team workspace ' + teamId : 'their personal workspace'}${boardId ? ', viewing board ' + boardId : ''}. The user calls you ${this.name()}. Use kiwi_request for board/card operations, including real estate and rental TalkThru creation; the app will ask for a public listing URL and open the specialized wizard. Use kiwi_apply only after explicit approval.${this.localeId === 'pt-BR' ? ' Speak to the user in natural Brazilian Portuguese. Keep tool names and structured identifiers in English.' : this.localeId === 'es-419' ? ' Speak to the user in natural, neutral Latin American Spanish, using tú. Keep tool names and structured identifiers in English.' : ''}`,
+      conversation.sendContextualUpdate(`The user is in ${teamId ? 'team workspace ' + teamId : 'their personal workspace'}${boardId ? ', viewing board ' + boardId : ''}. The user calls you ${this.name()}. Use kiwi_request for board/card operations, including real estate and rental TalkThru creation; the app will ask for a public listing URL and open the specialized wizard. Use kiwi_apply only after explicit approval.${this.localeId === 'de' ? ' Speak to the user in natural German. Keep tool names and structured identifiers in English.' : this.localeId === 'zh-Hans' ? ' Speak Mandarin Chinese and use Simplified Chinese for written text. Keep tool names and structured identifiers in English.' : this.localeId === 'pt-BR' ? ' Speak to the user in natural Brazilian Portuguese. Keep tool names and structured identifiers in English.' : this.localeId === 'es-419' ? ' Speak to the user in natural, neutral Latin American Spanish, using tú. Keep tool names and structured identifiers in English.' : ''}`,
         { contextId: 'kiwi-current-workspace' });
     } catch (error) {
       if (attempt !== this.voiceAttempt) return;
@@ -1202,8 +1202,8 @@ export class KiwiComponent {
   }
 
   private errorText(error: unknown, fallback: string): string {
-    // Server errors are written in English; Portuguese and Spanish show the localized fallback.
-    if (this.localeId === 'pt-BR' || this.localeId === 'es-419') return fallback;
+    // Server errors are written in English; localized builds use the translated fallback.
+    if (this.localeId !== 'en-US' && this.localeId !== 'en') return fallback;
     const message = error instanceof Error ? error.message.replace(/\bKiwi\b/g, 'Picamo') : '';
     return message.includes(': ') ? message.slice(message.indexOf(': ') + 2) : message || fallback;
   }

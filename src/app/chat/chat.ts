@@ -1441,7 +1441,7 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
     const dictionaries: Partial<Record<string, Partial<Record<ChatUiTextKey, string>>>> = {
       en: {
         weSpeakYourLanguage: $localize`We speak your language`,
-        languages: 'Languages',
+        languages: $localize`Languages`,
         voiceHintManual: $localize`{count} countries · choose a flag first.`,
         voiceHintAuto: $localize`{count} countries · selected for {country}.`,
         findCountry: $localize`Find country`,

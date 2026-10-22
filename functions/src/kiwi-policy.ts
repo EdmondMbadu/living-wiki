@@ -159,6 +159,25 @@ export function normalizeKiwiAction(value: unknown): KiwiAction | null {
 }
 
 export function kiwiActionSummary(action: KiwiAction, boardTitle?: string, locale = 'en'): string {
+  if (locale === 'de' || locale === 'zh-Hans') {
+    const german = locale === 'de';
+    const board = boardTitle || (german ? 'das Board' : '看板');
+    const visibility = action.kind === 'create_board'
+      ? (german ? { public: 'Öffentlich', unlisted: 'Nicht gelistet', private: 'Privat' }
+        : { public: '公开', unlisted: '不公开列出', private: '私密' })[action.visibility] : '';
+    const cards = (count: number) => german ? `${count} ${count === 1 ? 'Karte' : 'Karten'}` : `${count}张卡片`;
+    switch (action.kind) {
+      case 'create_board': return german ? `Board „${action.title}“ mit ${cards(action.cards.length)} erstellen (${visibility})` : `创建${visibility}看板“${action.title}”，包含${cards(action.cards.length)}`;
+      case 'copy_board': return german ? `Eine eigene öffentliche Kopie von „${board}“ erstellen` : `创建“${board}”的个人公开副本`;
+      case 'email_board': return german ? `„${board}“ per E-Mail an ${action.email} senden` : `将“${board}”通过电子邮件发送至 ${action.email}`;
+      case 'update_board': return german ? `„${board}“${action.title ? ` in „${action.title}“ ändern` : ' aktualisieren'}` : `更新“${board}”${action.title ? `，新标题为“${action.title}”` : ''}`;
+      case 'design_board': return german ? `„${board}“ gestalten und ${cards(action.cards.length)} hinzufügen` : `设计“${board}”并添加${cards(action.cards.length)}`;
+      case 'add_card': return german ? `„${action.card.title}“ zu „${board}“ hinzufügen` : `将“${action.card.title}”添加到“${board}”`;
+      case 'update_card': return german ? `Eine Karte auf „${board}“ bearbeiten` : `编辑“${board}”中的卡片`;
+      case 'remove_card': return german ? `Eine Karte aus „${board}“ entfernen` : `移除“${board}”中的卡片`;
+      case 'reorder_card': return german ? `Eine Karte auf „${board}“ an Position ${action.position} verschieben` : `将“${board}”中的卡片移至第${action.position}位`;
+    }
+  }
   const board = boardTitle || (locale === 'pt-BR' ? 'o quadro' : locale === 'es-419' ? 'el tablero' : 'the board');
   if (locale === 'es-419') {
     const visibility = action.kind === 'create_board'
@@ -210,6 +229,18 @@ export function kiwiActionDetails(action: KiwiAction, board?: RecordValue | null
     ? board['cards'].find((item: unknown) => object(item)?.['id'] === action.cardId) as RecordValue | undefined
     : undefined;
   const localizedValue = (key: string, input: unknown) => {
+    if (locale === 'de' || locale === 'zh-Hans') {
+      const labels: Record<string, Record<string, string>> = locale === 'de' ? {
+        tone: { teal: 'Türkis', coral: 'Koralle', yellow: 'Gelb', green: 'Grün', blue: 'Blau', sky: 'Hellblau', purple: 'Violett' },
+        visibility: { public: 'Öffentlich', unlisted: 'Nicht gelistet', private: 'Privat' },
+        type: { place: 'Ort', food: 'Essen', memory: 'Erinnerung', idea: 'Idee', shop: 'Geschäft', note: 'Notiz' },
+      } : {
+        tone: { teal: '青绿色', coral: '珊瑚色', yellow: '黄色', green: '绿色', blue: '蓝色', sky: '天蓝色', purple: '紫色' },
+        visibility: { public: '公开', unlisted: '不公开列出', private: '私密' },
+        type: { place: '地点', food: '美食', memory: '回忆', idea: '想法', shop: '商店', note: '说明' },
+      };
+      return labels[key]?.[String(input)] ?? String(input);
+    }
     if (locale === 'es-419') {
       const spanish: Record<string, Record<string, string>> = {
         tone: { teal: 'verde azulado', coral: 'coral', yellow: 'amarillo', green: 'verde', blue: 'azul', sky: 'celeste', purple: 'morado' },
@@ -228,11 +259,33 @@ export function kiwiActionDetails(action: KiwiAction, board?: RecordValue | null
   };
   const fields = (source: RecordValue, keys: readonly string[]) => keys
     .filter((key) => Object.hasOwn(source, key))
-    .map((key) => `${locale === 'pt-BR'
+    .map((key) => `${locale === 'de'
+      ? ({ title: 'Titel', description: 'Beschreibung', tone: 'Farbe', subtitle: 'Untertitel', notes: 'Text', type: 'Typ' }[key] ?? key)
+      : locale === 'zh-Hans'
+        ? ({ title: '标题', description: '描述', tone: '颜色', subtitle: '副标题', notes: '正文', type: '类型' }[key] ?? key)
+      : locale === 'pt-BR'
       ? ({ title: 'Título', description: 'Descrição', tone: 'Cor', subtitle: 'Subtítulo', notes: 'Texto', type: 'Tipo' }[key] ?? key)
       : locale === 'es-419'
         ? ({ title: 'Título', description: 'Descripción', tone: 'Color', subtitle: 'Subtítulo', notes: 'Texto', type: 'Tipo' }[key] ?? key)
       : key === 'notes' ? 'Text' : key[0].toUpperCase() + key.slice(1)}: ${localizedValue(key, source[key])}`);
+  if (locale === 'de' || locale === 'zh-Hans') {
+    const label = locale === 'de'
+      ? { title: 'Titel', description: 'Beschreibung', none: '(keine)', tone: 'Farbe', visibility: 'Sichtbarkeit', recipient: 'Empfänger', board: 'Board', card: 'Karte', remove: 'Entfernen', move: 'Verschieben', position: 'Position', copy: 'Öffentliche Texte und Bilder in ein neues Board in Ihrem Konto kopieren.' }
+      : { title: '标题', description: '描述', none: '（无）', tone: '颜色', visibility: '可见范围', recipient: '收件人', board: '看板', card: '卡片', remove: '移除', move: '移动', position: '位置', copy: '将公开文字和图片复制到您账户中的新看板。' };
+    const cardLines = (cards: KiwiCardDraft[]) => cards.map((card, index) => `${index + 1}. ${card.title}${card.subtitle ? ` — ${card.subtitle}` : ''}${card.notes ? `\n${card.notes}` : ''}`);
+    switch (action.kind) {
+      case 'create_board': return [`${label.title}: ${action.title}`, `${label.description}: ${action.description || label.none}`,
+        `${label.tone}: ${localizedValue('tone', action.tone)}`, `${label.visibility}: ${localizedValue('visibility', action.visibility)}`, ...cardLines(action.cards)];
+      case 'copy_board': return [label.copy];
+      case 'email_board': return [`${label.recipient}: ${action.email}`, `${label.board}: ${String(board?.['title'] || action.boardId)}`];
+      case 'update_board': return fields(action, ['title', 'description', 'tone']);
+      case 'design_board': return [...fields(action, ['title', 'description', 'tone']), ...cardLines(action.cards)];
+      case 'add_card': return fields(action.card, ['title', 'subtitle', 'notes', 'type']);
+      case 'update_card': return [`${label.card}: ${String(existingCard?.['title'] || action.cardId)}`, ...fields(action, ['title', 'subtitle', 'notes', 'type'])];
+      case 'remove_card': return [`${label.remove}: ${String(existingCard?.['title'] || action.cardId)}`];
+      case 'reorder_card': return [`${label.move}: ${String(existingCard?.['title'] || action.cardId)}`, `${label.position}: ${action.position}`];
+    }
+  }
   if (locale === 'es-419') {
     switch (action.kind) {
       case 'create_board': return [

@@ -1,6 +1,6 @@
 import { supportedLocale } from '../i18n/locales';
 
-export type BoardTranslationLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es';
+export type BoardTranslationLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh';
 
 export interface BoardTranslationSegment {
   key: string;
@@ -30,12 +30,14 @@ export const BOARD_TRANSLATION_LANGUAGES: ReadonlyArray<{
   { id: 'ja', label: '日本語', shortLabel: '日本語' },
   { id: 'pt', label: 'Português (Brasil)', shortLabel: 'PT' },
   { id: 'es', label: 'Español', shortLabel: 'ES' },
+  { id: 'de', label: 'Deutsch', shortLabel: 'DE' },
+  { id: 'zh', label: '简体中文', shortLabel: '中文' },
 ];
 
-export const BOARD_TRANSLATION_SCHEMA_VERSION = 2;
+export const BOARD_TRANSLATION_SCHEMA_VERSION = 3;
 
 export function isBoardTranslationLanguage(value: unknown): value is BoardTranslationLanguage {
-  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt' || value === 'es';
+  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt' || value === 'es' || value === 'de' || value === 'zh';
 }
 
 /** Localized board links translate their content unless the reader requests the original. */

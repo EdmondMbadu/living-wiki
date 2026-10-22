@@ -41,4 +41,27 @@ describe('locale routing', () => {
     expect(localizedPath('/', spanish)).toBe('/es/');
     expect(localizedPath('/es', english)).toBe('/');
   });
+  it('recognizes German and Simplified Chinese browser locale variants', () => {
+    for (const locale of ['de', 'de-DE', 'de_AT']) {
+      expect(supportedLocale(locale).language).toBe('de');
+    }
+    for (const locale of ['zh', 'zh-CN', 'zh-Hans', 'zh_Hans_CN']) {
+      expect(supportedLocale(locale).id).toBe('zh-Hans');
+    }
+    expect(supportedLocale('de').label).toBe('Deutsch');
+    expect(supportedLocale('zh').label).toBe('简体中文');
+  });
+
+  it('replaces every supported locale prefix without losing a nested route', () => {
+    for (const from of SUPPORTED_LOCALES) {
+      const route = `${from.subPath ? '/' + from.subPath : ''}/boards/board-a`;
+      for (const to of SUPPORTED_LOCALES) {
+        expect(localizedPath(route, to)).toBe(`${to.subPath ? '/' + to.subPath : ''}/boards/board-a`);
+        expect(localizedPath(from.subPath ? '/' + from.subPath : '/', to)).toBe(to.subPath ? '/' + to.subPath + '/' : '/');
+      }
+    }
+    expect(localizedPath('/details', supportedLocale('zh'))).toBe('/zh/details');
+    expect(localizedPath('/zhuang', supportedLocale('de'))).toBe('/de/zhuang');
+  });
+
 });

@@ -164,19 +164,21 @@ export function normalizeBoardCardConversation(value: unknown): BoardCardConvers
 
 export function talkingCardCtaLabel(
   conversation: BoardCardConversation | null | undefined,
-  language: 'en' | 'fr' | 'ja' | 'pt' | 'es' = 'en',
+  language: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh' = 'en',
 ): string {
   return conversation?.ctaLabel?.trim() || {
-    en: 'Talk to me', fr: 'Parlez-moi', ja: '話しかける', pt: 'Fale comigo', es: 'Háblame',
+    en: 'Talk to me', fr: 'Parlez-moi', ja: '話しかける', pt: 'Fale comigo', es: 'Háblame', de: 'Sprechen Sie mit mir', zh: '和我聊聊',
   }[language];
 }
 
 export function talkingCardQuestionLabel(
   title: string | null | undefined,
-  language: 'en' | 'fr' | 'ja' | 'pt' | 'es' = 'en',
+  language: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh' = 'en',
 ): string {
   if (language !== 'en') {
     return {
+      de: 'Stellen Sie dem virtuellen Assistenten eine Frage',
+      zh: '向虚拟助手提问',
       fr: 'Posez une question à l’agent virtuel',
       ja: 'バーチャルエージェントに質問する',
       pt: 'Faça uma pergunta ao agente virtual',

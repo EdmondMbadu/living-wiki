@@ -30,6 +30,14 @@
           "es-419": {
             "translation": "src/locale/messages.es-419.json",
             "subPath": "es"
+          },
+          "de": {
+            "translation": "src/locale/messages.de.json",
+            "subPath": "de"
+          },
+          "zh-Hans": {
+            "translation": "src/locale/messages.zh-Hans.json",
+            "subPath": "zh"
           }
         }
       },
@@ -106,6 +114,16 @@
               "localize": [
                 "es-419"
               ]
+            },
+            "de": {
+              "localize": [
+                "de"
+              ]
+            },
+            "zh": {
+              "localize": [
+                "zh-Hans"
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -130,6 +148,12 @@
             },
             "es": {
               "buildTarget": "living-atlast:build:development,es"
+            },
+            "de": {
+              "buildTarget": "living-atlast:build:development,de"
+            },
+            "zh": {
+              "buildTarget": "living-atlast:build:development,zh"
             }
           },
           "defaultConfiguration": "development"
@@ -158,6 +182,22 @@
             "styles": [
               "src/styles.css"
             ]
+          },
+          "configurations": {
+            "language-support": {
+              "tsConfig": "tsconfig.languages.spec.json",
+              "include": [
+                "src/app/i18n/locales.spec.ts",
+                "src/app/boards/board-translation.spec.ts",
+                "src/app/boards/board-language-playback.spec.ts",
+                "src/app/boards/narration-voice.spec.ts",
+                "src/app/boards/tour-handoff.spec.ts",
+                "src/app/boards/card-share.spec.ts",
+                "src/app/boards/card-live-route.spec.ts",
+                "src/app/boards/talking-card.spec.ts",
+                "src/app/talking-card-conversation/talking-card-conversation.spec.ts"
+              ]
+            }
           }
         }
       }

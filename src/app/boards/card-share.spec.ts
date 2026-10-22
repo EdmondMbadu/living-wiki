@@ -13,6 +13,15 @@ describe('card sharing', () => {
     );
   });
 
+  for (const language of ['de', 'zh'] as const) {
+    it(`preserves ${language} and the scanned card in a public QR link`, () => {
+      const url = new URL(publicCardUrl('board-1', 'card/id', language));
+      expect(url.pathname).toBe(`/${language}/boards/board-1`);
+      expect(url.searchParams.get('card')).toBe('card/id');
+      expect(url.searchParams.get('contentLang')).toBe(language);
+    });
+  }
+
   it('finds nested cards and inherits author-only visibility from parents', () => {
     type Card = { id: string; authorOnly?: boolean; relatedCards?: Card[] };
     const cards: Card[] = [{ id: 'parent', authorOnly: true, relatedCards: [{ id: 'child' }] }];

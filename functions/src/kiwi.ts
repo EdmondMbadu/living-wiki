@@ -10,6 +10,7 @@ import { requireTeamMember, saveKiwiTeamBoard } from './teams';
 import { kiwiActionDetails, kiwiActionSummary, kiwiApplyBoardAction, kiwiCanCopyBoard, kiwiCanEditPersonalBoard,
   kiwiCanEditTeamBoard, kiwiCanReadPersonalBoard, normalizeKiwiAction, type KiwiAction } from './kiwi-policy';
 import kiwiVoices from './kiwi-voices.json';
+import { kiwiLocalizedReply } from './kiwi-localization';
 
 type Data = Record<string, unknown>;
 type Scope = { teamId: string; boardId: string };
@@ -22,13 +23,15 @@ const DEFAULT_VOICE_ID = kiwiVoices[0].id;
 const voiceById = new Map(kiwiVoices.map((voice) => [voice.id, voice]));
 
 // The app sends its Angular locale id. Spanish is es-419 (Latin America).
-function kiwiLocale(input: unknown): 'en' | 'fr' | 'ja' | 'pt-BR' | 'es-419' {
+function kiwiLocale(input: unknown): 'en' | 'fr' | 'ja' | 'pt-BR' | 'es-419' | 'de' | 'zh-Hans' {
+  if (input === 'de' || input === 'de-DE') return 'de';
+  if (input === 'zh' || input === 'zh-Hans' || input === 'zh-CN') return 'zh-Hans';
   if (input === 'es' || input === 'es-419') return 'es-419';
   return input === 'fr' || input === 'ja' || input === 'pt-BR' ? input : 'en';
 }
 
 function kiwiReply(locale: string, english: string, portuguese: string, spanish: string): string {
-  return locale === 'pt-BR' ? portuguese : locale === 'es-419' ? spanish : english;
+  return locale === 'pt-BR' ? portuguese : locale === 'es-419' ? spanish : kiwiLocalizedReply(locale, english);
 }
 
 function value(input: unknown, max: number): string {
@@ -400,6 +403,8 @@ export const kiwiTalk = onCall({ region, cors: true, secrets: [geminiApiKey], ti
     ? ' Reply in natural Brazilian Portuguese. Write user-facing board titles, descriptions, and card text in Brazilian Portuguese. Keep JSON keys, action kinds, visibility, tone, and card type enum values in English.'
     : locale === 'es-419'
       ? ' Reply in natural, neutral Latin American Spanish using tú. Write user-facing board titles, descriptions, and card text in Spanish. Keep JSON keys, action kinds, visibility, tone, and card type enum values in English.'
+    : locale === 'de' ? ' Reply in natural German. Write user-facing board and card content in German. Keep JSON keys and enum values in English.'
+      : locale === 'zh-Hans' ? ' Reply in Simplified Chinese. Write user-facing board and card content in Simplified Chinese. Keep JSON keys and enum values in English.'
     : locale === 'fr' ? ' Reply in French while keeping JSON keys and enum values in English.'
       : locale === 'ja' ? ' Reply in Japanese while keeping JSON keys and enum values in English.' : '';
   const generation = { model: 'gemini-3-flash-preview',
@@ -461,7 +466,11 @@ export const kiwiTalk = onCall({ region, cors: true, secrets: [geminiApiKey], ti
     return { reply: kiwiReply(locale, 'I’ll use Describe it to research and prepare this board.', 'Vou usar Descrever para pesquisar e preparar este quadro.', 'Usaré Descríbelo para investigar y preparar este tablero.'), describeRequest: message };
   if (action.kind === 'create_board' && !action.cards.length)
     return { reply: kiwiReply(locale, 'What should this board be about? Describe it in a sentence and I’ll make cards with images.', 'Qual será o tema deste quadro? Descreva em uma frase e criarei cartões com imagens.', '¿De qué debería tratar este tablero? Descríbelo en una frase y crearé tarjetas con imágenes.') };
-  if (action.kind === 'create_board') reply = locale === 'pt-BR'
+  if (action.kind === 'create_board') reply = locale === 'de'
+    ? `Ich habe einen Entwurf für „${action.title}“ vorbereitet und füge Bilder hinzu. Prüfen Sie ihn und sagen Sie mir, was Sie ändern möchten.`
+    : locale === 'zh-Hans'
+      ? `已准备好“${action.title}”的草稿，正在添加图片。请查看并告诉我需要修改的内容。`
+    : locale === 'pt-BR'
     ? `Preparei um rascunho de “${action.title}”. Estou adicionando imagens; revise na tela e diga o que deseja alterar.`
     : locale === 'es-419'
       ? `Preparé un borrador de “${action.title}”. Estoy agregando imágenes; revísalo en tu pantalla y dime qué quieres cambiar.`
@@ -555,7 +564,11 @@ export const kiwiStageDescribeBoard = onCall({ region, cors: true, timeoutSecond
     status: 'pending', resultBoardId: randomUUID(),
   });
   return {
-    reply: locale === 'pt-BR'
+    reply: locale === 'de'
+      ? `„${action.title}“ mit ${action.cards.length} Karten ist vorbereitet. Prüfen Sie den Entwurf und die Bilder. Anschließend können Sie Änderungen anfordern oder speichern.`
+      : locale === 'zh-Hans'
+        ? `已准备好“${action.title}”，共${action.cards.length}张卡片。请查看草稿和图片，然后告诉我需要修改的内容或确认保存。`
+      : locale === 'pt-BR'
       ? `Preparei “${action.title}” com ${action.cards.length} ${action.cards.length === 1 ? 'cartão' : 'cartões'}. Revise o rascunho e as imagens; depois diga o que deseja alterar ou confirme para salvar.`
       : locale === 'es-419'
         ? `Preparé “${action.title}” con ${action.cards.length} ${action.cards.length === 1 ? 'tarjeta' : 'tarjetas'}. Revisa el borrador y las imágenes; luego dime qué quieres cambiar o guárdalo.`

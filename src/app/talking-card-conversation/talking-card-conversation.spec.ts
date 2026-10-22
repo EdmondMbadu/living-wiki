@@ -81,6 +81,17 @@ describe('TalkingCardConversationComponent', () => {
     }).compileComponents();
   });
 
+  for (const [language, expected] of [['de', 'German'], ['zh', 'Simplified Chinese']] as const) {
+    it(`keeps ${language} in voice and typed Talking Card requests`, () => {
+      const context = buildTalkingCardVoiceContext(atlas, {}, 'Property facts: a white house.', language);
+      expect(context.instruction).toContain(expected);
+      const question = talkingCardScopedQuestion('What can I visit?', '', language);
+      expect(question).toContain(expected);
+      expect(question).not.toContain('undefined');
+      expect(question).toContain('What can I visit?');
+    });
+  }
+
   it('keeps a person avatar in first person even when a stale session says city', () => {
     const context = buildTalkingCardVoiceContext(atlas, {
       atlas_subject_type: 'city',

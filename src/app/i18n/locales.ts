@@ -1,7 +1,7 @@
 export interface SupportedLocale {
-  readonly id: 'en-US' | 'fr' | 'ja' | 'pt-BR' | 'es-419';
-  readonly language: 'en' | 'fr' | 'ja' | 'pt' | 'es';
-  readonly subPath: '' | 'fr' | 'ja' | 'pt' | 'es';
+  readonly id: 'en-US' | 'fr' | 'ja' | 'pt-BR' | 'es-419' | 'de' | 'zh-Hans';
+  readonly language: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh';
+  readonly subPath: '' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh';
   readonly label: string;
   readonly direction: 'ltr';
 }
@@ -12,13 +12,18 @@ export const SUPPORTED_LOCALES: readonly SupportedLocale[] = [
   { id: 'ja', language: 'ja', subPath: 'ja', label: '日本語', direction: 'ltr' },
   { id: 'pt-BR', language: 'pt', subPath: 'pt', label: 'Português (Brasil)', direction: 'ltr' },
   { id: 'es-419', language: 'es', subPath: 'es', label: 'Español', direction: 'ltr' },
+  { id: 'de', language: 'de', subPath: 'de', label: 'Deutsch', direction: 'ltr' },
+  { id: 'zh-Hans', language: 'zh', subPath: 'zh', label: '简体中文', direction: 'ltr' },
 ];
 
 export const DEFAULT_LOCALE = SUPPORTED_LOCALES[0];
 export const LOCALE_STORAGE_KEY = 'livingwiki.locale';
 
 export function supportedLocale(localeId: string | null | undefined): SupportedLocale {
-  const normalized = (localeId ?? '').toLowerCase();
+  const normalized = (localeId ?? '').toLowerCase().replaceAll('_', '-');
+  // Regional browser language IDs share the site's German and Simplified Chinese builds.
+  if (/^de(?:-|$)/.test(normalized)) return SUPPORTED_LOCALES.find((locale) => locale.language === 'de')!;
+  if (/^zh(?:-|$)/.test(normalized)) return SUPPORTED_LOCALES.find((locale) => locale.language === 'zh')!;
   return SUPPORTED_LOCALES.find(
     (locale) => locale.id.toLowerCase() === normalized || locale.language === normalized,
   ) ?? DEFAULT_LOCALE;

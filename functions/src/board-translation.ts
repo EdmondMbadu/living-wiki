@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-export type BoardTranslationLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es';
+export type BoardTranslationLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh';
 
 export interface BoardTranslationSegment {
   key: string;
@@ -16,10 +16,10 @@ export interface BoardTranslationSource {
 
 const maximumBoardTranslationCharacters = 100_000;
 const maximumFieldCharacters = 8_000;
-export const BOARD_TRANSLATION_SCHEMA_VERSION = 2;
+export const BOARD_TRANSLATION_SCHEMA_VERSION = 3;
 
 export function isBoardTranslationLanguage(value: unknown): value is BoardTranslationLanguage {
-  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt' || value === 'es';
+  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt' || value === 'es' || value === 'de' || value === 'zh';
 }
 
 export function extractBoardTranslationSource(value: unknown): BoardTranslationSource {
@@ -158,11 +158,16 @@ export function boardTranslationSegmentsComplete(
 }
 
 export function detectBoardSourceLanguage(text: string): BoardTranslationLanguage {
-  if (/[\u3040-\u30ff\u3400-\u9fff]/u.test(text)) {
+  if (/[\u3040-\u30ff]/u.test(text)) {
     return 'ja';
   }
 
+  if (/\p{Script=Han}/u.test(text)) return 'zh';
+
   const normalized = ` ${text.toLocaleLowerCase()} `;
+  const germanSignals = normalized.match(/(?<!\p{L})(?:der|die|das|den|dem|des|ein|eine|einen|einem|einer|und|ist|sind|mit|für|auf|im|zum|zur|hier|dieser|diese|dieses|sich|nicht|werden)(?!\p{L})/gu)?.length ?? 0;
+  const words = Math.max(1, normalized.split(/\s+/u).filter(Boolean).length);
+  if (germanSignals >= 3 && germanSignals / words >= 0.08) return 'de';
   const frenchSignals = normalized.match(
     /(?:[àâçéèêëîïôùûüÿœæ]|\b(?:le|la|les|des|une|avec|pour|dans|sur|est|sont|et|du|au|aux|ce|cette|ces|vous|nous)\b)/gu,
   )?.length ?? 0;

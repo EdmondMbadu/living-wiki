@@ -3087,6 +3087,10 @@
     "source": "BEST{$LINE_BREAK}VALUE",
     "file": "src/app/membership/membership.html"
   },
+  "1949800099101277248": {
+    "source": "Languages",
+    "file": "src/app/chat/chat.ts"
+  },
   "1950875832040824729": {
     "source": "Business page",
     "file": "src/app/business-claim/business-claim.html"

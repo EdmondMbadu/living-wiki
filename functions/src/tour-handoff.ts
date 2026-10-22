@@ -1,5 +1,5 @@
 export type StoredTourHandoffMode = 'walking' | 'driving';
-export type StoredTourHandoffLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es';
+export type StoredTourHandoffLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh';
 
 type TourHandoffLeg = {
   durationText: string;
@@ -46,7 +46,7 @@ function record(value: unknown): Record<string, unknown> {
 }
 
 function punctuation(value: string, language: StoredTourHandoffLanguage = 'en'): string {
-  return value && !/[.!?。！？]$/u.test(value) ? `${value}${language === 'ja' ? '。' : '.'}` : value;
+  return value && !/[.!?。！？]$/u.test(value) ? `${value}${language === 'ja' || language === 'zh' ? '。' : '.'}` : value;
 }
 
 function normalized(value: unknown): string {
@@ -122,23 +122,30 @@ export function buildStoredTourHandoffFallback(
   const leg = fromCard.legToNext;
   const labels = {
     en: { next: 'Next stop:', title: 'the next stop', onFoot: 'on foot', driving: 'by car', ending: "I'll meet you there." },
+    de: { next: 'Nächster Halt:', title: 'der nächste Halt', onFoot: 'zu Fuß', driving: 'mit dem Auto', ending: 'Wir sehen uns dort.' },
+    zh: { next: '下一站：', title: '下一站', onFoot: '步行', driving: '驾车', ending: '我们在那里见。' },
     fr: { next: 'Prochaine étape :', title: 'la prochaine étape', onFoot: 'à pied', driving: 'en voiture', ending: 'Je vous y retrouve.' },
     ja: { next: '次の立ち寄り先：', title: '次の立ち寄り先', onFoot: '徒歩', driving: '車', ending: 'そこでお会いしましょう。' },
     pt: { next: 'Próxima parada:', title: 'a próxima parada', onFoot: 'a pé', driving: 'de carro', ending: 'Encontro você lá.' },
     es: { next: 'Próxima parada:', title: 'la próxima parada', onFoot: 'a pie', driving: 'en auto', ending: 'Nos vemos allí.' },
   } as const;
   const label = labels[language];
-  const sentences = [`${label.next}${language === 'ja' ? '' : ' '}${punctuation(nextCard.title || label.title, language)}`];
+  const sentences = [`${label.next}${language === 'ja' || language === 'zh' ? '' : ' '}${punctuation(nextCard.title || label.title, language)}`];
   const teaser = storedTourHandoffTeaser(nextCard, language);
   if (teaser) sentences.push(teaser);
   const duration = language === 'ja'
     ? (leg?.durationText ?? '').replace(/\b(?:minutes?|mins?)\b/giu, '分')
-    : leg?.durationText ?? '';
+    : language === 'zh' ? (leg?.durationText ?? '').replace(/\b(?:minutes?|mins?)\b/giu, '分钟')
+      : language === 'de' ? (leg?.durationText ?? '').replace(/\b(?:minutes?|mins?)\b/giu, 'Minuten') : leg?.durationText ?? '';
   const distance = leg?.distanceText ?? '';
   if (duration) {
     const travelMode = mode === 'driving' ? label.driving : label.onFoot;
     sentences.push(language === 'ja'
       ? `${travelMode}で約${duration}${distance ? `、距離は約${distance}` : ''}です。`
+      : language === 'de'
+        ? `Sie erreichen den nächsten Halt in etwa ${duration} ${travelMode}${distance ? `, nach ungefähr ${distance}` : ''}.`
+        : language === 'zh'
+          ? `${travelMode}约需${duration}${distance ? `，距离约${distance}` : ''}。`
       : language === 'fr'
         ? `Vous devriez y arriver en environ ${duration} ${travelMode}${distance ? `, sur environ ${distance}` : ''}.`
         : language === 'pt'
@@ -148,6 +155,8 @@ export function buildStoredTourHandoffFallback(
           : `You should reach it in about ${duration} ${travelMode}${distance ? `, around ${distance}` : ''}.`);
   } else if (distance) {
     sentences.push(language === 'ja' ? `距離は約${distance}です。`
+      : language === 'de' ? `Der nächste Halt ist etwa ${distance} entfernt.`
+        : language === 'zh' ? `距离约为${distance}。`
       : language === 'fr' ? `C'est à environ ${distance}.`
         : language === 'pt' ? `Fica a aproximadamente ${distance} daqui.`
           : language === 'es' ? `Queda a aproximadamente ${distance}.`

@@ -114,4 +114,17 @@ describe('Tour handoffs', () => {
       notes: '**Opened in 1882.** Its rooms hosted public life.',
     })).toBe('Opened in 1882.');
   });
+  it('uses German and Chinese handoffs instead of English fallback copy', () => {
+    const from = { id: 'start', title: 'Start', tour: { legToNext: { durationText: '3 min', distanceText: '200 m' } } };
+    const destination = { id: 'museum', title: 'Museum', shortSummary: '' };
+    const de = buildTourHandoffFallback(from, destination, 'walking', 'de');
+    const zh = buildTourHandoffFallback(from, destination, 'walking', 'zh');
+    expect(de).toContain('Nächster Halt:');
+    expect(de).toContain('3 Minuten');
+    expect(de).toContain('zu Fuß');
+    expect(zh).toContain('下一站：');
+    expect(zh).toContain('步行约需3 分钟');
+    expect(zh).not.toContain('Next stop');
+  });
+
 });

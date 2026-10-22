@@ -1213,6 +1213,8 @@ export async function translateBoardTextSegments(
 
   const languageName: Record<BoardTranslationLanguage, string> = {
     en: 'English',
+    de: 'German',
+    zh: 'Simplified Chinese (Mandarin; use Simplified Chinese characters)',
     fr: 'French',
     ja: 'Japanese',
     pt: 'Brazilian Portuguese',

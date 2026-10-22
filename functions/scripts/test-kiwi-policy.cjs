@@ -5,6 +5,35 @@ const {
   kiwiCanEditPersonalBoard, kiwiCanCopyBoard, kiwiCanEditTeamBoard, kiwiCardImageUrl,
   kiwiActionSummary, kiwiActionDetails,
 } = require('../lib/kiwi-policy');
+const { kiwiLocalizedReply } = require('../lib/kiwi-localization');
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
+
+test('Picamo fixed replies are translated in German and Simplified Chinese', () => {
+  const source = readFileSync(join(__dirname, '../src/kiwi.ts'), 'utf8');
+  const replies = [...source.matchAll(/kiwiReply\(locale, '([^']+)'/g)].map((match) => match[1]);
+  assert.ok(replies.length >= 18);
+  for (const reply of replies) {
+    assert.notEqual(kiwiLocalizedReply('de', reply), reply, reply);
+    assert.match(kiwiLocalizedReply('zh-Hans', reply), /\p{Script=Han}/u, reply);
+    assert.equal(kiwiLocalizedReply('en', reply), reply);
+  }
+});
+
+test('Picamo creation and editing previews use German and Chinese without changing content', () => {
+  const action = normalizeKiwiAction({ kind: 'create_board', title: 'Museum', visibility: 'unlisted', tone: 'sky', cards: [{ title: 'Gallery', notes: 'Original text' }] });
+  assert.ok(action);
+  assert.equal(kiwiActionSummary(action, undefined, 'de'), 'Board „Museum“ mit 1 Karte erstellen (Nicht gelistet)');
+  assert.equal(kiwiActionSummary(action, undefined, 'zh-Hans'), '创建不公开列出看板“Museum”，包含1张卡片');
+  assert.deepEqual(kiwiActionDetails(action, null, 'de'), ['Titel: Museum', 'Beschreibung: (keine)', 'Farbe: Hellblau', 'Sichtbarkeit: Nicht gelistet', '1. Gallery\nOriginal text']);
+  assert.deepEqual(kiwiActionDetails(action, null, 'zh-Hans'), ['标题: Museum', '描述: （无）', '颜色: 天蓝色', '可见范围: 不公开列出', '1. Gallery\nOriginal text']);
+  const edit = { kind: 'update_card', boardId: 'b', cardId: 'c', type: 'place', notes: 'Original text' };
+  assert.deepEqual(kiwiActionDetails(edit, { cards: [{ id: 'c', title: 'Gallery' }] }, 'de'), ['Karte: Gallery', 'Text: Original text', 'Typ: Ort']);
+  assert.deepEqual(kiwiActionDetails(edit, { cards: [{ id: 'c', title: 'Gallery' }] }, 'zh-Hans'), ['卡片: Gallery', '正文: Original text', '类型: 地点']);
+  const remove = { kind: 'remove_card', boardId: 'b', cardId: 'c' };
+  assert.equal(kiwiActionSummary(remove, undefined, 'de'), 'Eine Karte aus „das Board“ entfernen');
+  assert.equal(kiwiActionSummary(remove, undefined, 'zh-Hans'), '移除“看板”中的卡片');
+});
 
 test('personal reads, edits, and copies follow separate permission boundaries', () => {
   const otherPublic = { owner_user_id: 'owner', visibility: 'public' };

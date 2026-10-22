@@ -1501,7 +1501,7 @@
           <nav class="board-editorial-back" aria-label="Board navigation" i18n-aria-label>
             <button type="button" (click)="closeBoardDetail()">
               <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
-              <span i18n>Back to {{ board.parentCardId ? (board.parentCardTitle || 'parent card') : (tripsPage() ? 'trips' : songsPage() ? 'songs' : 'boards') }}</span>
+              <span i18n>Back to {{ board.parentCardId ? (board.parentCardTitle || templateText.message72) : (tripsPage() ? templateText.message16 : songsPage() ? templateText.message15 : templateText.message17) }}</span>
             </button>
             @if (board.parentCardId) {
               <button type="button" class="board-editorial-back__parent" (click)="openParentBoard(board, $event)">
@@ -1532,7 +1532,7 @@
                   <span aria-hidden="true">·</span>
                   <span>
                     {{ isSongBoard(board) ? songCards(board).length : isTourBoard(board) ? selectedBoardTourCards().length : boardDisplayCardCount(board) }}
-                    {{ isSongBoard(board) ? (songCards(board).length === 1 ? 'song' : 'songs') : isTourBoard(board) ? (selectedBoardTourCards().length === 1 ? 'stop' : 'stops') : (boardDisplayCardCount(board) === 1 ? 'card' : 'cards') }}
+                    {{ isSongBoard(board) ? (songCards(board).length === 1 ? templateText.message358 : templateText.message15) : isTourBoard(board) ? (selectedBoardTourCards().length === 1 ? 'stop' : 'stops') : (boardDisplayCardCount(board) === 1 ? templateText.message342 : templateText.message343) }}
                   </span>
                 </p>
               </div>
