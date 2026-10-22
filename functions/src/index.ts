@@ -1,4 +1,4 @@
-export { avatarQaCommand, runAvatarQaCase, recoverAvatarQaCases } from './avatar-qa';
+export { avatarQaCommand, prepareAvatarQaRun, runAvatarQaCase, recoverAvatarQaCases } from './avatar-qa';
 export { translateLiveCard } from './translate-live-card';
 import { liveCardTranslationCacheId, liveNarrationBoard } from './live-card-translation';
 import { isLinkReadableVisibility } from './board-visibility';

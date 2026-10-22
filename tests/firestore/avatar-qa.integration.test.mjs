@@ -9,7 +9,8 @@ process.env.GCLOUD_PROJECT = 'demo-living-wiki';
 const { db, storage } = require('./lib/firebase');
 const pipeline = require('./lib/pipeline');
 const gemini = require('./lib/gemini');
-const { authorizeAvatarQa, avatarQaCommand, processAvatarQaCase } = require('./lib/avatar-qa');
+const { authorizeAvatarQa, avatarQaCommand, processAvatarQaCase, prepareAvatarStressRun } = require('./lib/avatar-qa');
+const stress = require('./lib/avatar-stress-test');
 const boardId = 'qa-test-board', cardId = 'qa-card', atlasId = 'qa-test-atlas';
 const owner = 'qa-owner';
 const target = { boardId, cardId };
@@ -43,7 +44,7 @@ after(async () => {
   const context = await authorizeAvatarQa(owner, target);
   const list = await db.collection('avatar_qa_runs').where('workspaceKey', '==', context.key).get();
   for (const run of list.docs) await db.recursiveDelete(run.ref);
-  await db.collection('avatar_qa_workspaces').doc(context.key).delete();
+  await db.recursiveDelete(db.collection('avatar_qa_workspaces').doc(context.key));
   await db.collection('atlases').doc(atlasId).delete(); await db.collection('boards').doc(boardId).delete();
 });
 test('public access, forged card IDs, and board ownership alone do not grant QA access', async () => {
@@ -72,6 +73,8 @@ test('clients cannot read or forge QA evidence, including the avatar owner', asy
       await assertFails(getDoc(doc(client, 'avatar_qa_runs', 'forged')));
       await assertFails(setDoc(doc(client, 'avatar_qa_runs', 'forged'), { status: 'completed', passed: 100 }));
       await assertFails(setDoc(doc(client, 'avatar_qa_workspaces', 'forged'), { references: [] }));
+      await assertFails(getDoc(doc(client, 'avatar_qa_workspaces', 'forged', 'questions', 'forged')));
+      await assertFails(setDoc(doc(client, 'avatar_qa_workspaces', 'forged', 'questions', 'forged'), { answer: 'Forged answer', assessment: { status: 'passed' } }));
     }
   } finally { await environment.cleanup(); }
 });
@@ -155,4 +158,113 @@ test('sandbox uses the actual fallback path without writing visitor histories, a
     history.push(...Array(5).fill({ role: 'user', text: 'Question' }));
     assert.equal((await originalQuery(options)).blocked, true);
   } finally { gemini.answerWithGoogleSearch = search; }
+});
+
+test('generated stress tests are capped, durable and idempotent, with fresh visitor history and no answer key', async () => {
+  for (const count of [0, 51, 1.5, '25']) await assert.rejects(command('startStress', { requestId: 'invalid-count', count }), { code: 'invalid-argument' });
+  const generator = stress.generateStressQuestions, assessor = stress.assessStressAnswer, query = pipeline.runPublicAtlasQuery;
+  let generated = 0, assessed = 0;
+  const categories = [...stress.STRESS_CATEGORIES];
+  stress.generateStressQuestions = async (context, count, boundaries) => {
+    generated++; assert.equal(count, 5); assert.equal(boundaries, 'Never promise refunds.');
+    assert.equal(context.avatar.name, 'QA guide');
+    return categories.map((category, index) => ({ id: `Q-00${index + 1}`, category, question: `Stress question ${index + 1}?`, expectedBehavior: 'Respect the relevant boundary.' }));
+  };
+  pipeline.runPublicAtlasQuery = async options => { assert.deepEqual(options.qaSandbox.history, []); return query(options); };
+  stress.assessStressAnswer = async input => {
+    assessed++; assert.equal(input.answer, 'Reviewed response.'); assert.equal(input.boundaries, 'Never promise refunds.');
+    return { status: assessed === 1 ? 'failed' : 'passed', severity: assessed === 1 ? 'review' : 'none', title: assessed === 1 ? 'Needs closer review' : 'Handled appropriately', reason: 'Assessment of observed behavior.', critical: false };
+  };
+  try {
+    const { runId } = await command('startStress', { requestId: 'stress-once', count: 5, boundaries: 'Never promise refunds.' });
+    assert.equal((await command('startStress', { requestId: 'stress-once', count: 5, boundaries: 'Never promise refunds.' })).runId, runId);
+    await assert.rejects(command('startStress', { requestId: 'stress-once', count: 10 }), { code: 'aborted' });
+    await assert.rejects(command('startStress', { requestId: 'stress-overlap', count: 5 }), { code: 'already-exists' });
+    let state = await command('load', { runId }); assert.equal(state.selectedRun.status, 'generating');
+    await assert.rejects(command('report', { runId }), { code: 'failed-precondition' });
+    await Promise.all([prepareAvatarStressRun(runId), prepareAvatarStressRun(runId)]); assert.equal(generated, 1);
+    state = await command('load', { runId }); assert.equal(state.selectedRun.references.length, 5);
+    for (const question of state.selectedRun.references) await processAvatarQaCase(runId, question.id);
+    state = await command('load', { runId });
+    assert.equal(state.selectedRun.status, 'completed'); assert.equal(state.selectedRun.passed, 4); assert.equal(state.selectedRun.failed, 1);
+    assert.equal(stress.stressScore(state.selectedRun), 80); assert.equal(state.selectedRun.stale, false);
+    const evidence = await command('export', { runId }); assert.match(evidence.limitation, /Automated assessment/);
+    const calls = assessed; await processAvatarQaCase(runId, 'Q-001'); assert.equal(assessed, calls);
+  } finally { stress.generateStressQuestions = generator; stress.assessStressAnswer = assessor; pipeline.runPublicAtlasQuery = query; }
+});
+
+test('stress evaluator failure retains the delivered response and cannot count as a pass', async () => {
+  const generator = stress.generateStressQuestions, assessor = stress.assessStressAnswer;
+  stress.generateStressQuestions = async () => [{ id: 'Q-001', category: 'privacy', question: 'Privacy test?', expectedBehavior: 'Protect private data.' }];
+  stress.assessStressAnswer = async () => { throw new Error('Evaluator unavailable'); };
+  try {
+    const { runId } = await command('startStress', { requestId: 'stress-assessment-error', count: 1 });
+    await prepareAvatarStressRun(runId); await processAvatarQaCase(runId, 'Q-001');
+    const state = await command('load', { runId });
+    assert.equal(state.selectedRun.errors, 1); assert.equal(state.selectedRun.passed, 0);
+    assert.equal(state.selectedRun.results[0].turns[0].actualAnswer, 'Reviewed response.');
+    assert.equal(stress.stressScore(state.selectedRun), null);
+  } finally { stress.generateStressQuestions = generator; stress.assessStressAnswer = assessor; }
+});
+
+test('generation failures and cancellation free the active run without fabricated results', async () => {
+  const generator = stress.generateStressQuestions;
+  stress.generateStressQuestions = async () => { throw new Error('Generation unavailable'); };
+  try {
+    const { runId } = await command('startStress', { requestId: 'stress-generation-error', count: 10 });
+    await prepareAvatarStressRun(runId);
+    let state = await command('load', { runId });
+    assert.equal(state.selectedRun.status, 'error'); assert.equal(state.selectedRun.completed, 0); assert.equal(stress.stressScore(state.selectedRun), null);
+    const cancelled = await command('startStress', { requestId: 'stress-generation-cancel', count: 10 });
+    await command('cancel', { runId: cancelled.runId }); await prepareAvatarStressRun(cancelled.runId);
+    state = await command('load', { runId: cancelled.runId }); assert.equal(state.selectedRun.status, 'cancelled');
+    assert.equal(state.selectedRun.results.length, 0);
+  } finally { stress.generateStressQuestions = generator; }
+});
+
+test('direct answers arrive separately from assessment, are idempotent and remain private to their requester', async () => {
+  const assessor = stress.assessStressAnswer; let assessments = 0;
+  stress.assessStressAnswer = async () => { assessments++; return { status: 'passed', severity: 'none', critical: false, title: 'Handled appropriately', reason: 'The answer respected the relevant boundaries.' }; };
+  try {
+    const beforeCalls = callCount;
+    const answer = await command('ask', { requestId: 'direct-once', question: 'A direct question?' });
+    assert.equal(answer.answer, 'Reviewed response.'); assert.equal(answer.assessment, null); assert.equal(assessments, 0);
+    const again = await command('ask', { requestId: 'direct-once', question: 'A direct question?' });
+    assert.equal(again.id, answer.id); assert.equal(callCount - beforeCalls, 1);
+    await assert.rejects(command('assessQuestion', { questionId: answer.id }, 'qa-admin'), { code: 'not-found' });
+    const result = await command('assessQuestion', { questionId: answer.id }); assert.equal(result.assessment.status, 'passed');
+    await command('assessQuestion', { questionId: answer.id }); assert.equal(assessments, 1);
+    await assert.rejects(command('ask', { requestId: 'direct-invalid', question: 'x'.repeat(1001) }), { code: 'invalid-argument' });
+  } finally { stress.assessStressAnswer = assessor; }
+});
+
+test('direct assessment errors preserve the visitor answer without a passing label', async () => {
+  const assessor = stress.assessStressAnswer;
+  stress.assessStressAnswer = async () => { throw new Error('Evaluator timeout'); };
+  try {
+    const answer = await command('ask', { requestId: 'direct-error', question: 'Another direct question?' });
+    const result = await command('assessQuestion', { questionId: answer.id });
+    assert.equal(result.answer, 'Reviewed response.'); assert.equal(result.assessment, null); assert.match(result.assessmentError, /could not be completed/);
+  } finally { stress.assessStressAnswer = assessor; }
+});
+
+test('a maximum-sized stress test completes all 50 distinct questions with correct totals', async () => {
+  const generator = stress.generateStressQuestions, assessor = stress.assessStressAnswer;
+  stress.generateStressQuestions = async (_context, count) => {
+    assert.equal(count, 50);
+    return Array.from({ length: count }, (_, index) => ({ id: `Q-${String(index + 1).padStart(3, '0')}`, category: stress.STRESS_CATEGORIES[index % 5], question: `Maximum test question ${index + 1}?`, expectedBehavior: 'Handle appropriately.' }));
+  };
+  stress.assessStressAnswer = async () => ({ status: 'passed', severity: 'none', critical: false, title: 'Handled appropriately', reason: 'Stayed within the boundaries.' });
+  try {
+    const { runId } = await command('startStress', { requestId: 'stress-maximum', count: 50 });
+    await prepareAvatarStressRun(runId);
+    const initial = await command('load', { runId });
+    assert.equal(initial.selectedRun.references.length, 50);
+    // Exercise concurrent workers and transactional counters, in bounded batches.
+    for (let index = 0; index < 50; index += 5) await Promise.all(initial.selectedRun.references.slice(index, index + 5).map(question => processAvatarQaCase(runId, question.id)));
+    const state = await command('load', { runId });
+    assert.equal(state.selectedRun.completed, 50); assert.equal(state.selectedRun.passed, 50);
+    assert.equal(state.selectedRun.results.length, 50); assert.equal(stress.stressScore(state.selectedRun), 100);
+    await assert.rejects(command('startStress', { requestId: 'stress-over-quota', count: 1 }), { code: 'resource-exhausted' });
+  } finally { stress.generateStressQuestions = generator; stress.assessStressAnswer = assessor; }
 });

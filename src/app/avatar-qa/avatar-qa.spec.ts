@@ -7,19 +7,21 @@ import { AtlasService } from '../atlas.service';
 import { TeamsService } from '../teams/teams.service';
 import { teamsServiceStub } from '../teams/teams.testing';
 import { AvatarQaComponent } from './avatar-qa';
-import { AvatarQaService, type QaWorkspace, type QaReference } from './avatar-qa.service';
+import { AvatarQaService, type QaWorkspace, type QaReference, type QaRun, type DirectQuestion } from './avatar-qa.service';
 import { previewQaImport } from './avatar-qa-import';
-import gistExample from '../../../public/assets/avatar-qa/mordecai-gist-example.json';
-import genericExample from '../../../public/assets/avatar-qa/avatar-qa-example.json';
 const reference: QaReference = { id: 'AMD-001', question: 'A question?', expectedAnswer: 'Reference.', category: 'education', source: 'Answer key v1', approval: 'draft', approvedBy: '', approvedOn: '', followUps: [] };
-const workspace: QaWorkspace = { target: { boardId: 'b1', cardId: 'c1', atlasId: 'a1', boardTitle: 'Wet AMD', avatarName: 'Maya Chen', openingMessage: 'Hello', personaPrompt: 'Reviewed educational guide', boardSlug: 'wet-amd' }, references: [reference], revision: 1, documents: [], runs: [], selectedRun: null };
+const workspace: QaWorkspace = { target: { boardId: 'b1', cardId: 'c1', atlasId: 'a1', boardTitle: 'Your board', avatarName: 'Maya Chen', openingMessage: 'Hello', personaPrompt: 'Educational guide', boardSlug: 'your-board' }, references: [], revision: 0, documents: [], runs: [], selectedRun: null };
+const runFixture = (changes: Partial<QaRun> = {}): QaRun => ({ id: 'run1', createdAt: '2026-10-22T12:00:00Z', status: 'completed', total: 25, completed: 25, passed: 23, failed: 2, errors: 0, critical: 0, cancelled: 0, fingerprint: 'hash', suiteHash: 'suite', protocol: 'avatar-stress-v1', references: [], reviews: [], results: [], ...changes });
+const direct: DirectQuestion = { id: 'question1', question: 'A question?', answer: 'The answer a visitor receives.', answerMode: 'wiki', citations: [], createdAt: '2026-10-22T12:00:00Z', assessment: null };
+
 describe('AvatarQaComponent', () => {
   const service = { command: jasmine.createSpy('command') };
+  let params: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
   beforeEach(async () => {
+    params = new BehaviorSubject(convertToParamMap({ boardId: 'b1', cardId: 'c1' }));
     service.command.calls.reset(); service.command.and.resolveTo(structuredClone(workspace));
     await TestBed.configureTestingModule({ imports: [AvatarQaComponent], providers: [provideZonelessChangeDetection(), provideRouter([]),
-      { provide: ActivatedRoute, useValue: { paramMap: new BehaviorSubject(convertToParamMap({ boardId: 'b1', cardId: 'c1' })) } },
-      { provide: AvatarQaService, useValue: service },
+      { provide: ActivatedRoute, useValue: { paramMap: params } }, { provide: AvatarQaService, useValue: service },
       { provide: TeamsService, useFactory: teamsServiceStub },
       { provide: AuthService, useValue: { waitForReady: async () => {}, uid: signal('owner'), profile: signal({ preferredCitySlug: 'philly' }), isAuthenticated: signal(true), signOut: async () => {} } },
       { provide: AtlasService, useValue: { activeAtlasWikiLink: signal('/wiki/philly') } },
@@ -28,139 +30,109 @@ describe('AvatarQaComponent', () => {
   async function render() {
     const fixture = TestBed.createComponent(AvatarQaComponent); fixture.detectChanges(); await fixture.componentInstance.load(true); fixture.detectChanges(); return fixture;
   }
-  it('keeps the real shared sidebar and logo, starts with empty measured results', async () => {
+  it('shows both simple flows and real empty results without an upload prerequisite', async () => {
     const fixture = await render(), root = fixture.nativeElement as HTMLElement;
-    expect(root.querySelector('app-workspace-sidebar')).not.toBeNull();
-    expect(root.querySelector('.workspace-sidebar__brand img')?.getAttribute('src')).toBe('/assets/image/lucky-paper-crane.png');
-    expect(root.querySelector('.qa-logo img')?.getAttribute('src')).toBe('/assets/image/livingwiki-brand.svg');
-    expect(root.textContent).toContain('Maya Chen'); expect(root.textContent).toContain('No conversations tested yet');
-    expect(root.textContent).not.toContain('98.3%'); expect(root.querySelector('.qa-badge')?.textContent).toContain('Not tested');
+    expect(root.textContent).toContain('Run a stress test'); expect(root.textContent).toContain('Ask one question');
+    expect(root.textContent).toContain('Maya Chen'); expect(root.textContent).toContain('Not tested');
+    expect(root.textContent).not.toContain('Upload test file'); expect(root.textContent).not.toContain('92');
+    expect(root.querySelector('.qa-score-ring')).toBeNull();
+    expect(root.querySelector('.qa-rail-brand img')?.getAttribute('src')).toBe('/assets/image/lucky-paper-crane.png');
+    fixture.destroy();
   });
-  it('validates imported IDs and keeps draft edits separate until saved', async () => {
+  it('defaults to 25, supports presets and rejects invalid custom counts', async () => {
     const fixture = await render(), page = fixture.componentInstance;
-    page.importText.set(JSON.stringify([{...reference,id:'AMD-002'}])); page.importJson();
-    expect(page.references().length).toBe(2); expect(page.dirty()).toBeTrue();
-    expect(service.command.calls.allArgs().some(args => args[2] === 'save')).toBeFalse();
-    page.importText.set(JSON.stringify([reference])); page.importJson();
-    expect(page.importPreview().error).toContain('already exists'); expect(page.references().length).toBe(2);
+    expect(page.count()).toBe(25);
+    page.chooseCount(50); expect(page.validCount()).toBeTrue();
+    for (const value of [0, 51, 1.5, null]) { page.setCustomCount(value); expect(page.validCount()).toBeFalse(); await page.start(); }
+    expect(service.command.calls.allArgs().some(args => args[2] === 'startStress')).toBeFalse();
+    page.setCustomCount(17); expect(page.validCount()).toBeTrue(); fixture.destroy();
   });
-  it('previews an uploaded example before adding unsaved entries, without saving or starting a run', async () => {
+  it('starts generated tests without a reference library and sends the selected count and boundaries', async () => {
     const fixture = await render(), page = fixture.componentInstance;
-    page.openImport(); fixture.detectChanges();
-    const input = fixture.nativeElement.querySelector('#qa-test-file') as HTMLInputElement;
-    const transfer = new DataTransfer();
-    transfer.items.add(new File([JSON.stringify(gistExample)], 'gist-tests.json', { type: 'application/json' }));
-    input.files = transfer.files;
-    await page.readFile({ target: input } as unknown as Event); fixture.detectChanges();
-    expect(page.importPreview().entries.length).toBe(3);
-    expect(page.importPreview().turns).toBe(4);
-    expect(page.references().length).toBe(1);
-    expect(page.dirty()).toBeFalse();
-    expect(fixture.nativeElement.querySelector('.qa-import-preview')?.textContent).toContain('GIST-001');
-    expect(input.value).toBe('');
-    page.importJson(); fixture.detectChanges();
-    expect(page.references().length).toBe(4);
-    expect(page.dirty()).toBeTrue();
-    expect(page.tab()).toBe('library');
-    expect(page.importOpen()).toBeFalse();
-    expect(page.notice()).toContain('save the library');
-    expect(service.command.calls.allArgs().some(args => ['save','start'].includes(args[2]))).toBeFalse();
+    service.command.and.callFake(async (_b: string, _c: string, action: string) => action === 'startStress' ? { runId: 'new-run' } : workspace);
+    page.chooseCount(50); page.setBoundaries('Never promise refunds.'); await page.start();
+    const call = service.command.calls.allArgs().find(args => args[2] === 'startStress')!;
+    expect(call[3].count).toBe(50); expect(call[3].boundaries).toBe('Never promise refunds.'); expect(call[3].requestId).toBeTruthy();
+    expect(page.starting()).toBeFalse(); fixture.destroy();
   });
-  it('rejects invalid, oversized, and non-JSON files without changing the library', async () => {
+  it('reuses an uncertain start request rather than accidentally creating a second test', async () => {
     const fixture = await render(), page = fixture.componentInstance;
-    page.openImport(); fixture.detectChanges();
-    const input = fixture.nativeElement.querySelector('#qa-test-file') as HTMLInputElement;
-    for (const [file, message] of [
-      [new File(['not JSON'], 'tests.json'), 'not valid JSON'],
-      [new File([' '], 'empty.json'), 'empty'],
-      [new File(['x'.repeat(500001)], 'large.json'), '500 KB'],
-      [new File(['some text'], 'tests.txt'), '.json file'],
-    ] as const) {
-      const transfer = new DataTransfer(); transfer.items.add(file); input.files = transfer.files;
-      await page.readFile({ target: input } as unknown as Event); fixture.detectChanges();
-      expect(page.importError() || page.importPreview().error).toContain(message);
-      expect(page.references().length).toBe(1);
-      expect(page.dirty()).toBeFalse();
+    service.command.and.rejectWith(Object.assign(new Error('Network timeout'), { code: 'functions/deadline-exceeded' }));
+    await page.start(); const first = service.command.calls.mostRecent().args[3].requestId;
+    await page.start(); expect(service.command.calls.mostRecent().args[3].requestId).toBe(first);
+    page.chooseCount(10); await page.start(); expect(service.command.calls.mostRecent().args[3].requestId).not.toBe(first); fixture.destroy();
+  });
+  it('shows a final 92 score only for a fully assessed stress test', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    const run = runFixture(); page.data.set({ ...workspace, selectedRun: run, runs: [run] }); fixture.detectChanges();
+    expect(page.score()).toBe(92); expect(fixture.nativeElement.querySelector('.qa-score-ring strong').textContent).toBe('92');
+    for (const change of [{ completed: 24 }, { status: 'running' }, { errors: 1, passed: 22 }, { cancelled: 1, passed: 22 }, { protocol: 'exact-text-v1' }]) {
+      page.data.set({ ...workspace, selectedRun: runFixture(change) }); expect(page.score()).toBeNull();
     }
+    fixture.destroy();
   });
-  it('keeps a closed upload closed when its file finishes reading later', async () => {
+  it('disables new stress tests while questions are being generated and allows stopping', async () => {
     const fixture = await render(), page = fixture.componentInstance;
-    let finish!: (text: string) => void;
-    const pending = new Promise<string>(resolve => { finish = resolve; });
-    const file = new File(['pending'], 'tests.json');
-    spyOn(file, 'text').and.returnValue(pending);
-    page.openImport();
-    const reading = page.readFile({ target: { files: [file], value: '' } } as unknown as Event);
-    page.closeImport();
-    finish(JSON.stringify(gistExample)); await reading;
-    expect(page.importOpen()).toBeFalse(); expect(page.importText()).toBe(''); expect(page.importReading()).toBeFalse();
-    expect(page.references().length).toBe(1);
+    const run = runFixture({ status: 'generating', completed: 0, passed: 0, failed: 0 });
+    page.data.set({ ...workspace, selectedRun: run, runs: [run] }); fixture.detectChanges();
+    expect(page.score()).toBeNull(); expect(fixture.nativeElement.querySelector('.qa-start').disabled).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain('Generating 25 questions');
+    await page.start(); expect(service.command.calls.allArgs().some(args => args[2] === 'startStress')).toBeFalse(); fixture.destroy();
   });
-  it('shows the avatar-specific example and explains exact wording in an accessible modal', async () => {
+  it('preserves scores but clearly marks results of a changed avatar', async () => {
     const fixture = await render(), page = fixture.componentInstance;
-    page.data.set({ ...workspace, target: { ...workspace.target, avatarName: 'Major Mordecai Gist' } });
-    fixture.detectChanges();
-    const link = fixture.nativeElement.querySelector('.qa-starter a[download]') as HTMLAnchorElement;
-    expect(link.getAttribute('href')).toBe('/assets/avatar-qa/mordecai-gist-example.json');
-    expect(link.download).toBe('mordecai-gist-example.json');
-    const help = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(button => button.textContent?.includes('How to test'))!;
-    help.click(); fixture.detectChanges();
-    const dialog = fixture.nativeElement.querySelector('[aria-labelledby="qa-help-title"]') as HTMLElement;
-    expect(dialog.getAttribute('aria-modal')).toBe('true');
-    expect(dialog.textContent).toContain('A correct paraphrase can fail');
-    expect(page.dialogOpen()).toBeTrue();
-    page.closeDialog(); fixture.detectChanges();
-    expect(page.helpOpen()).toBeFalse(); expect(page.dialogOpen()).toBeFalse();
+    page.data.set({ ...workspace, selectedRun: runFixture({ stale: true }) }); fixture.detectChanges();
+    expect(page.status()).toBe('Avatar changed'); expect(page.score()).toBe(92);
+    expect(fixture.nativeElement.textContent).toContain('earlier version'); fixture.destroy();
   });
-  it('requires the synthetic-fixture acknowledgement and a saved suite before running', async () => {
+  it('shows the direct answer before assessment finishes and keeps its result separate from the score', async () => {
     const fixture = await render(), page = fixture.componentInstance;
-    page.openRun(); await page.start();
-    expect(service.command.calls.allArgs().some(args => args[2] === 'start')).toBeFalse();
-    page.syntheticConfirmed.set(true); page.dirty.set(true); await page.start();
-    expect(service.command.calls.allArgs().some(args => args[2] === 'start')).toBeFalse();
+    let finish!: (value: DirectQuestion) => void;
+    service.command.and.callFake((_b: string, _c: string, action: string) => action === 'ask' ? Promise.resolve(direct) : new Promise<DirectQuestion>(resolve => finish = resolve));
+    page.question.set('A question?'); const pending = page.ask(); await Promise.resolve(); await Promise.resolve(); fixture.detectChanges();
+    expect(page.direct()?.answer).toBe(direct.answer); expect(page.assessing()).toBeTrue(); expect(page.asking()).toBeFalse();
+    expect(fixture.nativeElement.textContent).toContain('The answer a visitor receives.'); expect(page.run()).toBeNull();
+    finish({ ...direct, assessment: { status: 'passed', critical: false, severity: 'none', title: 'Handled appropriately', reason: 'Respected the boundaries.' } });
+    await pending; expect(page.direct()?.assessment?.status).toBe('passed'); fixture.destroy();
   });
-  it('reuses a start request after an ambiguous timeout and replaces it after an explicit rejection', async () => {
+  it('keeps the actual answer visible when assessment is unavailable', async () => {
     const fixture = await render(), page = fixture.componentInstance;
-    page.syntheticConfirmed.set(true);
-    let code = 'functions/deadline-exceeded';
-    service.command.and.callFake(async () => { throw Object.assign(new Error('Start failed'), { code }); });
-    await page.start();
-    const first = service.command.calls.mostRecent().args[3].requestId;
-    code = 'functions/aborted'; await page.start();
-    const second = service.command.calls.mostRecent().args[3].requestId;
-    code = 'functions/deadline-exceeded'; await page.start();
-    const third = service.command.calls.mostRecent().args[3].requestId;
-    expect(first).toBe(second); expect(third).not.toBe(first);
+    service.command.and.callFake(async (_b: string, _c: string, action: string) => {
+      if (action === 'ask') return direct; throw new Error('Evaluator unavailable');
+    });
+    page.question.set('A question?'); await page.ask(); fixture.detectChanges();
+    expect(page.direct()?.answer).toBe(direct.answer); expect(page.direct()?.assessment).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Could not assess'); expect(fixture.nativeElement.textContent).not.toContain('Handled safely'); fixture.destroy();
   });
-  it('keeps the correct logo visible when the shared sidebar is collapsed', async () => {
-    const fixture = await render();
-    fixture.componentInstance.navigation.toggleSidebar(); fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.qa-logo--visible')).not.toBeNull();
-    fixture.componentInstance.navigation.toggleSidebar();
-  });
-  it('shows real failure evidence, error counts and retest state without clearing raw results', async () => {
+  it('does not call the backend for empty direct questions', async () => {
     const fixture = await render(), page = fixture.componentInstance;
-    const run = { id: 'run1', createdAt: '2026-10-15T12:00:00Z', status: 'completed', total: 2, completed: 2, passed: 0, failed: 1, errors: 1, critical: 1, cancelled: 0, fingerprint: 'hash', suiteHash: 'suite', protocol: 'exact-text-v1', references: [reference], reviews: [], results: [{ id: reference.id, referenceId: reference.id, category: 'education' as const, status: 'failed', critical: true, turns: [] }] };
-    page.data.set({...workspace,selectedRun:run,runs:[run]}); fixture.detectChanges();
-    expect(page.readiness()).toBe('Blocked'); expect(page.passRate()).toBe(0);
-    page.data.set({...workspace,selectedRun:{...run,stale:true},runs:[run]});
-    expect(page.readiness()).toBe('Retest required'); expect(page.run()?.failed).toBe(1);
+    page.question.set('   '); await page.ask(); expect(service.command.calls.allArgs().some(args => args[2] === 'ask')).toBeFalse(); fixture.destroy();
   });
-  it('renders protocol, history and answer library with working navigation', async () => {
+  it('ignores a delayed answer after navigating to another avatar', async () => {
     const fixture = await render(), page = fixture.componentInstance;
-    for (const [tab, text] of [['library','Answer key v1'], ['protocol','What this run measures'], ['history','No runs saved yet.']] as const) {
-      page.tab.set(tab); fixture.detectChanges(); expect(fixture.nativeElement.textContent).toContain(text);
-    }
+    let finish!: (value: DirectQuestion) => void;
+    service.command.and.callFake((_b: string, _c: string, action: string) => action === 'ask' ? new Promise<DirectQuestion>(resolve => finish = resolve) : Promise.resolve(workspace));
+    page.question.set('A question?'); const pending = page.ask();
+    params.next(convertToParamMap({ boardId: 'other-board', cardId: 'other-card' })); finish(direct); await pending;
+    expect(page.direct()).toBeNull(); expect(page.asking()).toBeFalse(); fixture.destroy();
+  });
+  it('renders question and answer markup as text, with expandable actual response evidence', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    const result = { id: 'Q-001', referenceId: 'Q-001', category: 'privacy' as const, status: 'failed', critical: true, turns: [{ question: '<img src=x onerror=alert(1)>', actualAnswer: '<script>bad()</script>', expectedAnswer: '', answerMode: 'wiki', reason: 'Private information disclosed.', status: 'failed', critical: true, citations: [], citedEntryIds: [], title: 'Privacy issue' }] };
+    page.data.set({ ...workspace, selectedRun: runFixture({ results: [result] }) }); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('script')).toBeNull(); expect(fixture.nativeElement.querySelector('.qa-result img')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.qa-result-detail').textContent).toContain('<script>bad()</script>');
+    page.toggleAll(); page.search.set('not present'); expect(page.visibleResults().length).toBe(0); fixture.destroy();
+  });
+  it('offers PDF export for finished tests and keeps export errors visible', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    page.data.set({ ...workspace, selectedRun: runFixture() });
+    service.command.and.rejectWith(new Error('Report temporarily unavailable')); await page.exportReport();
+    expect(service.command.calls.mostRecent().args[2]).toBe('report'); expect(page.exporting()).toBeFalse(); expect(page.error()).toContain('Report temporarily unavailable'); fixture.destroy();
   });
 });
 
 describe('QA file contract', () => {
-  it('ships valid draft example files with the advertised scenario and question counts', () => {
-    const gist = previewQaImport(JSON.stringify(gistExample), []);
-    const generic = previewQaImport(JSON.stringify(genericExample), []);
-    expect(gist.error).toBe(''); expect(gist.entries.length).toBe(3); expect(gist.turns).toBe(4); expect(gist.drafts).toBe(3);
-    expect(generic.error).toBe(''); expect(generic.entries.length).toBe(2); expect(generic.drafts).toBe(2);
-  });
   it('blocks bad shapes, duplicate IDs, invalid approval dates and excessive follow-ups', () => {
     for (const value of [
       { question: 'Not an array' }, [], [reference, reference],
