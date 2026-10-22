@@ -79,6 +79,7 @@ export class AvatarQaComponent {
     if (!run) return 'Not tested';
     if (run.status === 'generating') return 'Preparing questions';
     if (this.running()) return run.cancelRequested ? 'Stopping test' : 'Test in progress';
+    if (run.configurationWarning) return 'Retest recommended';
     if (run.stale) return 'Avatar changed';
     if (this.legacy()) return 'Historical wording test';
     if (run.status === 'cancelled') return 'Test stopped';

@@ -85,6 +85,13 @@ describe('AvatarQaComponent', () => {
     expect(page.status()).toBe('Avatar changed'); expect(page.score()).toBe(92);
     expect(fixture.nativeElement.textContent).toContain('earlier version'); fixture.destroy();
   });
+  it('keeps saved answers accessible when configuration freshness could not be checked', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    page.data.set({ ...workspace, selectedRun: runFixture({ stale: true, configurationWarning: 'Saved results are available, but the current avatar configuration could not be checked.' }) }); fixture.detectChanges();
+    expect(page.status()).toBe('Retest recommended'); expect(page.score()).toBe(92);
+    expect(fixture.nativeElement.textContent).toContain('Saved results are available');
+    expect(fixture.nativeElement.textContent).not.toContain('The avatar or its knowledge has changed.'); fixture.destroy();
+  });
   it('shows the direct answer before assessment finishes and keeps its result separate from the score', async () => {
     const fixture = await render(), page = fixture.componentInstance;
     let finish!: (value: DirectQuestion) => void;

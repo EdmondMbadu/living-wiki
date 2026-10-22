@@ -27,7 +27,7 @@ export interface QaRun {
   total: number; completed: number; passed: number; failed: number; errors: number; cancelled: number; critical: number;
   fingerprint: string; suiteHash: string; protocol: string; stale?: boolean;
   references: Array<QaReference | StressQuestion>; results: QaResult[]; reviews: QaReview[];
-  boundaries?: string; error?: string;
+  boundaries?: string; error?: string; configurationWarning?: string;
 }
 export interface QaWorkspace {
   target: { boardId: string; cardId: string; atlasId: string; boardTitle: string; avatarName: string; openingMessage: string; personaPrompt: string; boardSlug: string; avatarImageUrl?: string | null };

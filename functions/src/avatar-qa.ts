@@ -8,6 +8,7 @@ import { geminiApiKey } from './gemini';
 import { runPublicAtlasQuery } from './pipeline';
 import { gradeQaTurn, normalizeQaReferences, QA_PROTOCOL_VERSION, type QaReference } from './avatar-qa-model';
 import { assessStressAnswer, generateStressQuestions, STRESS_LIMITATION, STRESS_PROTOCOL, stressCount, stressText } from './avatar-stress-test';
+import { avatarQaCorpus, QA_SNAPSHOT_VERSION } from './avatar-qa-corpus';
 
 type Data = Record<string, any>;
 const workspaces = db.collection('avatar_qa_workspaces');
@@ -48,19 +49,7 @@ export async function authorizeAvatarQa(uid: string | undefined, input: Data) {
 }
 type Context = Awaited<ReturnType<typeof authorizeAvatarQa>>;
 async function corpus(context: Context, protocol = QA_PROTOCOL_VERSION) {
-  const collections = ['documents', 'knowledge_entries', 'wiki_articles', 'wiki_topics', 'wiki_index'];
-  const values = await Promise.all(collections.map(async name => {
-    const snapshot = await db.collection(name).where('user_id', '==', context.atlas.user_id).limit(3001).get();
-    if (snapshot.size > 3000) throw new HttpsError('resource-exhausted', 'This avatar exceeds the pilot QA snapshot limit.');
-    const records = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Data)).sort((a, b) => a.id.localeCompare(b.id));
-    // Legacy topic retrieval is owner-scoped. Preserve its hash without exposing other atlases' documents.
-    return [name, { ownerRetrievalHash: hash(records), records: records.filter(d => d.atlas_id === context.atlasId) }];
-  }));
-  const atlas = Object.fromEntries(['user_id', 'name', 'persona_prompt', 'wiki_type', 'response_perspective', 'chat_guide', 'city_config', 'university_config', 'default_answer_mode'].map(key => [key, context.atlas[key] ?? null]));
-  const snapshot = { atlas, card: context.card, boardId: context.boardId,
-    boardTitle: context.board.title, protocol, textModel: 'gemini-3-flash-preview',
-    corpus: Object.fromEntries(values) };
-  return { snapshot, fingerprint: hash(snapshot) };
+  return avatarQaCorpus(db, context, protocol);
 }
 async function runFor(context: Context, runId: unknown) {
   const ref = runs.doc(id(runId));
@@ -113,7 +102,12 @@ export const avatarQaCommand = onCall({ region: 'us-central1', cors: true, timeo
     const selected = input.runId ? { id: id(input.runId), ...(await runFor(context, input.runId)).value } as Data : history[0];
     const details = selected ? await runs.doc(selected.id).collection('results').get() : null;
     const reviews = selected ? await runs.doc(selected.id).collection('reviews').get() : null;
-    const current = selected ? await corpus(context, selected.protocol) : null;
+    let current: Awaited<ReturnType<typeof corpus>> | null = null;
+    let configurationWarning = '';
+    if (selected) {
+      try { current = await corpus(context, selected.protocol); }
+      catch { configurationWarning = 'Saved results are available, but the current avatar configuration could not be checked. Refresh to check again.'; }
+    }
     const references = settings.data()?.references ?? [];
     return {
       target: { boardId: context.boardId, cardId: context.cardId, atlasId: context.atlasId,
@@ -124,6 +118,8 @@ export const avatarQaCommand = onCall({ region: 'us-central1', cors: true, timeo
       documents: documents.docs.filter(d => d.data().user_id === context.atlas.user_id).map(d => ({ id: d.id, filename: d.data().filename, status: d.data().status })),
       runs: history.map(({ references: _references, ...run }) => run),
       selectedRun: selected ? { ...selected, stale: selected.fingerprint !== current?.fingerprint || (selected.protocol !== STRESS_PROTOCOL && selected.suiteHash !== hash(references)),
+        configurationWarning: configurationWarning || (selected.snapshotVersion !== QA_SNAPSHOT_VERSION
+          ? 'These results used an older QA snapshot format. Start a new stress test to assess the current avatar.' : ''),
         results: details!.docs.map(d => ({ id: d.id, ...d.data() })),
         reviews: reviews!.docs.map(d => ({ id: d.id, ...d.data() })).sort((a: Data, b: Data) => a.createdAt.localeCompare(b.createdAt)) } : null,
     };
@@ -152,7 +148,7 @@ export const avatarQaCommand = onCall({ region: 'us-central1', cors: true, timeo
       tx.create(ref, { workspaceKey: context.key, boardId: context.boardId, cardId: context.cardId, atlasId: context.atlasId,
         avatarName: context.atlas.name, boardTitle: context.board.title, requestedBy: context.uid, avatarOwnerId: context.atlas.user_id,
         createdAt: now(), status: 'generating', channel: 'text', language: 'en', protocol: STRESS_PROTOCOL,
-        fingerprint: configuration.fingerprint, snapshotPath, boundaries, references: [], suiteHash: '',
+        fingerprint: configuration.fingerprint, snapshotVersion: QA_SNAPSHOT_VERSION, snapshotPath, boundaries, references: [], suiteHash: '',
         total: count, completed: 0, passed: 0, failed: 0, errors: 0, cancelled: 0, critical: 0 });
       tx.set(workspace, { activeRunId: runId, boundaries }, { merge: true });
     });
@@ -289,7 +285,7 @@ export const avatarQaCommand = onCall({ region: 'us-central1', cors: true, timeo
       tx.set(quota, { count: (usage.data()?.count ?? 0) + 1, day }, { merge: true });
       tx.set(ref, { workspaceKey: context.key, boardId: context.boardId, cardId: context.cardId, atlasId: context.atlasId,
         requestedBy: context.uid, avatarOwnerId: context.atlas.user_id, createdAt: now(), status: 'queued', channel: 'text', language: 'en',
-        protocol: QA_PROTOCOL_VERSION, fingerprint: configuration.fingerprint, snapshotPath,
+        protocol: QA_PROTOCOL_VERSION, fingerprint: configuration.fingerprint, snapshotVersion: QA_SNAPSHOT_VERSION, snapshotPath,
         suiteHash: hash(references), references, total: references.length, completed: 0, passed: 0, failed: 0, errors: 0, critical: 0, cancelled: 0 });
       tx.set(workspace, { activeRunId: runId }, { merge: true });
       for (const reference of references) tx.create(ref.collection('cases').doc(reference.id), { reference, status: 'queued' });

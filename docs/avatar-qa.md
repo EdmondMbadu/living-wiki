@@ -81,9 +81,15 @@ run subcollections (`cases`, `results`, `reviews`), and workspace subcollection
 `avatar-qa/.../configuration.json`. The server-only `qaSandbox` uses isolated
 history and does not write visitor conversations or analytics.
 
-Legacy topic retrieval is owner-scoped. Fingerprints conservatively track that
-retrieval data while generation context and exported snapshots include only the
-selected avatar's records. Changing related owner data can require retesting.
+Snapshot format v2 pages through metadata for only the selected avatar, using
+Firestore document update times to detect changes even outside the generation
+sample. It retains at most 15 short excerpts per collection with an 8 KiB budget
+per collection. There is no account-wide or avatar-wide 3,000-record cutoff.
+Legacy retrieval remains owner-scoped: fingerprints also track the actual
+bounded fallback window (40 topics, 300 entries, and potentially referenced entry
+revisions) without copying other avatars' source bodies into QA snapshots.
+Older snapshot formats are labeled for retesting. A failed freshness check never
+prevents authorized users from opening saved results.
 Model-provider behavior can vary; the recorded model alias does not guarantee
 identical replay.
 

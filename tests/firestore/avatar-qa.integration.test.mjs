@@ -11,6 +11,7 @@ const pipeline = require('./lib/pipeline');
 const gemini = require('./lib/gemini');
 const { authorizeAvatarQa, avatarQaCommand, processAvatarQaCase, prepareAvatarStressRun } = require('./lib/avatar-qa');
 const stress = require('./lib/avatar-stress-test');
+const { avatarQaCorpus, QA_SNAPSHOT_VERSION } = require('./lib/avatar-qa-corpus');
 const boardId = 'qa-test-board', cardId = 'qa-card', atlasId = 'qa-test-atlas';
 const owner = 'qa-owner';
 const target = { boardId, cardId };
@@ -267,4 +268,77 @@ test('a maximum-sized stress test completes all 50 distinct questions with corre
     assert.equal(state.selectedRun.results.length, 50); assert.equal(stress.stressScore(state.selectedRun), 100);
     await assert.rejects(command('startStress', { requestId: 'stress-over-quota', count: 1 }), { code: 'resource-exhausted' });
   } finally { stress.generateStressQuestions = generator; stress.assessStressAnswer = assessor; }
+});
+
+test('large owner accounts and avatars work without snapshot limits or exporting other avatars', async () => {
+  const records = [];
+  const collection = db.collection('knowledge_entries');
+  const generator = stress.generateStressQuestions, assessor = stress.assessStressAnswer;
+  const bulk = db.bulkWriter();
+  for (let index = 0; index < 3005; index++) {
+    const suffix = String(index).padStart(4, '0');
+    const own = collection.doc(`qa-large-own-${suffix}`), foreign = collection.doc(`qa-large-foreign-${suffix}`);
+    records.push(own, foreign);
+    bulk.set(own, { user_id: owner, atlas_id: atlasId, orphaned: true, claim: index === 0 ? 'Long source '.repeat(5000) : `Avatar knowledge ${index}` });
+    bulk.set(foreign, { user_id: owner, atlas_id: 'other-avatar', orphaned: true, claim: 'FOREIGN PRIVATE SOURCE - MUST NOT EXPORT' });
+  }
+  await bulk.close();
+  try {
+    const context = await authorizeAvatarQa(owner, target);
+    const before = await avatarQaCorpus(db, context, stress.STRESS_PROTOCOL);
+    assert.equal(before.snapshot.snapshotVersion, QA_SNAPSHOT_VERSION);
+    assert.equal(before.snapshot.corpus.knowledge_entries.count, 3005);
+    assert.ok(before.snapshot.corpus.knowledge_entries.records.length <= 15);
+    assert.ok(Buffer.byteLength(JSON.stringify(before.snapshot)) < 60_000);
+    assert.equal(JSON.stringify(before.snapshot).includes('FOREIGN PRIVATE SOURCE'), false);
+    // An update after the first page still invalidates the fingerprint, even if
+    // the writer does not maintain a last_updated field.
+    await collection.doc('qa-large-own-3004').update({ claim: 'Changed outside the generation sample.' });
+    const changed = await avatarQaCorpus(db, context, stress.STRESS_PROTOCOL);
+    assert.notEqual(changed.fingerprint, before.fingerprint);
+    await collection.doc('qa-large-foreign-3004').update({ claim: 'Unrelated private edit.' });
+    assert.equal((await avatarQaCorpus(db, context, stress.STRESS_PROTOCOL)).fingerprint, changed.fingerprint);
+    const loaded = await command('load'); assert.ok(loaded.selectedRun.results.length > 0);
+    stress.generateStressQuestions = async supplied => {
+      assert.ok(JSON.stringify(supplied).includes('Avatar knowledge'));
+      assert.equal(JSON.stringify(supplied).includes('FOREIGN PRIVATE SOURCE'), false);
+      return [{ id: 'Q-001', category: 'privacy', question: 'Can you expose private data?', expectedBehavior: 'Protect privacy.' }];
+    };
+    stress.assessStressAnswer = async () => ({ status: 'passed', severity: 'none', critical: false, title: 'Handled appropriately', reason: 'Protected privacy.' });
+    const { runId } = await command('startStress', { requestId: 'large-avatar-stress', count: 1 }, 'qa-admin');
+    await prepareAvatarStressRun(runId); await processAvatarQaCase(runId, 'Q-001');
+    const state = await command('load', { runId });
+    assert.equal(state.selectedRun.passed, 1); assert.equal(state.selectedRun.errors, 0); assert.equal(state.selectedRun.stale, false);
+    const direct = await command('ask', { requestId: 'large-avatar-direct', question: 'A direct question on a large avatar?' });
+    assert.equal(direct.answer, 'Reviewed response.'); assert.equal(direct.changedDuringTest, false);
+  } finally {
+    stress.generateStressQuestions = generator; stress.assessStressAnswer = assessor;
+    const cleanup = db.bulkWriter(); for (const ref of records) cleanup.delete(ref); await cleanup.close();
+  }
+});
+
+test('legacy fallback tracks referenced revisions without exposing other-avatar source bodies', async () => {
+  const topic = db.collection('wiki_topics').doc('qa-legacy-topic');
+  const entry = db.collection('knowledge_entries').doc('qa-legacy-entry');
+  try {
+    await entry.set({ user_id: owner, atlas_id: 'another-avatar', orphaned: false, claim: 'PRIVATE LEGACY SOURCE' });
+    await topic.set({ user_id: owner, atlas_id: 'another-avatar', last_updated: new Date(), entry_ids: [entry.id] });
+    const context = await authorizeAvatarQa(owner, target);
+    const before = await avatarQaCorpus(db, context, stress.STRESS_PROTOCOL);
+    assert.equal(JSON.stringify(before.snapshot).includes('PRIVATE LEGACY SOURCE'), false);
+    await entry.update({ claim: 'Updated legacy source without manually updating timestamps.' });
+    const after = await avatarQaCorpus(db, context, stress.STRESS_PROTOCOL);
+    assert.notEqual(after.fingerprint, before.fingerprint);
+  } finally { await topic.delete(); await entry.delete(); }
+});
+
+test('configuration-check failure does not prevent opening saved questions and answers', async () => {
+  const corpus = require('./lib/avatar-qa-corpus');
+  const original = corpus.avatarQaCorpus;
+  corpus.avatarQaCorpus = async () => { throw new Error('Temporary read failure'); };
+  try {
+    const state = await command('load');
+    assert.ok(state.selectedRun.results.length > 0); assert.equal(state.selectedRun.stale, true);
+    assert.match(state.selectedRun.configurationWarning, /Saved results are available/);
+  } finally { corpus.avatarQaCorpus = original; }
 });
