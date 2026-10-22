@@ -195,7 +195,10 @@
                 "src/app/boards/card-share.spec.ts",
                 "src/app/boards/card-live-route.spec.ts",
                 "src/app/boards/talking-card.spec.ts",
-                "src/app/talking-card-conversation/talking-card-conversation.spec.ts"
+                "src/app/talking-card-conversation/talking-card-conversation.spec.ts",
+                "src/app/boards/live-language.spec.ts",
+                "src/app/boards/live-language-dialog.spec.ts",
+                "src/app/boards/board-studio-persistence.spec.ts"
               ]
             }
           }

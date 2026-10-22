@@ -110,7 +110,7 @@ export function boardTranslationLanguageName(language: BoardTranslationLanguage)
 }
 
 function validTranslationPath(path: string): boolean {
-  return /^(?:board\.(?:title|description|backNote|stackCtaLabel|tourMeta\.(?:paceOrRouteStyle|extras\.\d+)|learningQuiz\.(?:title|description|questions\.\d+\.(?:sourceCardTitle|prompt|explanation|options\.\d+\.text)))|cardsById\.[A-Za-z0-9_-]{1,160}\.(?:title|subtitle|notes|stackNarration|shortSummary|availability|productCategory|conversation\.(?:openingMessage|ctaLabel|starters\.\d+|actions\.\d+\.(?:label|description))|tour\.(?:guideScript|legToNext\.(?:instruction|navScript))))$/u.test(path);
+  return /^(?:board\.(?:title|description|backNote|stackCtaLabel|socialVideoClosingHeadline|socialVideoClosingMessage|tourMeta\.(?:paceOrRouteStyle|extras\.\d+)|learningQuiz\.(?:title|description|questions\.\d+\.(?:sourceCardTitle|prompt|explanation|options\.\d+\.text)))|cardsById\.[A-Za-z0-9_-]{1,160}\.(?:title|subtitle|notes|stackNarration|shortSummary|availability|productCategory|conversation\.(?:openingMessage|ctaLabel|starters\.\d+|actions\.\d+\.(?:label|description))|tour\.(?:guideScript|legToNext\.(?:instruction|navScript))))$/u.test(path);
 }
 
 function setExistingStringPath(value: unknown, rawPath: string[], text: string): void {

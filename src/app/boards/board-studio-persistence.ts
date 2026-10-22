@@ -42,11 +42,12 @@ export function boardStudioPatch(record: Record<string, unknown>, kind: BoardStu
       : kind === 'fresh-narration' || kind === 'cards'
         ? ['cards', ...mediaInvalidationFields]
         : kind === 'settings'
-          ? ['title', 'description', 'visibility', 'showCardNumbers', 'insideCardsDisplay',
+          ? ['title', 'description', 'visibility', 'showCardNumbers', 'insideCardsDisplay', 'askVisitorLanguage',
             'photoStudioDraft', ...mediaInvalidationFields]
           : [...finalScreenFields, 'socialVideoRenderVersion', 'socialLandscapeVideoRenderVersion'];
   return {
-    ...Object.fromEntries([...fields, 'updated_at_iso'].map((field) => [field, record[field]])),
+    ...Object.fromEntries([...fields, 'updated_at_iso'].map((field) => [field,
+      field === 'askVisitorLanguage' ? record[field] ?? false : record[field]])),
     // Lets Firestore evaluate this focused write before legacy full-board rules.
     studioSaveNonce: globalThis.crypto.randomUUID(),
   };

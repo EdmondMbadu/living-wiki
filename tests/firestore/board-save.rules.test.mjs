@@ -610,7 +610,7 @@ test('all small Studio saves work on a published board and preserve unrelated fi
   await saveStep('card edit', boardStudioPatch(cardRecord, 'cards'));
 
   const settingsRecord = { ...cardRecord, title: 'Cases with captions',
-    showCardNumbers: false, insideCardsDisplay: 'alongside', visibility: 'public',
+    showCardNumbers: false, insideCardsDisplay: 'alongside', askVisitorLanguage: true, visibility: 'public',
     photoStudioDraft: false, updated_at_iso: '2026-09-23T02:45:00.000Z' };
   await saveStep('board settings', boardStudioPatch(settingsRecord, 'settings'));
 
@@ -628,6 +628,8 @@ test('all small Studio saves work on a published board and preserve unrelated fi
   assert.equal(saved.cards[0].videoNarrationRevision, 1);
   assert.equal(saved.cards[1].title, 'Another case');
   assert.equal(saved.showCardNumbers, false);
+  assert.equal(saved.askVisitorLanguage, true);
+  await assertFails(updateDoc(reference, { ...boardStudioPatch({ ...settingsRecord, askVisitorLanguage: 'yes' }, 'settings'), server_updated_at: serverTimestamp() }));
   assert.equal(saved.insideCardsDisplay, 'alongside');
   assert.equal(saved.socialVideoClosingHeadline, 'Read the full board');
   assert.equal(saved.socialVideoAudioTrackId, 'none');
@@ -645,6 +647,27 @@ test('all small Studio saves work on a published board and preserve unrelated fi
       updated_at_iso: '2026-09-23T07:00:00.000Z' }, 'settings'),
     server_updated_at: serverTimestamp(),
   }));
+});
+
+test('changing only the visitor language prompt preserves published video revisions', async () => {
+  const stored = personalWizardBoard({ showCardNumbers: true, insideCardsDisplay: 'nested', photoStudioDraft: false,
+    socialVideoRenderVersion: 'published-v1', socialLandscapeVideoRenderVersion: 'published-v1',
+    trailerVideoRenderVersion: 'trailer-v1', trailerLandscapeVideoRenderVersion: 'trailer-v1',
+    trailerVideoSourceFingerprint: 'published-source' });
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'boards', stored.id), stored);
+  });
+  const ref = doc(testEnvironment.authenticatedContext(ownerUid).firestore(), 'boards', stored.id);
+  await assertSucceeds(updateDoc(ref, { ...boardStudioPatch({ ...stored, askVisitorLanguage: true }, 'settings'), server_updated_at: serverTimestamp() }));
+  const saved = (await getDoc(ref)).data();
+  assert.equal(saved.askVisitorLanguage, true);
+  assert.equal(saved.socialVideoRenderVersion, 'published-v1');
+  assert.equal(saved.trailerVideoSourceFingerprint, 'published-source');
+  await assertSucceeds(updateDoc(ref, { ...boardStudioPatch({ ...saved, askVisitorLanguage: false, visibility: 'unlisted', photoStudioDraft: false }, 'settings'), server_updated_at: serverTimestamp() }));
+  const unlisted = (await getDoc(ref)).data();
+  assert.equal(unlisted.visibility, 'unlisted');
+  assert.equal(unlisted.askVisitorLanguage, false);
+  assert.equal(unlisted.socialVideoRenderVersion, 'published-v1');
 });
 
 test('board-inside title and visibility updates preserve legacy fields and videos', async () => {

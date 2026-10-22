@@ -16,7 +16,7 @@ This phase adds German (`de`, `/de/`) and Simplified Chinese (`zh-Hans`, `/zh/`)
 
 Chinese Han characters no longer automatically identify a board as Japanese; Japanese kana take precedence. The source-language detector remains heuristic, particularly for short names. Translation schema/fingerprints advance to version 3 so old misclassified overlays are not reused. Deploy frontend and affected backend functions together.
 
-The approved first-visit visitor chooser, replacement Live toolbar globe, background language preparation, per-card on-demand translation, and streaming latency improvements remain the next phase. This change uses the existing selectors and translation/playback architecture.
+The first-visit visitor chooser, Live toolbar globe, remembered visitor preferences, and per-card on-demand translation are covered by the subsequent [Live visitor language flow](live-language-flow.md). Streaming and admin bulk language preparation remain follow-ups.
 
 ## Catalog workflow
 

@@ -1,4 +1,6 @@
 export { avatarQaCommand, runAvatarQaCase, recoverAvatarQaCases } from './avatar-qa';
+export { translateLiveCard } from './translate-live-card';
+import { liveCardTranslationCacheId, liveNarrationBoard } from './live-card-translation';
 import { isLinkReadableVisibility } from './board-visibility';
 import { normalizeKiwiAction } from './kiwi-policy';
 import { cityGuidePersonaPrompt, resolveCityGuide } from './city-guide';
@@ -21554,6 +21556,13 @@ async function boardAllowsCachedTranslatedNarration(
 ): Promise<boolean> {
   const cards = Array.isArray(board['cards']) ? board['cards'] as Array<Record<string, unknown>> : [];
   if (cardId && !cards.some((card) => card['id'] === cardId && card['authorOnly'] !== true)) return false;
+  if (cardId) {
+    // Tour handoffs also reference the next stop. Both caches are checked
+    // against current source text before allowing translated narration.
+    const translated = await liveNarrationBoard(board, cardId, async (id) =>
+      (await db.collection('board_card_translations').doc(liveCardTranslationCacheId(boardId, language, id)).get()).data());
+    if (translated && boardAllowsNarrationText(translated, text, language)) return true;
+  }
   let source;
   try {
     source = extractBoardTranslationSource(board);

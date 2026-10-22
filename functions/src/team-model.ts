@@ -144,7 +144,7 @@ export function teamPageProjection(id: string, team: TeamRecord): TeamRecord {
 // Public snapshots are allowlisted, not a private document with a handful of fields removed.
 const BOARD_FIELDS =
   `id kind title description icon tone imageUrl logoUrl logoLinkUrl stackCtaLabel stackCtaUrl
-  insideCardsDisplay showCardNumbers narrationStyle narrationSecondsPerCard stackNarratorVoiceId
+  insideCardsDisplay showCardNumbers askVisitorLanguage narrationStyle narrationSecondsPerCard stackNarratorVoiceId
   socialVideoUrl socialVideoMimeType socialVideoRatio socialLandscapeVideoUrl socialLandscapeVideoMimeType
   trailerVideoUrl trailerVideoMimeType trailerVideoRatio trailerLandscapeVideoUrl trailerLandscapeVideoMimeType
   socialVideoClosingHeadline socialVideoClosingMessage socialVideoClosingShowQrCode socialVideoClosingImage

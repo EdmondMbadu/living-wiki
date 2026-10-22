@@ -6,9 +6,14 @@
   @if (selectedBoard()?.teamId && !teamContextId()) {
     <div class="mx-auto max-w-xl px-4 py-3"><app-team-contact [teamId]="selectedBoard()!.teamId!" [boardId]="selectedBoard()!.id" /></div>
   }
+  @if (stackDirectView() && liveLanguageOpen()) {
+    @defer {
+    <app-live-language-dialog [firstVisit]="liveLanguageFirstVisit()" [initialLanguage]="liveLanguageInitial()"
+      (selected)="selectLiveLanguage($event)" (dismissed)="dismissLiveLanguage()" />
+    }
+  }
   @if (stackDirectView()) {
     @if (selectedBoard(); as board) {
-      @if (!boardTranslationTarget() || boardTranslationReady()) {
       <section
         class="stack-viewer-page"
         [style.--board-accent]="toneAccent(board.tone)"
@@ -21,6 +26,7 @@
 
           <section
             class="stack-viewer-story"
+            [class.stack-viewer-story--preparing]="!!boardTranslationTarget() && !boardTranslationReady()"
             aria-label="Stack story"
             (pointerdown)="beginStackSwipe($event)"
             (pointermove)="trackStackSwipe($event)"
@@ -69,11 +75,16 @@
                     </span>
                   </button>
                 }
-                @if (stackCurrentFrame().kind !== 'closing') {
-                  <button type="button" [attr.aria-label]="requestedCardId() && stackNarrationNeedsGesture() ? templateText.message362 : stackPlaying() ? templateText.message363 : templateText.message364" (click)="requestedCardId() && stackNarrationNeedsGesture() ? replayStackCurrentNarration($event) : toggleStackPlayback()">
-                    <span class="material-symbols-outlined">{{ stackPlaying() && !(requestedCardId() && stackNarrationNeedsGesture()) ? 'pause' : 'play_arrow' }}</span>
+                @if (!stackCurrentNarrationFrame() && stackCurrentFrame().kind !== 'closing') {
+                  <button type="button" [attr.aria-label]="stackPlaying() ? templateText.message363 : templateText.message364" (click)="toggleStackPlayback()">
+                    <span class="material-symbols-outlined">{{ stackPlaying() ? 'pause' : 'volume_up' }}</span>
                   </button>
                 }
+                <button id="live-language-trigger" type="button" class="live-language-trigger" aria-label="Change language" i18n-aria-label
+                  [attr.aria-expanded]="liveLanguageOpen()" aria-haspopup="dialog" (click)="openLiveLanguage($event)">
+                  <span class="material-symbols-outlined" aria-hidden="true">language</span>
+                  <small>{{ liveLanguageCode() }}</small>
+                </button>
                 <button type="button" aria-label="Share Stack" (click)="openStackShareDialog(board, $event)" i18n-aria-label>
                   <span class="material-symbols-outlined">near_me</span>
                 </button>
@@ -88,6 +99,18 @@
               </div>
             </header>
 
+            @if (boardTranslationTarget() && !boardTranslationReady() && !liveLanguageOpen()) {
+              <div class="live-card-preparing" role="status" aria-live="polite">
+                @if (boardTranslationError(); as translationError) {
+                  <p>{{ translationError }}</p>
+                  <button type="button" (click)="retryLiveTranslation()" i18n>Try again</button>
+                  <button type="button" (click)="showOriginalBoard($event)" i18n>Original</button>
+                } @else {
+                  <span class="material-symbols-outlined" aria-hidden="true">translate</span>
+                  <p i18n="@@livePreparingCard">Preparing this card in your language…</p>
+                }
+              </div>
+            }
             @if (stackCurrentFrame(); as frame) {
               <div class="stack-preview stack-preview--viewer">
                 @if (frame.kind === 'cover') {
@@ -386,7 +409,7 @@
             @if (stackShareMessage() || shareMessage() || tourAudioNotice()) {
               <small class="stack-viewer-toast">{{ stackShareMessage() || shareMessage() || tourAudioNotice() }}</small>
             }
-            @if (requestedCardId() && stackNarrationNeedsGesture() && stackCurrentNarrationFrame()) {
+            @if (stackNarrationNeedsGesture() && stackCurrentNarrationFrame()) {
               <button type="button" class="stack-viewer-hear-card" (click)="replayStackCurrentNarration($event)">
                 <span class="material-symbols-outlined" aria-hidden="true">volume_up</span>
                 <span i18n="@@tapToHearCard">Tap to hear this card</span>
@@ -406,19 +429,6 @@
           </button>
         </main>
       </section>
-      } @else {
-        <section class="stack-viewer-page stack-viewer-page--loading" role="status">
-          <span class="material-symbols-outlined">translate</span>
-          <strong i18n>Loading Stack</strong>
-          @if (boardTranslationError(); as translationError) {
-            <small>{{ translationError }}</small>
-            <div class="mt-5 flex flex-wrap justify-center gap-3">
-              <button type="button" class="rounded-full bg-white px-5 py-2 text-sm font-bold text-black" (click)="selectBoardTranslation(boardTranslationTarget() || 'en', $event)" i18n>Try again</button>
-              <button type="button" class="rounded-full border border-white px-5 py-2 text-sm font-bold text-white" (click)="closeStackView(board)" i18n>Back to board</button>
-            </div>
-          }
-        </section>
-      }
     } @else if (privateBoardBlocked()) {
       <section class="stack-viewer-page stack-viewer-page--loading">
         <span class="material-symbols-outlined">lock</span>
@@ -9398,6 +9408,17 @@
             </div>
           </section>
 
+          <section class="board-inside-display board-settings-choice" aria-labelledby="board-settings-language-title">
+            <div class="board-inside-display__copy board-settings-choice__copy">
+              <span class="material-symbols-outlined" aria-hidden="true">language</span>
+              <span>
+                <strong id="board-settings-language-title" i18n="@@liveAskVisitorLanguage">Ask visitors to choose a language on their first visit</strong>
+                <small i18n="@@liveAskVisitorLanguageHelp">Otherwise, Live opens in English or their saved language. Visitors can always change language using the globe.</small>
+              </span>
+            </div>
+            <input type="checkbox" [checked]="boardSettingsDraft().askVisitorLanguage" [disabled]="boardSettingsSaving()"
+              aria-labelledby="board-settings-language-title" (change)="updateBoardSettingsDraft('askVisitorLanguage', $any($event.target).checked)" />
+          </section>
           @if (isTourBoard(settingsBoard)) {
             <section class="board-inside-display board-settings-choice" aria-labelledby="board-settings-tour-view-title">
               <div class="board-inside-display__copy board-settings-choice__copy">

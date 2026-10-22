@@ -12931,6 +12931,10 @@
     "source": "Ask This Topic",
     "file": "src/app/wiki/wiki.html"
   },
+  "5037510664027250489": {
+    "source": "We could not translate this card right now. Please try again.",
+    "file": "src/app/boards/boards.ts"
+  },
   "5038772050275485800": {
     "source": "Preparing your video and cover…",
     "file": "src/app/off-grids/off-grid-copy.ts"
@@ -26586,6 +26590,30 @@
   "listingPhotoUploadRightsTitle": {
     "source": "Before you upload",
     "file": "src/app/boards/listing-photo-source.html"
+  },
+  "liveAskVisitorLanguage": {
+    "source": "Ask visitors to choose a language on their first visit",
+    "file": "src/app/boards/boards.html"
+  },
+  "liveAskVisitorLanguageHelp": {
+    "source": "Otherwise, Live opens in English or their saved language. Visitors can always change language using the globe.",
+    "file": "src/app/boards/boards.html"
+  },
+  "liveChooseLanguage": {
+    "source": "Choose your language",
+    "file": "src/app/boards/live-language-dialog.html"
+  },
+  "liveLanguageDescription": {
+    "source": "Explore this board with text and narration in your language.",
+    "file": "src/app/boards/live-language-dialog.html"
+  },
+  "liveLanguageRemembered": {
+    "source": "Remembered on this browser, including other boards.",
+    "file": "src/app/boards/live-language-dialog.html"
+  },
+  "livePreparingCard": {
+    "source": "Preparing this card in your language…",
+    "file": "src/app/boards/boards.html"
   },
   "scanLiveCard": {
     "source": "Scan to open this card in Live view and hear its narration.",

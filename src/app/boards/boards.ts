@@ -1,3 +1,6 @@
+import { LiveLanguageDialogComponent } from './live-language-dialog';
+import { LiveTranslationQueue } from './live-translation-queue';
+import { LIVE_LANGUAGE_STORAGE_KEY, liveLanguageEntry } from './live-language';
 import { BoardVisibilityControlComponent } from '../board-visibility-control';
 import { TalkThruBillingService } from '../talkthru-billing/talkthru-billing.service';
 import { isTalkThruBoardLike } from '../talkthru-billing/talkthru-plans';
@@ -6,7 +9,7 @@ import { canonicalCardNarration, withSavedNarration, invalidatedNarrationMedia }
 import { isPlatformBrowser } from '@angular/common';
 import { boardCoverPhotoUrl, stablePlacePhotoUrl } from '../place-photo';
 import { PlacePhotoDirective } from '../place-photo.directive';
-import { AfterViewInit, Component, computed, effect, ElementRef, HostListener, inject, input, output, LOCALE_ID, OnDestroy, PLATFORM_ID, signal, ViewChild, type WritableSignal } from '@angular/core';
+import { AfterViewInit, Component, computed, effect, ElementRef, HostListener, inject, input, output, LOCALE_ID, OnDestroy, PLATFORM_ID, signal, untracked, ViewChild, type WritableSignal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, Meta, type SafeResourceUrl } from '@angular/platform-browser';
@@ -111,6 +114,7 @@ import {
   normalizeBoardTranslationResult,
   type BoardTranslationLanguage,
   type BoardTranslationResult,
+  type BoardTranslationSegment,
 } from './board-translation';
 import { browserNarrationVoice, narrationUnavailableNotice } from './narration-voice';
 import { cardsForPublishedExperience, cardsVisibleToBoardViewer } from './board-card-visibility';
@@ -702,6 +706,7 @@ type Board = {
   generatedForAtlasId: string;
   insideCardsDisplay: BoardInsideDisplay;
   showCardNumbers: boolean;
+  askVisitorLanguage?: boolean;
   cards: BoardCard[];
   createdAt: string;
   updatedAt: string;
@@ -723,6 +728,7 @@ type BoardDraft = {
 };
 
 type BoardSettingsDraft = {
+  askVisitorLanguage: boolean;
   title: string;
   description: string;
   visibility: BoardVisibility;
@@ -1712,10 +1718,10 @@ type BoardLoadContext = {
 
 @Component({
   selector: 'app-boards',
-  imports: [BoardVisibilityControlComponent, ListingLiveClosingComponent, PlacePhotoDirective, RealEstateWizardSourceComponent, ListingPhotoSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective, CardShareDialogComponent, CardFocusDialogComponent],
+  imports: [LiveLanguageDialogComponent, BoardVisibilityControlComponent, ListingLiveClosingComponent, PlacePhotoDirective, RealEstateWizardSourceComponent, ListingPhotoSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective, CardShareDialogComponent, CardFocusDialogComponent],
   providers: [DocxExportService],
   templateUrl: './boards.html',
-  styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './real-estate-wizard-modal.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './talk-drop/board-talk-drop.css'],
+  styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './real-estate-wizard-modal.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './live-language.css', './talk-drop/board-talk-drop.css'],
 })
 export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly boardTitleMaxLength = FIRESTORE_BOARD_TITLE_MAX_LENGTH;
@@ -2406,6 +2412,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly boardSettingsSaving = signal(false);
   readonly boardSettingsError = signal<string | null>(null);
   readonly boardSettingsDraft = signal<BoardSettingsDraft>({
+    askVisitorLanguage: false,
     title: '',
     description: '',
     visibility: 'public',
@@ -2583,6 +2590,21 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly boardEmailShareRecipient = signal('');
   readonly boardEmailShareSending = signal(false);
   readonly boardEmailShareError = signal<string | null>(null);
+  readonly liveLanguageOpen = signal(false);
+  readonly liveLanguageFirstVisit = signal(false);
+  readonly liveLanguageInitial = signal<BoardTranslationLanguage>('en');
+  readonly liveCardTranslations = signal<Record<string, BoardTranslationResult>>({});
+  private liveLanguageBoardId = '';
+  private liveTranslationSession = '';
+  private liveLanguageWasPlaying = false;
+  private liveConfirmedLanguage: BoardTranslationLanguage | null = null;
+  private tourAnonymousVisitorId = '';
+  private liveTimingKey = '';
+  private liveFrameEnteredAt = 0;
+  private liveResumePlayback = false;
+  private liveTranslationQueue = new LiveTranslationQueue();
+  private liveDesiredCardIds = new Set<string>();
+  readonly liveTranslationPartial = signal(false);
   readonly boardTranslationMenuOpen = signal(false);
   readonly boardTranslationTarget = signal<BoardTranslationLanguage | null>(null);
   readonly boardTranslationResult = signal<BoardTranslationResult | null>(null);
@@ -3167,12 +3189,20 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     };
   });
   readonly boardTranslationActive = computed(() => {
-    return this.boardTranslationReady() && this.boardTranslationResult()?.changed === true;
+    return (this.stackDirectView() || !this.liveTranslationPartial())
+      && this.boardTranslationVersion() === this.originalSelectedBoard()?.updatedAt
+      && this.boardTranslationResult()?.boardId === this.originalSelectedBoard()?.id
+      && this.boardTranslationResult()?.changed === true;
   });
   readonly boardTranslationReady = computed(() => {
     const board = this.originalSelectedBoard();
     const result = this.boardTranslationResult();
-    return !!board
+    if (this.stackDirectView?.() && this.boardTranslationTarget()) {
+      return !!board && this.boardTranslationVersion() === board.updatedAt
+        && this.liveFrameTranslationIds(this.stackCurrentFrame()).every((id) =>
+          this.liveCardTranslations()[id]?.targetLanguage === this.boardTranslationTarget());
+    }
+    return !this.liveTranslationPartial?.() && !!board
       && !!result
       && result.boardId === board.id
       && result.targetLanguage === this.boardTranslationTarget()
@@ -4140,10 +4170,19 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     });
 
     effect(() => {
+      const board = this.originalSelectedBoard();
+      const live = this.stackDirectView();
+      this.stackFrameIndex();
+      this.boardTranslationTarget();
+      this.liveLanguageOpen();
+      if (this.isBrowser && live && board) untracked(() => void this.syncLiveFrameTranslation());
+    });
+
+    effect(() => {
       if (!this.stackAutoplayRequested() || !this.stackDirectView() || !this.selectedBoard()) {
         return;
       }
-      if (this.boardTranslationTarget() && !this.boardTranslationReady()) return;
+      if (this.liveLanguageOpen() || (this.boardTranslationTarget() && !this.boardTranslationReady())) return;
       // Consume the request once so a visitor can still pause the Stack later.
       this.stackAutoplayRequested.set(false);
       this.stackTourNarrationConsent.set(true);
@@ -7327,6 +7366,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.boardSettingsDraft.set({
+      askVisitorLanguage: board.askVisitorLanguage === true,
       title: board.title,
       description: board.description,
       visibility: board.teamId ? this.teamBoardVisitorVisibility(board) : board.visibility,
@@ -7399,6 +7439,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.boardSettingsError.set($localize`Your plan’s live TalkThrus are in use. Choose a plan to publish this one.`);
       return;
     }
+    const languagePromptChanged = (current.askVisitorLanguage === true) !== draft.askVisitorLanguage;
     const showCardNumbersChanged = this.boardShowsCardNumbers(current) !== draft.showCardNumbers;
     const insideCardsDisplayChanged = this.boardInsideDisplay(current) !== draft.insideCardsDisplay;
     const contentChanged = title !== current.title
@@ -7406,7 +7447,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       || showCardNumbersChanged || insideCardsDisplayChanged;
     const teamAudienceChanged = !!current.teamId && this.canPublishTeamBoard(current)
       && this.teamBoardVisitorVisibility(current) !== draft.visibility;
-    if (!contentChanged && visibility === current.visibility && !teamAudienceChanged) {
+    if (!contentChanged && !languagePromptChanged && visibility === current.visibility && !teamAudienceChanged) {
       this.closeBoardSettings();
       return;
     }
@@ -7427,6 +7468,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       title,
       description: draft.description.trim(),
       visibility,
+      askVisitorLanguage: draft.askVisitorLanguage,
       showCardNumbers: draft.showCardNumbers,
       insideCardsDisplay: draft.insideCardsDisplay,
       ...(isLinkReadableVisibility(visibility) ? { photoStudioDraft: false } : {}),
@@ -7441,7 +7483,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.activeAlongsideBoardIds.set(new Set());
     }
     try {
-      const visibilityOnlyEdit = !showCardNumbersChanged
+      const visibilityOnlyEdit = !languagePromptChanged && !showCardNumbersChanged
         && !insideCardsDisplayChanged
         && this.isVisibilityOnlyBoardEdit(current, nextBoard);
       const saved = current.teamId
@@ -11821,14 +11863,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     const pending = this.tourAudioPromises.get(requestKey);
     if (pending) {
-      this.tourAudioLoadingKey.set(requestKey);
+      if (!silent) this.tourAudioLoadingKey.set(requestKey);
       return pending;
     }
     const functions = this.functions;
     if (!functions) {
       return null;
     }
-    this.tourAudioLoadingKey.set(requestKey);
+    if (!silent) this.tourAudioLoadingKey.set(requestKey);
     const promise = (async () => {
       try {
         const callable = httpsCallable<
@@ -11875,6 +11917,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private boardSpeechLanguage(): BoardTranslationLanguage {
+    if (this.stackDirectView?.() && this.boardTranslationTarget()) return this.boardTranslationTarget()!;
     const result = this.boardTranslationResult();
     if (result && result.boardId === this.selectedBoard()?.id) {
       return this.boardTranslationReady() ? result.targetLanguage : result.sourceLanguage;
@@ -11900,12 +11943,16 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (!this.isBrowser) {
       return this.createId();
     }
-    const existing = window.localStorage.getItem(key);
+    if (this.tourAnonymousVisitorId) return this.tourAnonymousVisitorId;
+    let existing: string | null = null;
+    try { existing = window.localStorage.getItem(key); } catch { /* Use an in-memory visitor ID. */ }
     if (existing) {
+      this.tourAnonymousVisitorId = existing;
       return existing;
     }
     const next = this.createId();
-    window.localStorage.setItem(key, next);
+    this.tourAnonymousVisitorId = next;
+    try { window.localStorage.setItem(key, next); } catch { /* Private browsing may disable storage. */ }
     return next;
   }
 
@@ -14702,6 +14749,176 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     } : null;
   }
 
+  private liveFrameTranslationIds(frame: StackFrame): string[] {
+    return frame.kind === 'card' ? [frame.card.id]
+      : frame.kind === 'handoff' ? [frame.card.id, frame.nextCard.id] : [''];
+  }
+
+  private initializeLiveLanguage(): void {
+    const board = this.originalSelectedBoard();
+    if (!board || !this.isBrowser || this.liveLanguageBoardId === board.id) return;
+    this.liveLanguageBoardId = board.id;
+    this.boardTranslationRun += 1;
+    this.boardTranslationRequestKey = '';
+    let saved: string | null = this.liveConfirmedLanguage;
+    try { saved = window.localStorage.getItem(LIVE_LANGUAGE_STORAGE_KEY) ?? saved; } catch { /* Private browsing may disable storage. */ }
+    const routeLanguage = supportedLocale(this.localeId).language;
+    const explicit = this.route.snapshot.queryParamMap.get('contentLang') ?? (routeLanguage === 'en' ? null : routeLanguage);
+    const entry = liveLanguageEntry({ saved, explicit, ask: board.askVisitorLanguage === true });
+    this.syncBoardTranslationLanguage(entry.translate ? entry.language : 'original');
+    this.liveLanguageFirstVisit.set(entry.prompt);
+    this.liveLanguageInitial.set(entry.prompt ? supportedLocale(navigator.language).language : entry.language);
+    if (entry.prompt) {
+      this.stopStackPlayback();
+      this.liveLanguageOpen.set(true);
+    }
+  }
+
+  liveLanguageCode(): string {
+    return this.boardTranslationLanguages.find((item) => item.id === (this.boardTranslationTarget() ?? 'en'))?.shortLabel ?? 'EN';
+  }
+
+  openLiveLanguage(event?: Event): void {
+    event?.preventDefault(); event?.stopPropagation();
+    this.liveLanguageWasPlaying = this.stackPlaying() || this.liveResumePlayback;
+    this.stopStackPlayback();
+    this.liveLanguageFirstVisit.set(false);
+    this.liveLanguageInitial.set(this.boardTranslationTarget() ?? 'en');
+    this.liveLanguageOpen.set(true);
+  }
+
+  dismissLiveLanguage(): void {
+    const resume = this.liveLanguageWasPlaying;
+    this.liveLanguageOpen.set(false);
+    this.liveLanguageWasPlaying = false;
+    if (resume) this.startStackPlayback();
+    requestAnimationFrame(() => document.getElementById('live-language-trigger')?.focus());
+  }
+
+  selectLiveLanguage(language: BoardTranslationLanguage): void {
+    const resume = this.liveLanguageFirstVisit() || this.liveLanguageWasPlaying;
+    this.liveConfirmedLanguage = language;
+    try {
+      window.localStorage.setItem(LIVE_LANGUAGE_STORAGE_KEY, language);
+      window.localStorage.setItem(LOCALE_STORAGE_KEY, supportedLocale(language).id);
+    } catch { /* The choice still applies for this visit. */ }
+    void this.unlockStackNarrationAudio();
+    this.syncBoardTranslationLanguage(language);
+    this.liveLanguageOpen.set(false);
+    this.liveLanguageWasPlaying = false;
+    this.liveResumePlayback = resume;
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { contentLang: language }, queryParamsHandling: 'merge', replaceUrl: true });
+    void this.syncLiveFrameTranslation();
+    requestAnimationFrame(() => document.getElementById('live-language-trigger')?.focus());
+  }
+
+  async retryLiveTranslation(): Promise<void> {
+    this.boardTranslationError.set(null);
+    await this.syncLiveFrameTranslation();
+  }
+
+  private async prepareLiveCard(cardId: string, foreground = true): Promise<void> {
+    const board = this.originalSelectedBoard();
+    const language = this.boardTranslationTarget();
+    if (!board || !language || !this.functions) return;
+    if (this.liveCardTranslations()[cardId]?.targetLanguage === language && this.boardTranslationVersion() === board.updatedAt) return;
+    const session = `${board.id}:${board.updatedAt}:${language}`;
+    const key = `${session}:${cardId}`;
+    await this.liveTranslationQueue.schedule(key, async () => {
+      const started = performance.now();
+      let response;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try { response = await this.requestLiveCardTranslation(board.id, cardId, language); break; }
+        catch (error) {
+          if (!(error instanceof FirebaseError) || error.code !== 'functions/aborted' || attempt === 2) throw error;
+          if (this.liveTranslationSession !== session) return;
+        }
+      }
+      const result = normalizeBoardTranslationResult(response?.data);
+      if (!result || result.boardId !== board.id || result.targetLanguage !== language
+        || (response?.data as { cardId?: string })?.cardId !== cardId) throw new Error('Incomplete card translation.');
+      if (!this.stackDirectView() || this.liveTranslationSession !== session
+        || this.originalSelectedBoard()?.updatedAt !== board.updatedAt || this.boardTranslationTarget() !== language) return;
+      this.liveCardTranslations.update((items) => ({ ...items, [cardId]: result }));
+      const merged = new Map<string, BoardTranslationSegment>();
+      for (const item of Object.values(this.liveCardTranslations())) for (const segment of item.segments) merged.set(segment.key, segment);
+      const segments = [...merged.values()];
+      this.liveTranslationPartial.set(true);
+      this.boardTranslationResult.set({ ...result, segments, expectedSegmentCount: segments.length,
+        changed: Object.values(this.liveCardTranslations()).some((item) => item.changed) });
+      this.boardTranslationVersion.set(board.updatedAt);
+      console.debug('Live card text ready', { cardId, language, cached: result.cached, durationMs: Math.round(performance.now() - started) });
+    }, () => this.liveTranslationSession === session && this.liveDesiredCardIds.has(cardId), foreground);
+  }
+
+  private requestLiveCardTranslation(boardId: string, cardId: string, targetLanguage: BoardTranslationLanguage): Promise<{ data: unknown }> {
+    const callable = httpsCallable<{ boardId: string; cardId: string; targetLanguage: BoardTranslationLanguage; anonymousVisitorId: string }, unknown>(this.functions!, 'translateLiveCard', { timeout: 120_000 });
+    return callable({ boardId, cardId, targetLanguage, anonymousVisitorId: this.ensureTourAnonymousVisitorId() });
+  }
+
+  private async syncLiveFrameTranslation(): Promise<void> {
+    if (this.requestedCardId() && !this.boardRouteLoadState().complete) return;
+    const board = this.originalSelectedBoard();
+    if (!this.isBrowser || !this.stackDirectView() || !board) return;
+    this.initializeLiveLanguage();
+    if (this.liveLanguageOpen()) return;
+    const language = this.boardTranslationTarget();
+    const session = `${board.id}:${board.updatedAt}:${language}`;
+    if (this.liveTranslationSession !== session) {
+      this.liveTranslationSession = session;
+      this.liveCardTranslations.set({});
+      this.boardTranslationResult.set(null);
+      this.boardTranslationVersion.set('');
+    }
+    const frameKey = stackStoryFrameKey(this.stackCurrentFrame());
+    if (this.liveTimingKey !== `${session}:${frameKey}`) {
+      this.liveTimingKey = `${session}:${frameKey}`;
+      this.liveFrameEnteredAt = Date.now();
+    }
+    const ids = this.liveFrameTranslationIds(this.stackCurrentFrame());
+    const upcoming = this.stackFrameAtIndex(Math.min(this.stackFrameIndex() + 1, this.stackFrameCount() - 1));
+    this.liveDesiredCardIds = new Set([...ids, ...this.liveFrameTranslationIds(upcoming)]);
+    const current = () => this.stackDirectView() && this.liveTranslationSession === session
+      && stackStoryFrameKey(this.stackCurrentFrame()) === frameKey && !this.liveLanguageOpen();
+    this.boardTranslationError.set(null);
+    this.boardTranslationLoading.set(!!language && !this.boardTranslationReady());
+    try {
+      if (language) await Promise.all(ids.map((id) => this.prepareLiveCard(id)));
+      if (!current()) return;
+      this.boardTranslationLoading.set(false);
+      if (this.selectedBoard()) this.applyStackCoverState(this.selectedBoard()!);
+      if (this.liveResumePlayback) {
+        this.liveResumePlayback = false;
+        if (this.stackPlaying()) this.syncStackNarrationAfterFrameChange({ autoAdvance: true });
+        else this.startStackPlayback();
+      }
+      // Warm audio without playing it; existing audio authorization and dedupe remain in place.
+      this.warmLiveFrameAudio(this.stackCurrentFrame());
+      const next = this.stackFrameAtIndex(Math.min(this.stackFrameIndex() + 1, this.stackFrameCount() - 1));
+      if (stackStoryFrameKey(next) === frameKey) return;
+      const nextIds = this.liveFrameTranslationIds(next);
+      if (language) await Promise.all(nextIds.map((id) => this.prepareLiveCard(id, false)));
+      if (current()) this.warmLiveFrameAudio(this.stackFrameAtIndex(Math.min(this.stackFrameIndex() + 1, this.stackFrameCount() - 1)));
+    } catch (error) {
+      if (current() && !this.boardTranslationReady()) {
+        this.boardTranslationLoading.set(false);
+        this.boardTranslationError.set(error instanceof FirebaseError && error.code === 'functions/resource-exhausted'
+          ? $localize`Translation is temporarily busy. Please try again in a little while.`
+          : $localize`We could not translate this card right now. Please try again.`);
+      }
+    }
+  }
+
+  private warmLiveFrameAudio(frame: StackFrame): void {
+    if (this.boardTranslationTarget() && !this.liveFrameTranslationIds(frame).every((id) => !!this.liveCardTranslations()[id])) return;
+    const tour = this.stackTourFrameFromStackFrame(frame);
+    if (!tour) return;
+    const text = this.stackNarrationTextForTourFrame(tour).trim();
+    if (!text) return;
+    void this.ensureTourAudioUrl(tour.card.tour ? this.tourAudioKey(tour) : this.stackCardAudioKey(tour.card), text,
+      this.stackNarratorVoiceId(), this.selectedBoard()?.id, 'tour', tour.card.id, false, true);
+  }
+
   toggleBoardTranslationMenu(): void {
     this.boardTranslationMenuOpen.update((open) => !open);
   }
@@ -14791,6 +15008,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.boardTranslationRun += 1;
     this.boardTranslationRequestKey = '';
     this.boardTranslationTarget.set(target);
+    this.liveTranslationPartial?.set(false);
+    this.liveCardTranslations?.set({});
+    this.liveTranslationSession = '';
     this.boardTranslationResult.set(null);
     this.boardTranslationVersion.set('');
     this.boardTranslationError.set(null);
@@ -14798,13 +15018,15 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private async syncRequestedBoardTranslation(): Promise<void> {
+    if (this.requestedCardId() && !this.boardRouteLoadState().complete) return;
+    if (this.stackDirectView()) { await this.syncLiveFrameTranslation(); return; }
     const board = this.originalSelectedBoard();
     const targetLanguage = this.boardTranslationTarget();
     if (!board || !targetLanguage || !this.functions) {
       return;
     }
     const current = this.boardTranslationResult();
-    if (current?.boardId === board.id
+    if (!this.liveTranslationPartial() && current?.boardId === board.id
       && current.targetLanguage === targetLanguage
       && this.boardTranslationVersion() === board.updatedAt) {
       return;
@@ -14830,9 +15052,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       }
       if (run !== this.boardTranslationRun
         || this.selectedBoardId() !== board.id
+        || this.stackDirectView()
         || this.boardTranslationTarget() !== targetLanguage) {
         return;
       }
+      this.liveTranslationPartial.set(false);
       this.boardTranslationResult.set(result);
       this.boardTranslationVersion.set(board.updatedAt);
     } catch (error) {
@@ -14852,7 +15076,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
             : $localize`We could not translate this board right now. Please try again.`,
       );
     } finally {
-      if (run === this.boardTranslationRun) {
+      if (run === this.boardTranslationRun && !this.stackDirectView()) {
         this.boardTranslationLoading.set(false);
         this.boardTranslationRequestKey = '';
       }
@@ -19599,7 +19823,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private startStackPlayback(): void {
-    if (this.stackDirectView() && this.boardTranslationTarget() && !this.boardTranslationReady()) return;
+    if (this.stackDirectView() && this.isBrowser && this.originalSelectedBoard()) this.initializeLiveLanguage();
+    if (this.liveLanguageOpen?.()) return;
+    if (this.stackDirectView() && this.boardTranslationTarget() && !this.boardTranslationReady()) {
+      this.liveResumePlayback = true;
+      void this.syncLiveFrameTranslation();
+      return;
+    }
     if (this.stackPlaying()) {
       return;
     }
@@ -19612,6 +19842,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private stopStackPlayback(): void {
+    this.liveResumePlayback = false;
     this.clearStackPlaybackTimer();
     this.clearStackCardPhotoTimer();
     this.stackTourNarrationSwitchToken += 1;
@@ -19708,6 +19939,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stackActiveFrameDurationMs.set(this.stackFrameDurationMs);
 
     const autoAdvance = options.autoAdvance ?? this.stackPlaying();
+    if (this.liveLanguageOpen() || (this.boardTranslationTarget() && !this.boardTranslationReady())) {
+      this.liveResumePlayback = autoAdvance || options.forceNarration === true;
+      return true;
+    }
     const frame = this.stackCurrentFrame();
     const tourFrame = this.stackTourFrameFromStackFrame(frame);
     if (!tourFrame) {
@@ -19805,6 +20040,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     try {
       await audio.play();
       this.stackNarrationNeedsGesture.set(false);
+      console.debug('Live card audio started', { cardId: frame.card.id, language: narrationLanguage,
+        durationMs: Date.now() - this.liveFrameEnteredAt });
       syncProgressDuration();
       this.prefetchNextStackNarration(frameKey);
     } catch {
@@ -19896,7 +20133,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (this.stackFrameIndex() >= this.stackFrameCount() - 1) return;
     const nextFrame = this.stackFrameAtIndex(this.stackFrameIndex() + 1);
     const tourFrame = this.stackTourFrameFromStackFrame(nextFrame);
-    if (!tourFrame) return;
+    if (!tourFrame || (this.boardTranslationTarget() && !this.liveFrameTranslationIds(nextFrame).every((id) => !!this.liveCardTranslations()[id]))) return;
     const text = this.stackNarrationTextForTourFrame(tourFrame).trim();
     if (!text) return;
     const audioKey = tourFrame.card.tour
@@ -23727,6 +23964,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       atlasId: typeof data['atlas_id'] === 'string' ? data['atlas_id'] : '',
       generatedForAtlasId: typeof data['generated_for_atlas_id'] === 'string' ? data['generated_for_atlas_id'] : '',
       insideCardsDisplay: normalizeBoardInsideDisplay(data['insideCardsDisplay']),
+      askVisitorLanguage: data['askVisitorLanguage'] === true,
       showCardNumbers: data['showCardNumbers'] !== false,
       cards: rawCards.map((card) => this.cardFromRecord(card)).filter((card): card is BoardCard => !!card),
       createdAt: typeof data['created_at_iso'] === 'string' ? data['created_at_iso'] : new Date().toISOString(),

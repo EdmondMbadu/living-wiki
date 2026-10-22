@@ -349,6 +349,7 @@ service cloud.firestore {
         'parentBoardTitle',
         'parentCardTitle',
         'insideCardsDisplay',
+        'askVisitorLanguage',
         'showCardNumbers',
         'like_count',
         'atlas_id',
@@ -983,11 +984,11 @@ service cloud.firestore {
         && (
           (
             request.resource.data.diff(resource.data).affectedKeys().hasAny([
-              'visibility', 'showCardNumbers', 'insideCardsDisplay', 'photoStudioDraft'
+              'visibility', 'showCardNumbers', 'insideCardsDisplay', 'askVisitorLanguage', 'photoStudioDraft'
             ])
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
               'title', 'description', 'visibility', 'showCardNumbers',
-              'insideCardsDisplay', 'photoStudioDraft',
+              'insideCardsDisplay', 'askVisitorLanguage', 'photoStudioDraft',
               'socialVideoRenderVersion', 'socialLandscapeVideoRenderVersion',
               'trailerVideoRenderVersion', 'trailerLandscapeVideoRenderVersion',
               'trailerVideoSourceFingerprint', 'studioSaveNonce', 'updated_at_iso', 'server_updated_at'
@@ -1005,16 +1006,25 @@ service cloud.firestore {
               || hasActivePersonalWikiPlan()
             )
             && request.resource.data.get('showCardNumbers', true) is bool
+            && request.resource.data.get('askVisitorLanguage', false) is bool
             && request.resource.data.get('insideCardsDisplay', 'nested') in ['nested', 'alongside']
             && (
               !request.resource.data.diff(resource.data).affectedKeys().hasAny(['photoStudioDraft'])
               || request.resource.data.photoStudioDraft == false
             )
-            && request.resource.data.socialVideoRenderVersion == ''
-            && request.resource.data.socialLandscapeVideoRenderVersion == ''
-            && request.resource.data.trailerVideoRenderVersion == ''
-            && request.resource.data.trailerLandscapeVideoRenderVersion == ''
-            && request.resource.data.trailerVideoSourceFingerprint == ''
+            && (
+              request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                'askVisitorLanguage', 'visibility', 'photoStudioDraft',
+                'studioSaveNonce', 'updated_at_iso', 'server_updated_at'
+              ])
+              || (
+                request.resource.data.socialVideoRenderVersion == ''
+                && request.resource.data.socialLandscapeVideoRenderVersion == ''
+                && request.resource.data.trailerVideoRenderVersion == ''
+                && request.resource.data.trailerLandscapeVideoRenderVersion == ''
+                && request.resource.data.trailerVideoSourceFingerprint == ''
+              )
+            )
           )
           ||
           (
@@ -1406,6 +1416,7 @@ service cloud.firestore {
           'parentBoardTitle',
           'parentCardTitle',
           'insideCardsDisplay',
+          'askVisitorLanguage',
           'showCardNumbers',
           'like_count',
           'cards',
@@ -1535,36 +1546,42 @@ service cloud.firestore {
         && request.resource.data.server_updated_at == request.time;
 
       // Completed videos only change video metadata, even on legacy/private boards.
-      allow update: if isSignedIn()
+      function validCompletedBoardVideoUpdate() {
+        let next = request.resource.data;
+        let previous = resource.data;
+        return isSignedIn()
         && personalBoardMutation()
-        && resource.data.owner_user_id == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        && previous.owner_user_id == request.auth.uid
+        && next.diff(previous).affectedKeys().hasOnly([
           'socialVideoUrl', 'socialVideoMimeType', 'socialVideoUpdatedAt', 'socialVideoRenderVersion',
           'socialVideoRatio', 'socialVideoAudioTrackId', 'socialVideoAudioVolume', 'socialVideoNarrationEnabled',
           'socialLandscapeVideoUrl', 'socialLandscapeVideoMimeType', 'socialLandscapeVideoUpdatedAt',
           'socialLandscapeVideoRenderVersion', 'socialLandscapeVideoDurationSeconds',
           'stackNarratorVoiceId', 'updated_at_iso', 'server_updated_at'
         ])
-        && request.resource.data.socialVideoUrl is string
-        && request.resource.data.socialVideoUrl.size() >= 1
-        && request.resource.data.socialVideoUrl.size() <= 2500
-        && request.resource.data.socialVideoMimeType.matches('video/.*')
-        && request.resource.data.socialVideoMimeType.size() <= 120
-        && request.resource.data.socialVideoUpdatedAt is string
-        && request.resource.data.socialVideoUpdatedAt.size() <= 80
-        && request.resource.data.socialVideoRenderVersion is string
-        && request.resource.data.socialVideoRenderVersion.size() <= 64
-        && request.resource.data.socialVideoRatio in ['vertical', 'square', 'landscape']
-        && request.resource.data.socialVideoAudioTrackId is string
-        && request.resource.data.socialVideoAudioTrackId.size() <= 80
-        && request.resource.data.socialVideoAudioVolume is number
-        && request.resource.data.socialVideoAudioVolume >= 0
-        && request.resource.data.socialVideoAudioVolume <= 0.5
-        && request.resource.data.socialVideoNarrationEnabled is bool
-        && hasValidLandscapeVideoFields(request.resource.data)
-        && isValidStackNarratorVoiceId(request.resource.data.stackNarratorVoiceId)
-        && request.resource.data.updated_at_iso is string
-        && request.resource.data.server_updated_at == request.time;
+        && next.socialVideoUrl is string
+        && next.socialVideoUrl.size() >= 1
+        && next.socialVideoUrl.size() <= 2500
+        && next.socialVideoMimeType.matches('video/.*')
+        && next.socialVideoMimeType.size() <= 120
+        && next.socialVideoUpdatedAt is string
+        && next.socialVideoUpdatedAt.size() <= 80
+        && next.socialVideoRenderVersion is string
+        && next.socialVideoRenderVersion.size() <= 64
+        && next.socialVideoRatio in ['vertical', 'square', 'landscape']
+        && next.socialVideoAudioTrackId is string
+        && next.socialVideoAudioTrackId.size() <= 80
+        && next.socialVideoAudioVolume is number
+        && next.socialVideoAudioVolume >= 0
+        && next.socialVideoAudioVolume <= 0.5
+        && next.socialVideoNarrationEnabled is bool
+        && hasValidLandscapeVideoFields(next)
+        && isValidStackNarratorVoiceId(next.stackNarratorVoiceId)
+        && next.updated_at_iso is string
+        && next.server_updated_at == request.time;
+      }
+
+      allow update: if validCompletedBoardVideoUpdate();
 
       // My Videos also clears references without rewriting the source board.
       function clearsBoardVideo(prefix) {
@@ -1601,11 +1618,11 @@ service cloud.firestore {
         && (
           (
             request.resource.data.diff(resource.data).affectedKeys().hasAny([
-              'visibility', 'showCardNumbers', 'insideCardsDisplay', 'photoStudioDraft'
+              'visibility', 'showCardNumbers', 'insideCardsDisplay', 'askVisitorLanguage', 'photoStudioDraft'
             ])
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
               'title', 'description', 'visibility', 'showCardNumbers',
-              'insideCardsDisplay', 'photoStudioDraft',
+              'insideCardsDisplay', 'askVisitorLanguage', 'photoStudioDraft',
               'socialVideoRenderVersion', 'socialLandscapeVideoRenderVersion',
               'trailerVideoRenderVersion', 'trailerLandscapeVideoRenderVersion',
               'trailerVideoSourceFingerprint', 'updated_at_iso', 'server_updated_at'
@@ -1623,16 +1640,25 @@ service cloud.firestore {
               || hasActivePersonalWikiPlan()
             )
             && request.resource.data.get('showCardNumbers', true) is bool
+            && request.resource.data.get('askVisitorLanguage', false) is bool
             && request.resource.data.get('insideCardsDisplay', 'nested') in ['nested', 'alongside']
             && (
               !request.resource.data.diff(resource.data).affectedKeys().hasAny(['photoStudioDraft'])
               || request.resource.data.photoStudioDraft == false
             )
-            && request.resource.data.socialVideoRenderVersion == ''
-            && request.resource.data.socialLandscapeVideoRenderVersion == ''
-            && request.resource.data.trailerVideoRenderVersion == ''
-            && request.resource.data.trailerLandscapeVideoRenderVersion == ''
-            && request.resource.data.trailerVideoSourceFingerprint == ''
+            && (
+              request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                'askVisitorLanguage', 'visibility', 'photoStudioDraft',
+                'studioSaveNonce', 'updated_at_iso', 'server_updated_at'
+              ])
+              || (
+                request.resource.data.socialVideoRenderVersion == ''
+                && request.resource.data.socialLandscapeVideoRenderVersion == ''
+                && request.resource.data.trailerVideoRenderVersion == ''
+                && request.resource.data.trailerLandscapeVideoRenderVersion == ''
+                && request.resource.data.trailerVideoSourceFingerprint == ''
+              )
+            )
           )
           ||
           (
@@ -1775,6 +1801,7 @@ service cloud.firestore {
           'parentBoardTitle',
           'parentCardTitle',
           'insideCardsDisplay',
+          'askVisitorLanguage',
           'showCardNumbers',
           'like_count',
           'atlas_id',
@@ -2016,14 +2043,9 @@ service cloud.firestore {
           !request.resource.data.keys().hasAny(['stackNarratorVoiceId'])
           || isValidStackNarratorVoiceId(request.resource.data.stackNarratorVoiceId)
         )
-        && (
-          !request.resource.data.keys().hasAny(['insideCardsDisplay'])
-          || request.resource.data.insideCardsDisplay in ['nested', 'alongside']
-        )
-        && (
-          !request.resource.data.keys().hasAny(['showCardNumbers'])
-          || request.resource.data.showCardNumbers is bool
-        )
+        && request.resource.data.get('insideCardsDisplay', 'nested') in ['nested', 'alongside']
+        && request.resource.data.get('showCardNumbers', true) is bool
+        && request.resource.data.get('askVisitorLanguage', false) is bool
         && request.resource.data.stickers is list
         && request.resource.data.stickers.size() <= 48
         && (

@@ -1,0 +1,7 @@
+.stack-viewer-actions .live-language-trigger { display:flex; flex-direction:column; justify-content:center; gap:0; min-width:36px; min-height:44px; }
+.live-language-trigger small { font-size:10px; font-weight:800; line-height:12px; }
+.live-card-preparing { position:absolute; z-index:9; inset:40% 20px auto; padding:20px; border-radius:20px; color:white; background:#112d25e8; text-align:center; box-shadow:0 8px 30px #0004; }
+.live-card-preparing p { margin:8px 0; line-height:1.5; }
+.live-card-preparing button { min-height:44px; padding:8px 18px; margin:6px 4px 0; border:1px solid #ffffff60; border-radius:24px; color:white; background:#ffffff14; font-weight:700; }
+.stack-viewer-story--preparing .stack-preview__content { visibility:hidden; }
+.stack-viewer-story--preparing .stack-viewer-progress__segment i { animation-play-state:paused; }

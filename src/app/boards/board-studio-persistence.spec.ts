@@ -21,7 +21,7 @@ describe('board Studio persistence contracts', () => {
     const fresh = boardStudioPatch(record, 'fresh-narration');
     const cards = boardStudioPatch(record, 'cards');
     const settings = boardStudioPatch({ ...record, visibility: 'public',
-      showCardNumbers: false, insideCardsDisplay: 'alongside' }, 'settings');
+      showCardNumbers: false, insideCardsDisplay: 'alongside', askVisitorLanguage: true }, 'settings');
     const finalScreen = boardStudioPatch(record, 'final-screen');
 
     expect(script['cards']).toBe(record['cards']);
@@ -33,6 +33,7 @@ describe('board Studio persistence contracts', () => {
     expect(cards['cards']).toBe(record['cards']);
     expect(cards['socialVideoUrl']).toBeUndefined();
     expect(settings['showCardNumbers']).toBe(false);
+    expect(settings['askVisitorLanguage']).toBe(true);
     expect(settings['insideCardsDisplay']).toBe('alongside');
     expect(settings['cards']).toBeUndefined();
     expect(finalScreen['socialVideoClosingHeadline']).toBe(record['socialVideoClosingHeadline']);

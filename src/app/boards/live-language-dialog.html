@@ -1,0 +1,25 @@
+<dialog #dialog class="live-language-dialog" [class.live-language-dialog--first]="firstVisit()"
+      aria-labelledby="live-language-title" aria-describedby="live-language-description"
+      (cancel)="$event.preventDefault(); dismissed.emit()" (click)="dismissBackdrop($event)">
+      <form (submit)="$event.preventDefault(); selected.emit(choice())">
+        <header>
+          <span class="material-symbols-outlined" aria-hidden="true">language</span>
+          <button type="button" (click)="dismissed.emit()" aria-label="Close" i18n-aria-label><span aria-hidden="true">×</span></button>
+        </header>
+        <h2 id="live-language-title" i18n="@@liveChooseLanguage">Choose your language</h2>
+        <p id="live-language-description" i18n="@@liveLanguageDescription">Explore this board with text and narration in your language.</p>
+        <fieldset>
+          <legend class="sr-only" i18n>Language</legend>
+          @for (language of languages; track language.id) {
+            <label [class.selected]="choice() === language.id" [attr.lang]="language.id === 'zh' ? 'zh-Hans' : language.id">
+              <span aria-hidden="true">{{ flags[language.id] }}</span>
+              <strong>{{ language.label }}</strong>
+              <input type="radio" name="live-language" [value]="language.id" [checked]="choice() === language.id"
+                (change)="choice.set(language.id)" />
+            </label>
+          }
+        </fieldset>
+        <p class="remember" i18n="@@liveLanguageRemembered">Remembered on this browser, including other boards.</p>
+        <button type="submit" class="continue" i18n>Continue</button>
+      </form>
+    </dialog>

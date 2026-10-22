@@ -31,10 +31,10 @@ test('visitors cannot get a Kiwi name, talk, or apply an action', async () => {
 });
 
 test('the assistant name belongs only to the signed-in account', async () => {
-  assert.equal((await call(kiwiPreferences, 'alice')).name, 'Kiwi');
+  assert.equal((await call(kiwiPreferences, 'alice')).name, 'Picamo');
   assert.equal((await call(kiwiPreferences, 'alice', { operation: 'setName', name: 'Pip' })).name, 'Pip');
   assert.equal((await call(kiwiPreferences, 'alice')).name, 'Pip');
-  assert.equal((await call(kiwiPreferences, 'bob')).name, 'Kiwi');
+  assert.equal((await call(kiwiPreferences, 'bob')).name, 'Picamo');
 });
 
 test('Kiwi creates a personal board once and does not expose private boards without a plan', async () => {
@@ -71,7 +71,7 @@ test('Kiwi cannot edit another person’s board and rejects stale personal edits
   assert.equal((await db.doc('boards/board-a').get()).data().title, 'Alice board');
   await proposal('alice', 'stale', { kind: 'update_board', boardId: 'board-a', title: 'New title' },
     { boardId: 'board-a', resultBoardId: 'board-a', baseUpdatedAt: 'older' });
-  await assert.rejects(call(kiwiApply, 'alice', { proposalId: 'stale' }), /changed after Kiwi/);
+  await assert.rejects(call(kiwiApply, 'alice', { proposalId: 'stale' }), /changed after Picamo/);
 });
 
 test('team edits require current membership and use team revision history', async () => {

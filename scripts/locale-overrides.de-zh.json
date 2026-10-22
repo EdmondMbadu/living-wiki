@@ -365,7 +365,14 @@
     "Each LivingWiki is designed to organize public information into something browsable and conversational.": "Jedes LivingWiki ordnet öffentliche Informationen so, dass Sie darin stöbern und Fragen dazu stellen können.",
     "Start with practical local knowledge, then branch into culture, jobs, climate, food, transit, and civic life.": "Beginnen Sie mit nützlichem Wissen vor Ort und entdecken Sie dann Kultur, Arbeit, Klima, Essen, Verkehr und das Leben in der Stadt.",
     "More cities and public topics are queued as the directory grows.": "Mit dem Verzeichnis kommen weitere Städte und öffentliche Themen hinzu.",
-    "Open ": "Öffne "
+    "Open ": "Öffne ",
+    "We could not translate this card right now. Please try again.": "Diese Karte konnte gerade nicht übersetzt werden. Bitte versuchen Sie es erneut.",
+    "Ask visitors to choose a language on their first visit": "Besucher beim ersten Besuch eine Sprache wählen lassen",
+    "Otherwise, Live opens in English or their saved language. Visitors can always change language using the globe.": "Andernfalls öffnet sich die Live-Ansicht auf Englisch oder in der gespeicherten Sprache. Besucher können die Sprache jederzeit über den Globus ändern.",
+    "Choose your language": "Wählen Sie Ihre Sprache",
+    "Explore this board with text and narration in your language.": "Entdecken Sie dieses Board mit Text und Sprachausgabe in Ihrer Sprache.",
+    "Remembered on this browser, including other boards.": "In diesem Browser gespeichert, auch für andere Boards.",
+    "Preparing this card in your language…": "Diese Karte wird in Ihrer Sprache vorbereitet…"
   },
   "zh-Hans": {
     "Share": "分享",
@@ -733,6 +740,13 @@
     "Each LivingWiki is designed to organize public information into something browsable and conversational.": "每个 LivingWiki 都将公开信息整理成可浏览、可提问的知识。",
     "Start with practical local knowledge, then branch into culture, jobs, climate, food, transit, and civic life.": "从实用的本地知识开始，逐步探索文化、就业、气候、美食、交通和城市生活。",
     "More cities and public topics are queued as the directory grows.": "随着目录不断扩展，我们将添加更多城市和公共主题。",
-    "Open ": "打开 "
+    "Open ": "打开 ",
+    "We could not translate this card right now. Please try again.": "暂时无法翻译此卡片，请重试。",
+    "Ask visitors to choose a language on their first visit": "首次访问时请访客选择语言",
+    "Otherwise, Live opens in English or their saved language. Visitors can always change language using the globe.": "关闭时，沉浸式浏览将使用英语或已保存的语言。访客始终可以通过地球图标切换语言。",
+    "Choose your language": "选择您的语言",
+    "Explore this board with text and narration in your language.": "通过您所选语言的文字和语音讲解探索此看板。",
+    "Remembered on this browser, including other boards.": "保存在此浏览器中，也适用于其他看板。",
+    "Preparing this card in your language…": "正在用您选择的语言准备此卡片…"
   }
 }
