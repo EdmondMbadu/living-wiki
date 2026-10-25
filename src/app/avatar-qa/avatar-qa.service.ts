@@ -22,18 +22,29 @@ export interface QaTurn {
 }
 export interface QaResult { id: string; referenceId: string; category: QaCategory | StressCategory; status: string; critical: boolean; turns: QaTurn[]; error?: string }
 export interface QaReview { id: string; resultId: string; decision: string; note: string; reviewerId: string; createdAt: string }
+export interface QaRepair {
+  phase?: 'reassessing' | 'writing' | 'checking' | 'testing'; reviewed?: number; reviewTotal?: number;
+  mode: 'fix' | 'retest'; round: number; rootRunId: string; sourceRunId: string;
+  candidatePrompt?: string; previousPrompt?: string; changes?: string[]; baselineScore?: number; baselineReassessed?: boolean;
+  retestRequired?: boolean; outcome: 'pending' | 'improved' | 'retained'; retainedRunId: string; noProgressCount: number; canApply: boolean;
+  appliedAt?: string; restoredAt?: string;
+  comparison: { score: number | null; previousScore: number; passed: number; total: number; resolved: number;
+    regressions: string[]; checksPassed: number; checksTotal: number; allPassed: boolean };
+}
 export interface QaRun {
   id: string; createdAt: string; finishedAt?: string; status: string; cancelRequested?: boolean;
   total: number; completed: number; passed: number; failed: number; errors: number; cancelled: number; critical: number;
   fingerprint: string; suiteHash: string; protocol: string; stale?: boolean;
   references: Array<QaReference | StressQuestion>; results: QaResult[]; reviews: QaReview[];
   boundaries?: string; error?: string; configurationWarning?: string;
+  repair?: QaRepair;
 }
 export interface QaWorkspace {
   target: { boardId: string; cardId: string; atlasId: string; boardTitle: string; avatarName: string; openingMessage: string; personaPrompt: string; boardSlug: string; avatarImageUrl?: string | null };
   references: QaReference[]; revision: number; documents: Array<{ id: string; filename: string; status: string }>;
   runs: QaRun[]; selectedRun: QaRun | null;
   boundaries?: string;
+  attemptsRemaining?: number; repairUnavailableReason?: string;
 }
 @Injectable({ providedIn: 'root' })
 export class AvatarQaService {

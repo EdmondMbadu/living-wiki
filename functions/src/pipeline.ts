@@ -783,7 +783,7 @@ async function countCollectionForAtlas(
 
 const maxPersonaPromptChars = 8000;
 
-async function loadAtlasChatContext(atlasId: string | null): Promise<{
+async function loadAtlasChatContext(atlasId: string | null, qaPersonaPrompt?: string): Promise<{
   personaPrompt: string | null;
   identityInstruction: string | null;
   atlasName: string | null;
@@ -821,7 +821,7 @@ async function loadAtlasChatContext(atlasId: string | null): Promise<{
         data_year?: unknown;
       } | null;
     } | undefined;
-    const raw = cityGuidePersonaPrompt(data, typeof data?.persona_prompt === 'string' ? data.persona_prompt : '');
+    const raw = cityGuidePersonaPrompt(data, qaPersonaPrompt ?? (typeof data?.persona_prompt === 'string' ? data.persona_prompt : ''));
     const guide = resolveCityGuide(data) || (data?.chat_guide && typeof data.chat_guide === 'object'
       ? data.chat_guide as Record<string, unknown>
       : null);
@@ -835,6 +835,9 @@ async function loadAtlasChatContext(atlasId: string | null): Promise<{
       ].join(' ')
       : '';
     const combined = [guidePrompt, raw].filter(Boolean).join('\n\n');
+    if (qaPersonaPrompt !== undefined && (raw !== qaPersonaPrompt || combined.length > maxPersonaPromptChars)) {
+      throw new Error('The candidate persona cannot be used unchanged by this avatar.');
+    }
     const personaPrompt = combined
       ? combined.length > maxPersonaPromptChars
         ? combined.slice(0, maxPersonaPromptChars)
@@ -878,6 +881,7 @@ async function loadAtlasChatContext(atlasId: string | null): Promise<{
           : null,
     };
   } catch (error) {
+    if (qaPersonaPrompt !== undefined) throw error;
     logger.warn('Failed to load atlas chat context.', {
       atlasId,
       errorMessage: error instanceof Error ? error.message : String(error),
@@ -1718,6 +1722,8 @@ export async function runPublicAtlasQuery(params: {
   /** Server-only sandbox: same answer path, isolated history, no visitor records or analytics. */
   qaSandbox?: {
     history: Array<{ role: 'user' | 'assistant'; text: string }>;
+    /** Server-only candidate, resolved exactly like a saved persona. Never accepted from visitor input. */
+    personaPrompt?: string;
     capture: (exchange: { answerMode: 'wiki' | 'internet' }) => void;
   };
 }): Promise<{
@@ -1793,7 +1799,7 @@ export async function runPublicAtlasQuery(params: {
       : thread.reusedExisting
       ? loadRecentPublicChatThreadMessages(thread.id, maxHistoryMessagesForAnswer)
       : Promise.resolve([] as Awaited<ReturnType<typeof loadRecentPublicChatThreadMessages>>),
-    loadAtlasChatContext(params.atlasId),
+    loadAtlasChatContext(params.atlasId, params.qaSandbox?.personaPrompt),
   ]);
   timer.mark('history_and_context_ms');
 

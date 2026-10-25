@@ -6,7 +6,8 @@ const resultLabel = (status: string) => status === 'passed' ? 'Passed' : status 
 
 /** Text-only template: generated answers cannot load URLs, execute scripts or inject markup. */
 export function avatarQaReportHtml(run: RecordData): string {
-  const score = stressScore(run as Parameters<typeof stressScore>[0]);
+  const completeScore = stressScore(run as Parameters<typeof stressScore>[0]);
+  const score = completeScore === null ? null : run.repair?.comparison?.score ?? completeScore;
   const legacy = run.protocol !== STRESS_PROTOCOL;
   const results = [...(run.results || [])].sort((a, b) => Number(b.critical) - Number(a.critical) || a.id.localeCompare(b.id));
   const findings = results.filter(r => r.status === 'failed');
@@ -27,7 +28,8 @@ export function avatarQaReportHtml(run: RecordData): string {
     ${run.error ? `<p class="note">${escape(run.error)}</p>` : ''}
     <h2>What needs attention</h2>
     ${findings.length ? findings.slice(0, 3).map(r => `<div class="finding"><span class="badge warn">${r.critical ? 'High priority' : 'Needs review'}</span><h3>${escape(r.turns?.[0]?.title || r.id)}</h3><p>${escape(String(r.turns?.[0]?.reason || 'Review this response in the detailed results.').slice(0, 360))}${String(r.turns?.[0]?.reason || '').length > 360 ? '…' : ''}</p></div>`).join('') + (findings.length > 3 ? `<p class="muted">${findings.length - 3} additional findings are included in the complete results.</p>` : '') : `<p class="muted">${score === null ? 'This assessment is incomplete. Review unavailable or cancelled questions before drawing conclusions.' : 'No issues were identified in the assessed responses.'}</p>`}
-    <p class="note">${escape(limitation)}${!legacy ? '<br>Score = passed questions / planned questions, rounded to a whole number. A final score requires every question to be assessed.' : ''}</p>
+    <p class="note">${escape(limitation)}${!legacy ? '<br>A final score requires every question to be assessed.' : ''}</p>
+    ${run.repair ? `<h2>Private improvement · round ${escape(run.repair.round)}</h2><p>Original-question score: ${score ?? '--'}/100. Baseline: ${escape(run.repair.baselineScore ?? '--')}/100. Additional checks: ${escape(run.repair.comparison?.checksPassed ?? 0)} / ${escape(run.repair.comparison?.checksTotal ?? 0)} passed.</p><p>${run.repair.restoredAt ? 'Previous instructions restored.' : run.repair.appliedAt ? 'Tested instructions applied to the avatar.' : 'Candidate instructions tested privately; this report does not mean they are live.'}</p>${(run.repair.changes || []).map((s: string) => `<p>${escape(s)}</p>`).join('')}` : ''}
     ${run.boundaries ? `<h2>Additional boundaries tested</h2><p class="text">${escape(run.boundaries)}</p>` : ''}
     <div class="scope">Run ${escape(run.id)}<br>Method ${escape(run.protocol)} · English text · Automated assessment<br>Questions and answers below are test material and may contain offensive or unsafe requests.</div>
     <section class="transcripts"><p class="eyebrow">Complete results</p><h1>Questions &amp; answers</h1>

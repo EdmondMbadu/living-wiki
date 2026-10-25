@@ -55,6 +55,18 @@ describe('AvatarQaComponent', () => {
     expect(call[3].count).toBe(50); expect(call[3].boundaries).toBe('Never promise refunds.'); expect(call[3].requestId).toBeTruthy();
     expect(page.starting()).toBeFalse(); fixture.destroy();
   });
+  it('clears a running-test notice when polling returns a finished test', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    const active = runFixture({ status: 'running', completed: 0, passed: 0, failed: 0 });
+    service.command.and.callFake(async (_b: string, _c: string, action: string) => action === 'startStress'
+      ? { runId: active.id } : { ...workspace, selectedRun: active, runs: [active] });
+    await page.start(); expect(page.notice()).toContain('is running');
+    const finished = runFixture();
+    service.command.and.resolveTo({ ...workspace, selectedRun: finished, runs: [finished] });
+    await page.load(); expect(page.notice()).toBe('');
+    page.notice.set('Your PDF report has been downloaded.');
+    await page.load(); expect(page.notice()).toContain('downloaded'); fixture.destroy();
+  });
   it('reuses an uncertain start request rather than accidentally creating a second test', async () => {
     const fixture = await render(), page = fixture.componentInstance;
     service.command.and.rejectWith(Object.assign(new Error('Network timeout'), { code: 'functions/deadline-exceeded' }));
@@ -150,5 +162,88 @@ describe('QA file contract', () => {
     expect(previewQaImport(JSON.stringify([reference]), [reference]).error).toContain('already exists');
     const full = Array.from({length: 100}, (_, index) => ({...reference, id: `EXISTING-${index}`}));
     expect(previewQaImport(JSON.stringify([reference]), full).error).toContain('100');
+  });
+});
+
+describe('Avatar QA iterative improvements', () => {
+  const service = { command: jasmine.createSpy('command') };
+  let params: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
+  const candidate = (changes: Partial<NonNullable<QaRun['repair']>> = {}): NonNullable<QaRun['repair']> => ({
+    mode: 'fix', round: 1, rootRunId: 'root', sourceRunId: 'root', retainedRunId: 'candidate',
+    candidatePrompt: 'Private instructions <script>unsafe markup</script>', previousPrompt: 'Original instructions',
+    changes: ['Respect privacy and the historical cutoff.'], baselineScore: 60,
+    outcome: 'improved', noProgressCount: 0, canApply: true,
+    comparison: { score: 100, previousScore: 60, passed: 5, total: 5, resolved: 2, regressions: [], checksPassed: 5, checksTotal: 5, allPassed: true },
+    ...changes,
+  });
+  beforeEach(async () => {
+    params = new BehaviorSubject(convertToParamMap({ boardId: 'b1', cardId: 'c1' }));
+    service.command.calls.reset(); service.command.and.resolveTo(structuredClone(workspace));
+    await TestBed.configureTestingModule({ imports: [AvatarQaComponent], providers: [provideZonelessChangeDetection(), provideRouter([]),
+      { provide: ActivatedRoute, useValue: { paramMap: params } }, { provide: AvatarQaService, useValue: service },
+      { provide: TeamsService, useFactory: teamsServiceStub },
+      { provide: AuthService, useValue: { waitForReady: async () => {}, uid: signal('owner'), profile: signal({ preferredCitySlug: 'philly' }), isAuthenticated: signal(true), signOut: async () => {} } },
+      { provide: AtlasService, useValue: { activeAtlasWikiLink: signal('/wiki/philly') } },
+    ] }).compileComponents();
+  });
+  async function render(run: QaRun, options: Partial<QaWorkspace> = {}) {
+    service.command.and.resolveTo({ ...workspace, selectedRun: run, runs: [run], attemptsRemaining: 8, ...options });
+    const fixture = TestBed.createComponent(AvatarQaComponent); await fixture.whenStable(); fixture.detectChanges(); return fixture;
+  }
+  it('offers a single fix-and-retest action after a complete failed test', async () => {
+    const fixture = await render(runFixture());
+    expect(fixture.nativeElement.textContent).toContain('Fix & retest');
+    expect(fixture.componentInstance.canRepair()).toBeTrue();
+    service.command.and.callFake(async (_b: string, _c: string, action: string) => action === 'repair' ? { runId: 'draft' } : workspace);
+    await fixture.componentInstance.repairAction('repair');
+    expect(service.command.calls.allArgs().find(args => args[2] === 'repair')?.[3].runId).toBe('run1');
+    expect(service.command.calls.allArgs().some(args => args[2] === 'applyRepair')).toBeFalse(); fixture.destroy();
+  });
+  it('separates original-question scores from extra checks and escapes generated instruction text', async () => {
+    const fixture = await render(runFixture({ total: 10, completed: 10, passed: 10, failed: 0, repair: candidate() }));
+    expect(fixture.componentInstance.score()).toBe(100);
+    expect(fixture.nativeElement.textContent).toContain('5/5 additional checks passed');
+    expect(fixture.nativeElement.textContent).toContain('Use improved version');
+    expect(fixture.nativeElement.textContent).toContain('other cards connected to it');
+    expect(fixture.nativeElement.querySelector('script')).toBeNull(); fixture.destroy();
+  });
+  it('cannot apply an apparent 100 original score when extra checks failed or a candidate regressed', async () => {
+    const fixture = await render(runFixture({ total: 10, completed: 10, passed: 9, failed: 1,
+      repair: candidate({ canApply: false, outcome: 'retained', comparison: { ...candidate().comparison, checksPassed: 4, allPassed: false } }) }));
+    expect(fixture.componentInstance.score()).toBe(100);
+    expect(fixture.nativeElement.textContent).not.toContain('Use improved version');
+    expect(fixture.nativeElement.textContent).toContain('previous version has been kept');
+    await fixture.componentInstance.repairAction('applyRepair');
+    expect(service.command.calls.allArgs().some(args => args[2] === 'applyRepair')).toBeFalse(); fixture.destroy();
+  });
+  it('blocks stale changes, unavailable personas, quota exhaustion and three unproductive attempts', async () => {
+    const fixture = await render(runFixture()), page = fixture.componentInstance;
+    for (const change of [{ attemptsRemaining: 0 }, { repairUnavailableReason: 'Automatic persona' },
+      { selectedRun: runFixture({ stale: true }) }, { selectedRun: runFixture({ repair: candidate({ noProgressCount: 3, canApply: false }), failed: 2 }) }]) {
+      page.data.set({ ...workspace, selectedRun: runFixture(), runs: [], ...change });
+      expect(page.canRepair()).toBeFalse(); await page.repairAction('repair');
+    }
+    expect(service.command.calls.allArgs().some(args => args[2] === 'repair')).toBeFalse(); fixture.destroy();
+  });
+  it('reuses uncertain repair request IDs and prevents double clicks while a request is pending', async () => {
+    const fixture = await render(runFixture()), page = fixture.componentInstance;
+    service.command.and.rejectWith(Object.assign(new Error('timeout'), { code: 'functions/deadline-exceeded' }));
+    await page.repairAction('repair'); const first = service.command.calls.mostRecent().args[3].requestId;
+    await page.repairAction('repair'); expect(service.command.calls.mostRecent().args[3].requestId).toBe(first);
+    let finish!: (value: unknown) => void;
+    service.command.and.callFake((_b: string, _c: string, action: string) => action === 'repair' ? new Promise(resolve => finish = resolve) : Promise.resolve(workspace));
+    const pending = page.repairAction('repair'), before = service.command.calls.count();
+    await page.repairAction('repair'); expect(service.command.calls.count()).toBe(before);
+    params.next(convertToParamMap({ boardId: 'other', cardId: 'card' }));
+    finish({ runId: 'draft' }); await pending; await fixture.whenStable();
+    expect(page.run()).toBeNull(); expect(page.repairBusy()).toBe(''); fixture.destroy();
+  });
+  it('shows a recoverable apply failure and retains the candidate for retry', async () => {
+    const run = runFixture({ total: 10, completed: 10, passed: 10, failed: 0, repair: candidate() });
+    const fixture = await render(run), page = fixture.componentInstance;
+    service.command.and.rejectWith(new Error('The avatar changed in another window.'));
+    await page.repairAction('applyRepair');
+    expect(page.error()).toContain('changed in another window'); expect(page.run()?.repair?.candidatePrompt).toBe(run.repair?.candidatePrompt);
+    expect(page.repairBusy()).toBe(''); fixture.destroy();
   });
 });

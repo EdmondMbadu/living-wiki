@@ -1704,3 +1704,25 @@ textarea {
     transition: none!important;
   }
 }
+
+.qa-repair { border: 1px solid var(--qa-line); background: var(--qa-soft); border-radius: 12px; padding: 22px; margin-bottom: 24px; }
+.qa-repair-heading { display: flex; gap: 12px; align-items: flex-start; }
+.qa-repair-heading > .material-symbols-outlined { color: var(--qa-green); font-size: 25px; }
+.qa-repair h3 { font-size: 17px; margin: 0 0 6px; }
+.qa-repair p, .qa-improve p { font-size: 12px; line-height: 1.7; color: var(--qa-muted); margin: 0; }
+.qa-repair small, .qa-improve small { display: block; font-size: 11px; line-height: 1.7; color: var(--qa-muted); margin-top: 9px; }
+.qa-repair-comparison { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin: 18px 0 12px; font-size: 12px; }
+.qa-repair-comparison strong { font-size: 26px; color: var(--qa-green); }
+.qa-repair-changes { padding-left: 20px; margin: 15px 0; font-size: 12px; line-height: 1.8; }
+.qa-repair-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 18px; }
+.qa-instruction-changes { margin-top: 18px; font-size: 12px; }
+.qa-instruction-changes summary { cursor: pointer; color: var(--qa-green); }
+.qa-instruction-changes h4 { margin: 16px 0 8px; }
+.qa-instruction-changes pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit; font-size: 11px; line-height: 1.7; background: var(--qa-panel); padding: 15px; border-radius: 8px; }
+.qa-improve { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--qa-line); }
+.qa-improve .qa-primary { width: 100%; margin-top: 12px; white-space: normal; }
+@media(max-width:700px) {
+  .qa-repair { padding: 17px; }
+  .qa-repair-actions > button { width: 100%; }
+  .qa-repair-comparison { align-items: flex-start; flex-direction: column; }
+}

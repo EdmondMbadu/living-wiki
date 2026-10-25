@@ -342,3 +342,209 @@ test('configuration-check failure does not prevent opening saved questions and a
     assert.match(state.selectedRun.configurationWarning, /Saved results are available/);
   } finally { corpus.avatarQaCorpus = original; }
 });
+
+const repairTools = require('./lib/avatar-qa-repair');
+async function repairFixture(suffix, operation) {
+  const saved = { generate: stress.generateStressQuestions, assess: stress.assessStressAnswer,
+    query: pipeline.runPublicAtlasQuery, repair: repairTools.generateAvatarRepair, checks: repairTools.generateRepairChecks };
+  const quota = db.collection('avatar_qa_quotas').doc(createHash('sha256').update(JSON.stringify([owner, new Date().toISOString().slice(0,10)])).digest('hex'));
+  await quota.set({ count: 0 });
+  const originalPrompt = (await db.collection('atlases').doc(atlasId).get()).data().persona_prompt;
+  let candidateCalls = 0, promptInputs = [], candidateMode = 'good';
+  stress.generateStressQuestions = async () => Array.from({ length: 5 }, (_, i) => ({ id: `Q-00${i + 1}`, category: stress.STRESS_CATEGORIES[i], question: `Repair baseline ${i + 1}?`, expectedBehavior: 'Respect original persona and be helpful.' }));
+  repairTools.generateAvatarRepair = async input => { candidateCalls++; promptInputs.push(input.currentPrompt); return { prompt: `${require('./lib/avatar-response-policy').AVATAR_BOUNDARY_MARKER} Candidate ${suffix} ${candidateCalls}. Preserve all original rules.`, changes: ['Preserve privacy and historical boundaries.'] }; };
+  repairTools.generateRepairChecks = async input => {
+    const offset = input.questions.filter(q => q.id.startsWith('C-')).length;
+    return Array.from({ length: 5 }, (_, i) => ({ id: `C-${String(offset + i + 1).padStart(3, '0')}`, category: 'accuracy', question: `Additional ${offset + i + 1}?`, expectedBehavior: 'Answer legitimate questions helpfully.' }));
+  };
+  pipeline.runPublicAtlasQuery = async input => {
+    assert.deepEqual(input.qaSandbox.history, []);
+    assert.equal(input.expectedBehavior, undefined);
+    const draft = input.qaSandbox.personaPrompt;
+    const baselineFailure = !draft && /baseline [12]\?/.test(input.question);
+    const regression = draft && candidateMode === 'regress' && /baseline 3\?/.test(input.question);
+    const noProgress = draft && candidateMode === 'stuck' && /baseline [12]\?/.test(input.question);
+    input.qaSandbox.capture({ answerMode: 'wiki' });
+    return { answer: baselineFailure || regression || noProgress ? 'Bad answer' : 'Good answer', citedPassages: [], citedEntryIds: [], knowledgeGap: false };
+  };
+  stress.assessStressAnswer = async input => {
+    assert.equal(input.persona, originalPrompt, 'grading always uses original rules, never the generated candidate');
+    const pass = input.answer === 'Good answer';
+    return { status: pass ? 'passed' : 'failed', critical: false, severity: pass ? 'none' : 'review', title: pass ? 'Appropriate answer' : 'Boundary failure', reason: 'Observed answer assessment.' };
+  };
+  try {
+    const root = await command('startStress', { requestId: `repair-root-${suffix}`, count: 5 });
+    await prepareAvatarStressRun(root.runId);
+    const loaded = await command('load', { runId: root.runId });
+    for (const q of loaded.selectedRun.references) await processAvatarQaCase(root.runId, q.id);
+    await operation({ rootId: root.runId, quota, promptInputs, originalPrompt,
+      candidateCalls: () => candidateCalls, setMode: value => { candidateMode = value; },
+      finish: async runId => {
+        await prepareAvatarStressRun(runId);
+        const state = await command('load', { runId });
+        for (const q of state.selectedRun.references) await processAvatarQaCase(runId, q.id);
+        return (await command('load', { runId })).selectedRun;
+      } });
+  } finally {
+    stress.generateStressQuestions = saved.generate; stress.assessStressAnswer = saved.assess;
+    pipeline.runPublicAtlasQuery = saved.query; repairTools.generateAvatarRepair = saved.repair; repairTools.generateRepairChecks = saved.checks;
+    await db.collection('atlases').doc(atlasId).update({ persona_prompt: originalPrompt });
+  }
+}
+
+test('repair stays private, replays all original questions, adds checks, applies atomically and restores its backup', async () => {
+  await repairFixture('apply', async f => {
+    const first = await command('repair', { runId: f.rootId, requestId: 'repair-apply' });
+    const count = (await f.quota.get()).data().count;
+    assert.equal((await command('repair', { runId: f.rootId, requestId: 'repair-apply' })).runId, first.runId);
+    assert.equal((await f.quota.get()).data().count, count);
+    await assert.rejects(command('repair', { runId: f.rootId, requestId: 'repair-overlap' }), { code: 'already-exists' });
+    await assert.rejects(command('applyRepair', { runId: first.runId }), { code: 'failed-precondition' });
+    const candidate = await f.finish(first.runId);
+    assert.equal(candidate.total, 10); assert.equal(candidate.repair.comparison.total, 5);
+    assert.equal(candidate.repair.comparison.score, 100); assert.equal(candidate.repair.baselineScore, 60);
+    assert.equal(candidate.repair.comparison.checksPassed, 5); assert.equal(candidate.repair.canApply, true);
+    assert.equal(f.candidateCalls(), 1);
+    assert.equal((await db.collection('atlases').doc(atlasId).get()).data().persona_prompt, f.originalPrompt);
+    await assert.rejects(command('applyRepair', { runId: first.runId }, 'qa-visitor'), { code: 'permission-denied' });
+    await command('applyRepair', { runId: first.runId });
+    await command('applyRepair', { runId: first.runId });
+    assert.equal((await db.collection('atlases').doc(atlasId).get()).data().persona_prompt, candidate.repair.candidatePrompt);
+    let live = (await command('load', { runId: first.runId })).selectedRun;
+    assert.equal(live.stale, false); assert.ok(live.repair.appliedAt); assert.equal(live.repair.canApply, false);
+    await command('restoreRepair', { runId: first.runId }); await command('restoreRepair', { runId: first.runId });
+    assert.equal((await db.collection('atlases').doc(atlasId).get()).data().persona_prompt, f.originalPrompt);
+    live = (await command('load', { runId: first.runId })).selectedRun; assert.ok(live.repair.restoredAt);
+    assert.equal((await command('load', { runId: f.rootId })).selectedRun.passed, 3, 'original evidence is immutable');
+  });
+});
+
+test('a regressing repair is rejected; the next round starts from the better prompt and preserves original questions', async () => {
+  await repairFixture('regression', async f => {
+    f.setMode('regress');
+    const first = await command('repair', { runId: f.rootId, requestId: 'repair-regress' });
+    const rejected = await f.finish(first.runId);
+    assert.equal(rejected.repair.outcome, 'retained'); assert.equal(rejected.repair.retainedRunId, f.rootId);
+    assert.deepEqual(rejected.repair.comparison.regressions, ['Q-003']); assert.equal(rejected.repair.noProgressCount, 1);
+    await assert.rejects(command('applyRepair', { runId: first.runId }), { code: 'failed-precondition' });
+    const replayRejected = await command('retest', { runId: first.runId, requestId: 'retest-rejected' });
+    const stillRejected = await f.finish(replayRejected.runId);
+    assert.equal(stillRejected.repair.retainedRunId, f.rootId, 'retesting a rejected draft must not promote it to the retained version');
+    f.setMode('good');
+    const second = await command('repair', { runId: replayRejected.runId, requestId: 'repair-after-regress' });
+    const improved = await f.finish(second.runId);
+    assert.equal(f.promptInputs[1], f.originalPrompt);
+    assert.deepEqual(improved.repair.baselineIds, ['Q-001', 'Q-002', 'Q-003', 'Q-004', 'Q-005']);
+    assert.equal(improved.repair.rootRunId, f.rootId); assert.equal(improved.repair.round, 3);
+    assert.equal(improved.references.length, 15, 'checks from rejected candidates remain in the suite');
+    assert.equal(improved.repair.canApply, true);
+    const replay = await command('retest', { runId: second.runId, requestId: 'repeat-candidate' });
+    const retested = await f.finish(replay.runId);
+    assert.equal(f.candidateCalls(), 2, 'retest does not generate another prompt');
+    assert.equal(retested.repair.candidatePrompt, improved.repair.candidatePrompt);
+    assert.equal(retested.suiteHash, improved.suiteHash); assert.equal(retested.repair.canApply, true);
+  });
+});
+
+test('stale candidates cannot overwrite live edits; cancelled repairs and provider failures never apply', async () => {
+  await repairFixture('stale', async f => {
+    const attempt = await command('repair', { runId: f.rootId, requestId: 'repair-cancel' });
+    await command('cancel', { runId: attempt.runId }); await prepareAvatarStressRun(attempt.runId);
+    await assert.rejects(command('applyRepair', { runId: attempt.runId }), { code: 'failed-precondition' });
+    const second = await command('repair', { runId: attempt.runId, requestId: 'repair-stale' });
+    await f.finish(second.runId);
+    await db.collection('atlases').doc(atlasId).update({ persona_prompt: 'Another administrator edited this avatar.' });
+    await assert.rejects(command('applyRepair', { runId: second.runId }), { code: 'aborted' });
+    await assert.rejects(command('repair', { runId: f.rootId, requestId: 'repair-changed' }), { code: 'failed-precondition' });
+    assert.equal((await db.collection('atlases').doc(atlasId).get()).data().persona_prompt, 'Another administrator edited this avatar.');
+  });
+});
+
+test('three unproductive repair rounds stop rather than spending indefinitely or weakening the test', async () => {
+  await repairFixture('stuck', async f => {
+    f.setMode('stuck'); let runId = f.rootId;
+    for (let i = 1; i <= 3; i++) {
+      const next = await command('repair', { runId, requestId: `stuck-${i}` });
+      const state = await f.finish(next.runId); runId = next.runId;
+      assert.equal(state.repair.noProgressCount, i); assert.equal(state.repair.outcome, 'retained');
+      assert.equal(state.repair.canApply, false);
+    }
+    await assert.rejects(command('repair', { runId, requestId: 'stuck-fourth' }), { code: 'failed-precondition' });
+    assert.equal(f.candidateCalls(), 3);
+  });
+});
+
+test('private candidate instructions reach the real internet fallback unchanged and cannot be silently truncated', async () => {
+  const search = gemini.answerWithGoogleSearch;
+  let seen;
+  gemini.answerWithGoogleSearch = async input => { seen = input.personaPrompt; return { answer: 'Candidate fallback answer.', cited_entry_ids: [], citations: [] }; };
+  try {
+    const input = { atlasId, atlasOwnerUserId: owner, question: 'An unusual question without matching source material?', answerMode: 'internet',
+      visitor: { kind: 'anonymous', visitorUserId: null, anonymousVisitorId: 'candidate-fallback-test', visitorDisplayName: null, visitorEmail: null },
+      qaSandbox: { history: [], personaPrompt: 'Private candidate Washington in 1799.', capture: () => {} } };
+    const before = (await db.collection('atlases').doc(atlasId).get()).data().persona_prompt;
+    assert.equal((await originalQuery(input)).answer, 'Candidate fallback answer.');
+    assert.equal(seen, input.qaSandbox.personaPrompt);
+    assert.equal((await db.collection('atlases').doc(atlasId).get()).data().persona_prompt, before);
+    await assert.rejects(originalQuery({ ...input, qaSandbox: { ...input.qaSandbox, personaPrompt: 'x'.repeat(8001) } }), /cannot be used unchanged/);
+  } finally { gemini.answerWithGoogleSearch = search; }
+});
+
+
+test('repair reassesses old answers consistently without changing the old score or report', async () => {
+  await repairFixture('old-rubric', async f => {
+    await db.collection('avatar_qa_runs').doc(f.rootId).update({ assessmentVersion: 1 });
+    const result = db.collection('avatar_qa_runs').doc(f.rootId).collection('results').doc('Q-003');
+    const before = (await result.get()).data();
+    await result.update({ turns: [{ ...before.turns[0], actualAnswer: 'Bad answer', reason: 'Old rubric allowed this.' }] });
+    const attempt = await command('repair', { runId: f.rootId, requestId: 'repair-new-rubric' });
+    const candidate = await f.finish(attempt.runId);
+    assert.equal(candidate.repair.baselineReassessed, true); assert.equal(candidate.repair.baselineScore, 40);
+    assert.equal(candidate.repair.comparison.previousScore, 40);
+    const old = (await command('load', { runId: f.rootId })).selectedRun;
+    assert.equal(old.passed, 3); assert.equal(old.results.find(r => r.id === 'Q-003').turns[0].reason, 'Old rubric allowed this.');
+  });
+});
+
+test('a failed repair preparation gives a useful error and reuses cached baseline assessments on retry', async () => {
+  await repairFixture('cached-baseline', async f => {
+    await db.collection('avatar_qa_runs').doc(f.rootId).update({ assessmentVersion: 1 });
+    const assess = stress.assessStressAnswer, generate = repairTools.generateAvatarRepair;
+    let reviewed = 0;
+    stress.assessStressAnswer = async input => { reviewed++; return assess(input); };
+    repairTools.generateAvatarRepair = async () => { throw new repairTools.RepairPreparationError('The proposed instructions were too long. Retry to prepare a shorter version.'); };
+    const first = await command('repair', { runId: f.rootId, requestId: 'cached-failure' });
+    const failed = await f.finish(first.runId);
+    assert.equal(failed.status, 'error'); assert.match(failed.error, /too long/); assert.equal(reviewed, 5);
+    assert.equal(failed.repair.phase, 'writing'); assert.equal(failed.repair.canApply, false);
+    repairTools.generateAvatarRepair = generate;
+    const second = await command('repair', { runId: first.runId, requestId: 'cached-retry' });
+    await prepareAvatarStressRun(second.runId);
+    assert.equal(reviewed, 5, 'retry must reuse the five cached baseline assessments');
+    const prepared = await command('load', { runId: second.runId });
+    for (const q of prepared.selectedRun.references) await processAvatarQaCase(second.runId, q.id);
+    assert.equal((await command('load', { runId: second.runId })).selectedRun.repair.canApply, true);
+  });
+});
+
+test('repair retries preserve accumulated checks and their passing history even when preparation failed before cases existed', async () => {
+  await repairFixture('preserve-after-preparation', async f => {
+    f.setMode('stuck');
+    const first = await command('repair', { runId: f.rootId, requestId: 'preserve-first' });
+    const retained = await f.finish(first.runId);
+    assert.equal(retained.references.length, 10); assert.equal(retained.repair.outcome, 'retained');
+    const checks = repairTools.generateRepairChecks;
+    repairTools.generateRepairChecks = async () => { throw new repairTools.RepairPreparationError('New checks temporarily unavailable.'); };
+    const second = await command('repair', { runId: first.runId, requestId: 'preserve-preparation-failure' });
+    const failed = await f.finish(second.runId);
+    assert.equal(failed.status, 'error'); assert.equal(failed.references.length, 0);
+    assert.equal(failed.repair.inheritedQuestions.length, 10);
+    repairTools.generateRepairChecks = checks; f.setMode('good');
+    const third = await command('repair', { runId: second.runId, requestId: 'preserve-retry' });
+    const final = await f.finish(third.runId);
+    assert.equal(final.references.length, 15, 'all five previously tested extra checks must survive the preparation failure');
+    for (let i = 1; i <= 5; i++) assert.equal(final.repair.previousResults.find(r => r.id === `C-${String(i).padStart(3, '0')}`).status, 'passed');
+    assert.equal(final.repair.comparison.total, 5); assert.equal(final.repair.comparison.checksTotal, 10);
+    assert.equal(final.repair.canApply, true);
+  });
+});

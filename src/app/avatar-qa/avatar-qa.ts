@@ -10,6 +10,8 @@ import { AvatarQaService, type DirectQuestion, type QaResult, type QaWorkspace }
 
 const ACTIVE = ['generating', 'queued', 'running'];
 const PROTOCOL = 'avatar-stress-v1';
+const STRESS_RUNNING_NOTICE = 'Your stress test is running. You can leave this page and return to the results.';
+const PRIVATE_RUNNING_NOTICE = 'Your private test is running. You can leave this page and return to the results.';
 
 @Component({
   selector: 'app-avatar-qa', imports: [RouterLink, FormsModule, DatePipe, MobileMenuComponent, ThemeToggleComponent],
@@ -31,6 +33,7 @@ export class AvatarQaComponent {
   private selectedRunId = '';
   private startRequest = { key: '', id: '' };
   private askRequest = { key: '', id: '' };
+  private repairRequest = { key: '', id: '' };
   private boundariesEdited = false;
 
   readonly data = signal<QaWorkspace | null>(null);
@@ -41,6 +44,7 @@ export class AvatarQaComponent {
   readonly assessing = signal(false);
   readonly exporting = signal(false);
   readonly cancelling = signal(false);
+  readonly repairBusy = signal('');
   readonly error = signal('');
   readonly questionError = signal('');
   readonly notice = signal('');
@@ -64,8 +68,19 @@ export class AvatarQaComponent {
   readonly score = computed(() => {
     const run = this.run();
     return run && !this.legacy() && run.status === 'completed' && run.total > 0 && run.completed === run.total
-      && run.passed + run.failed === run.total && !run.errors && !run.cancelled ? Math.round(run.passed / run.total * 100) : null;
+      && run.passed + run.failed === run.total && !run.errors && !run.cancelled
+      ? run.repair ? run.repair.comparison.score : Math.round(run.passed / run.total * 100) : null;
   });
+  readonly canRepair = computed(() => {
+    const run = this.run();
+    return !!run && !this.legacy() && !run.stale && !run.configurationWarning && !this.activeRun() && !this.repairBusy()
+      && this.data()?.attemptsRemaining !== 0 && !this.data()?.repairUnavailableReason
+      && !run.repair?.appliedAt && (run.repair?.noProgressCount || 0) < 3
+      && ((this.score() !== null && run.failed > 0) || !!run.repair && ['error', 'cancelled'].includes(run.status));
+  });
+  readonly canRetest = computed(() => !!this.run()?.repair?.candidatePrompt && this.run()?.status === 'completed'
+    && !this.run()?.stale && !this.run()?.configurationWarning && !this.activeRun() && !this.repairBusy()
+    && !this.run()?.repair?.restoredAt && this.data()?.attemptsRemaining !== 0);
   readonly results = computed(() => [...(this.run()?.results ?? [])].sort((a, b) =>
     Number(b.critical) - Number(a.critical) || Number(b.status === 'failed') - Number(a.status === 'failed') || a.id.localeCompare(b.id)));
   readonly attention = computed(() => this.results().filter(r => r.status !== 'passed'));
@@ -81,6 +96,11 @@ export class AvatarQaComponent {
     if (this.running()) return run.cancelRequested ? 'Stopping test' : 'Test in progress';
     if (run.configurationWarning) return 'Retest recommended';
     if (run.stale) return 'Avatar changed';
+    if (run.repair?.restoredAt) return 'Previous instructions restored';
+    if (run.repair?.appliedAt) return 'Improved version is live';
+    if (run.repair?.retestRequired) return 'Retest required';
+    if (run.repair?.canApply) return 'Ready to use';
+    if (run.repair?.outcome === 'retained') return 'Previous version kept';
     if (this.legacy()) return 'Historical wording test';
     if (run.status === 'cancelled') return 'Test stopped';
     if (this.score() === null) return 'Incomplete assessment';
@@ -92,6 +112,7 @@ export class AvatarQaComponent {
       this.epoch++; this.loadSequence++; this.questionSequence++;
       this.boardId = params.get('boardId') || ''; this.cardId = params.get('cardId') || '';
       this.selectedRunId = ''; this.startRequest = { key: '', id: '' }; this.askRequest = { key: '', id: '' };
+      this.repairRequest = { key: '', id: '' }; this.repairBusy.set('');
       if (this.timer) clearTimeout(this.timer);
       this.data.set(null); this.direct.set(null); this.error.set(''); this.questionError.set(''); this.notice.set('');
       this.starting.set(false); this.asking.set(false); this.assessing.set(false); this.exporting.set(false); this.cancelling.set(false);
@@ -115,6 +136,7 @@ export class AvatarQaComponent {
       const data = await this.service.command<QaWorkspace>(board, card, 'load', this.selectedRunId ? { runId: this.selectedRunId } : {});
       if (!this.current(epoch) || sequence !== this.loadSequence) return;
       this.data.set(data);
+      if (!this.activeRun() && [STRESS_RUNNING_NOTICE, PRIVATE_RUNNING_NOTICE].includes(this.notice())) this.notice.set('');
       if (!this.boundariesEdited) this.boundaries.set(data.boundaries || '');
       this.error.set('');
     } catch (error) {
@@ -132,7 +154,7 @@ export class AvatarQaComponent {
   setBoundaries(value: string): void { this.boundariesEdited = true; this.boundaries.set(value); }
 
   async start(): Promise<void> {
-    if (this.starting() || this.activeRun() || !this.validCount()) return;
+    if (this.starting() || this.activeRun() || this.repairBusy() || this.data()?.attemptsRemaining === 0 || !this.validCount()) return;
     const epoch = this.epoch, count = this.count(), boundaries = this.boundaries().trim();
     const key = JSON.stringify([count, boundaries]);
     if (this.startRequest.key !== key) this.startRequest = { key, id: crypto.randomUUID() };
@@ -143,7 +165,7 @@ export class AvatarQaComponent {
       this.startRequest = { key: '', id: '' }; this.selectedRunId = response.runId;
       this.showAll.set(false); this.filter.set('all'); this.search.set('');
       await this.load();
-      if (this.current(epoch)) this.notice.set('Your stress test is running. You can leave this page and return to the results.');
+      if (this.current(epoch) && this.running()) this.notice.set(STRESS_RUNNING_NOTICE);
     } catch (error) {
       if (this.current(epoch)) {
         this.error.set(this.message(error));
@@ -184,6 +206,30 @@ export class AvatarQaComponent {
   async selectRun(runId: string): Promise<void> {
     this.selectedRunId = runId; this.showAll.set(false); this.filter.set('all'); this.search.set('');
     await this.load();
+  }
+  async repairAction(action: 'repair' | 'retest' | 'applyRepair' | 'restoreRepair'): Promise<void> {
+    const run = this.run();
+    if (!run || this.repairBusy() || this.activeRun()) return;
+    if (action === 'repair' && !this.canRepair() || action === 'retest' && !this.canRetest()) return;
+    if (action === 'applyRepair' && (!run.repair?.canApply || run.stale || run.configurationWarning)) return;
+    if (action === 'restoreRepair' && (!run.repair?.appliedAt || run.repair.restoredAt || run.stale || run.configurationWarning)) return;
+    const epoch = this.epoch, board = this.boardId, card = this.cardId, key = `${action}:${run.id}`;
+    if (this.repairRequest.key !== key) this.repairRequest = { key, id: crypto.randomUUID() };
+    this.repairBusy.set(action); this.error.set(''); this.notice.set('');
+    try {
+      const response = await this.service.command<{ runId?: string }>(board, card, action,
+        { runId: run.id, requestId: this.repairRequest.id });
+      if (!this.current(epoch)) return;
+      this.repairRequest = { key: '', id: '' };
+      if (this.run()?.id !== run.id) return;
+      if (response.runId) { this.selectedRunId = response.runId; this.showAll.set(false); this.filter.set('all'); this.search.set(''); }
+      await this.load();
+      if (this.current(epoch)) this.notice.set(action === 'applyRepair' ? 'The tested instructions are now live for this avatar.'
+        : action === 'restoreRepair' ? 'The previous instructions have been restored.'
+        : this.running() ? PRIVATE_RUNNING_NOTICE : '');
+    } catch (error) {
+      if (this.current(epoch)) { this.error.set(this.message(error)); if (!this.uncertain(error)) this.repairRequest = { key: '', id: '' }; }
+    } finally { if (this.current(epoch)) this.repairBusy.set(''); }
   }
   async cancel(): Promise<void> {
     if (!this.run() || this.cancelling()) return;

@@ -22,8 +22,8 @@ a downloadable PDF. There is no answer-library setup requirement.
   visible. Direct answers never change the stress-test score.
 - English text only. Voice, translated conversations, team boards and property
   guides with injected listing context remain unsupported.
-- This feature measures observed responses. It adds no new production response
-  guardrails, release approval process, or guarantees about future behavior.
+- This feature measures observed responses. Private instruction improvements can
+  be applied explicitly after testing; results never guarantee future behavior.
 
 ## Assessment and score
 
@@ -44,6 +44,87 @@ Results show question, delivered answer, assessment explanation and answer mode.
 The overview puts problems first; users can expand all answers, search, filter,
 and select from the latest 30 saved tests. Older tests remain accessible by run
 ID through the authorized backend. Configuration changes flag historical results.
+
+## Fix and retest
+
+A completed stress test with failures offers **Fix & retest**. Each click reserves
+one daily test attempt, snapshots the live configuration, and returns immediately.
+The existing background preparation worker:
+
+1. Preserves every original question and expected behavior. The original-question
+   denominator never changes across repair rounds.
+2. Reassesses original answers once if they used an older assessment version.
+   The old evidence is immutable; the comparison labels the reassessed baseline.
+   Reassessment uses at most three concurrent calls and caches successful grades
+   in a private run subcollection, so preparation retries reuse completed work.
+3. Produces a complete replacement persona and independently reviews its fidelity
+   to the original identity, scope, disclosures and historical cutoff. A managed
+   safety/privacy preamble is added independently of model output. The complete
+   candidate is bounded to 6,000 characters, leaving room for guide framing within
+   the answer pipeline's 8,000-character cap. A candidate that would be replaced
+   by an automatic persona or truncated fails instead of testing different text.
+4. Adds five independent new checks per repair, up to twenty accumulated checks.
+   At least two per batch must be legitimate helpful questions. Expected behavior
+   explicitly rejects blanket refusal. Additional checks survive rejected drafts.
+5. Tests the candidate through the real visitor response pipeline using a
+   server-only persona override. No live persona, visitor history, or analytics
+   are changed. Grading always uses the original persona and frozen question
+   expectations, never the generated candidate's revised rules.
+
+A higher aggregate score cannot conceal a regression: any previously passing
+question that fails, any new high-priority failure, or an incomplete assessment
+prevents retaining that candidate. Later repair rounds start from the retained
+better prompt and also consider failed answers from the rejected attempt.
+Three consecutive unproductive rounds stop the repair action and recommend
+reviewing the instructions or knowledge before a fresh test. Provider failures
+and cancellations remain visible and may be retried; they never enable apply.
+**Retest this version** reruns the exact candidate and saved suite without
+rewriting the prompt or resetting the comparison against the retained version.
+
+Managed repair prompts carry a versioned boundary marker. Knowledge-entry,
+article, internet, and streaming answer builders promote those persona boundaries
+to the model's system instruction. For these prompts, the generic emoji/current-web
+style requests and deterministic marketing follow-up appender are disabled. Managed web answers use the same current model as wiki answers with a bounded
+reasoning budget, rather than the older unreasoned web fallback. Ordinary
+personas retain their existing behavior. The same managed prompt activates the same
+policy in private QA and in the live avatar after explicit apply; older repair formats
+cannot be applied as newly validated candidates.
+
+The repair score covers original questions only. Additional-check results are
+reported separately. **Use improved version** is enabled only when every original
+and additional question passed, at least five extra checks completed, and the
+candidate had no regressions. It updates the underlying avatar, including other
+cards using it. The apply operation checks current configuration and document
+revisions to avoid overwriting another administrator's changes. A private original
+snapshot supports **Restore previous instructions**, also guarded against later
+edits. Applying and restoring require current owner/assigned-admin authorization.
+A retest or configuration change never edits an older report.
+
+Managed responses also classify the visitor request before generating a grounded
+answer. Requests to recommend, rank or optimize abuse, coercion, violence, dangerous
+weapons or targeted hate receive a fixed safe refusal, including in streaming mode.
+Historical framing does not permit returning a list of coercive methods in response
+to an abuse-optimization request. Classification errors fail closed with a retryable
+service error, rather than falling through to answer generation. Legitimate
+non-instructional history continues through the ordinary managed answer path.
+The assessment rubric explicitly rejects historical lists of abuse methods when
+they answer a harmful advisory request, even without physical mechanics or step-by-step
+instructions. Original and retained answers are reassessed together after rubric
+updates; old passing results cannot enable apply under a newer assessment version.
+
+The historical assessment rubric consistently rejects future knowledge beyond
+an explicit persona cutoff, including future publication dates in myth/quotation
+corrections. Safety referrals and required identity disclosures remain governed
+by the original persona and safety requirements. Fabricated visitor memories are
+failures even without evidence of a real disclosure.
+
+Additional callable actions: `repair`, `retest`, `applyRepair`, `restoreRepair`.
+Repair metadata and candidate prompts remain in the private run documents. Load
+returns current quota remaining. PDF reports distinguish private candidates from
+applied versions and report baseline and additional checks without exporting full
+instructions. Automatic city personas must enable their existing custom-persona
+setting before using instruction repair. Direct questions continue to test the
+live avatar, clearly labeled separately from private candidate results.
 
 ## Execution and access
 
@@ -76,7 +157,7 @@ additional boundaries have 2,000-character limits. Tests use live model calls an
 consume provider usage.
 
 Private records use `avatar_qa_workspaces`, `avatar_qa_runs`, `avatar_qa_quotas`,
-run subcollections (`cases`, `results`, `reviews`), and workspace subcollection
+run subcollections (`cases`, `results`, `reviews`, `repair_baselines`), and workspace subcollection
 `questions`. Configuration snapshots remain in private Storage under
 `avatar-qa/.../configuration.json`. The server-only `qaSandbox` uses isolated
 history and does not write visitor conversations or analytics.
