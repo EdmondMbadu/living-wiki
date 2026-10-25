@@ -667,10 +667,6 @@
     "source": "Square found. Take a photo to finish the card.",
     "file": "src/app/boards/boards.ts"
   },
-  "1209491603374137409": {
-    "source": "Meet Picamo. Your LivingWiki guide.",
-    "file": "src/app/public-wikis/public-wikis.html"
-  },
   "1209515042620743127": {
     "source": "Narrated",
     "file": "src/app/video-library/video-library.ts"
@@ -2586,10 +2582,6 @@
   "1764870169538132277": {
     "source": "$0 today · card required · cancel anytime",
     "file": "src/app/talkthrus/talkthrus.html"
-  },
-  "1764995089188303915": {
-    "source": "Meet Picamo",
-    "file": "src/app/kiwi/kiwi.ts"
   },
   "1766606672964991995": {
     "source": "Delete empty Wiki",
@@ -5014,10 +5006,6 @@
   "2579339600286801694": {
     "source": "Use the standard voice, select one from the library, or create a new voice from a description.",
     "file": "src/app/atlas-persona/atlas-persona.html"
-  },
-  "2579387381932730692": {
-    "source": "Chat with Picamo",
-    "file": "src/app/kiwi/kiwi.html"
   },
   "257957744178192367": {
     "source": "Start talking",
@@ -7503,6 +7491,10 @@
     "source": "Links from another site",
     "file": "src/app/board-insights/board-insights.ts"
   },
+  "3340175835616461639": {
+    "source": "Picamo™ Knows",
+    "file": "src/app/public-wikis/public-wikis.ts"
+  },
   "3341619711923959044": {
     "source": "Individual institution",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -8287,6 +8279,10 @@
     "source": "Property listing detected",
     "file": "src/app/boards/boards.html"
   },
+  "3569186524153223713": {
+    "source": "Meet Picamo™",
+    "file": "src/app/kiwi/kiwi.ts"
+  },
   "3570806918561889447": {
     "source": "Card activity",
     "file": "src/app/board-insights/board-insights.html"
@@ -8458,10 +8454,6 @@
   "3628049544035375454": {
     "source": "Only the board owner can edit this board.",
     "file": "src/app/boards/boards.ts"
-  },
-  "3628407173016406851": {
-    "source": "Your guide, Picamo",
-    "file": "src/app/public-wikis/public-wikis.ts"
   },
   "3628592485712345651": {
     "source": "Your email is already verified. You can continue now.",
@@ -8702,6 +8694,10 @@
   "3699649574527410738": {
     "source": "Account businesses",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "3700698938388268182": {
+    "source": "Picamo™ Picks",
+    "file": "src/app/public-wikis/public-wikis.ts"
   },
   "3701276374577758003": {
     "source": " Search across {$INTERPOLATION}, its metropolitan area, nearby cities, and suburbs. Google finds the address, then your review becomes part of this city wiki. ",
@@ -13075,10 +13071,6 @@
     "source": "Sort friends",
     "file": "src/app/boards/boards.html"
   },
-  "508905406447983366": {
-    "source": "Make things happen with Picamo",
-    "file": "src/app/kiwi/kiwi.html"
-  },
   "5090209836643637979": {
     "source": "Loading your plan…",
     "file": "src/app/talkthru-billing/talkthru-billing-page.html"
@@ -14642,6 +14634,10 @@
   "5575268937361125192": {
     "source": "Could not save your interest. Please try again.",
     "file": "src/app/boards/boards.ts"
+  },
+  "557719448091576441": {
+    "source": "Chat with Picamo™",
+    "file": "src/app/kiwi/kiwi.html"
   },
   "5577760239891590318": {
     "source": "Close subscribe dialog",
@@ -16539,6 +16535,10 @@
     "source": "Decades of chemical incidents at the plant next door.",
     "file": "src/app/fence-line/fence-line.ts"
   },
+  "6156822484386385357": {
+    "source": "Explore with Picamo™",
+    "file": "src/app/public-wikis/public-wikis.ts"
+  },
   "6158176952588553376": {
     "source": "Close settings",
     "file": "src/app/boards/boards.ts"
@@ -17183,6 +17183,10 @@
     "source": "Ask a question…",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
+  "6333120269164650210": {
+    "source": " I’m Picamo™. Ask a city, explore a campus, or discover the places and ideas people know best. ",
+    "file": "src/app/public-wikis/public-wikis.html"
+  },
   "6333335057236774263": {
     "source": "Saved",
     "file": "src/app/boards/boards.ts"
@@ -17483,10 +17487,6 @@
     "source": "Business name",
     "file": "src/app/business-claim/business-claim.html"
   },
-  "6427444351626583402": {
-    "source": "Sign in to talk with Picamo",
-    "file": "src/app/kiwi/kiwi.html"
-  },
   "6428471696911424036": {
     "source": " Copy coordinates ",
     "file": "src/app/off-grids/off-grid-detail.html"
@@ -17602,6 +17602,10 @@
   "6464386002659318435": {
     "source": "60+ Languages",
     "file": "src/app/business/business.html"
+  },
+  "6464410502967187724": {
+    "source": "Your guide, Picamo™",
+    "file": "src/app/public-wikis/public-wikis.ts"
   },
   "6465639078478433092": {
     "source": "{$INTERPOLATION} of {$INTERPOLATION_1} scraped",
@@ -19659,6 +19663,10 @@
     "source": "Choose a name with at least two characters.",
     "file": "src/app/kiwi/kiwi.ts"
   },
+  "712540697121504673": {
+    "source": "Make things happen with Picamo™",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "7126190980322350827": {
     "source": "Confirm I’m going",
     "file": "src/app/boards/boards.ts"
@@ -20830,10 +20838,6 @@
   "7504664347340394522": {
     "source": "Starting point hidden",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
-  },
-  "7504992203933879978": {
-    "source": " I’m Picamo. Ask a city, explore a campus, or discover the places and ideas people know best. ",
-    "file": "src/app/public-wikis/public-wikis.html"
   },
   "7506348746709759533": {
     "source": "Add at least an email address or phone number.",
@@ -23111,6 +23115,10 @@
     "source": "Share this card",
     "file": "src/app/boards/card-share-dialog.html"
   },
+  "8210063178167579426": {
+    "source": "Sign in to talk with Picamo™",
+    "file": "src/app/kiwi/kiwi.html"
+  },
   "8212177249756365917": {
     "source": " Remove ",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -24334,6 +24342,10 @@
   "8638414637636465569": {
     "source": "Sign in after playing",
     "file": "src/app/answer-quiz/answer-quiz.html"
+  },
+  "863907883979510602": {
+    "source": "Meet Picamo™. Your LivingWiki guide.",
+    "file": "src/app/public-wikis/public-wikis.html"
   },
   "8639376656849835941": {
     "source": "Card preview",

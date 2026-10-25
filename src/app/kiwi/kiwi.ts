@@ -42,7 +42,7 @@ export class KiwiComponent {
   readonly ui = {
     openPrefix: $localize`Open `,
     askPrefix: $localize`Ask `,
-    meetKiwi: $localize`Meet Picamo`,
+    meetKiwi: $localize`Meet Picamo™`,
     assistantPrefix: $localize`Assistant `,
     editPrefix: $localize`Edit name and voice of `,
     hereToHelp: $localize`Here to talk and help`,

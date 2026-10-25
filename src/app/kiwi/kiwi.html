@@ -1,7 +1,7 @@
 @if (!hidden()) {
   <button class="kiwi-launcher" [class.kiwi-launcher--city]="!!cityChat.context()" type="button" (click)="toggle()" [attr.aria-expanded]="cityChat.context() ? null : open()" [attr.aria-controls]="cityChat.context() ? 'city-guide-composer' : 'kiwi-panel'" [attr.aria-label]="cityChat.context() ? ui.askPrefix + cityChat.context()!.name : ui.openPrefix + name()">
     <img [src]="cityChat.context()?.avatarUrl || '/assets/picamo/avatar.webp'" alt="" aria-hidden="true" />
-    <span>{{ cityChat.context() ? ui.askPrefix + cityChat.context()!.name : signedIn() ? ui.askPrefix + name() : ui.meetKiwi }}</span>
+    <span>{{ cityChat.context() ? ui.askPrefix + cityChat.context()!.name : signedIn() ? ui.askPrefix + name() + (name() === 'Picamo' ? '™' : '') : ui.meetKiwi }}</span>
     <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
   </button>
 
@@ -13,7 +13,7 @@
           <img src="/assets/picamo/avatar.webp" alt="" aria-hidden="true" />
           <div>
             <div class="kiwi-panel__name-row">
-              <h2>{{ name() }}</h2>
+              <h2>{{ name() }}{{ name() === 'Picamo' ? '™' : '' }}</h2>
               @if (signedIn()) {
                 <button type="button" class="kiwi-icon-button" (click)="beginRename()" [attr.aria-label]="ui.editPrefix + name()" title="Edit name and voice" i18n-title>
                   <span class="material-symbols-outlined" aria-hidden="true">edit</span>
@@ -31,9 +31,9 @@
       @if (!signedIn()) {
         <div class="kiwi-panel__guest">
           <img src="/assets/picamo/avatar.webp" alt="Picamo, the LivingWiki assistant"  i18n-alt/>
-          <h3 i18n>Make things happen with Picamo</h3>
+          <h3 i18n>Make things happen with Picamo™</h3>
           <p i18n>Sign in to talk, create a board, and edit your own boards and cards.</p>
-          <a class="kiwi-primary" routerLink="/sign-in" [queryParams]="signInRedirect()" (click)="close()" i18n>Sign in to talk with Picamo</a>
+          <a class="kiwi-primary" routerLink="/sign-in" [queryParams]="signInRedirect()" (click)="close()" i18n>Sign in to talk with Picamo™</a>
         </div>
       } @else {
         <div class="kiwi-modes" role="tablist" aria-label="Conversation mode" i18n-aria-label>
@@ -76,7 +76,7 @@
           @if (!messages().length) {
             <div class="kiwi-welcome" [class.kiwi-welcome--chat]="mode() === 'chat'">
               @if (mode() === 'chat') {
-                <h3 i18n>Chat with Picamo</h3>
+                <h3 i18n>Chat with Picamo™</h3>
                 <p i18n>Ask a question or tell Picamo what you would like to change. You can review any proposed action before it is saved.</p>
               } @else {
                 <p i18n>Ask about your boards, plan something new, or just talk.</p>

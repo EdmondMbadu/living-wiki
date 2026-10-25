@@ -686,14 +686,14 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
   readonly picamoAvatar = PICAMO_AVATAR;
   readonly picamoArtwork = PICAMO_CITY_GUIDE;
   readonly picamoText = {
-    knows: $localize`Picamo Knows`,
+    knows: $localize`Picamo™ Knows`,
     letsExplore: $localize`Let’s explore`,
-    yourGuide: $localize`Your guide, Picamo`,
-    meet: $localize`Meet Picamo`,
+    yourGuide: $localize`Your guide, Picamo™`,
+    meet: $localize`Meet Picamo™`,
     yourPlace: $localize`Your place. Your guide.`,
     ready: $localize`Ready to find your next discovery? Let’s explore together.`,
-    exploreWith: $localize`Explore with Picamo`,
-    picks: $localize`Picamo Picks`,
+    exploreWith: $localize`Explore with Picamo™`,
+    picks: $localize`Picamo™ Picks`,
     curiosity: $localize`A little curiosity goes a long way.`,
     invitation: $localize`Where shall we explore?`,
   };
