@@ -4,7 +4,7 @@ The public Angular route `/talkthrus` implements Jim's October 26, 2026 city-neu
 
 ## Design and navigation
 
-The supplied bay-view photos and TalkThrus mark are served from `public/assets/talkthrus`. Newsreader regular and italic are hosted locally with their OFL license; the existing site Inter font supplies body text. Styles are scoped to the component. The floating Picamo launcher is hidden only while this landing page is present, to keep campaign buttons clear; an already-open assistant remains accessible.
+Jennifer Jones's unobstructed original portrait from the public example board is stored locally as `jennifer-jones-portrait.jpg`. The agent preview uses a larger rounded portrait frame that preserves her complete face and smile on desktop and mobile; the hero uses the same clean photo in its avatar. The supplied bay-view photos and TalkThrus mark are served from `public/assets/talkthrus`. Newsreader regular and italic are hosted locally with their OFL license; the existing site Inter font supplies body text. Styles are scoped to the component. The floating Picamo launcher is hidden only while this landing page is present, to keep campaign buttons clear; an already-open assistant remains accessible.
 
 Section links resolve against the locale base URL, preserving English, French, Spanish, Portuguese, German, Japanese, and Chinese routes. The contact form is at `#start`; the previous `#signup` anchor remains supported. The live example opens the existing public board in a new tab. Preview tabs support arrow keys, Home, and End, with linked tab panels and visible focus indicators.
 

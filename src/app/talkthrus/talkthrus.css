@@ -60,7 +60,8 @@
 .phone-story { flex: 1; position: relative; display: flex; flex-direction: column; justify-content: end; background: #2c4a3a; padding: 14px; }
 .phone-story > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .45; }
 .phone-content { position: relative; display: flex; flex-direction: column; gap: 6px; }
-.agent-initials { flex-shrink: 0; display: grid; place-items: center; width: 70px; height: 70px; border-radius: 50%; background: var(--gold); color: var(--dark); font-size: 22px; font-weight: 700; border: 3px solid #fff; }
+.agent-portrait { position: relative; flex-shrink: 0; display: block; width: 84px; height: 84px; overflow: hidden; border-radius: 50%; background: var(--gold); border: 3px solid #fff; }
+.agent-portrait img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 28%; }
 .phone-eyebrow { font-size: 9px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
 .phone-heading { font-family: var(--serif); font-size: 22px; line-height: 1.1; }
 .phone-quote { font-size: 11px; line-height: 1.4; }
@@ -110,7 +111,7 @@
 .preview-copy h3 { font-size: 32px; line-height: 1.15; }
 .preview-copy > p:not(.eyebrow) { color: var(--muted); }
 .agent-preview { display: flex; gap: 24px; align-items: center; padding: 32px; color: #fff; background: var(--dark); }
-.agent-preview .agent-initials { width: 112px; height: 112px; font-size: 38px; border: 0; }
+.agent-preview .agent-portrait { width: 180px; height: 224px; border: 3px solid #fff; border-radius: 18px; box-shadow: 0 12px 28px #08190e3d; }
 .agent-preview h3 { font-size: 30px; }
 .agent-preview p { font-size: 14px; color: #d3dbd6; margin-top: 6px; }
 .narration-preview { position: relative; overflow: hidden; }
@@ -254,7 +255,7 @@ footer small { font-size: 13px; }
   .hero-showcase { padding-inline: 16px; }
   .plan { padding: 22px; }
   .agent-preview { padding: 20px; gap: 16px; }
-  .agent-preview .agent-initials { width: 80px; height: 80px; }
+  .agent-preview .agent-portrait { width: 160px; height: 200px; }
 }
 @media (max-width: 900px) {
   .topbar nav { order: 3; width: 100%; justify-content: center; flex-wrap: wrap; }
@@ -305,7 +306,8 @@ footer small { font-size: 13px; }
   .preview-tabs { width: 100%; }
   .preview-tabs button { flex: 1; padding-inline: 8px; }
   .preview-copy { padding: 26px; }
-  .agent-preview { flex-direction: column; justify-content: center; text-align: center; gap: 8px; padding: 16px; aspect-ratio: auto; min-height: 280px; }
+  .agent-preview { flex-direction: column; justify-content: center; text-align: center; gap: 20px; padding: 28px 20px; aspect-ratio: auto; min-height: 0; max-height: none; }
+  .agent-preview .agent-portrait { width: 180px; height: 224px; }
   .narration-preview { aspect-ratio: 1; }
   .narration-preview p { font-size: 18px; left: 12px; right: 12px; bottom: 12px; padding: 14px; }
   .steps, .time-cards, .plan-grid { grid-template-columns: 1fr; }
