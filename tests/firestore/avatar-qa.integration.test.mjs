@@ -350,9 +350,9 @@ async function repairFixture(suffix, operation) {
   const quota = db.collection('avatar_qa_quotas').doc(createHash('sha256').update(JSON.stringify([owner, new Date().toISOString().slice(0,10)])).digest('hex'));
   await quota.set({ count: 0 });
   const originalPrompt = (await db.collection('atlases').doc(atlasId).get()).data().persona_prompt;
-  let candidateCalls = 0, promptInputs = [], candidateMode = 'good';
+  let candidateCalls = 0, promptInputs = [], repairInputs = [], candidateMode = 'good';
   stress.generateStressQuestions = async () => Array.from({ length: 5 }, (_, i) => ({ id: `Q-00${i + 1}`, category: stress.STRESS_CATEGORIES[i], question: `Repair baseline ${i + 1}?`, expectedBehavior: 'Respect original persona and be helpful.' }));
-  repairTools.generateAvatarRepair = async input => { candidateCalls++; promptInputs.push(input.currentPrompt); return { prompt: `${require('./lib/avatar-response-policy').AVATAR_BOUNDARY_MARKER} Candidate ${suffix} ${candidateCalls}. Preserve all original rules.`, changes: ['Preserve privacy and historical boundaries.'] }; };
+  repairTools.generateAvatarRepair = async input => { candidateCalls++; promptInputs.push(input.currentPrompt); repairInputs.push(input); return { prompt: `${require('./lib/avatar-response-policy').AVATAR_BOUNDARY_MARKER} Candidate ${suffix} ${candidateCalls}. Preserve all original rules.`, changes: ['Preserve privacy and historical boundaries.'] }; };
   repairTools.generateRepairChecks = async input => {
     const offset = input.questions.filter(q => q.id.startsWith('C-')).length;
     return Array.from({ length: 5 }, (_, i) => ({ id: `C-${String(offset + i + 1).padStart(3, '0')}`, category: 'accuracy', question: `Additional ${offset + i + 1}?`, expectedBehavior: 'Answer legitimate questions helpfully.' }));
@@ -377,7 +377,7 @@ async function repairFixture(suffix, operation) {
     await prepareAvatarStressRun(root.runId);
     const loaded = await command('load', { runId: root.runId });
     for (const q of loaded.selectedRun.references) await processAvatarQaCase(root.runId, q.id);
-    await operation({ rootId: root.runId, quota, promptInputs, originalPrompt,
+    await operation({ rootId: root.runId, quota, promptInputs, repairInputs, originalPrompt,
       candidateCalls: () => candidateCalls, setMode: value => { candidateMode = value; },
       finish: async runId => {
         await prepareAvatarStressRun(runId);
@@ -412,6 +412,8 @@ test('repair stays private, replays all original questions, adds checks, applies
     assert.equal((await db.collection('atlases').doc(atlasId).get()).data().persona_prompt, candidate.repair.candidatePrompt);
     let live = (await command('load', { runId: first.runId })).selectedRun;
     assert.equal(live.stale, false); assert.ok(live.repair.appliedAt); assert.equal(live.repair.canApply, false);
+    await db.collection('avatar_qa_runs').doc(first.runId).update({ 'repair.version': repairTools.REPAIR_VERSION - 1 });
+    await assert.rejects(command('applyRepair', { runId: first.runId }), { code: 'failed-precondition' });
     await command('restoreRepair', { runId: first.runId }); await command('restoreRepair', { runId: first.runId });
     assert.equal((await db.collection('atlases').doc(atlasId).get()).data().persona_prompt, f.originalPrompt);
     live = (await command('load', { runId: first.runId })).selectedRun; assert.ok(live.repair.restoredAt);
@@ -443,6 +445,33 @@ test('a regressing repair is rejected; the next round starts from the better pro
     assert.equal(f.candidateCalls(), 2, 'retest does not generate another prompt');
     assert.equal(retested.repair.candidatePrompt, improved.repair.candidatePrompt);
     assert.equal(retested.suiteHash, improved.suiteHash); assert.equal(retested.repair.canApply, true);
+  });
+});
+
+test('a failed retest of a perfect retained candidate can be repaired, including after preparation fails', async () => {
+  await repairFixture('perfect-retest-failure', async f => {
+    const first = await command('repair', { runId: f.rootId, requestId: 'perfect-first' });
+    const perfect = await f.finish(first.runId);
+    assert.equal(perfect.repair.comparison.score, 100);
+    await assert.rejects(command('repair', { runId: first.runId, requestId: 'perfect-no-findings' }), /All questions passed/);
+    f.setMode('regress');
+    const retest = await command('retest', { runId: first.runId, requestId: 'perfect-retest' });
+    const failed = await f.finish(retest.runId);
+    assert.equal(failed.failed, 1); assert.equal(failed.repair.outcome, 'retained');
+    assert.equal(failed.repair.retainedRunId, first.runId);
+    const generate = repairTools.generateAvatarRepair;
+    repairTools.generateAvatarRepair = async () => { throw new repairTools.RepairPreparationError('Temporary preparation failure.'); };
+    const retry = await command('repair', { runId: retest.runId, requestId: 'perfect-fix-failure' });
+    const preparation = await f.finish(retry.runId);
+    assert.equal(preparation.status, 'error');
+    repairTools.generateAvatarRepair = generate; f.setMode('good');
+    const recovery = await command('repair', { runId: retry.runId, requestId: 'perfect-fix-recovery' });
+    const repaired = await f.finish(recovery.runId);
+    assert.equal(f.promptInputs.at(-1), perfect.repair.candidatePrompt);
+    assert.ok(f.repairInputs.at(-1).findings.some(finding => finding.question === 'Repair baseline 3?' && finding.answer === 'Bad answer'));
+    assert.equal(repaired.repair.canApply, true); assert.equal(repaired.failed, 0);
+    assert.deepEqual(repaired.repair.comparison.regressions, []);
+    assert.equal((await db.collection('atlases').doc(atlasId).get()).data().persona_prompt, f.originalPrompt);
   });
 });
 

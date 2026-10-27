@@ -30,7 +30,7 @@
           <p class="intro" i18n>Turn listing photos into a narrated TalkThru in your own voice. Walk into your next listing appointment, press play, and let the seller hear their home the way buyers will — introduced by you.</p>
           <div class="hero-actions">
             <a class="button gold" href="talkthrus#start" (click)="selectRequest('free')" i18n>Get a free TalkThru of your listing ↗</a>
-            <a class="text-link" href="talkthrus#video" i18n>▶ Watch the video <span class="watch-duration">0:38</span></a>
+            <a class="text-link" href="talkthrus#video" i18n>▶ Watch the video <span class="watch-duration">0:45</span></a>
           </div>
           <a class="text-link" [href]="exampleUrl" target="_blank" rel="noopener noreferrer" i18n>Experience a live TalkThru ↗</a>
           <p class="hero-note" i18n><span aria-hidden="true">▥</span><span>The technology brings it together.<br>You make it personal.</span></p>
@@ -90,19 +90,19 @@
               <div class="video-cover-photo">
                 <img src="/assets/talkthrus/bayview-living-room-detail.jpg" alt="" width="1024" height="1024" loading="lazy">
                 <span class="video-tag" i18n>Intro video</span>
-                <button type="button" class="play-video" (click)="playIntroduction()" aria-label="Play the 38-second introduction" i18n-aria-label><span aria-hidden="true">▶</span></button>
+                <button type="button" class="play-video" (click)="playIntroduction()" aria-label="Play the 45-second introduction" i18n-aria-label><span aria-hidden="true">▶</span></button>
               </div>
             </div>
           } @else {
-            <video #introductionVideo controls playsinline preload="metadata" width="1080" height="1080"
-              poster="/assets/talkthrus/talkthrus-introduction-poster.jpg?v=margot-20261020"
-              src="/assets/talkthrus/talkthrus-introduction.mp4?v=margot-20261020"
+            <video #introductionVideo controls playsinline preload="metadata" width="1080" height="1350"
+              poster="/assets/talkthrus/talkthrus-introduction-poster.jpg?v=miami-voice-v3-20261027"
+              src="/assets/talkthrus/talkthrus-introduction.mp4?v=miami-voice-v3-20261027"
               aria-labelledby="video-title" aria-describedby="video-caption" (error)="videoError.set(true)">
               <p i18n>Your browser does not support video playback. Use the link below to open the video.</p>
             </video>
           }
           @if (videoError()) { <p class="form-error" role="alert" i18n>The video couldn’t load. Try opening it directly using the link below.</p> }
-          <figcaption id="video-caption"><span i18n>38-second introduction · English audio and captions</span><a href="/assets/talkthrus/talkthrus-introduction.mp4?v=margot-20261020" target="_blank" rel="noopener noreferrer" i18n>Open the video ↗</a></figcaption>
+          <figcaption id="video-caption"><span i18n>45-second introduction · English audio and captions</span><a href="/assets/talkthrus/talkthrus-introduction.mp4?v=miami-voice-v3-20261027" target="_blank" rel="noopener noreferrer" i18n>Open the video ↗</a></figcaption>
         </figure>
       </div>
     </section>

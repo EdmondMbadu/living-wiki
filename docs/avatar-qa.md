@@ -80,6 +80,9 @@ reviewing the instructions or knowledge before a fresh test. Provider failures
 and cancellations remain visible and may be retried; they never enable apply.
 **Retest this version** reruns the exact candidate and saved suite without
 rewriting the prompt or resetting the comparison against the retained version.
+A failed retest remains repairable even when the retained candidate previously
+passed every question. The next repair uses that retained prompt and the newly
+observed failures. Failure evidence also survives preparation errors and retries.
 
 Managed repair prompts carry a versioned boundary marker. Knowledge-entry,
 article, internet, and streaming answer builders promote those persona boundaries
@@ -89,6 +92,14 @@ reasoning budget, rather than the older unreasoned web fallback. Ordinary
 personas retain their existing behavior. The same managed prompt activates the same
 policy in private QA and in the live avatar after explicit apply; older repair formats
 cannot be applied as newly validated candidates.
+The entire managed answer receives a separate temporal review before delivery,
+including implied facts without dates and later claims after an opening refusal.
+If correction is needed, the corrected answer is checked again. Up to three review
+calls allow correction or a retry of malformed review output; unverifiable results
+produce a retryable error. No unchecked draft is returned. Citation IDs are cleared after a correction.
+Managed internet streams buffer the draft until review finishes so unverified
+partial text cannot escape. This adds review latency; ordinary personas keep
+their existing streaming behavior.
 
 The repair score covers original questions only. Additional-check results are
 reported separately. **Use improved version** is enabled only when every original

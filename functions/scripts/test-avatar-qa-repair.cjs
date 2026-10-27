@@ -104,7 +104,11 @@ test('managed boundaries reach every real answer builder and prevent hard-coded 
   sdk.GoogleGenAI = class {
     constructor() {
       this.models = {
-        generateContent: async request => { if (request.config.responseJsonSchema?.properties?.requiresRefusal) return { text: JSON.stringify({ requiresRefusal: false }) }; verify(request); return { text: request.config.responseMimeType === 'application/json' ? JSON.stringify({ answer, cited_entry_ids: ['e1'], knowledge_gap: false }) : answer, candidates: [] }; },
+        generateContent: async request => {
+          if (request.config.responseJsonSchema?.properties?.requiresRefusal) return { text: JSON.stringify({ requiresRefusal: false }) };
+          if (request.config.responseJsonSchema?.properties?.withinTemporalBoundary) return { text: JSON.stringify({ withinTemporalBoundary: true, correctedAnswer: '' }) };
+          verify(request); return { text: request.config.responseMimeType === 'application/json' ? JSON.stringify({ answer, cited_entry_ids: ['e1'], knowledge_gap: false }) : answer, candidates: [] };
+        },
         generateContentStream: async function* (request) { verify(request); yield { text: answer, candidates: [] }; },
       };
     }
@@ -128,6 +132,50 @@ test('managed boundaries reach every real answer builder and prevent hard-coded 
     sdk.GoogleGenAI = OriginalClient;
     if (originalKey === undefined) delete process.env.GEMINI_API_KEY; else process.env.GEMINI_API_KEY = originalKey;
   }
+});
+
+test('future facts are corrected and rechecked before any answer or stream is delivered', async () => {
+  const sdk = require('@google/genai'), OriginalClient = sdk.GoogleGenAI;
+  const originalKey = process.env.GEMINI_API_KEY; process.env.GEMINI_API_KEY = 'synthetic-test-key';
+  const { AVATAR_BOUNDARY_MARKER } = require('../lib/avatar-response-policy');
+  const gemini = require('../lib/gemini');
+  const bad = '1805 is in the future, although Napoleon has since styled himself Emperor.';
+  const good = 'I cannot describe a meeting in 1805 from the year 1799. I have had no such meeting.';
+  let checks = 0, invalid = false, invalidOnce = false, persistentlyBad = false;
+  sdk.GoogleGenAI = class { constructor() { this.models = {
+    generateContent: async request => {
+      if (request.config.responseJsonSchema?.properties?.requiresRefusal) return { text: JSON.stringify({ requiresRefusal: false }) };
+      if (request.config.responseJsonSchema?.properties?.withinTemporalBoundary) {
+        checks++; const supplied = JSON.parse(request.contents);
+        assert.match(request.config.systemInstruction, /EVERY claim/);
+        if (invalidOnce) { invalidOnce = false; return { text: '{incomplete' }; }
+        return { text: JSON.stringify(invalid ? {} : { withinTemporalBoundary: !persistentlyBad && supplied.answer === good, correctedAnswer: good }) };
+      }
+      return { text: request.config.responseMimeType === 'application/json' ? JSON.stringify({ answer: bad, cited_entry_ids: ['e1'], knowledge_gap: false }) : bad, candidates: [] };
+    },
+    generateContentStream: async function* () { yield { text: bad.slice(0, 20) }; yield { text: bad.slice(20) }; },
+  }; } };
+  try {
+    const input = { question: 'Describe your secret meeting with Napoleon in 1805.', personaPrompt: `${AVATAR_BOUNDARY_MARKER} You are Washington in 1799.`, identityInstruction: 'Speak in first person.' };
+    const outputs = [await gemini.answerQuestion({ ...input, entries: [{ id: 'e1', topic: 'Washington', claim: 'Source.', source: { page: 1, line_start: 1, line_end: 1 } }] }),
+      await gemini.answerFromArticles({ ...input, articles: [] }), await gemini.answerWithGoogleSearch(input)];
+    const deltas = [];
+    outputs.push(await gemini.streamAnswerWithGoogleSearch({ ...input, onDelta: value => { deltas.push(value); } }));
+    for (const response of outputs) { assert.equal(response.answer, good); assert.deepEqual(response.cited_entry_ids, []); }
+    assert.deepEqual(deltas, [good], 'no unverified partial text may escape');
+    assert.equal(checks, 8, 'every correction is independently rechecked');
+    invalidOnce = true;
+    const beforeRetry = checks;
+    assert.equal(await gemini.validateManagedAvatarAnswer(input, good), good);
+    assert.equal(checks - beforeRetry, 2, 'a malformed review retries the same answer before failing');
+    invalid = true;
+    await assert.rejects(gemini.validateManagedAvatarAnswer(input, bad), /historical boundary check/);
+    invalid = false; persistentlyBad = true;
+    const before = checks;
+    await assert.rejects(gemini.validateManagedAvatarAnswer(input, bad), /historical boundary check/);
+    assert.equal(checks - before, 3, 'correction is bounded and cannot loop');
+    assert.equal(await gemini.validateManagedAvatarAnswer({ question: 'Question?', personaPrompt: 'Ordinary guide.' }, bad), bad);
+  } finally { sdk.GoogleGenAI = OriginalClient; if (originalKey === undefined) delete process.env.GEMINI_API_KEY; else process.env.GEMINI_API_KEY = originalKey; }
 });
 
 test('duplicate additional checks are regenerated in a bounded retry without dropping existing questions', async () => {

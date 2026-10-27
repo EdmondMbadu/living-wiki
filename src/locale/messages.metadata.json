@@ -1951,6 +1951,10 @@
     "source": "Tour complete",
     "file": "src/app/boards/listing-live-closing.html"
   },
+  "1561020215790201457": {
+    "source": "45-second introduction · English audio and captions",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "1562584780596394495": {
     "source": "Archived",
     "file": "src/app/admin-users/talkthru-interests-admin.html"
@@ -3834,10 +3838,6 @@
   "2195879366322108269": {
     "source": "Make ",
     "file": "src/app/boards/boards.ts"
-  },
-  "2197741064452700183": {
-    "source": "Play the 38-second introduction",
-    "file": "src/app/talkthrus/talkthrus.html"
   },
   "219825243880527209": {
     "source": "Explore every {$INTERPOLATION} board",
@@ -6574,10 +6574,6 @@
   "3060284155306018575": {
     "source": "No Failed Sources",
     "file": "src/app/library/library.ts"
-  },
-  "3063626342971336704": {
-    "source": "38-second introduction · English audio and captions",
-    "file": "src/app/talkthrus/talkthrus.html"
   },
   "3069422820744216221": {
     "source": "Admin name",
@@ -17287,6 +17283,10 @@
     "source": "Donald Trump: Policies & Impact",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "632062202019285622": {
+    "source": "Play the 45-second introduction",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "6320993347287256971": {
     "source": " Card count may change after analysis. Actual voice timing may vary. {$START_BLOCK_IF}{$START_TAG_SPAN}This longer narration may take more time to generate.{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
     "file": "src/app/boards/real-estate-wizard-source.html"
@@ -21591,6 +21591,10 @@
     "source": "No public boards found yet",
     "file": "src/app/boards/boards.ts"
   },
+  "7674618912050028460": {
+    "source": "▶ Watch the video {$START_TAG_SPAN}0:45{$CLOSE_TAG_SPAN}",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "7675333593483857317": {
     "source": " Explore guide {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
     "file": "src/app/business-detail/business-detail.html"
@@ -25098,10 +25102,6 @@
   "880635411284636094": {
     "source": "Rental scenes",
     "file": "src/app/boards/boards.html"
-  },
-  "8808564818344831813": {
-    "source": "▶ Watch the video {$START_TAG_SPAN}0:38{$CLOSE_TAG_SPAN}",
-    "file": "src/app/talkthrus/talkthrus.html"
   },
   "8809902939714878222": {
     "source": "{$INTERPOLATION} boards",

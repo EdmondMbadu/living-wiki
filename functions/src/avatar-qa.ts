@@ -6,7 +6,7 @@ import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import { db, storage } from './firebase';
-import { geminiApiKey } from './gemini';
+import { AvatarBoundaryCheckError, geminiApiKey } from './gemini';
 import { runPublicAtlasQuery } from './pipeline';
 import { gradeQaTurn, normalizeQaReferences, QA_PROTOCOL_VERSION, type QaReference } from './avatar-qa-model';
 import { assessStressAnswer, generateStressQuestions, STRESS_ASSESSMENT_VERSION, STRESS_LIMITATION, STRESS_PROTOCOL, stressCount, stressText, type StressQuestion } from './avatar-stress-test';
@@ -139,7 +139,18 @@ async function startRepair(context: Context, input: Data, mode: 'fix' | 'retest'
   if (cityGuidePersonaPrompt(context.atlas, originalPrompt) !== originalPrompt) {
     throw new HttpsError('failed-precondition', 'This avatar uses an automatic city persona. Enable its custom persona before repairing instructions.');
   }
-  if (mode === 'fix' && !source.value.failed) throw new HttpsError('failed-precondition', 'All questions passed. Retest this version or start a fresh stress test.');
+  // A fresh retest can expose an intermittent failure in a formerly perfect
+  // retained prompt. Repair that evidence without discarding the better prompt.
+  const failureFindings = [...new Map([
+    ...(selected.value.status === 'completed' ? [] : selected.value.repair?.failureFindings || []),
+    ...[...sourceResults, ...selectedResults].filter(r => r.status === 'failed').map(r => ({
+      question: (selected.value.references?.length ? selected.value.references : source.value.references)
+        ?.find((q: StressQuestion) => q.id === r.id)?.question,
+      answer: String(r.turns?.[0]?.actualAnswer || '').slice(0, 5000),
+      reason: String(r.turns?.[0]?.reason || '').slice(0, 1800),
+    })),
+  ].filter(f => f.question).map(f => [f.question, f])).values()];
+  if (mode === 'fix' && !failureFindings.length) throw new HttpsError('failed-precondition', 'All questions passed. Retest this version or start a fresh stress test.');
   if (mode === 'retest' && (selected.value.status !== 'completed' || !selected.value.repair?.candidatePrompt)) throw new HttpsError('failed-precondition', 'Choose a completed candidate to retest.');
   // Keep every additional check, including checks discovered by a rejected draft.
   // Only the prompt rolls back to the better version.
@@ -174,6 +185,7 @@ async function startRepair(context: Context, input: Data, mode: 'fix' | 'retest'
       repair: { version: REPAIR_VERSION, mode, parentRunId: requestedRunId, sourceRunId: sourceId,
         rootRunId: source.value.repair?.rootRunId || sourceId, round: (selected.value.repair?.round || 0) + 1,
         baselineIds, additionalCount, noProgressBefore: view?.noProgressCount || 0,
+        failureFindings,
         inheritedQuestions: questions,
         inheritedResults: compactResults((selectedResults.length ? selectedResults : selected.value.repair?.inheritedResults || [])
           .filter((r: Data) => !sourceResults.some(s => s.id === r.id))) } });
@@ -185,7 +197,9 @@ async function startRepair(context: Context, input: Data, mode: 'fix' | 'retest'
 async function applyRepair(context: Context, input: Data, restore = false) {
   const run = await runFor(context, input.runId);
   const data: Data = { ...run.value, id: run.ref.id };
-  if (!data.repair || data.repair.version !== REPAIR_VERSION) throw new HttpsError('failed-precondition', 'Choose a tested improvement.');
+  // Runtime upgrades require a fresh test before applying, but must never
+  // strand the verified backup of an already-applied older version.
+  if (!data.repair || !restore && data.repair.version !== REPAIR_VERSION) throw new HttpsError('failed-precondition', 'Choose a tested improvement.');
   const configuration = await corpus(context, STRESS_PROTOCOL);
   const view = repairView(data, await resultsFor(run.ref.id))!;
   if (restore && data.repair.restoredAt) return { restored: true };
@@ -561,8 +575,11 @@ async function prepareRepair(run: Data, snapshot: Data, runId: string) {
   if (sourceNeedsReview) await reassess(source, run.repair.sourceRunId, questions, previous);
   if (rootNeedsReview) await reassess(root, run.repair.rootRunId, root.references, rootResults);
   const parentResults = run.repair.parentRunId === run.repair.sourceRunId ? [] : await resultsFor(run.repair.parentRunId);
-  const findings = [...previous, ...parentResults].filter(r => r.status === 'failed').map(r => ({ question: questions.find(q => q.id === r.id)?.question,
-    answer: String(r.turns?.[0]?.actualAnswer || '').slice(0, 5000), reason: String(r.turns?.[0]?.reason || '').slice(0, 1800) }));
+  const findings = [...new Map([
+    ...(run.repair.failureFindings || []),
+    ...[...previous, ...parentResults].filter(r => r.status === 'failed').map(r => ({ question: questions.find(q => q.id === r.id)?.question,
+      answer: String(r.turns?.[0]?.actualAnswer || '').slice(0, 5000), reason: String(r.turns?.[0]?.reason || '').slice(0, 1800) })),
+  ].filter(f => f.question).map(f => [f.question, f])).values()];
   const replay = run.repair.mode === 'retest' ? (await runs.doc(run.repair.parentRunId).get()).data()! : source;
   const currentPrompt = String(replay.repair?.candidatePrompt || snapshot.atlas.persona_prompt || '');
   await ensureActive();
@@ -649,6 +666,9 @@ export async function processAvatarQaCase(runId: string, caseId: string) {
     await finishCase(runId, caseId, { status: turns.every(t => t.status === 'passed') ? 'passed' : 'failed',
       critical: turns.some(t => t.critical), turns, referenceId: reference.id, category: reference.category });
   } catch (error) {
+    logger.warn('Avatar QA case could not complete', { runId, caseId,
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+      ...(error instanceof AvatarBoundaryCheckError ? { reason: error.reason } : {}) });
     await finishCase(runId, caseId, { status: 'error', critical: turns.some(t => t.critical), turns,
       referenceId: reference.id, category: reference.category, error: claimed.run.protocol === STRESS_PROTOCOL
         ? 'The answer or its assessment could not be completed, or the avatar changed. Start a new test to try again.' : (error as Error).message.slice(0, 1000) });
