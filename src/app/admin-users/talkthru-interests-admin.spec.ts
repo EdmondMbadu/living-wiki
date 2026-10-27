@@ -14,7 +14,7 @@ describe('TalkThruInterestsAdminComponent', () => {
     fixture.componentInstance.interests.set([
       {
         id: 'active-interest-1', role: 'agent', name: 'Active Agent', email: 'active@example.com',
-        agency: 'Active Realty', listing: '', status: 'done', adminNotes: '', archivedAt: null,
+        agency: 'Active Realty', listing: '', requestType: 'founding', city: 'Miami', status: 'done', adminNotes: '', archivedAt: null,
         doneAt: '2026-09-21T12:00:00.000Z', createdAt: '2026-09-20T12:00:00.000Z', updatedAt: null,
         emailDelivery: { applicant: 'sent', jim: 'sent', edmond: 'sent' },
       },
@@ -36,6 +36,11 @@ describe('TalkThruInterestsAdminComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Active Agent');
     expect(fixture.nativeElement.textContent).not.toContain('Archived Agency');
+    expect(fixture.nativeElement.textContent).toContain('A founding-agent seat');
+    expect(fixture.nativeElement.textContent).toContain('Miami');
+    fixture.componentInstance.search.set('Miami');
+    expect(fixture.componentInstance.filtered().map(item => item.id)).toEqual(['active-interest-1']);
+    fixture.componentInstance.search.set('');
 
     fixture.componentInstance.scope.set('archived');
     fixture.detectChanges();

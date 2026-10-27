@@ -1976,3 +1976,6 @@ html.workspace-overlay-open body {
   .card-share-dialog__actions { display: grid; }
   .card-focus-dialog__image { max-height: 38dvh; }
 }
+
+/* Keep the TalkThrus campaign CTA clear while preserving an already-open assistant. */
+body:has(app-talkthrus) app-kiwi .kiwi-launcher:not([aria-expanded="true"]) { display: none; }

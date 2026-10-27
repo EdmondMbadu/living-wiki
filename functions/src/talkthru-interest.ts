@@ -31,6 +31,8 @@ export interface TalkThruInterest {
   agency: string;
   listing: string;
   consent: true;
+  requestType?: 'free' | 'done_for_you' | 'founding' | 'waitlist' | 'general';
+  city?: string;
 }
 
 function requiredAdminUid(uid: string | undefined): string {
@@ -69,6 +71,8 @@ function serializeInterest(id: string, data: Record<string, unknown>) {
     email: String(data.email ?? ''),
     agency: String(data.agency ?? ''),
     listing: String(data.listing ?? ''),
+    requestType: String(data.requestType ?? ''),
+    city: String(data.city ?? ''),
     status: data.status === 'in_progress' || data.status === 'done' ? data.status : 'new',
     adminNotes: String(data.adminNotes ?? ''),
     archivedAt: timestampToIso(data.archivedAt),
@@ -102,7 +106,23 @@ export function normalizeTalkThruInterest(input: Record<string, unknown>): TalkT
       throw new HttpsError('invalid-argument', 'Enter an HTTPS listing link.');
   }
   if (input.consent !== true) throw new HttpsError('invalid-argument', 'Consent is required.');
-  return { role, name, email, agency, listing, consent: true };
+  const requestType = value('requestType');
+  const city = value('city');
+  const types = ['free', 'done_for_you', 'founding', 'waitlist', 'general'];
+  if (input.requestType !== undefined && (typeof input.requestType !== 'string' || !types.includes(requestType))) {
+    throw new HttpsError('invalid-argument', 'Choose a valid request type.');
+  }
+  if ((input.city !== undefined && typeof input.city !== 'string') || city.length > 120) {
+    throw new HttpsError('invalid-argument', 'Enter a valid city or market.');
+  }
+  if ((requestType === 'founding' || requestType === 'waitlist') && !city) {
+    throw new HttpsError('invalid-argument', 'Enter your city or market.');
+  }
+  return {
+    role, name, email, agency, listing, consent: true,
+    ...(requestType ? { requestType: requestType as TalkThruInterest['requestType'] } : {}),
+    ...(city ? { city } : {}),
+  };
 }
 
 export const submitTalkThruInterest = onCall({ region: 'us-central1', cors: true, maxInstances: 10 }, async (request) => {

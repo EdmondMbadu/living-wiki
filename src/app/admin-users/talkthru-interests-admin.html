@@ -72,6 +72,8 @@
               <dl class="mt-5 grid gap-3 text-sm sm:grid-cols-2">
                 <div><dt class="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]" i18n>Email</dt><dd class="mt-1 break-all font-semibold"><a [href]="'mailto:' + item.email" class="underline underline-offset-2">{{ item.email }}</a></dd></div>
                 <div><dt class="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]" i18n>Listing</dt><dd class="mt-1 break-all">@if (item.listing) { <a [href]="item.listing" target="_blank" rel="noopener noreferrer" class="font-semibold underline underline-offset-2" i18n>Open listing ↗</a> } @else { Not provided }</dd></div>
+                @if (item.requestType) { <div><dt class="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]" i18n>Request</dt><dd class="mt-1">{{ requestLabel(item.requestType) }}</dd></div> }
+                @if (item.city) { <div><dt class="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]" i18n>City / market</dt><dd class="mt-1">{{ item.city }}</dd></div> }
                 @if (item.adminNotes) { <div class="sm:col-span-2"><dt class="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]" i18n>Admin notes</dt><dd class="mt-1 whitespace-pre-wrap">{{ item.adminNotes }}</dd></div> }
               </dl>
             }

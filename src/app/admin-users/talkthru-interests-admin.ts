@@ -16,6 +16,8 @@ interface TalkThruInterestRecord {
   email: string;
   agency: string;
   listing: string;
+  requestType?: string;
+  city?: string;
   status: InterestStatus;
   adminNotes: string;
   archivedAt: string | null;
@@ -89,7 +91,7 @@ export class TalkThruInterestsAdminComponent implements OnInit {
       if (this.scope() === 'archived' && !item.archivedAt) return false;
       if (this.statusFilter() !== 'all' && item.status !== this.statusFilter()) return false;
       if (!query) return true;
-      return [item.name, item.email, item.agency, item.listing, item.role, item.adminNotes]
+      return [item.name, item.email, item.agency, item.listing, item.role, item.adminNotes, item.requestType, item.city]
         .join(' ').toLowerCase().includes(query);
     });
   });
@@ -101,6 +103,17 @@ export class TalkThruInterestsAdminComponent implements OnInit {
 
   statusLabel(status: InterestStatus): string {
     return status === 'in_progress' ? 'In progress' : status === 'done' ? 'Done' : 'New';
+  }
+
+  requestLabel(type: string): string {
+    const labels: Record<string, string> = {
+      free: $localize`A free TalkThru of my listing`,
+      done_for_you: $localize`Done For You · $199/listing`,
+      founding: $localize`A founding-agent seat`,
+      waitlist: $localize`The waitlist for my city`,
+      general: $localize`A conversation with the team`,
+    };
+    return labels[type] || type;
   }
 
   deliveryLabel(status: DeliveryStatus): string {

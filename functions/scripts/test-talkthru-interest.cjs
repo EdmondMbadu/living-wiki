@@ -52,3 +52,30 @@ test('requires two distinct admin alert addresses', () => {
     assert.throws(() => parseTalkThruAdminEmails(value));
   }
 });
+
+test('preserves service and city context for new TalkThru offers', () => {
+  for (const requestType of ['free', 'done_for_you', 'general']) {
+    assert.equal(normalizeTalkThruInterest({ ...valid, requestType }).requestType, requestType);
+  }
+  for (const requestType of ['founding', 'waitlist']) {
+    const result = normalizeTalkThruInterest({ ...valid, requestType, city: ' Miami ' });
+    assert.equal(result.city, 'Miami');
+    assert.equal(result.requestType, requestType);
+    assert.throws(() => normalizeTalkThruInterest({ ...valid, requestType }), error => error.code === 'invalid-argument');
+  }
+  for (const patch of [{ requestType: 'other' }, { requestType: '' }, { requestType: 1 }, { city: 'x'.repeat(121) }, { city: {} }]) {
+    assert.throws(() => normalizeTalkThruInterest({ ...valid, ...patch }), error => error.code === 'invalid-argument');
+  }
+});
+
+test('includes service and city in applicant and admin email with HTML escaping', () => {
+  const interest = normalizeTalkThruInterest({ ...valid, requestType: 'founding', city: 'Miami <test>' });
+  for (const build of [buildTalkThruApplicantEmail, buildTalkThruAdminEmail]) {
+    const content = build(interest);
+    assert.match(content.text, /Founding-agent seat/);
+    assert.match(content.text, /City \/ market: Miami <test>/);
+    assert.match(content.html, /Miami &lt;test&gt;/);
+    assert.doesNotMatch(content.html, /Miami <test>/);
+  }
+  assert.match(buildTalkThruAdminEmail({ ...valid, requestType: 'done_for_you' }).text, /Done For You \(\$199\/listing\)/);
+});

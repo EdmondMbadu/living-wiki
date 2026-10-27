@@ -1,248 +1,281 @@
 <div class="talkthrus-page" id="top">
   <a class="skip" href="talkthrus#main" i18n>Skip to content</a>
   <header class="topbar">
-    <div class="brand-group">
-      <a class="livingwiki-brand" href="./"><img src="/assets/image/livingwiki-brand.svg" width="1289" height="249" alt="LivingWiki"></a>
-      <span class="brand-divider" aria-hidden="true"></span>
-      <a class="product-brand" href="talkthrus#top" aria-label="LivingWiki TalkThrus home" i18n-aria-label>
-        <img src="/assets/talkthrus/talkthrus-mark-light.svg" width="64" height="64" alt="">
-        <span class="product-wordmark">Talk<span>Thrus</span></span>
-      </a>
+    <div class="wrap nav-inner">
+      <div class="brand-group">
+        <a class="livingwiki-brand" href="./" aria-label="LivingWiki home" i18n-aria-label>Living<span>Wiki</span></a>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <a class="product-brand" href="talkthrus#top" aria-label="LivingWiki TalkThrus home" i18n-aria-label>
+          <img src="/assets/talkthrus/talkthrus-mark.png" width="26" height="26" alt="">
+          <span>Talk<span class="brand-gold">Thrus</span></span>
+        </a>
+      </div>
+      <nav aria-label="Main navigation" i18n-aria-label>
+        <a href="talkthrus#experience" i18n>The experience</a>
+        <a href="talkthrus#how" i18n>How it wins</a>
+        <a href="talkthrus#teams" i18n>For agencies</a>
+        <a href="talkthrus#pricing" i18n>Pricing</a>
+      </nav>
+      <a class="button dark top-cta" href="talkthrus#start" (click)="selectRequest('free')" i18n>Get started ↗</a>
     </div>
-    <nav aria-label="Main navigation" i18n-aria-label>
-      <a href="talkthrus#experience" i18n>The experience</a>
-      <a href="talkthrus#how" i18n>How it works</a>
-      <a href="talkthrus#teams" i18n>For agencies</a>
-      <a href="talkthrus#pricing" i18n>Pricing</a>
-    </nav>
-    <a class="button dark top-cta" href="talkthrus#pricing" i18n>Get started <span aria-hidden="true">↗</span></a>
   </header>
 
   <main id="main">
     <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-inner wrap">
-        <div class="hero-copy">
-          <p class="eyebrow" i18n><span class="eyebrow-line"></span> Your expertise. Brought to life.</p>
-          <h1 id="hero-title" i18n>Your listings.<br><em>Your voice.</em></h1>
-          <p class="hero-subtitle" i18n>Every home has a story.<br><em>Tell it in your voice.</em></p>
-          <p class="intro" i18n>Turn your listing photos into a personal, narrated TalkThru. Your voice. Your local knowledge. The details that make a buyer feel at home.</p>
+      <div class="wrap hero-inner">
+        <div class="hero-copy stack">
+          <p class="eyebrow" i18n><span class="eyebrow-line" aria-hidden="true"></span>For listing agents &amp; teams</p>
+          <h1 id="hero-title" i18n>Their home.<br><em>Your voice.</em><br>A story that wins listings.</h1>
+          <p class="hero-subtitle" i18n>Every home has a story.<br><em>Tell it in your voice — and win the listing.</em></p>
+          <p class="intro" i18n>Turn listing photos into a narrated TalkThru in your own voice. Walk into your next listing appointment, press play, and let the seller hear their home the way buyers will — introduced by you.</p>
           <div class="hero-actions">
-            <a class="button gold" [href]="exampleUrl" target="_blank" rel="noopener noreferrer" i18n>Experience a TalkThru <span aria-hidden="true">↗</span></a>
-            <a class="text-link watch-link" href="talkthrus#video" i18n><span aria-hidden="true">▶</span> Watch the video <span class="watch-duration">0:38</span></a>
-            <a class="text-link" href="talkthrus#pricing" i18n>Bring your listing to life <span aria-hidden="true">↗</span></a>
+            <a class="button gold" href="talkthrus#start" (click)="selectRequest('free')" i18n>Get a free TalkThru of your listing ↗</a>
+            <a class="text-link" href="talkthrus#video" i18n>▶ Watch the video <span class="watch-duration">0:38</span></a>
           </div>
-          <p class="hero-note"><span aria-hidden="true">▥</span><span i18n>The technology brings it together.<br><strong>You make it personal.</strong></span></p>
+          <a class="text-link" [href]="exampleUrl" target="_blank" rel="noopener noreferrer" i18n>Experience a live TalkThru ↗</a>
+          <p class="hero-note" i18n><span aria-hidden="true">▥</span><span>The technology brings it together.<br>You make it personal.</span></p>
         </div>
         <div class="hero-visual">
-          <img class="hero-showcase" src="/assets/talkthrus/jennifer-jones-hero.png" alt="Jennifer Jones welcoming viewers in a TalkThru over a photo of a home" i18n-alt>
+          <div class="hero-showcase">
+            <p class="showcase-label" i18n>Their home. Your voice. The listing.</p>
+            <div class="showcase-scene">
+              <img class="scene-room" src="/assets/talkthrus/bayview-living-room.jpg" width="1024" height="1024" alt="Sunlit living room with a view of the water" i18n-alt fetchpriority="high">
+              <div class="phone">
+                <div class="phone-top"><strong i18n>Sunny Bayview Home</strong><span i18n>Room 1 of 14</span></div>
+                <div class="phone-story">
+                  <img src="/assets/talkthrus/bayview-living-room-detail.jpg" width="1024" height="1024" alt="">
+                  <div class="phone-content">
+                    <span class="agent-initials" aria-hidden="true">JJ</span>
+                    <p class="phone-eyebrow" i18n>A personal introduction</p>
+                    <p class="phone-heading" i18n>Welcome from Jennifer Jones</p>
+                    @if (previewLanguage() === 'en') {
+                      <p class="phone-quote" lang="en">“Hi, I'm Jennifer. Come on in — this is the room where this family spent every Sunday morning.”</p>
+                    } @else {
+                      <p class="phone-quote" lang="es">“Hola, soy Jennifer. Adelante — esta es la sala donde esta familia pasaba cada domingo por la mañana.”</p>
+                    }
+                    <div class="language-chips" role="group" aria-label="Example introduction language" i18n-aria-label>
+                      <button type="button" lang="en" [attr.aria-pressed]="previewLanguage() === 'en'" (click)="previewLanguage.set('en')">English</button>
+                      <button type="button" lang="es" [attr.aria-pressed]="previewLanguage() === 'es'" (click)="previewLanguage.set('es')">Español</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <p class="visual-footnote" i18n>Actual TalkThru interface · illustrative property imagery</p>
         </div>
       </div>
     </section>
 
-    <div class="benefit-strip" aria-label="TalkThru benefits" i18n-aria-label><span i18n>▧ &nbsp; Your listing photos</span><span i18n>♩ &nbsp; Your personal narration</span><span i18n>♧ &nbsp; A more human connection</span></div>
+    <div class="benefit-strip" aria-label="TalkThru benefits" i18n-aria-label>
+      <div class="wrap"><span i18n><span aria-hidden="true">▢</span> Their listing photos</span><span i18n><span aria-hidden="true">♩</span> Your personal narration</span><span i18n><span aria-hidden="true">⌂</span> A pitch no one else can bring</span></div>
+    </div>
 
-    <section class="introduction" id="video" aria-labelledby="video-title">
+    <section class="introduction section" id="video" aria-labelledby="video-title">
       <div class="wrap introduction-inner">
-        <div class="introduction-copy">
-          <p class="eyebrow green" i18n>Watch the introduction</p>
+        <div class="introduction-copy stack">
+          <p class="eyebrow" i18n>Watch the introduction</p>
           <h2 id="video-title" i18n>See what<br><em>your voice can do.</em></h2>
-          <p i18n>A quick introduction to more personal property listings. Your photos, your perspective, and a voice buyers can connect with.</p>
-          <a class="inline-link" [href]="exampleUrl" target="_blank" rel="noopener noreferrer" i18n>Explore a live TalkThru <span aria-hidden="true">↗</span></a>
+          <p i18n>A quick introduction to the moment that wins listings: the seller hears their own home, in your voice, before they sign with anyone.</p>
+          <a class="inline-link" [href]="exampleUrl" target="_blank" rel="noopener noreferrer" i18n>Explore a live TalkThru ↗</a>
         </div>
         <figure class="introduction-film">
-          <video controls playsinline preload="none" width="1080" height="1080"
-            poster="/assets/talkthrus/talkthrus-introduction-poster.jpg?v=margot-20261020"
-            src="/assets/talkthrus/talkthrus-introduction.mp4?v=margot-20261020"
-            aria-labelledby="video-title" aria-describedby="video-caption"
-            (error)="videoError.set(true)">
-            <p i18n>Your browser does not support video playback. Use the link below to open the video.</p>
-          </video>
-          @if (videoError()) {
-            <p class="video-error" role="alert" i18n>The video couldn’t load. Try opening it directly using the link below.</p>
+          @if (!videoStarted()) {
+            <div class="video-cover">
+              <div class="video-cover-copy">
+                <div class="video-brand"><img src="/assets/talkthrus/talkthrus-mark.png" width="34" height="34" alt=""><span>Talk<span>Thrus</span></span></div>
+                <p i18n>Their home.<br>Your voice.<br><span>A story that wins listings.</span></p>
+                <ul><li i18n>Their listing photos</li><li i18n>Your personal voice</li><li i18n>Your local expertise</li></ul>
+              </div>
+              <div class="video-cover-photo">
+                <img src="/assets/talkthrus/bayview-living-room-detail.jpg" alt="" width="1024" height="1024" loading="lazy">
+                <span class="video-tag" i18n>Intro video</span>
+                <button type="button" class="play-video" (click)="playIntroduction()" aria-label="Play the 38-second introduction" i18n-aria-label><span aria-hidden="true">▶</span></button>
+              </div>
+            </div>
+          } @else {
+            <video #introductionVideo controls playsinline preload="metadata" width="1080" height="1080"
+              poster="/assets/talkthrus/talkthrus-introduction-poster.jpg?v=margot-20261020"
+              src="/assets/talkthrus/talkthrus-introduction.mp4?v=margot-20261020"
+              aria-labelledby="video-title" aria-describedby="video-caption" (error)="videoError.set(true)">
+              <p i18n>Your browser does not support video playback. Use the link below to open the video.</p>
+            </video>
           }
-          <figcaption id="video-caption">
-            <span i18n>38-second introduction · English audio and captions</span>
-            <a href="/assets/talkthrus/talkthrus-introduction.mp4?v=margot-20261020" target="_blank" rel="noopener noreferrer" i18n>Open the video <span aria-hidden="true">↗</span></a>
-          </figcaption>
+          @if (videoError()) { <p class="form-error" role="alert" i18n>The video couldn’t load. Try opening it directly using the link below.</p> }
+          <figcaption id="video-caption"><span i18n>38-second introduction · English audio and captions</span><a href="/assets/talkthrus/talkthrus-introduction.mp4?v=margot-20261020" target="_blank" rel="noopener noreferrer" i18n>Open the video ↗</a></figcaption>
         </figure>
       </div>
     </section>
 
-    <section class="promise wrap" aria-labelledby="promise-title">
-      <p class="eyebrow green" i18n>The human advantage</p>
-      <h2 id="promise-title" i18n>Photos show the space.<br><em>You help buyers feel the possibility.</em></h2>
-      <div class="promise-copy"><p i18n>A photo can show a sunlit kitchen. You can explain why it’s your favorite place in the home. TalkThrus bring your perspective into the listing, so buyers discover more than a collection of rooms.</p><p i18n>In a market full of automated content, your experience, personality, and genuine enthusiasm give people something meaningful to connect with.</p></div>
+    <section class="promise section" aria-labelledby="promise-title">
+      <div class="wrap stack">
+        <p class="eyebrow" i18n>The human advantage</p>
+        <h2 id="promise-title" i18n>Photos show the space.<br><em>You help the seller feel the story.</em></h2>
+        <div class="promise-copy">
+          <p i18n>Every seller has already heard the same pitch: same photos, same AI-polished copy, same promises. When every agent sounds alike, they choose on commission. A photo can show a sunlit kitchen — you can explain why it's the heart of the home.</p>
+          <p i18n>In a market full of automated content, your experience, personality and genuine enthusiasm are the one thing nobody else can bring to the listing appointment. TalkThrus deliver the emotional details photos and videos just can't.</p>
+        </div>
+        <div class="story-callout"><p i18n>The other agents brought brochures.</p><p i18n>You brought their home's story — <em>in your own voice.</em></p></div>
+      </div>
     </section>
 
-    <section class="experience" id="experience" aria-labelledby="experience-title">
-      <div class="wrap">
-        <div class="section-heading"><div><p class="eyebrow green" i18n>Take a closer look</p><h2 id="experience-title" i18n>Meet the TalkThru.</h2></div><p i18n>A visual story guided by the person<br> who knows the property.</p></div>
-        <div class="preview-tabs" role="tablist" aria-label="TalkThru preview" i18n-aria-label>
+    <section class="experience section" id="experience" aria-labelledby="experience-title">
+      <div class="wrap stack">
+        <div class="section-heading"><div class="stack"><p class="eyebrow" i18n>Take a closer look</p><h2 id="experience-title" i18n>Meet the TalkThru.</h2></div><p i18n>A visual story guided by the person who knows the property — and the pitch that sets you apart.</p></div>
+        <div class="preview-tabs" role="tablist" aria-label="Parts of a TalkThru" i18n-aria-label>
           @for (preview of previews; track preview.label; let i = $index) {
-            <button type="button" role="tab" [attr.id]="'preview-tab-' + i" [attr.aria-selected]="selectedPreview() === i" [attr.aria-controls]="'preview-panel-' + i" [class.active]="selectedPreview() === i" (click)="selectedPreview.set(i)">{{ preview.label }}</button>
+            <button type="button" role="tab" [id]="'preview-tab-' + i" [attr.aria-selected]="selectedPreview() === i" [attr.aria-controls]="'preview-panel-' + i" [tabIndex]="selectedPreview() === i ? 0 : -1" (click)="selectedPreview.set(i)" (keydown)="onPreviewKey($event, i)">{{ preview.label }}</button>
           }
         </div>
         @for (preview of previews; track preview.label; let i = $index) {
-          @if (selectedPreview() === i) {
-            <div class="preview-panel" role="tabpanel" [attr.id]="'preview-panel-' + i" [attr.aria-labelledby]="'preview-tab-' + i">
-              <div class="preview-art"><img [src]="preview.image" [alt]="preview.alt"></div>
-              <div class="preview-copy"><p class="eyebrow green">{{ preview.step }}</p><h3>{{ preview.heading }}</h3><p>{{ preview.body }}</p><a class="inline-link" href="talkthrus#pricing" i18n>I’d like this for my listings <span aria-hidden="true">→</span></a><div class="preview-live"><strong i18n>See it. Hear it. Explore it.</strong><a [href]="exampleUrl" target="_blank" rel="noopener noreferrer" i18n>Open the live TalkThru ↗</a><small i18n>Opens the full experience on LivingWiki in a new tab.</small></div></div>
+          <div class="preview-panel" role="tabpanel" [id]="'preview-panel-' + i" [attr.aria-labelledby]="'preview-tab-' + i" [hidden]="selectedPreview() !== i" tabindex="0">
+            <div class="preview-art">
+              @if (i === 0) {
+                <img src="/assets/talkthrus/bayview-living-room.jpg" width="1024" height="1024" alt="Sunlit living room with a view of the water" i18n-alt loading="lazy">
+              } @else if (i === 1) {
+                <div class="agent-preview"><span class="agent-initials" aria-hidden="true">JJ</span><div><h3>Jennifer Jones</h3><p i18n>Listing agent</p><p i18n>Your headshot, contact details and brokerage</p></div></div>
+              } @else {
+                <div class="narration-preview"><img src="/assets/talkthrus/bayview-living-room-detail.jpg" width="1024" height="1024" alt="Second angle of the living room" i18n-alt loading="lazy"><p i18n>“See that light? It hits the sofa right around ten every morning. The sellers told me that's where they read the paper together for eleven years.”</p></div>
+              }
             </div>
-          }
+            <div class="preview-copy stack"><p class="eyebrow">{{ preview.step }}</p><h3>{{ preview.heading }}</h3><p>{{ preview.body }}</p><a class="inline-link" href="talkthrus#start" (click)="selectRequest('free')" i18n>I'd like this for my listings →</a></div>
+          </div>
         }
       </div>
     </section>
 
-    <section class="how wrap" id="how" aria-labelledby="how-title">
-      <div class="section-heading"><div><p class="eyebrow green" i18n>From listing to connection</p><h2 id="how-title" i18n>Your next listing.<br>Your next great story.</h2></div><p i18n>A simple flow that puts your<br> expertise at the heart of the experience.</p></div>
-      <div class="steps"><article><div class="step-top"><span>01</span><span aria-hidden="true">↗</span></div><h3 i18n>Start with your listing.</h3><p i18n>Bring in your property details and photos. Arrange them into a natural flow through the home.</p></article><article><div class="step-top"><span>02</span><span aria-hidden="true">♩</span></div><h3 i18n>Make it sound like you.</h3><p i18n>Add your voice and personal insights. Highlight the moments, features, and details you’d point out in person.</p></article><article><div class="step-top"><span>03</span><span aria-hidden="true">↗</span></div><h3 i18n>Invite buyers inside.</h3><p i18n>Share your TalkThru with prospective buyers and let your listing start a more personal conversation.</p></article></div>
+    <section class="how section" id="how" aria-labelledby="how-title">
+      <div class="wrap stack">
+        <div class="stack"><p class="eyebrow" i18n>From listing photos to a signed listing</p><h2 id="how-title" i18n>Your next appointment.<br><em>Your next great story.</em></h2></div>
+        <div class="steps">
+          <article class="stack"><span class="step-number">01</span><p class="eyebrow" i18n>Before the appointment</p><h3 i18n>Start with their home.</h3><p i18n>Upload walkthrough photos. We draft a room-by-room script; you add what only you noticed.</p></article>
+          <article class="stack"><span class="step-number">02</span><p class="eyebrow" i18n>At the kitchen table</p><h3 i18n>Press play.</h3><p i18n>The seller hears their home in your voice, the way buyers will. Then in Spanish.</p></article>
+          <article class="stack"><span class="step-number">03</span><p class="eyebrow" i18n>After you leave</p><h3 i18n>Leave the story behind.</h3><p i18n>Text them their private Story Page. They replay it with family tonight — with your name on it.</p></article>
+        </div>
+        <div class="time-cards">
+          <div><p i18n>3 min</p><span i18n>to set up your voice, once</span></div>
+          <div><p i18n>10–15 min</p><span i18n>to finish and polish a listing yourself</span></div>
+          <div><p i18n>0 min</p><span i18n>if we do it for you — send photos and a 2-minute voice memo</span></div>
+        </div>
+      </div>
     </section>
 
-    <section class="teams" id="teams" aria-labelledby="teams-title"><div class="wrap"><p class="eyebrow" i18n>For agents &amp; agencies</p><div class="teams-heading"><h2 id="teams-title" i18n>A stronger presence.<br><em>A personal voice.</em></h2><p i18n>Whether you’re building your own business or leading a team, let the people who know your listings best tell their stories.</p></div><div class="team-cards"><article><p class="eyebrow green" i18n>For the individual agent</p><h3 i18n>Make your expertise part of every listing.</h3><p i18n>Give buyers a sense of who you are and what you see in the property, before the first conversation.</p><a href="talkthrus#pricing" i18n>Get started as an agent <span aria-hidden="true">→</span></a></article><article><p class="eyebrow green" i18n>For the agency</p><h3 i18n>Bring out every agent’s individual strengths.</h3><p i18n>Introduce a more personal listing experience across your team while keeping each agent’s voice front and center.</p><a href="talkthrus#pricing" i18n>Explore TalkThrus for your team <span aria-hidden="true">→</span></a></article></div></div></section>
+    <section class="story-kit section" aria-labelledby="kit-title">
+      <div class="wrap stack">
+        <div class="stack"><p class="eyebrow" i18n>The Listing Story Kit</p><h2 id="kit-title" i18n>Walk in with a story.<br><em>Walk out with the listing.</em></h2></div>
+        <div class="kit-columns">
+          <div><p class="eyebrow" i18n>The core</p><ul class="core-features">
+            <li i18n><strong>Your Personal Voice</strong> — set up once in under 3 minutes</li>
+            <li i18n><strong>Photo-to-story builder</strong> — edit any line, drop any photo</li>
+            <li i18n><strong>Neighborhood cards</strong> from LivingWiki local guides</li>
+            <li i18n><strong>Video export</strong> for Reels, Instagram and YouTube</li>
+            <li i18n><strong>Listener analytics</strong> — see which rooms buyers replayed</li>
+          </ul></div>
+          <div class="bonuses"><p class="eyebrow" i18n>Plus five bonuses, included</p>
+            @for (bonus of bonuses; track bonus.title) {
+              <article class="bonus"><div><h3>{{ bonus.title }}</h3><p>{{ bonus.description }}</p></div><span>{{ bonus.value }}</span></article>
+            }
+            <div class="bonus-total"><strong i18n>Total bonus value</strong><p><s>$365</s> <em i18n>Included in every plan</em></p></div>
+          </div>
+        </div>
+        <div class="delivery-promise"><p class="hours" i18n>48<span> hrs</span></p><div class="stack"><h3 i18n>The 48-Hour Promise</h3><p i18n>Send photos and a 2-minute voice memo. Your finished TalkThru is back within 48 hours — <strong>or that listing is free.</strong></p></div></div>
+      </div>
+    </section>
 
-    <section class="pricing" id="pricing" aria-labelledby="pricing-title">
-      <div class="wrap">
+    <section class="teams section" id="teams" aria-labelledby="teams-title">
+      <div class="wrap stack">
+        <div class="stack"><p class="eyebrow" i18n>For agents &amp; agencies</p><h2 id="teams-title" i18n>A stronger pitch.<br><em>A personal voice.</em></h2></div>
+        <div class="team-cards">
+          <article class="stack"><p class="eyebrow" i18n>For the individual agent</p><h3 i18n>Win more of the appointments you walk into.</h3><p i18n>Give sellers a sense of who you are and how you'll present their home — before they sign with anyone else.</p><a class="inline-link" href="talkthrus#pricing" i18n>Get started as an agent →</a></article>
+          <article class="stack"><p class="eyebrow" i18n>For the agency</p><h3 i18n>A listing pitch no competitor can copy.</h3><p i18n>Roll out a personal listing experience across your team, with your brand on every TalkThru and each agent's own voice front and center.</p><a class="inline-link" href="talkthrus#pricing" i18n>Explore TalkThrus for your team →</a></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="pricing section" id="pricing" aria-labelledby="pricing-title">
+      <div class="wrap stack">
         <div class="pricing-heading">
-          <p class="eyebrow green" i18n>TalkThru plans</p>
-          <h2 id="pricing-title" i18n>Every listing deserves your voice.<br><em>Pricing that keeps it that way.</em></h2>
-          <p class="pricing-intro" i18n>Start with a listing you already know. Narrate as many as you like. Bring your whole team along for less per agent.</p>
-          <div class="pricing-badges">
-            <span class="pricing-badge" i18n><span aria-hidden="true">✦</span> Your first TalkThru is free, no card required</span>
-            <span class="pricing-badge gold" i18n><span aria-hidden="true">✦</span> First month free on every plan · cancel anytime</span>
-          </div>
-          <div class="cycle-toggle" role="radiogroup" aria-label="Billing period" i18n-aria-label>
-            <button type="button" role="radio" [attr.aria-checked]="cycle() === 'monthly'" [class.active]="cycle() === 'monthly'" (click)="cycle.set('monthly')" i18n>Monthly</button>
-            <button type="button" role="radio" [attr.aria-checked]="cycle() === 'annual'" [class.active]="cycle() === 'annual'" (click)="cycle.set('annual')"><span i18n>Annual</span> <small i18n>2 months free</small></button>
+          <div class="stack"><p class="eyebrow" i18n>TalkThru plans</p><h2 id="pricing-title" i18n>Every listing deserves your voice.<br><em>Pricing that keeps it that way.</em></h2><p class="pricing-badges" i18n>✦ Your first TalkThru is free, no card required &nbsp; ✦ First month free on every plan · cancel anytime</p></div>
+          <div class="cycle-toggle" role="group" aria-label="Billing period" i18n-aria-label>
+            <button type="button" [attr.aria-pressed]="cycle() === 'monthly'" (click)="cycle.set('monthly')" i18n>Monthly</button>
+            <button type="button" [attr.aria-pressed]="cycle() === 'annual'" (click)="cycle.set('annual')" i18n>Annual · 2 months free</button>
           </div>
         </div>
-
         <div class="plan-grid">
-          <article class="plan" aria-labelledby="plan-solo">
-            <p class="eyebrow green" id="plan-solo" i18n>Solo Agent</p>
-            <p class="plan-pitch" i18n>Put your voice on your next few listings and see how buyers respond.</p>
+          <article class="plan stack" aria-labelledby="plan-solo">
+            <p class="eyebrow" id="plan-solo" i18n>Solo Agent</p><p class="plan-pitch" i18n>Put your voice on your next few listing pitches.</p>
             <p class="plan-price"><strong>{{ planPrice('solo') }}</strong><span>{{ cycleSuffix() }}</span></p>
-            <p class="plan-unit" i18n>Per agent</p>
-            <p class="plan-trial" i18n>First month free · cancel anytime</p>
-            <ul class="plan-features">
-              <li i18n>Up to 10 active TalkThrus at a time</li>
-              <li i18n>Photo-to-story builder with your own Personal Voice narration</li>
-              <li i18n>Your headshot, contact card and branding on every TalkThru</li>
-              <li i18n>Share link and QR code for open houses and yard signs</li>
-              <li i18n>View counts for every TalkThru</li>
-              <li i18n>Standard setup support</li>
-            </ul>
-            <div class="plan-cta">
-              <button type="button" class="button dark" (click)="subscribe('solo')" [disabled]="!!ctaBusy()" i18n>Start free <span aria-hidden="true">→</span></button>
-              <p class="plan-card-note" i18n>$0 today · card required · cancel anytime</p>
-              <button type="button" class="plan-alt" (click)="tryFree()" [disabled]="!!ctaBusy()" i18n>Or make one TalkThru free, no card needed</button>
-            </div>
+            <ul><li i18n>Up to 10 active TalkThrus</li><li i18n>Your Personal Voice narration</li><li i18n>Headshot, contact card &amp; branding</li><li i18n>Share link + QR code</li><li i18n>View counts</li></ul>
+            <div class="plan-cta"><button type="button" class="button outlined" (click)="subscribe('solo')" [disabled]="!!ctaBusy()" i18n>Start free →</button><p i18n>$0 today · card required · cancel anytime</p><button type="button" class="plan-alt" (click)="tryFree()" [disabled]="!!ctaBusy()" i18n>Or make one TalkThru free, no card needed</button></div>
           </article>
-
-          <article class="plan featured" aria-labelledby="plan-pro">
-            <p class="eyebrow" id="plan-pro" i18n>Agent Pro</p>
-            <p class="plan-flag" i18n><span aria-hidden="true">★</span> Most popular</p>
-            <p class="plan-pitch" i18n>Every listing, every channel, and a clear view of what buyers lingered on.</p>
+          <article class="plan featured stack" aria-labelledby="plan-pro">
+            <div class="plan-label"><p class="eyebrow" id="plan-pro" i18n>Agent Pro</p><span class="plan-flag" i18n>★ Most popular</span></div><p class="plan-pitch" i18n>Every listing, every language, every channel.</p>
             <p class="plan-price"><strong>{{ planPrice('pro') }}</strong><span>{{ cycleSuffix() }}</span></p>
-            <p class="plan-unit" i18n>Per agent</p>
-            <p class="plan-trial" i18n>First month free · cancel anytime</p>
-            <ul class="plan-features">
-              <li i18n>Everything in Solo Agent</li>
-              <li i18n>Unlimited active TalkThrus</li>
-              <li i18n>Video export for Reels, Instagram and YouTube</li>
-              <li i18n>Multilingual TalkThrus: your narration in 30+ languages, still in your voice</li>
-              <li i18n>Advanced analytics</li>
-              <li i18n>Neighborhood cards from LivingWiki local guides</li>
-              <li i18n>Priority support</li>
-            </ul>
-            <div class="plan-cta">
-              <button type="button" class="button gold" (click)="subscribe('pro')" [disabled]="!!ctaBusy()" i18n>Bring your listings to life <span aria-hidden="true">→</span></button>
-              <p class="plan-card-note" i18n>$0 today · card required · cancel anytime</p>
-              <button type="button" class="plan-alt" (click)="tryFree()" [disabled]="!!ctaBusy()" i18n>Or make one TalkThru free, no card needed</button>
-            </div>
+            <ul><li i18n>Everything in Solo Agent</li><li i18n>Unlimited active TalkThrus</li><li i18n>30+ languages, in your voice</li><li i18n>Video export for Reels</li><li i18n>Advanced analytics</li><li i18n>Neighborhood cards</li></ul>
+            <div class="plan-cta"><button type="button" class="button dark" (click)="subscribe('pro')" [disabled]="!!ctaBusy()" i18n>Start free →</button><p i18n>$0 today · card required · cancel anytime</p><button type="button" class="plan-alt" (click)="tryFree()" [disabled]="!!ctaBusy()" i18n>Or make one TalkThru free, no card needed</button></div>
           </article>
-
-          <article class="plan" aria-labelledby="plan-team">
-            <p class="eyebrow green" id="plan-team" i18n>Agency &amp; Team</p>
-            <p class="plan-pitch" i18n>A personal listing experience across your team, with each agent’s voice front and center.</p>
+          <article class="plan done-for-you stack" aria-labelledby="plan-dfy">
+            <div class="plan-label"><p class="eyebrow" id="plan-dfy" i18n>Done For You</p><span class="plan-flag" i18n>48-hr promise</span></div><p class="plan-pitch" i18n>You send photos + a voice memo. We hand back a finished TalkThru.</p>
+            <p class="plan-price"><strong>$199</strong><span i18n>/listing</span></p>
+            <ul><li i18n>Script written from your voice memo</li><li i18n>English + Spanish versions</li><li i18n>Seller Story Page, ready to text</li><li i18n>Reel + yard-sign QR delivered</li><li i18n>Includes Agent Pro for that month</li></ul>
+            <div class="plan-cta"><a class="button gold" href="talkthrus#start" (click)="selectRequest('done_for_you')" i18n>Book my first listing ↗</a></div>
+          </article>
+          <article class="plan team-plan stack" aria-labelledby="plan-team">
+            <p class="eyebrow" id="plan-team" i18n>Agency &amp; Team</p><p class="plan-pitch" i18n>Every agent's own voice, one brand.</p>
             <p class="plan-price"><strong>{{ teamTiers().first }}</strong><span>{{ teamSuffix() }}</span></p>
-            <p class="plan-unit" i18n>Minimum 3 agents</p>
-            <p class="plan-trial" i18n>First month free · cancel anytime</p>
-            <div class="tier-grid" role="list" aria-label="Price per agent by team size" i18n-aria-label>
-              <div role="listitem"><small i18n>Agents 1–10</small><strong>{{ teamTiers().first }}</strong></div>
-              <div role="listitem"><small i18n>Agents 11–25</small><strong>{{ teamTiers().second }}</strong></div>
-              <div role="listitem"><small i18n>26+ agents</small><strong i18n>Let’s talk</strong></div>
-            </div>
-            <ul class="plan-features">
-              <li i18n>Everything in Agent Pro, for every agent</li>
-              <li i18n>Agency branding alongside each agent’s own voice</li>
-              <li i18n>Team dashboard and shared listing library</li>
-              <li i18n>Team-wide engagement reporting</li>
-              <li i18n>Live onboarding sessions for your agents</li>
-              <li i18n>Dedicated partner support</li>
-            </ul>
-            <div class="plan-cta">
-              <button type="button" class="button dark" (click)="startTeam()" [disabled]="!!ctaBusy()" i18n>Explore for your team <span aria-hidden="true">→</span></button>
-              <p class="plan-card-note" i18n>$0 today · card required · cancel anytime</p>
-              <a class="plan-alt" href="talkthrus#signup" i18n>26+ agents? Let’s talk</a>
-            </div>
+            <ul><li i18n>Everything in Agent Pro, for every agent</li><li i18n>Agency branding + team dashboard</li><li i18n>Team-wide engagement reporting</li><li i18n>Live onboarding sessions</li><li i18n>Min. 3 agents · {{ teamTiers().second }}{{ teamSuffix() }} from 11–25</li></ul>
+            <div class="plan-cta"><button type="button" class="button outlined" (click)="startTeam()" [disabled]="!!ctaBusy()" i18n>Explore for your team →</button></div>
           </article>
         </div>
-
-        @if (ctaError()) { <p class="pricing-error" role="alert">{{ ctaError() }}</p> }
-        <ul class="pricing-notes">
-          <li i18n><strong>Annual plans:</strong> 2 months free</li>
-          <li i18n><strong>Switch plans</strong> any time as your listings grow</li>
-          <li i18n><strong>Teams:</strong> every seat gets unlimited TalkThrus</li>
-        </ul>
+        @if (ctaError()) { <p class="form-error" role="alert">{{ ctaError() }}</p> }
+        <p class="pricing-notes" i18n>Every plan includes the five bonuses · Switch plans any time · 26+ agents? <a href="talkthrus#start" (click)="selectRequest('general', true)">Let's talk</a></p>
       </div>
     </section>
 
-    <section class="signup wrap" id="signup" aria-labelledby="signup-title">
-      <div class="signup-copy"><p class="eyebrow green" i18n>Let’s bring your listings to life</p><h2 id="signup-title" i18n>Your next listing<br>deserves <em>your voice.</em></h2><p i18n>Leading more than 25 agents, or have questions before you start? Tell us a little about yourself and we’ll reach out.</p><ul><li i18n>For independent agents and agency teams</li><li i18n>Start with a property you already know</li><li i18n>Your insights stay at the center</li></ul></div>
-      <div class="signup-card">
-        @if (submitted()) {
-          <div class="thank-you" role="status"><span aria-hidden="true">✓</span><h3 i18n>Thanks for your interest.</h3><p i18n>We’ve received your details and will follow up about your TalkThru.</p><a [href]="exampleUrl" target="_blank" rel="noopener noreferrer" i18n>Explore the example TalkThru ↗</a></div>
-        } @else {
-          <form (ngSubmit)="submit()" #signupForm="ngForm">
-            <h3 i18n>Let’s talk.</h3><p class="form-sub" i18n>A more personal listing experience starts here.</p>
-            <fieldset><legend i18n>I’m interested as</legend><div class="role-options"><label i18n><input type="radio" name="role" value="agent" [(ngModel)]="role"> An agent</label><label i18n><input type="radio" name="role" value="agency" [(ngModel)]="role"> An agency / team</label></div></fieldset>
-            <div class="form-grid"><label i18n>Your name<input required autocomplete="name" maxlength="120" placeholder="Full name" name="name" [(ngModel)]="name" i18n-placeholder></label><label i18n>Work email<input required type="email" autocomplete="email" maxlength="254" placeholder="you@agency.com" name="email" [(ngModel)]="email" i18n-placeholder></label></div>
-            <label i18n>Agency or brokerage<input required autocomplete="organization" maxlength="160" placeholder="Your agency name" name="agency" [(ngModel)]="agency" i18n-placeholder></label>
-            <label i18n>Listing link <span class="optional">(optional)</span><input type="url" maxlength="2000" placeholder="https://…" name="listing" [(ngModel)]="listing" i18n-placeholder></label>
-            <label class="honeypot" aria-hidden="true" i18n>Leave blank<input tabindex="-1" autocomplete="off" name="website" [(ngModel)]="website"></label>
-            <label class="consent" i18n><input type="checkbox" required name="consent" [(ngModel)]="consent"> I agree to be contacted by LivingWiki about TalkThrus and this request.</label>
-            @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
-            <button class="button dark submit" type="submit" [disabled]="!signupForm.valid || sending()">{{ sending() ? templateText.message1 : templateText.message2 }} <span aria-hidden="true">→</span></button>
-            <p class="form-note" i18n>We’ll use these details to respond to your interest. No payment is collected here.</p>
-          </form>
-        }
+    <section class="founding section" id="founding" aria-labelledby="founding-title">
+      <div class="wrap founding-inner">
+        <div class="stack"><p class="eyebrow" i18n><span class="eyebrow-line" aria-hidden="true"></span>Founding agents</p><h2 id="founding-title" i18n>25 seats per city.<br><em>Then the founding rate closes.</em></h2><p i18n>We're launching city by city and onboarding every founding agent personally. We can only do that well for 25 agents per market — that's the whole reason for the cap.</p><ul><li i18n>Your plan price locked for as long as you stay</li><li i18n>Your first Done For You listing free</li><li i18n>Personal onboarding + a direct line to the team</li></ul></div>
+        <div class="founding-card stack"><p class="eyebrow" i18n>Founding seats now open</p>
+          @for (cityName of foundingCities; track cityName) {
+            <div class="city-row"><span>{{ cityName }}</span><a href="talkthrus#start" (click)="selectRequest('founding', false, cityName)" i18n>25 founding seats ↗</a></div>
+          }
+          <a class="button dark" href="talkthrus#start" (click)="selectRequest('founding')" i18n>Claim my founding seat ↗</a>
+          <p class="waitlist-note" i18n>Not in these cities yet? <a href="talkthrus#start" (click)="selectRequest('waitlist')">Join the waitlist for yours.</a></p>
+        </div>
       </div>
+    </section>
+
+    <section class="signup section" id="start" aria-labelledby="signup-title">
+      <span id="signup" class="legacy-anchor" aria-hidden="true"></span>
+      <div class="wrap signup-inner">
+        <div class="signup-copy stack"><p class="eyebrow" i18n>Let's bring your listing to life</p><h2 id="signup-title" i18n>Your next listing appointment deserves <em>your voice.</em></h2><p i18n>Send us one listing — a current one, or the home you're pitching next. We'll build the TalkThru free, so you can hear exactly what your seller will hear.</p><ul><li i18n>For independent agents and agency teams</li><li i18n>Start with a property you already know</li><li i18n>Your insights stay at the center</li></ul></div>
+        <div class="signup-card">
+          @if (submitted()) {
+            <div class="thank-you" role="status" tabindex="-1" #thankYou><span aria-hidden="true">✓</span><h3 i18n>Thanks for your interest.</h3><p i18n>We’ve received your details and will follow up about your TalkThru.</p><a [href]="exampleUrl" target="_blank" rel="noopener noreferrer" i18n>Explore the example TalkThru ↗</a></div>
+          } @else {
+            <form (ngSubmit)="submit(signupForm)" #signupForm="ngForm" class="stack" [attr.aria-busy]="sending()">
+              <h3 i18n>Let's talk.</h3>
+              <fieldset><legend i18n>I'm interested as</legend><div class="role-options"><label><input type="radio" name="role" value="agent" [(ngModel)]="role"><span i18n>An agent</span></label><label><input type="radio" name="role" value="agency" [(ngModel)]="role"><span i18n>An agency / team</span></label></div></fieldset>
+              <label><span i18n>Your name</span><input required minlength="2" autocomplete="name" maxlength="120" name="name" [(ngModel)]="name"></label>
+              <label><span i18n>Work email</span><input required email type="email" autocomplete="email" maxlength="254" name="email" [(ngModel)]="email"></label>
+              <label><span i18n>Agency or brokerage</span><input required autocomplete="organization" maxlength="160" name="agency" [(ngModel)]="agency"></label>
+              <label><span i18n>Listing link (optional)</span><input type="url" pattern="https://[^\s]+" maxlength="2000" placeholder="https://" name="listing" [(ngModel)]="listing" aria-describedby="listing-hint"><small id="listing-hint" i18n>Use a link beginning with https://.</small></label>
+              <label><span i18n>I'm interested in</span><select name="requestType" [(ngModel)]="requestType"><option value="free" i18n>A free TalkThru of my listing</option><option value="done_for_you" i18n>Done For You · $199/listing</option><option value="founding" i18n>A founding-agent seat</option><option value="waitlist" i18n>The waitlist for my city</option><option value="general" i18n>A conversation with the team</option></select></label>
+              @if (requestType === 'founding' || requestType === 'waitlist') { <label><span i18n>Your city / market</span><input required maxlength="120" autocomplete="address-level2" name="city" [(ngModel)]="city"></label> }
+              <label class="honeypot" aria-hidden="true"><span i18n>Website</span><input tabindex="-1" autocomplete="off" name="website" [(ngModel)]="website"></label>
+              <label class="consent"><input required type="checkbox" name="consent" [(ngModel)]="consent"><span i18n>I agree to be contacted by LivingWiki about TalkThrus and this request.</span></label>
+              @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
+              <button class="button dark submit" type="submit" [disabled]="signupForm.invalid || sending()"><span>{{ sending() ? templateText.message1 : templateText.message2 }}</span><span aria-hidden="true">→</span></button>
+              <p class="form-note" i18n>We'll use these details to respond to your interest. No payment is collected here.</p>
+            </form>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="about section" id="about" aria-labelledby="about-title">
+      <div class="wrap about-inner"><div class="stack"><p class="eyebrow" i18n>About TalkThrus</p><h2 id="about-title" i18n>From Philadelphia <em>to Las Vegas.</em></h2></div><div class="stack"><p i18n>We’re a dynamic team of builders and creative thinkers working between Philadelphia and Las Vegas. We bring local perspective, curiosity, and a love of storytelling to everything we create.</p><p i18n>As part of LivingWiki, TalkThrus helps people bring places to life through their own voice and insights. We believe useful technology should make sharing what you know feel simple and personal.</p><p class="ai-credit" i18n>Built with human imagination. Powered by Gemini and GPT.</p></div></div>
     </section>
   </main>
-  <footer>
-    <section class="wrap footer-about" id="about" aria-labelledby="about-title">
-      <div>
-        <p class="eyebrow green" i18n>About TalkThrus</p>
-        <h2 id="about-title" i18n>From Philadelphia<br>to Las Vegas.</h2>
-      </div>
-      <div class="footer-about-copy">
-        <p i18n>We’re a dynamic team of builders and creative thinkers working between Philadelphia and Las Vegas. We bring local perspective, curiosity, and a love of storytelling to everything we create.</p>
-        <p i18n>As part of LivingWiki, TalkThrus helps people bring places to life through their own voice and insights. We believe useful technology should make sharing what you know feel simple and personal.</p>
-        <p class="footer-ai-credit" i18n>Built with human imagination. Powered by Gemini and GPT.</p>
-      </div>
-    </section>
-    <div class="wrap footer-inner">
-      <div class="brand-group">
-        <a class="livingwiki-brand" href="./"><img src="/assets/image/livingwiki-brand.svg" width="1289" height="249" alt="LivingWiki" loading="lazy"></a>
-        <span class="brand-divider" aria-hidden="true"></span>
-        <a class="product-brand" href="talkthrus#top" aria-label="LivingWiki TalkThrus home" i18n-aria-label>
-          <img src="/assets/talkthrus/talkthrus-mark-light.svg" width="64" height="64" alt="" loading="lazy">
-          <span class="product-wordmark">Talk<span>Thrus</span></span>
-        </a>
-      </div>
-      <p i18n>Real properties. Real perspectives. Your voice.</p>
-      <small i18n>© 2026 LivingWiki</small>
-    </div>
-  </footer>
+  <footer><div class="wrap footer-inner"><div class="brand-group"><a class="livingwiki-brand" href="./">LivingWiki</a><span class="brand-divider" aria-hidden="true"></span><a class="product-brand" href="talkthrus#top" aria-label="LivingWiki TalkThrus home" i18n-aria-label><img src="/assets/talkthrus/talkthrus-mark.png" width="26" height="26" alt="" loading="lazy"><span>Talk<span class="brand-gold">Thrus</span></span></a></div><p i18n>Their home. Your voice. A story that wins listings.</p><small i18n>© 2026 LivingWiki</small></div></footer>
 </div>

@@ -1,6 +1,6 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { Meta } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 import { httpsCallable } from 'firebase/functions';
 import { AuthService } from '../auth.service';
@@ -19,10 +19,20 @@ const createListingPath = '/boards?create=real-estate';
 
 const exampleUrl = 'https://www.livingwiki.com/boards/charming-beach-condo-wildwood-nj';
 
+export type TalkThruRequestType = 'free' | 'done_for_you' | 'founding' | 'waitlist' | 'general';
+
 const previews = [
-  { label: $localize`The property`, image: '/assets/talkthrus/property.png', alt: $localize`Beach Holiday Condo TalkThru listing example`, step: $localize`01 / SET THE SCENE`, heading: $localize`A home worth getting to know.`, body: $localize`Bring the listing together in a visual story that buyers can explore at their own pace.` },
-  { label: $localize`The agent`, image: '/assets/talkthrus/jennifer-jones-card.png', alt: $localize`Jennifer Jones personal welcome card for a Wildwood condominium`, step: $localize`02 / MAKE IT PERSONAL`, heading: $localize`Start with a familiar voice. Yours.`, body: $localize`Introduce yourself and welcome buyers into the property. Give them a person to connect with from the very beginning.` },
-  { label: $localize`The narration`, image: '/assets/talkthrus/voice.png', alt: $localize`TalkThru narration settings with style and length choices`, step: $localize`03 / TELL ITS STORY`, heading: $localize`Add the details only you can.`, body: $localize`Shape the narration around your insights, from the way a room feels to the features that deserve a closer look.` },
+  { label: $localize`The property`, step: $localize`01 / SET THE SCENE`, heading: $localize`A home worth getting to know.`, body: $localize`Their listing photos, arranged into a natural walk through the home that sellers and buyers explore at their own pace.` },
+  { label: $localize`The agent`, step: $localize`02 / PUT YOU IN THE ROOM`, heading: $localize`Your name on every room.`, body: $localize`Your headshot, contact card and branding travel with the story — so every replay, share and forward leads back to you.` },
+  { label: $localize`The narration`, step: $localize`03 / TELL IT LIKE YOU WOULD`, heading: $localize`The details only you know.`, body: $localize`In first person, in your own voice — and in Spanish or 30+ other languages when their buyers need it.` },
+] as const;
+
+const bonuses = [
+  { title: $localize`The Listing Appointment Closer`, description: $localize`Pitch slide + talk track built around their TalkThru.`, value: '$99' },
+  { title: $localize`The Seller Story Page`, description: $localize`A private page they replay and share with family.`, value: '$79' },
+  { title: $localize`Multilingual Pack`, description: $localize`Spanish and 30+ languages, still in your voice.`, value: '$99' },
+  { title: $localize`The Open House Magnet`, description: $localize`QR yard-sign riders and flyers — buyers hear you from the curb.`, value: '$49' },
+  { title: $localize`Just Listed / Just Sold Social Kit`, description: $localize`Ready-to-post templates from every TalkThru.`, value: '$39' },
 ] as const;
 
 @Component({
@@ -42,6 +52,49 @@ export class TalkThrusComponent {
   private readonly teams = inject(TeamsService);
   readonly exampleUrl = exampleUrl;
   readonly videoError = signal(false);
+  readonly videoStarted = signal(false);
+  readonly previewLanguage = signal<'en' | 'es'>('en');
+  readonly foundingCities = ['Miami', 'Austin', 'Charlotte'];
+  readonly bonuses = bonuses;
+  requestType: TalkThruRequestType = 'free';
+  city = '';
+
+  @ViewChild('introductionVideo')
+  set introductionVideo(ref: ElementRef<HTMLVideoElement> | undefined) {
+    // The video is created only after an explicit play action. Native controls
+    // remain available if the browser declines the initial playback request.
+    if (ref) void ref.nativeElement.play().catch(() => {});
+  }
+
+  @ViewChild('thankYou')
+  set thankYou(ref: ElementRef<HTMLElement> | undefined) {
+    ref?.nativeElement.focus();
+  }
+
+  playIntroduction(): void {
+    this.videoError.set(false);
+    this.videoStarted.set(true);
+  }
+
+  selectRequest(type: TalkThruRequestType, agency = false, city = ''): void {
+    this.requestType = type;
+    this.role = agency ? 'agency' : 'agent';
+    this.city = city;
+    this.submitted.set(false);
+    this.error.set('');
+    this.submissionId = null;
+  }
+
+  onPreviewKey(event: KeyboardEvent, index: number): void {
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? this.previews.length - 1
+      : event.key === 'ArrowRight' ? (index + 1) % this.previews.length
+      : event.key === 'ArrowLeft' ? (index + this.previews.length - 1) % this.previews.length : null;
+    if (next === null) return;
+    event.preventDefault();
+    this.selectedPreview.set(next);
+    const tabs = (event.currentTarget as HTMLElement).parentElement?.querySelectorAll<HTMLButtonElement>('[role=tab]');
+    tabs?.[next]?.focus();
+  }
   readonly cycle = signal<TalkThruBillingCycle>('monthly');
   readonly ctaBusy = signal('');
   readonly ctaError = signal('');
@@ -66,7 +119,7 @@ export class TalkThrusComponent {
   private submissionId: string | null = null;
 
   constructor() {
-    inject(Meta).updateTag({ name: 'description', content: $localize`Turn real estate listing photos into a personal, narrated TalkThru. Your voice, your insights, and a more human connection with buyers.` });
+    inject(Meta).updateTag({ name: 'description', content: $localize`Win your next listing with a TalkThru in your own voice. Get a free listing story, or let us build it for you with our 48-hour promise.` });
   }
 
   planPrice(plan: TalkThruIndividualPlanKey): string {
@@ -117,6 +170,8 @@ export class TalkThrusComponent {
         return;
       }
       await this.router.navigateByUrl(createListingPath);
+    } catch (error) {
+      this.ctaError.set(talkThruErrorMessage(error, $localize`Your TalkThru could not be started. Please try again.`));
     } finally {
       this.ctaBusy.set('');
     }
@@ -124,6 +179,7 @@ export class TalkThrusComponent {
 
   async startTeam(): Promise<void> {
     if (this.ctaBusy()) return;
+    this.ctaError.set('');
     this.ctaBusy.set('team');
     try {
       await this.auth.waitForReady();
@@ -137,19 +193,20 @@ export class TalkThrusComponent {
         return;
       }
       await this.router.navigateByUrl(this.teams.memberships().length ? '/teams' : '/teams/new');
+    } catch (error) {
+      this.ctaError.set(talkThruErrorMessage(error, $localize`Your team could not be opened. Please try again.`));
     } finally {
       this.ctaBusy.set('');
     }
   }
 
-  async submit(): Promise<void> {
-    if (this.sending()) return;
+  async submit(form: NgForm): Promise<void> {
+    if (this.sending() || form.invalid) return;
     this.error.set('');
     this.sending.set(true);
     try {
       this.submissionId ??= globalThis.crypto?.randomUUID?.() ?? null;
-      const submitInterest = httpsCallable(getFirebaseFunctions(), 'submitTalkThruInterest');
-      await submitInterest({
+      await this.sendInterest({
         submissionId: this.submissionId,
         role: this.role,
         name: this.name.trim(),
@@ -158,6 +215,8 @@ export class TalkThrusComponent {
         listing: this.listing.trim(),
         website: this.website,
         consent: this.consent,
+        requestType: this.requestType,
+        city: this.requestType === 'founding' || this.requestType === 'waitlist' ? this.city.trim() : '',
       });
       this.submitted.set(true);
     } catch {
@@ -165,5 +224,9 @@ export class TalkThrusComponent {
     } finally {
       this.sending.set(false);
     }
+  }
+
+  protected async sendInterest(input: Record<string, unknown>): Promise<void> {
+    await httpsCallable(getFirebaseFunctions(), 'submitTalkThruInterest')(input);
   }
 }

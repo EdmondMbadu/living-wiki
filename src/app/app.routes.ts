@@ -11,7 +11,7 @@ const loadWikiComponent = () => import('./wiki/wiki').then((m) => m.WikiComponen
 
 export const routes: Routes = [
   { path: 'talkthrus/billing', loadComponent: () => import('./talkthru-billing/talkthru-billing-page').then(m => m.TalkThruBillingPageComponent), canActivate: [authGuard], title: $localize`TalkThru plan | LivingWiki` },
-  { path: 'talkthrus', loadComponent: () => import('./talkthrus/talkthrus').then(m => m.TalkThrusComponent), title: $localize`LivingWiki TalkThrus | Your listings. Your voice.` },
+  { path: 'talkthrus', loadComponent: () => import('./talkthrus/talkthrus').then(m => m.TalkThrusComponent), title: $localize`LivingWiki TalkThrus | A story that wins listings.` },
   { path: 'off-grids/new', loadComponent: () => import('./off-grids/off-grid-editor').then(m => m.OffGridEditorComponent), canActivate: [authGuard], title: $localize`Mark a gem | LivingWiki` },
   { path: 'off-grids/:spotId/edit', loadComponent: () => import('./off-grids/off-grid-editor').then(m => m.OffGridEditorComponent), canActivate: [authGuard], title: $localize`Edit gem | LivingWiki` },
   { path: 'off-grids/:spotId', loadComponent: () => import('./off-grids/off-grid-detail').then(m => m.OffGridDetailComponent), title: $localize`Off Grids | LivingWiki` },
