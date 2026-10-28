@@ -1951,10 +1951,6 @@
     "source": "Tour complete",
     "file": "src/app/boards/listing-live-closing.html"
   },
-  "1561020215790201457": {
-    "source": "45-second introduction · English audio and captions",
-    "file": "src/app/talkthrus/talkthrus.html"
-  },
   "1562584780596394495": {
     "source": "Archived",
     "file": "src/app/admin-users/talkthru-interests-admin.html"
@@ -17283,10 +17279,6 @@
     "source": "Donald Trump: Policies & Impact",
     "file": "src/app/public-wiki-catalog.ts"
   },
-  "632062202019285622": {
-    "source": "Play the 45-second introduction",
-    "file": "src/app/talkthrus/talkthrus.html"
-  },
   "6320993347287256971": {
     "source": " Card count may change after analysis. Actual voice timing may vary. {$START_BLOCK_IF}{$START_TAG_SPAN}This longer narration may take more time to generate.{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
     "file": "src/app/boards/real-estate-wizard-source.html"
@@ -18150,6 +18142,10 @@
   "6578362371707420395": {
     "source": "Picamo saved this board, but the latest version could not be loaded. Refresh to try again.",
     "file": "src/app/boards/boards.ts"
+  },
+  "6579825943873076625": {
+    "source": "▶ Watch the video {$START_TAG_SPAN}0:47{$CLOSE_TAG_SPAN}",
+    "file": "src/app/talkthrus/talkthrus.html"
   },
   "657996528857278086": {
     "source": "Badge icons",
@@ -21591,10 +21587,6 @@
     "source": "No public boards found yet",
     "file": "src/app/boards/boards.ts"
   },
-  "7674618912050028460": {
-    "source": "▶ Watch the video {$START_TAG_SPAN}0:45{$CLOSE_TAG_SPAN}",
-    "file": "src/app/talkthrus/talkthrus.html"
-  },
   "7675333593483857317": {
     "source": " Explore guide {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
     "file": "src/app/business-detail/business-detail.html"
@@ -24275,6 +24267,10 @@
     "source": "Contact us",
     "file": "src/app/pricing/pricing.ts"
   },
+  "8527498357119672322": {
+    "source": "47-second introduction · English audio and captions",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
   "8527560239789567218": {
     "source": "Share the guide",
     "file": "src/app/business-detail/business-detail.html"
@@ -24949,6 +24945,10 @@
   },
   "8766711568761590629": {
     "source": "Every listing, every language, every channel.",
+    "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "8768382158258429103": {
+    "source": "Play the 47-second introduction",
     "file": "src/app/talkthrus/talkthrus.html"
   },
   "8771480923599835644": {
