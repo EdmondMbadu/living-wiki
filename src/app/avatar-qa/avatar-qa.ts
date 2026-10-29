@@ -23,8 +23,8 @@ export class AvatarQaComponent {
   private readonly auth = inject(AuthService);
   private readonly service = inject(AvatarQaService);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
-  private boardId = '';
-  private cardId = '';
+  protected boardId = '';
+  protected cardId = '';
   private epoch = 0;
   private loadSequence = 0;
   private questionSequence = 0;
@@ -116,7 +116,7 @@ export class AvatarQaComponent {
       if (this.timer) clearTimeout(this.timer);
       this.data.set(null); this.direct.set(null); this.error.set(''); this.questionError.set(''); this.notice.set('');
       this.starting.set(false); this.asking.set(false); this.assessing.set(false); this.exporting.set(false); this.cancelling.set(false);
-      this.boundaries.set(''); this.boundariesEdited = false; this.question.set(''); this.count.set(25); this.customCount.set(null);
+      this.boundaries.set(''); this.boundariesEdited = false; this.question.set((this.route.snapshot?.queryParamMap?.get('question') || '').slice(0, 1000)); this.count.set(25); this.customCount.set(null);
       this.showAll.set(false); this.historyOpen.set(false); this.filter.set('all'); this.search.set('');
       if (this.browser) void this.load(true); else this.loading.set(false);
     });

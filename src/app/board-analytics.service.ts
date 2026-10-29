@@ -29,6 +29,7 @@ export type BoardInsights = {
   range: { days: number; from: string; to: string };
   totals: {
     views: number;
+    conversations?: number;
     uniqueVisitors: number;
     engagedVisits: number;
     cardOpens: number;
@@ -43,6 +44,7 @@ export type BoardInsights = {
   daily: Array<{
     day: string;
     views: number;
+    conversations?: number;
     uniqueVisitors: number;
     engagedVisits: number;
     cardOpens: number;
@@ -58,6 +60,7 @@ export type BoardInsights = {
   campaigns: Array<{ campaign: string; views: number }>;
   cards: Array<{
     cardId: string;
+    conversations?: number;
     title: string;
     opens: number;
     outboundClicks: number;
@@ -66,6 +69,7 @@ export type BoardInsights = {
     talkingCardVoiceStarts?: number;
     talkingCardVoiceEnds?: number;
   }>;
+  trackingStartedAt?: string | null;
   lastUpdatedAt: string;
   definitions: { uniqueVisitors: string; engagedVisits: string };
 };
@@ -123,6 +127,11 @@ export function buildTrackedBoardUrl(
 export class BoardAnalyticsService {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly functions: Functions | null = this.isBrowser ? getFirebaseFunctions() : null;
+  private fallbackVisitorId = '';
+  visitorId(): string {
+    if (!this.isBrowser) return '';
+    return this.fallbackVisitorId ||= this.clientId('localStorage', 'lw_board_analytics_visitor');
+  }
   private current: BoardAnalyticsContext | null = null;
   private engagementTimer: ReturnType<typeof setTimeout> | null = null;
   private engagementRecorded = false;
@@ -149,7 +158,7 @@ export class BoardAnalyticsService {
     if (this.current?.boardId === input.boardId) return;
     this.stopBoardSession();
 
-    const visitorId = this.clientId('localStorage', 'lw_board_analytics_visitor');
+    const visitorId = this.visitorId();
     const sessionId = this.clientId('sessionStorage', 'lw_board_analytics_session');
     const query = new URL(window.location.href).searchParams;
     const requested = input.requestedRouteKey.trim().toLowerCase();

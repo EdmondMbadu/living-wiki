@@ -5,6 +5,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { db } from './firebase';
 import { isActiveTeamMember } from './teams';
 import { recordTeamActivity } from './team-analytics';
+import { flattenAnalyticsCards, trackingRef, uniqueAnalyticsVisitors, analyticsConversations } from './card-analytics';
 
 export const BOARD_ANALYTICS_SHARD_COUNT = 8;
 export const BOARD_ANALYTICS_EVENT_TYPES = [
@@ -182,6 +183,7 @@ export const recordBoardAnalyticsEvent = onCall(
     if (request.auth?.uid && request.auth.uid === board['owner_user_id']) {
       return { accepted: false, reason: 'owner' };
     }
+    if (request.auth?.uid && (await db.collection('users').doc(request.auth.uid).get()).data()?.['role'] === 'admin') return { accepted: false, reason: 'admin' };
     const teamId = typeof board['team_id'] === 'string' ? board['team_id'] : '';
     if (teamId && request.auth?.uid && await isActiveTeamMember(teamId, request.auth.uid)) return { accepted: false, reason: 'team_member' };
 
@@ -194,6 +196,15 @@ export const recordBoardAnalyticsEvent = onCall(
     const campaign = normalizeAnalyticsCampaign(request.data?.utmCampaign);
     const cardId = cleanText(request.data?.cardId, 180);
     const cardKey = cardId && RESOURCE_ID_PATTERN.test(cardId) ? cardId : '';
+    if (cardKey && !flattenAnalyticsCards(board['cards']).some(card => card.id === cardKey)) throw new HttpsError('invalid-argument', 'This card is not on this board.');
+    if (cardKey && request.auth?.uid) {
+      const avatarId = flattenAnalyticsCards(board['cards']).find(card => card.id === cardKey)?.conversation?.atlasId;
+      if (avatarId && RESOURCE_ID_PATTERN.test(String(avatarId))) {
+        const avatar = (await db.collection('atlases').doc(String(avatarId)).get()).data();
+        if (avatar && (avatar['user_id'] === request.auth.uid || avatar['admin_user_ids']?.includes(request.auth.uid))) return { accepted:false, reason:'avatar_admin' };
+      }
+    }
+    if ((type === 'card_open' || type === 'outbound_click' || type.startsWith('talking_card_')) && !cardKey) throw new HttpsError('invalid-argument', 'A card is required.');
     const counter = eventCounter(type);
     const eventReceiptId = sha256(`${boardId}:${eventId}`);
     const uniqueReceiptId = sha256(`${boardId}:${day}:${visitorId}`);
@@ -205,6 +216,10 @@ export const recordBoardAnalyticsEvent = onCall(
     const rateReference = db.collection('board_analytics_rate_limits').doc(rateId);
     const shardReference = db.collection('board_analytics_daily_shards').doc(`${boardId}__${day}__${shard}`);
     const now = Timestamp.now();
+    const ledger = trackingRef(boardId);
+    const visitorKey = sha256(visitorId);
+    const visitorRef = ledger.collection('visitors').doc(visitorKey);
+    const cardVisitorRef = cardKey ? ledger.collection('cards').doc(cardKey).collection('visitors').doc(visitorKey) : null;
 
     const transactionResult = await db.runTransaction(async (transaction) => {
       const receiptSnapshot = await transaction.get(receiptReference);
@@ -216,8 +231,14 @@ export const recordBoardAnalyticsEvent = onCall(
       ]);
       if (numeric(rateSnapshot.data()?.['count']) >= 500) return 'rate_limited';
 
+      const [ledgerSnapshot, visitorSnapshot, cardVisitorSnapshot] = await Promise.all([transaction.get(ledger), transaction.get(visitorRef), cardVisitorRef ? transaction.get(cardVisitorRef) : Promise.resolve(null)]);
       if (teamId) await recordTeamActivity(transaction, { teamId, boardId, visitorId, sessionId, type, day });
 
+      const oldestDay = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+      const visitorDays = (old: unknown) => [...new Set([...(Array.isArray(old) ? old.filter(d => typeof d === 'string' && d >= oldestDay) : []), day])];
+      if (!ledgerSnapshot.exists) transaction.create(ledger, { started_at: now });
+      transaction.set(visitorRef, { days: visitorDays(visitorSnapshot.data()?.['days']), last_day: day, expires_at: Timestamp.fromMillis(now.toMillis()+91*86400000) });
+      if (cardVisitorRef && cardVisitorSnapshot) transaction.set(cardVisitorRef, { days: visitorDays(cardVisitorSnapshot.data()?.['days']), last_day: day, expires_at: Timestamp.fromMillis(now.toMillis()+91*86400000) });
       transaction.set(rateReference, {
         board_id: boardId,
         day,
@@ -393,7 +414,13 @@ export const getBoardInsights = onCall(
       talkingCardVoiceStarts: 0,
       talkingCardVoiceEnds: 0,
     });
-    const boardCards = Array.isArray(board['cards']) ? board['cards'] as Array<Record<string, unknown>> : [];
+    const boardCards = flattenAnalyticsCards(board['cards'], true);
+    const [visitors, conversations, tracking] = await Promise.all([uniqueAnalyticsVisitors(boardId, dateKeys[0]), analyticsConversations(boardId, dateKeys[0]), trackingRef(boardId).get()]);
+    for (const conversation of conversations) visitors.add(String(conversation.data()['visitor_hash']));
+    totals.uniqueVisitors = visitors.size;
+    const conversationCounts = new Map<string, number>();
+    for (const doc of conversations) { const id = String(doc.data()['card_id']); conversationCounts.set(id, (conversationCounts.get(id) || 0) + 1); }
+    for (const card of boardCards) if (!cards.has(card.id)) cards.set(card.id, { opens: 0, outboundClicks: 0, talkingCardOpens: 0, talkingCardMessages: 0, talkingCardVoiceStarts: 0, talkingCardVoiceEnds: 0 });
     const cardTitles = new Map(boardCards.map((card) => [cleanText(card['id'], 180), cleanText(card['title'], 120)]));
 
     return {
@@ -404,7 +431,8 @@ export const getBoardInsights = onCall(
         visibility: board['visibility'] === 'unlisted' ? 'unlisted' : board['visibility'] === 'public' ? 'public' : 'private',
       },
       range: { days, from: dateKeys[0], to: dateKeys.at(-1) },
-      totals,
+      totals: { ...totals, conversations: conversations.length },
+      trackingStartedAt: tracking.data()?.['started_at']?.toDate().toISOString() || null,
       daily: [...daily.values()],
       sources: Object.entries(sources)
         .map(([source, views]) => ({ source, views }))
@@ -414,14 +442,14 @@ export const getBoardInsights = onCall(
         .sort((left, right) => right.views - left.views)
         .slice(0, 20),
       cards: [...cards.entries()]
-        .map(([cardId, activity]) => ({ cardId, title: cardTitles.get(cardId) || 'Board card', ...activity }))
+        .map(([cardId, activity]) => ({ cardId, title: cardTitles.get(cardId) || 'Removed card', conversations: conversationCounts.get(cardId) || 0, ...activity }))
         .sort((left, right) =>
           (right.outboundClicks + right.opens + right.talkingCardOpens + right.talkingCardMessages + right.talkingCardVoiceStarts)
           - (left.outboundClicks + left.opens + left.talkingCardOpens + left.talkingCardMessages + left.talkingCardVoiceStarts))
-        .slice(0, 50),
+        ,
       lastUpdatedAt,
       definitions: {
-        uniqueVisitors: 'Daily unique browsers summed across the selected period.',
+        uniqueVisitors: 'Distinct browsers across the selected period, since visitor tracking began. A browser may represent more than one person.',
         engagedVisits: 'Visits with at least ten seconds of attention or a board interaction.',
       },
     };

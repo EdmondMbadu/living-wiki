@@ -3,6 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import type { AtlasItem } from '../atlas.models';
 import { AtlasService } from '../atlas.service';
 import { AuthService } from '../auth.service';
+import { BoardAnalyticsService } from '../board-analytics.service';
+import { CardAnalyticsService } from '../card-analytics.service';
 import { ChatService } from '../chat.service';
 import {
   buildTalkingCardVoiceContext,
@@ -74,6 +76,8 @@ describe('TalkingCardConversationComponent', () => {
       imports: [TalkingCardConversationComponent],
       providers: [
         provideZonelessChangeDetection(),
+        { provide: BoardAnalyticsService, useValue: { visitorId: () => 'fixture_browser_12345678' } },
+        { provide: CardAnalyticsService, useValue: { endText: jasmine.createSpy('endText').and.resolveTo({ accepted: true }), syncVoice: jasmine.createSpy('syncVoice').and.resolveTo({ pending: true }) } },
         { provide: AtlasService, useValue: atlasService },
         { provide: AuthService, useValue: authService },
         { provide: ChatService, useValue: chatService },

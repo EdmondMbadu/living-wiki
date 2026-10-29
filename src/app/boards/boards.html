@@ -1666,6 +1666,9 @@
                   <span class="material-symbols-outlined" aria-hidden="true">ios_share</span>
                   <span i18n>Share</span>
                 </button>
+                @if (canEditBoard(board) || isPlatformAdmin()) {
+                  <button type="button" (click)="openBoardInsights(board, $event)"><span class="material-symbols-outlined" aria-hidden="true">monitoring</span><span i18n>Analytics</span></button>
+                }
                 @if (isLinkReadableVisibility(board.visibility) || canForkBoard(board) || canEditBoard(board) || canUseStackStudio(board) || (board.stackCtaLabel && stackCtaHref(board))) {
                   <details class="board-editorial-hero__more">
                     <summary>
@@ -1692,7 +1695,7 @@
                     @if (canEditBoard(board)) {
                       <button type="button" (click)="openBoardInsights(board, $event)">
                         <span class="material-symbols-outlined" aria-hidden="true">monitoring</span>
-                        <span i18n>View insights</span>
+                        <span i18n>Analytics</span>
                       </button>
                       <button type="button" (click)="openCustomUrlDialog(board, $event)">
                         <span class="material-symbols-outlined" aria-hidden="true">link</span>
@@ -3385,6 +3388,9 @@
                             <span class="material-symbols-outlined">qr_code_2</span>
                             <span i18n>Share card</span>
                           </button>
+                          @if (canEditBoard(cardHostBoard(board, card)) || canOpenAvatarQa(cardHostBoard(board, card), card)) {
+                            <button type="button" role="menuitem" [routerLink]="['/manage/boards', cardHostBoard(board, card).id, 'cards', card.id, 'analytics']" (click)="closeCardActionMenu()"><span class="material-symbols-outlined" aria-hidden="true">monitoring</span><span i18n>Analytics</span></button>
+                          }
                           @if (canEditBoard(cardHostBoard(board, card))) {
                           @if (exploredRelatedCardParent(); as relatedParent) {
                             @if (!isLegacyMemoryRelatedCard(card)) {

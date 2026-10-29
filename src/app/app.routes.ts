@@ -155,9 +155,19 @@ export const routes: Routes = [
     canDeactivate: [(component: { canLeave(): boolean }) => component.canLeave()],
   },
   {
+    path: 'manage/boards/:boardId/cards/:cardId/analytics',
+    loadComponent: () => import('./card-analytics/card-analytics').then((m) => m.CardAnalyticsComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'manage/boards/:boardId/insights',
+    redirectTo: 'manage/boards/:boardId/analytics',
+    pathMatch: 'full',
+  },
+  {
+    path: 'manage/boards/:boardId/analytics',
     loadComponent: () => import('./board-insights/board-insights').then((m) => m.BoardInsightsComponent),
-    title: $localize`Board Insights | LivingWiki`,
+    title: $localize`Board Analytics | LivingWiki`,
     canActivate: [authGuard],
   },
   {

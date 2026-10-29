@@ -258,7 +258,7 @@ export class BoardInsightsComponent {
       if (loadSequence !== this.loadSequence) return;
       this.insights.set(insights);
       if (!this.campaign()) this.campaign.set(`${insights.board.title} launch`);
-      this.title.setTitle(`${insights.board.title} Insights | LivingWiki`);
+      this.title.setTitle(`${insights.board.title} Analytics | LivingWiki`);
     } catch (error) {
       if (loadSequence !== this.loadSequence) return;
       this.insights.set(null);

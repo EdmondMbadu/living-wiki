@@ -119,6 +119,8 @@ export {
   setCustomPublicUrl,
 } from './custom-public-routes';
 export { getBoardInsights, recordBoardAnalyticsEvent } from './board-analytics';
+export { getCardAnalytics, getCardConversation, endCardTextAnalytics, syncCardVoiceAnalytics, recoverCardVoiceAnalytics } from './card-analytics';
+import { beginCardText, finishCardText, issueCardVoice } from './card-analytics';
 export { teamCommand, getPublicTeamPage, getTeamInvitationPreview } from './teams';
 export { kiwiPreferences, kiwiTalk, kiwiStageDescribeBoard, kiwiApply, kiwiReadback, kiwiSpeak, kiwiSpeakStream, kiwiVoiceSession } from './kiwi';
 export { sendTeamInvitationEmail, retryTeamInvitationEmails, syncTeamInvitationNotification, syncTeamInvitationAvailability } from './team-invitations';
@@ -16974,6 +16976,15 @@ export const createElevenLabsVoiceSession = onCall(
       throw new HttpsError('internal', 'ElevenLabs did not return a conversation credential.');
     }
     if (listingVoice) visitorId = await issueTeamVoiceSession(listingVoice, requestedTeamBoardId, agentId, visitorId);
+    else if (atlasRecord && atlasId && request.data?.boardId && request.data?.cardId) {
+      try {
+        const analyticsSession = await issueCardVoice(request, { ...atlasRecord, id: atlasId }, agentId);
+        if (analyticsSession) visitorId = analyticsSession;
+      } catch (error) {
+        if (error instanceof HttpsError) throw error;
+        logger.error('Voice analytics unavailable; continuing the visitor conversation', { error: String(error) });
+      }
+    }
 
     timings.totalMs = Date.now() - startedAt;
     logger.info('ElevenLabs voice session prepared.', {
@@ -22773,15 +22784,23 @@ export const askPublicAtlas = onCall(
       throw new HttpsError('failed-precondition', 'Atlas owners should use the workspace chat.');
     }
 
+    let analyticsContext: Awaited<ReturnType<typeof beginCardText>> = null;
+    try { analyticsContext = await beginCardText(request, atlas); }
+    catch (error) {
+      if (error instanceof HttpsError) throw error;
+      logger.error('Card analytics unavailable; continuing the visitor conversation', { error: String(error) });
+    }
     try {
-      return await runPublicAtlasQuery({
+      const result = await runPublicAtlasQuery({
         atlasId: atlas.id,
         atlasOwnerUserId: atlas.user_id,
         question,
         answerMode,
         topicIds,
-        threadId,
-        startNewThread,
+        threadId: analyticsContext ? analyticsContext.threadId : threadId,
+        startNewThread: analyticsContext ? !analyticsContext.threadId : startNewThread,
+        boardContext: request.data?.boardId && request.data?.cardId
+          ? { boardId: String(request.data.boardId), cardId: String(request.data.cardId) } : undefined,
         visitor: {
           kind: visitor.kind,
           visitorUserId: visitor.visitorUserId,
@@ -22790,7 +22809,10 @@ export const askPublicAtlas = onCall(
           visitorEmail: visitor.visitorEmail,
         },
       });
+      try { await finishCardText(analyticsContext, result); } catch (error) { logger.error('Card analytics write failed', { error: String(error) }); }
+      return result;
     } catch (error) {
+      try { await finishCardText(analyticsContext); } catch (analyticsError) { logger.error('Card analytics write failed', { error: String(analyticsError) }); }
       logger.error('askPublicAtlas failed', {
         atlasId,
         visitorKind: visitor.kind,

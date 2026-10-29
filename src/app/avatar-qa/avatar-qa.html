@@ -26,7 +26,7 @@
         @if (data(); as workspace) {
           <a class="qa-back" [routerLink]="boardPath()"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>Back to board</a>
           <section class="qa-heading">
-            <div><h1>Test your avatar</h1><p>See how your avatar handles difficult questions before visitors ask them.</p></div>
+            <div><a class="qa-back" [routerLink]="['/manage/boards', boardId, 'cards', cardId, 'analytics']">Card analytics →</a><h1>Test your avatar</h1><p>See how your avatar handles difficult questions before visitors ask them.</p></div>
             <div class="qa-avatar-context">
               <span class="qa-avatar" aria-hidden="true">@if (workspace.target.avatarImageUrl) { <img [src]="workspace.target.avatarImageUrl" alt="" (error)="$any($event.target).hidden = true" /> }{{ avatarInitial() }}</span>
               <div><strong>{{ workspace.target.avatarName }}</strong><small>This avatar only</small></div>

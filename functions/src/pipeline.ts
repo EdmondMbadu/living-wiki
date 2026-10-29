@@ -1719,6 +1719,7 @@ export async function runPublicAtlasQuery(params: {
   startNewThread?: boolean;
   anonymousQuestionLimit?: number | null;
   visitor: PublicChatVisitorContext;
+  boardContext?: { boardId: string; cardId: string };
   /** Server-only sandbox: same answer path, isolated history, no visitor records or analytics. */
   qaSandbox?: {
     history: Array<{ role: 'user' | 'assistant'; text: string }>;
@@ -1758,6 +1759,7 @@ export async function runPublicAtlasQuery(params: {
     atlasOwnerUserId: params.atlasOwnerUserId,
     threadId: params.threadId ?? null,
     startNewThread: params.startNewThread === true,
+    boardContext: params.boardContext,
     seedQuestion: trimmedQuestion,
     visitor: params.visitor,
   });
@@ -2572,6 +2574,7 @@ async function ensureActivePublicChatThread(params: {
   threadId: string | null;
   startNewThread?: boolean;
   seedQuestion: string;
+  boardContext?: { boardId: string; cardId: string };
   visitor: PublicChatVisitorContext;
 }): Promise<{ id: string; reusedExisting: boolean; questionCount: number }> {
   if (params.threadId) {
@@ -2581,7 +2584,8 @@ async function ensureActivePublicChatThread(params: {
       if (
         existing.atlas_id === params.atlasId &&
         existing.atlas_owner_user_id === params.atlasOwnerUserId &&
-        publicVisitorMatchesThread(existing, params.visitor)
+        publicVisitorMatchesThread(existing, params.visitor) &&
+        (!params.boardContext || ((existing as any).board_id === params.boardContext.boardId && (existing as any).card_id === params.boardContext.cardId))
       ) {
         return {
           id: params.threadId,
@@ -2592,7 +2596,7 @@ async function ensureActivePublicChatThread(params: {
     }
   }
 
-  if (params.startNewThread !== true) {
+  if (params.startNewThread !== true && !params.boardContext) {
     const currentThread = await loadPublicChatThreadForVisitor({
       atlasId: params.atlasId,
       visitor: params.visitor,
@@ -2615,6 +2619,7 @@ async function ensureActivePublicChatThread(params: {
     anonymous_visitor_id: params.visitor.anonymousVisitorId,
     visitor_display_name: params.visitor.visitorDisplayName,
     visitor_email: params.visitor.visitorEmail,
+    ...(params.boardContext ? { board_id: params.boardContext.boardId, card_id: params.boardContext.cardId } : {}),
     title: threadTitleFromQuestion(params.seedQuestion),
     created_at: FieldValue.serverTimestamp(),
     updated_at: FieldValue.serverTimestamp(),

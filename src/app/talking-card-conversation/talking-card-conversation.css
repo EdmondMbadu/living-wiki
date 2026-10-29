@@ -481,3 +481,5 @@
   .talking-chat__presence.is-connecting .talking-chat__presence-aura,
   .talking-chat__presence.is-connecting .talking-chat__presence-contour.is-outer { animation: none; }
 }
+
+.talking-chat__analytics-note{margin:0;padding:7px 20px;text-align:center;font-size:10px;line-height:1.5;color:var(--muted,#6b786e)}

@@ -539,6 +539,10 @@ export class ChatService {
     question: string,
     atlasId: string,
     options?: {
+      analyticsVisitorId?: string;
+      analyticsSessionId?: string;
+      analyticsRequestId?: string;
+      visitorQuestion?: string;
       boardId?: string | null;
       cardId?: string | null;
       threadId?: string | null;
@@ -560,6 +564,10 @@ export class ChatService {
         {
           question: string;
           atlasId: string;
+          analyticsVisitorId?: string;
+          analyticsSessionId?: string;
+          analyticsRequestId?: string;
+          visitorQuestion?: string;
           boardId?: string | null;
           cardId?: string | null;
           threadId?: string | null;
@@ -574,6 +582,10 @@ export class ChatService {
       const { data } = await askPublicAtlas({
         question,
         atlasId,
+        analyticsVisitorId: options?.analyticsVisitorId,
+        analyticsSessionId: options?.analyticsSessionId,
+        analyticsRequestId: options?.analyticsRequestId,
+        visitorQuestion: options?.visitorQuestion,
         boardId: options?.boardId ?? null,
         cardId: options?.cardId ?? null,
         threadId: options?.threadId ?? null,
@@ -622,6 +634,7 @@ export class ChatService {
   }
 
   async createElevenLabsVoiceSession(options: {
+    analyticsVisitorId?: string;
     experience?: 'talking-card';
     boardId?: string | null;
     cardId?: string | null;
@@ -641,6 +654,7 @@ export class ChatService {
 
     const createVoiceSession = httpsCallable<
       {
+        analyticsVisitorId?: string;
         experience?: 'talking-card';
         boardId?: string | null;
         cardId?: string | null;
@@ -658,6 +672,7 @@ export class ChatService {
     >(this.functions, 'createElevenLabsVoiceSession');
 
     const { data } = await createVoiceSession({
+      analyticsVisitorId: options.analyticsVisitorId,
       experience: options.experience,
       boardId: options.boardId ?? null,
       cardId: options.cardId ?? null,

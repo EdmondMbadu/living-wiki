@@ -2419,6 +2419,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Analytics identities and transcripts are served only by scoped, authorized callables.
+    match /board_tracking/{document=**} { allow read, write: if false; }
+    match /card_analytics_conversations/{document=**} { allow read, write: if false; }
+    match /card_analytics_questions/{document=**} { allow read, write: if false; }
+    match /card_analytics_voice_sessions/{document=**} { allow read, write: if false; }
     match /board_analytics_event_receipts/{documentId} {
       allow read, write: if false;
     }

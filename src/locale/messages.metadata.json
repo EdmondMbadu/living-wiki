@@ -107,6 +107,10 @@
     "source": "{$INTERPOLATION} cards have enough detail to generate questions.",
     "file": "src/app/boards/boards.html"
   },
+  "1032016653784127463": {
+    "source": "Newest first. Open a conversation to read its transcript.",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "1033599986930556880": {
     "source": "Up to 10 active TalkThrus",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -643,10 +647,6 @@
     "source": " Decline",
     "file": "src/app/teams/teams.html"
   },
-  "1196818261785130967": {
-    "source": "Board Insights | LivingWiki",
-    "file": "src/app/app.routes.ts"
-  },
   "1198549113650077336": {
     "source": "{$START_TAG_SPAN}verified_user{$CLOSE_TAG_SPAN} Full playback is handled by Spotify when supported by your browser. No LivingWiki connection needed. ",
     "file": "src/app/spotify-player/spotify-player.html"
@@ -802,6 +802,10 @@
   "125158739463376692": {
     "source": "Fresh narration could not be created.",
     "file": "src/app/boards/boards.ts"
+  },
+  "1253626514377470831": {
+    "source": "Visitors are anonymous browser counts. Detailed tracking starts with this release. Older transcripts and durations are not backfilled.",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "1253970445863215538": {
     "source": "Stop saved voice preview",
@@ -1110,6 +1114,10 @@
   "1343335633205401472": {
     "source": "Related Articles",
     "file": "src/app/wiki/wiki.html"
+  },
+  "1345940852027588834": {
+    "source": "Card performance",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "1346115540868064606": {
     "source": "Board performance summary",
@@ -1835,6 +1843,10 @@
     "source": "Choose a JPG, PNG, WebP or HEIC photo under 10 MB.",
     "file": "src/app/off-grids/off-grid-editor.ts"
   },
+  "1537634434910329209": {
+    "source": "{$INTERPOLATION} failed answers",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "1537930879075202732": {
     "source": "Picamo Knows",
     "file": "src/app/chat/chat.ts"
@@ -1938,6 +1950,10 @@
   "1556270137829928334": {
     "source": "Close menu",
     "file": "src/app/mobile-menu/mobile-menu.html"
+  },
+  "1558598788575670654": {
+    "source": "{$INTERPOLATION} text · {$INTERPOLATION_1} voice",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "1559314035690920091": {
     "source": "Connects Vapi voice calls to this Wiki's answer pipeline.",
@@ -2075,6 +2091,10 @@
     "source": "Neighborhood or address",
     "file": "src/app/business-claim/business-claim.html"
   },
+  "1590901017571120852": {
+    "source": "Conversations over time",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "1593548096714579742": {
     "source": "Edit team listing | LivingWiki",
     "file": "src/app/app.routes.ts"
@@ -2154,6 +2174,10 @@
   "1614114820020537854": {
     "source": "Close video",
     "file": "src/app/boards/boards.html"
+  },
+  "1616102757855967475": {
+    "source": "All",
+    "file": "src/app/card-analytics/card-analytics.ts"
   },
   "1617658171087305476": {
     "source": "Translating…",
@@ -2403,6 +2427,10 @@
     "source": "{$START_TAG_SPAN}storefront{$CLOSE_TAG_SPAN} Business ",
     "file": "src/app/public-wikis/public-wikis.html"
   },
+  "1713271461473302108": {
+    "source": "Mode",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "1717944657826721850": {
     "source": "Add seats in Billing",
     "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
@@ -2611,6 +2639,10 @@
     "source": "Make yourself available to buyers",
     "file": "src/app/boards/boards.html"
   },
+  "178739699302445032": {
+    "source": "Search first question or visitor",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "1787606642016505284": {
     "source": "{$START_TAG_SPAN}view_carousel{$CLOSE_TAG_SPAN} View university boards",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
@@ -2642,6 +2674,10 @@
   "1798373699506341277": {
     "source": "Personalized local answers for visitors, customers, and residents through LivingWiki.",
     "file": "src/app/business-detail/business-detail.html"
+  },
+  "1801222292062279264": {
+    "source": "Loading transcript…",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "1802420054244349827": {
     "source": "Generation engine",
@@ -2975,6 +3011,10 @@
     "source": "System Status: Optimal",
     "file": "src/app/landing/landing.html"
   },
+  "1916649087167619307": {
+    "source": "No conversations recorded yet",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "1916827325840744045": {
     "source": "The video could not be deleted.",
     "file": "src/app/video-library/video-library.ts"
@@ -3075,6 +3115,10 @@
     "source": "Copy public link",
     "file": "src/app/video-library/video-library.html"
   },
+  "194778486300166669": {
+    "source": "View card",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "1948669245132616622": {
     "source": "TEAM INVITATION",
     "file": "src/app/notifications/notifications.html"
@@ -3102,10 +3146,6 @@
   "1957471412588268025": {
     "source": "Refine each card to",
     "file": "src/app/boards/boards.html"
-  },
-  "1958501581161123646": {
-    "source": "Most active cards",
-    "file": "src/app/board-insights/board-insights.html"
   },
   "1958941022278691804": {
     "source": "Open board logo link",
@@ -3318,6 +3358,10 @@
   "2021756259208992603": {
     "source": " No metrics yet. Save city settings and refresh the snapshot. ",
     "file": "src/app/city-pulse-admin/city-pulse-admin.html"
+  },
+  "2021764825649992448": {
+    "source": "Tracking began {$INTERPOLATION}.",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "2022969013276110482": {
     "source": "Operational Flow",
@@ -3558,6 +3602,10 @@
   "2104044817012426487": {
     "source": "Warm storyteller",
     "file": "src/app/boards/boards.ts"
+  },
+  "2107380426080326188": {
+    "source": "Conversations",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "2107688472607679539": {
     "source": " {$INTERPOLATION} invited you as a {$INTERPOLATION_1}. ",
@@ -3806,6 +3854,10 @@
   "2189507244978938064": {
     "source": "ERROR",
     "file": "src/app/web-scraper/web-scraper.ts"
+  },
+  "2189591623539134890": {
+    "source": "Download transcript",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "2189658386781190180": {
     "source": "Download QR only",
@@ -4185,7 +4237,7 @@
   },
   "2317673285989169654": {
     "source": "Newest first",
-    "file": "src/app/video-library/video-library.html"
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "231860958035139417": {
     "source": "Opening this gem…",
@@ -4823,6 +4875,10 @@
     "source": "Delete permanently",
     "file": "src/app/admin-users/talkthru-interests-admin.html"
   },
+  "2509141182388535183": {
+    "source": "View",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "2509507091667851698": {
     "source": "Review invitation {$START_TAG_SPAN}→{$CLOSE_TAG_SPAN}",
     "file": "src/app/notifications/notifications.html"
@@ -4947,10 +5003,6 @@
     "source": "Fenceline sections",
     "file": "src/app/fence-line/fence-line.html"
   },
-  "2545220974971711861": {
-    "source": "{$INTERPOLATION}% click-through rate",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "2547019822509993435": {
     "source": "Top 500 podcasts mapped by genre, audience, ad rates, and influence — with the business model of podcasting analyzed through public data.",
     "file": "src/app/public-wiki-catalog.ts"
@@ -4966,6 +5018,10 @@
   "2554008766216746347": {
     "source": "Previews are temporary. Select one and save it to add the voice to this wiki.",
     "file": "src/app/atlas-persona/atlas-persona.html"
+  },
+  "2555504081689918106": {
+    "source": "Average conversation time",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "2555853257286023739": {
     "source": " Claim your business {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
@@ -5034,6 +5090,10 @@
   "2572120046524006698": {
     "source": "Could not join this plan. Please try again.",
     "file": "src/app/boards/boards.ts"
+  },
+  "2573891022199067172": {
+    "source": "{$INTERPOLATION}% of this card’s visitors",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "257538373054146352": {
     "source": "That’s right.",
@@ -5407,6 +5467,10 @@
     "source": "Visitor listing QR code",
     "file": "src/app/teams/teams.html"
   },
+  "2675547004900522005": {
+    "source": "Card activity summary",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "2677403608256780695": {
     "source": "Review gem",
     "file": "src/app/off-grids/off-grid-copy.ts"
@@ -5426,10 +5490,6 @@
   "2681539398262203355": {
     "source": "This voice will be saved to the new avatar and used in live conversations.",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
-  },
-  "2682038026495482460": {
-    "source": "Daily unique browsers",
-    "file": "src/app/board-insights/board-insights.html"
   },
   "268207037286012614": {
     "source": "{$INTERPOLATION} like{$INTERPOLATION_1}",
@@ -5835,6 +5895,10 @@
     "source": "Choose where you will share it",
     "file": "src/app/board-insights/board-insights.html"
   },
+  "2829531184795586554": {
+    "source": "Analytics unavailable",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "2834035040494576196": {
     "source": "At the kitchen table",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -5983,10 +6047,6 @@
     "source": "Select shown",
     "file": "src/app/board-collection-create/board-collection-create.html"
   },
-  "2874931037783334587": {
-    "source": "Insights unavailable",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "2880258575103791541": {
     "source": " /chat/{$INTERPOLATION} ",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -6021,7 +6081,7 @@
   },
   "2895747618881739814": {
     "source": "Visitor",
-    "file": "src/app/teams/teams.ts"
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "2897021350669857473": {
     "source": "Board hierarchy",
@@ -6170,10 +6230,6 @@
   "2943033819969004159": {
     "source": "Requested",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
-  },
-  "2943164010091035282": {
-    "source": "Loading board insights…",
-    "file": "src/app/board-insights/board-insights.html"
   },
   "2944449439955980766": {
     "source": "Email ",
@@ -6502,6 +6558,10 @@
   "3041458879885595840": {
     "source": "This is not a sale listing. Check the link or choose Rental TalkThru.",
     "file": "src/app/boards/boards.ts"
+  },
+  "3042538198246029973": {
+    "source": "{$INTERPOLATION} voice sessions awaiting provider verification. Completed conversations appear after processing; refresh to check.",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "3043241215169697558": {
     "source": "New tour stop preview",
@@ -6923,6 +6983,10 @@
     "source": "Your business claim draft is saved.",
     "file": "src/app/verify-email/verify-email.html"
   },
+  "3161761279555692477": {
+    "source": "Duration type",
+    "file": "src/app/card-analytics/card-analytics.ts"
+  },
   "3163044740176820503": {
     "source": "Get started",
     "file": "src/app/business/business.ts"
@@ -7049,7 +7113,7 @@
   },
   "3193976279273491157": {
     "source": "Actions",
-    "file": "src/app/talking-card-editor/talking-card-editor.html"
+    "file": "src/app/board-insights/board-insights.html"
   },
   "3195455883654835677": {
     "source": "Text messaging",
@@ -7210,6 +7274,10 @@
   "3247270478289751669": {
     "source": "{$START_TAG_SPAN}stop_circle{$CLOSE_TAG_SPAN} Cancel queued work ",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
+  "3247609170728399419": {
+    "source": "No conversations match these filters.",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "3249136606070563827": {
     "source": "Narration style",
@@ -7442,6 +7510,10 @@
   "3308689142362134793": {
     "source": "The Immigration & Border Policy Wiki",
     "file": "src/app/public-wiki-catalog.ts"
+  },
+  "331137627041830476": {
+    "source": "Sharing and campaign tools",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "3313186549244980624": {
     "source": " {$INTERPOLATION} cards · Created {$INTERPOLATION_1} ",
@@ -7755,6 +7827,10 @@
     "source": "Upload Markdown",
     "file": "src/app/atlas-persona/atlas-persona.html"
   },
+  "3396886503628656620": {
+    "source": "Close transcript",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "3397611686838872230": {
     "source": " Drop your documents and ask anything. LivingWiki reads, remembers, and answers with exact citations so you always know where the truth came from. ",
     "file": "src/app/marketing/marketing.html"
@@ -8026,6 +8102,10 @@
   "347527975201882092": {
     "source": "Filter representative",
     "file": "src/app/teams/teams.html"
+  },
+  "3476842083868084912": {
+    "source": "Open a card’s analytics for its visitors and conversations.",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "347766918215490011": {
     "source": "Generated card image preview",
@@ -8351,10 +8431,6 @@
     "source": "Meet Picamo™",
     "file": "src/app/kiwi/kiwi.ts"
   },
-  "3570806918561889447": {
-    "source": "Card activity",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "3573767755137279417": {
     "source": "Start voice mode in {language}",
     "file": "src/app/chat/chat.ts"
@@ -8402,6 +8478,10 @@
   "3580062820340952356": {
     "source": "Copy was blocked. Select the tracked URL and copy it manually.",
     "file": "src/app/board-insights/board-insights.ts"
+  },
+  "3580481128105203462": {
+    "source": "{$INTERPOLATION} opens · distinct browsers",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "3581633941182729086": {
     "source": "CDC PLACES + EJI",
@@ -9331,6 +9411,10 @@
     "source": "people were",
     "file": "src/app/boards/boards.ts"
   },
+  "3885497195825665706": {
+    "source": "Next",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "3886551008992120756": {
     "source": "This intro card is no longer available.",
     "file": "src/app/boards/boards.ts"
@@ -9742,6 +9826,10 @@
   "4006024859693716857": {
     "source": "{$price}/yr",
     "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
+  "4006744841157272529": {
+    "source": "Loading card analytics…",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "4013681269990540326": {
     "source": "Featured placement in a neighborhood guide",
@@ -10202,6 +10290,10 @@
   "4155395024816191514": {
     "source": "The Card Wizard could not prepare this related card.",
     "file": "src/app/boards/boards.ts"
+  },
+  "4156203964506154344": {
+    "source": "Visitors who chatted",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "4157232470683063712": {
     "source": "Click to chat",
@@ -10815,6 +10907,10 @@
     "source": "Close, easy, worthwhile",
     "file": "src/app/boards/boards.ts"
   },
+  "4332121300703711931": {
+    "source": "First question",
+    "file": "src/app/card-analytics/card-analytics.ts"
+  },
   "4337104782633377302": {
     "source": "Show photo ",
     "file": "src/app/boards/boards.ts"
@@ -10966,6 +11062,10 @@
   "4382580897390353403": {
     "source": "{$INTERPOLATION} skipped",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
+  "4382810201410532128": {
+    "source": "Analytics could not be loaded. Please try again.",
+    "file": "src/app/card-analytics/card-analytics.ts"
   },
   "4382896668786967342": {
     "source": "{$START_TAG_SPAN}restart_alt{$CLOSE_TAG_SPAN} Reset ",
@@ -11139,6 +11239,10 @@
     "source": "Chemical plants and incidents",
     "file": "src/app/fence-line/fence-line.ts"
   },
+  "4452427314943113135": {
+    "source": "Previous",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "44532857892216979": {
     "source": "Generate a different item for this position",
     "file": "src/app/boards/boards.html"
@@ -11179,6 +11283,10 @@
     "source": "Search loaded signups by name, email, agency, or notes...",
     "file": "src/app/admin-users/talkthru-interests-admin.html"
   },
+  "4466438366939136462": {
+    "source": "Dates use UTC. Unique visitors count browsers, not identified people. Conversation and visitor details begin with this release; older activity cannot be reconstructed.",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "4467323362722952678": {
     "source": "Unknown",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -11198,6 +11306,10 @@
   "4471242384722989552": {
     "source": "Generate a card picture",
     "file": "src/app/boards/boards.html"
+  },
+  "447237248906960932": {
+    "source": "Only this avatar’s administrators can read visitor transcripts.",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "4473257852654026111": {
     "source": "Read {name}’s complete take",
@@ -11554,6 +11666,10 @@
   "4567179193327756074": {
     "source": " {$INTERPOLATION} {$INTERPOLATION_1} source picture{$INTERPOLATION_2} found. ",
     "file": "src/app/boards/boards.html"
+  },
+  "4567602893820246854": {
+    "source": "Card visitors",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "4568293355349183679": {
     "source": "Select card",
@@ -12507,6 +12623,10 @@
     "source": "Total listings",
     "file": "src/app/teams/teams.html"
   },
+  "4853140945208037395": {
+    "source": "Test this question in QA →",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "4856267183472819161": {
     "source": " Watch on YouTube {$START_TAG_SPAN}open_in_new{$CLOSE_TAG_SPAN}",
     "file": "src/app/boards/boards.html"
@@ -12719,6 +12839,10 @@
     "source": "Revenue growth in Q3...",
     "file": "src/app/marketing/marketing.html"
   },
+  "4933712818423377138": {
+    "source": "{$INTERPOLATION} – {$INTERPOLATION_1} · UTC",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "493724287502794340": {
     "source": "Industry Atlas",
     "file": "src/app/public-wiki-catalog.ts"
@@ -12734,6 +12858,10 @@
   "4940907641547268065": {
     "source": "If an atlas owner marks an atlas as public, visitors may be able to browse the atlas landing page, source files, wiki, and other public surfaces without signing in.",
     "file": "src/app/legal/legal.ts"
+  },
+  "4941268406725140317": {
+    "source": "Conversations needing attention ({$INTERPOLATION})",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "4941506466459140494": {
     "source": "Failed to remove subscriber.",
@@ -12919,6 +13047,10 @@
     "source": "Expand official Spotify player",
     "file": "src/app/spotify-player/spotify-player.ts"
   },
+  "5002826943133563844": {
+    "source": "These conversations include a failed answer or an answer flagged as a knowledge gap by the app. This is not an automated safety assessment.",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "5006468790205631755": {
     "source": " Listings {$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}",
     "file": "src/app/teams/teams.html"
@@ -12955,6 +13087,10 @@
     "source": "Social Videos Shared",
     "file": "src/app/membership/membership.ts"
   },
+  "5012023302192197160": {
+    "source": "Voice recorded · text estimated",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "5013133429486114776": {
     "source": "Personal onboarding + a direct line to the team",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -12986,6 +13122,10 @@
   "5022311860835674535": {
     "source": "Beer",
     "file": "src/app/business/business.ts"
+  },
+  "5025060044421256043": {
+    "source": "Clicks to a destination",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "5026451956621817792": {
     "source": "Publishing…",
@@ -13359,6 +13499,10 @@
     "source": "Business page sections",
     "file": "src/app/business-detail/business-detail.html"
   },
+  "5146398958364876914": {
+    "source": "Sort",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "5146587659269752968": {
     "source": "{$START_TAG_SPAN}mic{$CLOSE_TAG_SPAN} My shared voice ",
     "file": "src/app/teams/teams.html"
@@ -13414,6 +13558,10 @@
   "5157604788236856693": {
     "source": "Continue to TalkThru setup",
     "file": "src/app/kiwi/kiwi.html"
+  },
+  "5158177792461436439": {
+    "source": "Export CSV",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "5158401516813764836": {
     "source": "Share a name, phone number, email, and optional organization.",
@@ -14291,6 +14439,10 @@
     "source": " No public wikis are available yet. ",
     "file": "src/app/marketing/marketing.html"
   },
+  "5441468077564828588": {
+    "source": "Most asked questions",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "5444466177162484286": {
     "source": "The quiet overlook",
     "file": "src/app/boards/boards.html"
@@ -14694,10 +14846,6 @@
   "5563503982884634556": {
     "source": "This board collection could not be found.",
     "file": "src/app/city-board-collection/city-board-collection.ts"
-  },
-  "5563699944749073926": {
-    "source": "Share and link-copy actions",
-    "file": "src/app/board-insights/board-insights.html"
   },
   "556540835757526483": {
     "source": "Uses an energetic, youthful point of view without forced slang.",
@@ -15387,10 +15535,6 @@
     "source": "{$START_TAG_SPAN}web_asset{$CLOSE_TAG_SPAN} Cover ",
     "file": "src/app/boards/boards.html"
   },
-  "5753329042813139773": {
-    "source": "Private author analytics",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "5756850866536450016": {
     "source": "Music connection",
     "file": "src/app/spotify-player/spotify-player.html"
@@ -15927,6 +16071,10 @@
     "source": "Loading gems",
     "file": "src/app/off-grids/off-grids.html"
   },
+  "5908172445684425546": {
+    "source": "(estimated)",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "5911629878274755333": {
     "source": "{$INTERPOLATION} sources",
     "file": "src/app/chat/chat.html"
@@ -16375,10 +16523,6 @@
     "source": "Recent Wikis",
     "file": "src/app/wiki-home/wiki-home.html"
   },
-  "6048525527642471640": {
-    "source": "{$INTERPOLATION} unique · {$INTERPOLATION_1} engaged",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "6048852053110701325": {
     "source": "Let request decide",
     "file": "src/app/boards/boards.html"
@@ -16711,6 +16855,14 @@
     "source": "Checkout was cancelled. Your draft is still here when you are ready.",
     "file": "src/app/business-claim/business-claim.ts"
   },
+  "6161819470037353490": {
+    "source": "Daily conversations",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
+  "6162693758764653365": {
+    "source": "Text",
+    "file": "src/app/card-analytics/card-analytics.ts"
+  },
   "6164965935859298270": {
     "source": " Agree & share voice ",
     "file": "src/app/teams/teams.html"
@@ -16923,6 +17075,10 @@
     "source": "Meet the team",
     "file": "src/app/teams/teams.ts"
   },
+  "6215927012769611230": {
+    "source": "Open conversation",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "6216101844109026134": {
     "source": "Edit Business | LivingWiki",
     "file": "src/app/app.routes.ts"
@@ -17014,6 +17170,10 @@
   "6234386085176180250": {
     "source": "Coordinates",
     "file": "src/app/dymaxion/dymaxion.html"
+  },
+  "6234985323744540610": {
+    "source": "Date range",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "6236647480500111471": {
     "source": "There is not enough conversation to create a recap yet.",
@@ -17307,6 +17467,10 @@
     "source": " You will receive weekly emails with information related to this LivingWiki. ",
     "file": "src/app/atlas-landing/atlas-landing.html"
   },
+  "6325348777379685488": {
+    "source": "No cards on this board yet.",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "6325350537285711422": {
     "source": "voices",
     "file": "src/app/boards/boards.ts"
@@ -17351,17 +17515,9 @@
     "source": "Saved",
     "file": "src/app/boards/boards.ts"
   },
-  "6335133676320774600": {
-    "source": "{$INTERPOLATION}% of views",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "6335170224171015933": {
     "source": "Create one institution or upload a federal-data CSV. Unit ID is the durable identity; batches run safely in groups of 250 and skip duplicates.",
     "file": "src/app/atlas-manage/atlas-manage.html"
-  },
-  "6335556699334401620": {
-    "source": "Shares",
-    "file": "src/app/board-insights/board-insights.html"
   },
   "6338658156206907238": {
     "source": " LW ",
@@ -17406,6 +17562,10 @@
   "6357285887711067123": {
     "source": "Finding articles on {$INTERPOLATION}...",
     "file": "src/app/web-scraper/web-scraper.html"
+  },
+  "6358738184054397541": {
+    "source": "Started (UTC)",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "6361948693237132762": {
     "source": "Knowledge",
@@ -17599,6 +17759,10 @@
     "source": "Email verified",
     "file": "src/app/profile/profile.html"
   },
+  "641279762639148665": {
+    "source": "One conversation starts with a visitor message. Dates use UTC.",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "6413775643517123892": {
     "source": "e.g. Real estate advisor",
     "file": "src/app/teams/teams.html"
@@ -17711,6 +17875,10 @@
     "source": "Your First 24 Hours in [City], Dealt as Cards",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
   },
+  "6447345334664456055": {
+    "source": "Loading board analytics…",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "6449242040584990151": {
     "source": "Choose from {$INTERPOLATION} voices",
     "file": "src/app/boards/boards.html"
@@ -17718,6 +17886,10 @@
   "6452353119568306344": {
     "source": "Run state",
     "file": "src/app/web-scraper/web-scraper.html"
+  },
+  "6453098595803131790": {
+    "source": "Page {$INTERPOLATION} of {$INTERPOLATION_1}",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "6454713588786517747": {
     "source": "More properties",
@@ -17786,6 +17958,10 @@
   "6480390330423300875": {
     "source": "View source",
     "file": "src/app/atlas-landing/atlas-landing.html"
+  },
+  "6480458594107706139": {
+    "source": "Estimated",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "6480514482875099731": {
     "source": "Author / account",
@@ -17899,9 +18075,17 @@
     "source": "Select a card type to continue.",
     "file": "src/app/boards/boards.html"
   },
+  "6515488098284528416": {
+    "source": "Content and conversation opens",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "6516285359606459572": {
     "source": "The Open Source Software Atlas",
     "file": "src/app/public-wiki-catalog.ts"
+  },
+  "6518583707310260062": {
+    "source": "No transcript is available for this conversation.",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "6518735976299478568": {
     "source": "Your private, reusable voice library · {$INTERPOLATION}",
@@ -17930,6 +18114,10 @@
   "6524202925316851488": {
     "source": "Public Wikis",
     "file": "src/app/business/business.html"
+  },
+  "6525109356951792180": {
+    "source": "Avatar",
+    "file": "src/app/card-analytics/card-analytics.ts"
   },
   "6526391118895675264": {
     "source": "{$START_BOLD_TEXT}{$INTERPOLATION}{$CLOSE_BOLD_TEXT} now",
@@ -18154,10 +18342,6 @@
   "6580280261265446633": {
     "source": "Storyteller",
     "file": "src/app/boards/board-narration-style.ts"
-  },
-  "6580282821981617214": {
-    "source": "Engaged visits",
-    "file": "src/app/board-insights/board-insights.html"
   },
   "6585005525824777845": {
     "source": "Greenline Coffee House",
@@ -18419,6 +18603,10 @@
     "source": "{$INTERPOLATION} verified cards · {$INTERPOLATION_1}",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
+  "6656543170619430570": {
+    "source": "Duration (seconds)",
+    "file": "src/app/card-analytics/card-analytics.ts"
+  },
   "6656694949959399435": {
     "source": "Board visibility",
     "file": "src/app/boards/boards.html"
@@ -18542,6 +18730,10 @@
   "6701320898374106914": {
     "source": "{count} stops",
     "file": "src/app/chat/chat.ts"
+  },
+  "6703675630443668722": {
+    "source": "Reading visitor activity and recorded conversations.",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "6703947649972852818": {
     "source": "Featured",
@@ -19183,6 +19375,10 @@
     "source": "Company or organization",
     "file": "src/app/boards/boards.html"
   },
+  "692344902106766219": {
+    "source": "Exact questions grouped without changing their wording. Text and verified voice conversations are included.",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "6924884775601601984": {
     "source": "Search songs...",
     "file": "src/app/boards/boards.html"
@@ -19242,10 +19438,6 @@
   "6941706625081649823": {
     "source": "Low income percentile",
     "file": "src/app/fence-line/fence-line.ts"
-  },
-  "6941720011944288538": {
-    "source": "View insights",
-    "file": "src/app/boards/boards.html"
   },
   "6943744947943845058": {
     "source": "Explore TalkThru {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
@@ -19627,6 +19819,10 @@
     "source": "~{$INTERPOLATION} words per stop",
     "file": "src/app/boards/boards.html"
   },
+  "7051329302849652522": {
+    "source": "Conversations may be reviewed by this avatar’s administrators.",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
   "7051535332948231705": {
     "source": " Refresh official city metrics, inspect the stored snapshot, and validate what the public landing page will render. ",
     "file": "src/app/city-pulse-admin/city-pulse-admin.html"
@@ -19738,6 +19934,10 @@
   "708478611039634042": {
     "source": "Guide and admin contact",
     "file": "src/app/business-detail/business-edit.html"
+  },
+  "7085679729777397411": {
+    "source": "Interrupted",
+    "file": "src/app/card-analytics/card-analytics.ts"
   },
   "7086927641932219828": {
     "source": "All eligible {$INTERPOLATION}",
@@ -20103,6 +20303,10 @@
     "source": " {$INTERPOLATION} estimated voice {$START_BLOCK_IF} · {$INTERPOLATION_1} missing {$CLOSE_BLOCK_IF}",
     "file": "src/app/boards/boards.html"
   },
+  "7203316191865273434": {
+    "source": "{$INTERPOLATION} engaged",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "7204676341315786201": {
     "source": "accept",
     "file": "src/app/boards/boards.ts"
@@ -20342,6 +20546,10 @@
   "7276980897773952881": {
     "source": "The card could not be added.",
     "file": "src/app/boards/boards.ts"
+  },
+  "7278130344649094651": {
+    "source": "Distinct browsers since tracking began",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "7279742675286490461": {
     "source": "Fuller story and flow",
@@ -20718,10 +20926,6 @@
   "7403581958322433123": {
     "source": "Optional. A secure HTTPS link will appear as “Schedule a showing.”",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
-  },
-  "7409057315504039559": {
-    "source": "Photos, videos, and deeper content",
-    "file": "src/app/board-insights/board-insights.html"
   },
   "740968178232344031": {
     "source": " boards",
@@ -21259,10 +21463,6 @@
     "source": "The video couldn’t load. Try opening it directly using the link below.",
     "file": "src/app/talkthrus/talkthrus.html"
   },
-  "7567952289321192271": {
-    "source": "Card opens and destination clicks will appear here.",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "7569129015837471165": {
     "source": "Deep dive",
     "file": "src/app/boards/board-narration-length.ts"
@@ -21318,6 +21518,10 @@
   "7590767207440303327": {
     "source": "shared struggles",
     "file": "src/app/fence-line/fence-line.html"
+  },
+  "7591167868841357385": {
+    "source": "Card analytics →",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "7593555694782789615": {
     "source": "Open",
@@ -21541,7 +21745,7 @@
   },
   "7658206762212562775": {
     "source": "Conversation mode",
-    "file": "src/app/kiwi/kiwi.html"
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "765824652595217279": {
     "source": "Use chat to find gaps, then add more sources when answers need better coverage.",
@@ -21911,6 +22115,10 @@
     "source": "City not found.",
     "file": "src/app/city-places/city-places.ts"
   },
+  "7776025084422518241": {
+    "source": "Private conversation",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "7776905796566999300": {
     "source": "Lead in drinking water",
     "file": "src/app/fence-line/fence-line.ts"
@@ -21961,7 +22169,7 @@
   },
   "7788789394151316565": {
     "source": "Oldest first",
-    "file": "src/app/video-library/video-library.html"
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "7793580788216466724": {
     "source": " Each Wiki is an isolated knowledge workspace. Wikis shared with you as an admin appear here alongside the ones you own. ",
@@ -21977,7 +22185,7 @@
   },
   "7799617835685078485": {
     "source": "Outbound clicks",
-    "file": "src/app/board-insights/board-insights.html"
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "7801066442268234034": {
     "source": "Study card",
@@ -22151,6 +22359,10 @@
     "source": "End voice",
     "file": "src/app/chat/chat.ts"
   },
+  "7861389751355579174": {
+    "source": "Analytics",
+    "file": "src/app/boards/boards.html"
+  },
   "7863557223969568039": {
     "source": " Missing covers ",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -22306,6 +22518,10 @@
   "7899350452655441577": {
     "source": "Everything in Agent Pro, for every agent",
     "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "7901133370737245516": {
+    "source": "Board analytics",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "7901425420980302199": {
     "source": " tone",
@@ -23145,7 +23361,7 @@
   },
   "8141032971342903723": {
     "source": "Private workspace",
-    "file": "src/app/teams/teams.ts"
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "8146960230716882663": {
     "source": "Built-in customer service in 60+ languages",
@@ -23331,6 +23547,10 @@
     "source": "Choose a PNG, WebP, or JPG logo.",
     "file": "src/app/boards/boards.ts"
   },
+  "8206006585684152373": {
+    "source": "{$INTERPOLATION} conversations match",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "8206948523239565162": {
     "source": "Welcome visitors in your own words",
     "file": "src/app/boards/boards.html"
@@ -23462,6 +23682,10 @@
   "8261679947507018262": {
     "source": "{$START_TAG_SPAN}check_circle{$CLOSE_TAG_SPAN}This address is available.",
     "file": "src/app/custom-public-url-dialog/custom-public-url-dialog.html"
+  },
+  "8261807674927574911": {
+    "source": "Avatar QA",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "8262093510871901269": {
     "source": "Let’s explore",
@@ -23891,6 +24115,10 @@
     "source": " Make this gem private ",
     "file": "src/app/off-grids/off-grid-detail.html"
   },
+  "8400021489912571161": {
+    "source": "Started with a visitor message",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "8400710475813576647": {
     "source": "Itineraries & Tours",
     "file": "src/app/membership/membership.ts"
@@ -24014,6 +24242,10 @@
   "843886505567724437": {
     "source": "Bulk city CSV",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "8439633349478107676": {
+    "source": "Private to authorized administrators. Conversations are retained for 90 days. Text duration estimates observed activity between messages, with idle gaps capped at one minute; voice duration is supplied by the provider.",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "8439955599488894226": {
     "source": "Privacy Policy",
@@ -24347,6 +24579,10 @@
     "source": "This badge links directly to the public business chat.",
     "file": "src/app/business-detail/business-edit.html"
   },
+  "854959281906555205": {
+    "source": "New visitor conversations on this card will appear here. Owner activity and QA tests are excluded.",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "8549753242044019923": {
     "source": "Conditions, therapies, medications, crisis resources, and the science of mental health — compiled from clinical literature for accessible understanding.",
     "file": "src/app/public-wiki-catalog.ts"
@@ -24418,6 +24654,10 @@
   "8572553133753753498": {
     "source": "Full video ready",
     "file": "src/app/boards/boards.ts"
+  },
+  "8579126774460469844": {
+    "source": "Load more messages",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "8581192205995435394": {
     "source": "Start with blank stories",
@@ -24506,6 +24746,10 @@
   "8611456471670320249": {
     "source": "Review status",
     "file": "src/app/admin-users/admin-users.html"
+  },
+  "8612068028739984710": {
+    "source": "Board Analytics | LivingWiki",
+    "file": "src/app/app.routes.ts"
   },
   "8612909747947713404": {
     "source": "Maximum 5 {$INTERPOLATION}",
@@ -26095,6 +26339,10 @@
     "source": "Graph",
     "file": "src/app/landing/landing.html"
   },
+  "907136822175606758": {
+    "source": "Questions",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "9072651888472173950": {
     "source": "Start directions with destination ",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.ts"
@@ -26146,6 +26394,10 @@
   "9092459562049603266": {
     "source": "{$START_TAG_SPAN}{$CLOSE_TAG_SPAN} City places ",
     "file": "src/app/city-places/city-places.html"
+  },
+  "9092538032487210833": {
+    "source": "Activity for this card only",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "9094663081716470240": {
     "source": "Failed to add admin.",
@@ -26270,6 +26522,10 @@
   "9139280231181462": {
     "source": "city",
     "file": "src/app/atlas-persona/atlas-persona.ts"
+  },
+  "9139374967581087946": {
+    "source": "Card analytics",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "9139929300053330470": {
     "source": "10 places to sit for hours, framed through observed behavior.",
@@ -26654,6 +26910,10 @@
   "960025547683389713": {
     "source": "The map is unavailable. You can still enter coordinates and open directions.",
     "file": "src/app/off-grids/off-grid-map.ts"
+  },
+  "96092498068066351": {
+    "source": "The avatar’s answer was not completed.",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "964020914369402704": {
     "source": "Network summary",

@@ -7905,7 +7905,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     event?.preventDefault();
     event?.stopPropagation();
     if (!this.canEditBoard(board) && !this.isPlatformAdmin()) return;
-    void this.router.navigate(['/manage/boards', board.id, 'insights']);
+    void this.router.navigate(['/manage/boards', board.id, 'analytics']);
   }
 
   closeCustomUrlDialog(): void {

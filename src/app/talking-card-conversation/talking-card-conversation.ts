@@ -4,6 +4,8 @@ import type { DisconnectionDetails } from '@elevenlabs/client';
 import { BackdropDismissDirective } from '../backdrop-dismiss.directive';
 import type { AtlasItem } from '../atlas.models';
 import { AtlasService } from '../atlas.service';
+import { BoardAnalyticsService } from '../board-analytics.service';
+import { CardAnalyticsService } from '../card-analytics.service';
 import { AuthService } from '../auth.service';
 import { ChatService, type VoiceSummaryTranscriptItem } from '../chat.service';
 import { VoiceFluidVisualComponent } from '../chat/voice-fluid-visual';
@@ -157,6 +159,11 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   private readonly chatService = inject(ChatService);
   private readonly authService = inject(AuthService);
   private voiceConversation: VoiceConversation | null = null;
+  private readonly trafficAnalytics = inject(BoardAnalyticsService);
+  private readonly cardAnalytics = inject(CardAnalyticsService);
+  private analyticsSessionId = '';
+  private lastTextActivityAt = 0;
+  private voiceAnalyticsSessionId = '';
   private threadId: string | null = null;
   private voiceMeterFrame: number | null = null;
   private voiceMeterLastSampleAt = 0;
@@ -264,6 +271,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.endTextAnalytics();
     this.destroyed = true;
     void this.endVoice();
   }
@@ -272,6 +280,11 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     const question = this.draft().trim();
     const atlas = this.atlas();
     if (!question || !atlas || this.submitting()) return;
+    if (!this.analyticsSessionId || Date.now() - this.lastTextActivityAt > 30 * 60_000) {
+      this.analyticsSessionId = crypto.randomUUID();
+      this.threadId = null;
+    }
+    this.lastTextActivityAt = Date.now();
     this.draft.set('');
     this.errorMessage.set(null);
     this.appendMessage('user', question, false, false);
@@ -281,6 +294,10 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       const response = this.atlasService.canAdminAtlas(atlas)
         ? await this.chatService.askScoped(contextualQuestion, atlas.id, this.threadId)
         : await this.chatService.askPublic(contextualQuestion, atlas.id, {
+            analyticsVisitorId: this.trafficAnalytics.visitorId(),
+            analyticsSessionId: this.analyticsSessionId,
+            analyticsRequestId: crypto.randomUUID(),
+            visitorQuestion: question,
             threadId: this.threadId,
             anonymousVisitorId: this.anonymousVisitorId(),
             answerMode: 'wiki',
@@ -290,6 +307,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       if (!response?.answer) {
         throw new Error(this.chatService.submitError() || 'The avatar could not answer right now.');
       }
+      this.lastTextActivityAt = Date.now();
       this.threadId = response.threadId ?? this.threadId;
       this.appendMessage('agent', response.answer, true, false);
       this.activity.emit('message');
@@ -365,6 +383,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       } as const;
       const [session, client] = await Promise.all([
         this.chatService.createElevenLabsVoiceSession({
+          analyticsVisitorId: this.trafficAnalytics.visitorId(),
           experience: 'talking-card',
           boardId: this.boardId(),
           cardId: this.cardId(),
@@ -379,6 +398,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
         import('@elevenlabs/client'),
       ]);
       if (!session) throw new Error('Voice service is unavailable.');
+      this.voiceAnalyticsSessionId = session.userId.startsWith('card_') ? session.userId : '';
       const connection = session.signedUrl
         ? { signedUrl: session.signedUrl, connectionType: 'websocket' as const }
         : session.conversationToken
@@ -421,6 +441,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
         onConnect: ({ conversationId }) => {
           if (attempt !== this.voiceAttempt || this.conversationMode() !== 'voice') return;
           this.voiceConversationId.set(conversationId || null);
+          this.syncVoiceAnalytics();
           this.voiceActivityActive = true;
           this.voiceStatus.set('connected');
           this.activity.emit('voice_start');
@@ -515,6 +536,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   async finishConversation(reason: ConversationCompletionReason = 'ended'): Promise<void> {
     if (this.conversationStage() !== 'conversation' || this.finishingConversation) return;
     this.finishingConversation = true;
+    this.endTextAnalytics();
     try {
       await this.endVoice();
       if (!this.offerRecap(reason) && !this.destroyed) {
@@ -632,7 +654,18 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     return true;
   }
 
+  private endTextAnalytics(): void {
+    if (this.analyticsSessionId && this.boardId() && this.cardId()) void this.cardAnalytics.endText(this.boardId(), this.cardId(), this.analyticsSessionId, this.anonymousVisitorId() || '').catch(() => undefined);
+  }
+
+  private syncVoiceAnalytics(): void {
+    const sessionId = this.voiceAnalyticsSessionId;
+    const conversationId = this.voiceConversationId();
+    if (sessionId && conversationId) void this.cardAnalytics.syncVoice(sessionId, conversationId, this.anonymousVisitorId() || '').catch(() => undefined);
+  }
+
   private emitVoiceEndIfActive(): void {
+    this.syncVoiceAnalytics();
     if (!this.voiceActivityActive) return;
     this.voiceActivityActive = false;
     this.activity.emit('voice_end');
