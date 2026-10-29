@@ -2847,6 +2847,10 @@
     "source": "Opening Spotify…",
     "file": "src/app/spotify-player/spotify-player.ts"
   },
+  "1860501119422454013": {
+    "source": "Owner and administrator activity, QA tests, and visits to analytics pages are excluded.",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "1863311581510100043": {
     "source": "from your saved threads.",
     "file": "src/app/chat/chat.ts"
@@ -9897,7 +9901,7 @@
   },
   "4036954840270412556": {
     "source": "Not recorded",
-    "file": "src/app/admin-users/admin-users.ts"
+    "file": "src/app/board-insights/board-insights.html"
   },
   "4038462564721961770": {
     "source": "Describe it did not produce usable cards. Please try again.",

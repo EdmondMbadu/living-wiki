@@ -24,6 +24,8 @@
 @media (prefers-reduced-motion: reduce) { .insights-spin { animation: none; }.insights-bar > span { transition: none; } }
 
 .insights-kpis { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.insights-heading > div:first-child { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; }
+.insights-heading > div:first-child > small { display: block; }
 .analytics-sharing { margin:24px 0; }.analytics-sharing>summary { cursor:pointer;font-weight:650;padding:16px 4px; }
 .analytics-sharing .insights-grid { grid-template-columns:1fr; }
 .analytics-cards { margin:24px 0; }.analytics-table-wrap{overflow:auto;position:relative} .analytics-cards table{width:100%;border-collapse:collapse;text-align:left;font-size:.88rem}.analytics-cards th,.analytics-cards td{padding:16px;border-bottom:1px solid var(--border-color,#e4e9e2)}.analytics-cards thead{color:#687469}.analytics-cards a{color:#3e7048;white-space:nowrap}.insights-notice{flex-wrap:wrap}

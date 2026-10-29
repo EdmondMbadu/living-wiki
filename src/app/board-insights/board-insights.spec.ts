@@ -31,6 +31,7 @@ describe('BoardInsightsComponent', () => {
     sources: [{ source: 'facebook', views: 80 }, { source: 'direct', views: 40 }],
     campaigns: [{ campaign: 'cape-may-group', views: 70 }],
     cards: [{ cardId: 'card-1', title: 'Sunset Beach', opens: 20, outboundClicks: 8 }],
+    trackingStartedAt: '2026-07-20T00:00:00.000Z',
     lastUpdatedAt: '2026-08-19T18:00:00.000Z',
     definitions: {
       uniqueVisitors: 'Daily unique browsers summed across the selected period.',
@@ -50,6 +51,7 @@ describe('BoardInsightsComponent', () => {
 
   beforeEach(async () => {
     analytics.getInsights.calls.reset();
+    analytics.getInsights.and.resolveTo(report);
     await TestBed.configureTestingModule({
       imports: [BoardInsightsComponent],
       providers: [
@@ -97,4 +99,16 @@ describe('BoardInsightsComponent', () => {
     expect(fixture.componentInstance.trackedUrl()).toContain('utm_medium=newsletter');
     expect(fixture.nativeElement.textContent).toContain('Campaigns and personal email');
   });
+  it('distinguishes unavailable historical visitor counts from zero visitors', async () => {
+    analytics.getInsights.and.resolveTo({ ...report, trackingStartedAt: null, totals: { ...report.totals, uniqueVisitors: 0 } });
+    const fixture = TestBed.createComponent(BoardInsightsComponent);
+    fixture.detectChanges();
+    await fixture.componentInstance['load']();
+    fixture.detectChanges();
+    const visitorMetric = fixture.nativeElement.querySelectorAll('.insights-kpis article')[1];
+    expect(visitorMetric.textContent).toContain('Not recorded');
+    expect(visitorMetric.querySelector('strong').textContent.trim()).not.toBe('0');
+    fixture.destroy();
+  });
+
 });

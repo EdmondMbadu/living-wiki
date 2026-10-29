@@ -6,3 +6,5 @@
 @media(prefers-reduced-motion:reduce){.spin{animation:none}}
 
 .popular-question{display:flex;justify-content:space-between;gap:20px;padding:14px 0;border-top:1px solid var(--line);font-size:13px}.popular-question span{overflow-wrap:anywhere}
+
+.analytics-note .analytics-exclusions{flex-basis:100%}
