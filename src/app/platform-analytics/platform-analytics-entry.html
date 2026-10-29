@@ -1,0 +1,28 @@
+<section class="platform-entry">
+  <div class="entry-copy">
+    <a routerLink="/admin/analytics"><strong i18n>Platform analytics</strong></a>
+    <p i18n>Across all users and teams · Current totals</p>
+  </div>
+  @if (inventory(); as totals) {
+    <div class="entry-stats">
+      <a routerLink="/admin/analytics" [queryParams]="{ view: 'boards' }"
+        ><small i18n>Boards</small><b>{{ totals.boards | number }}</b></a
+      ><span
+        ><small i18n>Total cards</small><b>{{ totals.cards | number }}</b></span
+      ><a routerLink="/admin/analytics" [queryParams]="{ view: 'cards' }"
+        ><small i18n>Talking cards</small><b>{{ totals.talkingCards | number }}</b></a
+      >
+    </div>
+  } @else {
+    <p class="entry-status" role="status">
+      @if (error()) {
+        <span i18n>Inventory unavailable. Open analytics to retry.</span>
+      } @else {
+        <span i18n>Preparing accurate totals…</span>
+      }
+    </p>
+  }
+  <a class="entry-open" routerLink="/admin/analytics"
+    ><span i18n>Open analytics</span><span aria-hidden="true">→</span></a
+  >
+</section>

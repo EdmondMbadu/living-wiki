@@ -11,6 +11,10 @@
     "source": "cities",
     "file": "src/app/public-wikis/public-wikis.ts"
   },
+  "1006647870236065400": {
+    "source": "Loading platform analytics…",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "1006894004797771010": {
     "source": "Private & unlisted",
     "file": "src/app/boards/boards.html"
@@ -130,6 +134,10 @@
   "1039414121458988593": {
     "source": "Backfill missing",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "1041790190218101600": {
+    "source": "{$INTERPOLATION} records checked",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "1041798048590896776": {
     "source": "One visit per listing, browser session, and UTC day. Signed-in team members are excluded.",
@@ -258,6 +266,10 @@
   "1081701854449045573": {
     "source": "Voice: ",
     "file": "src/app/kiwi/kiwi.ts"
+  },
+  "1082991689097946513": {
+    "source": "Visitor and owner/admin sessions included. Automated QA stays separate.",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "1083872236788160262": {
     "source": "Set up intro card",
@@ -586,6 +598,10 @@
   "1177294727529714800": {
     "source": "View Wiki",
     "file": "src/app/profile/profile.html"
+  },
+  "117807439786033695": {
+    "source": "voice sessions pending now",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "1181444623588245539": {
     "source": "Connections to nearby places, guides, and events",
@@ -1539,6 +1555,10 @@
     "source": "Replace picture",
     "file": "src/app/boards/boards.html"
   },
+  "1464072562214937907": {
+    "source": "Year",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
+  },
   "1464356151059047889": {
     "source": "Regenerated draft",
     "file": "src/app/boards/boards.ts"
@@ -2235,6 +2255,10 @@
     "source": "https://sponsor.com",
     "file": "src/app/boards/boards.html"
   },
+  "1640609344969975994": {
+    "source": "To",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "1643898480790022851": {
     "source": "Turn listing photos into a narrated TalkThru in your own voice. Walk into your next listing appointment, press play, and let the seller hear their home the way buyers will — introduced by you.",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -2318,6 +2342,10 @@
   "167406533841467180": {
     "source": "Resolved from the map location",
     "file": "src/app/boards/boards.html"
+  },
+  "1674506362340484717": {
+    "source": "From (UTC)",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
   },
   "167558248608399494": {
     "source": "Neighborhood map placement",
@@ -3215,6 +3243,10 @@
     "source": "Close custom URL dialog",
     "file": "src/app/custom-public-url-dialog/custom-public-url-dialog.html"
   },
+  "1981077127929312279": {
+    "source": "Voice minutes over time",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "1982430449724722716": {
     "source": "Enter a valid business email address, or leave it blank to remove it.",
     "file": "src/app/teams/teams.ts"
@@ -3511,6 +3543,10 @@
     "source": "Create a real estate TalkThru. Everyone on the team can help refine its cards before it goes public.",
     "file": "src/app/teams/teams.ts"
   },
+  "2063625011080974036": {
+    "source": "By owner",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
+  },
   "2064480782922116750": {
     "source": "See what{$LINE_BREAK}{$START_EMPHASISED_TEXT}your voice can do.{$CLOSE_EMPHASISED_TEXT}",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -3606,6 +3642,10 @@
   "2107688472607679539": {
     "source": " {$INTERPOLATION} invited you as a {$INTERPOLATION_1}. ",
     "file": "src/app/notifications/notifications.html"
+  },
+  "2109611613428272590": {
+    "source": "Platform analytics",
+    "file": "src/app/account-menu/account-menu.html"
   },
   "2110094468894570961": {
     "source": "LivingWiki for business",
@@ -3710,6 +3750,10 @@
   "2142062721718317578": {
     "source": "Add friend",
     "file": "src/app/public-wikis/public-wikis.ts"
+  },
+  "2145513371956656384": {
+    "source": "Analytics →",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "2146066249625556606": {
     "source": "Fix the issue below and try another source.",
@@ -5543,6 +5587,10 @@
     "source": "adding the card",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
+  "270722029860633445": {
+    "source": "{$INTERPOLATION} records",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "2707588703742240661": {
     "source": "A private page they replay and share with family.",
     "file": "src/app/talkthrus/talkthrus.ts"
@@ -5678,6 +5726,10 @@
   "2749831668506858361": {
     "source": "Multilingual Pack",
     "file": "src/app/talkthrus/talkthrus.ts"
+  },
+  "2749966111337931624": {
+    "source": "Across all users and teams",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "2751945587032314141": {
     "source": "Describe the card",
@@ -6241,7 +6293,7 @@
   },
   "2949150997160654358": {
     "source": "Last 30 days",
-    "file": "src/app/teams/teams.html"
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "2949760583069906671": {
     "source": "Search knowledge base...",
@@ -6723,6 +6775,10 @@
     "source": "Delete song confirmation",
     "file": "src/app/boards/boards.ts"
   },
+  "3090044831643242355": {
+    "source": " Reading existing boards and recorded activity. This continues in the background. ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "3091830411634291163": {
     "source": "The Listing Appointment Closer",
     "file": "src/app/talkthrus/talkthrus.ts"
@@ -6966,6 +7022,10 @@
   "3155615140885816438": {
     "source": "Back to boards profile",
     "file": "src/app/city-board-collection/city-board-collection.ts"
+  },
+  "3157202012046945426": {
+    "source": "Activity breakdown",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "3158053523780209538": {
     "source": "Be the first on the leaderboard",
@@ -7287,6 +7347,14 @@
     "source": "Narration style",
     "file": "src/app/boards/boards.html"
   },
+  "3249405667632600635": {
+    "source": "Custom dates",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
+  "3251407689667930109": {
+    "source": "Platform analytics could not be loaded.",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
+  },
   "3251416375500340583": {
     "source": "No messages in this shared chat",
     "file": "src/app/shared-chat/shared-chat.html"
@@ -7559,6 +7627,10 @@
     "source": "10 Late-Night Runs That Explain [School]",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
   },
+  "3326244831004056253": {
+    "source": "Voice seconds",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
+  },
   "3327660782257633619": {
     "source": "Search Apple Music",
     "file": "src/app/boards/boards.html"
@@ -7730,6 +7802,10 @@
   "3370968761476099799": {
     "source": "Anyone with the source board link can view. Hidden from public discovery.",
     "file": "src/app/off-grids/off-grid-editor.ts"
+  },
+  "3371852187134159676": {
+    "source": "Voice conversation minutes",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "3373688270058378466": {
     "source": "Upload a logo before selecting Your logo.",
@@ -7947,6 +8023,10 @@
     "source": "Custom board link copied",
     "file": "src/app/boards/boards.ts"
   },
+  "3434019150985946658": {
+    "source": " Activity totals are retained separately from transcripts. Transcripts keep their existing permissions and retention period. ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "3434418851650366018": {
     "source": "LivingWiki of the OpenClaw phenomenon — 247K GitHub stars, the viral mechanics, the lobster culture, security incidents, and the broader shift to autonomous AI agents.",
     "file": "src/app/public-wiki-catalog.ts"
@@ -8062,6 +8142,10 @@
   "3464074116178888634": {
     "source": "Voice setup steps",
     "file": "src/app/atlas-persona/atlas-persona.html"
+  },
+  "3464601429320432272": {
+    "source": "Used during this period",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "3465942650835858981": {
     "source": "Maintenance",
@@ -8330,6 +8414,10 @@
   "3538937416612452276": {
     "source": "Luxury editorial",
     "file": "src/app/boards/boards.ts"
+  },
+  "3540093114552725635": {
+    "source": "Pending and unknown durations are excluded from minutes.",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "3540443474970052764": {
     "source": "When are you going?",
@@ -8891,6 +8979,10 @@
     "source": "Choose or create a workspace",
     "file": "src/app/wiki-home/wiki-home.html"
   },
+  "3714885354370967982": {
+    "source": "No recorded conversations in this period.",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "3714899061455941046": {
     "source": "Trim to {$INTERPOLATION} characters or less.",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -8910,6 +9002,10 @@
   "3722282908489550483": {
     "source": "Your browser could not open the file picker. Try the photo button again, or reload this page.",
     "file": "src/app/teams/teams.ts"
+  },
+  "3724068243287682962": {
+    "source": "Team",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "3724745343069721398": {
     "source": "Find the address, choose your stars, and leave the note that should help the next person.",
@@ -8962,6 +9058,10 @@
   "3733245563534414484": {
     "source": "Team workspace | LivingWiki",
     "file": "src/app/app.routes.ts"
+  },
+  "3735007294357580817": {
+    "source": " Minutes use verified voice-call seconds. Text time is kept separate. Conversations start with a visitor message, and pending voice sessions are counted after verification. ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "373517295923347413": {
     "source": "{$START_TAG_SPAN}refresh{$CLOSE_TAG_SPAN} Regenerate ",
@@ -9062,6 +9162,10 @@
   "3765125977049766699": {
     "source": "Sign in to save chat",
     "file": "src/app/chat/chat.ts"
+  },
+  "3765212613647711756": {
+    "source": "Active talking cards",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "3765759644395425453": {
     "source": "Before the appointment",
@@ -9695,6 +9799,10 @@
     "source": "Done",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
+  "3971100408152984961": {
+    "source": " Next ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "3971391472521012491": {
     "source": "Business AI",
     "file": "src/app/business-claim/business-claim.html"
@@ -9870,6 +9978,10 @@
   "4022792217111662940": {
     "source": "Sign in to make quiz challenge",
     "file": "src/app/chat/chat.ts"
+  },
+  "40244452765406528": {
+    "source": "Breakdown view",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "4024505474875107352": {
     "source": "Making Philly Answer Card",
@@ -10119,6 +10231,10 @@
     "source": "GPS accuracy ±{$INTERPOLATION} m. Adjust the pin if needed.",
     "file": "src/app/off-grids/off-grid-editor.html"
   },
+  "4104070079949462623": {
+    "source": "To (UTC)",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
+  },
   "4104141013290924022": {
     "source": "Recommended: 8–16",
     "file": "src/app/boards/boards.html"
@@ -10166,6 +10282,10 @@
   "4119317062986389746": {
     "source": "Use {language} for {city} ({country})",
     "file": "src/app/chat/chat.ts"
+  },
+  "4120398520484336814": {
+    "source": " Previous",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "4122979480230344180": {
     "source": "Southwest canyon",
@@ -10306,6 +10426,10 @@
   "4157232470683063712": {
     "source": "Click to chat",
     "file": "src/app/wiki/wiki.html"
+  },
+  "415731335671333270": {
+    "source": "No matching records.",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "4157985239119642644": {
     "source": "Create valid rows",
@@ -10502,6 +10626,10 @@
   "4211189969614763390": {
     "source": "Don’t Just Search.{$LINE_BREAK}{$START_TAG_SPAN}Let’s Go.{$CLOSE_TAG_SPAN}",
     "file": "src/app/membership/membership.html"
+  },
+  "4211468127688374416": {
+    "source": "Current inventory",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "4213078306142487946": {
     "source": "Add a brief personal welcome before publishing.",
@@ -11247,6 +11375,10 @@
     "source": "Docs",
     "file": "src/app/profile/profile.html"
   },
+  "4449312283520100058": {
+    "source": "Open analytics",
+    "file": "src/app/platform-analytics/platform-analytics-entry.html"
+  },
   "4450901996114574400": {
     "source": "Chemical plants and incidents",
     "file": "src/app/fence-line/fence-line.ts"
@@ -11515,6 +11647,10 @@
     "source": "Describe the picture",
     "file": "src/app/boards/boards.html"
   },
+  "4527039094471612988": {
+    "source": "Across all users and teams · Current totals",
+    "file": "src/app/platform-analytics/platform-analytics-entry.html"
+  },
   "4527453189287545186": {
     "source": "No usable pictures were found. Try the event, year, and subject together.",
     "file": "src/app/boards/boards.ts"
@@ -11710,6 +11846,10 @@
   "4572277330155711965": {
     "source": "Open business page",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "4575827076582385214": {
+    "source": "{$INTERPOLATION} voice durations were not recorded.",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "4575908058839059992": {
     "source": "Close intro setup",
@@ -12009,7 +12149,7 @@
   },
   "467515590191938529": {
     "source": "Board",
-    "file": "src/app/boards/board-promo-image-dialog.ts"
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "4675283137032553082": {
     "source": "SF's tech ecosystem, housing crisis, transit, climate policy, and civic innovation — compiled from one of the world's best open data programs.",
@@ -12195,6 +12335,10 @@
     "source": "Replace video",
     "file": "src/app/boards/talk-drop/talk-drop.component.ts"
   },
+  "4725021375459953170": {
+    "source": "Updated {$INTERPOLATION} UTC",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "4726028815015036726": {
     "source": "The ",
     "file": "src/app/city-board-collection/city-board-collection.ts"
@@ -12350,6 +12494,10 @@
   "4770734614221820951": {
     "source": "The human advantage",
     "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "4770784917619098882": {
+    "source": "Voice time",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "4770871382442698718": {
     "source": "Menu, event check-in, parking map...",
@@ -12815,6 +12963,10 @@
     "source": "Profile",
     "file": "src/app/account-menu/account-menu.html"
   },
+  "4916113134668251138": {
+    "source": "Date preset",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "4918496402143101585": {
     "source": "Narration needed",
     "file": "src/app/boards/boards.ts"
@@ -13047,6 +13199,10 @@
     "source": "Selected now",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
+  "4998242685199716583": {
+    "source": "Platform analytics | LivingWiki",
+    "file": "src/app/app.routes.ts"
+  },
   "5001570881659534074": {
     "source": "Expand official Spotify player",
     "file": "src/app/spotify-player/spotify-player.ts"
@@ -13266,6 +13422,10 @@
   "5072800929048912019": {
     "source": "Join the leaderboard",
     "file": "src/app/boards/boards.html"
+  },
+  "5075223968080999388": {
+    "source": "voice sessions could not be verified",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "5075737817639260180": {
     "source": "Invite someone",
@@ -13722,6 +13882,10 @@
   "520033374999204969": {
     "source": "Your voice library could not be loaded.",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
+  "5203279511751768967": {
+    "source": "From",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "5207635742003539443": {
     "source": "Sign in",
@@ -14315,6 +14479,10 @@
     "source": "What are the latest updates about {city}?",
     "file": "src/app/chat/chat.ts"
   },
+  "5382000729195938849": {
+    "source": "Data status",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "5385110158604213209": {
     "source": "The waitlist for my city",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -14363,9 +14531,17 @@
     "source": "Golden Hour is selected for you. Preview a mood or choose a different soundtrack.",
     "file": "src/app/boards/boards.html"
   },
+  "5403684285319082289": {
+    "source": "Month",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
+  },
   "5403950912722004779": {
     "source": "Your email address has been restored for this account.",
     "file": "src/app/auth-action/auth-action.ts"
+  },
+  "5409041682831525075": {
+    "source": "Talking card",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "5410901007256963002": {
     "source": "Included by default: narrator, music, format, ratio, and social caption",
@@ -14711,6 +14887,10 @@
     "source": "Semantic Search",
     "file": "src/app/landing/landing.html"
   },
+  "5524368187775939406": {
+    "source": " Ownership is saved when usage is recorded. Older records use the owner available when imported. ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "5524388556572227873": {
     "source": "The Intro and closing cards are added automatically.",
     "file": "src/app/boards/boards.html"
@@ -14734,6 +14914,10 @@
   "5530830137945785604": {
     "source": "Replace this voice",
     "file": "src/app/boards/boards.ts"
+  },
+  "5531237363767747080": {
+    "source": "Minutes",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "5534008719315120493": {
     "source": "Part of the LA/Long Beach port corridor often described as a diesel death zone.",
@@ -14814,6 +14998,10 @@
   "5554528553553249088": {
     "source": "Show password",
     "file": "src/app/create-account/create-account.ts"
+  },
+  "5554592740021607017": {
+    "source": "Last 12 months",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "5554669496175509358": {
     "source": "About highlight",
@@ -15011,6 +15199,10 @@
     "source": "Dymaxion Map | LivingWiki",
     "file": "src/app/app.routes.ts"
   },
+  "5599476321051432214": {
+    "source": "Talking cards",
+    "file": "src/app/platform-analytics/platform-analytics-entry.html"
+  },
   "559959477702422115": {
     "source": "Design new",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -15127,6 +15319,10 @@
     "source": "Only the board owner or an admin can delete cards.",
     "file": "src/app/boards/boards.ts"
   },
+  "5640989008529494781": {
+    "source": " {$INTERPOLATION} voice · {$INTERPOLATION_1} text ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "5641773084383976698": {
     "source": "Drafts",
     "file": "src/app/boards/boards.html"
@@ -15162,6 +15358,10 @@
   "5653202483299129380": {
     "source": "Weather",
     "file": "src/app/public-wikis/public-wikis.ts"
+  },
+  "5654068806573421962": {
+    "source": "{$MINUTES} min",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
   },
   "5654661210833818062": {
     "source": "Describe it",
@@ -15547,6 +15747,10 @@
     "source": "{$START_TAG_SPAN}web_asset{$CLOSE_TAG_SPAN} Cover ",
     "file": "src/app/boards/boards.html"
   },
+  "5756140291442025722": {
+    "source": "Include internal testing",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "5756850866536450016": {
     "source": "Music connection",
     "file": "src/app/spotify-player/spotify-player.html"
@@ -15794,6 +15998,10 @@
   "582286457536645662": {
     "source": "Assigned representative",
     "file": "src/app/teams/teams.html"
+  },
+  "5823033522229329248": {
+    "source": "By talking card",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
   },
   "5824319082998168646": {
     "source": "For Travelers",
@@ -16239,6 +16447,10 @@
     "source": "Step 0{$INTERPOLATION}",
     "file": "src/app/marketing/marketing.html"
   },
+  "5956090433796153039": {
+    "source": "{$SECONDS} sec",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
+  },
   "5957995465199589102": {
     "source": "We collect account information such as name, email address, authentication details, and basic profile metadata needed to operate the workspace.",
     "file": "src/app/legal/legal.ts"
@@ -16455,6 +16667,10 @@
     "source": "Manage the details, presentation, and visibility of this board.",
     "file": "src/app/boards/boards.html"
   },
+  "6024125322111202194": {
+    "source": "Current total",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "6024645474739898779": {
     "source": "{$START_TAG_SPAN}upload{$CLOSE_TAG_SPAN} Upload logo {$TAG_INPUT}",
     "file": "src/app/boards/boards.html"
@@ -16579,6 +16795,10 @@
     "source": "Replacing card...",
     "file": "src/app/boards/boards.ts"
   },
+  "6064944630254683218": {
+    "source": "failed answers in this period",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "6065499070488215076": {
     "source": "Go Lifetime",
     "file": "src/app/membership/membership.ts"
@@ -16614,6 +16834,10 @@
   "6079332127682977479": {
     "source": "Your live location is shown only on this device and is never saved.",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
+  },
+  "6081261674561127550": {
+    "source": "Inventory totals are current; usage follows the selected dates.",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "6082651509502858408": {
     "source": "Live onboarding sessions",
@@ -17267,6 +17491,10 @@
     "source": "Failed to load Vapi voice settings.",
     "file": "src/app/atlas-manage/atlas-manage.ts"
   },
+  "6256040971953345483": {
+    "source": " Current inventory includes saved personal and team boards, including drafts and private boards. Talking cards are placements, so one avatar on three boards counts as three talking cards. ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "6256346837104054910": {
     "source": " Suggest an update ",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -17530,6 +17758,10 @@
   "6335170224171015933": {
     "source": "Create one institution or upload a federal-data CSV. Unit ID is the durable identity; batches run safely in groups of 250 and skip duplicates.",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "6338029512328721211": {
+    "source": "Recorded activity",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "6338658156206907238": {
     "source": " LW ",
@@ -18551,6 +18783,10 @@
     "source": " Clear filters ",
     "file": "src/app/teams/teams.html"
   },
+  "6634916155757968480": {
+    "source": "Boards, talking cards, and conversations across LivingWiki.",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "6636276505664212270": {
     "source": "Bio, story, and direct shares",
     "file": "src/app/board-insights/board-insights.ts"
@@ -18974,6 +19210,10 @@
   "6797905165265709433": {
     "source": "Subscribed {$INTERPOLATION}",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "6798228022918014339": {
+    "source": "Search this breakdown",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "6799800762487004396": {
     "source": "PHL",
@@ -19419,6 +19659,10 @@
     "source": " No topics match \"{$INTERPOLATION}\". ",
     "file": "src/app/wiki/wiki.html"
   },
+  "6935730671219189718": {
+    "source": "Text conversations",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
+  },
   "693914892669878606": {
     "source": "Image URL fallback",
     "file": "src/app/boards/boards.html"
@@ -19675,6 +19919,10 @@
     "source": "Map unavailable",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
   },
+  "7015524553445110596": {
+    "source": "Retry sync",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "701721694157980584": {
     "source": "Taco",
     "file": "src/app/business-badge-icons.ts"
@@ -19826,6 +20074,10 @@
   "7051177342601224426": {
     "source": "~{$INTERPOLATION} words per stop",
     "file": "src/app/boards/boards.html"
+  },
+  "7051192362192243941": {
+    "source": "Preparing accurate platform totals",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "7051329302849652522": {
     "source": "Conversations may be reviewed by this avatar’s administrators.",
@@ -20467,6 +20719,10 @@
     "source": "{$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN} Save ",
     "file": "src/app/boards/boards.html"
   },
+  "7237870925896062563": {
+    "source": "Total cards",
+    "file": "src/app/platform-analytics/platform-analytics-entry.html"
+  },
   "7239750919884229270": {
     "source": "Updated",
     "file": "src/app/boards/boards.html"
@@ -20751,6 +21007,10 @@
     "source": "{$START_TAG_SPAN}account_tree{$CLOSE_TAG_SPAN} Explore {$INTERPOLATION} {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
     "file": "src/app/boards/boards.html"
   },
+  "7338615326516842687": {
+    "source": "Historical activity",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "7338792061373130743": {
     "source": "Founding seats now open",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -20998,6 +21258,10 @@
   "7422189979105970730": {
     "source": "Board Trailer",
     "file": "src/app/boards/boards.html"
+  },
+  "7424882868774338594": {
+    "source": "By board",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
   },
   "7425863483295202714": {
     "source": "Stay connected",
@@ -21323,6 +21587,10 @@
     "source": "Save script",
     "file": "src/app/boards/boards.ts"
   },
+  "7519891355746759350": {
+    "source": "Inventory unavailable. Open analytics to retry.",
+    "file": "src/app/platform-analytics/platform-analytics-entry.html"
+  },
   "7520155379629775330": {
     "source": "QR guide link",
     "file": "src/app/business-claim/business-claim.html"
@@ -21491,6 +21759,10 @@
     "source": "Profile | LivingWiki",
     "file": "src/app/app.routes.ts"
   },
+  "7577331606965049881": {
+    "source": "Time grouping",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "7579229954909728794": {
     "source": "Street, neighborhood, or address",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -21526,6 +21798,10 @@
   "7590767207440303327": {
     "source": "shared struggles",
     "file": "src/app/fence-line/fence-line.html"
+  },
+  "7590985378631917549": {
+    "source": " Apply dates",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "7591167868841357385": {
     "source": "Card analytics →",
@@ -22439,6 +22715,10 @@
     "source": "Toggle ",
     "file": "src/app/boards/boards.ts"
   },
+  "7878813844917362690": {
+    "source": "Last 5 years",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "7881110331025414182": {
     "source": "Add a Talking Card",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
@@ -22746,6 +23026,10 @@
   "7959098677447874969": {
     "source": "Needs update",
     "file": "src/app/boards/boards.ts"
+  },
+  "7959408185952480939": {
+    "source": " Historical coverage is incomplete. Totals reflect recorded activity; missing history is not shown as measured zero. ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "7961019553843548204": {
     "source": "Previous boards",
@@ -23591,6 +23875,10 @@
     "source": "Agency & Team · free month · {$days} days left · {$seats}",
     "file": "src/app/teams/teams.ts"
   },
+  "8218159690979803062": {
+    "source": "Reconcile totals",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "8218838315276535589": {
     "source": "Search listings or agents",
     "file": "src/app/teams/teams.html"
@@ -24407,6 +24695,10 @@
     "source": " Sign in to explore ",
     "file": "src/app/atlas-landing/atlas-landing.html"
   },
+  "8484231838290610217": {
+    "source": "Choose a valid date range.",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
+  },
   "8488910447915517935": {
     "source": "Persona prompt",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -24882,6 +25174,10 @@
   "8652519551811753253": {
     "source": " The reconciler keeps every existing board, queues only unsuppressed gaps, and leaves new boards private for review. ",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
+  "8656252686515602109": {
+    "source": "Verified call duration",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "8656568328190188638": {
     "source": "Selected cards",
@@ -25695,6 +25991,10 @@
     "source": "Standard setup support",
     "file": "src/app/business/business.ts"
   },
+  "8905698584581205668": {
+    "source": " Platform tracking started {$INTERPOLATION}. Older activity includes only records still available. ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "8905995985388209337": {
     "source": "Accept",
     "file": "src/app/boards/boards.html"
@@ -25722,6 +26022,10 @@
   "8908794332644878646": {
     "source": "Green jobs",
     "file": "src/app/atlas-landing/atlas-landing.ts"
+  },
+  "8909591053346589550": {
+    "source": "Preparing accurate totals…",
+    "file": "src/app/platform-analytics/platform-analytics-entry.html"
   },
   "8910395303429563529": {
     "source": "{$START_TAG_SPAN}settings{$CLOSE_TAG_SPAN} Board settings ",
@@ -25930,6 +26234,10 @@
   "8955719179313148360": {
     "source": "Clear the search or add cards with song titles, Spotify metadata, or preview URLs.",
     "file": "src/app/boards/boards.html"
+  },
+  "8956120324021995195": {
+    "source": "Visitor activity. Owner/admin sessions and automated QA are excluded.",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "8956781124292530382": {
     "source": "Video link shared.",
@@ -26275,6 +26583,10 @@
     "source": "Verified near ",
     "file": "src/app/boards/boards.ts"
   },
+  "9049309055354864581": {
+    "source": "Wait for the initial sync to finish.",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
+  },
   "9049366986248242853": {
     "source": "{$INTERPOLATION} export {$INTERPOLATION_1}",
     "file": "src/app/boards/boards.html"
@@ -26370,6 +26682,10 @@
   "907439478106726036": {
     "source": "Team invitations and updates, all in one place.",
     "file": "src/app/notifications/notifications.html"
+  },
+  "90761460509166634": {
+    "source": "Back to Users",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "9076673685856493841": {
     "source": "Quick, friendly energy for memorable local discoveries.",
@@ -26791,6 +27107,10 @@
     "source": "Removing LivingWiki branding or adding your logo is included with a paid membership.",
     "file": "src/app/boards/boards.html"
   },
+  "9219960151821498093": {
+    "source": "Voice calls",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
+  },
   "9220264015100449915": {
     "source": "Building the preview. This stays active while places, images, and cards finish.",
     "file": "src/app/boards/boards.ts"
@@ -26958,6 +27278,10 @@
   "965658665551565977": {
     "source": "{$INTERPOLATION}% image coverage",
     "file": "src/app/boards/boards.html"
+  },
+  "965930271379417515": {
+    "source": " Internal testing includes owner/admin preview conversations. Automated QA is separate from visitor conversations. ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "967028822522182738": {
     "source": "Personal Plus, Creator, or platform admin access is required for fresh city, template, and bulk Wiki creation.",

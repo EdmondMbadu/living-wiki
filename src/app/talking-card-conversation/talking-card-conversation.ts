@@ -292,7 +292,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     try {
       const contextualQuestion = talkingCardScopedQuestion(question, this.boardContext(), this.contentLanguage());
       const response = this.atlasService.canAdminAtlas(atlas)
-        ? await this.chatService.askScoped(contextualQuestion, atlas.id, this.threadId)
+        ? await this.chatService.askScoped(contextualQuestion, atlas.id, this.threadId, {boardId:this.boardId(),cardId:this.cardId(),analyticsSessionId:this.analyticsSessionId,analyticsRequestId:crypto.randomUUID()})
         : await this.chatService.askPublic(contextualQuestion, atlas.id, {
             analyticsVisitorId: this.trafficAnalytics.visitorId(),
             analyticsSessionId: this.analyticsSessionId,
@@ -398,7 +398,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
         import('@elevenlabs/client'),
       ]);
       if (!session) throw new Error('Voice service is unavailable.');
-      this.voiceAnalyticsSessionId = session.userId.startsWith('card_') ? session.userId : '';
+      this.voiceAnalyticsSessionId = /^(?:card|team)_/.test(session.userId) ? session.userId : '';
       const connection = session.signedUrl
         ? { signedUrl: session.signedUrl, connectionType: 'websocket' as const }
         : session.conversationToken

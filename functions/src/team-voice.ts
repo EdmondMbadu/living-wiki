@@ -77,6 +77,7 @@ export async function issueTeamVoiceSession(
   boardId: string,
   agentId: string,
   visitorId: string,
+  cardId = '',
 ): Promise<string> {
   const sessionId = `team_${randomUUID()}`;
   await db
@@ -85,6 +86,7 @@ export async function issueTeamVoiceSession(
     .create({
       teamId: binding.board['team_id'],
       boardId,
+      cardId,
       agentId,
       representativeId: binding.config['representative_id'] || '',
       visitorHash: hash(visitorId),
@@ -163,6 +165,7 @@ export async function recordVerifiedTeamCall(event: TeamRecord): Promise<void> {
     tx.create(callRef, {
       teamId: session['teamId'],
       boardId: session['boardId'],
+      cardId:session['cardId']||'',
       representativeId: session['representativeId'],
       startedAt: new Date(start).toISOString(),
       durationSeconds: seconds,

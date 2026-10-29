@@ -238,6 +238,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'admin/analytics',
+    loadComponent: () => import('./platform-analytics/platform-analytics').then(m => m.PlatformAnalyticsComponent),
+    title: $localize`Platform analytics | LivingWiki`,
+    canActivate: [adminGuard],
+  },
+  {
     path: 'admin/users',
     loadComponent: () => import('./admin-users/admin-users').then((m) => m.AdminUsersComponent),
     title: $localize`Users | LivingWiki`,

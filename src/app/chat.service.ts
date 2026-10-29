@@ -275,16 +275,18 @@ export class ChatService {
     question: string,
     atlasId: string,
     threadId?: string | null,
+    context?: {boardId:string;cardId:string;analyticsSessionId:string;analyticsRequestId:string},
   ): Promise<AskAtlasResponse | null> {
     if (!this.functions || !atlasId.trim()) return null;
     this.isSubmitting.set(true);
     this.submitError.set(null);
     try {
       const askAtlas = httpsCallable<
-        { question: string; threadId?: string | null; atlasId: string; answerMode: 'wiki' },
+        { question: string; threadId?: string | null; atlasId: string; answerMode: 'wiki'; boardId?:string;cardId?:string;analyticsSessionId?:string;analyticsRequestId?:string },
         AskAtlasResponse
       >(this.functions, 'askAtlas');
       const { data } = await askAtlas({
+        ...context,
         question,
         threadId: threadId ?? null,
         atlasId: atlasId.trim(),

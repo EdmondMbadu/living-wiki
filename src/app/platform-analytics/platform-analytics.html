@@ -1,0 +1,466 @@
+<div class="platform-shell">
+  <header class="platform-header">
+    <a routerLink="/admin/users" class="platform-brand"
+      ><img src="/assets/image/livingwiki-brand.svg" alt="LivingWiki"
+    /></a>
+    <nav>
+      <a routerLink="/admin/users" i18n>Users</a
+      ><span aria-current="page" i18n>Platform analytics</span>
+    </nav>
+    <div class="header-actions">
+      <button type="button" (click)="exportCsv()" [disabled]="!report()?.inventory || exporting()">
+        <span class="material-symbols-outlined" aria-hidden="true">download</span
+        ><span i18n>Export CSV</span></button
+      ><button type="button" (click)="load(true)" [disabled]="loading() || refreshing()">
+        <span class="material-symbols-outlined" [class.spin]="refreshing()" aria-hidden="true"
+          >refresh</span
+        ><span i18n>Refresh</span></button
+      ><app-theme-toggle /><app-account-menu />
+    </div>
+  </header>
+  <main [attr.aria-busy]="loading() || refreshing()">
+    <a class="platform-back" routerLink="/admin/users"
+      ><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span
+      ><span i18n>Back to Users</span></a
+    >
+    <section class="platform-heading">
+      <div>
+        <span class="eyebrow" i18n>Platform admin</span>
+        <h1 i18n>Platform analytics</h1>
+        <p i18n>Boards, talking cards, and conversations across LivingWiki.</p>
+      </div>
+      @if (report()?.updatedAt) {
+        <small i18n>Updated {{ report()?.updatedAt | date: 'medium' : 'UTC' }} UTC</small>
+      }
+    </section>
+    @if (error()) {
+      <div class="platform-error" role="alert">
+        <span>{{ error() }}</span
+        ><button type="button" (click)="load(true)" i18n>Try again</button>
+      </div>
+    }
+    @if (loading()) {
+      <section class="platform-state" role="status">
+        <span class="material-symbols-outlined spin" aria-hidden="true">progress_activity</span>
+        <h2 i18n>Loading platform analytics…</h2>
+      </section>
+    }
+    @if (report(); as r) {
+      @if (r.preparing) {
+        <section class="platform-state" role="status">
+          <span
+            class="material-symbols-outlined"
+            [class.spin]="r.progress?.status !== 'error'"
+            aria-hidden="true"
+            >sync</span
+          >
+          <h2 i18n>Preparing accurate platform totals</h2>
+          <p i18n>
+            Reading existing boards and recorded activity. This continues in the background.
+          </p>
+          @if (r.progress) {
+            <small i18n>{{ r.progress.processed | number }} records checked</small>
+          }
+          @if (r.progress?.status === 'error') {
+            <button type="button" (click)="sync()" [disabled]="syncing()" i18n>Retry sync</button>
+          }
+        </section>
+      }
+      @if (r.inventory; as inv) {
+        <section
+          class="platform-panel inventory-panel"
+          aria-label="Current inventory"
+          i18n-aria-label
+        >
+          <header>
+            <h2 class="eyebrow" i18n>Current inventory</h2>
+            <span i18n>Across all users and teams</span>
+          </header>
+          <div class="inventory-grid">
+            <button type="button" (click)="setView('boards')">
+              <span class="material-symbols-outlined" aria-hidden="true">dashboard</span
+              ><span
+                ><small i18n>Boards</small><strong>{{ inv.boards | number }}</strong
+                ><em i18n>Current total</em></span
+              >
+            </button>
+            <article>
+              <span class="material-symbols-outlined" aria-hidden="true">layers</span
+              ><span
+                ><small i18n>Total cards</small><strong>{{ inv.cards | number }}</strong
+                ><em i18n>Current total</em></span
+              >
+            </article>
+            <button type="button" (click)="setView('cards')">
+              <span class="material-symbols-outlined" aria-hidden="true">record_voice_over</span
+              ><span
+                ><small i18n>Talking cards</small><strong>{{ inv.talkingCards | number }}</strong
+                ><em i18n>Current total</em></span
+              >
+            </button>
+          </div>
+        </section>
+        <section class="activity-section">
+          <div class="activity-heading">
+            <h2><span i18n>Recorded activity</span></h2>
+            <div class="period-controls">
+              <label
+                ><span class="sr-only" i18n>Date preset</span
+                ><select [value]="preset()" (change)="selectPreset($any($event.target).value)">
+                  <option value="30" i18n>Last 30 days</option>
+                  <option value="365" i18n>Last 12 months</option>
+                  <option value="years" i18n>Last 5 years</option>
+                  <option value="custom" i18n>Custom dates</option>
+                </select></label
+              >
+              <div class="group-controls" role="group" aria-label="Time grouping" i18n-aria-label>
+                @for (g of groups; track g.value) {
+                  <button
+                    type="button"
+                    [class.selected]="group() === g.value"
+                    [attr.aria-pressed]="group() === g.value"
+                    (click)="setGroup(g.value)"
+                  >
+                    {{ g.label }}
+                  </button>
+                }
+              </div>
+              <label class="internal-toggle"
+                ><input
+                  type="checkbox"
+                  [checked]="internal()"
+                  (change)="setInternal($any($event.target).checked)"
+                /><span i18n>Include internal testing</span></label
+              >
+            </div>
+          </div>
+          <div class="date-controls">
+            <label
+              ><span i18n>From</span
+              ><input
+                type="date"
+                [value]="from()"
+                [max]="to()"
+                (change)="setDate('from', $any($event.target).value)" /></label
+            ><label
+              ><span i18n>To</span
+              ><input
+                type="date"
+                [value]="to()"
+                [min]="from()"
+                [max]="today"
+                (change)="setDate('to', $any($event.target).value)" /></label
+            ><button type="button" (click)="applyDates()" [disabled]="refreshing()" i18n>
+              Apply dates</button
+            ><span i18n>Dates shown in UTC</span>
+          </div>
+          <p class="scope-note">
+            @if (internal()) {
+              <span i18n
+                >Visitor and owner/admin sessions included. Automated QA stays separate.</span
+              >
+            } @else {
+              <span i18n
+                >Visitor activity. Owner/admin sessions and automated QA are excluded.</span
+              >
+            }
+          </p>
+        @if (r.coverage?.partial) {
+          <p class="coverage-note" i18n>
+            Historical coverage is incomplete. Totals reflect recorded activity; missing history is
+            not shown as measured zero.
+          </p>
+        }
+          <div class="usage-grid">
+            <article class="platform-panel usage-metric">
+              <span class="material-symbols-outlined" aria-hidden="true">call</span>
+              <div>
+                <small i18n>Voice conversation minutes</small
+                ><strong>{{ time(voiceSeconds(totals())) }}</strong>
+                <p i18n>Verified call duration</p>
+              </div>
+            </article>
+            <article class="platform-panel usage-metric">
+              <span class="material-symbols-outlined" aria-hidden="true">forum</span>
+              <div>
+                <small i18n>Conversations</small
+                ><strong>
+                  @if (unavailable()) {
+                    <span i18n>Not recorded</span>
+                  } @else {
+                    {{ totals()?.conversations || 0 | number }}
+                  }
+                </strong>
+                <p i18n>
+                  {{ totals()?.voice || 0 | number }} voice ·
+                  {{ totals()?.text || 0 | number }} text
+                </p>
+              </div>
+            </article>
+            <article class="platform-panel usage-metric">
+              <span class="material-symbols-outlined" aria-hidden="true">graphic_eq</span>
+              <div>
+                <small i18n>Active talking cards</small
+                ><strong>
+                  @if (unavailable()) {
+                    <span i18n>Not recorded</span>
+                  } @else {
+                    {{ totals()?.activeCards || 0 | number }}
+                  }
+                </strong>
+                <p i18n>Used during this period</p>
+              </div>
+            </article>
+          </div>
+          <div class="trend-layout">
+            <section class="platform-panel trend-panel">
+              <header>
+                <h2 i18n>Voice minutes over time</h2>
+                <small i18n>Minutes</small>
+              </header>
+              @if (series().length) {
+                <div class="chart">
+                  <div class="y-axis" aria-hidden="true">
+                    @for (tick of ticks(); track $index) {
+                      <span>{{ tick | number: '1.0-1' }}</span>
+                    }
+                  </div>
+                  <div class="plot">
+                    <div class="gridlines" aria-hidden="true">
+                      @for (tick of ticks(); track $index) {
+                        <i></i>
+                      }
+                    </div>
+                    <div class="chart-bars">
+                      @for (bucket of series(); track bucket.period) {
+                        <div class="chart-day">
+                          <button
+                            type="button"
+                            [class.unrecorded]="!bucket.recorded || voiceSeconds(bucket) === null"
+                            [style.height.%]="
+                              bucket.recorded && voiceSeconds(bucket) !== null
+                                ? barHeight(bucket.seconds)
+                                : 100
+                            "
+                            [attr.aria-label]="
+                              bucket.period +
+                              ': ' +
+                              time(bucket.recorded ? voiceSeconds(bucket) : null)
+                            "
+                          >
+                            <span class="chart-tooltip"
+                              >{{ bucket.period }} ·
+                              {{ time(bucket.recorded ? voiceSeconds(bucket) : null) }}</span
+                            >
+                          </button>
+                          @if (showPeriod($index)) {
+                            <small>{{ periodLabel(bucket.period) }}</small>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+                @if (!totals()?.conversations && !totals()?.seconds) {
+                  <p class="chart-empty" i18n>No recorded conversations in this period.</p>
+                }
+              }
+            </section>
+            <aside class="platform-panel status-panel">
+              <h2 i18n>Data status</h2>
+              <p>
+                <span class="status-dot"></span><strong>{{ r.pending || 0 | number }}</strong
+                ><span i18n>voice sessions pending now</span>
+              </p>
+              <p>
+                <span class="status-dot"></span
+                ><strong>{{ totals()?.failedAnswers || 0 | number }}</strong
+                ><span i18n>failed answers in this period</span>
+              </p>
+              @if (r.unverified) {
+                <p>
+                  <span class="status-dot"></span><strong>{{ r.unverified | number }}</strong
+                  ><span i18n>voice sessions could not be verified</span>
+                </p>
+              }
+              @if (totals()?.unknownDurations) {
+                <p i18n>{{ totals()?.unknownDurations }} voice durations were not recorded.</p>
+              }
+              <small i18n>Pending and unknown durations are excluded from minutes.</small>
+            </aside>
+          </div>
+        </section>
+        <section class="platform-panel breakdown-panel">
+          <header>
+            <h2 i18n>Activity breakdown</h2>
+            <span i18n>Inventory totals are current; usage follows the selected dates.</span>
+          </header>
+          <div class="breakdown-toolbar">
+            <div class="group-controls" role="group" aria-label="Breakdown view" i18n-aria-label>
+              @for (v of views; track v.value) {
+                <button
+                  type="button"
+                  [class.selected]="view() === v.value"
+                  [attr.aria-pressed]="view() === v.value"
+                  (click)="setView(v.value)"
+                >
+                  {{ v.label }}
+                </button>
+              }
+            </div>
+            <label class="search"
+              ><span class="material-symbols-outlined" aria-hidden="true">search</span
+              ><input
+                type="search"
+                [value]="search()"
+                (input)="setSearch($any($event.target).value)"
+                placeholder="Search this breakdown"
+                aria-label="Search this breakdown"
+                i18n-placeholder
+                i18n-aria-label
+            /></label>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>
+                    @if (view() === 'users') {
+                      <span i18n>Owner</span>
+                    } @else if (view() === 'boards') {
+                      <span i18n>Board</span>
+                    } @else {
+                      <span i18n>Talking card</span>
+                    }
+                  </th>
+                  @if (view() !== 'users') {
+                    <th i18n>Owner</th>
+                  }
+                  @if (view() === 'cards') {
+                    <th i18n>Board</th>
+                  }
+                  @if (view() === 'users') {
+                    <th i18n>Boards</th>
+                  }
+                  @if (view() !== 'cards') {
+                    <th i18n>Total cards</th>
+                    <th i18n>Talking cards</th>
+                  }
+                  <th i18n>Conversations</th>
+                  <th i18n>Voice time</th>
+                  <th><span class="sr-only" i18n>Actions</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of rows(); track row.key) {
+                  <tr>
+                    <th>
+                      {{ row.title }}
+                      @if (row.deleted) {
+                        <small i18n>Historical activity</small>
+                      }
+                      @if (row.kind === 'team') {
+                        <small i18n>Team</small>
+                      }
+                    </th>
+                    @if (view() !== 'users') {
+                      <td>{{ row.owner }}</td>
+                    }
+                    @if (view() === 'cards') {
+                      <td>{{ row.boardTitle }}</td>
+                    }
+                    @if (view() === 'users') {
+                      <td>{{ row.boards | number }}</td>
+                    }
+                    @if (view() !== 'cards') {
+                      <td>{{ row.cards | number }}</td>
+                      <td>{{ row.talkingCards | number }}</td>
+                    }
+                    <td>
+                      @if (unavailable()) {
+                        <span i18n>Not recorded</span>
+                      } @else {
+                        {{ row.conversations | number }}
+                      }
+                    </td>
+                    <td>{{ time(voiceSeconds(row)) }}</td>
+                    <td>
+                      @if (row.analyticsAvailable && row.boardId && view() !== 'users') {
+                        <a [routerLink]="analyticsPath(row)" i18n>Analytics →</a>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="8" class="table-empty" i18n>No matching records.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <footer class="pagination">
+            <span i18n>{{ r.breakdown?.total || 0 | number }} records</span
+            ><button
+              type="button"
+              [disabled]="page() === 1 || refreshing()"
+              (click)="setPage(page() - 1)"
+              i18n
+            >
+              Previous</button
+            ><span i18n>Page {{ page() }} of {{ pages() }}</span
+            ><button
+              type="button"
+              [disabled]="page() >= pages() || refreshing()"
+              (click)="setPage(page() + 1)"
+              i18n
+            >
+              Next
+            </button>
+          </footer>
+        </section>
+        <details class="platform-help">
+          <summary i18n>How analytics works</summary>
+          <p i18n>
+            Current inventory includes saved personal and team boards, including drafts and private
+            boards. Talking cards are placements, so one avatar on three boards counts as three
+            talking cards.
+          </p>
+          <p i18n>
+            Minutes use verified voice-call seconds. Text time is kept separate. Conversations start
+            with a visitor message, and pending voice sessions are counted after verification.
+          </p>
+          <p i18n>
+            Activity totals are retained separately from transcripts. Transcripts keep their
+            existing permissions and retention period.
+          </p>
+          @if (r.trackingSince) {
+            <p i18n>
+              Platform tracking started {{ r.trackingSince | date: 'mediumDate' : 'UTC' }}. Older
+              activity includes only records still available.
+            </p>
+          }
+          <p i18n>
+            Internal testing includes owner/admin preview conversations. Automated QA is separate
+            from visitor conversations.
+          </p>
+          <p i18n>
+            Ownership is saved when usage is recorded. Older records use the owner available when
+            imported.
+          </p>
+          <button
+            type="button"
+            (click)="sync()"
+            [disabled]="
+              syncing() || r.progress?.status === 'queued' || r.progress?.status === 'running'
+            "
+          >
+            <span class="material-symbols-outlined" [class.spin]="syncing()" aria-hidden="true"
+              >sync</span
+            ><span i18n>Reconcile totals</span>
+          </button>
+        </details>
+
+      }
+    }
+  </main>
+</div>

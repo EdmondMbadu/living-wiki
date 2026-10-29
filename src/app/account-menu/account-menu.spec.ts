@@ -47,3 +47,13 @@ describe('AccountMenuComponent team creation', () => {
     });
   }
 });
+
+describe('Platform analytics navigation', () => {
+  for (const admin of [false, true]) {
+    it(`is ${admin ? 'available to admins' : 'hidden from non-admins'}`, async () => {
+      await TestBed.configureTestingModule({imports:[AccountMenuComponent],providers:[provideZonelessChangeDetection(),provideRouter([]),{provide:TeamsService,useValue:teamsServiceStub()},{provide:AuthService,useValue:{uid:signal('user'),isAuthenticated:signal(true),isAdmin:signal(admin),profile:signal(null),displayName:signal('User'),email:signal('user@example.test')}}]}).compileComponents();
+      const f=TestBed.createComponent(AccountMenuComponent);f.componentInstance.toggleMenu();f.detectChanges();
+      expect(!!f.nativeElement.querySelector('a[href="/admin/analytics"]')).toBe(admin);
+    });
+  }
+});

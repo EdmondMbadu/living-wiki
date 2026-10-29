@@ -121,6 +121,8 @@ export {
 export { getBoardInsights, recordBoardAnalyticsEvent } from './board-analytics';
 export { getCardAnalytics, getCardConversation, endCardTextAnalytics, syncCardVoiceAnalytics, recoverCardVoiceAnalytics } from './card-analytics';
 import { beginCardText, finishCardText, issueCardVoice } from './card-analytics';
+export { getPlatformAnalytics, getPlatformInventory, startPlatformAnalyticsSync, platformAnalyticsWorker, reconcilePlatformAnalytics, syncPlatformBoardInventory, syncPlatformTeamInventory, syncPlatformConversationUsage, syncPlatformTeamUsage, syncPlatformVoiceStatus, syncPlatformInternalTextUsage } from './platform-analytics';
+import { withPlatformTextUsage } from './platform-analytics';
 export { teamCommand, getPublicTeamPage, getTeamInvitationPreview } from './teams';
 export { kiwiPreferences, kiwiTalk, kiwiStageDescribeBoard, kiwiApply, kiwiReadback, kiwiSpeak, kiwiSpeakStream, kiwiVoiceSession } from './kiwi';
 export { sendTeamInvitationEmail, retryTeamInvitationEmails, syncTeamInvitationNotification, syncTeamInvitationAvailability } from './team-invitations';
@@ -16975,10 +16977,10 @@ export const createElevenLabsVoiceSession = onCall(
     if (requestedConnectionType === 'websocket' ? !signedUrl : !conversationToken) {
       throw new HttpsError('internal', 'ElevenLabs did not return a conversation credential.');
     }
-    if (listingVoice) visitorId = await issueTeamVoiceSession(listingVoice, requestedTeamBoardId, agentId, visitorId);
-    else if (atlasRecord && atlasId && request.data?.boardId && request.data?.cardId) {
+    if (listingVoice) visitorId = await issueTeamVoiceSession(listingVoice, requestedTeamBoardId, agentId, visitorId, textValue(request.data?.cardId,180)||'');
+    if (atlasRecord && atlasId && request.data?.boardId && request.data?.cardId) {
       try {
-        const analyticsSession = await issueCardVoice(request, { ...atlasRecord, id: atlasId }, agentId);
+        const analyticsSession = await issueCardVoice(request, { ...atlasRecord, id: atlasId }, agentId, listingVoice ? {sessionId:visitorId,board:listingVoice.board,internal:listingVoice.internal} : undefined);
         if (analyticsSession) visitorId = analyticsSession;
       } catch (error) {
         if (error instanceof HttpsError) throw error;
@@ -19856,7 +19858,7 @@ export const askAtlas = onCall(
     cors: true,
     secrets: [geminiApiKey],
   },
-  async (request) => {
+  withPlatformTextUsage(async (request) => {
     if (!request.auth?.uid) {
       throw new HttpsError('unauthenticated', 'Authentication is required.');
     }
@@ -19889,7 +19891,7 @@ export const askAtlas = onCall(
         error instanceof Error ? error.message : 'Failed to answer question.',
       );
     }
-  },
+  }),
 );
 
 export const createAnswerCard = onCall(
@@ -22760,7 +22762,7 @@ export const askPublicAtlas = onCall(
     cors: true,
     secrets: [geminiApiKey],
   },
-  async (request) => {
+  withPlatformTextUsage(async (request) => {
     const atlasId = normalizeAtlasId(request.data?.atlasId);
     const question = String(request.data?.question ?? '').trim();
     const threadId = String(request.data?.threadId ?? '').trim() || null;
@@ -22823,7 +22825,7 @@ export const askPublicAtlas = onCall(
         error instanceof Error ? error.message : 'Failed to answer public question.',
       );
     }
-  },
+  }),
 );
 
 export const deleteDocument = onCall(

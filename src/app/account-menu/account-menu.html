@@ -110,6 +110,7 @@
             </span>
           </div>
           @if (isAdmin()) {
+            <a routerLink="/admin/analytics" role="menuitem" class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--soft-fill)] hover:text-[var(--text)]" (click)="closeMenu()"><span class="material-symbols-outlined w-5 shrink-0 text-center text-base" aria-hidden="true">monitoring</span><span class="min-w-0" i18n>Platform analytics</span></a>
             <span
               class="mt-3 inline-flex rounded-full border border-[var(--accent)]/30 bg-[var(--soft-fill)] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--accent)]"
               i18n
@@ -214,6 +215,7 @@
             <span class="min-w-0" i18n>Settings</span>
           </a>
           @if (isAdmin()) {
+            <a routerLink="/admin/analytics" role="menuitem" class="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--soft-fill)] hover:text-[var(--text)]" (click)="closeMenu()"><span class="material-symbols-outlined w-5 shrink-0 text-center text-base" aria-hidden="true">monitoring</span><span class="min-w-0" i18n>Platform analytics</span></a>
             <a
               routerLink="/admin/city-board-factory"
               role="menuitem"

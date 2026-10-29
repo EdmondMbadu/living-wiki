@@ -84,7 +84,10 @@ test('failed model responses remain visible without a fabricated assistant answe
 for(const [label,uid,ua] of [['board owner',owner],['avatar administrator','analytics-avatar-admin'],['recognized bot',undefined,'SearchBot/1.0']]){
  test(`${label} is excluded from conversation counts`,async()=>{
   const r=request({analyticsSessionId:`session_excluded_${++serial}`},uid);if(ua)r.rawRequest.headers['user-agent']=ua;
-  assert.equal(await api.beginCardText(r,atlas),null);assert.equal(await api.issueCardVoice(r,atlas,'agent_fixture'),null);
+  assert.equal(await api.beginCardText(r,atlas),null);
+  const nonce=await api.issueCardVoice(r,atlas,'agent_fixture');
+  if(ua) assert.equal(nonce,null);
+  else { assert.ok(nonce?.startsWith('card_')); const job=(await db.collection('card_analytics_voice_sessions').doc(nonce).get()).data(); assert.equal(job.internal,true); }
  });
 }
 test('missing browser metadata never fabricates historical attribution',async()=>{

@@ -2419,6 +2419,18 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Platform management metrics never grant direct client access to private metadata.
+    match /platform_analytics_inventory/{document=**} { allow read, write: if false; }
+    match /platform_analytics_inventory_shards/{document=**} { allow read, write: if false; }
+    match /platform_analytics_usage/{document=**} { allow read, write: if false; }
+    match /platform_analytics_daily/{document=**} { allow read, write: if false; }
+    match /platform_analytics_meta/{document=**} { allow read, write: if false; }
+    match /platform_analytics_jobs/{document=**} { allow read, write: if false; }
+    match /platform_analytics_batches/{document=**} { allow read, write: if false; }
+    match /platform_analytics_sources/{document=**} { allow read, write: if false; }
+    match /platform_analytics_providers/{document=**} { allow read, write: if false; }
+    match /platform_analytics_pending/{document=**} { allow read, write: if false; }
+    match /platform_analytics_text_sessions/{document=**} { allow read, write: if false; }
     // Analytics identities and transcripts are served only by scoped, authorized callables.
     match /board_tracking/{document=**} { allow read, write: if false; }
     match /card_analytics_conversations/{document=**} { allow read, write: if false; }

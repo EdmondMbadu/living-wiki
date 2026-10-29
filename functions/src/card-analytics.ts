@@ -7,6 +7,7 @@ import * as logger from 'firebase-functions/logger';
 import { db } from './firebase';
 import { isLinkReadableVisibility } from './board-visibility';
 import { isActiveTeamMember } from './teams';
+import { recordPlatformVerifiedVoice, hasPlatformVisitorMessage } from './platform-analytics';
 
 type Data = Record<string, any>;
 type Actor = { auth?: { uid: string }; data: Data; rawRequest?: { headers: Data } };
@@ -76,18 +77,20 @@ export async function analyticsConversations(boardId: string, from: string, card
   if(cardId) query=query.where('card_id','==',cardId);
   return allAnalyticsDocs(query);
 }
-async function actorBinding(request: Actor, board: Data, atlas: Data) {
+async function actorBinding(request: Actor, board: Data, atlas: Data, includeInternal = false) {
   const uid = request.auth?.uid;
   const anonymous = String(request.data.anonymousVisitorId || '');
   if (!uid && !clientPattern.test(anonymous)) throw new HttpsError('unauthenticated', 'A visitor session is required.');
   const visitor = String(request.data.analyticsVisitorId || '');
-  if (!clientPattern.test(visitor)) return null; // Older clients continue without inventing attribution.
+  if (!clientPattern.test(visitor) && !includeInternal) return null; // Older clients continue without inventing attribution.
   const ua = String(request.rawRequest?.headers?.['user-agent'] || '');
   const internal = uid && (uid === board.owner_user_id || uid === atlas.user_id || atlas.admin_user_ids?.includes(uid)
     || (await db.collection('users').doc(uid).get()).data()?.role === 'admin'
     || (board.team_id && await isActiveTeamMember(board.team_id, uid)));
-  if (internal || /bot|crawler|spider|headless|preview/i.test(ua) || !isLinkReadableVisibility(board.visibility)) return null;
-  return { actor_hash: hashAnalytics(uid ? `uid:${uid}` : `anonymous:${anonymous}`), visitor_hash: hashAnalytics(visitor) };
+  if ((internal && !includeInternal) || /bot|crawler|spider|headless|preview/i.test(ua) || (!isLinkReadableVisibility(board.visibility) && !internal)) return null;
+  const ownerId=String(board.owner_user_id||''), teamId=String(board.team_id||'');
+  return { actor_hash: hashAnalytics(uid ? `uid:${uid}` : `anonymous:${anonymous}`), visitor_hash: clientPattern.test(visitor)?hashAnalytics(visitor):'',
+    internal:!!internal, platform_only:!clientPattern.test(visitor), owner_id:ownerId, team_id:teamId, owner_key:teamId?`team:${teamId}`:`user:${ownerId||'unknown'}`, board_title:board.title||'' };
 }
 export async function beginCardText(request: Actor, atlas: Data) {
   if (!request.data.boardId || !request.data.cardId) return null;
@@ -114,7 +117,7 @@ export async function beginCardText(request: Actor, atlas: Data) {
     if (previous && now.toMillis() - previous.last_activity_at.toMillis() > 30 * 60000) throw new HttpsError('failed-precondition', 'This conversation expired. Close it and start a new conversation.');
     const elapsed = previous ? Math.min(60, Math.max(0, (now.toMillis() - previous.last_activity_at.toMillis()) / 1000)) : 0;
     tx.set(ref, {
-      ...actor, board_id: boardId, card_id: cardId, atlas_id: atlas.id, mode: 'text',
+      ...actor, board_id: boardId, card_id: cardId, card_title:card.title||'', atlas_id: atlas.id, mode: 'text',
       ...(previous ? {} : { started_at: now, day: now.toDate().toISOString().slice(0,10), first_question: question.slice(0,1000), duration_kind: 'estimated' }),
       last_activity_at: now, status: 'active', questions: FieldValue.increment(1),
       duration_seconds: FieldValue.increment(elapsed), expires_at: expires(),
@@ -157,15 +160,17 @@ export const endCardTextAnalytics = onCall({ region:'us-central1', cors:true, ti
   return {accepted:true};
 });
 
-export async function issueCardVoice(request: Actor, atlas: Data, agentId: string): Promise<string | null> {
+export async function issueCardVoice(request: Actor, atlas: Data, agentId: string, trusted?: { sessionId:string; board:Data; internal:boolean }): Promise<string | null> {
   if (!request.data.boardId || !request.data.cardId) return null;
-  const { board, card } = await analyticsTarget(String(request.data.boardId), String(request.data.cardId), request.auth?.uid);
-  if (!isLinkReadableVisibility(board.visibility) && board.owner_user_id !== request.auth?.uid) throw new HttpsError('permission-denied', 'This board is not available.');
+  const target = trusted ? { board:trusted.board, card:flattenAnalyticsCards(trusted.board.cards,trusted.internal).find(c=>c.id===request.data.cardId) } : await analyticsTarget(String(request.data.boardId), String(request.data.cardId), request.auth?.uid);
+  const {board,card}=target;
+  if(!card) throw new HttpsError('not-found','This card is no longer available.');
+  if (!trusted?.internal && !isLinkReadableVisibility(board.visibility) && board.owner_user_id !== request.auth?.uid) throw new HttpsError('permission-denied', 'This board is not available.');
   if (card.conversation?.atlasId !== atlas.id) throw new HttpsError('permission-denied', 'This avatar does not belong to this card.');
-  const actor = await actorBinding(request, board, atlas);
+  const actor = await actorBinding(request, board, atlas, true);
   if (!actor) return null;
-  const nonce = `card_${randomUUID()}`;
-  await jobs.doc(nonce).create({ ...actor, board_id: String(request.data.boardId), card_id: String(request.data.cardId), atlas_id: atlas.id, agent_id: agentId,
+  const nonce = trusted?.sessionId || `card_${randomUUID()}`;
+  await jobs.doc(nonce).create({ ...actor, board_id: String(request.data.boardId), card_id: String(request.data.cardId), card_title:card.title||'', atlas_id: atlas.id, agent_id: agentId,
     day: new Date().toISOString().slice(0,10), issued_at: Timestamp.now(), next_sync_at: Timestamp.fromMillis(Date.now() + 5*60000), status: 'waiting', expires_at: expires(), attempts: 0 });
   return nonce;
 }
@@ -181,11 +186,12 @@ async function syncVoice(id: string, apiKey: string) {
     return;
   }
   const transcript = (Array.isArray(data.transcript) ? data.transcript : []).filter((m: Data) => ['user','agent'].includes(m.role) && typeof m.message === 'string' && m.message.trim());
-  const questions = transcript.filter((m: Data) => m.role === 'user');
+  const questions = transcript.filter(hasPlatformVisitorMessage);
   if (questions.length) {
     const started = Number(data.metadata?.start_time_unix_secs);
     if (!Number.isFinite(started) || Math.abs(started*1000 - job.issued_at.toMillis()) > 24*3600000) throw new Error('Invalid voice start time.');
-    const start = Timestamp.fromMillis(started*1000), duration = Number(data.metadata?.call_duration_secs);
+    const start = Timestamp.fromMillis(started*1000), duration = typeof data.metadata?.call_duration_secs==='number'?data.metadata.call_duration_secs:NaN;
+    if (!job.internal && !job.platform_only) {
     const conversation = sessions.doc(id);
     // Provider turns are separate documents: long conversations are never silently truncated.
     const writer = db.bulkWriter();
@@ -195,6 +201,7 @@ async function syncVoice(id: string, apiKey: string) {
     }));
     await writer.close();
     await conversation.set({ board_id: job.board_id, card_id: job.card_id, atlas_id: job.atlas_id,
+      owner_id:job.owner_id||'', team_id:job.team_id||'', owner_key:job.owner_key||'', board_title:job.board_title||'', card_title:job.card_title||'', provider_conversation_id:job.conversation_id,
       actor_hash: job.actor_hash, visitor_hash: job.visitor_hash, mode:'voice', started_at:start, day:start.toDate().toISOString().slice(0,10),
       last_activity_at: Timestamp.now(), status: data.status === 'done' ? 'completed' : 'interrupted',
       first_question: questions[0].message.slice(0,1000), questions: questions.length,
@@ -217,12 +224,14 @@ async function syncVoice(id: string, apiKey: string) {
         tx.update(ref,{question_chunks:FieldValue.arrayUnion(chunkId)});
       });
     }
+    }
+    await recordPlatformVerifiedVoice(id,job,data);
   }
   await ref.update({ status:'done', synced_at: Timestamp.now(), next_sync_at:FieldValue.delete() });
 }
 export const syncCardVoiceAnalytics = onCall({ region:'us-central1', cors:true, timeoutSeconds:60, secrets:[key] }, async request => {
   const nonce = String(request.data?.sessionId || ''), conversationId = String(request.data?.conversationId || '');
-  if (!/^card_[A-Za-z0-9-]{36}$/.test(nonce) || !idPattern.test(conversationId)) throw new HttpsError('invalid-argument','Invalid voice session.');
+  if (!/^(?:card|team)_[A-Za-z0-9-]{36}$/.test(nonce) || !idPattern.test(conversationId)) throw new HttpsError('invalid-argument','Invalid voice session.');
   const ref = jobs.doc(nonce), job = (await ref.get()).data();
   const actorHash = hashAnalytics(request.auth?.uid ? `uid:${request.auth.uid}` : `anonymous:${String(request.data?.anonymousVisitorId || '')}`);
   if (!job || job.actor_hash !== actorHash) throw new HttpsError('permission-denied','This voice session is not available.');
@@ -285,7 +294,7 @@ export const getCardAnalytics = onCall({ region:'us-central1', cors:true, timeou
     outboundClicks:traffic.reduce((sum,d)=>sum+(Number(d.data().cards?.[target.cardId]?.outbound_clicks)||0),0),
     canViewBoardAnalytics:target.canViewBoardAnalytics, canReadTranscripts:target.canReadTranscripts, visitors:cardVisitors.size, visitorsWhoChatted:chatting.size,
     conversations:conversations.map(({visitorKey,...c})=>({...c, firstQuestion: c.canReadTranscript ? c.firstQuestion : ''})),
-    pendingVoice:pending.docs.filter(d=>d.data().card_id===target.cardId && !['done','unavailable'].includes(d.data().status)).length,
+    pendingVoice:pending.docs.filter(d=>d.data().card_id===target.cardId && !d.data().internal && !d.data().platform_only && !['done','unavailable'].includes(d.data().status)).length,
   };
 });
 export const getCardConversation = onCall({ region:'us-central1', cors:true, timeoutSeconds:30 }, async request => {

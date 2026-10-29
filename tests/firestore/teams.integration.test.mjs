@@ -298,6 +298,7 @@ test('analytics count distinct period participants, exclude members, and dedupli
         visitorId: 'visitor-12345678',
         sessionId: 'session-12345678',
         eventType: type,
+        ...(type.startsWith('talking_card_') ? { cardId: 'a' } : {}),
       },
       auth: uid ? { uid } : undefined,
       rawRequest: { headers: { 'user-agent': 'Mozilla/5.0' }, ip: '127.0.0.1' },

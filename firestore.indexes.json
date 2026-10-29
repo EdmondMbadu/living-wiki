@@ -508,6 +508,9 @@
     {"collectionGroup": "card_analytics_voice_sessions", "fieldPath": "expires_at", "ttl": true, "indexes": []},
     {"collectionGroup": "analytics_turns", "fieldPath": "expires_at", "ttl": true, "indexes": []},
     {"collectionGroup": "visitors", "fieldPath": "expires_at", "ttl": true, "indexes": []},
-    { "collectionGroup": "card_analytics_questions", "fieldPath": "expires_at", "ttl": true, "indexes": [] }
+    { "collectionGroup": "card_analytics_questions", "fieldPath": "expires_at", "ttl": true, "indexes": [] },
+    { "collectionGroup": "platform_analytics_batches", "fieldPath": "expires_at", "ttl": true, "indexes": [] },
+    { "collectionGroup": "platform_analytics_text_sessions", "fieldPath": "expires_at", "ttl": true, "indexes": [] },
+    { "collectionGroup": "platform_analytics_attempts", "fieldPath": "expires_at", "ttl": true, "indexes": [] }
   ]
 }
