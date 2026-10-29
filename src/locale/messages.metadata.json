@@ -4731,6 +4731,10 @@
     "source": "Personal Plus or Professional is required for new Wiki workspaces.",
     "file": "src/app/wiki-home/wiki-home.ts"
   },
+  "2433088774281034112": {
+    "source": "No recorded creation dates are available.",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "2435814343940799128": {
     "source": "Start a conversation",
     "file": "src/app/boards/boards.html"
@@ -8195,6 +8199,10 @@
     "source": "Filter representative",
     "file": "src/app/teams/teams.html"
   },
+  "347606755465233197": {
+    "source": " Board creation counts use saved dates and remain after deletion. Team drafts and published copies count once. Older deleted boards may be missing. ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "3476842083868084912": {
     "source": "Open a card’s analytics for its visitors and conversations.",
     "file": "src/app/board-insights/board-insights.html"
@@ -9222,6 +9230,10 @@
   "3783913300558991064": {
     "source": "Start (seconds){$TAG_INPUT}",
     "file": "src/app/off-grids/pin-talk-recorder.html"
+  },
+  "3784121696824109973": {
+    "source": " {$INTERPOLATION} boards have missing or invalid creation dates and are excluded. ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "3784503893413914470": {
     "source": "Events and promotions on your profile",
@@ -10422,6 +10434,10 @@
   "4156203964506154344": {
     "source": "Visitors who chatted",
     "file": "src/app/card-analytics/card-analytics.html"
+  },
+  "4156805055124633035": {
+    "source": " Retry sync ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "4157232470683063712": {
     "source": "Click to chat",
@@ -13695,6 +13711,10 @@
     "source": "Share Challenge",
     "file": "src/app/answer-quiz/answer-quiz.html"
   },
+  "5151943143817150041": {
+    "source": "Created in this period",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "5152706416148572263": {
     "source": "Back to my teams",
     "file": "src/app/teams/teams.html"
@@ -13794,6 +13814,10 @@
   "5175136637575623788": {
     "source": "{$START_TAG_SPAN}progress_activity{$CLOSE_TAG_SPAN} Uploading {$INTERPOLATION}… ",
     "file": "src/app/teams/teams.html"
+  },
+  "5175492968961710656": {
+    "source": " Based on available creation dates. Each board is counted once. ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "5176001824160948960": {
     "source": "LLM Knowledge Bases & the Karpathy Pattern",
@@ -15194,6 +15218,10 @@
   "5596090881059033": {
     "source": "{$START_BOLD_TEXT}{$INTERPOLATION}{$CLOSE_BOLD_TEXT} curator",
     "file": "src/app/boards/boards.html"
+  },
+  "5598249911761833120": {
+    "source": "No boards were created in this period.",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "5599350434644369333": {
     "source": "Dymaxion Map | LivingWiki",
@@ -17606,6 +17634,10 @@
   "6297950127540572260": {
     "source": "Member",
     "file": "src/app/boards/boards.ts"
+  },
+  "6297960348996723693": {
+    "source": "Preparing board creation history…",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "6300268466755202647": {
     "source": "Recommended narrator voices",
@@ -20766,6 +20798,10 @@
   "7254422419292127733": {
     "source": "{$START_TAG_SPAN}lock{$CLOSE_TAG_SPAN}This public avatar’s voice is managed by its creator. You can still edit this card’s presentation and links.",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
+  "7260119081107004912": {
+    "source": "Boards created over time",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "7266750530049736349": {
     "source": "Opening message *",

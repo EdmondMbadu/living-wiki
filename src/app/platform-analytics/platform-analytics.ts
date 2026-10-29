@@ -82,6 +82,15 @@ export class PlatformAnalyticsComponent {
   readonly totals = computed(() => this.report()?.totals);
   readonly rows = computed(() => this.report()?.breakdown?.rows || []);
   readonly series = computed(() => this.report()?.series || []);
+  readonly creationSeries = computed(() => this.report()?.boardCreation?.series || []);
+  readonly creationAxisMax = computed(() => {
+    const max = Math.max(1, ...this.creationSeries().map((row) => row.boards));
+    const step = 10 ** Math.floor(Math.log10(max));
+    return Math.ceil(max / step) * step;
+  });
+  readonly creationTicks = computed(() => [
+    ...new Set([this.creationAxisMax(), Math.floor(this.creationAxisMax() / 2), 0]),
+  ]);
   readonly maxMinutes = computed(() => Math.max(1, ...this.series().map((r) => r.seconds / 60)));
   readonly axisMax = computed(() => {
     const max = this.maxMinutes();
@@ -132,7 +141,10 @@ export class PlatformAnalyticsComponent {
       if (this.disposed || seq !== this.sequence) return;
       this.report.set(report);
       if (report.error) this.error.set(report.error);
-      if (report.preparing && report.progress?.status !== 'error')
+      if (
+        (report.preparing || report.boardCreation?.preparing) &&
+        report.progress?.status !== 'error'
+      )
         this.timer = setTimeout(() => void this.load(), 5000);
     } catch (e) {
       if (!this.disposed && seq === this.sequence) this.error.set(this.friendly(e));
@@ -208,8 +220,10 @@ export class PlatformAnalyticsComponent {
   barHeight(seconds: number): number {
     return seconds > 0 ? Math.max(2, (seconds / 60 / this.axisMax()) * 100) : 0;
   }
-  showPeriod(index: number): boolean {
-    const n = this.series().length;
+  creationBarHeight(boards: number): number {
+    return boards > 0 ? Math.max(2, (boards / this.creationAxisMax()) * 100) : 0;
+  }
+  showPeriod(index: number, n = this.series().length): boolean {
     return n <= 12 || index === 0 || index === n - 1 || index % Math.ceil(n / 7) === 0;
   }
   periodLabel(value: string): string {
@@ -218,7 +232,7 @@ export class PlatformAnalyticsComponent {
     return new Intl.DateTimeFormat(undefined, {
       timeZone: 'UTC',
       ...(value.length === 7
-        ? { month: 'short', year: '2-digit' }
+        ? { month: 'short', year: 'numeric' }
         : { month: 'short', day: 'numeric' }),
     } as Intl.DateTimeFormatOptions).format(new Date(stamp + 'T00:00:00Z'));
   }
@@ -275,7 +289,9 @@ export class PlatformAnalyticsComponent {
           r.conversations,
           r.voice,
           r.text,
-          report.coverage?.unrecorded || (r.voice && r.voice === r.unknownDurations && !r.seconds) ? null : r.seconds,
+          report.coverage?.unrecorded || (r.voice && r.voice === r.unknownDurations && !r.seconds)
+            ? null
+            : r.seconds,
           filters.from,
           filters.to,
         ]),
@@ -295,6 +311,7 @@ export class PlatformAnalyticsComponent {
   private friendly(e: unknown): string {
     const message = e instanceof Error ? e.message.replace(/^FirebaseError:\s*/, '') : '';
     return message && !/^(internal|unknown|unavailable|deadline-exceeded)$/i.test(message)
-      ? message : $localize`Platform analytics could not be loaded.`;
+      ? message
+      : $localize`Platform analytics could not be loaded.`;
   }
 }

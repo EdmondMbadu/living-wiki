@@ -41,6 +41,13 @@ export type PlatformReport = {
   updatedAt?: string;
   progress?: { status: string; stage: string; processed: number } | null;
   totals?: PlatformTotals;
+  boardCreation?: {
+    preparing: boolean;
+    total?: number | null;
+    datedBoards?: number;
+    missingDates?: number;
+    series?: Array<{ period: string; boards: number }>;
+  };
   series?: Array<{
     period: string;
     seconds: number;

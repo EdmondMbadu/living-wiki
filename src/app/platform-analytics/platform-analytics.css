@@ -349,6 +349,67 @@ main {
   color: var(--pa-muted);
   font-size: 10px;
 }
+.creation-panel {
+  margin: 20px 0;
+}
+.creation-panel > header p,
+.creation-note {
+  margin: 8px 0 0;
+  color: var(--pa-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.creation-total {
+  text-align: right;
+}
+.creation-total strong,
+.creation-total small {
+  display: block;
+}
+.creation-total strong {
+  font-size: 26px;
+  line-height: 1.2;
+}
+.creation-total small {
+  margin-top: 5px;
+}
+.creation-panel .chart-day:last-child > small {
+  left: auto;
+  right: 0;
+}
+.creation-panel .chart-day:last-child .chart-tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+.creation-state {
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--pa-muted);
+  font-size: 13px;
+  text-align: center;
+}
+.creation-state button {
+  padding: 9px 14px;
+  border: 1px solid var(--pa-line);
+  border-radius: 8px;
+  background: var(--pa-surface);
+  color: var(--text);
+}
+@media (max-width: 600px) {
+  .creation-panel .chart-day > small {
+    display: none;
+  }
+  .creation-panel .chart-day:first-child > small,
+  .creation-panel .chart-day:nth-child(4n) > small,
+  .creation-panel .chart-day:last-child > small {
+    display: block;
+  }
+}
 .chart {
   display: flex;
   gap: 9px;

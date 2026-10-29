@@ -2421,6 +2421,7 @@ service cloud.firestore {
 
     // Platform management metrics never grant direct client access to private metadata.
     match /platform_analytics_inventory/{document=**} { allow read, write: if false; }
+    match /platform_analytics_board_creations/{document=**} { allow read, write: if false; }
     match /platform_analytics_inventory_shards/{document=**} { allow read, write: if false; }
     match /platform_analytics_usage/{document=**} { allow read, write: if false; }
     match /platform_analytics_daily/{document=**} { allow read, write: if false; }

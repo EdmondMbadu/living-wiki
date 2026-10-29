@@ -154,6 +154,86 @@
               Apply dates</button
             ><span i18n>Dates shown in UTC</span>
           </div>
+          <section
+            class="platform-panel trend-panel creation-panel"
+            aria-label="Boards created over time"
+            i18n-aria-label
+          >
+            <header>
+              <div>
+                <h2 i18n>Boards created over time</h2>
+                <p i18n>Across all users and teams</p>
+              </div>
+              @if (
+                r.boardCreation && !r.boardCreation.preparing && r.boardCreation.total !== null
+              ) {
+                <div class="creation-total">
+                  <strong>{{ r.boardCreation.total | number }}</strong
+                  ><small i18n>Created in this period</small>
+                </div>
+              }
+            </header>
+            @if (!r.boardCreation || r.boardCreation.preparing) {
+              <div class="creation-state" role="status">
+                <p i18n>Preparing board creation history…</p>
+                @if (r.progress?.status === 'error') {
+                  <button type="button" (click)="sync()" [disabled]="syncing()" i18n>
+                    Retry sync
+                  </button>
+                }
+              </div>
+            } @else if (r.boardCreation.total === null) {
+              <p class="creation-state" i18n>No recorded creation dates are available.</p>
+            } @else {
+              <div class="chart">
+                <div class="y-axis" aria-hidden="true">
+                  @for (tick of creationTicks(); track tick) {
+                    <span>{{ tick | number: '1.0-0' }}</span>
+                  }
+                </div>
+                <div class="plot">
+                  <div class="gridlines" aria-hidden="true">
+                    @for (tick of creationTicks(); track tick) {
+                      <i></i>
+                    }
+                  </div>
+                  <div class="chart-bars">
+                    @for (bucket of creationSeries(); track bucket.period) {
+                      <div class="chart-day">
+                        <button
+                          type="button"
+                          [style.height.%]="creationBarHeight(bucket.boards)"
+                          [attr.aria-label]="bucket.period + ': ' + (bucket.boards | number)"
+                        >
+                          <span class="chart-tooltip"
+                            >{{ bucket.period }} · {{ bucket.boards | number }}
+                            <span i18n>Boards</span></span
+                          >
+                        </button>
+                        @if (showPeriod($index, creationSeries().length)) {
+                          <small>{{ periodLabel(bucket.period) }}</small>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+              @if (!r.boardCreation.total) {
+                <p class="chart-empty" i18n>No boards were created in this period.</p>
+              }
+            }
+            @if (r.boardCreation && !r.boardCreation.preparing) {
+              <p class="creation-note" i18n>
+                Based on available creation dates. Each board is counted once.
+              </p>
+              @if (r.boardCreation.missingDates) {
+                <p class="creation-note" i18n>
+                  {{ r.boardCreation.missingDates | number }} boards have missing or invalid
+                  creation dates and are excluded.
+                </p>
+              }
+            }
+          </section>
           <p class="scope-note">
             @if (internal()) {
               <span i18n
@@ -165,12 +245,12 @@
               >
             }
           </p>
-        @if (r.coverage?.partial) {
-          <p class="coverage-note" i18n>
-            Historical coverage is incomplete. Totals reflect recorded activity; missing history is
-            not shown as measured zero.
-          </p>
-        }
+          @if (r.coverage?.partial) {
+            <p class="coverage-note" i18n>
+              Historical coverage is incomplete. Totals reflect recorded activity; missing history
+              is not shown as measured zero.
+            </p>
+          }
           <div class="usage-grid">
             <article class="platform-panel usage-metric">
               <span class="material-symbols-outlined" aria-hidden="true">call</span>
@@ -421,6 +501,10 @@
         <details class="platform-help">
           <summary i18n>How analytics works</summary>
           <p i18n>
+            Board creation counts use saved dates and remain after deletion. Team drafts and
+            published copies count once. Older deleted boards may be missing.
+          </p>
+          <p i18n>
             Current inventory includes saved personal and team boards, including drafts and private
             boards. Talking cards are placements, so one avatar on three boards counts as three
             talking cards.
@@ -459,7 +543,6 @@
             ><span i18n>Reconcile totals</span>
           </button>
         </details>
-
       }
     }
   </main>

@@ -12,6 +12,7 @@ const options = { region: 'us-central1' };
 const SHARDS = 32;
 const DAY = 86400000;
 const inventory = db.collection('platform_analytics_inventory');
+const boardCreations = db.collection('platform_analytics_board_creations');
 const shards = db.collection('platform_analytics_inventory_shards');
 const usage = db.collection('platform_analytics_usage');
 const daily = db.collection('platform_analytics_daily');
@@ -38,6 +39,50 @@ const iso = (v: any): string | null => {
 const text = (v: unknown, max = 180) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const deleted = (v: Data | undefined) =>
   !v || v.deleted === true || v.is_deleted === true || !!v.deleted_at || !!v.deletedAt;
+
+/** Use saved dates only; an analytics import or edit is never a board creation. */
+export function platformBoardCreatedAt(...values: unknown[]): string | null {
+  return (
+    values
+      .map(iso)
+      .filter((value): value is string => !!value && Date.parse(value) <= Date.now())
+      .sort()[0] || null
+  );
+}
+
+export function platformBoardCreationSeries(
+  records: Data[],
+  dates: { from: string; to: string; group: string },
+) {
+  const period = (day: string) =>
+    dates.group === 'year' ? day.slice(0, 4) : dates.group === 'month' ? day.slice(0, 7) : day;
+  const series = new Map<string, { period: string; boards: number }>();
+  for (let stamp = Date.parse(dates.from); stamp <= Date.parse(dates.to); stamp += DAY) {
+    const key = period(new Date(stamp).toISOString().slice(0, 10));
+    if (!series.has(key)) series.set(key, { period: key, boards: 0 });
+  }
+  let total = 0,
+    missingDates = 0;
+  for (const record of records) {
+    const created = platformBoardCreatedAt(record.created_at);
+    if (!created) {
+      missingDates++;
+      continue;
+    }
+    const day = created.slice(0, 10);
+    if (day < dates.from || day > dates.to) continue;
+    series.get(period(day))!.boards++;
+    total++;
+  }
+  const datedBoards = records.length - missingDates;
+  return {
+    preparing: false,
+    total: !datedBoards && missingDates ? null : total,
+    datedBoards,
+    missingDates,
+    series: [...series.values()],
+  };
+}
 
 export async function requirePlatformAnalyticsAdmin(uid?: string): Promise<void> {
   if (!uid) throw new HttpsError('unauthenticated', 'Sign in to view platform analytics.');
@@ -80,7 +125,7 @@ function inventoryRecord(boardId: string, published?: Data, draft?: Data): Data 
     visibility: source.visibility || 'private',
     cards: cards.length,
     talking_cards: talking.length,
-    created_at: iso(source.created_at || source.created_at_iso || source.createdAt),
+    created_at: platformBoardCreatedAt(source.created_at, source.created_at_iso, source.createdAt),
     published: !deleted(published),
     talking: talking.map((c) => ({
       id: c.id,
@@ -92,17 +137,45 @@ function inventoryRecord(boardId: string, published?: Data, draft?: Data): Data 
   };
 }
 /** Read current canonical sources inside the transaction: delayed/repeated events cannot restore stale counts. */
-export async function syncPlatformInventoryBoard(boardId: string): Promise<void> {
+export async function syncPlatformInventoryBoard(
+  boardId: string,
+  observedSources: Data[] = [],
+): Promise<void> {
   if (!validId(boardId)) return;
   const ref = inventory.doc(boardId);
   await db.runTransaction(async (tx) => {
-    const [published, draft, previous] = await tx.getAll(
+    const [published, draft, previous, creation] = await tx.getAll(
       db.collection('boards').doc(boardId),
       db.collection('team_boards').doc(boardId),
       ref,
+      boardCreations.doc(boardId),
     );
     const next = inventoryRecord(boardId, published.data(), draft.data());
     const before = previous.data();
+    const savedDate = platformBoardCreatedAt(
+      creation.data()?.created_at,
+      before?.created_at,
+      ...[draft.data(), published.data(), ...observedSources].flatMap((source) => [
+        source?.created_at,
+        source?.created_at_iso,
+        source?.createdAt,
+      ]),
+    );
+    if (next) next.created_at = savedDate;
+    // This ledger survives deletion and counts a draft/published pair only once.
+    if (
+      (next || before || observedSources.length) &&
+      (!creation.exists || creation.data()?.created_at !== savedDate)
+    ) {
+      tx.set(
+        creation.ref,
+        {
+          created_at: savedDate,
+          ...(creation.exists ? {} : { first_recorded_at: Timestamp.now() }),
+        },
+        { merge: true },
+      );
+    }
     const fingerprint = hash(JSON.stringify(next));
     if (before?.fingerprint === fingerprint || (!before && !next)) return;
     const shard = Number.parseInt(hash(boardId).slice(0, 8), 16) % SHARDS;
@@ -125,19 +198,35 @@ export async function syncPlatformInventoryBoard(boardId: string): Promise<void>
     else tx.delete(ref);
   });
   inventoryCache = null;
+  creationCache = null;
+  reportCache.clear();
 }
 export const syncPlatformBoardInventory = onDocumentWritten(
   { ...options, document: 'boards/{boardId}', retry: true },
-  (event) => syncPlatformInventoryBoard(event.params.boardId),
+  (event) =>
+    syncPlatformInventoryBoard(
+      event.params.boardId,
+      [event.data?.before.data(), event.data?.after.data()].filter(
+        (source): source is Data => !!source,
+      ),
+    ),
 );
 export const syncPlatformTeamInventory = onDocumentWritten(
   { ...options, document: 'team_boards/{boardId}', retry: true },
-  (event) => syncPlatformInventoryBoard(event.params.boardId),
+  (event) =>
+    syncPlatformInventoryBoard(
+      event.params.boardId,
+      [event.data?.before.data(), event.data?.after.data()].filter(
+        (source): source is Data => !!source,
+      ),
+    ),
 );
 
 /** ASR silence markers (for example "...") are not visitor messages. */
 export function hasPlatformVisitorMessage(turn: Data): boolean {
-  return turn.role === 'user' && typeof turn.message === 'string' && /[\p{L}\p{N}]/u.test(turn.message);
+  return (
+    turn.role === 'user' && typeof turn.message === 'string' && /[\p{L}\p{N}]/u.test(turn.message)
+  );
 }
 export type PlatformUsage = {
   boardId: string;
@@ -340,9 +429,7 @@ export async function ingestPlatformConversation(
   const voice = source === 'team' || data.mode === 'voice';
   const questions =
     count(data.questions) ||
-    (Array.isArray(data.transcript)
-      ? data.transcript.filter(hasPlatformVisitorMessage).length
-      : 0);
+    (Array.isArray(data.transcript) ? data.transcript.filter(hasPlatformVisitorMessage).length : 0);
   if (!questions) return;
   let providerId = text(data.provider_conversation_id || data.providerId);
   if (voice && !providerId) {
@@ -379,7 +466,9 @@ export async function recordPlatformVerifiedVoice(
 ): Promise<void> {
   const boardId = String(job.board_id),
     cardId = String(job.card_id);
-  const questions = (Array.isArray(details.transcript) ? details.transcript : []).filter(hasPlatformVisitorMessage).length;
+  const questions = (Array.isArray(details.transcript) ? details.transcript : []).filter(
+    hasPlatformVisitorMessage,
+  ).length;
   const startedAt = iso(Number(details.metadata?.start_time_unix_secs) * 1000);
   if (!questions || !startedAt) return;
   const context = await usageContext(boardId, cardId, job);
@@ -596,18 +685,25 @@ export async function startPlatformSync(): Promise<string> {
 }
 /** Requeue a stalled handoff, at most once a minute, without replacing an active lease. */
 export async function wakePlatformSync(jobId: string, observed?: Data): Promise<void> {
-  const stale = (value?: Data) => value && ['queued', 'running'].includes(value.status)
-    && !(value.leaseUntil?.toMillis() > Date.now())
-    && (value.updatedAt || value.createdAt)?.toMillis() < Date.now() - 45000
-    && !(value.lastWakeAt?.toMillis() > Date.now() - 60000);
+  const stale = (value?: Data) =>
+    value &&
+    ['queued', 'running'].includes(value.status) &&
+    !(value.leaseUntil?.toMillis() > Date.now()) &&
+    (value.updatedAt || value.createdAt)?.toMillis() < Date.now() - 45000 &&
+    !(value.lastWakeAt?.toMillis() > Date.now() - 60000);
   if (observed && !stale(observed)) return;
-  await db.runTransaction(async tx => {
-    const ref = jobs.doc(jobId), job = (await tx.get(ref)).data();
+  await db.runTransaction(async (tx) => {
+    const ref = jobs.doc(jobId),
+      job = (await tx.get(ref)).data();
     if (!stale(job)) return;
     const batch = batches.doc(`${jobId}_${job!.step}_${Math.floor(Date.now() / 60000)}`);
     if ((await tx.get(batch)).exists) return;
-    tx.create(batch, {jobId, step: job!.step, expires_at: Timestamp.fromMillis(Date.now() + 7 * DAY)});
-    tx.update(ref, {lastWakeAt: Timestamp.now()});
+    tx.create(batch, {
+      jobId,
+      step: job!.step,
+      expires_at: Timestamp.fromMillis(Date.now() + 7 * DAY),
+    });
+    tx.update(ref, { lastWakeAt: Timestamp.now() });
   });
 }
 export const startPlatformAnalyticsSync = onCall({ ...options, cors: true }, async (request) => {
@@ -674,7 +770,12 @@ export async function processPlatformBatch(jobId: string, step: number): Promise
       if (finished)
         tx.set(
           meta,
-          { inventoryReady: true, updatedAt: Timestamp.now(), lastSyncAt: Timestamp.now() },
+          {
+            inventoryReady: true,
+            boardCreationsReady: true,
+            updatedAt: Timestamp.now(),
+            lastSyncAt: Timestamp.now(),
+          },
           { merge: true },
         );
       else
@@ -699,7 +800,11 @@ export async function processPlatformBatch(jobId: string, step: number): Promise
   }
 }
 /** Continue while this invocation owns the queue; delayed events cannot strand the next page. */
-export async function drainPlatformBatches(jobId: string, step: number, budgetMs = 420000): Promise<void> {
+export async function drainPlatformBatches(
+  jobId: string,
+  step: number,
+  budgetMs = 420000,
+): Promise<void> {
   const deadline = Date.now() + budgetMs;
   while (Date.now() < deadline) {
     await processPlatformBatch(jobId, step);
@@ -768,6 +873,13 @@ let inventoryCache: {
   updatedAt: string | null;
 } | null = null;
 const reportCache = new Map<string, { until: number; value: Data }>();
+let creationCache: { until: number; records: Data[] } | null = null;
+async function creationSnapshot(): Promise<Data[]> {
+  if (creationCache && creationCache.until > Date.now()) return creationCache.records;
+  const records = (await readAll(boardCreations.orderBy('__name__'))).map((doc) => doc.data());
+  creationCache = { until: Date.now() + 30000, records };
+  return records;
+}
 async function inventorySnapshot() {
   if (inventoryCache && inventoryCache.until > Date.now()) return inventoryCache;
   const [docs, counters] = await Promise.all([
@@ -839,7 +951,17 @@ export const getPlatformAnalytics = onCall(
       await startPlatformSync();
       state = (await meta.get()).data();
     }
-    const job = state?.jobId ? (await jobs.doc(state.jobId).get()).data() : null;
+    let job = state?.jobId ? (await jobs.doc(state.jobId).get()).data() : null;
+    // Upgrade existing installations in the background while keeping usage reports available.
+    if (
+      state?.inventoryReady &&
+      !state.boardCreationsReady &&
+      (!job || job.status === 'complete')
+    ) {
+      await startPlatformSync();
+      state = (await meta.get()).data();
+      job = (await jobs.doc(state!.jobId).get()).data() || null;
+    }
     if (state?.jobId && job) await wakePlatformSync(state.jobId, job);
     const progress = job
       ? {
@@ -857,19 +979,25 @@ export const getPlatformAnalytics = onCall(
         error:
           job?.status === 'error' ? 'The initial sync could not finish. Retry the sync.' : null,
       };
-    const cacheKey = JSON.stringify([dates, state.lastSyncAt?.toMillis()]);
+    const cacheKey = JSON.stringify([
+      dates,
+      state.lastSyncAt?.toMillis(),
+      state.boardCreationsReady === true,
+    ]);
     let cached = reportCache.get(cacheKey);
     if (input.refresh === true) {
       inventoryCache = null;
+      creationCache = null;
       reportCache.delete(cacheKey);
       cached = undefined;
     }
     let report = cached && cached.until > Date.now() ? cached.value : null;
     if (!report) {
-      const [inv, docs, statuses] = await Promise.all([
+      const [inv, docs, statuses, creations] = await Promise.all([
         inventorySnapshot(),
         readAll(daily.where('day', '>=', dates.from).where('day', '<=', dates.to).orderBy('day')),
         readAll(pending.orderBy('__name__'), 20000),
+        state.boardCreationsReady ? creationSnapshot() : Promise.resolve(null),
       ]);
       const empty = () => ({
         conversations: 0,
@@ -945,6 +1073,9 @@ export const getPlatformAnalytics = onCall(
         inventoryRecords: inv.records,
         totals: { ...totals, activeCards: activeCards.size },
         series: [...series.values()],
+        boardCreation: creations
+          ? platformBoardCreationSeries(creations, dates)
+          : { preparing: true },
         activity: [...activity.values()],
         trackingSince,
         coverage: {
@@ -1109,9 +1240,9 @@ export const getPlatformInventory = onCall(
       state = (await meta.get()).data();
     }
     if (!state?.inventoryReady) {
-    if (state?.jobId) await wakePlatformSync(state.jobId);
-    return { preparing: true, inventory: null };
-  }
+      if (state?.jobId) await wakePlatformSync(state.jobId);
+      return { preparing: true, inventory: null };
+    }
     const result = await inventorySnapshot();
     return { preparing: false, inventory: result.totals, updatedAt: result.updatedAt };
   },

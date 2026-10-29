@@ -6,7 +6,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 const require = createRequire(new URL('../../functions/package.json', import.meta.url));
 process.env.GCLOUD_PROJECT = 'demo-living-wiki';
 const { db } = require('./lib/firebase');
-const { Timestamp } = require('firebase-admin/firestore');
+const { Timestamp, FieldValue } = require('firebase-admin/firestore');
 const api = require('./lib/platform-analytics');
 const cardApi = require('./lib/card-analytics');
 const admin = 'platform-admin',
@@ -58,20 +58,24 @@ async function bootstrap() {
 let baseline = { boards: 0, cards: 0, talkingCards: 0 };
 async function totals() {
   const value = (await api.getPlatformInventory.run({ ...actor, data: {} })).inventory;
-  return Object.fromEntries(Object.keys(baseline).map(key => [key, value[key] - baseline[key]]));
+  return Object.fromEntries(Object.keys(baseline).map((key) => [key, value[key] - baseline[key]]));
 }
 before(async () => {
   assert.ok(process.env.FIRESTORE_EMULATOR_HOST, 'Use emulator, never production.');
   // Other serial integration suites may leave unrelated boards in this emulator.
   const canonical = new Map();
   for (const collection of ['boards', 'team_boards']) {
-    for (const doc of (await db.collection(collection).get()).docs) canonical.set(doc.id, doc.data());
+    for (const doc of (await db.collection(collection).get()).docs)
+      canonical.set(doc.id, doc.data());
   }
   for (const board of canonical.values()) {
     if (board.deleted || board.is_deleted || board.deleted_at || board.deletedAt) continue;
     const list = api.platformCards(board.cards);
-    baseline.boards++; baseline.cards += list.length;
-    baseline.talkingCards += list.filter(c => c.conversation?.provider === 'atlas' && c.conversation?.atlasId).length;
+    baseline.boards++;
+    baseline.cards += list.length;
+    baseline.talkingCards += list.filter(
+      (c) => c.conversation?.provider === 'atlas' && c.conversation?.atlasId,
+    ).length;
   }
   await db.collection('users').doc(admin).set({ role: 'admin', displayName: 'Platform Admin' });
   await db.collection('users').doc(owner).set({ role: 'user', displayName: 'Fixture Owner' });
@@ -109,7 +113,7 @@ before(async () => {
 });
 after(async () => {
   for (const name of ['boards', 'team_boards'])
-    for (const id of [boardId, teamBoard, 'platform-other-board'])
+    for (const id of [boardId, teamBoard, 'platform-other-board', 'platform-creation-fixture'])
       await db.collection(name).doc(id).delete();
   await db.collection('atlases').doc(atlasId).delete();
   await db.collection('teams').doc('platform-team').delete();
@@ -141,15 +145,136 @@ test('bootstrap is idempotent and counts nested cards and team drafts exactly on
   await api.processPlatformBatch(id, complete.step - 1);
   assert.deepEqual(await totals(), { boards: 2, cards: 4, talkingCards: 2 });
 });
+test('creation series uses saved UTC dates, fills gaps, and groups exact boundaries', () => {
+  const records = [
+    '2026-01-31T23:59:59Z',
+    '2026-02-01T00:30:00+01:00',
+    '2026-02-01T00:00:00Z',
+    '2026-02-01T23:59:59Z',
+    '2025-12-31T23:59:59Z',
+    null,
+    'invalid',
+    '2099-01-01T00:00:00Z',
+  ].map((created_at) => ({ created_at }));
+  const dates = { from: '2026-01-30', to: '2026-02-01', group: 'day' };
+  const daily = api.platformBoardCreationSeries(records, dates);
+  assert.deepEqual(daily.series, [
+    { period: '2026-01-30', boards: 0 },
+    { period: '2026-01-31', boards: 2 },
+    { period: '2026-02-01', boards: 2 },
+  ]);
+  assert.equal(daily.total, 4);
+  assert.equal(daily.missingDates, 3);
+  assert.equal(daily.datedBoards, 5);
+  assert.deepEqual(api.platformBoardCreationSeries(records, { ...dates, group: 'month' }).series, [
+    { period: '2026-01', boards: 2 },
+    { period: '2026-02', boards: 2 },
+  ]);
+  assert.deepEqual(
+    api.platformBoardCreationSeries(records, { ...dates, from: '2025-12-01', group: 'year' })
+      .series,
+    [
+      { period: '2025', boards: 1 },
+      { period: '2026', boards: 4 },
+    ],
+  );
+  assert.equal(
+    api.platformBoardCreatedAt('bad', Timestamp.fromDate(new Date('2026-01-01')), '2026-02-01'),
+    '2026-01-01T00:00:00.000Z',
+  );
+});
+test('unknown creation dates are never replaced by a sync date or a measured zero', () => {
+  const dates = { from: '2026-01-01', to: '2026-01-02', group: 'day' };
+  const unknown = api.platformBoardCreationSeries([{ created_at: null }], dates);
+  assert.equal(unknown.total, null);
+  assert.equal(unknown.missingDates, 1);
+  assert.equal(api.platformBoardCreationSeries([], dates).total, 0);
+});
+test('creation history counts a team draft/published pair once and survives edits and deletion', async () => {
+  const id = 'platform-creation-fixture';
+  await db
+    .collection('boards')
+    .doc(id)
+    .set({ owner_user_id: owner, created_at_iso: '2026-01-31T23:59:59Z', cards: [] });
+  await api.syncPlatformInventoryBoard(id);
+  await db.collection('team_boards').doc(id).set({
+    owner_user_id: owner,
+    team_id: 'platform-team',
+    created_at_iso: '2026-02-02T00:00:00Z',
+    cards: [],
+  });
+  await Promise.all([api.syncPlatformInventoryBoard(id), api.syncPlatformInventoryBoard(id)]);
+  assert.equal((await totals()).boards, 3);
+  const ref = db.collection('platform_analytics_board_creations').doc(id);
+  assert.equal((await ref.get()).data().created_at, '2026-01-31T23:59:59.000Z');
+  await db.collection('boards').doc(id).update({ created_at_iso: '2026-02-05T00:00:00Z' });
+  await api.syncPlatformInventoryBoard(id);
+  assert.equal((await ref.get()).data().created_at, '2026-01-31T23:59:59.000Z');
+  await db.collection('boards').doc(id).delete();
+  await db.collection('team_boards').doc(id).delete();
+  await api.syncPlatformInventoryBoard(id);
+  assert.equal((await totals()).boards, 2);
+  assert.equal((await ref.get()).data().created_at, '2026-01-31T23:59:59.000Z');
+  const visitor = await call({ refresh: true }),
+    internal = await call({ includeInternal: true, refresh: true });
+  assert.deepEqual(visitor.boardCreation, internal.boardCreation);
+  assert.ok(
+    visitor.boardCreation.series.some((row) => row.period === '2026-01-31' && row.boards >= 1),
+  );
+});
+test('existing installations backfill creation history without blocking current usage reports', async () => {
+  await db
+    .collection('platform_analytics_meta')
+    .doc('state')
+    .update({ boardCreationsReady: FieldValue.delete() });
+  const preparing = await call({ refresh: true });
+  assert.equal(preparing.preparing, false);
+  assert.ok(preparing.inventory);
+  assert.equal(preparing.boardCreation.preparing, true);
+  await bootstrap();
+  const completed = await call({ refresh: true });
+  assert.equal(completed.boardCreation.preparing, false);
+  assert.ok(completed.boardCreation.series.length);
+});
+test('delayed deletion events retain a creation without restoring a deleted board', async () => {
+  await api.syncPlatformInventoryBoard('platform-deleted-before-delivery', [
+    { created_at_iso: '2026-01-15T08:00:00Z' },
+  ]);
+  assert.equal(
+    (
+      await db
+        .collection('platform_analytics_inventory')
+        .doc('platform-deleted-before-delivery')
+        .get()
+    ).exists,
+    false,
+  );
+  const creation = await db
+    .collection('platform_analytics_board_creations')
+    .doc('platform-deleted-before-delivery')
+    .get();
+  assert.equal(creation.data().created_at, '2026-01-15T08:00:00.000Z');
+  assert.equal((await totals()).boards, 2);
+});
 test('a stalled handoff is safely requeued once and drains without another event', async () => {
-  const id=await api.startPlatformSync();
-  await db.collection('platform_analytics_jobs').doc(id).update({updatedAt:Timestamp.fromMillis(Date.now()-120000)});
-  const before=(await db.collection('platform_analytics_batches').where('jobId','==',id).get()).size;
-  await Promise.all([api.wakePlatformSync(id),api.wakePlatformSync(id)]);
-  assert.equal((await db.collection('platform_analytics_batches').where('jobId','==',id).get()).size,before+1);
-  await api.drainPlatformBatches(id,0,20000);
-  assert.equal((await db.collection('platform_analytics_jobs').doc(id).get()).data().status,'complete');
-  assert.deepEqual(await totals(),{boards:2,cards:4,talkingCards:2});
+  const id = await api.startPlatformSync();
+  await db
+    .collection('platform_analytics_jobs')
+    .doc(id)
+    .update({ updatedAt: Timestamp.fromMillis(Date.now() - 120000) });
+  const before = (await db.collection('platform_analytics_batches').where('jobId', '==', id).get())
+    .size;
+  await Promise.all([api.wakePlatformSync(id), api.wakePlatformSync(id)]);
+  assert.equal(
+    (await db.collection('platform_analytics_batches').where('jobId', '==', id).get()).size,
+    before + 1,
+  );
+  await api.drainPlatformBatches(id, 0, 20000);
+  assert.equal(
+    (await db.collection('platform_analytics_jobs').doc(id).get()).data().status,
+    'complete',
+  );
+  assert.deepEqual(await totals(), { boards: 2, cards: 4, talkingCards: 2 });
 });
 test('inventory sync reads the latest canonical data on repeated and out-of-order delivery', async () => {
   await db
@@ -333,16 +458,42 @@ test('a real internal text handler is measured without storing question text or 
 });
 test('analytics preparation failures cannot interrupt a real answer', async () => {
   const original = db.getAll;
-  db.getAll = async () => { throw new Error('Telemetry unavailable'); };
+  db.getAll = async () => {
+    throw new Error('Telemetry unavailable');
+  };
   try {
-    const answer = await api.withPlatformTextUsage(async () => 'Answer remains available')({auth:{uid:owner},data:{atlasId,boardId,cardId,analyticsSessionId:'session_resilience',analyticsRequestId:'request_resilience'}});
+    const answer = await api.withPlatformTextUsage(async () => 'Answer remains available')({
+      auth: { uid: owner },
+      data: {
+        atlasId,
+        boardId,
+        cardId,
+        analyticsSessionId: 'session_resilience',
+        analyticsRequestId: 'request_resilience',
+      },
+    });
     assert.equal(answer, 'Answer remains available');
-  } finally { db.getAll = original; }
+  } finally {
+    db.getAll = original;
+  }
 });
 test('internal draft conversations use the team board context', async () => {
-  await api.withPlatformTextUsage(async () => 'Draft answer')({auth:{uid:owner},data:{atlasId,boardId:teamBoard,cardId:'team-card',analyticsSessionId:'draft_session',analyticsRequestId:'draft_request'}});
-  const sessions=await db.collection('platform_analytics_text_sessions').where('board_id','==',teamBoard).get();
-  assert.equal(sessions.size,1);assert.equal(sessions.docs[0].data().team_id,'platform-team');
+  await api.withPlatformTextUsage(async () => 'Draft answer')({
+    auth: { uid: owner },
+    data: {
+      atlasId,
+      boardId: teamBoard,
+      cardId: 'team-card',
+      analyticsSessionId: 'draft_session',
+      analyticsRequestId: 'draft_request',
+    },
+  });
+  const sessions = await db
+    .collection('platform_analytics_text_sessions')
+    .where('board_id', '==', teamBoard)
+    .get();
+  assert.equal(sessions.size, 1);
+  assert.equal(sessions.docs[0].data().team_id, 'platform-team');
 });
 test('automated QA and ordinary workspace requests without card metadata are not internal conversations', async () => {
   const before = (await db.collection('platform_analytics_text_sessions').get()).size;
@@ -377,7 +528,12 @@ test('unknown voice durations stay explicitly unknown', async () => {
 });
 test('owner and legacy voice sessions are globally verified without creating fake browser visitors', async () => {
   const today = new Date().toISOString().slice(0, 10);
-  const baselineUsage = await call({from:today,to:today,includeInternal:true,refresh:true});
+  const baselineUsage = await call({
+    from: today,
+    to: today,
+    includeInternal: true,
+    refresh: true,
+  });
   const originalFetch = globalThis.fetch;
   process.env.ELEVENLABS_API_KEY = 'fixture_key';
   for (const [uid, browser, message] of [
@@ -486,6 +642,7 @@ test('Firestore clients cannot read or forge platform metrics, even as a platfor
         : env.unauthenticatedContext().firestore();
       for (const collection of [
         'platform_analytics_inventory',
+        'platform_analytics_board_creations',
         'platform_analytics_usage',
         'platform_analytics_daily',
         'platform_analytics_meta',

@@ -21,6 +21,16 @@ const result = (): PlatformReport => ({
     activeCards: 1,
   },
   series: [],
+  boardCreation: {
+    preparing: false,
+    total: 3,
+    datedBoards: 3,
+    missingDates: 0,
+    series: [
+      { period: '2026-01-30', boards: 0 },
+      { period: '2026-01-31', boards: 3 },
+    ],
+  },
   coverage: { partial: false, unrecorded: false },
   breakdown: {
     view: 'cards',
@@ -130,9 +140,46 @@ describe('Platform analytics', () => {
       'Service unavailable',
     );
   });
+  it('renders real board creation buckets with integer axes and accessible values', async () => {
+    const f = TestBed.createComponent(PlatformAnalyticsComponent);
+    await f.whenStable();
+    f.detectChanges();
+    const chart = f.nativeElement.querySelector('.creation-panel');
+    expect(chart.textContent).toContain('Boards created over time');
+    expect(chart.querySelector('.creation-total strong').textContent.trim()).toBe('3');
+    expect(chart.querySelector('button[aria-label="2026-01-31: 3"]')).not.toBeNull();
+    expect(f.componentInstance.creationTicks().every(Number.isInteger)).toBeTrue();
+    expect(new Set(f.componentInstance.creationTicks()).size).toBe(
+      f.componentInstance.creationTicks().length,
+    );
+  });
+  it('keeps current inventory available while creation history is preparing', async () => {
+    api.report.and.resolveTo({ ...result(), boardCreation: { preparing: true } });
+    const f = TestBed.createComponent(PlatformAnalyticsComponent);
+    await f.whenStable();
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('.creation-panel [role="status"]').textContent).toContain(
+      'Preparing board creation history',
+    );
+    expect(f.nativeElement.querySelector('.inventory-grid')).not.toBeNull();
+    f.destroy();
+  });
+  it('does not display missing creation dates as zero creations', async () => {
+    api.report.and.resolveTo({
+      ...result(),
+      boardCreation: { preparing: false, total: null, datedBoards: 0, missingDates: 3, series: [] },
+    });
+    const f = TestBed.createComponent(PlatformAnalyticsComponent);
+    await f.whenStable();
+    f.detectChanges();
+    const chart = f.nativeElement.querySelector('.creation-panel');
+    expect(chart.textContent).toContain('No recorded creation dates are available.');
+    expect(chart.querySelector('.creation-total')).toBeNull();
+  });
   it('replaces opaque callable errors with a useful retry message', async () => {
     api.report.and.rejectWith(new Error('internal'));
-    const f = TestBed.createComponent(PlatformAnalyticsComponent); await f.whenStable();
+    const f = TestBed.createComponent(PlatformAnalyticsComponent);
+    await f.whenStable();
     expect(f.componentInstance.error()).toBe('Platform analytics could not be loaded.');
   });
   it('rejects invalid dates without calling the server', async () => {
