@@ -8,7 +8,7 @@
       @if (report(); as r) {
         <a class="analytics-back" [routerLink]="boardPath()"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span><span i18n>Back to board</span></a>
         <section class="analytics-heading"><div><span class="eyebrow" i18n>Card analytics</span><h1>{{ r.card.title }}</h1><p>{{ r.board.title }} <span aria-hidden="true">·</span> <span i18n>Activity for this card only</span></p></div><div class="analytics-links">@if(r.canViewBoardAnalytics){<a [routerLink]="boardAnalyticsPath()" i18n>Board analytics</a>}<a [routerLink]="boardPath()" [queryParams]="{card:cardId()}" i18n>View card</a>@if(r.card.talking && r.canReadTranscripts){<a [routerLink]="qaPath()"><span class="material-symbols-outlined" aria-hidden="true">fact_check</span><span i18n>Avatar QA</span></a>}</div></section>
-        <div class="analytics-toolbar"><span i18n>{{ r.range.from | date:'MMM d':'UTC' }} – {{ r.range.to | date:'MMM d, y':'UTC' }} · UTC</span><div class="range" role="group" aria-label="Date range" i18n-aria-label>@for(option of rangeOptions;track option.days){<button type="button" [class.selected]="days()===option.days" [attr.aria-pressed]="days()===option.days" (click)="selectRange(option.days)">{{option.label}}</button>}</div><button class="refresh" type="button" [disabled]="refreshing()" (click)="load()"><span class="material-symbols-outlined" [class.spin]="refreshing()" aria-hidden="true">refresh</span><span i18n>Refresh</span></button></div>
+        <div class="analytics-toolbar"><div class="analytics-dates"><span i18n>{{ r.range.from | date:'MMM d':'UTC' }} – {{ r.range.to | date:'MMM d, y':'UTC' }}</span><small i18n>Dates shown in UTC</small></div><div class="range" role="group" aria-label="Date range" i18n-aria-label>@for(option of rangeOptions;track option.days){<button type="button" [class.selected]="days()===option.days" [attr.aria-pressed]="days()===option.days" (click)="selectRange(option.days)">{{option.label}}</button>}</div><button class="refresh" type="button" [disabled]="refreshing()" (click)="load()"><span class="material-symbols-outlined" [class.spin]="refreshing()" aria-hidden="true">refresh</span><span i18n>Refresh</span></button></div>
         <section class="analytics-kpis" [class.standard-card]="!r.card.talking" aria-label="Card activity summary" i18n-aria-label>
           <article><span class="material-symbols-outlined" aria-hidden="true">group</span><small i18n>Card visitors</small><strong>{{r.visitors | number}}</strong><p i18n>{{r.opens | number}} opens · distinct browsers</p></article>
           @if(r.card.talking){
@@ -17,9 +17,19 @@
             <article><span class="material-symbols-outlined" aria-hidden="true">timer</span><small i18n>Average conversation time</small><strong>{{duration(average())}}</strong><p i18n>Voice recorded · text estimated</p></article>
           } @else {<article><span class="material-symbols-outlined" aria-hidden="true">ads_click</span><small i18n>Outbound clicks</small><strong>{{r.outboundClicks | number}}</strong><p i18n>Clicks to a destination</p></article>}
         </section>
-        <p class="analytics-note"><span class="material-symbols-outlined" aria-hidden="true">info</span><span i18n>Visitors are anonymous browser counts. Detailed tracking starts with this release. Older transcripts and durations are not backfilled.</span><span class="analytics-exclusions" i18n>Owner and administrator activity, QA tests, and visits to analytics pages are excluded.</span>@if(r.trackingStartedAt){<span i18n>Tracking began {{r.trackingStartedAt | date:'mediumDate':'UTC'}}.</span>}</p>
+        <div class="analytics-context">
+          <p i18n>Visitor counts represent browsers, not individual people.</p>
+          @if(r.trackingStartedAt){<p i18n>Detailed activity is recorded from {{r.trackingStartedAt | date:'mediumDate':'UTC'}}.</p>}
+          @else{<p i18n>Detailed activity will appear after the first visitor interaction.</p>}
+          <details>
+            <summary i18n>How analytics works</summary>
+            <p i18n>Owner and administrator activity, QA tests, and visits to analytics pages are excluded.</p>
+            <p i18n>Previously recorded activity remains available. Details that were never recorded cannot be reconstructed.</p>
+            @if(r.card.talking){<p i18n>Text duration estimates observed activity between messages, with idle gaps capped at one minute. Voice duration is supplied by the provider.</p>}
+          </details>
+        </div>
         @if(r.card.talking){
-          <section class="analytics-panel trend-panel"><header><div><h2 i18n>Conversations over time</h2><p i18n>One conversation starts with a visitor message. Dates use UTC.</p></div><strong>{{r.conversations.length | number}}</strong></header>
+          <section class="analytics-panel trend-panel"><header><div><h2 i18n>Conversations over time</h2><p i18n>One conversation starts with a visitor message.</p></div><strong>{{r.conversations.length | number}}</strong></header>
             @if(r.conversations.length){<div class="trend" aria-label="Daily conversations" i18n-aria-label>@for(day of trend();track day.day){<div class="trend-day"><div class="trend-column"><button type="button" [style.height.%]="day.count ? 8+day.count/maxTrend()*92 : 2" [class.empty]="!day.count" [attr.aria-label]="day.day+': '+day.count" [attr.title]="day.day+': '+day.count"><span class="trend-tooltip">{{day.day}} · {{day.count}}</span></button></div>@if($first || $last || (days()===7) || $index%7===0){<small>{{day.day | date:'MMM d':'UTC'}}</small>}</div>}</div>}
             @else {<div class="analytics-empty"><span class="material-symbols-outlined" aria-hidden="true">forum</span><strong i18n>No conversations recorded yet</strong><p i18n>New visitor conversations on this card will appear here. Owner activity and QA tests are excluded.</p></div>}
           </section>
@@ -36,7 +46,7 @@
           @if(r.canReadTranscripts && r.popularQuestions?.length){<details class="analytics-panel attention"><summary i18n>Most asked questions</summary><p i18n>Exact questions grouped without changing their wording. Text and verified voice conversations are included.</p>@for(q of r.popularQuestions;track q.question){<a class="popular-question" [routerLink]="qaPath()" [queryParams]="{question:q.question}"><span>{{q.question}}</span><strong>{{q.count | number}}</strong></a>}</details>}
           @if(needsAttention().length){<details class="analytics-panel attention"><summary i18n>Conversations needing attention ({{needsAttention().length}})</summary><p i18n>These conversations include a failed answer or an answer flagged as a knowledge gap by the app. This is not an automated safety assessment.</p>@for(row of needsAttention();track row.id){<button type="button" (click)="openDetails(row)" [disabled]="!r.canReadTranscripts || row.canReadTranscript===false">{{row.firstQuestion || row.visitor}}<span class="material-symbols-outlined" aria-hidden="true">chevron_right</span></button>}</details>}
         }
-        <footer class="analytics-footnote"><span class="material-symbols-outlined" aria-hidden="true">lock</span><span i18n>Private to authorized administrators. Conversations are retained for 90 days. Text duration estimates observed activity between messages, with idle gaps capped at one minute; voice duration is supplied by the provider.</span></footer>
+        <footer class="analytics-footnote"><span class="material-symbols-outlined" aria-hidden="true">lock</span><span i18n>Private to authorized administrators. Conversations are retained for 90 days.</span></footer>
       }
     </main>
   </div>

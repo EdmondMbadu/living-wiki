@@ -803,10 +803,6 @@
     "source": "Fresh narration could not be created.",
     "file": "src/app/boards/boards.ts"
   },
-  "1253626514377470831": {
-    "source": "Visitors are anonymous browser counts. Detailed tracking starts with this release. Older transcripts and durations are not backfilled.",
-    "file": "src/app/card-analytics/card-analytics.html"
-  },
   "1253970445863215538": {
     "source": "Stop saved voice preview",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
@@ -2849,7 +2845,7 @@
   },
   "1860501119422454013": {
     "source": "Owner and administrator activity, QA tests, and visits to analytics pages are excluded.",
-    "file": "src/app/card-analytics/card-analytics.html"
+    "file": "src/app/board-insights/board-insights.html"
   },
   "1863311581510100043": {
     "source": "from your saved threads.",
@@ -3362,10 +3358,6 @@
   "2021756259208992603": {
     "source": " No metrics yet. Save city settings and refresh the snapshot. ",
     "file": "src/app/city-pulse-admin/city-pulse-admin.html"
-  },
-  "2021764825649992448": {
-    "source": "Tracking began {$INTERPOLATION}.",
-    "file": "src/app/board-insights/board-insights.html"
   },
   "2022969013276110482": {
     "source": "Operational Flow",
@@ -6327,6 +6319,10 @@
     "source": "Searching knowledge base",
     "file": "src/app/chat/chat.ts"
   },
+  "2976680874064921166": {
+    "source": "Private to authorized administrators. Conversations are retained for 90 days.",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "2976754607591419703": {
     "source": "Preview, deduplicate, and create",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -7098,6 +7094,10 @@
   "3186452641234187874": {
     "source": " Every public city Wiki currently has a cover image. ",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "3186805904264454109": {
+    "source": "Previously recorded activity remains available. Details that were never recorded cannot be reconstructed.",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "31884475587223189": {
     "source": "Inside",
@@ -8002,6 +8002,10 @@
   "3448462145758383019": {
     "source": "Total",
     "file": "src/app/business/business.html"
+  },
+  "3451327579407703999": {
+    "source": "Dates shown in UTC",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "3451683641196393363": {
     "source": "Playing preview",
@@ -9455,6 +9459,10 @@
     "source": "Choose a voice that feels right. Tap Listen to hear it first.",
     "file": "src/app/kiwi/kiwi.html"
   },
+  "3898410421233470512": {
+    "source": "How analytics works",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "3898763300307281411": {
     "source": " Remembered it? {$START_TAG_BUTTON}Return to sign in{$CLOSE_TAG_BUTTON}",
     "file": "src/app/forgot-password/forgot-password.html"
@@ -10543,6 +10551,10 @@
     "source": " These are the institutions this page trusts right now. Each source stays visible even when it temporarily has zero active listings. ",
     "file": "src/app/green-jobs/green-jobs.html"
   },
+  "4221324966107302227": {
+    "source": "Detailed activity will appear after the first visitor interaction.",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "4221504296480510088": {
     "source": "As of {$INTERPOLATION}",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -11287,10 +11299,6 @@
     "source": "Search loaded signups by name, email, agency, or notes...",
     "file": "src/app/admin-users/talkthru-interests-admin.html"
   },
-  "4466438366939136462": {
-    "source": "Dates use UTC. Unique visitors count browsers, not identified people. Conversation and visitor details begin with this release; older activity cannot be reconstructed.",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "4467323362722952678": {
     "source": "Unknown",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -11754,6 +11762,10 @@
   "4587737600969915636": {
     "source": "Queueing article URLs one by one and waiting for ingestion to finish.",
     "file": "src/app/web-scraper/web-scraper.ts"
+  },
+  "4589018647606458829": {
+    "source": "Visitor counts represent browsers, not individual people.",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "4589489925793665539": {
     "source": "Play 15 second audio recap",
@@ -12843,10 +12855,6 @@
     "source": "Revenue growth in Q3...",
     "file": "src/app/marketing/marketing.html"
   },
-  "4933712818423377138": {
-    "source": "{$INTERPOLATION} – {$INTERPOLATION_1} · UTC",
-    "file": "src/app/card-analytics/card-analytics.html"
-  },
   "493724287502794340": {
     "source": "Industry Atlas",
     "file": "src/app/public-wiki-catalog.ts"
@@ -13226,6 +13234,10 @@
   "5058724274689127163": {
     "source": "Interactive network",
     "file": "src/app/fence-line/fence-line.html"
+  },
+  "5059505754101294453": {
+    "source": "One conversation starts with a visitor message.",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "5062236235406182830": {
     "source": "Matching LivingWiki users",
@@ -13814,6 +13826,10 @@
   "5241526903309053937": {
     "source": "City Board Factory | LivingWiki",
     "file": "src/app/app.routes.ts"
+  },
+  "5243912597729181218": {
+    "source": "{$INTERPOLATION} – {$INTERPOLATION_1}",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "5245657366616111982": {
     "source": "Story",
@@ -17762,10 +17778,6 @@
   "6411901163227359492": {
     "source": "Email verified",
     "file": "src/app/profile/profile.html"
-  },
-  "641279762639148665": {
-    "source": "One conversation starts with a visitor message. Dates use UTC.",
-    "file": "src/app/card-analytics/card-analytics.html"
   },
   "6413775643517123892": {
     "source": "e.g. Real estate advisor",
@@ -23855,6 +23867,10 @@
     "source": "Big color. Bold culture.",
     "file": "src/app/chat/chat.ts"
   },
+  "8311081945855314245": {
+    "source": "Text duration estimates observed activity between messages, with idle gaps capped at one minute. Voice duration is supplied by the provider.",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "8313470300978955171": {
     "source": "What are the key open questions about {city}?",
     "file": "src/app/chat/chat.ts"
@@ -24247,10 +24263,6 @@
     "source": "Bulk city CSV",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
-  "8439633349478107676": {
-    "source": "Private to authorized administrators. Conversations are retained for 90 days. Text duration estimates observed activity between messages, with idle gaps capped at one minute; voice duration is supplied by the provider.",
-    "file": "src/app/card-analytics/card-analytics.html"
-  },
   "8439955599488894226": {
     "source": "Privacy Policy",
     "file": "src/app/legal/legal.ts"
@@ -24454,6 +24466,10 @@
   "8502809476130133618": {
     "source": "Add a photo and a name for this gem.",
     "file": "src/app/off-grids/off-grid-editor.ts"
+  },
+  "8503246748658256181": {
+    "source": "Detailed activity is recorded from {$INTERPOLATION}.",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "8504370808757315250": {
     "source": "Apple Music",
