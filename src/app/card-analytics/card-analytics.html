@@ -10,9 +10,9 @@
         <section class="analytics-heading"><div><span class="eyebrow" i18n>Card analytics</span><h1>{{ r.card.title }}</h1><p>{{ r.board.title }} <span aria-hidden="true">·</span> <span i18n>Activity for this card only</span></p></div><div class="analytics-links">@if(r.canViewBoardAnalytics){<a [routerLink]="boardAnalyticsPath()" i18n>Board analytics</a>}<a [routerLink]="boardPath()" [queryParams]="{card:cardId()}" i18n>View card</a>@if(r.card.talking && r.canReadTranscripts){<a [routerLink]="qaPath()"><span class="material-symbols-outlined" aria-hidden="true">fact_check</span><span i18n>Avatar QA</span></a>}</div></section>
         <div class="analytics-toolbar"><div class="analytics-dates"><span i18n>{{ r.range.from | date:'MMM d':'UTC' }} – {{ r.range.to | date:'MMM d, y':'UTC' }}</span><small i18n>Dates shown in UTC</small></div><div class="range" role="group" aria-label="Date range" i18n-aria-label>@for(option of rangeOptions;track option.days){<button type="button" [class.selected]="days()===option.days" [attr.aria-pressed]="days()===option.days" (click)="selectRange(option.days)">{{option.label}}</button>}</div><button class="refresh" type="button" [disabled]="refreshing()" (click)="load()"><span class="material-symbols-outlined" [class.spin]="refreshing()" aria-hidden="true">refresh</span><span i18n>Refresh</span></button></div>
         <section class="analytics-kpis" [class.standard-card]="!r.card.talking" aria-label="Card activity summary" i18n-aria-label>
-          <article><span class="material-symbols-outlined" aria-hidden="true">group</span><small i18n>Card visitors</small><strong>{{r.visitors | number}}</strong><p i18n>{{r.opens | number}} opens · distinct browsers</p></article>
+          <article><span class="material-symbols-outlined" aria-hidden="true">touch_app</span><small i18n>Card opens</small><strong>{{r.opens | number}}</strong><p><span i18n>Unique visitors:</span>{{ ' ' }}@if(visitorCountUnavailable()){<span i18n>Not recorded</span>} @else {<span>{{r.visitors | number}}</span>}</p></article>
           @if(r.card.talking){
-            <article><span class="material-symbols-outlined" aria-hidden="true">record_voice_over</span><small i18n>Visitors who chatted</small><strong>{{r.visitorsWhoChatted | number}}</strong><p i18n>{{chatRate() | number:'1.0-1'}}% of this card’s visitors</p></article>
+            <article><span class="material-symbols-outlined" aria-hidden="true">record_voice_over</span><small i18n>Visitors who chatted</small><strong>{{r.visitorsWhoChatted | number}}</strong><p>@if(visitorCountUnavailable()){<span i18n>Visitor rate not recorded</span>} @else {<span i18n>{{chatRate() | number:'1.0-1'}}% of this card’s visitors</span>}</p></article>
             <article><span class="material-symbols-outlined" aria-hidden="true">forum</span><small i18n>Conversations</small><strong>{{r.conversations.length | number}}</strong><p i18n>{{textCount() | number}} text · {{voiceCount() | number}} voice</p></article>
             <article><span class="material-symbols-outlined" aria-hidden="true">timer</span><small i18n>Average conversation time</small><strong>{{duration(average())}}</strong><p i18n>Voice recorded · text estimated</p></article>
           } @else {<article><span class="material-symbols-outlined" aria-hidden="true">ads_click</span><small i18n>Outbound clicks</small><strong>{{r.outboundClicks | number}}</strong><p i18n>Clicks to a destination</p></article>}
@@ -20,7 +20,8 @@
         <div class="analytics-context">
           <p i18n>Visitor counts represent browsers, not individual people.</p>
           @if(r.trackingStartedAt){<p i18n>Detailed activity is recorded from {{r.trackingStartedAt | date:'mediumDate':'UTC'}}.</p>}
-          @else{<p i18n>Detailed activity will appear after the first visitor interaction.</p>}
+          @else if(!visitorCountUnavailable()){<p i18n>Detailed activity will appear after the first visitor interaction.</p>}
+          @if(visitorCountUnavailable()){<p i18n>Unique visitor counts were not recorded for these opens.</p>}
           <details>
             <summary i18n>How analytics works</summary>
             <p i18n>Owner and administrator activity, QA tests, and visits to analytics pages are excluded.</p>

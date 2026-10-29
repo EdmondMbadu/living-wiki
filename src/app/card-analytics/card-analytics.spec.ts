@@ -29,6 +29,20 @@ describe('CardAnalyticsComponent',()=>{
   const f=await render();expect(api.report).toHaveBeenCalledWith('board1','card1',30);expect(f.componentInstance.chatRate()).toBe(20);expect(f.componentInstance.average()).toBe(90);
   expect(f.nativeElement.textContent).toContain('20% of this card’s visitors');expect(f.nativeElement.textContent).toContain('1 text · 1 voice');expect(f.nativeElement.textContent).toContain('Activity for this card only');f.destroy();
  });
+ it('keeps historical opens visible without inventing a unique visitor count',async()=>{
+  api.report.and.resolveTo({...report,card:{...report.card,talking:false},opens:2,visitors:0,visitorsWhoChatted:0,conversations:[]});
+  const f=await render(),metric=f.nativeElement.querySelector('.analytics-kpis article');
+  expect(metric.querySelector('small').textContent).toBe('Card opens');expect(metric.querySelector('strong').textContent).toBe('2');
+  expect(metric.querySelector('p').textContent).toContain('Unique visitors: Not recorded');
+  expect(f.nativeElement.textContent).toContain('Unique visitor counts were not recorded for these opens.');
+  expect(f.nativeElement.textContent).not.toContain('Detailed activity will appear after the first visitor interaction.');f.destroy();
+ });
+ it('distinguishes repeated opens from the browser count and preserves a genuine empty zero',async()=>{
+  api.report.and.resolveTo({...report,opens:2,visitors:1});const f=await render();
+  expect(f.nativeElement.querySelector('.analytics-kpis strong').textContent).toBe('2');expect(f.nativeElement.querySelector('.analytics-kpis p').textContent.trim()).toBe('Unique visitors: 1');
+  api.report.and.resolveTo({...report,opens:0,visitors:0});await f.componentInstance.load();f.detectChanges();
+  expect(f.nativeElement.querySelector('.analytics-kpis strong').textContent).toBe('0');expect(f.nativeElement.querySelector('.analytics-kpis p').textContent.trim()).toBe('Unique visitors: 0');f.destroy();
+ });
  it('filters by mode and question, sorts dates and resets pagination',async()=>{
   const f=await render(),c=f.componentInstance;c.setMode('text');expect(c.rows().map(r=>r.id)).toEqual(['old']);c.setMode('all');c.setQuery('Mount Vernon');expect(c.rows().map(r=>r.id)).toEqual(['new']);c.setQuery('');c.oldest.set(true);expect(c.rows().map(r=>r.id)).toEqual(['old','new']);f.destroy();
  });

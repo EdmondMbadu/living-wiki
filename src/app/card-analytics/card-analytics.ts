@@ -55,6 +55,10 @@ export class CardAnalyticsComponent {
   readonly pages = computed(() => Math.max(1, Math.ceil(this.rows().length / this.pageSize)));
   readonly textCount = computed(() => this.report()?.conversations.filter(c => c.mode === 'text').length ?? 0);
   readonly voiceCount = computed(() => this.report()?.conversations.filter(c => c.mode === 'voice').length ?? 0);
+  readonly visitorCountUnavailable = computed(() => {
+    const report = this.report();
+    return !!report && report.opens > 0 && report.visitors === 0;
+  });
   readonly chatRate = computed(() => { const r = this.report(); return r?.visitors ? (r.visitorsWhoChatted/r.visitors)*100 : 0; });
   readonly average = computed(() => {
     const rows = this.report()?.conversations.filter(c=>c.durationSeconds !== null) ?? [];

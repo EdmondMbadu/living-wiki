@@ -8487,10 +8487,6 @@
     "source": "Copy was blocked. Select the tracked URL and copy it manually.",
     "file": "src/app/board-insights/board-insights.ts"
   },
-  "3580481128105203462": {
-    "source": "{$INTERPOLATION} opens · distinct browsers",
-    "file": "src/app/card-analytics/card-analytics.html"
-  },
   "3581633941182729086": {
     "source": "CDC PLACES + EJI",
     "file": "src/app/fence-line/fence-line.html"
@@ -11678,10 +11674,6 @@
   "4567179193327756074": {
     "source": " {$INTERPOLATION} {$INTERPOLATION_1} source picture{$INTERPOLATION_2} found. ",
     "file": "src/app/boards/boards.html"
-  },
-  "4567602893820246854": {
-    "source": "Card visitors",
-    "file": "src/app/card-analytics/card-analytics.html"
   },
   "4568293355349183679": {
     "source": "Select card",
@@ -23511,6 +23503,10 @@
     "source": "Why it belongs here, accessibility notes, or what to notice",
     "file": "src/app/boards/boards.html"
   },
+  "8196385484667295706": {
+    "source": "Visitor rate not recorded",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "8197309704375996966": {
     "source": "Failed to rename atlas.",
     "file": "src/app/atlas-manage/atlas-manage.ts"
@@ -24674,6 +24670,10 @@
   "8572553133753753498": {
     "source": "Full video ready",
     "file": "src/app/boards/boards.ts"
+  },
+  "857260048192165121": {
+    "source": "Unique visitors:",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "8579126774460469844": {
     "source": "Load more messages",
@@ -26746,6 +26746,10 @@
   "9203853982818549778": {
     "source": "Delete board",
     "file": "src/app/boards/boards.html"
+  },
+  "9204145806629161810": {
+    "source": "Unique visitor counts were not recorded for these opens.",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "920707969278930052": {
     "source": "My teams",

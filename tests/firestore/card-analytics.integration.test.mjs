@@ -46,6 +46,12 @@ test('only meaningful card activity creates a card visitor; normal cards work',a
  const r=await report();assert.equal(r.visitors,1);assert.equal(r.opens,2);assert.equal(r.conversations.length,0);
  const ordinary=await report('ordinary-card');assert.equal(ordinary.card.talking,false);assert.equal(ordinary.outboundClicks,1);assert.equal(ordinary.visitors,1);
 });
+test('historical opens agree between board and card reports without fabricating visitor identities',async()=>{
+ const day=analyticsDay(new Date(Date.now()-2*86400000));
+ await db.collection('board_analytics_daily_shards').doc(`${boardId}__${day}__0`).set({board_id:boardId,day,counts:{card_opens:2},cards:{[otherCard]:{card_opens:2}}});
+ const boardReport=await getBoardInsights.run(request({days:30},owner)),cardReport=await report(otherCard);
+ assert.equal(boardReport.cards.find(c=>c.cardId===otherCard).opens,2);assert.equal(cardReport.opens,2);assert.equal(cardReport.visitors,0);
+});
 test('typed conversation saves actual visitor wording and actual response; retry cannot double count',async()=>{
  const r=request();const context=await api.beginCardText(r,atlas);
  await api.finishCardText(context,{answer:'Actual model answer',threadId:'thread_one',knowledgeGap:true});
