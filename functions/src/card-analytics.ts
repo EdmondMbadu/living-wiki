@@ -1,3 +1,4 @@
+import { recoverPicamoVoice } from './picamo-analytics';
 import { createHash, randomUUID } from 'node:crypto';
 import { FieldValue, Timestamp, type Query, type DocumentData } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
@@ -265,6 +266,7 @@ export const recoverCardVoiceAnalytics = onSchedule({ schedule:'every 5 minutes'
     } catch (error) { logger.warn('Card voice analytics pending', { sessionId:doc.id, error:String(error) }); }
     if ((await doc.ref.get()).data()?.status !== 'done') await doc.ref.update({ next_sync_at:Timestamp.fromMillis(Date.now()+5*60000) });
   }
+  await recoverPicamoVoice(key.value());
 });
 function serializedConversation(id: string, data: Data) {
   return { id, mode:data.mode, startedAt:data.started_at.toDate().toISOString(), visitor:`Visitor ${data.visitor_hash.slice(0,8)}`,

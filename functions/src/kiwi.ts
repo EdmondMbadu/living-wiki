@@ -1,3 +1,4 @@
+import { withPicamoAssistantText, issuePicamoVoice } from './picamo-analytics';
 import boardContentLimits from './board-content-limits.json';
 import { GoogleGenAI } from '@google/genai';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
@@ -280,7 +281,8 @@ export const kiwiVoiceSession = onCall({ region, cors: true, secrets: [elevenLab
   const body = await response.json() as { signed_url?: unknown };
   if (typeof body.signed_url !== 'string' || !body.signed_url.startsWith('wss://'))
     throw new HttpsError('internal', 'Picamo voice did not return a valid session.');
-  return { signedUrl: body.signed_url, providerVoiceId: voice.providerVoiceId };
+  const analyticsSessionId = await issuePicamoVoice('assistant', uid, null, agentId);
+  return { signedUrl: body.signed_url, providerVoiceId: voice.providerVoiceId, analyticsSessionId };
 });
 
 async function consumeKiwiSpeechQuota(uid: string): Promise<void> {
@@ -373,7 +375,7 @@ export const kiwiSpeakStream = onCall({ region, cors: true, secrets: [elevenLabs
   return { contentType: 'audio/mpeg' };
 });
 
-export const kiwiTalk = onCall({ region, cors: true, secrets: [geminiApiKey], timeoutSeconds: 60, memory: '512MiB' }, async (request, stream) => {
+export const kiwiTalk = onCall({ region, cors: true, secrets: [geminiApiKey], timeoutSeconds: 60, memory: '512MiB' }, withPicamoAssistantText(async (request, stream) => {
   const uid = actor(request.auth?.uid);
   const locale = kiwiLocale(request.data?.locale);
   const message = value(request.data?.message, MAX_PROMPT);
@@ -536,7 +538,7 @@ export const kiwiTalk = onCall({ region, cors: true, secrets: [geminiApiKey], ti
     draft: action.kind === 'create_board' ? action : undefined,
     visibility: action.kind === 'create_board' ? action.visibility : undefined,
     workspace: scope.teamId ? 'team' : 'personal' } };
-});
+}));
 
 // The Describe it wizard generates the content; Picamo only stages the resulting
 // draft for review. The signed-in user can still edit every field before apply.

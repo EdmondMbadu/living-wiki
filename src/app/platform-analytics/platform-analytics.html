@@ -8,17 +8,17 @@
       ><span aria-current="page" i18n>Platform analytics</span>
     </nav>
     <div class="header-actions">
-      <button type="button" (click)="exportCsv()" [disabled]="!report()?.inventory || exporting()">
+      <button type="button" (click)="exportCurrent()" [disabled]="tab() === 'picamo' ? (!picamoPanel()?.report() || picamoPanel()?.loading() || picamoPanel()?.exporting()) : (!report()?.inventory || exporting())">
         <span class="material-symbols-outlined" aria-hidden="true">download</span
         ><span i18n>Export CSV</span></button
-      ><button type="button" (click)="load(true)" [disabled]="loading() || refreshing()">
-        <span class="material-symbols-outlined" [class.spin]="refreshing()" aria-hidden="true"
+      ><button type="button" (click)="refreshCurrent()" [disabled]="tab() === 'picamo' ? picamoPanel()?.loading() : (loading() || refreshing())">
+        <span class="material-symbols-outlined" [class.spin]="tab() === 'picamo' ? picamoPanel()?.loading() : refreshing()" aria-hidden="true"
           >refresh</span
         ><span i18n>Refresh</span></button
       ><app-theme-toggle /><app-account-menu />
     </div>
   </header>
-  <main [attr.aria-busy]="loading() || refreshing()">
+  <main [attr.aria-busy]="tab() === 'picamo' ? picamoPanel()?.loading() : (loading() || refreshing())">
     <a class="platform-back" routerLink="/admin/users"
       ><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span
       ><span i18n>Back to Users</span></a
@@ -27,12 +27,19 @@
       <div>
         <span class="eyebrow" i18n>Platform admin</span>
         <h1 i18n>Platform analytics</h1>
-        <p i18n>Boards, talking cards, and conversations across LivingWiki.</p>
+        <p i18n>Boards, talking cards, and Picamo activity across LivingWiki.</p>
       </div>
-      @if (report()?.updatedAt) {
+      @if (tab() === 'overview' && report()?.updatedAt) {
         <small i18n>Updated {{ report()?.updatedAt | date: 'medium' : 'UTC' }} UTC</small>
       }
     </section>
+    <nav class="analytics-tabs" aria-label="Analytics sections" i18n-aria-label>
+      <a [routerLink]="[]" [queryParams]="{tab: null}" queryParamsHandling="merge" [class.active]="tab() === 'overview'" [attr.aria-current]="tab() === 'overview' ? 'page' : null" i18n>Overview</a>
+      <a [routerLink]="[]" [queryParams]="{tab: 'picamo'}" queryParamsHandling="merge" [class.active]="tab() === 'picamo'" [attr.aria-current]="tab() === 'picamo' ? 'page' : null" i18n>Picamo</a>
+    </nav>
+    @if (tab() === 'picamo') {
+      <app-picamo-analytics />
+    } @else {
     @if (error()) {
       <div class="platform-error" role="alert">
         <span>{{ error() }}</span
@@ -544,6 +551,7 @@
           </button>
         </details>
       }
+    }
     }
   </main>
 </div>

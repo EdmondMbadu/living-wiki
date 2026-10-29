@@ -1,0 +1,405 @@
+<section
+  class="picamo-analytics"
+  [attr.aria-busy]="loading()"
+  aria-label="Picamo analytics"
+  i18n-aria-label
+>
+  <header class="section-heading">
+    <div>
+      <h2 i18n>Picamo analytics</h2>
+      <p i18n>Text chats and voice conversations with the assistant and city guides.</p>
+    </div>
+    @if (report()?.updatedAt) {
+      <small i18n>Updated {{ report()?.updatedAt | date: 'medium' : 'UTC' }} UTC</small>
+    }
+  </header>
+  <div class="filters">
+    <label
+      ><span i18n>Date preset</span
+      ><select [value]="preset()" (change)="selectPreset($any($event.target).value)">
+        <option value="30" i18n>Last 30 days</option>
+        <option value="365" i18n>Last 12 months</option>
+        <option value="years" i18n>Last 5 years</option>
+        <option value="custom" i18n>Custom dates</option>
+      </select></label
+    >
+    <div class="segmented" role="group" aria-label="Time grouping" i18n-aria-label>
+      @for (g of groups; track g.value) {
+        <button
+          type="button"
+          [class.selected]="group() === g.value"
+          [attr.aria-pressed]="group() === g.value"
+          (click)="setGroup(g.value)"
+        >
+          {{ g.label }}
+        </button>
+      }
+    </div>
+    <label
+      ><span i18n>Source</span
+      ><select [value]="source()" (change)="setSource($any($event.target).value)">
+        <option value="all" i18n>All Picamo</option>
+        <option value="assistant" i18n>Assistant</option>
+        <option value="city" i18n>City guide</option>
+      </select></label
+    >
+    @if (source() === 'city') {
+      <label
+        ><span i18n>City</span
+        ><select [value]="city()" (change)="setCity($any($event.target).value)">
+          <option value="" i18n>All cities</option>
+          @for (city of report()?.cities || []; track city.atlasId) {
+            <option [value]="city.atlasId">{{ city.label }}</option>
+          }
+        </select></label
+      >
+    }
+    <label class="toggle"
+      ><input
+        type="checkbox"
+        [checked]="internal()"
+        (change)="setInternal($any($event.target).checked)"
+      /><span i18n>Include admin testing</span></label
+    >
+    <div class="date-range">
+      <label
+        ><span i18n>From</span
+        ><input
+          type="date"
+          [value]="from()"
+          [max]="to()"
+          (change)="setDate('from', $any($event.target).value)" /></label
+      ><label
+        ><span i18n>To</span
+        ><input
+          type="date"
+          [value]="to()"
+          [min]="from()"
+          [max]="today"
+          (change)="setDate('to', $any($event.target).value)" /></label
+      ><button type="button" (click)="applyDates()" [disabled]="loading()" i18n>Apply dates</button
+      ><small i18n>Dates shown in UTC</small>
+    </div>
+  </div>
+  @if (error()) {
+    <div class="error" role="alert">
+      <span>{{ error() }}</span
+      ><button type="button" (click)="load(true)" [disabled]="loading()" i18n>Try again</button>
+    </div>
+  }
+  @if (loading()) {
+    <p class="loading" role="status" i18n>Loading Picamo activity…</p>
+  }
+  @if (report(); as r) {
+    @if (r.coverage.unrecorded) {
+      <p class="notice" role="status" i18n>
+        No recorded Picamo activity is available for this period. Tracking begins with this release.
+      </p>
+    } @else if (r.coverage.partial) {
+      <p class="notice" i18n>
+        Recorded activity starts {{ r.trackingSince | date: 'medium' : 'UTC' }} UTC. Earlier
+        activity is unavailable.
+      </p>
+    }
+    <div class="metrics">
+      <article>
+        <span i18n>Conversations</span
+        ><strong>{{ unavailable() ? '—' : (r.totals.conversations | number) }}</strong
+        ><small i18n>Text chats + voice calls</small>
+      </article>
+      <article>
+        <span i18n>Text chats</span
+        ><strong>{{ unavailable() ? '—' : (r.totals.text | number) }}</strong
+        ><small i18n>Sessions with a user message</small>
+      </article>
+      <article>
+        <span i18n>Voice calls</span
+        ><strong>{{ unavailable() ? '—' : (r.totals.voice | number) }}</strong
+        ><small i18n>Verified calls with participation</small>
+      </article>
+      <article>
+        <span i18n>User messages</span
+        ><strong>{{ unavailable() ? '—' : (r.totals.messages | number) }}</strong
+        ><small i18n>Text messages and spoken turns</small>
+      </article>
+    </div>
+    <div class="participant-strip">
+      <span i18n
+        >Active accounts
+        <strong>{{ unavailable() ? '—' : (r.totals.accounts | number) }}</strong></span
+      ><span i18n
+        >Guest browsers
+        <strong>{{ unavailable() ? '—' : (r.totals.guests | number) }}</strong></span
+      ><span i18n
+        >Verified voice time <strong>{{ voiceTime() }}</strong></span
+      >
+    </div>
+    @if (r.totals.unknownDurations) {
+      <p class="notice" i18n>
+        {{ r.totals.unknownDurations | number }} voice calls have no recorded duration. Their time
+        is excluded.
+      </p>
+    }
+    <section class="panel trend">
+      <header>
+        <div>
+          <h3>
+            {{
+              metric() === 'messages'
+                ? messagesHeading
+                : metric() === 'seconds'
+                  ? minutesHeading
+                  : conversationsHeading
+            }}
+          </h3>
+          <small i18n>Select a date to see its recent conversations.</small>
+        </div>
+        <div class="segmented" role="group" aria-label="Chart metric" i18n-aria-label>
+          @for (m of metrics; track m.value) {
+            <button
+              type="button"
+              [class.selected]="metric() === m.value"
+              [attr.aria-pressed]="metric() === m.value"
+              (click)="metric.set(m.value)"
+            >
+              {{ m.label }}
+            </button>
+          }
+        </div>
+      </header>
+      <div class="chart">
+        <div class="axis" aria-hidden="true">
+          @for (tick of ticks(); track tick) {
+            <span>{{ tick | number: '1.0-1' }}</span>
+          }
+        </div>
+        <div class="plot" [style.min-width.px]="r.series.length * 12">
+          <div class="grid" aria-hidden="true">
+            @for (tick of ticks(); track tick) {
+              <i></i>
+            }
+          </div>
+          <div class="bars">
+            @for (row of r.series; track row.period) {
+              <div class="bucket">
+                <button
+                  type="button"
+                  [class.unrecorded]="!row.recorded"
+                  [class.partial]="row.partial && row.recorded"
+                  [class.zero]="row.recorded && row[metric()] === 0"
+                  [style.height.%]="row.recorded ? height(row) : 100"
+                  [attr.aria-label]="barLabel(row)"
+                  (click)="narrow(row.period)"
+                  [disabled]="loading() || !row.recorded"
+                >
+                  <span class="tooltip">{{ barLabel(row) }}</span>
+                  @if (metric() === 'conversations' && row.conversations) {
+                    <i
+                      class="voice-segment"
+                      [style.height.%]="(row.voice / row.conversations) * 100"
+                    ></i>
+                  }
+                </button>
+                @if (showLabel($index)) {
+                  <small>{{ label(row.period) }}</small>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        @if (metric() === 'conversations') {
+          <span><i></i><span i18n>Text chats</span></span
+          ><span><i class="voice"></i><span i18n>Voice calls</span></span>
+        }
+        <span><i class="unrecorded"></i><span i18n>Not recorded</span></span>
+        <span class="muted" i18n
+          >Today and incomplete periods are marked with a dashed border.</span
+        >
+      </div>
+    </section>
+    <div class="split">
+      <section class="panel">
+        <header><h3 i18n>Where Picamo is used</h3></header>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col" i18n>Source</th>
+              <th scope="col" i18n>Conversations</th>
+              <th scope="col" i18n>User messages</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of r.sources; track row.source) {
+              <tr>
+                <td>
+                  <button class="text-button" type="button" (click)="setSource(row.source)">
+                    {{ sourceName(row.source) }}
+                  </button>
+                </td>
+                <td>{{ row.conversations | number }}</td>
+                <td>{{ row.messages | number }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" i18n>No recorded activity in this period.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+      <section class="panel">
+        <header><h3 i18n>Service health</h3></header>
+        <dl class="health">
+          <div>
+            <dt i18n>Answer success</dt>
+            <dd>{{ successRate() }}</dd>
+          </div>
+          <div>
+            <dt i18n>Average answer time</dt>
+            <dd>{{ responseTime() }}</dd>
+          </div>
+          <div>
+            <dt i18n>Failed answer requests</dt>
+            <dd>{{ unavailable() ? '—' : (r.totals.failures | number) }}</dd>
+          </div>
+        </dl>
+        <small class="muted" i18n
+          >Measured text answer requests only. Voice calls and local interface steps are
+          excluded.</small
+        >
+      </section>
+    </div>
+    <section class="panel recent">
+      <header>
+        <div>
+          <h3 i18n>Recent conversations</h3>
+          @if (recentFrom()) {
+            <p>
+              {{ recentFrom() }} – {{ recentTo() }}
+              <button class="text-button" type="button" (click)="clearNarrow()" i18n>
+                Show all dates
+              </button>
+            </p>
+          }
+        </div>
+        <label
+          ><span class="sr-only" i18n>Conversation mode</span
+          ><select [value]="mode()" (change)="setMode($any($event.target).value)">
+            <option value="all" i18n>Text + Voice</option>
+            <option value="text" i18n>Text only</option>
+            <option value="voice" i18n>Voice only</option>
+          </select></label
+        >
+      </header>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col" i18n>Date (UTC)</th>
+              <th scope="col" i18n>Source</th>
+              <th scope="col" i18n>Mode</th>
+              <th scope="col" i18n>User messages</th>
+              <th scope="col" i18n>Duration</th>
+              <th scope="col" i18n>Status</th>
+              <th scope="col"><span class="sr-only" i18n>Details</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of r.rows; track row.id) {
+              <tr>
+                <td>{{ row.startedAt | date: 'MMM d, y, HH:mm' : 'UTC' }}</td>
+                <td>
+                  {{ sourceName(row.source) }}
+                  @if (row.source === 'city') {
+                    <small class="context">{{ row.label }}</small>
+                  }
+                  @if (row.internal) {
+                    <small class="context" i18n>Admin testing</small>
+                  }
+                </td>
+                <td>{{ modeName(row.mode) }}</td>
+                <td>{{ row.messages | number }}</td>
+                <td>{{ duration(row.seconds) }}</td>
+                <td>
+                  <span
+                    class="status"
+                    [class.failed]="row.status === 'failed' || row.status === 'interrupted'"
+                    >{{ statusName(row.status) }}</span
+                  >
+                </td>
+                <td>
+                  <button
+                    class="text-button"
+                    type="button"
+                    (click)="selected.set(selected()?.id === row.id ? null : row)"
+                    [attr.aria-expanded]="selected()?.id === row.id"
+                    i18n
+                  >
+                    Details
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" i18n>No conversations match these filters.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="muted" i18n>
+        Text duration: first to last activity. Voice duration: verified call time.
+      </p>
+      @if (selected(); as row) {
+        <aside class="session-details" aria-label="Conversation details" i18n-aria-label>
+          <button type="button" (click)="selected.set(null)" i18n>Close details</button>
+          <h4 i18n>Conversation details</h4>
+          <dl>
+            <dt i18n>Started (UTC)</dt>
+            <dd>{{ row.startedAt | date: 'medium' : 'UTC' }}</dd>
+            <dt i18n>Context</dt>
+            <dd>{{ row.label }}</dd>
+            <dt i18n>Session ID</dt>
+            <dd class="session-id">{{ row.id }}</dd>
+            <dt i18n>Failed answer requests</dt>
+            <dd>{{ row.failures | number }}</dd>
+          </dl>
+          <p class="muted" i18n>Message contents are not copied into platform analytics.</p>
+        </aside>
+      }
+      <div class="pagination">
+        <button type="button" [disabled]="loading() || !previous().length" (click)="back()" i18n>
+          Previous</button
+        ><span i18n>Page {{ previous().length + 1 }}</span
+        ><button type="button" [disabled]="loading() || !r.nextCursor" (click)="next()" i18n>
+          Next
+        </button>
+      </div>
+    </section>
+    <details class="panel definitions">
+      <summary i18n>How Picamo analytics works</summary>
+      <p i18n>
+        Private to platform administrators. Opening Picamo or receiving a greeting does not count. A
+        text session starts with a user message and ends after 30 minutes without activity. Panel
+        reopening continues the same session. Voice calls are counted only after provider
+        verification; recently ended calls can take several minutes to appear.
+      </p>
+      <p i18n>
+        Ordinary users, board owners, and team members count. Admin testing is excluded unless
+        selected. Automated QA and other avatars are excluded.
+      </p>
+      <p i18n>
+        Accounts and guest browsers are distinct identities, not a count of people. They are
+        deduplicated across the selected period. Conversation counts follow the session start date;
+        messages and voice time follow the date they occurred. A session can therefore contribute
+        messages on a date when it did not start.
+      </p>
+      <p i18n>
+        Historical Picamo activity cannot be reliably reconstructed and is not imported. Only
+        metadata is retained here; this page does not store conversation transcripts.
+      </p>
+    </details>
+  }
+</section>

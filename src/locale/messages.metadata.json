@@ -475,6 +475,10 @@
     "source": "Subscribe",
     "file": "src/app/atlas-landing/atlas-landing.html"
   },
+  "1146311205413930426": {
+    "source": "Include admin testing",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "1146504259091811465": {
     "source": "Picamo is working",
     "file": "src/app/kiwi/kiwi.ts"
@@ -866,6 +870,10 @@
   "1263182111044358747": {
     "source": " Jump to spaces {$START_BLOCK_IF}{$START_TAG_BUTTON} Admin {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}{$CLOSE_TAG_BUTTON}{$CLOSE_BLOCK_IF}",
     "file": "src/app/atlas-landing/atlas-landing.html"
+  },
+  "1263286787790883688": {
+    "source": "Text chats and voice conversations with the assistant and city guides.",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "1266372829686289709": {
     "source": "Tell the story behind this photo.",
@@ -1443,6 +1451,10 @@
     "source": "More sharing options opened.",
     "file": "src/app/boards/boards.ts"
   },
+  "1440415895263591575": {
+    "source": "Message contents are not copied into platform analytics.",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "1441541755814400436": {
     "source": "Quiz Challenge | LivingWiki",
     "file": "src/app/app.routes.ts"
@@ -1557,7 +1569,7 @@
   },
   "1464072562214937907": {
     "source": "Year",
-    "file": "src/app/platform-analytics/platform-analytics.ts"
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "1464356151059047889": {
     "source": "Regenerated draft",
@@ -1630,6 +1642,10 @@
   "1481495224714907427": {
     "source": "Window cling 8x10\"",
     "file": "src/app/business-claim/business-claim.ts"
+  },
+  "1481653424139024083": {
+    "source": "Voice only",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "148220396868777558": {
     "source": "See my score",
@@ -2083,6 +2099,10 @@
     "source": "We're launching city by city and onboarding every founding agent personally. We can only do that well for 25 agents per market — that's the whole reason for the cap.",
     "file": "src/app/talkthrus/talkthrus.html"
   },
+  "1585281314151703377": {
+    "source": "Duration seconds",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
+  },
   "1585852459260032270": {
     "source": "Video library summary",
     "file": "src/app/video-library/video-library.html"
@@ -2257,7 +2277,7 @@
   },
   "1640609344969975994": {
     "source": "To",
-    "file": "src/app/platform-analytics/platform-analytics.html"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "1643898480790022851": {
     "source": "Turn listing photos into a narrated TalkThru in your own voice. Walk into your next listing appointment, press play, and let the seller hear their home the way buyers will — introduced by you.",
@@ -2345,7 +2365,7 @@
   },
   "1674506362340484717": {
     "source": "From (UTC)",
-    "file": "src/app/platform-analytics/platform-analytics.ts"
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "167558248608399494": {
     "source": "Neighborhood map placement",
@@ -2482,6 +2502,10 @@
   "1724432991252360526": {
     "source": "Venture Capital & Startup Funding",
     "file": "src/app/public-wiki-catalog.ts"
+  },
+  "1724839765990458931": {
+    "source": " Private to platform administrators. Opening Picamo or receiving a greeting does not count. A text session starts with a user message and ends after 30 minutes without activity. Panel reopening continues the same session. Voice calls are counted only after provider verification; recently ended calls can take several minutes to appear. ",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "1724872294849974660": {
     "source": "Permanently delete this draft?",
@@ -2827,6 +2851,10 @@
     "source": "Could not update that friend request.",
     "file": "src/app/boards/boards.ts"
   },
+  "1845523362153918685": {
+    "source": "Guest browsers {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "184679452808063613": {
     "source": "Add board manually",
     "file": "src/app/boards/boards.ts"
@@ -2995,9 +3023,17 @@
     "source": "Team listings use a stable visitor link. Manage sharing in Board settings or on the team page.",
     "file": "src/app/boards/boards.ts"
   },
+  "189677661134094854": {
+    "source": " Text duration: first to last activity. Voice duration: verified call time. ",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "1898671547408147666": {
     "source": "Use my current location",
     "file": "src/app/boards/boards.ts"
+  },
+  "1901785958081891430": {
+    "source": "Partial period",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "1902929840524678848": {
     "source": "Display name *",
@@ -3383,6 +3419,10 @@
     "source": "Upload cover",
     "file": "src/app/atlas-landing/atlas-landing.ts"
   },
+  "2020113356125864611": {
+    "source": "Date (UTC)",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "2020200289611537288": {
     "source": "Prompt & documents",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -3647,6 +3687,10 @@
     "source": "Platform analytics",
     "file": "src/app/account-menu/account-menu.html"
   },
+  "2110076785057500501": {
+    "source": "Verified voice time {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "2110094468894570961": {
     "source": "LivingWiki for business",
     "file": "src/app/business/business.html"
@@ -3863,6 +3907,10 @@
     "source": "Choose an image file for the avatar.",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
+  "2172162389147784659": {
+    "source": " Ordinary users, board owners, and team members count. Admin testing is excluded unless selected. Automated QA and other avatars are excluded. ",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "2172845425175320892": {
     "source": "Loading voice settings…",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -3915,6 +3963,10 @@
     "source": "This board cannot be translated from this view.",
     "file": "src/app/boards/boards.ts"
   },
+  "2192790251335732277": {
+    "source": "Loading Picamo activity…",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "2194567229076353822": {
     "source": "Walking tour",
     "file": "src/app/boards/boards.ts"
@@ -3926,6 +3978,10 @@
   "2195879366322108269": {
     "source": "Make ",
     "file": "src/app/boards/boards.ts"
+  },
+  "2197766708659073086": {
+    "source": "Select a date to see its recent conversations.",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "219825243880527209": {
     "source": "Explore every {$INTERPOLATION} board",
@@ -4290,6 +4346,10 @@
   "2320562722758447930": {
     "source": "{$INTERPOLATION} matching listings · Page {$INTERPOLATION_1} of {$INTERPOLATION_2}",
     "file": "src/app/teams/teams.html"
+  },
+  "2322181678360380277": {
+    "source": "User messages",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "2324193909761102998": {
     "source": "Video shared.",
@@ -4722,6 +4782,10 @@
   "2432093903373755152": {
     "source": "Source files",
     "file": "src/app/green-jobs/green-jobs.html"
+  },
+  "2432418381127098379": {
+    "source": "Chart metric",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "2432538182373451602": {
     "source": "Browse all {$INTERPOLATION}",
@@ -5235,6 +5299,10 @@
     "source": "{$START_TAG_SPAN}delete{$CLOSE_TAG_SPAN} Delete board ",
     "file": "src/app/boards/boards.html"
   },
+  "2601202843031151194": {
+    "source": " {$INTERPOLATION} voice calls have no recorded duration. Their time is excluded. ",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "2602773901491715295": {
     "source": "Captions",
     "file": "src/app/boards/boards.html"
@@ -5355,6 +5423,10 @@
     "source": "Current Wikis",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "2632503799833946610": {
+    "source": "Conversation details",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "2632636501402661969": {
     "source": "Will queue",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
@@ -5450,6 +5522,10 @@
   "2658599863895362792": {
     "source": "No avatars match “{$INTERPOLATION}”.",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
+  "2658728033078789907": {
+    "source": "Text chats + voice calls",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "2659625723096392929": {
     "source": "Create a full board inside this card",
@@ -6099,6 +6175,10 @@
     "source": "Select shown",
     "file": "src/app/board-collection-create/board-collection-create.html"
   },
+  "2875472004590226048": {
+    "source": "Text chats",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "2880258575103791541": {
     "source": " /chat/{$INTERPOLATION} ",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -6291,13 +6371,17 @@
     "source": "Ask a question or tell Picamo what you would like to change. You can review any proposed action before it is saved.",
     "file": "src/app/kiwi/kiwi.html"
   },
+  "2946884778730469244": {
+    "source": "Active accounts {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "2947303945244189223": {
     "source": "Add docs",
     "file": "src/app/wiki-home/wiki-home.html"
   },
   "2949150997160654358": {
     "source": "Last 30 days",
-    "file": "src/app/platform-analytics/platform-analytics.html"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "2949760583069906671": {
     "source": "Search knowledge base...",
@@ -7353,7 +7437,7 @@
   },
   "3249405667632600635": {
     "source": "Custom dates",
-    "file": "src/app/platform-analytics/platform-analytics.html"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "3251407689667930109": {
     "source": "Platform analytics could not be loaded.",
@@ -7378,6 +7462,10 @@
   "32574714261860078": {
     "source": "Listen",
     "file": "src/app/atlas-persona/atlas-persona.html"
+  },
+  "3258134253519679428": {
+    "source": " Recorded activity starts {$INTERPOLATION} UTC. Earlier activity is unavailable. ",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "3259370148249292434": {
     "source": "Rendering your promo image…",
@@ -7546,6 +7634,10 @@
   "3296989265261559934": {
     "source": " job",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
+  "3297818069040748077": {
+    "source": "Text + Voice",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "3298505040407858500": {
     "source": "Card title grammar",
@@ -8895,6 +8987,10 @@
     "source": "Save chat guide",
     "file": "src/app/atlas-manage/atlas-manage.ts"
   },
+  "3685245659406643866": {
+    "source": "All Picamo",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "3686284950598311784": {
     "source": "Private",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
@@ -9419,6 +9515,10 @@
     "source": "Creating your board",
     "file": "src/app/kiwi/kiwi.ts"
   },
+  "3835211125655594627": {
+    "source": "Text only",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "3836322407229237486": {
     "source": "Every listing deserves your voice.{$LINE_BREAK}{$START_EMPHASISED_TEXT}Pricing that keeps it that way.{$CLOSE_EMPHASISED_TEXT}",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -9615,6 +9715,10 @@
     "source": "Failed cities",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "3908149768883526924": {
+    "source": "All cities",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "3909234480211706957": {
     "source": "Delete is available for empty Wikis.",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -9654,6 +9758,10 @@
   "3918644475080887512": {
     "source": "Unlike this answer card",
     "file": "src/app/answer-card/answer-card.ts"
+  },
+  "3918755948403340447": {
+    "source": "How Picamo analytics works",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "392017562171689836": {
     "source": "Internet mode uses general web knowledge and current public sources, not just your uploaded material.",
@@ -9813,7 +9921,7 @@
   },
   "3971100408152984961": {
     "source": " Next ",
-    "file": "src/app/platform-analytics/platform-analytics.html"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "3971391472521012491": {
     "source": "Business AI",
@@ -10245,7 +10353,7 @@
   },
   "4104070079949462623": {
     "source": "To (UTC)",
-    "file": "src/app/platform-analytics/platform-analytics.ts"
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "4104141013290924022": {
     "source": "Recommended: 8–16",
@@ -10297,7 +10405,7 @@
   },
   "4120398520484336814": {
     "source": " Previous",
-    "file": "src/app/platform-analytics/platform-analytics.html"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "4122979480230344180": {
     "source": "Southwest canyon",
@@ -10895,6 +11003,10 @@
     "source": "Return to LivingWiki and choose another public university.",
     "file": "src/app/city-board-collection/city-board-collection.ts"
   },
+  "428649348470571163": {
+    "source": "Picamo analytics",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "4288005000765407799": {
     "source": "Jobs · daily  ·  Pathways · weekly",
     "file": "src/app/green-jobs/green-jobs.html"
@@ -10946,6 +11058,10 @@
   "4299747088909139234": {
     "source": "Add a card here or ask Picamo to fill the board.",
     "file": "src/app/kiwi/kiwi.ts"
+  },
+  "4302656268684881700": {
+    "source": "Voice minutes",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "4302912603848458571": {
     "source": "Editing preview",
@@ -11157,7 +11273,7 @@
   },
   "4361487192183535591": {
     "source": "Assistant",
-    "file": "src/app/teams/teams.ts"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "4363856189098893767": {
     "source": "Could not load this business page.",
@@ -11338,6 +11454,10 @@
   "4423197176847405589": {
     "source": "{$START_TAG_SPAN}visibility_lock{$CLOSE_TAG_SPAN} Only you can see this ",
     "file": "src/app/boards/boards.html"
+  },
+  "4423253549935469768": {
+    "source": " Details ",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "4423700486312526884": {
     "source": "Upload | LivingWiki",
@@ -12353,7 +12473,7 @@
   },
   "4725021375459953170": {
     "source": "Updated {$INTERPOLATION} UTC",
-    "file": "src/app/platform-analytics/platform-analytics.html"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "4726028815015036726": {
     "source": "The ",
@@ -12981,7 +13101,7 @@
   },
   "4916113134668251138": {
     "source": "Date preset",
-    "file": "src/app/platform-analytics/platform-analytics.html"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "4918496402143101585": {
     "source": "Narration needed",
@@ -13150,6 +13270,10 @@
   "497516847475509949": {
     "source": "All Files",
     "file": "src/app/library/library.html"
+  },
+  "4975369279473830779": {
+    "source": "No recorded activity in this period.",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "4983399463195223226": {
     "source": "Conversational guide",
@@ -13359,6 +13483,10 @@
     "source": "Admin",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "5041475127119195004": {
+    "source": "Failed answer requests",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "5045572951005571111": {
     "source": "Joined",
     "file": "src/app/profile/profile.html"
@@ -13377,7 +13505,7 @@
   },
   "5048957535073058856": {
     "source": "Page {$INTERPOLATION}",
-    "file": "src/app/shared-chat/shared-chat.html"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "5049635935950843903": {
     "source": "Prompt examples",
@@ -13675,6 +13803,10 @@
     "source": "Logo shown on exported videos",
     "file": "src/app/boards/boards.html"
   },
+  "5141045428148226506": {
+    "source": "Admin testing",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "5141773353492911855": {
     "source": "Name *",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -13909,7 +14041,7 @@
   },
   "5203279511751768967": {
     "source": "From",
-    "file": "src/app/platform-analytics/platform-analytics.html"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "5207635742003539443": {
     "source": "Sign in",
@@ -14557,7 +14689,7 @@
   },
   "5403684285319082289": {
     "source": "Month",
-    "file": "src/app/platform-analytics/platform-analytics.ts"
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "5403950912722004779": {
     "source": "Your email address has been restored for this account.",
@@ -14610,6 +14742,10 @@
   "5428954358926724665": {
     "source": "{$INTERPOLATION} lifecycle",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
+  "542942528519449836": {
+    "source": "Text messages and spoken turns",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "543243826700074360": {
     "source": "{$INTERPOLATION} of {$INTERPOLATION_1} articles",
@@ -15025,7 +15161,7 @@
   },
   "5554592740021607017": {
     "source": "Last 12 months",
-    "file": "src/app/platform-analytics/platform-analytics.html"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "5554669496175509358": {
     "source": "About highlight",
@@ -15389,7 +15525,7 @@
   },
   "5654068806573421962": {
     "source": "{$MINUTES} min",
-    "file": "src/app/platform-analytics/platform-analytics.ts"
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "5654661210833818062": {
     "source": "Describe it",
@@ -15891,6 +16027,10 @@
     "source": "Favorite",
     "file": "src/app/boards/boards.ts"
   },
+  "5789109280626589415": {
+    "source": "First to last activity",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
+  },
   "5789533107118360752": {
     "source": " stops map",
     "file": "src/app/boards/boards.ts"
@@ -16062,6 +16202,10 @@
   "5832128376291749362": {
     "source": "Switch to {$plan}",
     "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
+  },
+  "5833433213968318944": {
+    "source": "Analytics sections",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "5836116249544998271": {
     "source": " Modeled live estimate {$INTERPOLATION} ",
@@ -16477,7 +16621,7 @@
   },
   "5956090433796153039": {
     "source": "{$SECONDS} sec",
-    "file": "src/app/platform-analytics/platform-analytics.ts"
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "5957995465199589102": {
     "source": "We collect account information such as name, email address, authentication details, and basic profile metadata needed to operate the workspace.",
@@ -16702,6 +16846,10 @@
   "6024645474739898779": {
     "source": "{$START_TAG_SPAN}upload{$CLOSE_TAG_SPAN} Upload logo {$TAG_INPUT}",
     "file": "src/app/boards/boards.html"
+  },
+  "6025719554050589771": {
+    "source": "Answer success",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "6030082786890657600": {
     "source": "New visitor activity will appear here after this analytics release is deployed.",
@@ -18159,6 +18307,10 @@
     "source": "Run state",
     "file": "src/app/web-scraper/web-scraper.html"
   },
+  "6452372740127749380": {
+    "source": "Messages",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
+  },
   "6453098595803131790": {
     "source": "Page {$INTERPOLATION} of {$INTERPOLATION_1}",
     "file": "src/app/card-analytics/card-analytics.html"
@@ -18346,6 +18498,10 @@
   "651397030885166278": {
     "source": "Select a card type to continue.",
     "file": "src/app/boards/boards.html"
+  },
+  "6515447254987491620": {
+    "source": " Show all dates ",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "6515488098284528416": {
     "source": "Content and conversation opens",
@@ -18562,6 +18718,10 @@
   "6568496994795904409": {
     "source": "{$START_TAG_SPAN}ios_share{$CLOSE_TAG_SPAN} Share page ",
     "file": "src/app/boards/boards.html"
+  },
+  "6568517612884338421": {
+    "source": "{$SECONDS} s",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "6568799266865651023": {
     "source": "Current video logo",
@@ -18815,10 +18975,6 @@
     "source": " Clear filters ",
     "file": "src/app/teams/teams.html"
   },
-  "6634916155757968480": {
-    "source": "Boards, talking cards, and conversations across LivingWiki.",
-    "file": "src/app/platform-analytics/platform-analytics.html"
-  },
   "6636276505664212270": {
     "source": "Bio, story, and direct shares",
     "file": "src/app/board-insights/board-insights.ts"
@@ -19014,6 +19170,10 @@
   "6703947649972852818": {
     "source": "Featured",
     "file": "src/app/business-detail/business-detail.html"
+  },
+  "6705304142674987863": {
+    "source": "Sessions with a user message",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "6710093577250437725": {
     "source": "Tour narration ready",
@@ -19450,6 +19610,10 @@
   "6860867256711112980": {
     "source": "One listing link. The details stay together.",
     "file": "src/app/boards/real-estate-wizard-source.html"
+  },
+  "686094009316446012": {
+    "source": "Picamo analytics could not be loaded. Please try again.",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "6862189383012317096": {
     "source": "Follow public city and topic wikis",
@@ -20075,6 +20239,10 @@
     "source": "Searching more boards…",
     "file": "src/app/public-wikis/public-wikis.ts"
   },
+  "704479539569726663": {
+    "source": "Where Picamo is used",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "7045041100799709352": {
     "source": "Focus on places, food, and things worth saving",
     "file": "src/app/boards/boards.ts"
@@ -20102,6 +20270,10 @@
   "7046850086124797303": {
     "source": "Add a cover title before saving.",
     "file": "src/app/boards/boards.ts"
+  },
+  "7048177663032781750": {
+    "source": "{$MINUTES} min {$SECONDS} sec",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "7051177342601224426": {
     "source": "~{$INTERPOLATION} words per stop",
@@ -20255,6 +20427,10 @@
     "source": "Introduce yourself, highlight what you love about the home, and invite the buyer to contact you.",
     "file": "src/app/boards/boards.html"
   },
+  "7096103396107025337": {
+    "source": "Picamo",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "7098620213960902222": {
     "source": "Video export is not included",
     "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
@@ -20379,6 +20555,10 @@
     "source": "Put your voice on your next few listings.",
     "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
   },
+  "7135909571918750050": {
+    "source": " Accounts and guest browsers are distinct identities, not a count of people. They are deduplicated across the selected period. Conversation counts follow the session start date; messages and voice time follow the date they occurred. A session can therefore contribute messages on a date when it did not start. ",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "7136018875175606726": {
     "source": "in",
     "file": "src/app/chat/chat.html"
@@ -20502,6 +20682,10 @@
   "7179883842546030946": {
     "source": "Source registry",
     "file": "src/app/green-jobs/green-jobs.html"
+  },
+  "7180559812435210864": {
+    "source": " No recorded Picamo activity is available for this period. Tracking begins with this release. ",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "7180739387153748225": {
     "source": "This browser does not support microphone conversations. You can still type below.",
@@ -20723,6 +20907,10 @@
     "source": "{$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}/{$INTERPOLATION_1} complete",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
+  "722717935459520844": {
+    "source": "Verified voice minutes over time",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
+  },
   "7228661053909212914": {
     "source": "Experience a live TalkThru ↗",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -20799,6 +20987,10 @@
     "source": "{$START_TAG_SPAN}lock{$CLOSE_TAG_SPAN}This public avatar’s voice is managed by its creator. You can still edit this card’s presentation and links.",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
+  "7256395947475975935": {
+    "source": "Failed",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
+  },
   "7260119081107004912": {
     "source": "Boards created over time",
     "file": "src/app/platform-analytics/platform-analytics.html"
@@ -20826,6 +21018,10 @@
   "7272825947268421273": {
     "source": "You have used the anonymous question limit for this atlas. Sign in to keep the conversation going.",
     "file": "src/app/chat/chat.ts"
+  },
+  "727389632226608763": {
+    "source": "Measured text answer requests only. Voice calls and local interface steps are excluded.",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "7274587482160060331": {
     "source": "Choose a cover image smaller than 10 MB.",
@@ -20991,6 +21187,10 @@
     "source": "An agency / team",
     "file": "src/app/talkthrus/talkthrus.html"
   },
+  "7321805950618282075": {
+    "source": "Apply dates",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "7322362260005537577": {
     "source": "Compiled knowledge from your uploaded documents",
     "file": "src/app/wiki/wiki.ts"
@@ -21070,6 +21270,10 @@
   "7347789063461193661": {
     "source": "Your free month has started. You won’t be charged until {$date}.",
     "file": "src/app/talkthru-billing/talkthru-billing.service.ts"
+  },
+  "7348145098078181896": {
+    "source": " Historical Picamo activity cannot be reliably reconstructed and is not imported. Only metadata is retained here; this page does not store conversation transcripts. ",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "7348299236124287511": {
     "source": " Wiki is still available.",
@@ -21619,6 +21823,10 @@
     "source": "Could not generate the QR code.",
     "file": "src/app/off-grids/off-grid-detail.ts"
   },
+  "7516864956407696127": {
+    "source": "Duration basis",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
+  },
   "7517271026610841090": {
     "source": "Save script",
     "file": "src/app/boards/boards.ts"
@@ -21797,7 +22005,7 @@
   },
   "7577331606965049881": {
     "source": "Time grouping",
-    "file": "src/app/platform-analytics/platform-analytics.html"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "7579229954909728794": {
     "source": "Street, neighborhood, or address",
@@ -22270,6 +22478,10 @@
   "7728067922028228861": {
     "source": "Next stop",
     "file": "src/app/boards/boards.html"
+  },
+  "772922974420228094": {
+    "source": "Tracking since (UTC)",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "7729325138351919747": {
     "source": "I’ll meet you there.",
@@ -22753,7 +22965,7 @@
   },
   "7878813844917362690": {
     "source": "Last 5 years",
-    "file": "src/app/platform-analytics/platform-analytics.html"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "7881110331025414182": {
     "source": "Add a Talking Card",
@@ -22987,6 +23199,10 @@
     "source": "Only the board owner or an admin can manage cards.",
     "file": "src/app/boards/boards.ts"
   },
+  "7931842598748106840": {
+    "source": "Verified calls with participation",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "7932692489430322232": {
     "source": "Book now",
     "file": "src/app/boards/boards.html"
@@ -23042,6 +23258,10 @@
   "7950796063672592069": {
     "source": "Flip through all {$INTERPOLATION} cards and reveal the details.",
     "file": "src/app/boards/boards.html"
+  },
+  "7951329800610000775": {
+    "source": "User messages over time",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "7951658951885156837": {
     "source": "Select paid plan to upload",
@@ -23262,6 +23482,10 @@
   "8024880718038273882": {
     "source": "No {$INTERPOLATION} match this search.",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
+  "8025247491093068464": {
+    "source": "{$PERIOD}: Not recorded",
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "8025899844026015559": {
     "source": "Tell the story behind the place, keep hours and links current, and give people a richer page than a static directory listing.",
@@ -24239,6 +24463,10 @@
     "source": "Duplicate this card",
     "file": "src/app/boards/boards.html"
   },
+  "8339581786626550712": {
+    "source": "Session ID",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "8340082836740122639": {
     "source": "Create a city not listed below.",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -24733,7 +24961,7 @@
   },
   "8484231838290610217": {
     "source": "Choose a valid date range.",
-    "file": "src/app/platform-analytics/platform-analytics.ts"
+    "file": "src/app/platform-analytics/picamo-analytics.ts"
   },
   "8488910447915517935": {
     "source": "Persona prompt",
@@ -24914,6 +25142,10 @@
   "8545922858081740513": {
     "source": "Realtime voice is ready",
     "file": "src/app/chat/chat.ts"
+  },
+  "8546542978634281063": {
+    "source": "Average answer time",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "8548173041178568456": {
     "source": "Preview default voice",
@@ -25691,6 +25923,10 @@
     "source": "Searching for card photos",
     "file": "src/app/kiwi/kiwi.ts"
   },
+  "8803513963084720973": {
+    "source": "Recent conversations",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "8803977195874302490": {
     "source": "What are people debating about {city} right now?",
     "file": "src/app/chat/chat.ts"
@@ -25963,6 +26199,10 @@
     "source": "City pages use Picamo by default. Enable this to use the guide and persona configured below.",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "8876362523334517028": {
+    "source": "City guide",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "8876752408632821792": {
     "source": "Surface the unresolved or most-discussed questions.",
     "file": "src/app/chat/chat.ts"
@@ -25998,6 +26238,10 @@
   "8890553633144307762": {
     "source": "Back",
     "file": "src/app/atlas-persona/atlas-persona.html"
+  },
+  "889581076845216138": {
+    "source": "Context",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "8896784378686086972": {
     "source": "Festival of Colors",
@@ -26671,6 +26915,10 @@
     "source": "Keep a few gems for later",
     "file": "src/app/off-grids/off-grid-copy.ts"
   },
+  "9060173675400473919": {
+    "source": "Close details",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "9060820198169675816": {
     "source": "LivingWiki of every country's climate commitments, actual emissions, NDC progress, and policy implementations — the COP process made navigable.",
     "file": "src/app/public-wiki-catalog.ts"
@@ -26838,6 +27086,10 @@
   "9116808367150008810": {
     "source": "Preparing the editable preview",
     "file": "src/app/boards/boards.ts"
+  },
+  "9118344533355014538": {
+    "source": "Today and incomplete periods are marked with a dashed border.",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "9118928885179196531": {
     "source": "Public URL",
@@ -27015,6 +27267,10 @@
     "source": "Your first Done For You listing free",
     "file": "src/app/talkthrus/talkthrus.html"
   },
+  "9178816529218542032": {
+    "source": "Service health",
+    "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
   "9179224848192368180": {
     "source": "Results will appear here after the first learner finishes and saves a score.",
     "file": "src/app/boards/boards.html"
@@ -27042,6 +27298,10 @@
   "9187580480258537751": {
     "source": "“Answer in the first person, grounded in the historical record.”",
     "file": "src/app/atlas-persona/atlas-persona.html"
+  },
+  "9188180936214264985": {
+    "source": "Boards, talking cards, and Picamo activity across LivingWiki.",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "9188331972161718906": {
     "source": " Cancel upload ",
@@ -27145,7 +27405,7 @@
   },
   "9219960151821498093": {
     "source": "Voice calls",
-    "file": "src/app/platform-analytics/platform-analytics.ts"
+    "file": "src/app/platform-analytics/picamo-analytics.html"
   },
   "9220264015100449915": {
     "source": "Building the preview. This stays active while places, images, and cards finish.",

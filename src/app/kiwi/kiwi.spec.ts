@@ -1,3 +1,4 @@
+import { PicamoTrackingService } from '../picamo-tracking.service';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -28,6 +29,7 @@ describe('Picamo conversation interface', () => {
     await TestBed.configureTestingModule({
       imports: [KiwiComponent],
       providers: [provideZonelessChangeDetection(), provideRouter([]),
+        { provide: PicamoTrackingService, useValue: { next: () => undefined, assistant: async () => {}, voice: async () => {} } },
         { provide: AuthService, useValue: { uid: signal('member'), isAuthenticated: signal(true) } },
         { provide: WorkspaceNavigationService, useValue: { currentUrl: signal('/boards') } },
       ],

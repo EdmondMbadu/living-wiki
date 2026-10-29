@@ -2419,6 +2419,16 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Picamo tracking contains metadata only and is served exclusively by admin callables.
+    match /picamo_analytics_sessions/{document=**} { allow read, write: if false; }
+    match /picamo_analytics_requests/{document=**} { allow read, write: if false; }
+    match /picamo_analytics_scopes/{document=**} { allow read, write: if false; }
+    match /picamo_analytics_daily/{document=**} { allow read, write: if false; }
+    match /picamo_analytics_participants/{document=**} { allow read, write: if false; }
+    match /picamo_analytics_voice_sessions/{document=**} { allow read, write: if false; }
+    match /picamo_analytics_providers/{document=**} { allow read, write: if false; }
+    match /picamo_analytics_meta/{document=**} { allow read, write: if false; }
+
     // Platform management metrics never grant direct client access to private metadata.
     match /platform_analytics_inventory/{document=**} { allow read, write: if false; }
     match /platform_analytics_board_creations/{document=**} { allow read, write: if false; }

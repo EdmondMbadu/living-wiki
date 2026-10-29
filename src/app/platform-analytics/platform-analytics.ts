@@ -1,5 +1,7 @@
+import { PicamoAnalyticsComponent } from './picamo-analytics';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { AuthService } from '../auth.service';
@@ -35,7 +37,7 @@ export function platformCsv(rows: unknown[][]): string {
 }
 @Component({
   selector: 'app-platform-analytics',
-  imports: [RouterLink, DatePipe, DecimalPipe, ThemeToggleComponent, AccountMenuComponent],
+  imports: [RouterLink, DatePipe, DecimalPipe, ThemeToggleComponent, AccountMenuComponent, PicamoAnalyticsComponent],
   templateUrl: './platform-analytics.html',
   styleUrl: './platform-analytics.css',
 })
@@ -45,6 +47,8 @@ export class PlatformAnalyticsComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly title = inject(Title);
   private readonly destroyRef = inject(DestroyRef);
+  readonly tab = signal('overview');
+  readonly picamoPanel = viewChild(PicamoAnalyticsComponent);
   readonly report = signal<PlatformReport | null>(null);
   readonly loading = signal(true);
   readonly refreshing = signal(false);
@@ -127,8 +131,17 @@ export class PlatformAnalyticsComponent {
       if (this.timer) clearTimeout(this.timer);
       if (this.searchTimer) clearTimeout(this.searchTimer);
     });
-    void this.load();
+    this.tab.set(this.route.snapshot?.queryParamMap?.get('tab') === 'picamo' ? 'picamo' : 'overview');
+    if (this.tab() === 'overview') void this.load(); else this.loading.set(false);
+    this.route.queryParamMap?.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      const tab = params.get('tab') === 'picamo' ? 'picamo' : 'overview';
+      if (tab === this.tab()) return;
+      this.tab.set(tab);
+      if (tab === 'overview' && !this.report()) void this.load();
+    });
   }
+  refreshCurrent(): void { if (this.tab() === 'picamo') void this.picamoPanel()?.load(true); else void this.load(true); }
+  exportCurrent(): void { if (this.tab() === 'picamo') void this.picamoPanel()?.exportCsv(); else void this.exportCsv(); }
   async load(refresh = false): Promise<void> {
     if (this.timer) clearTimeout(this.timer);
     const seq = ++this.sequence;

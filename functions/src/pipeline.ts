@@ -1,3 +1,4 @@
+import { trackPicamoCityText, type PicamoTracking } from './picamo-analytics';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { answerFromArticles, answerQuestion, answerWithGoogleSearch, compileKnowledgeEntries, compileWikiArticles, mergeWikiArticle, planArticleMerge, streamAnswerWithGoogleSearch, summarizeTopic } from './gemini';
@@ -1275,6 +1276,7 @@ async function updateAtlasStats(userId: string, atlasId: string): Promise<void> 
 }
 
 export async function runAtlasQuery(params: {
+  picamoTracking?: PicamoTracking;
   userId: string;
   atlasId: string | null;
   question: string;
@@ -1308,6 +1310,8 @@ export async function runAtlasQuery(params: {
     ? await loadRecentChatThreadMessages(thread.id, maxHistoryMessagesForAnswer)
     : [];
   timer.mark('history_ms');
+
+  return trackPicamoCityText({ atlasId: params.atlasId, uid: params.userId, tracking: params.picamoTracking }, async () => {
 
   if (params.answerMode === 'internet') {
     const response = await answerWithGoogleSearch({
@@ -1625,9 +1629,11 @@ export async function runAtlasQuery(params: {
     knowledgeGap: knowledgeGap,
     threadId: thread.id,
   };
+  });
 }
 
 export async function runAtlasInternetStream(params: {
+  picamoTracking?: PicamoTracking;
   userId: string;
   atlasId: string | null;
   question: string;
@@ -1658,6 +1664,8 @@ export async function runAtlasInternetStream(params: {
     ? await loadRecentChatThreadMessages(thread.id, maxHistoryMessagesForAnswer)
     : [];
   timer.mark('history_ms');
+
+  return trackPicamoCityText({ atlasId: params.atlasId, uid: params.userId, tracking: params.picamoTracking }, async () => {
 
   const response = await streamAnswerWithGoogleSearch({
     question: trimmedQuestion,
@@ -1707,9 +1715,11 @@ export async function runAtlasInternetStream(params: {
     knowledgeGap: false,
     threadId: thread.id,
   };
+  });
 }
 
 export async function runPublicAtlasQuery(params: {
+  picamoTracking?: PicamoTracking;
   atlasId: string;
   atlasOwnerUserId: string;
   question: string;
@@ -1804,6 +1814,8 @@ export async function runPublicAtlasQuery(params: {
     loadAtlasChatContext(params.atlasId, params.qaSandbox?.personaPrompt),
   ]);
   timer.mark('history_and_context_ms');
+
+  return trackPicamoCityText({ atlasId: params.atlasId, uid: params.visitor.visitorUserId, anonymous: params.visitor.anonymousVisitorId, tracking: params.qaSandbox || params.boardContext ? undefined : params.picamoTracking }, async () => {
 
   if (params.answerMode === 'internet') {
     const response = await answerWithGoogleSearch({
@@ -2173,6 +2185,7 @@ export async function runPublicAtlasQuery(params: {
     remainingQuestions,
     requiresSignIn: questionLimit !== null && remainingQuestions !== null && remainingQuestions <= 0,
   };
+  });
 }
 
 async function tryAnswerFromArticles(params: {

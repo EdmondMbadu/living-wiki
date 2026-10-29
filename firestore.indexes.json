@@ -441,6 +441,158 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "day", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "internal", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "source", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "mode", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "atlasId", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "internal", "order": "ASCENDING"},
+        {"fieldPath": "source", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "internal", "order": "ASCENDING"},
+        {"fieldPath": "mode", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "internal", "order": "ASCENDING"},
+        {"fieldPath": "atlasId", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "source", "order": "ASCENDING"},
+        {"fieldPath": "mode", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "source", "order": "ASCENDING"},
+        {"fieldPath": "atlasId", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "mode", "order": "ASCENDING"},
+        {"fieldPath": "atlasId", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "internal", "order": "ASCENDING"},
+        {"fieldPath": "source", "order": "ASCENDING"},
+        {"fieldPath": "mode", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "internal", "order": "ASCENDING"},
+        {"fieldPath": "source", "order": "ASCENDING"},
+        {"fieldPath": "atlasId", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "internal", "order": "ASCENDING"},
+        {"fieldPath": "mode", "order": "ASCENDING"},
+        {"fieldPath": "atlasId", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "source", "order": "ASCENDING"},
+        {"fieldPath": "mode", "order": "ASCENDING"},
+        {"fieldPath": "atlasId", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "picamo_analytics_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "internal", "order": "ASCENDING"},
+        {"fieldPath": "source", "order": "ASCENDING"},
+        {"fieldPath": "mode", "order": "ASCENDING"},
+        {"fieldPath": "atlasId", "order": "ASCENDING"},
+        {"fieldPath": "startedAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
     }
   ],
   "fieldOverrides": [

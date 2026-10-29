@@ -1,3 +1,4 @@
+import { PicamoTrackingService } from '../picamo-tracking.service';
 import { AfterViewChecked, Component, ElementRef, HostListener, LOCALE_ID, OnDestroy, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -489,6 +490,7 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
   private readonly localeId = inject(LOCALE_ID);
   private readonly authService = inject(AuthService);
   private readonly picamoCityChat = inject(PicamoCityChatService);
+  private readonly picamoTracking = inject(PicamoTrackingService);
   private readonly atlasService = inject(AtlasService);
   private readonly answerCardService = inject(AnswerCardService);
   private readonly answerQuizService = inject(AnswerQuizService);
@@ -4626,10 +4628,12 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
           markStartupTiming('connectCallbackMs', startupStartedAt);
           startupTimings['totalToConnectMs'] = Math.round(performance.now() - startupStartedAt);
           console.info('[Voice startup] connected', startupTimings);
+          void this.picamoTracking.voice(session.userId, conversationId, this.isAnonymousPublicVisitor() ? this.ensureAnonymousVisitorId() : null);
           this.realtimeVoiceConversationId.set(conversationId);
           this.realtimeVoiceStatus.set('connected');
         },
         onDisconnect: (details) => {
+          void this.picamoTracking.voice(session.userId, this.realtimeVoiceConversationId(), this.isAnonymousPublicVisitor() ? this.ensureAnonymousVisitorId() : null);
           console.warn('[Voice mode] ElevenLabs disconnected', details);
           this.handleRealtimeVoiceDisconnect(details);
         },

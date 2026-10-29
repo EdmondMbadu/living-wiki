@@ -1,3 +1,5 @@
+import { issuePicamoVoice } from './picamo-analytics';
+export { getPicamoAnalytics, recordPicamoAssistantInteraction, syncPicamoVoiceAnalytics } from './picamo-analytics';
 export { avatarQaCommand, prepareAvatarQaRun, runAvatarQaCase, recoverAvatarQaCases } from './avatar-qa';
 export { translateLiveCard } from './translate-live-card';
 import { liveCardTranslationCacheId, liveNarrationBoard } from './live-card-translation';
@@ -16988,6 +16990,11 @@ export const createElevenLabsVoiceSession = onCall(
       }
     }
 
+    if (atlasRecord && atlasId && !request.data?.boardId && !request.data?.cardId) {
+      const picamoSession = await issuePicamoVoice('city', uid, anonymousVisitorId, agentId, atlasId);
+      if (picamoSession) visitorId = picamoSession;
+    }
+
     timings.totalMs = Date.now() - startedAt;
     logger.info('ElevenLabs voice session prepared.', {
       atlasId,
@@ -19882,6 +19889,7 @@ export const askAtlas = onCall(
         answerMode,
         question,
         topicIds,
+        picamoTracking: request.data?.boardId || request.data?.cardId ? undefined : request.data?.picamoTracking,
         threadId,
       });
     } catch (error) {
@@ -21044,6 +21052,7 @@ export const askAtlasStream = onRequest(
         userId: decodedToken.uid,
         atlasId,
         question,
+        picamoTracking: request.body?.picamoTracking,
         threadId,
         onDelta: (delta) => writeSseEvent(response, 'delta', { delta }),
       });
@@ -22794,6 +22803,7 @@ export const askPublicAtlas = onCall(
     }
     try {
       const result = await runPublicAtlasQuery({
+        picamoTracking: request.data?.picamoTracking,
         atlasId: atlas.id,
         atlasOwnerUserId: atlas.user_id,
         question,

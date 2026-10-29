@@ -1,3 +1,4 @@
+import { PicamoTrackingService, type PicamoTracking } from './picamo-tracking.service';
 import { isPlatformBrowser } from '@angular/common';
 import { effect, inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import {
@@ -124,6 +125,7 @@ export type StreamingAnswerCallbacks = {
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
+  private readonly picamoTracking = inject(PicamoTrackingService);
   private readonly authService = inject(AuthService);
   private readonly atlasService = inject(AtlasService);
   private readonly platformId = inject(PLATFORM_ID);
@@ -235,12 +237,15 @@ export class ChatService {
       return null;
     }
 
+    const picamoAtlasId = this.atlasService.activeAtlasId();
+    const picamoTracking = this.picamoTracking.city(picamoAtlasId, threadId);
     this.isSubmitting.set(true);
     this.submitError.set(null);
 
     try {
       const askAtlas = httpsCallable<
         {
+          picamoTracking?: PicamoTracking;
           question: string;
           topicIds?: string[];
           threadId?: string | null;
@@ -250,6 +255,7 @@ export class ChatService {
         AskAtlasResponse
       >(this.functions, 'askAtlas');
       const { data } = await askAtlas({
+        picamoTracking,
         question,
         topicIds,
         threadId: threadId ?? null,
@@ -257,6 +263,7 @@ export class ChatService {
         answerMode: 'wiki',
       });
 
+      this.picamoTracking.bindCity(picamoAtlasId, data.threadId, picamoTracking);
       this.latestAnswer.set(data.answer);
       this.latestCitations.set(data.citedPassages);
       this.knowledgeGap.set(data.knowledgeGap);
@@ -306,12 +313,15 @@ export class ChatService {
       return null;
     }
 
+    const picamoAtlasId = this.atlasService.activeAtlasId();
+    const picamoTracking = this.picamoTracking.city(picamoAtlasId, threadId);
     this.isSubmitting.set(true);
     this.submitError.set(null);
 
     try {
       const askAtlas = httpsCallable<
         {
+          picamoTracking?: PicamoTracking;
           question: string;
           threadId?: string | null;
           atlasId: string | null;
@@ -320,12 +330,14 @@ export class ChatService {
         AskAtlasResponse
       >(this.functions, 'askAtlas');
       const { data } = await askAtlas({
+        picamoTracking,
         question,
         threadId: threadId ?? null,
         atlasId: this.atlasService.activeAtlasId(),
         answerMode: 'internet',
       });
 
+      this.picamoTracking.bindCity(picamoAtlasId, data.threadId, picamoTracking);
       this.latestAnswer.set(data.answer);
       this.latestCitations.set(data.citedPassages);
       this.knowledgeGap.set(data.knowledgeGap);
@@ -348,6 +360,8 @@ export class ChatService {
       return this.askInternet(question, threadId);
     }
 
+    const picamoAtlasId = this.atlasService.activeAtlasId();
+    const picamoTracking = this.picamoTracking.city(picamoAtlasId, threadId);
     this.isSubmitting.set(true);
     this.submitError.set(null);
 
@@ -365,6 +379,7 @@ export class ChatService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          picamoTracking,
           question,
           threadId: threadId ?? null,
           atlasId: this.atlasService.activeAtlasId(),
@@ -436,6 +451,7 @@ export class ChatService {
         throw new Error('Streaming answer ended before the final response arrived.');
       }
 
+      this.picamoTracking.bindCity(picamoAtlasId, finalResponse.threadId, picamoTracking);
       this.latestAnswer.set(finalResponse.answer);
       this.latestCitations.set(finalResponse.citedPassages);
       this.knowledgeGap.set(finalResponse.knowledgeGap);
@@ -558,12 +574,14 @@ export class ChatService {
       return null;
     }
 
+    const picamoTracking = this.picamoTracking.city(atlasId, options?.threadId, options?.startNewThread === true);
     this.isSubmitting.set(true);
     this.submitError.set(null);
 
     try {
       const askPublicAtlas = httpsCallable<
         {
+          picamoTracking?: PicamoTracking;
           question: string;
           atlasId: string;
           analyticsVisitorId?: string;
@@ -582,6 +600,7 @@ export class ChatService {
       >(this.functions, 'askPublicAtlas');
 
       const { data } = await askPublicAtlas({
+        picamoTracking,
         question,
         atlasId,
         analyticsVisitorId: options?.analyticsVisitorId,
@@ -597,6 +616,7 @@ export class ChatService {
         startNewThread: options?.startNewThread === true,
       });
 
+      this.picamoTracking.bindCity(atlasId, data.threadId, picamoTracking);
       this.latestAnswer.set(data.answer);
       this.latestCitations.set(data.citedPassages ?? []);
       this.knowledgeGap.set(data.knowledgeGap === true);

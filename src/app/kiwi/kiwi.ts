@@ -1,3 +1,4 @@
+import { PicamoTrackingService, type PicamoTracking } from '../picamo-tracking.service';
 import { isPlatformBrowser } from '@angular/common';
 import { Component, HostListener, LOCALE_ID, PLATFORM_ID, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
@@ -97,6 +98,7 @@ export class KiwiComponent {
       'friendly-explainer': $localize`Calm, friendly, and direct`,
     } as Record<string, string>,
   };
+  private readonly tracking = inject(PicamoTrackingService);
   private readonly auth = inject(AuthService);
   private readonly localeId = inject(LOCALE_ID);
   private readonly navigation = inject(WorkspaceNavigationService);
@@ -108,6 +110,8 @@ export class KiwiComponent {
   private readonly storage = this.isBrowser ? getFirebaseStorage() : null;
   private conversation: VoiceConversation | null = null;
   private voiceAttempt = 0;
+  private analyticsVoiceSession: string | null = null;
+  private analyticsVoiceConversation: string | null = null;
   private queuedVoiceRequest = '';
   private voiceUserSequence = 0;
   private proposalReadyVoiceSequence = 0;
@@ -694,6 +698,22 @@ export class KiwiComponent {
       if (fromVoiceTool) this.queuedVoiceRequest = text;
       return;
     }
+    const meta = fromVoiceTool ? undefined : this.tracking.next('assistant');
+    // Start recording independently; never put telemetry latency in the conversation path.
+    const begun = this.tracking.assistant(meta, 'begin');
+    let interrupted = false;
+    try { await this.sendUntracked(prefill, fromVoiceTool, meta); }
+    catch (error) { interrupted = true; throw error; }
+    finally { void begun.then(() => this.tracking.assistant(meta, 'finish', interrupted)); }
+  }
+
+  private async sendUntracked(prefill?: string, fromVoiceTool = false, picamoTracking?: PicamoTracking): Promise<void> {
+    const text = (prefill || this.draft()).trim();
+    if (!text || !this.signedIn() || !this.functions) return;
+    if (this.busy() || this.applying() || this.boardAwaitingOpen()) {
+      if (fromVoiceTool) this.queuedVoiceRequest = text;
+      return;
+    }
     const cancelled = /\b(cancel|never mind|nevermind|stop)\b/i.test(text);
     if (cancelled) {
       this.pendingCreationPrompt = '';
@@ -809,9 +829,9 @@ export class KiwiComponent {
       }
       const callable = httpsCallable<{
         message: string; history: Array<{ role: string; text: string }>;
-        teamId: string; boardId: string; locale: string; currentDraft?: KiwiBoardDraft;
+        teamId: string; boardId: string; locale: string; currentDraft?: KiwiBoardDraft; picamoTracking?: PicamoTracking;
       }, KiwiTalkResponse, KiwiStreamEvent>(this.functions, 'kiwiTalk');
-      const { stream, data: finalData } = await callable.stream({ message: text, history,
+      const { stream, data: finalData } = await callable.stream({ message: text, history, picamoTracking,
         teamId: this.scope().teamId, boardId: this.scope().boardId, locale: this.localeId,
         ...(modelDraft ? { currentDraft: modelDraft } : {}) }, { signal: controller.signal });
       for await (const event of stream) {
@@ -1057,13 +1077,14 @@ export class KiwiComponent {
     if (!this.functions) return;
     try {
       const [session, client] = await Promise.all([
-        httpsCallable<{ voiceId: string }, { signedUrl: string; providerVoiceId: string }>(
+        httpsCallable<{ voiceId: string }, { signedUrl: string; providerVoiceId: string; analyticsSessionId?: string }>(
           this.functions, 'kiwiVoiceSession')({ voiceId: this.voiceId() }),
         import('@elevenlabs/client'),
       ]);
       if (attempt !== this.voiceAttempt || !this.voiceActive()) return;
       const conversation = await client.Conversation.startSession({
         signedUrl: session.data.signedUrl,
+        ...(session.data.analyticsSessionId ? { userId: session.data.analyticsSessionId } : {}),
         connectionType: 'websocket',
         textOnly: false,
         overrides: { tts: { voiceId: session.data.providerVoiceId } },
@@ -1101,12 +1122,16 @@ export class KiwiComponent {
             return 'Saving the approved change now.';
           },
         },
-        onConnect: () => {
+        onConnect: ({ conversationId }) => {
           if (attempt !== this.voiceAttempt) return;
+          this.analyticsVoiceSession = session.data.analyticsSessionId || null;
+          this.analyticsVoiceConversation = conversationId;
+          void this.tracking.voice(this.analyticsVoiceSession, conversationId);
           this.voicePhase.set('listening');
           this.listening.set(true);
         },
         onDisconnect: () => {
+          void this.tracking.voice(session.data.analyticsSessionId, this.analyticsVoiceConversation);
           if (attempt !== this.voiceAttempt) return;
           this.conversation = null;
           this.voiceActive.set(false);
@@ -1154,6 +1179,9 @@ export class KiwiComponent {
   }
 
   stopVoiceSession(): void {
+    const sessionId = this.analyticsVoiceSession, conversationId = this.analyticsVoiceConversation;
+    this.analyticsVoiceSession = null;
+    this.analyticsVoiceConversation = null;
     this.voiceAttempt++;
     const conversation = this.conversation;
     this.conversation = null;
@@ -1163,7 +1191,7 @@ export class KiwiComponent {
     this.listening.set(false);
     this.speaking.set(false);
     this.queuedVoiceRequest = '';
-    if (conversation) void conversation.endSession().catch(() => {});
+    if (conversation) void conversation.endSession().catch(() => {}).finally(() => this.tracking.voice(sessionId, conversationId));
     this.stopSpeaking();
   }
 
