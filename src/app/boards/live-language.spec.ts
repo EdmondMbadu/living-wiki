@@ -1,3 +1,4 @@
+import { BoardTranslationCache } from './board-translation-cache';
 import { signal } from '@angular/core';
 import { BoardsComponent } from './boards';
 import { BOARD_TRANSLATION_SCHEMA_VERSION, boardAlreadyInEnglish, type BoardTranslationResult } from './board-translation';
@@ -26,7 +27,7 @@ describe('Live visitor language', () => {
     const c: any = Object.create(BoardsComponent.prototype);
     const board = { id: 'board-123', updatedAt: 'v1', askVisitorLanguage: false, cards: [] };
     Object.assign(c, {
-      isBrowser: true, originalBoardIsEnglish: () => false, functions: {}, originalSelectedBoard: signal(board),
+      isBrowser: true, originalBoardIsEnglish: () => false, boardTranslationStreaming: signal(false), boardTranslationComplete: signal(false), boardTranslationProgress: signal({completed:0,total:0}), functions: {}, originalSelectedBoard: signal(board),
       boardTranslationTarget: signal('de'), boardTranslationResult: signal(null), boardTranslationVersion: signal(''),
       liveCardTranslations: signal({}), liveCardTranslationCache: new Map(), liveTranslationPartial: signal(false), liveTranslationQueue: new LiveTranslationQueue(),
       liveDesiredCardIds: new Set(['one','two']), liveTranslationSession: 'board-123:v1:de',
@@ -137,6 +138,48 @@ describe('Live visitor language', () => {
     c.originalBoardIsEnglish = () => true;
     c.syncBoardTranslationLanguage('fr');
     expect(c.boardTranslationTarget()).toBe('fr');
+  });
+
+  it('shows a section before the final response, then restores it without another request', async () => {
+    const c = harness(); c.stackDirectView.set(false); c.requestedCardId = signal('');
+    c.selectedBoardId = signal('board-123'); c.boardTranslationCache = new BoardTranslationCache(null);
+    const partial = {boardId:'board-123',targetLanguage:'de',sourceLanguage:'en',fingerprint:'hash',schemaVersion:3,
+      expectedSegmentCount:1,segments:[{key:'board.title',text:'Museum'}],cached:false,changed:true};
+    let progress!: (value:unknown)=>void; let finish!: (value:unknown)=>void;
+    c.requestBoardTranslation = jasmine.createSpy('stream').and.callFake((_board:string,_language:string, callback:(value:unknown)=>void)=>{
+      progress=callback; return new Promise(done=>{finish=done;});
+    });
+    const pending = c.syncRequestedBoardTranslation();
+    progress({...partial,totalSegmentCount:2});
+    expect(c.boardTranslationResult().segments.length).toBe(1);
+    expect(c.boardTranslationLoading()).toBeTrue();
+    expect(c.boardTranslationComplete()).toBeFalse();
+    expect(c.boardTranslationProgress()).toEqual({completed:1,total:2});
+    const complete = {...partial,expectedSegmentCount:2,segments:[...partial.segments,{key:'board.description',text:'Geschichte'}]};
+    finish(complete); await pending;
+    expect(c.boardTranslationComplete()).toBeTrue();
+    expect(c.boardTranslationLoading()).toBeFalse();
+    c.syncBoardTranslationLanguage('fr'); c.syncBoardTranslationLanguage('de');
+    await c.syncRequestedBoardTranslation();
+    expect(c.requestBoardTranslation).toHaveBeenCalledTimes(1);
+    expect(c.boardTranslationResult().cached).toBeTrue();
+  });
+
+  it('ignores stale stream chunks and completion after a language switch', async () => {
+    const c = harness(); c.stackDirectView.set(false); c.requestedCardId = signal('');
+    c.selectedBoardId = signal('board-123'); c.boardTranslationCache = new BoardTranslationCache(null);
+    let progress!: (value:unknown)=>void; let finish!: (value:unknown)=>void;
+    c.requestBoardTranslation = (_board:string,_language:string, callback:(value:unknown)=>void)=>{
+      progress=callback; return new Promise(done=>{finish=done;});
+    };
+    const pending = c.syncRequestedBoardTranslation();
+    c.syncBoardTranslationLanguage('fr');
+    const value = {boardId:'board-123',targetLanguage:'de',sourceLanguage:'en',fingerprint:'hash',schemaVersion:3,
+      expectedSegmentCount:1,segments:[{key:'board.title',text:'Alte Sprache'}],cached:false,changed:true,totalSegmentCount:1};
+    progress(value); finish(value); await pending;
+    expect(c.boardTranslationTarget()).toBe('fr');
+    expect(c.boardTranslationResult()).toBeNull();
+    expect(c.boardTranslationError()).toBeNull();
   });
 
   it('reuses a translated card immediately when switching back, but requests edited content again', async () => {

@@ -24,12 +24,6 @@ import {
   boardNarrationTargetWords,
   normalizeBoardNarrationSeconds,
 } from './board-narration-length';
-import {
-  missingBoardTranslationSegments,
-  normalizeTranslatedBoardSegments,
-  type BoardTranslationLanguage,
-  type BoardTranslationSegment,
-} from './board-translation';
 import type { ExtractBlock, KnowledgeEntryDraft, MappableLocation, ModelUsage, WikiArticleDraft, WikiArticlePlan } from './types';
 import {
   normalizeRelatedTopics,
@@ -93,18 +87,6 @@ const boardWizardCompleteSetManifestSchema = {
     },
   },
   required: ['title', 'status', 'message', 'items'],
-} as const;
-
-const boardTranslationSchema = {
-  type: 'array',
-  items: {
-    type: 'object',
-    properties: {
-      key: { type: 'string' },
-      text: { type: 'string' },
-    },
-    required: ['key', 'text'],
-  },
 } as const;
 
 const knowledgeEntrySchema = {
@@ -1274,89 +1256,7 @@ export async function shortenStackScriptNarrations(params: {
   }
 }
 
-export async function translateBoardTextSegments(
-  segments: readonly BoardTranslationSegment[],
-  targetLanguage: BoardTranslationLanguage,
-): Promise<BoardTranslationSegment[]> {
-  if (!segments.length) {
-    return [];
-  }
-
-  const batches: BoardTranslationSegment[][] = [];
-  let currentBatch: BoardTranslationSegment[] = [];
-  let currentCharacters = 0;
-  for (const segment of segments) {
-    if (currentBatch.length >= 70 || currentCharacters + segment.text.length > 14_000) {
-      batches.push(currentBatch);
-      currentBatch = [];
-      currentCharacters = 0;
-    }
-    currentBatch.push(segment);
-    currentCharacters += segment.text.length;
-  }
-  if (currentBatch.length) {
-    batches.push(currentBatch);
-  }
-
-  const translatedBatches: BoardTranslationSegment[][] = new Array(batches.length);
-  let nextBatchIndex = 0;
-  const workers = Array.from({ length: Math.min(3, batches.length) }, async () => {
-    while (nextBatchIndex < batches.length) {
-      const batchIndex = nextBatchIndex;
-      nextBatchIndex += 1;
-      const batch = batches[batchIndex];
-      const translated: BoardTranslationSegment[] = [];
-      let remaining = batch;
-      // A model can return valid JSON while omitting later fields. Retry only
-      // those fields in smaller requests; never cache the source English text.
-      for (let attempt = 0; attempt < 3 && remaining.length; attempt += 1) {
-        const retryGroups = attempt === 0
-          ? [remaining]
-          : Array.from({ length: Math.ceil(remaining.length / 20) }, (_item, index) =>
-              remaining.slice(index * 20, (index + 1) * 20));
-        for (const group of retryGroups) {
-          const response = await generateContentWithRetry({
-            model,
-            contents: [
-              `Translate every text value into natural, fluent ${contentLanguageDetails(targetLanguage).name}.`,
-              'This is user-facing content from a LivingWiki board.',
-              'Return exactly one object for every input key and keep each key byte-for-byte unchanged.',
-              'Translate meaning faithfully without summarizing, censoring, embellishing, or adding facts.',
-              'Keep URLs, email addresses, @handles, hashtags, prices, measurements, catalog numbers, emoji, and what3words addresses unchanged.',
-              'Keep product, artist, person, venue, and place names in their established form unless that name has a standard form in the target language.',
-              'Preserve paragraph breaks. Return JSON only.',
-              JSON.stringify(group),
-            ].join('\n\n'),
-            config: {
-              responseMimeType: 'application/json',
-              responseJsonSchema: boardTranslationSchema,
-              temperature: 0,
-              maxOutputTokens: 16_384,
-              thinkingConfig: { thinkingBudget: 0 },
-            },
-          });
-          const parsed = parseJsonResponse<unknown>(response.text ?? '[]');
-          if (Array.isArray(parsed)) {
-            translated.push(...parsed.map((value) => {
-              const record = value && typeof value === 'object'
-                ? value as Record<string, unknown>
-                : {};
-              return {
-                key: typeof record['key'] === 'string' ? record['key'] : '',
-                text: typeof record['text'] === 'string' ? record['text'] : '',
-              };
-            }));
-          }
-        }
-        remaining = missingBoardTranslationSegments(batch, translated);
-      }
-      translatedBatches[batchIndex] = normalizeTranslatedBoardSegments(batch, translated);
-    }
-  });
-
-  await Promise.all(workers);
-  return translatedBatches.flat();
-}
+export { translateBoardTextSegments } from './board-translation-provider';
 
 function normalizeGeminiError(error: unknown): { message: string; retryable: boolean } {
   const message = error instanceof Error ? error.message : String(error);

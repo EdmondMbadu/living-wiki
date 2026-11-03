@@ -1480,7 +1480,11 @@
                 <span class="material-symbols-outlined board-translation-control__spinner" aria-hidden="true">progress_activity</span>
                 <span>
                   <strong i18n>Translating this board…</strong>
-                  <small i18n>The original stays available while we prepare it.</small>
+                  @if (boardTranslationProgress().completed) {
+                    <small i18n="@@boardTranslationProgress">Translated {{ boardTranslationProgress().completed }} of {{ boardTranslationProgress().total }} text sections.</small>
+                  } @else {
+                    <small i18n>The original stays available while we prepare it.</small>
+                  }
                 </span>
               } @else if (boardTranslationError(); as translationError) {
                 <span class="material-symbols-outlined" aria-hidden="true">error</span>

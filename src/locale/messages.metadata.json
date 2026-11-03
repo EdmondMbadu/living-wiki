@@ -19627,10 +19627,6 @@
     "source": "Pitch slide + talk track built around their TalkThru.",
     "file": "src/app/talkthrus/talkthrus.ts"
   },
-  "6868573968045788053": {
-    "source": "No translation was needed.",
-    "file": "src/app/boards/boards.html"
-  },
   "6869615587399615312": {
     "source": "Place card",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -21846,10 +21842,6 @@
   "7524295457674216642": {
     "source": "Retry analytics",
     "file": "src/app/teams/teams.ts"
-  },
-  "7527242895095482156": {
-    "source": "This board is already in {$INTERPOLATION}",
-    "file": "src/app/boards/boards.html"
   },
   "7531918989068231421": {
     "source": "Open, peaceful motion for nature and reflective stories.",
@@ -27682,6 +27674,10 @@
   "authStorySignInTitle": {
     "source": "Welcome back to your world.",
     "file": "src/app/auth-story-panel/auth-story-panel.html"
+  },
+  "boardTranslationProgress": {
+    "source": "Translated {$INTERPOLATION} of {$INTERPOLATION_1} text sections.",
+    "file": "src/app/boards/boards.html"
   },
   "duplicateBoardMenu": {
     "source": "Duplicate board",

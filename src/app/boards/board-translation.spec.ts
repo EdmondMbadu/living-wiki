@@ -1,3 +1,4 @@
+import { BoardTranslationCache, mergeBoardTranslationProgress } from './board-translation-cache';
 import {
   applyBoardTranslation,
   boardAlreadyInEnglish,
@@ -144,5 +145,35 @@ describe('board translation overlay', () => {
       fingerprint: 'fingerprint', schemaVersion: 3, expectedSegmentCount: 2,
       segments: [{ key: 'board.title', text: 'A casa' }],
     })).toBeNull();
+  });
+});
+
+describe('progressive board translation cache', () => {
+  const result = {boardId:'board-123', targetLanguage:'fr', sourceLanguage:'en', fingerprint:'hash',
+    schemaVersion:3, expectedSegmentCount:1, segments:[{key:'board.title',text:'Musée'}], cached:false, changed:true} as const;
+  it('restores completed text after a locale reload and rejects edited source', () => {
+    const values = new Map<string,string>();
+    const storage = {getItem:(key:string)=>values.get(key)??null, setItem:(key:string,value:string)=>{values.set(key,value);}};
+    const first = new BoardTranslationCache(storage);
+    first.put('board-123:v1:fr','original source',{...result,segments:[...result.segments]});
+    const reloaded = new BoardTranslationCache(storage);
+    expect(reloaded.get('board-123:v1:fr','original source')?.segments[0].text).toBe('Musée');
+    expect(reloaded.get('board-123:v1:fr','original source')?.cached).toBeTrue();
+    expect(reloaded.get('board-123:v1:fr','edited source')).toBeNull();
+    expect(reloaded.get('board-123:v1:de','original source')).toBeNull();
+  });
+  it('remains usable when storage is unavailable and bounds retained translations', () => {
+    const cache = new BoardTranslationCache({getItem:()=>{throw Error('blocked');},setItem:()=>{throw Error('blocked');}});
+    for(let i=0;i<15;i++) cache.put(`key-${i}`,'source',{...result,segments:[...result.segments]});
+    expect(cache.get('key-0','source')).toBeNull();
+    expect(cache.get('key-14','source')?.segments.length).toBe(1);
+  });
+  it('merges completed sections without losing earlier text and rejects a different revision', () => {
+    const first = {...result,segments:[...result.segments]};
+    const second = {...result,segments:[{key:'board.description',text:'Une histoire'}]};
+    const merged = mergeBoardTranslationProgress(first,second);
+    expect(merged.expectedSegmentCount).toBe(2);
+    expect(merged.segments.map(item=>item.key)).toEqual(['board.title','board.description']);
+    expect(()=>mergeBoardTranslationProgress(first,{...second,fingerprint:'changed'})).toThrow();
   });
 });

@@ -1,3 +1,4 @@
+import { BoardTranslationCache, boardTranslationSourceSignature, mergeBoardTranslationProgress } from './board-translation-cache';
 import { contentLanguageDetails, contentLanguageForLocale } from '../../../functions/src/content-language';
 import { LiveLanguageDialogComponent } from './live-language-dialog';
 import { LiveTranslationQueue } from './live-translation-queue';
@@ -2614,6 +2615,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly boardTranslationTarget = signal<BoardTranslationLanguage | null>(null);
   readonly boardTranslationResult = signal<BoardTranslationResult | null>(null);
   readonly boardTranslationVersion = signal('');
+  private readonly boardTranslationCache = new BoardTranslationCache();
+  private boardTranslationAbort: AbortController | null = null;
+  readonly boardTranslationStreaming = signal(false);
+  readonly boardTranslationComplete = signal(false);
+  readonly boardTranslationProgress = signal({completed: 0, total: 0});
   readonly boardTranslationLoading = signal(false);
   readonly boardTranslationError = signal<string | null>(null);
   readonly boardTranslationLanguages = BOARD_TRANSLATION_LANGUAGES;
@@ -3207,7 +3213,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         && this.liveFrameTranslationIds(this.stackCurrentFrame()).every((id) =>
           this.liveCardTranslations()[id]?.targetLanguage === this.boardTranslationTarget());
     }
-    return !this.liveTranslationPartial?.() && !!board
+    return this.boardTranslationComplete() && !this.liveTranslationPartial?.() && !!board
       && !!result
       && result.boardId === board.id
       && result.targetLanguage === this.boardTranslationTarget()
@@ -4356,6 +4362,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.boardTranslationAbort?.abort();
     this.meta.removeTag('name="robots"');
     this.docxExportService.release(this.stackDocsExportResult());
     this.wizardOffGridLocationRun += 1;
@@ -14883,6 +14890,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (this.requestedCardId() && !this.boardRouteLoadState().complete) return;
     const board = this.originalSelectedBoard();
     if (!this.isBrowser || !this.stackDirectView() || !board) return;
+    if (this.boardTranslationStreaming()) {
+      this.boardTranslationAbort?.abort();
+      this.boardTranslationRun += 1;
+      this.boardTranslationStreaming.set(false);
+    }
     this.initializeLiveLanguage();
     if (this.boardTranslationTarget() === 'en' && this.originalBoardIsEnglish()) this.syncBoardTranslationLanguage('original');
     if (this.liveLanguageOpen()) return;
@@ -15015,6 +15027,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stopStackPlayback();
     this.boardTranslationRun += 1;
     this.boardTranslationRequestKey = '';
+    this.boardTranslationAbort?.abort();
+    this.boardTranslationStreaming.set(false);
+    this.boardTranslationComplete.set(false);
     this.boardTranslationTarget.set(null);
     this.boardTranslationResult.set(null);
     this.boardTranslationVersion.set('');
@@ -15034,6 +15049,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     );
     const target = requested === 'en' && this.originalBoardIsEnglish() ? null : requested;
     if (target === this.boardTranslationTarget()) return;
+    this.boardTranslationAbort?.abort();
+    this.boardTranslationStreaming.set(false);
+    this.boardTranslationComplete.set(false);
+    this.boardTranslationProgress.set({completed: 0, total: 0});
     this.stopStackPlayback();
     this.boardTranslationRun += 1;
     this.boardTranslationRequestKey = '';
@@ -15060,41 +15079,70 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const current = this.boardTranslationResult();
-    if (!this.liveTranslationPartial() && current?.boardId === board.id
-      && current.targetLanguage === targetLanguage
-      && this.boardTranslationVersion() === board.updatedAt) {
-      return;
-    }
+    if (this.boardTranslationComplete() && !this.liveTranslationPartial() && current?.boardId === board.id
+      && current.targetLanguage === targetLanguage && this.boardTranslationVersion() === board.updatedAt) return;
     const requestKey = `${board.id}:${board.updatedAt}:${targetLanguage}`;
-    if (this.boardTranslationLoading() && this.boardTranslationRequestKey === requestKey) {
+    if (this.boardTranslationLoading() && this.boardTranslationRequestKey === requestKey) return;
+    const source = boardTranslationSourceSignature(board);
+    const cached = this.boardTranslationCache.get(requestKey, source);
+    if (cached && cached.boardId === board.id && cached.targetLanguage === targetLanguage) {
+      this.boardTranslationAbort?.abort();
+      this.boardTranslationRun += 1;
+      this.boardTranslationStreaming.set(false);
+      this.boardTranslationRequestKey = '';
+      this.liveTranslationPartial.set(false);
+      this.boardTranslationResult.set(cached);
+      this.boardTranslationVersion.set(board.updatedAt);
+      this.boardTranslationComplete.set(true);
+      this.boardTranslationLoading.set(false);
+      this.boardTranslationError.set(null);
       return;
     }
-
+    this.boardTranslationAbort?.abort();
     const run = ++this.boardTranslationRun;
+    const started = performance.now();
+    let firstText = false;
+    const isCurrent = () => run === this.boardTranslationRun && this.selectedBoardId() === board.id
+      && this.originalSelectedBoard()?.updatedAt === board.updatedAt && !this.stackDirectView()
+      && this.boardTranslationTarget() === targetLanguage;
     this.boardTranslationRequestKey = requestKey;
+    this.boardTranslationComplete.set(false);
+    this.boardTranslationStreaming.set(true);
+    this.boardTranslationProgress.set({completed: 0, total: 0});
     this.boardTranslationLoading.set(true);
     this.boardTranslationError.set(null);
+    this.liveTranslationPartial.set(false);
+    this.boardTranslationResult.set(null);
     try {
-      const callable = httpsCallable<
-        { boardId: string; targetLanguage: BoardTranslationLanguage },
-        unknown
-      >(this.functions, 'translateBoard', { timeout: 300_000 });
-      const response = await callable({ boardId: board.id, targetLanguage });
-      const result = normalizeBoardTranslationResult(response.data);
-      if (!result || result.boardId !== board.id || result.targetLanguage !== targetLanguage) {
-        throw new Error('The translation response was incomplete.');
-      }
-      if (run !== this.boardTranslationRun
-        || this.selectedBoardId() !== board.id
-        || this.stackDirectView()
-        || this.boardTranslationTarget() !== targetLanguage) {
-        return;
-      }
-      this.liveTranslationPartial.set(false);
+      const data = await this.requestBoardTranslation(board.id, targetLanguage, (value) => {
+        if (!isCurrent()) return;
+        const chunk = normalizeBoardTranslationResult(value);
+        const total = value && typeof value === 'object' ? (value as {totalSegmentCount?: unknown}).totalSegmentCount : null;
+        if (!chunk || chunk.boardId !== board.id || chunk.targetLanguage !== targetLanguage
+          || typeof total !== 'number' || !Number.isInteger(total) || total < chunk.segments.length) {
+          throw new Error('The translation progress was incomplete.');
+        }
+        const merged = mergeBoardTranslationProgress(this.boardTranslationResult(), chunk);
+        if (merged.segments.length > total) throw new Error('The translation progress was invalid.');
+        this.boardTranslationResult.set(merged);
+        this.boardTranslationVersion.set(board.updatedAt);
+        this.boardTranslationProgress.set({completed: merged.segments.length, total});
+        if (!firstText && merged.segments.length) {
+          firstText = true;
+          console.debug('Board translation first text', {boardId: board.id, language: targetLanguage, durationMs: Math.round(performance.now() - started)});
+        }
+      });
+      if (!isCurrent()) return;
+      const result = normalizeBoardTranslationResult(data);
+      if (!result || result.boardId !== board.id || result.targetLanguage !== targetLanguage) throw new Error('The translation response was incomplete.');
       this.boardTranslationResult.set(result);
       this.boardTranslationVersion.set(board.updatedAt);
+      this.boardTranslationComplete.set(true);
+      this.boardTranslationCache.put(requestKey, source, result);
+      console.debug('Board translation complete', {boardId: board.id, language: targetLanguage, cached: result.cached,
+        durationMs: Math.round(performance.now() - started)});
     } catch (error) {
-      if (run !== this.boardTranslationRun) {
+      if (!isCurrent()) {
         return;
       }
       console.error('Board translation failed', error, {
@@ -15111,9 +15159,26 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       );
     } finally {
       if (run === this.boardTranslationRun && !this.stackDirectView()) {
+        this.boardTranslationStreaming.set(false);
         this.boardTranslationLoading.set(false);
         this.boardTranslationRequestKey = '';
       }
+    }
+  }
+
+  private async requestBoardTranslation(boardId: string, targetLanguage: BoardTranslationLanguage, onProgress: (value: unknown) => void): Promise<unknown> {
+    const controller = new AbortController();
+    this.boardTranslationAbort = controller;
+    const callable = httpsCallable<{boardId: string; targetLanguage: BoardTranslationLanguage}, unknown, unknown>(this.functions!, 'translateBoard', {timeout: 300_000});
+    const response = await callable.stream({boardId, targetLanguage}, {signal: controller.signal});
+    // The final promise can reject before the async iterator finishes on cancellation.
+    void response.data.catch(() => undefined);
+    try {
+      for await (const chunk of response.stream) onProgress(chunk);
+      return await response.data;
+    } finally {
+      controller.abort();
+      if (this.boardTranslationAbort === controller) this.boardTranslationAbort = null;
     }
   }
 

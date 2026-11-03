@@ -3,6 +3,8 @@
 const offGridTargets = new Set([
   'offGridCommand', 'offGridDirectory', 'offGridMedia', 'offGridShare', 'syncOffGridSpots',
 ]);
-module.exports = offGridTargets.has(process.env.FUNCTION_TARGET || '')
+const translations: Record<string, string> = { translateBoard: './translate-board', translateLiveCard: './translate-live-card' };
+const translationModule = translations[process.env.FUNCTION_TARGET || ''];
+module.exports = translationModule ? require(translationModule) : offGridTargets.has(process.env.FUNCTION_TARGET || '')
   ? require('./off-grids') : require('./index');
 export {};

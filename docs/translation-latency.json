@@ -1,0 +1,90 @@
+{
+  "boardId": "affc2db6-3e95-42c4-9de8-d7735dad6e70",
+  "measuredAt": "2026-11-03T07:15:37.472Z",
+  "sourceCharacters": 8410,
+  "sourceSegments": 17,
+  "model": "gemini-3.1-flash-lite",
+  "providerOnly": [
+    {
+      "language": "es",
+      "firstTextMs": 1110,
+      "completeMs": 4401,
+      "chunks": 7,
+      "segments": 17,
+      "title": "La historia viva del condado de Montgomery"
+    },
+    {
+      "language": "ja",
+      "firstTextMs": 889,
+      "completeMs": 4926,
+      "chunks": 7,
+      "segments": 17,
+      "title": "モンゴメリー郡の生きた歴史"
+    },
+    {
+      "language": "ar",
+      "firstTextMs": 570,
+      "completeMs": 4724,
+      "chunks": 7,
+      "segments": 17,
+      "title": "التاريخ الحي لمقاطعة مونتغمري"
+    }
+  ],
+  "firebaseRequests": [
+    {
+      "language": "ja",
+      "pass": 1,
+      "cached": false,
+      "firstTextMs": 2230,
+      "completeMs": 6592,
+      "chunks": 7,
+      "segments": 17
+    },
+    {
+      "language": "ja",
+      "pass": 2,
+      "cached": true,
+      "firstTextMs": 264,
+      "completeMs": 264,
+      "chunks": 0,
+      "segments": 17
+    },
+    {
+      "language": "ar",
+      "pass": 1,
+      "cached": false,
+      "firstTextMs": 1148,
+      "completeMs": 5207,
+      "chunks": 7,
+      "segments": 17
+    },
+    {
+      "language": "ar",
+      "pass": 2,
+      "cached": true,
+      "firstTextMs": 378,
+      "completeMs": 378,
+      "chunks": 0,
+      "segments": 17
+    },
+    {
+      "language": "es",
+      "pass": 1,
+      "cached": true,
+      "firstTextMs": 183,
+      "completeMs": 183,
+      "chunks": 0,
+      "segments": 17
+    },
+    {
+      "language": "es",
+      "pass": 2,
+      "cached": true,
+      "firstTextMs": 169,
+      "completeMs": 169,
+      "chunks": 0,
+      "segments": 17
+    }
+  ],
+  "browserCheck": "Observed 1 of 17 translated sections before completion; completed Italian restored from session storage on reload without another translation request."
+}

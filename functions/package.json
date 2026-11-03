@@ -23,7 +23,7 @@
     "test:board-wizard-reader": "npm run build && node scripts/test-board-wizard-reader.cjs",
     "test:board-wizard-article": "npm run build && node scripts/test-board-wizard-article.cjs",
     "test:board-wizard-video": "npm run build && node scripts/test-board-wizard-video.cjs",
-    "test:board-translation": "npm run build && node scripts/test-board-translation.cjs",
+    "test:board-translation": "npm run build && node scripts/test-board-translation.cjs && node --test scripts/test-translation-batches.cjs",
     "test:spotify-oauth": "npm run build && node scripts/test-spotify-oauth.cjs",
     "test:spotify-playlist": "npm run build && node scripts/test-spotify-playlist.cjs",
     "test:visit-plans": "npm run build && node scripts/test-visit-plans.cjs",

@@ -7,7 +7,7 @@ process.env.GCLOUD_PROJECT = 'demo-living-wiki';
 process.env.FIREBASE_CONFIG = JSON.stringify({ projectId: 'demo-living-wiki', storageBucket: 'demo-living-wiki.appspot.com' });
 const require = createRequire(new URL('../../functions/package.json', import.meta.url));
 const { db } = require('./lib/firebase');
-const gemini = require('./lib/gemini');
+const gemini = require('./lib/board-translation-provider');
 const { translateLiveCard } = require('./lib/translate-live-card');
 const { translateBoard } = require('./lib/index');
 const { liveCardTranslationSource, liveCardTranslationCacheId, readyLiveCardTranslation, applyLiveCardTranslation, liveNarrationBoard } = require('./lib/live-card-translation');
@@ -172,4 +172,42 @@ test('narration authorization rebuilds both translated tour stops and rejects st
   value.cards[0].notes = 'Edited card';
   assert.equal(await liveNarrationBoard(value, 'one', read), null);
   assert.equal(await liveNarrationBoard(value, 'hidden', read), null);
+});
+
+test('board translation streams validated partial text before completion and shares progress with another visitor', async () => {
+  const request = {data:{boardId,targetLanguage:'fr'}, acceptsStreaming:true, rawRequest:{ip:'127.0.0.1',headers:{}}};
+  let release; let firstReady;
+  const ready = new Promise(resolve=>{firstReady=resolve;});
+  gemini.translateBoardTextSegments = async (segments, language, onBatch) => {
+    calls.push({segments,language});
+    const translated=segments.map(segment=>({...segment,text:`fr: ${segment.text}`}));
+    await onBatch(translated.slice(0,1)); firstReady();
+    await new Promise(resolve=>{release=resolve;});
+    await onBatch(translated.slice(1)); return translated;
+  };
+  const chunks=[];
+  const response = {signal:new AbortController().signal,sendChunk:async chunk=>{chunks.push(chunk);return true;}};
+  const first=translateBoard.run(request,response); await ready;
+  assert.equal(chunks.at(-1).segments.length,1);
+  assert.ok(chunks.at(-1).totalSegmentCount>1);
+  let followerReady;
+  const followerReceived=new Promise(resolve=>{followerReady=resolve;});
+  const second=translateBoard.run(request,{...response,sendChunk:async chunk=>{if(chunk.segments.length===1) followerReady();return true;}});
+  await followerReceived;
+  assert.equal(calls.length,1);
+  release(); const results=await Promise.all([first,second]);
+  assert.equal(results[0].segments.length,results[0].expectedSegmentCount);
+  assert.equal(results[1].cached,true);
+  assert.deepEqual(chunks.at(-1).segments,results[0].segments);
+});
+
+test('board translation releases its lease when visitor quota is exhausted', async () => {
+  const quota=db.collection('board_translation_limits').doc(createHash('sha256').update(':').digest('hex'));
+  await quota.set({window_started_at_ms:Date.now(),count:10});
+  const request={data:{boardId,targetLanguage:'fr'},rawRequest:{headers:{}}};
+  await assert.rejects(translateBoard.run(request),error=>error.code==='resource-exhausted');
+  const cache=await db.collection('board_translations').doc(createHash('sha256').update(`${boardId}:fr`).digest('hex')).get();
+  assert.equal(cache.data().status,'error');
+  assert.equal(cache.data().lease_token,undefined);
+  assert.equal(calls.length,0);
 });

@@ -4,7 +4,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { db } from './firebase';
-import { geminiApiKey, translateBoardTextSegments } from './gemini';
+import { geminiApiKey, translateBoardTextSegments } from './board-translation-provider';
 import { BOARD_TRANSLATION_SCHEMA_VERSION, isBoardTranslationLanguage, extractBoardTranslationSource, boardTranslationSegmentsComplete } from './board-translation';
 import { liveCardTranslationSource, liveCardTranslationCacheId, readyLiveCardTranslation } from './live-card-translation';
 

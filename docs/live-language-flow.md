@@ -46,3 +46,18 @@ After deployment, test a public board and card QR in a fresh browser, with the a
 The character conversation component loads separately from the initial board bundle, with prefetch when a talking card is visible. The chooser loads immediately when opened; both Live and normal board language lists scroll within the viewport.
 
 Streaming audio and admin bulk language preparation are separate follow-ups after measuring this version. This implementation reuses the existing complete-clip playback path and makes no fixed latency guarantee.
+
+## Progressive translation on regular boards
+
+Regular board pages use the callable `translateBoard.stream()` response: validated sections appear as they finish, while the remaining authored text stays readable. Progress shows translated text sections. Only a complete result is saved in the browser's session cache, keyed by board, revision, language and exact source text; it survives navigation between compiled locale pages. Switching language or entering Live aborts the obsolete client stream, and revision/language guards reject late results. Edited source cannot reuse the previous browser entry.
+
+Both translation endpoints load a small runtime module and share `gemini-3.1-flash-lite`, with minimal thinking, short requests, three concurrent workers and deduplication of repeated narration/summary text. Heading text has its own request. Server caches keep the existing fingerprint/schema contract, access checks, quotas and approved text fields. A second visitor can follow the first request's validated partial cache without starting another provider job. Failed quota checks release their lease for retry.
+
+To measure translation requests on a public board (uses the existing provider for uncached languages):
+
+```bash
+npm --prefix functions run build
+node scripts/measure-board-translation.mjs BOARD_ID es,ja /tmp/translation-timings.json
+```
+
+The report separates first visible text, full completion and repeat cache hits. The measured example is in `docs/translation-latency.json`; it is a sample, not a latency guarantee. Network, function cold starts, board length and provider load can change response times.
