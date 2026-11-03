@@ -88,6 +88,18 @@ This repo is configured for Firebase project `living-atlas-7622a`. Functions tar
 
 The Hosting predeploy hook runs `npm run build:hosting`, so a plain `firebase deploy` rebuilds all twelve interfaces and checks production performance budgets before publishing. This prevents deployment of a stale seven-language build. Deployment itself is a separate operation from local validation.
 
+For website changes, use `npm run deploy:hosting`. For backend changes or recovery from a partial deployment, deploy only the affected functions:
+
+```bash
+npm run deploy:functions -- translateBoard translateLiveCard
+# Inspect the exact targets without sending a deployment:
+npm run deploy:functions -- --dry-run translateBoard translateLiveCard
+```
+
+The helper validates names against the compiled exports and updates five functions at a time by default. It refuses to overlap another Firebase deployment, stops at the first failed batch, and prints the unfinished targets for retry. Use `--batch-size=1` if the regional CPU quota is still exhausted. Hosting and database rules are deployed separately, so a function retry does not rebuild all twelve interfaces.
+
+Deploying every function together can exceed Cloud Run's regional CPU quota and write-rate limit. Existing healthy revisions can remain active when a new revision fails, so `ACTIVE` alone does not prove that the latest code deployed. Check the deployment result and the latest revision. Firebase recommends [deploying only changed functions and using groups of ten or fewer](https://firebase.google.com/docs/functions/manage-functions#deploy_functions).
+
 Local runtime config:
 
 ```bash

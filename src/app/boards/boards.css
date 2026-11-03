@@ -203,11 +203,7 @@
   width: 2rem;
   height: 2rem;
   place-items: center;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--surface);
   font-size: 1.2rem;
-  font-weight: 950;
 }
 
 .board-translation-menu__check {
