@@ -1,9 +1,9 @@
 export interface SupportedLocale {
-  readonly id: 'en-US' | 'fr' | 'ja' | 'pt-BR' | 'es-419' | 'de' | 'zh-Hans';
-  readonly language: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh';
-  readonly subPath: '' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh';
+  readonly id: 'en-US' | 'fr' | 'ja' | 'pt-BR' | 'es-419' | 'de' | 'zh-Hans' | 'it' | 'ko' | 'ar' | 'hi' | 'ru';
+  readonly language: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh' | 'it' | 'ko' | 'ar' | 'hi' | 'ru';
+  readonly subPath: '' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh' | 'it' | 'ko' | 'ar' | 'hi' | 'ru';
   readonly label: string;
-  readonly direction: 'ltr';
+  readonly direction: 'ltr' | 'rtl';
 }
 
 export const SUPPORTED_LOCALES: readonly SupportedLocale[] = [
@@ -14,6 +14,11 @@ export const SUPPORTED_LOCALES: readonly SupportedLocale[] = [
   { id: 'es-419', language: 'es', subPath: 'es', label: 'Español', direction: 'ltr' },
   { id: 'de', language: 'de', subPath: 'de', label: 'Deutsch', direction: 'ltr' },
   { id: 'zh-Hans', language: 'zh', subPath: 'zh', label: '简体中文', direction: 'ltr' },
+  { id: 'it', language: 'it', subPath: 'it', label: 'Italiano', direction: 'ltr' },
+  { id: 'ko', language: 'ko', subPath: 'ko', label: '한국어', direction: 'ltr' },
+  { id: 'ar', language: 'ar', subPath: 'ar', label: 'العربية', direction: 'rtl' },
+  { id: 'hi', language: 'hi', subPath: 'hi', label: 'हिन्दी', direction: 'ltr' },
+  { id: 'ru', language: 'ru', subPath: 'ru', label: 'Русский', direction: 'ltr' },
 ];
 
 export const DEFAULT_LOCALE = SUPPORTED_LOCALES[0];
@@ -21,12 +26,9 @@ export const LOCALE_STORAGE_KEY = 'livingwiki.locale';
 
 export function supportedLocale(localeId: string | null | undefined): SupportedLocale {
   const normalized = (localeId ?? '').toLowerCase().replaceAll('_', '-');
-  // Regional browser language IDs share the site's German and Simplified Chinese builds.
-  if (/^de(?:-|$)/.test(normalized)) return SUPPORTED_LOCALES.find((locale) => locale.language === 'de')!;
-  if (/^zh(?:-|$)/.test(normalized)) return SUPPORTED_LOCALES.find((locale) => locale.language === 'zh')!;
-  return SUPPORTED_LOCALES.find(
-    (locale) => locale.id.toLowerCase() === normalized || locale.language === normalized,
-  ) ?? DEFAULT_LOCALE;
+  return SUPPORTED_LOCALES.find((locale) => locale.id.toLowerCase() === normalized)
+    ?? SUPPORTED_LOCALES.find((locale) => locale.language === normalized.split('-')[0])
+    ?? DEFAULT_LOCALE;
 }
 
 export function localizedPath(pathname: string, target: SupportedLocale): string {
@@ -49,4 +51,11 @@ export function localizedPath(pathname: string, target: SupportedLocale): string
   return localeNeutralPath === '/'
     ? `/${target.subPath}/`
     : `/${target.subPath}${localeNeutralPath}`;
+}
+
+/** Set the root language/direction in both browser rendering and prerendered pages. */
+export function applyDocumentLocale(document: Pick<Document, 'documentElement'>, localeId: string): void {
+  const locale = supportedLocale(localeId);
+  document.documentElement.lang = locale.id;
+  document.documentElement.dir = locale.direction;
 }

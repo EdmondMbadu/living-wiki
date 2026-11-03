@@ -1,4 +1,4 @@
-import { localizedPath, SUPPORTED_LOCALES, supportedLocale } from './locales';
+import { applyDocumentLocale, localizedPath, SUPPORTED_LOCALES, supportedLocale } from './locales';
 
 describe('locale routing', () => {
   const english = SUPPORTED_LOCALES[0];
@@ -16,6 +16,20 @@ describe('locale routing', () => {
     expect(supportedLocale('es-419')).toBe(spanish);
     expect(spanish.subPath).toBe('es');
     expect(supportedLocale('unsupported')).toBe(english);
+  });
+
+  it('matches all twelve regional browser languages and applies Arabic document direction', () => {
+    expect(SUPPORTED_LOCALES.length).toBe(12);
+    for (const language of ['it','ko','ar','hi','ru']) {
+      expect(supportedLocale(`${language}_XX`).language).toBe(language);
+    }
+    const page = document.implementation.createHTMLDocument('Locale test');
+    applyDocumentLocale(page, 'ar-EG');
+    expect(page.documentElement.dir).toBe('rtl');
+    expect(page.documentElement.lang).toBe('ar');
+    applyDocumentLocale(page, 'ko-KR');
+    expect(page.documentElement.dir).toBe('ltr');
+    expect(page.documentElement.lang).toBe('ko');
   });
 
   it('adds and replaces locale prefixes while preserving the route', () => {

@@ -81,7 +81,7 @@ describe('Live visitor language', () => {
   });
 
   for (const language of ['it', 'ko', 'ar', 'hi', 'ru'] as const) {
-    it(`persists ${language}, preserves the interface locale, and restores it on another board`, () => {
+    it(`persists ${language}, updates the matching interface locale, and restores it on another board`, () => {
       const old = localStorage.getItem(LIVE_LANGUAGE_STORAGE_KEY);
       const oldLocale = localStorage.getItem('livingwiki.locale');
       try {
@@ -89,7 +89,7 @@ describe('Live visitor language', () => {
         const c = harness(); c.selectLiveLanguage(language);
         expect(c.boardTranslationTarget()).toBe(language);
         expect(c.boardContentDirection()).toBe(language === 'ar' ? 'rtl' : 'ltr');
-        expect(localStorage.getItem('livingwiki.locale')).toBe('fr');
+        expect(localStorage.getItem('livingwiki.locale')).toBe(language);
         const another = harness(); another.initializeLiveLanguage();
         expect(another.boardTranslationTarget()).toBe(language);
         expect(c.router.navigate).toHaveBeenCalledWith([], jasmine.objectContaining({queryParams: {contentLang: language}, queryParamsHandling: 'merge'}));

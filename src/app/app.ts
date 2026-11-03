@@ -1,4 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { applyDocumentLocale } from './i18n/locales';
+import { Component, inject, LOCALE_ID } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SpotifyPlayerComponent } from './spotify-player/spotify-player';
 import { ThemeService } from './theme.service';
@@ -14,6 +16,8 @@ import { TalkThruPlanDialogComponent } from './talkthru-billing/talkthru-plan-di
   styleUrl: './app.css'
 })
 export class App {
+  constructor() { applyDocumentLocale(inject(DOCUMENT), inject(LOCALE_ID)); }
+
   protected readonly title = $localize`LivingWiki`;
   protected routeActive = false;
   private readonly themeService = inject(ThemeService);

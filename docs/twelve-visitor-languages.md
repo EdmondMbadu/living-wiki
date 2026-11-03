@@ -2,7 +2,7 @@
 
 ## Plan and scope
 
-Add Italian (`it`), Korean (`ko`), Arabic (`ar`), Hindi (`hi`), and Russian (`ru`) to the seven existing visitor languages. Preserve the existing distinction between the seven compiled application interfaces and the visitor's independently selected content language. Do not expose nonexistent application locale routes or manufacture untranslated application catalogs.
+Add Italian (`it`), Korean (`ko`), Arabic (`ar`), Hindi (`hi`), and Russian (`ru`) to the seven existing visitor languages. Visitor language can still be selected independently in Live. The subsequent site expansion now also provides twelve complete compiled application interfaces, including the homepage and shared site language switcher.
 
 1. Centralize visitor language metadata for native labels, browser locale matching, speech locales, direction, and voice preferences. Map browser regional variants and `contentLang` QR parameters to all twelve visitor languages without changing application routes.
 2. Extend server validation, translation instructions, source detection, native voice selection, conversation instructions, talking-card labels, tour handoffs, and share links. Preserve native voice readiness checks and explicit text fallback when the external voice account is not configured.
@@ -28,3 +28,19 @@ Deploy updated translation, narration, voice-session, and share functions before
 - Initial board code is reduced by deferring character conversations and prefetching when a talking card is visible. The measured board bundle is 441.0 KiB gzip, below the unchanged 454.8 KiB ceiling. Existing stylesheet/CommonJS warnings remain.
 
 No cloud deployment, external agent configuration change, billable production translation/audio generation, or real-provider latency measurement was performed as part of local implementation. After deployment, confirm the configured account has the requested agent presets and verified voices, then use `node scripts/verify-board-language-live.mjs BOARD_ID REPORT_PATH it,ko,ar,hi,ru` for a public narrated board. That command calls production translation and narration and may incur provider charges; it does not start a realtime character conversation. Also test one actual character conversation per language on a phone.
+
+## Site interface and runtime follow-up
+
+The homepage and every shared site switcher now use all twelve locales from `SUPPORTED_LOCALES`. Five complete additional Angular catalogs provide Italian, Korean, Arabic, Hindi, and Russian interfaces. Each locale has a compiled route, local server fallback, Firebase rewrite, and development configuration. The document language and Arabic direction are set during both browser rendering and prerendering. The global menu scrolls on short screens.
+
+Functions now target Node 22 in both package metadata and Firebase configuration; `.nvmrc` and the root package engine align development tooling. Hosting predeploy builds the full localized application, avoiding stale deployments. The local Node 22 smoke check loads all 216 function exports; the installed Firebase CLI runtime guard accepts Node 22 and reproduces the Node 20 decommission error. No cloud deployment is needed to make these local changes reviewable.
+
+The earlier seven-interface scope above records the first visitor-language implementation. This follow-up supersedes that scope: site interfaces and visitor content now both offer twelve languages.
+
+### Site follow-up validation
+
+- All 11 translated catalogs contain 6,939 source-matched entries with preserved placeholders. Arabic received an additional review of untranslated controls and longer passages; common product terms are maintained in the shared overrides file.
+- 142 focused browser tests and five Hosting runtime-configuration tests pass. The production Hosting build passes with 204 HTML pages; the initial board bundle remains 441.0 KiB gzip below its existing 454.8 KiB limit.
+- The localhost server was changed from the English-only `ng serve` process to `scripts/serve-localized.mjs` serving the production build on both loopback addresses at port 4200.
+- Actual Chrome checks selected Italian, Korean, Arabic, Hindi, and Russian from the shared homepage menu and verified each page's locale and translated tagline. Arabic uses `dir=rtl` in both prerendered HTML and the browser. A fixed sidebar control was changed to logical positioning after it was found to overlap the language button; the final browser check confirms the language button is unobstructed with the RTL sidebar open.
+- The English homepage is left with all twelve choices open. No production deployment was run; deployment configuration and the local Node 22 function-discovery smoke check were verified independently.

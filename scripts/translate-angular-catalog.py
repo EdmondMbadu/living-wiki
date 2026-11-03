@@ -33,7 +33,7 @@ sbd.stanza.Pipeline = _offline_stanza_pipeline
 WORKSPACE = Path(__file__).resolve().parent.parent
 SOURCE_PATH = WORKSPACE / "src/locale/messages.json"
 PLACEHOLDER = re.compile(r"(\{\$[^}]+\}|\{[A-Za-z][A-Za-z0-9_]*\})")
-PROTECTED = re.compile(r"(\s[|·]\s|LivingWiki|Living Wiki|Mind Palace|Stack Studio|\bStack\b|Philly|https?://\S+|\b[a-z]+(?:_[a-z]+)+\b)", re.IGNORECASE)
+PROTECTED = re.compile(r"(\s[|·]\s|LivingWiki|Living Wiki|Mind Palace|Picamo(?:™)?|TalkThru|Talking Card|Talk Drop|Stack Studio|\bStack\b|Philly|https?://\S+|\b[a-z]+(?:_[a-z]+)+\b)", re.IGNORECASE)
 LETTER = re.compile(r"[A-Za-z]")
 MATERIAL_ICON = re.compile(
     r'<[^>]+class="[^"]*material-symbols[^"]*"[^>]*>\s*([a-z][a-z0-9_]*)\s*</'
@@ -45,6 +45,11 @@ ICON_NAMES = {
 }
 
 TARGETS = {
+    "it": ("it", WORKSPACE / "src/locale/messages.it.json"),
+    "ko": ("ko", WORKSPACE / "src/locale/messages.ko.json"),
+    "ar": ("ar", WORKSPACE / "src/locale/messages.ar.json"),
+    "hi": ("hi", WORKSPACE / "src/locale/messages.hi.json"),
+    "ru": ("ru", WORKSPACE / "src/locale/messages.ru.json"),
     "de": ("de", WORKSPACE / "src/locale/messages.de.json"),
     "zh-Hans": ("zh", WORKSPACE / "src/locale/messages.zh-Hans.json"),
     "fr": ("fr", WORKSPACE / "src/locale/messages.fr.json"),
@@ -537,6 +542,10 @@ MANUAL_OVERRIDES["pt-BR"].update({
     "To the fullest extent permitted by law, we are not liable for indirect, incidental, special, consequential, or punitive damages, or for loss of data, profits, or business arising from use of the service.": "Na máxima medida permitida por lei, não nos responsabilizamos por danos indiretos, incidentais, especiais, consequenciais ou punitivos, nem por perda de dados, lucros ou negócios decorrentes do uso do serviço.",
 })
 
+# Reviewed navigation, homepage, and Live copy for the five additional site locales.
+for _locale, _entries in json.loads((WORKSPACE / "scripts/locale-overrides.it-ko-ar-hi-ru.json").read_text()).items():
+    MANUAL_OVERRIDES[_locale] = _entries
+
 # Reviewed product terminology shared by both new locales. Keep overrides outside
 # the model cache so regenerating a catalog never discards editorial corrections.
 for _locale, _entries in json.loads((WORKSPACE / "scripts/locale-overrides.de-zh.json").read_text()).items():
@@ -544,7 +553,7 @@ for _locale, _entries in json.loads((WORKSPACE / "scripts/locale-overrides.de-zh
 
 
 def review_product_copy(source: str, translated: str, locale: str) -> str:
-    if locale not in ("de", "zh-Hans"):
+    if locale not in ("de", "zh-Hans", "it", "ko", "ar", "hi", "ru"):
         return translated
     source_parts = PLACEHOLDER.split(source)
     target_parts = PLACEHOLDER.split(translated)
@@ -561,6 +570,8 @@ def review_product_copy(source: str, translated: str, locale: str) -> str:
                 trailing = part[len(part.rstrip()):]
                 target_parts[index] = leading + reviewed[part.strip().casefold()] + trailing
         translated = "".join(target_parts)
+    if locale not in ("de", "zh-Hans"):
+        return translated
     if re.search(r"\bboards?\b", source, re.IGNORECASE):
         if locale == "zh-Hans":
             translated = re.sub(r"董事会|董事局|棋盘|木板|板卡|板子", "看板", translated)
@@ -632,6 +643,7 @@ def prepare_batch_cache(messages: dict[str, str], locale: str, cache: dict[str, 
     for start in range(0, len(pending), 96):
         group = pending[start:start + 96]
         cache.update(zip(group, translate_batch(group)))
+        Path(f"/tmp/livingwiki-translation-cache-{locale}.json").write_text(json.dumps(cache, ensure_ascii=False))
         print(f"{locale}: prepared {min(start + 96, len(pending))}/{len(pending)} fragments", flush=True)
 
 
@@ -698,6 +710,23 @@ def manual_override(message: str, target: str) -> str | None:
 
 
 def normalize_product_terms(source: str, translated: str, target: str) -> str:
+    if re.search(r"\bboards?\b", source, re.IGNORECASE):
+        if target == "ko":
+            return translated.replace("이사회", "보드").replace("내 널", "내 보드")
+        if target == "ar":
+            for old, new in [("مجالسي", "لوحاتي"), ("المجالس", "اللوحات"), ("مجالس", "لوحات"), ("المجلس", "اللوحة"), ("مجلس", "لوحة"), ("الألواح", "اللوحات"), ("السبورة", "اللوحة")]:
+                translated = translated.replace(old, new)
+            return translated
+        if target == "ru":
+            translated = re.sub(r"\s+директоров\b", "", translated, flags=re.IGNORECASE)
+            words = {"совет": "доска", "совета": "доски", "совету": "доске", "советом": "доской", "совете": "доске", "советы": "доски", "советов": "досок", "советам": "доскам", "советами": "досками", "советах": "досках", "правление": "доска", "правления": "доски", "правлении": "доске", "правлению": "доске"}
+            translated = re.sub(r"\b(?:" + "|".join(words) + r")\b", lambda match: words[match.group().lower()].capitalize() if match.group()[0].isupper() else words[match.group().lower()], translated, flags=re.IGNORECASE)
+            return translated
+        if target == "it":
+            replacements = [("dei consigli", "delle bacheche"), ("i miei consigli", "le mie bacheche"), ("miei consigli", "mie bacheche"), ("del consiglio", "della bacheca"), ("al consiglio", "alla bacheca"), ("questo consiglio", "questa bacheca"), ("un consiglio", "una bacheca"), ("il consiglio", "la bacheca"), ("consigli", "bacheche"), ("consiglio", "bacheca")]
+            for old, new in replacements:
+                translated = re.sub(r"\b" + old + r"\b", lambda match: new.capitalize() if match.group()[0].isupper() else new, translated, flags=re.IGNORECASE)
+            return translated
     if target != "pt-BR" or not re.search(r"\bboards?\b", source, re.IGNORECASE):
         return translated
 
@@ -738,7 +767,7 @@ def normalize_product_terms(source: str, translated: str, target: str) -> str:
 
 def main() -> None:
     if len(sys.argv) not in (2, 3) or sys.argv[1] not in TARGETS or (len(sys.argv) == 3 and sys.argv[2] != "--batch"):
-        raise SystemExit("usage: translate-angular-catalog.py <fr|ja|pt-BR|es-419|de|zh-Hans> [--batch]")
+        raise SystemExit("usage: translate-angular-catalog.py <fr|ja|pt-BR|es-419|de|zh-Hans|it|ko|ar|hi|ru> [--batch]")
 
     target = sys.argv[1]
     locale, output_path = TARGETS[target]

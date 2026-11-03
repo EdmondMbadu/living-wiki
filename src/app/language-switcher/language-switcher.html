@@ -21,7 +21,7 @@
           [class.language-switcher__option--active]="locale.id === currentLocale.id"
           (click)="selectLocale(locale)"
         >
-          <span lang="{{ locale.language }}">{{ locale.label }}</span>
+          <span [attr.lang]="locale.id" [attr.dir]="locale.direction">{{ locale.label }}</span>
           @if (locale.id === currentLocale.id) {
             <span class="material-symbols-outlined" aria-hidden="true">check</span>
           }

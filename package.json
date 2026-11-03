@@ -17,8 +17,8 @@
     "build:ios:web": "ng build --configuration production",
     "ios:sync": "npx cap sync ios",
     "build:hosting": "npm run i18n:check && ng build --configuration production && node scripts/prepare-hosting-runtime-config.mjs && node scripts/check-board-performance.mjs",
-    "deploy:hosting": "npm run build:hosting && firebase deploy --only hosting",
-    "deploy:board-saves": "npm run build:hosting && firebase deploy --only firestore:rules,hosting",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy:board-saves": "firebase deploy --only firestore:rules,hosting",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:firestore-rules": "node scripts/run-firestore-rule-tests.mjs",
@@ -38,7 +38,12 @@
     "serve:ssr:living-atlast": "node dist/living-atlast/server/server.mjs",
     "start:de": "ng serve --configuration de",
     "start:zh": "ng serve --configuration zh",
-    "test:languages": "ng test --configuration=language-support --watch=false --browsers=ChromeHeadless"
+    "test:languages": "ng test --configuration=language-support --watch=false --browsers=ChromeHeadless",
+    "start:it": "ng serve --configuration it",
+    "start:ko": "ng serve --configuration ko",
+    "start:ar": "ng serve --configuration ar",
+    "start:hi": "ng serve --configuration hi",
+    "start:ru": "ng serve --configuration ru"
   },
   "prettier": {
     "printWidth": 100,
@@ -97,5 +102,8 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "tailwindcss": "^4.2.2",
     "typescript": "~5.9.2"
+  },
+  "engines": {
+    "node": ">=22.12.0 <23"
   }
 }

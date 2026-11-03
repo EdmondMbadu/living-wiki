@@ -15,7 +15,7 @@
   @if (stackDirectView()) {
     @if (selectedBoard(); as board) {
       <section
-        class="stack-viewer-page"
+        class="stack-viewer-page" dir="ltr"
         [style.--board-accent]="toneAccent(board.tone)"
         [style.--board-soft]="toneSoft(board.tone)"
       >

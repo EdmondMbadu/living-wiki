@@ -16,7 +16,8 @@
         "firebase-debug.log",
         "firebase-debug.*.log",
         "*.local"
-      ]
+      ],
+      "runtime": "nodejs22"
     }
   ],
   "storage": {
@@ -25,7 +26,7 @@
   "hosting": {
     "public": "dist/living-atlast/browser",
     "predeploy": [
-      "node scripts/prepare-hosting-runtime-config.mjs"
+      "npm run build:hosting"
     ],
     "ignore": [
       "firebase.json",
@@ -131,13 +132,53 @@
         "destination": "/zh/index.csr.html"
       },
       {
+        "source": "/it",
+        "destination": "/it/index.html"
+      },
+      {
+        "source": "/it/**",
+        "destination": "/it/index.csr.html"
+      },
+      {
+        "source": "/ko",
+        "destination": "/ko/index.html"
+      },
+      {
+        "source": "/ko/**",
+        "destination": "/ko/index.csr.html"
+      },
+      {
+        "source": "/ar",
+        "destination": "/ar/index.html"
+      },
+      {
+        "source": "/ar/**",
+        "destination": "/ar/index.csr.html"
+      },
+      {
+        "source": "/hi",
+        "destination": "/hi/index.html"
+      },
+      {
+        "source": "/hi/**",
+        "destination": "/hi/index.csr.html"
+      },
+      {
+        "source": "/ru",
+        "destination": "/ru/index.html"
+      },
+      {
+        "source": "/ru/**",
+        "destination": "/ru/index.csr.html"
+      },
+      {
         "source": "**",
         "destination": "/index.csr.html"
       }
     ],
     "headers": [
       {
-        "source": "/{,fr/,ja/,pt/,es/,de/,zh/}notifications{,/**}",
+        "source": "/{,fr/,ja/,pt/,es/,de/,zh/,it/,ko/,ar/,hi/,ru/}notifications{,/**}",
         "headers": [
           {
             "key": "Cache-Control",
@@ -191,7 +232,7 @@
         ]
       },
       {
-        "source": "/{,fr/,ja/,pt/,es/,de/,zh/}boards{,/**}",
+        "source": "/{,fr/,ja/,pt/,es/,de/,zh/,it/,ko/,ar/,hi/,ru/}boards{,/**}",
         "headers": [
           {
             "key": "Cache-Control",
@@ -209,7 +250,7 @@
         ]
       },
       {
-        "source": "/{,fr/,ja/,pt/,es/,de/,zh/}runtime-config.js",
+        "source": "/{,fr/,ja/,pt/,es/,de/,zh/,it/,ko/,ar/,hi/,ru/}runtime-config.js",
         "headers": [
           {
             "key": "Cache-Control",
@@ -228,6 +269,51 @@
       },
       {
         "source": "/zh/teams{,/**}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache,max-age=0,must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/it/teams{,/**}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache,max-age=0,must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/ko/teams{,/**}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache,max-age=0,must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/ar/teams{,/**}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache,max-age=0,must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/hi/teams{,/**}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache,max-age=0,must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/ru/teams{,/**}",
         "headers": [
           {
             "key": "Cache-Control",

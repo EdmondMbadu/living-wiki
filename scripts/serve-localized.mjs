@@ -37,18 +37,11 @@ function localeFallback(pathname) {
   // while application deep links start from the neutral CSR shell. Serving the
   // prerendered English homepage for a board URL makes Angular remove that page
   // before rendering the requested route, which produces a visible flash.
-  if (pathname === '/fr' || pathname === '/fr/') return 'fr/index.html';
-  if (pathname.startsWith('/fr/')) return 'fr/index.csr.html';
-  if (pathname === '/ja' || pathname === '/ja/') return 'ja/index.html';
-  if (pathname.startsWith('/ja/')) return 'ja/index.csr.html';
-  if (pathname === '/pt' || pathname === '/pt/') return 'pt/index.html';
-  if (pathname.startsWith('/pt/')) return 'pt/index.csr.html';
-  if (pathname === '/es' || pathname === '/es/') return 'es/index.html';
-  if (pathname.startsWith('/es/')) return 'es/index.csr.html';
-  if (pathname === '/de' || pathname === '/de/') return 'de/index.html';
-  if (pathname.startsWith('/de/')) return 'de/index.csr.html';
-  if (pathname === '/zh' || pathname === '/zh/') return 'zh/index.html';
-  if (pathname.startsWith('/zh/')) return 'zh/index.csr.html';
+  const prefix = pathname.split('/')[1];
+  if (['fr', 'ja', 'pt', 'es', 'de', 'zh', 'it', 'ko', 'ar', 'hi', 'ru'].includes(prefix)) {
+    return pathname === `/${prefix}` || pathname === `/${prefix}/`
+      ? `${prefix}/index.html` : `${prefix}/index.csr.html`;
+  }
   if (pathname === '/') return 'index.html';
   return 'index.csr.html';
 }
@@ -135,7 +128,7 @@ if (occupiedHost) {
     })));
 
     console.log(`LivingWiki localized server: http://${displayHost}:${port}`);
-    console.log('English: /  French: /fr/  Japanese: /ja/  Portuguese: /pt/  Spanish: /es/  German: /de/  Chinese: /zh/');
+    console.log('English: /  French: /fr/  Japanese: /ja/  Portuguese: /pt/  Spanish: /es/  German: /de/  Chinese: /zh/  Italian: /it/  Korean: /ko/  Arabic: /ar/  Hindi: /hi/  Russian: /ru/');
   } catch (error) {
     await Promise.all(servers.map((server) => new Promise((resolve) => {
       if (!server.listening) return resolve();

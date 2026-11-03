@@ -12,7 +12,8 @@
     "src/app/talking-card-conversation/talking-card-conversation.spec.ts",
     "src/app/boards/live-language.spec.ts",
     "src/app/boards/live-language-dialog.spec.ts",
-    "src/app/boards/board-studio-persistence.spec.ts"
+    "src/app/boards/board-studio-persistence.spec.ts",
+    "src/app/language-switcher/language-switcher.spec.ts"
   ],
   "include": [
     "src/**/*.d.ts"

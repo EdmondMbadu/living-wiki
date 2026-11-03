@@ -8,7 +8,7 @@ The globe remains available independently of that setting. It replaces the forme
 
 The confirmed preference is `livingwiki.liveLanguage` (`en`, `fr`, `ja`, `pt`, `es`, `de`, `zh`, `it`, `ko`, `ar`, `hi`, or `ru`). It applies across boards on the same browser/device. Merely taking the English default does not record a confirmed choice. Explicit language parameters and localized URL prefixes on shared links take precedence over saved preferences. Neutral QR links use the saved preference or English. An enabled first-visit prompt still appears for localized QR links when there is no saved preference. If browser storage is unavailable, the chosen language works for the current visit.
 
-Language changes in Live update content and narration in place; the surrounding application controls retain the locale of the URL's Angular build. Native language names make the chooser usable across those builds. The board-page content selector switches the localized site build when one exists; the five additional visitor languages translate content in place within the current interface. Arabic story text, question suggestions, and conversation input use right-to-left direction. Playback controls and progress retain their order. See [the twelve-language plan and map](twelve-visitor-languages.md).
+Language changes in Live update content and narration in place; the surrounding application controls retain the locale of the URL's Angular build. Native language names make the chooser usable across those builds. The board-page content selector switches the corresponding localized site build for all twelve languages. The shared site switcher also offers all twelve interfaces, including the homepage. Arabic story text, question suggestions, and conversation input use right-to-left direction. Playback controls and progress retain their order. See [the twelve-language plan and map](twelve-visitor-languages.md).
 
 ## Preparation order
 
@@ -35,7 +35,7 @@ Changing only the language prompt or visitor visibility preserves published vide
 
 Run `npm run test:languages`, `npm run test:firestore-rules`, `npm --prefix functions run build`, the existing board translation/native voice/agent language/tour tests, and `npm run build:hosting`.
 
-Local verification passed: **139 focused browser tests**, **261 emulator/rule integration tests**, **12 chooser layout checks** across desktop and two phone window sizes, complete **6,939-message catalogs** for every translated site interface, and the seven-interface production Hosting build supporting twelve visitor content languages. The board feature is **441.0 KiB gzip**, within its existing **454.8 KiB** limit. Existing CSS-budget/CommonJS warnings remain.
+Local verification passed: **139 focused browser tests**, **261 emulator/rule integration tests**, **12 chooser layout checks** across desktop and two phone window sizes, complete **6,939-message catalogs** for every translated site interface. The site follow-up expands this to twelve compiled interfaces and **142 focused browser tests**. The board feature is **441.0 KiB gzip**, within its existing **454.8 KiB** limit. Existing CSS-budget/CommonJS warnings remain.
 
 The Firestore integration tests use an emulator and a mocked Gemini provider: they verify all twelve request languages, caching, unchanged source content, unrelated edits, changed-card invalidation, large boards, private/hidden cards, provider failure recovery, and concurrent visitors. These tests do not measure production Gemini or ElevenLabs latency.
 

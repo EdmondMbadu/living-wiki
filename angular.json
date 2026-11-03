@@ -38,6 +38,26 @@
           "zh-Hans": {
             "translation": "src/locale/messages.zh-Hans.json",
             "subPath": "zh"
+          },
+          "it": {
+            "translation": "src/locale/messages.it.json",
+            "subPath": "it"
+          },
+          "ko": {
+            "translation": "src/locale/messages.ko.json",
+            "subPath": "ko"
+          },
+          "ar": {
+            "translation": "src/locale/messages.ar.json",
+            "subPath": "ar"
+          },
+          "hi": {
+            "translation": "src/locale/messages.hi.json",
+            "subPath": "hi"
+          },
+          "ru": {
+            "translation": "src/locale/messages.ru.json",
+            "subPath": "ru"
           }
         }
       },
@@ -124,6 +144,31 @@
               "localize": [
                 "zh-Hans"
               ]
+            },
+            "it": {
+              "localize": [
+                "it"
+              ]
+            },
+            "ko": {
+              "localize": [
+                "ko"
+              ]
+            },
+            "ar": {
+              "localize": [
+                "ar"
+              ]
+            },
+            "hi": {
+              "localize": [
+                "hi"
+              ]
+            },
+            "ru": {
+              "localize": [
+                "ru"
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -154,6 +199,21 @@
             },
             "zh": {
               "buildTarget": "living-atlast:build:development,zh"
+            },
+            "it": {
+              "buildTarget": "living-atlast:build:development,it"
+            },
+            "ko": {
+              "buildTarget": "living-atlast:build:development,ko"
+            },
+            "ar": {
+              "buildTarget": "living-atlast:build:development,ar"
+            },
+            "hi": {
+              "buildTarget": "living-atlast:build:development,hi"
+            },
+            "ru": {
+              "buildTarget": "living-atlast:build:development,ru"
             }
           },
           "defaultConfiguration": "development"
@@ -198,7 +258,8 @@
                 "src/app/talking-card-conversation/talking-card-conversation.spec.ts",
                 "src/app/boards/live-language.spec.ts",
                 "src/app/boards/live-language-dialog.spec.ts",
-                "src/app/boards/board-studio-persistence.spec.ts"
+                "src/app/boards/board-studio-persistence.spec.ts",
+                "src/app/language-switcher/language-switcher.spec.ts"
               ]
             }
           }

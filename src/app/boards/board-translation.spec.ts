@@ -23,7 +23,7 @@ describe('board translation overlay', () => {
     });
   }
 
-  it('maps twelve visitor languages without creating unbuilt interface routes', () => {
+  it('maps all twelve visitor languages and their localized interfaces', () => {
     expect(CONTENT_LANGUAGES.length).toBe(12);
     for (const language of CONTENT_LANGUAGES) {
       expect(isBoardTranslationLanguage(language.id)).toBeTrue();

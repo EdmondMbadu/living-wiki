@@ -43,9 +43,12 @@
   position: absolute;
   z-index: 1000;
   top: calc(100% + 0.5rem);
-  right: 0;
+  inset-inline-end: 0;
   display: grid;
   min-width: 10.5rem;
+  max-height: min(70dvh, 34rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   gap: 0.2rem;
   padding: 0.45rem;
   border: 1px solid var(--line);
@@ -70,7 +73,7 @@
   font-size: 0.85rem;
   font-weight: 750;
   padding: 0.55rem 0.7rem;
-  text-align: left;
+  text-align: start;
 }
 
 .language-switcher__menu button:hover,

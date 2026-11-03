@@ -43,7 +43,7 @@ export class LanguageSwitcherComponent {
     this.closeMenu();
     if (!isPlatformBrowser(this.platformId) || locale.id === this.currentLocale.id) return;
 
-    window.localStorage.setItem(LOCALE_STORAGE_KEY, locale.id);
+    try { window.localStorage.setItem(LOCALE_STORAGE_KEY, locale.id); } catch { /* Switching works when storage is blocked. */ }
     const targetPath = localizedPath(window.location.pathname, locale);
     window.location.assign(`${targetPath}${window.location.search}${window.location.hash}`);
   }

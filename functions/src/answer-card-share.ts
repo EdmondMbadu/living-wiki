@@ -266,7 +266,7 @@ function parseBoardSharePath(url: string): {
   rawVideo: boolean;
   videoKind: 'video' | 'trailer' | null;
   videoRatio: 'vertical' | 'landscape';
-  uiLanguage: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh';
+  uiLanguage: ContentLanguage;
   contentLanguage: ContentLanguage | null;
 } | null {
   const [path, query = ''] = url.split('?');
@@ -277,8 +277,7 @@ function parseBoardSharePath(url: string): {
   const queryParams = new URLSearchParams(query);
   const contentLanguage = boardShareLanguage(queryParams.get('lang'));
   const requestedUi = queryParams.get('ui') ?? contentLanguage;
-  const uiLanguage = requestedUi === 'en' || requestedUi === 'fr' || requestedUi === 'ja'
-    || requestedUi === 'pt' || requestedUi === 'es' || requestedUi === 'de' || requestedUi === 'zh' ? requestedUi : 'en';
+  const uiLanguage = boardShareLanguage(requestedUi) ?? 'en';
 
   return {
     boardId: match[1],
@@ -846,7 +845,7 @@ function buildBoardSharePageHtml(
   board: BoardShare,
   stack: boolean,
   quiz: boolean,
-  uiLanguage: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh' = 'en',
+  uiLanguage: ContentLanguage = 'en',
   contentLanguage: ContentLanguage | null = null,
 ): string {
   const sharedQuiz = quiz ? board.quiz : null;
