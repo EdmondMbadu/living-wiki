@@ -11,7 +11,7 @@ export const CONTENT_LANGUAGES = [
   { id: 'zh', label: '简体中文', shortLabel: '中文', name: 'Simplified Chinese (Mandarin for speech)', country: 'China', locale: 'zh-CN', direction: 'ltr', flag: '🇨🇳' },
   { id: 'it', label: 'Italiano', shortLabel: 'IT', name: 'Italian', country: 'Italy', locale: 'it-IT', direction: 'ltr', flag: '🇮🇹' },
   { id: 'ko', label: '한국어', shortLabel: '한국어', name: 'Korean', country: 'South Korea', locale: 'ko-KR', direction: 'ltr', flag: '🇰🇷' },
-  { id: 'ar', label: 'العربية', shortLabel: 'AR', name: 'Modern Standard Arabic', country: '', locale: 'ar-SA', direction: 'rtl', flag: '🌐' },
+  { id: 'ar', label: 'العربية', shortLabel: 'AR', name: 'Modern Standard Arabic', country: '', locale: 'ar-SA', direction: 'rtl', flag: '🇸🇦' },
   { id: 'hi', label: 'हिन्दी', shortLabel: 'हिन्दी', name: 'Hindi', country: 'India', locale: 'hi-IN', direction: 'ltr', flag: '🇮🇳' },
   { id: 'ru', label: 'Русский', shortLabel: 'RU', name: 'Russian', country: 'Russia', locale: 'ru-RU', direction: 'ltr', flag: '🇷🇺' },
 ] as const;

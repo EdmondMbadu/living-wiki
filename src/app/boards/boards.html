@@ -83,7 +83,7 @@
                 <button id="live-language-trigger" type="button" class="live-language-trigger" aria-label="Change language" i18n-aria-label
                   [attr.aria-expanded]="liveLanguageOpen()" aria-haspopup="dialog" (click)="openLiveLanguage($event)">
                   <span class="material-symbols-outlined" aria-hidden="true">language</span>
-                  <small>{{ liveLanguageCode() }}</small>
+                  <small><span aria-hidden="true">{{ liveLanguageFlag() }}</span> {{ liveLanguageCode() }}</small>
                 </button>
                 <button type="button" aria-label="Share Stack" (click)="openStackShareDialog(board, $event)" i18n-aria-label>
                   <span class="material-symbols-outlined">near_me</span>
@@ -509,6 +509,9 @@
                   [class.board-translation-control__spinner]="boardTranslationLoading()"
                   aria-hidden="true"
                 >{{ boardTranslationLoading() ? 'progress_activity' : 'translate' }}</span>
+                @if (boardTranslationControlFlag(); as flag) {
+                  <span aria-hidden="true">{{ flag }}</span>
+                }
                 <span class="board-translation-control__label">{{ boardTranslationControlLabel() }}</span>
                 <span class="material-symbols-outlined board-translation-control__chevron" aria-hidden="true">expand_more</span>
               </button>
@@ -543,9 +546,9 @@
                       [class.board-translation-menu__option--active]="boardTranslationTarget() === language.id"
                       (click)="selectBoardTranslation(language.id, $event)"
                     >
-                      <span class="board-translation-menu__language-code">{{ language.shortLabel }}</span>
+                      <span class="board-translation-menu__language-code" aria-hidden="true">{{ language.flag }}</span>
                       <span>
-                        <strong [attr.lang]="language.locale" [attr.dir]="language.direction">{{ language.label }}</strong>
+                        <strong translate="no" [attr.lang]="language.locale" [attr.dir]="language.direction">{{ language.label }}</strong>
                         <small i18n>Translate board content</small>
                       </span>
                       @if (boardTranslationTarget() === language.id) {
@@ -1466,7 +1469,7 @@
           [style.--board-accent]="toneAccent(board.tone)"
           [style.--board-soft]="toneSoft(board.tone)"
         >
-          @if (boardTranslationLoading() || boardTranslationError() || boardTranslationResult()) {
+          @if (boardTranslationLoading() || boardTranslationError() || boardTranslationActive()) {
             <div
               class="board-translation-status"
               [class.board-translation-status--error]="!!boardTranslationError()"
@@ -1497,13 +1500,6 @@
                   <small i18n>From {{ boardTranslationSourceLabel() }} · Links and locations are unchanged.</small>
                 </span>
                 <button type="button" (click)="showOriginalBoard($event)" i18n>Show original</button>
-              } @else if (boardTranslationResult()) {
-                <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
-                <span>
-                  <strong i18n>This board is already in {{ boardTranslationTargetLabel() }}</strong>
-                  <small i18n>No translation was needed.</small>
-                </span>
-                <button type="button" (click)="showOriginalBoard($event)" i18n>Dismiss</button>
               }
             </div>
           }

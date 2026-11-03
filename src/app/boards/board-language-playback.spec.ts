@@ -6,7 +6,7 @@ describe('localized board narration', () => {
   function harness(localeId = 'es-419') {
     const component: any = Object.create(BoardsComponent.prototype);
     Object.assign(component, {
-      localeId, isBrowser: true, teamContextId: signal(''),
+      localeId, isBrowser: true, originalBoardIsEnglish: () => false, teamContextId: signal(''),
       boardTranslationTarget: signal(null), boardTranslationResult: signal(null),
       boardTranslationVersion: signal('old'), boardTranslationError: signal('old error'),
       boardTranslationLoading: signal(true), boardTranslationRun: 0,

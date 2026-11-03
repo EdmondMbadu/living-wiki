@@ -13,5 +13,5 @@ export function liveLanguageEntry(options: {
   const explicit = savedLiveLanguage(options.explicit);
   const language = explicit ?? saved ?? 'en';
   return { language, prompt: options.ask && !saved,
-    translate: options.explicit !== 'original' || !!(explicit || saved) };
+    translate: options.explicit !== 'original' };
 }

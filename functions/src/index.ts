@@ -1,3 +1,4 @@
+import { isOriginalEnglish } from './board-translation-source';
 import { contentLanguageVoicePreference } from './content-language';
 import { issuePicamoVoice } from './picamo-analytics';
 export { getPicamoAnalytics, recordPicamoAssistantInteraction, syncPicamoVoiceAnalytics } from './picamo-analytics';
@@ -7507,14 +7508,14 @@ export const translateBoard = onCall(
         error instanceof Error ? error.message : 'This board is too large to translate.',
       );
     }
-    if (!source.segments.length) {
+    if (!source.segments.length || (targetLanguage === 'en' && isOriginalEnglish(source.segments))) {
       return {
         boardId,
         targetLanguage,
         sourceLanguage: source.sourceLanguage,
         fingerprint: source.fingerprint,
         schemaVersion: BOARD_TRANSLATION_SCHEMA_VERSION,
-        expectedSegmentCount: 0,
+        expectedSegmentCount: source.segments.length,
         segments: source.segments,
         cached: true,
         changed: false,

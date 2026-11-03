@@ -111,6 +111,7 @@ import {
   applyBoardTranslation,
   BOARD_TRANSLATION_LANGUAGES,
   boardTranslationLanguageForRoute,
+  boardAlreadyInEnglish,
   boardTranslationLanguageName,
   isBoardTranslationLanguage,
   normalizeBoardTranslationResult,
@@ -2608,6 +2609,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   private liveTranslationQueue = new LiveTranslationQueue();
   private liveDesiredCardIds = new Set<string>();
   readonly liveTranslationPartial = signal(false);
+  readonly originalBoardIsEnglish = computed(() => boardAlreadyInEnglish(this.originalSelectedBoard()));
   readonly boardTranslationMenuOpen = signal(false);
   readonly boardTranslationTarget = signal<BoardTranslationLanguage | null>(null);
   readonly boardTranslationResult = signal<BoardTranslationResult | null>(null);
@@ -14785,6 +14787,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     return contentLanguageDetails(this.boardTranslationTarget() ?? this.boardTranslationResult()?.sourceLanguage ?? 'en').locale;
   }
 
+  liveLanguageFlag(): string {
+    return contentLanguageDetails(this.boardTranslationTarget() ?? 'en').flag;
+  }
+
   liveLanguageCode(): string {
     return this.boardTranslationLanguages.find((item) => item.id === (this.boardTranslationTarget() ?? 'en'))?.shortLabel ?? 'EN';
   }
@@ -14878,6 +14884,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const board = this.originalSelectedBoard();
     if (!this.isBrowser || !this.stackDirectView() || !board) return;
     this.initializeLiveLanguage();
+    if (this.boardTranslationTarget() === 'en' && this.originalBoardIsEnglish()) this.syncBoardTranslationLanguage('original');
     if (this.liveLanguageOpen()) return;
     const language = this.boardTranslationTarget();
     const session = `${board.id}:${board.updatedAt}:${language}`;
@@ -14942,6 +14949,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   closeBoardTranslationMenu(): void {
     this.boardTranslationMenuOpen.set(false);
+  }
+
+  boardTranslationControlFlag(): string | null {
+    const target = this.boardTranslationActive() ? this.boardTranslationTarget() : null;
+    return target ? contentLanguageDetails(target).flag : null;
   }
 
   boardTranslationControlLabel(): string {
@@ -15017,9 +15029,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   private syncBoardTranslationLanguage(contentLanguage: string | null): void {
     // Team working copies must remain editable in their authored language.
-    const target = boardTranslationLanguageForRoute(
+    const requested = boardTranslationLanguageForRoute(
       contentLanguage, this.teamContextId() ? 'en-US' : this.localeId,
     );
+    const target = requested === 'en' && this.originalBoardIsEnglish() ? null : requested;
     if (target === this.boardTranslationTarget()) return;
     this.stopStackPlayback();
     this.boardTranslationRun += 1;
@@ -15039,6 +15052,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (this.stackDirectView()) { await this.syncLiveFrameTranslation(); return; }
     const board = this.originalSelectedBoard();
     const targetLanguage = this.boardTranslationTarget();
+    if (targetLanguage === 'en' && this.originalBoardIsEnglish()) {
+      this.syncBoardTranslationLanguage('original');
+      return;
+    }
     if (!board || !targetLanguage || !this.functions) {
       return;
     }

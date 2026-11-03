@@ -1,3 +1,4 @@
+import { isOriginalEnglish } from './board-translation-source';
 import { randomUUID, createHash } from 'node:crypto';
 import { FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
@@ -30,6 +31,17 @@ export const translateLiveCard = onCall({ region: 'us-central1', cors: true, tim
     expectedSegmentCount: segments.length, segments, cached,
     changed: segments.some((segment, index) => segment.text !== source.segments[index]?.text) });
   const existing = (await cacheRef.get()).data();
+  if (language === 'en' && isOriginalEnglish(source.segments)) {
+    // Keep an identity cache for authorized tour handoffs on mixed-language boards.
+    // Replace legacy English paraphrases without provider work or visitor quota.
+    if (!readyLiveCardTranslation(existing, source)
+      || existing.segments.some((segment, index) => segment.text !== source.segments[index]?.text)) {
+      await cacheRef.set({ board_id: boardId, card_id: cardId, target_language: language,
+        fingerprint: source.fingerprint, status: 'ready', segments: source.segments,
+        updated_at: FieldValue.serverTimestamp() });
+    }
+    return response(source.segments, true);
+  }
   if (readyLiveCardTranslation(existing, source)) return response(existing.segments, true);
 
   // A valid whole-board cache can satisfy this request without provider work.

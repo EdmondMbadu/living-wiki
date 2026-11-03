@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const {
   detectBoardSourceLanguage,
+  isOriginalEnglish,
   extractBoardTranslationSource,
   isBoardTranslationLanguage,
   normalizeTranslatedBoardSegments,
@@ -136,3 +137,8 @@ for (const [language, text] of [
   assert.equal(detectBoardSourceLanguage(text), language);
   assert.equal(extractBoardTranslationSource({title: text}).sourceLanguage, language);
 }
+
+assert.equal(isOriginalEnglish(source.segments), true);
+assert.equal(isOriginalEnglish(extractBoardTranslationSource({title:'Bonjour'}).segments), false);
+assert.equal(isOriginalEnglish(extractBoardTranslationSource({title:'Ciao, benvenuti al museo'}).segments), false);
+assert.equal(isOriginalEnglish(extractBoardTranslationSource({title:'Une promenade dans la ville avec les lieux et des histoires.'}).segments), false);

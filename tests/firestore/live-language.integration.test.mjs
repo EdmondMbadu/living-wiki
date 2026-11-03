@@ -9,6 +9,7 @@ const require = createRequire(new URL('../../functions/package.json', import.met
 const { db } = require('./lib/firebase');
 const gemini = require('./lib/gemini');
 const { translateLiveCard } = require('./lib/translate-live-card');
+const { translateBoard } = require('./lib/index');
 const { liveCardTranslationSource, liveCardTranslationCacheId, readyLiveCardTranslation, applyLiveCardTranslation, liveNarrationBoard } = require('./lib/live-card-translation');
 const { extractBoardTranslationSource } = require('./lib/board-translation');
 let calls;
@@ -60,6 +61,44 @@ for (const language of ['en', 'fr', 'ja', 'pt', 'es', 'de', 'zh', 'it', 'ko', 'a
     assert.equal(second.cached, true); assert.equal(calls.length, 1);
     const cache = (await db.collection('board_card_translations').doc(liveCardTranslationCacheId(boardId, language, 'one')).get()).data();
     assert.equal(readyLiveCardTranslation(cache, liveCardTranslationSource(board(), 'one')), true);
+  });
+}
+
+for (const kind of ['Live', 'Board']) {
+  const translate = () => kind === 'Live' ? call({targetLanguage: 'en'}) : translateBoard.run({
+    data: {boardId, targetLanguage: 'en'}, rawRequest: {ip: '127.0.0.1', headers: {}} });
+  test(`${kind}: English original bypasses provider, quota and stale English paraphrases`, async () => {
+    const value = board();
+    value.description = 'This is the story of our city and the people who lived here.';
+    await db.doc(`boards/${boardId}`).set(value);
+    const source = kind === 'Live' ? liveCardTranslationSource(value, 'one') : extractBoardTranslationSource(value);
+    const collection = kind === 'Live' ? 'board_card_translations' : 'board_translations';
+    const cacheId = kind === 'Live' ? liveCardTranslationCacheId(boardId, 'en', 'one')
+      : createHash('sha256').update(`${boardId}:en`).digest('hex');
+    await db.collection(collection).doc(cacheId).set({status: 'ready', fingerprint: source.fingerprint, changed: true,
+      segments: source.segments.map((segment) => ({...segment, text: `Unwanted rewrite: ${segment.text}`}))});
+    const result = await translate();
+    assert.equal(result.changed, false);
+    assert.deepEqual(result.segments, source.segments);
+    assert.equal(calls.length, 0);
+    assert.equal((await db.collection('live_translation_limits').get()).size, 0);
+    assert.equal((await db.collection('board_translation_limits').get()).size, 0);
+    if (kind === 'Live') {
+      const translated = await liveNarrationBoard(value, 'one', async (id) =>
+        (await db.collection(collection).doc(liveCardTranslationCacheId(boardId, 'en', id)).get()).data());
+      assert.equal(translated.cards[0].notes, value.cards[0].notes);
+    }
+    await db.doc(`boards/${boardId}`).update({visibility: 'private'});
+    await assert.rejects(translate(), (error) => error.code === 'permission-denied');
+  });
+  test(`${kind}: foreign content still translates into English`, async () => {
+    const value = board();
+    value.description = 'Une promenade dans la ville avec les lieux et des histoires locales.';
+    await db.doc(`boards/${boardId}`).set(value);
+    const result = await translate();
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].language, 'en');
+    assert.equal(result.changed, true);
   });
 }
 

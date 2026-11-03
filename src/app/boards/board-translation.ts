@@ -1,3 +1,4 @@
+import { collectBoardTranslationSegments, isOriginalEnglish } from '../../../functions/src/board-translation-source';
 import { CONTENT_LANGUAGES, contentLanguageForLocale, isContentLanguage, type ContentLanguage } from '../../../functions/src/content-language';
 
 export type BoardTranslationLanguage = ContentLanguage;
@@ -34,6 +35,21 @@ export function boardTranslationLanguageForRoute(
   if (isBoardTranslationLanguage(contentLanguage)) return contentLanguage;
   const language = contentLanguageForLocale(localeId) ?? 'en';
   return language === 'en' ? null : language;
+}
+
+/** Unknown/short foreign text still needs translation; only confirmed English is a no-op. */
+export function boardAlreadyInEnglish(board: unknown): boolean {
+  if (!board) return false;
+  try {
+    const segments = collectBoardTranslationSegments(board, Infinity);
+    const record = objectRecord(board);
+    for (const field of ['socialVideoClosingHeadline', 'socialVideoClosingMessage']) {
+      const text = record[field];
+      if (typeof text === 'string' && text.trim()) segments.push({key: `board.${field}`, text});
+    }
+    return isOriginalEnglish(segments);
+  }
+  catch { return false; }
 }
 
 export function normalizeBoardTranslationResult(value: unknown): BoardTranslationResult | null {

@@ -7,7 +7,7 @@
     [attr.aria-label]="openLabel"
     (click)="toggleMenu()"
   >
-    <span class="material-symbols-outlined" aria-hidden="true">language</span>
+    <span class="language-switcher__flag" aria-hidden="true">{{ currentLocale.flag }}</span>
     <span class="language-switcher__code">{{ currentLocale.language.toUpperCase() }}</span>
   </button>
 
@@ -21,7 +21,10 @@
           [class.language-switcher__option--active]="locale.id === currentLocale.id"
           (click)="selectLocale(locale)"
         >
-          <span [attr.lang]="locale.id" [attr.dir]="locale.direction">{{ locale.label }}</span>
+          <span class="language-switcher__name" translate="no">
+            <span class="language-switcher__flag" aria-hidden="true">{{ locale.flag }}</span>
+            <span [attr.lang]="locale.id" [attr.dir]="locale.direction">{{ locale.label }}</span>
+          </span>
           @if (locale.id === currentLocale.id) {
             <span class="material-symbols-outlined" aria-hidden="true">check</span>
           }

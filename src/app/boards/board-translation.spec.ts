@@ -1,5 +1,6 @@
 import {
   applyBoardTranslation,
+  boardAlreadyInEnglish,
   BOARD_TRANSLATION_LANGUAGES,
   boardTranslationLanguageForRoute,
   isBoardTranslationLanguage,
@@ -41,6 +42,17 @@ describe('board translation overlay', () => {
     expect(boardTranslationLanguageForRoute(null, 'en-US')).toBeNull();
     expect(boardTranslationLanguageForRoute('es', 'en-US')).toBe('es');
     expect(boardTranslationLanguageForRoute('fr', 'es-419')).toBe('fr');
+  });
+
+  it('recognizes English without treating the fallback for short foreign text as proof', () => {
+    const english = { title: 'Museum stories', description: 'This is the story of our city and the people who lived here.' };
+    expect(boardAlreadyInEnglish(english)).toBeTrue();
+    expect(boardAlreadyInEnglish({title: 'Bonjour'})).toBeFalse();
+    expect(boardAlreadyInEnglish({title: 'Une promenade dans la ville avec les lieux et des histoires.'})).toBeFalse();
+    expect(boardAlreadyInEnglish({...english, cards: [{id: 'one', notes: 'يقدم هذا المتحف تاريخ المدينة.'}]})).toBeFalse();
+    expect(boardAlreadyInEnglish({...english, cards: [{id: 'one', notes: 'Bonjour', authorOnly: true}]})).toBeTrue();
+    expect(boardAlreadyInEnglish({...english, cards: [{id: 'one', conversation: {openingMessage: 'Une promenade dans la ville avec les lieux et des histoires.'}}]})).toBeFalse();
+    expect(boardAlreadyInEnglish({...english, learningQuiz: {title: '这个博物馆'}})).toBeFalse();
   });
 
   it('changes only approved text fields and preserves links and exact locations', () => {

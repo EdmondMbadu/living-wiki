@@ -13,7 +13,7 @@
           @for (language of languages; track language.id) {
             <label [class.selected]="choice() === language.id" [attr.lang]="language.locale">
               <span aria-hidden="true">{{ language.flag }}</span>
-              <strong [attr.dir]="language.direction">{{ language.label }}</strong>
+              <strong translate="no" [attr.dir]="language.direction">{{ language.label }}</strong>
               <input type="radio" name="live-language" [value]="language.id" [checked]="choice() === language.id"
                 (change)="choice.set(language.id)" />
             </label>

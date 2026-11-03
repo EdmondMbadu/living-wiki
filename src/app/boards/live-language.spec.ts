@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { BoardsComponent } from './boards';
-import { BOARD_TRANSLATION_SCHEMA_VERSION, type BoardTranslationResult } from './board-translation';
+import { BOARD_TRANSLATION_SCHEMA_VERSION, boardAlreadyInEnglish, type BoardTranslationResult } from './board-translation';
 import { LIVE_LANGUAGE_STORAGE_KEY, liveLanguageEntry, savedLiveLanguage } from './live-language';
 import { LiveTranslationQueue } from './live-translation-queue';
 
@@ -9,7 +9,7 @@ describe('Live visitor language', () => {
     expect(liveLanguageEntry({ saved: null, explicit: null, ask: false })).toEqual({ language: 'en', prompt: false, translate: true });
     expect(liveLanguageEntry({ saved: null, explicit: null, ask: true }).prompt).toBeTrue();
     expect(liveLanguageEntry({ saved: 'de', explicit: null, ask: true })).toEqual({ language: 'de', prompt: false, translate: true });
-    expect(liveLanguageEntry({ saved: 'zh', explicit: 'original', ask: false }).language).toBe('zh');
+    expect(liveLanguageEntry({ saved: 'zh', explicit: 'original', ask: false }).translate).toBeFalse();
     expect(liveLanguageEntry({ saved: 'unsupported', explicit: null, ask: true }).prompt).toBeTrue();
     expect(savedLiveLanguage('zh-Hans')).toBeNull(); // Stored preferences use API language IDs.
   });
@@ -26,7 +26,7 @@ describe('Live visitor language', () => {
     const c: any = Object.create(BoardsComponent.prototype);
     const board = { id: 'board-123', updatedAt: 'v1', askVisitorLanguage: false, cards: [] };
     Object.assign(c, {
-      isBrowser: true, functions: {}, originalSelectedBoard: signal(board),
+      isBrowser: true, originalBoardIsEnglish: () => false, functions: {}, originalSelectedBoard: signal(board),
       boardTranslationTarget: signal('de'), boardTranslationResult: signal(null), boardTranslationVersion: signal(''),
       liveCardTranslations: signal({}), liveCardTranslationCache: new Map(), liveTranslationPartial: signal(false), liveTranslationQueue: new LiveTranslationQueue(),
       liveDesiredCardIds: new Set(['one','two']), liveTranslationSession: 'board-123:v1:de',
@@ -99,6 +99,45 @@ describe('Live visitor language', () => {
       }
     });
   }
+
+  it('keeps an English board original through Live entry and return without starting translation', async () => {
+    const c = harness();
+    c.originalSelectedBoard.update((board: any) => ({...board, description: 'This is the story of our city and the people who lived here.'}));
+    c.originalBoardIsEnglish = () => boardAlreadyInEnglish(c.originalSelectedBoard());
+    spyOn(Storage.prototype, 'getItem').and.returnValue('en');
+    c.initializeLiveLanguage();
+    expect(c.boardTranslationTarget()).toBeNull();
+    expect(c.boardTranslationLoading()).toBeFalse();
+    c.stopSongPreview = jasmine.createSpy('stop song'); c.stackShareDialogOpen = signal(false);
+    c.boardViewRoute = () => ['/boards', 'board-123'];
+    c.closeStackView(c.originalSelectedBoard());
+    expect(c.router.navigate).toHaveBeenCalledWith(['/boards', 'board-123'], {queryParams: {contentLang: 'original'}});
+    c.requestedCardId = signal('');
+    await c.syncRequestedBoardTranslation();
+    expect(c.boardTranslationLoading()).toBeFalse();
+    expect(c.boardTranslationRequestKey).toBe('');
+    expect(c.boardTranslationResult()).toBeNull();
+    expect(c.boardTranslationError()).toBeNull();
+  });
+
+  it('clears a pending English request when the English source arrives after route initialization', async () => {
+    const c = harness(); c.originalBoardIsEnglish = () => true;
+    c.boardTranslationTarget.set('en'); c.boardTranslationLoading.set(true);
+    c.requestedCardId = signal(''); c.stackDirectView.set(false);
+    await c.syncRequestedBoardTranslation();
+    expect(c.boardTranslationTarget()).toBeNull();
+    expect(c.boardTranslationLoading()).toBeFalse();
+    expect(c.boardTranslationResult()).toBeNull();
+  });
+
+  it('still requests English for a foreign board and other languages for an English board', () => {
+    const c = harness(); c.originalBoardIsEnglish = () => false;
+    c.syncBoardTranslationLanguage('en');
+    expect(c.boardTranslationTarget()).toBe('en');
+    c.originalBoardIsEnglish = () => true;
+    c.syncBoardTranslationLanguage('fr');
+    expect(c.boardTranslationTarget()).toBe('fr');
+  });
 
   it('reuses a translated card immediately when switching back, but requests edited content again', async () => {
     const c = harness();
