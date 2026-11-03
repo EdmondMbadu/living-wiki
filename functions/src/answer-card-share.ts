@@ -1,3 +1,4 @@
+import { isContentLanguage, type ContentLanguage } from './content-language';
 import { isLinkReadableVisibility } from './board-visibility';
 import chromium from '@sparticuz/chromium';
 import { createHash } from 'node:crypto';
@@ -266,7 +267,7 @@ function parseBoardSharePath(url: string): {
   videoKind: 'video' | 'trailer' | null;
   videoRatio: 'vertical' | 'landscape';
   uiLanguage: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh';
-  contentLanguage: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh' | null;
+  contentLanguage: ContentLanguage | null;
 } | null {
   const [path, query = ''] = url.split('?');
   const match = (path ?? '').match(/\/share\/board\/([A-Za-z0-9_-]{8,128})(?:\/(og\.png|video|video\/player|video\.mp4|trailer|trailer\/player|trailer\.mp4))?\/?$/);
@@ -275,7 +276,9 @@ function parseBoardSharePath(url: string): {
   }
   const queryParams = new URLSearchParams(query);
   const contentLanguage = boardShareLanguage(queryParams.get('lang'));
-  const uiLanguage = boardShareLanguage(queryParams.get('ui')) ?? contentLanguage ?? 'en';
+  const requestedUi = queryParams.get('ui') ?? contentLanguage;
+  const uiLanguage = requestedUi === 'en' || requestedUi === 'fr' || requestedUi === 'ja'
+    || requestedUi === 'pt' || requestedUi === 'es' || requestedUi === 'de' || requestedUi === 'zh' ? requestedUi : 'en';
 
   return {
     boardId: match[1],
@@ -292,8 +295,8 @@ function parseBoardSharePath(url: string): {
   };
 }
 
-function boardShareLanguage(value: string | null): 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh' | null {
-  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt' || value === 'es' || value === 'de' || value === 'zh' ? value : null;
+function boardShareLanguage(value: string | null): ContentLanguage | null {
+  return isContentLanguage(value) ? value : null;
 }
 
 async function proxyBoardVideo(req: Request, res: Response, board: BoardShare, kind: 'video' | 'trailer', ratio: 'vertical' | 'landscape'): Promise<void> {
@@ -844,7 +847,7 @@ function buildBoardSharePageHtml(
   stack: boolean,
   quiz: boolean,
   uiLanguage: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh' = 'en',
-  contentLanguage: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh' | null = null,
+  contentLanguage: ContentLanguage | null = null,
 ): string {
   const sharedQuiz = quiz ? board.quiz : null;
   const title = sharedQuiz?.title || board.title;

@@ -13,10 +13,10 @@ describe('card sharing', () => {
     );
   });
 
-  for (const language of ['de', 'zh'] as const) {
+  for (const language of ['de', 'zh', 'it', 'ko', 'ar', 'hi', 'ru'] as const) {
     it(`preserves ${language} and the scanned card in a public QR link`, () => {
       const url = new URL(publicCardUrl('board-1', 'card/id', language));
-      expect(url.pathname).toBe(`/${language}/boards/board-1`);
+      expect(url.pathname).toBe(['de', 'zh'].includes(language) ? `/${language}/boards/board-1` : '/boards/board-1');
       expect(url.searchParams.get('card')).toBe('card/id');
       expect(url.searchParams.get('contentLang')).toBe(language);
     });

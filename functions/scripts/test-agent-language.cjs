@@ -16,7 +16,7 @@ assert.deepEqual(agentNativeLanguageReadiness({ ...configured, platform_settings
 });
 console.log('ElevenLabs agent language readiness checks passed.');
 
-for (const language of ['de','zh']) {
+for (const language of ['de','zh','it','ko','ar','hi','ru']) {
  const config = { ...configured, conversation_config: { agent: { language: 'en' }, language_presets: { [language]: {} } } };
  assert.equal(agentNativeLanguageReadiness(config,language).supported,true);
  assert.equal(agentNativeLanguageReadiness(configured,language).supported,false);

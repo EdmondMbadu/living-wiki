@@ -50,6 +50,11 @@ for (const [language, opening] of [
   ['es', 'Próxima parada:'],
   ['de', 'Nächster Halt:'],
   ['zh', '下一站：'],
+  ['it', 'Prossima tappa:'],
+  ['ko', '다음 정류장:'],
+  ['ar', 'المحطة التالية:'],
+  ['hi', 'अगला पड़ाव:'],
+  ['ru', 'Следующая остановка:'],
 ]) {
   const localized = buildStoredTourHandoffFallback(cards[0], cards[1], 'walking', language);
   assert.ok(localized.startsWith(opening));

@@ -1,3 +1,4 @@
+import { contentLanguageVoicePreference } from './content-language';
 import { issuePicamoVoice } from './picamo-analytics';
 export { getPicamoAnalytics, recordPicamoAssistantInteraction, syncPicamoVoiceAnalytics } from './picamo-analytics';
 export { avatarQaCommand, prepareAvatarQaRun, runAvatarQaCase, recoverAvatarQaCases } from './avatar-qa';
@@ -22372,24 +22373,17 @@ export const synthesizeChatAnswerSpeech = onCall(
     let primaryVoiceId = requestedNarratorVoiceId || chatAnswerVoiceId;
     const requiresNativeNarration = ['tour', 'stack-video'].includes(requestedMode) && requestedContentLanguage !== 'en';
     if (requiresNativeNarration) {
-      const preference = {
-        de: { languageCode: 'de', language: 'German', country: 'Germany', accent: null },
-        zh: { languageCode: 'zh', language: 'Chinese', country: 'China', accent: 'Mandarin' },
-        fr: { languageCode: 'fr', language: 'French', country: 'France', accent: null },
-        ja: { languageCode: 'ja', language: 'Japanese', country: 'Japan', accent: null },
-        pt: { languageCode: 'pt', language: 'Portuguese', country: 'Brazil', accent: null },
-        es: { languageCode: 'es', language: 'Spanish', country: 'Mexico', accent: null },
-      } as const;
+      const preference = contentLanguageVoicePreference(requestedContentLanguage);
       try {
         const matchingVoice = await resolveElevenLabsVoiceForPreference(
           apiKey,
-          preference[requestedContentLanguage],
+          preference,
           `native-narration:${requestedContentLanguage}:${primaryVoiceId}`,
           requestedContentLanguage,
           primaryVoiceId,
           tourGuideSpeechModel,
         );
-        if (!matchingVoice) throw new HttpsError('failed-precondition', `No verified native ${preference[requestedContentLanguage].language} narrator is available in the ElevenLabs account.`);
+        if (!matchingVoice) throw new HttpsError('failed-precondition', `No verified native ${preference.language} narrator is available in the ElevenLabs account.`);
         primaryVoiceId = matchingVoice.voiceId;
       } catch (error) {
         logger.warn('Language-matched tour voice lookup failed.', {

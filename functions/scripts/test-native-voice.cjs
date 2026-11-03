@@ -47,3 +47,13 @@ for (const language of ['de','zh']) {
  const matching = { voice_id: language, ...native(language, language === 'de' ? 'de-DE' : 'zh-CN') };
  assert.equal(selectNativeVoice([...accountVoices,matching],language,'eleven_multilingual_v2')?.voice_id,language);
 }
+
+for (const [language, locale] of [['it','it-IT'],['ko','ko-KR'],['ar','ar-SA'],['hi','hi-IN'],['ru','ru-RU']]) {
+  const voice = { voice_id: language, ...native(language, locale) };
+  assert.equal(voiceMatchesNativeLocale(voice, language, 'eleven_multilingual_v2'), true);
+  assert.equal(selectNativeVoice([...accountVoices, voice], language, 'eleven_multilingual_v2')?.voice_id, language);
+  assert.equal(selectNativeVoice(accountVoices, language, 'eleven_multilingual_v2'), null);
+  assert.equal(voiceMatchesNativeLocale(native(language,locale,'','wrong-model'), language, 'eleven_multilingual_v2'), false);
+  assert.equal(voiceMatchesNativeLocale(native('en','en-US'), language), false);
+  assert.equal(voiceMatchesNativeLocale({labels:{language}}, language), false);
+}

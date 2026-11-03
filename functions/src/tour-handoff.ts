@@ -1,5 +1,7 @@
+import type { ContentLanguage } from './content-language';
+import { ADDITIONAL_HANDOFF_LABELS, additionalHandoffTravel } from './tour-handoff-language';
 export type StoredTourHandoffMode = 'walking' | 'driving';
-export type StoredTourHandoffLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh';
+export type StoredTourHandoffLanguage = ContentLanguage;
 
 type TourHandoffLeg = {
   durationText: string;
@@ -46,7 +48,7 @@ function record(value: unknown): Record<string, unknown> {
 }
 
 function punctuation(value: string, language: StoredTourHandoffLanguage = 'en'): string {
-  return value && !/[.!?。！？]$/u.test(value) ? `${value}${language === 'ja' || language === 'zh' ? '。' : '.'}` : value;
+  return value && !/[.!?。！？؟।]$/u.test(value) ? `${value}${language === 'ja' || language === 'zh' ? '。' : '.'}` : value;
 }
 
 function normalized(value: unknown): string {
@@ -99,7 +101,7 @@ export function storedTourHandoffTeaser(
 ): string {
   for (const candidate of [card.shortSummary, card.notes, card.subtitle]) {
     if (!candidate || normalized(candidate) === normalized(card.title)) continue;
-    const completeSentence = candidate.match(/^(.{1,190}?[.!?。！？])(?:\s|$)/u)?.[1];
+    const completeSentence = candidate.match(/^(.{1,190}?[.!?。！？؟।])(?:\s|$)/u)?.[1];
     const teaser = cleanText(completeSentence || candidate, 190);
     if (teaser) return punctuation(teaser, language);
   }
@@ -121,6 +123,7 @@ export function buildStoredTourHandoffFallback(
 ): string {
   const leg = fromCard.legToNext;
   const labels = {
+    ...ADDITIONAL_HANDOFF_LABELS,
     en: { next: 'Next stop:', title: 'the next stop', onFoot: 'on foot', driving: 'by car', ending: "I'll meet you there." },
     de: { next: 'Nächster Halt:', title: 'der nächste Halt', onFoot: 'zu Fuß', driving: 'mit dem Auto', ending: 'Wir sehen uns dort.' },
     zh: { next: '下一站：', title: '下一站', onFoot: '步行', driving: '驾车', ending: '我们在那里见。' },
@@ -138,8 +141,11 @@ export function buildStoredTourHandoffFallback(
     : language === 'zh' ? (leg?.durationText ?? '').replace(/\b(?:minutes?|mins?)\b/giu, '分钟')
       : language === 'de' ? (leg?.durationText ?? '').replace(/\b(?:minutes?|mins?)\b/giu, 'Minuten') : leg?.durationText ?? '';
   const distance = leg?.distanceText ?? '';
-  if (duration) {
-    const travelMode = mode === 'driving' ? label.driving : label.onFoot;
+  const travelMode = mode === 'driving' ? label.driving : label.onFoot;
+  const additionalTravel = additionalHandoffTravel(language, travelMode, duration, distance);
+  if (additionalTravel !== null) {
+    if (additionalTravel) sentences.push(additionalTravel);
+  } else if (duration) {
     sentences.push(language === 'ja'
       ? `${travelMode}で約${duration}${distance ? `、距離は約${distance}` : ''}です。`
       : language === 'de'

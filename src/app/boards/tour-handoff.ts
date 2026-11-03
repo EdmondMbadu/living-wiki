@@ -1,5 +1,7 @@
+import type { ContentLanguage } from '../../../functions/src/content-language';
+import { ADDITIONAL_HANDOFF_LABELS, additionalHandoffTravel } from '../../../functions/src/tour-handoff-language';
 export type TourHandoffMode = 'walking' | 'driving';
-export type TourHandoffLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh';
+export type TourHandoffLanguage = ContentLanguage;
 
 export type TourHandoffLegLike = {
   durationText?: string | null;
@@ -34,7 +36,7 @@ function cleanHandoffText(value: unknown, maxLength: number): string {
 }
 
 function withTerminalPunctuation(value: string, language: TourHandoffLanguage = 'en'): string {
-  return value && !/[.!?。！？]$/u.test(value) ? `${value}${language === 'ja' || language === 'zh' ? '。' : '.'}` : value;
+  return value && !/[.!?。！？؟।]$/u.test(value) ? `${value}${language === 'ja' || language === 'zh' ? '。' : '.'}` : value;
 }
 
 function normalizedRouteText(value: unknown): string {
@@ -66,7 +68,7 @@ export function tourHandoffDestinationTeaser(
   for (const candidate of candidates) {
     const cleaned = cleanHandoffText(candidate, 420);
     if (!cleaned || normalizedRouteText(cleaned) === normalizedRouteText(card.title)) continue;
-    const completeSentence = cleaned.match(/^(.{1,190}?[.!?。！？])(?:\s|$)/u)?.[1];
+    const completeSentence = cleaned.match(/^(.{1,190}?[.!?。！？؟।])(?:\s|$)/u)?.[1];
     const teaser = cleanHandoffText(completeSentence || cleaned, 190);
     if (teaser) return withTerminalPunctuation(teaser, language);
   }
@@ -86,7 +88,7 @@ export function buildTourHandoffFallback(
 ): string {
   const leg = fromCard.tour?.legToNext;
   const title = cleanHandoffText(nextCard.title, 180)
-    || ({ en: 'the next stop', fr: 'la prochaine étape', ja: '次の立ち寄り先', pt: 'a próxima parada', es: 'la próxima parada', de: 'der nächste Halt', zh: '下一站' } as const)[language];
+    || ({ it: ADDITIONAL_HANDOFF_LABELS.it.title, ko: ADDITIONAL_HANDOFF_LABELS.ko.title, ar: ADDITIONAL_HANDOFF_LABELS.ar.title, hi: ADDITIONAL_HANDOFF_LABELS.hi.title, ru: ADDITIONAL_HANDOFF_LABELS.ru.title, en: 'the next stop', fr: 'la prochaine étape', ja: '次の立ち寄り先', pt: 'a próxima parada', es: 'la próxima parada', de: 'der nächste Halt', zh: '下一站' } as const)[language];
   const teaser = tourHandoffDestinationTeaser(nextCard, language);
   const rawDuration = cleanHandoffText(leg?.durationText, 32);
   const duration = language === 'ja'
@@ -95,6 +97,7 @@ export function buildTourHandoffFallback(
       : language === 'de' ? rawDuration.replace(/\b(?:minutes?|mins?)\b/giu, 'Minuten') : rawDuration;
   const distance = cleanHandoffText(leg?.distanceText, 32);
   const labels = {
+    ...ADDITIONAL_HANDOFF_LABELS,
     en: { next: 'Next stop:', onFoot: 'on foot', driving: 'by car', ending: "I'll meet you there." },
     de: { next: 'Nächster Halt:', title: 'der nächste Halt', onFoot: 'zu Fuß', driving: 'mit dem Auto', ending: 'Wir sehen uns dort.' },
     zh: { next: '下一站：', title: '下一站', onFoot: '步行', driving: '驾车', ending: '我们在那里见。' },
@@ -106,8 +109,11 @@ export function buildTourHandoffFallback(
   const label = labels[language];
   const sentences = [`${label.next}${language === 'ja' || language === 'zh' ? '' : ' '}${withTerminalPunctuation(title, language)}`];
   if (teaser) sentences.push(teaser);
-  if (duration) {
-    const travelMode = mode === 'driving' ? label.driving : label.onFoot;
+  const travelMode = mode === 'driving' ? label.driving : label.onFoot;
+  const additionalTravel = additionalHandoffTravel(language, travelMode, duration, distance);
+  if (additionalTravel !== null) {
+    if (additionalTravel) sentences.push(additionalTravel);
+  } else if (duration) {
     sentences.push(language === 'ja'
       ? `${travelMode}で約${duration}${distance ? `、距離は約${distance}` : ''}です。`
       : language === 'de'

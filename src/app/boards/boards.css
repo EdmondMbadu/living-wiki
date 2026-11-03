@@ -141,7 +141,9 @@
   z-index: 70;
   display: grid;
   width: min(21rem, calc(100vw - 1.5rem));
-  overflow: hidden;
+  max-height: 72dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 2px solid var(--ink);
   border-radius: 1rem;
   background: var(--surface);

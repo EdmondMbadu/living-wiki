@@ -1,3 +1,4 @@
+import { contentLanguageDetails, contentLanguageForLocale } from '../../../functions/src/content-language';
 import { LiveLanguageDialogComponent } from './live-language-dialog';
 import { LiveTranslationQueue } from './live-translation-queue';
 import { LIVE_LANGUAGE_STORAGE_KEY, liveLanguageEntry } from './live-language';
@@ -97,6 +98,7 @@ import {
 import {
   localizedPath,
   LOCALE_STORAGE_KEY,
+  SUPPORTED_LOCALES,
   supportedLocale,
 } from '../i18n/locales';
 import {
@@ -2597,6 +2599,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   private liveLanguageBoardId = '';
   private liveTranslationSession = '';
   private liveLanguageWasPlaying = false;
+  private readonly liveCardTranslationCache = new Map<string, BoardTranslationResult>();
   private liveConfirmedLanguage: BoardTranslationLanguage | null = null;
   private tourAnonymousVisitorId = '';
   private liveTimingKey = '';
@@ -14767,11 +14770,19 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const entry = liveLanguageEntry({ saved, explicit, ask: board.askVisitorLanguage === true });
     this.syncBoardTranslationLanguage(entry.translate ? entry.language : 'original');
     this.liveLanguageFirstVisit.set(entry.prompt);
-    this.liveLanguageInitial.set(entry.prompt ? supportedLocale(navigator.language).language : entry.language);
+    this.liveLanguageInitial.set(entry.prompt ? contentLanguageForLocale(navigator.language) ?? 'en' : entry.language);
     if (entry.prompt) {
       this.stopStackPlayback();
       this.liveLanguageOpen.set(true);
     }
+  }
+
+  boardContentDirection(): 'ltr' | 'rtl' {
+    return contentLanguageDetails(this.boardTranslationTarget() ?? this.boardTranslationResult()?.sourceLanguage ?? 'en').direction;
+  }
+
+  boardContentLocale(): string {
+    return contentLanguageDetails(this.boardTranslationTarget() ?? this.boardTranslationResult()?.sourceLanguage ?? 'en').locale;
   }
 
   liveLanguageCode(): string {
@@ -14800,7 +14811,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.liveConfirmedLanguage = language;
     try {
       window.localStorage.setItem(LIVE_LANGUAGE_STORAGE_KEY, language);
-      window.localStorage.setItem(LOCALE_STORAGE_KEY, supportedLocale(language).id);
+      const siteLocale = SUPPORTED_LOCALES.find((locale) => locale.language === language);
+      if (siteLocale) window.localStorage.setItem(LOCALE_STORAGE_KEY, siteLocale.id);
     } catch { /* The choice still applies for this visit. */ }
     void this.unlockStackNarrationAudio();
     this.syncBoardTranslationLanguage(language);
@@ -14826,8 +14838,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const key = `${session}:${cardId}`;
     await this.liveTranslationQueue.schedule(key, async () => {
       const started = performance.now();
-      let response;
-      for (let attempt = 0; attempt < 3; attempt++) {
+      const cached = this.liveCardTranslationCache.get(key);
+      let response: { data: unknown } | undefined = cached ? { data: { ...cached, cardId, cached: true } } : undefined;
+      for (let attempt = 0; !response && attempt < 3; attempt++) {
         try { response = await this.requestLiveCardTranslation(board.id, cardId, language); break; }
         catch (error) {
           if (!(error instanceof FirebaseError) || error.code !== 'functions/aborted' || attempt === 2) throw error;
@@ -14837,6 +14850,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       const result = normalizeBoardTranslationResult(response?.data);
       if (!result || result.boardId !== board.id || result.targetLanguage !== language
         || (response?.data as { cardId?: string })?.cardId !== cardId) throw new Error('Incomplete card translation.');
+      // Keep a small revision-keyed cache so switching back needs no network round trip.
+      this.liveCardTranslationCache.delete(key);
+      this.liveCardTranslationCache.set(key, result);
+      if (this.liveCardTranslationCache.size > 24) this.liveCardTranslationCache.delete(this.liveCardTranslationCache.keys().next().value!);
       if (!this.stackDirectView() || this.liveTranslationSession !== session
         || this.originalSelectedBoard()?.updatedAt !== board.updatedAt || this.boardTranslationTarget() !== language) return;
       this.liveCardTranslations.update((items) => ({ ...items, [cardId]: result }));
@@ -14959,8 +14976,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const targetLocale = supportedLocale(language);
-    window.localStorage.setItem(LOCALE_STORAGE_KEY, targetLocale.id);
+    const targetLocale = SUPPORTED_LOCALES.find((locale) => locale.language === language) ?? supportedLocale(this.localeId);
+    try { window.localStorage.setItem(LOCALE_STORAGE_KEY, targetLocale.id); } catch { /* The selection still works without storage. */ }
     const currentLocale = supportedLocale(this.localeId);
     if (targetLocale.id !== currentLocale.id) {
       const query = new URLSearchParams(window.location.search);
@@ -20077,7 +20094,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
 
     const utterance = new SpeechSynthesisUtterance(text.slice(0, 3600));
-    const language = ({ en: 'en-US', fr: 'fr-FR', ja: 'ja-JP', pt: 'pt-BR', es: 'es-US', de: 'de-DE', zh: 'zh-CN' } as const)[this.boardSpeechLanguage()];
+    const language = contentLanguageDetails(this.boardSpeechLanguage()).locale;
     const voices = window.speechSynthesis.getVoices();
     utterance.voice = browserNarrationVoice(voices, this.boardSpeechLanguage());
     if (this.boardSpeechLanguage() !== 'en' && !utterance.voice) return false;

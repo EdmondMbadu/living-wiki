@@ -1,6 +1,6 @@
-import { supportedLocale } from '../i18n/locales';
+import { CONTENT_LANGUAGES, contentLanguageForLocale, isContentLanguage, type ContentLanguage } from '../../../functions/src/content-language';
 
-export type BoardTranslationLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh';
+export type BoardTranslationLanguage = ContentLanguage;
 
 export interface BoardTranslationSegment {
   key: string;
@@ -19,26 +19,11 @@ export interface BoardTranslationResult {
   changed: boolean;
 }
 
-export const BOARD_TRANSLATION_LANGUAGES: ReadonlyArray<{
-  id: BoardTranslationLanguage;
-  label: string;
-  shortLabel: string;
-}> = [
-  // Use the same native language names as the site switcher in every locale.
-  { id: 'en', label: 'English', shortLabel: 'EN' },
-  { id: 'fr', label: 'Français', shortLabel: 'FR' },
-  { id: 'ja', label: '日本語', shortLabel: '日本語' },
-  { id: 'pt', label: 'Português (Brasil)', shortLabel: 'PT' },
-  { id: 'es', label: 'Español', shortLabel: 'ES' },
-  { id: 'de', label: 'Deutsch', shortLabel: 'DE' },
-  { id: 'zh', label: '简体中文', shortLabel: '中文' },
-];
+export const BOARD_TRANSLATION_LANGUAGES = CONTENT_LANGUAGES;
 
 export const BOARD_TRANSLATION_SCHEMA_VERSION = 3;
 
-export function isBoardTranslationLanguage(value: unknown): value is BoardTranslationLanguage {
-  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt' || value === 'es' || value === 'de' || value === 'zh';
-}
+export const isBoardTranslationLanguage = isContentLanguage;
 
 /** Localized board links translate their content unless the reader requests the original. */
 export function boardTranslationLanguageForRoute(
@@ -47,7 +32,7 @@ export function boardTranslationLanguageForRoute(
 ): BoardTranslationLanguage | null {
   if (contentLanguage === 'original') return null;
   if (isBoardTranslationLanguage(contentLanguage)) return contentLanguage;
-  const language = supportedLocale(localeId).language;
+  const language = contentLanguageForLocale(localeId) ?? 'en';
   return language === 'en' ? null : language;
 }
 

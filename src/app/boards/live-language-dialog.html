@@ -11,9 +11,9 @@
         <fieldset>
           <legend class="sr-only" i18n>Language</legend>
           @for (language of languages; track language.id) {
-            <label [class.selected]="choice() === language.id" [attr.lang]="language.id === 'zh' ? 'zh-Hans' : language.id">
-              <span aria-hidden="true">{{ flags[language.id] }}</span>
-              <strong>{{ language.label }}</strong>
+            <label [class.selected]="choice() === language.id" [attr.lang]="language.locale">
+              <span aria-hidden="true">{{ language.flag }}</span>
+              <strong [attr.dir]="language.direction">{{ language.label }}</strong>
               <input type="radio" name="live-language" [value]="language.id" [checked]="choice() === language.id"
                 (change)="choice.set(language.id)" />
             </label>

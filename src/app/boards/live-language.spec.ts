@@ -28,7 +28,7 @@ describe('Live visitor language', () => {
     Object.assign(c, {
       isBrowser: true, functions: {}, originalSelectedBoard: signal(board),
       boardTranslationTarget: signal('de'), boardTranslationResult: signal(null), boardTranslationVersion: signal(''),
-      liveCardTranslations: signal({}), liveTranslationPartial: signal(false), liveTranslationQueue: new LiveTranslationQueue(),
+      liveCardTranslations: signal({}), liveCardTranslationCache: new Map(), liveTranslationPartial: signal(false), liveTranslationQueue: new LiveTranslationQueue(),
       liveDesiredCardIds: new Set(['one','two']), liveTranslationSession: 'board-123:v1:de',
       stackDirectView: signal(true), liveLanguageOpen: signal(false), liveLanguageFirstVisit: signal(false), liveLanguageInitial: signal('en'),
       stackPlaying: signal(false), boardTranslationRun: 0, boardTranslationRequestKey: '',
@@ -78,6 +78,46 @@ describe('Live visitor language', () => {
       old === null ? localStorage.removeItem(LIVE_LANGUAGE_STORAGE_KEY) : localStorage.setItem(LIVE_LANGUAGE_STORAGE_KEY, old);
       oldLocale === null ? localStorage.removeItem('livingwiki.locale') : localStorage.setItem('livingwiki.locale', oldLocale);
     }
+  });
+
+  for (const language of ['it', 'ko', 'ar', 'hi', 'ru'] as const) {
+    it(`persists ${language}, preserves the interface locale, and restores it on another board`, () => {
+      const old = localStorage.getItem(LIVE_LANGUAGE_STORAGE_KEY);
+      const oldLocale = localStorage.getItem('livingwiki.locale');
+      try {
+        localStorage.setItem('livingwiki.locale', 'fr');
+        const c = harness(); c.selectLiveLanguage(language);
+        expect(c.boardTranslationTarget()).toBe(language);
+        expect(c.boardContentDirection()).toBe(language === 'ar' ? 'rtl' : 'ltr');
+        expect(localStorage.getItem('livingwiki.locale')).toBe('fr');
+        const another = harness(); another.initializeLiveLanguage();
+        expect(another.boardTranslationTarget()).toBe(language);
+        expect(c.router.navigate).toHaveBeenCalledWith([], jasmine.objectContaining({queryParams: {contentLang: language}, queryParamsHandling: 'merge'}));
+      } finally {
+        old === null ? localStorage.removeItem(LIVE_LANGUAGE_STORAGE_KEY) : localStorage.setItem(LIVE_LANGUAGE_STORAGE_KEY, old);
+        oldLocale === null ? localStorage.removeItem('livingwiki.locale') : localStorage.setItem('livingwiki.locale', oldLocale);
+      }
+    });
+  }
+
+  it('reuses a translated card immediately when switching back, but requests edited content again', async () => {
+    const c = harness();
+    c.requestLiveCardTranslation = jasmine.createSpy('request').and.resolveTo(result('one', 'ar'));
+    c.boardTranslationTarget.set('ar'); c.liveTranslationSession = 'board-123:v1:ar';
+    await c.prepareLiveCard('one');
+    c.boardTranslationTarget.set('ko'); c.liveTranslationSession = 'board-123:v1:ko'; c.liveCardTranslations.set({});
+    c.requestLiveCardTranslation.and.resolveTo(result('one', 'ko'));
+    await c.prepareLiveCard('one');
+    c.boardTranslationTarget.set('ar'); c.liveTranslationSession = 'board-123:v1:ar'; c.liveCardTranslations.set({});
+    await c.prepareLiveCard('one');
+    expect(c.requestLiveCardTranslation).toHaveBeenCalledTimes(2);
+    expect(c.boardTranslationResult().targetLanguage).toBe('ar');
+    expect(c.boardTranslationResult().cached).toBeTrue();
+    c.originalSelectedBoard.update((board: any) => ({...board, updatedAt: 'v2'}));
+    c.liveTranslationSession = 'board-123:v2:ar';
+    c.requestLiveCardTranslation.and.resolveTo(result('one', 'ar'));
+    await c.prepareLiveCard('one');
+    expect(c.requestLiveCardTranslation).toHaveBeenCalledTimes(3);
   });
 
   it('pauses while choosing and resumes the existing language when cancelled', () => {

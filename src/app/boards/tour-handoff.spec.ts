@@ -1,3 +1,4 @@
+import { buildStoredTourHandoffFallback, orderedStoredTourHandoffCards } from '../../../functions/src/tour-handoff';
 import {
   buildTourHandoffFallback,
   effectiveTourHandoffText,
@@ -54,6 +55,24 @@ describe('Tour handoffs', () => {
     expect(japanese).toContain('徒歩で約3 分');
     expect(japanese).not.toContain('Next stop');
   });
+
+  for (const language of ['it', 'ko', 'ar', 'hi', 'ru'] as const) {
+    it(`keeps browser and server ${language} narration identical for audio authorization`, () => {
+      for (const leg of [{durationText: '3 min', distanceText: '200 m'}, {durationText: '', distanceText: '2 km'}, {durationText: '', distanceText: ''}]) {
+        const from = {id:'from', title:'Start', tour:{sequence:1, legToNext:leg}};
+        const destination = {...nextCard, shortSummary:'', notes:'', subtitle:''};
+        const stored = orderedStoredTourHandoffCards([from, destination]);
+        for (const mode of ['walking', 'driving'] as const) {
+          const text = buildTourHandoffFallback(from, destination, mode, language);
+          expect(text).toBe(buildStoredTourHandoffFallback(stored[0], stored[1], mode, language));
+          expect(text).not.toContain('Next stop');
+          expect(text).not.toContain('undefined');
+          expect(text).not.toMatch(/\bmin\b/);
+          expect(text).not.toMatch(/200 m\b/);
+        }
+      }
+    });
+  }
 
   it('uses a curated handoff when it targets the actual next stop', () => {
     const fromCard = {

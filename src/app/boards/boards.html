@@ -7,7 +7,7 @@
     <div class="mx-auto max-w-xl px-4 py-3"><app-team-contact [teamId]="selectedBoard()!.teamId!" [boardId]="selectedBoard()!.id" /></div>
   }
   @if (stackDirectView() && liveLanguageOpen()) {
-    @defer {
+    @defer (on immediate) {
     <app-live-language-dialog [firstVisit]="liveLanguageFirstVisit()" [initialLanguage]="liveLanguageInitial()"
       (selected)="selectLiveLanguage($event)" (dismissed)="dismissLiveLanguage()" />
     }
@@ -57,7 +57,7 @@
                   }
                 </span>
                 <div>
-                  <strong>{{ board.title }}</strong>
+                  <strong [attr.dir]="boardContentDirection()" [attr.lang]="boardContentLocale()">{{ board.title }}</strong>
                   <span i18n>{{ stackSelectedCount() }} cards · {{ ownerName(board) }}</span>
                 </div>
               </div>
@@ -118,7 +118,7 @@
                     <img class="stack-preview__media" [src]="stackCoverImage(board)" [alt]="stackCoverTitle()" />
                   }
                   <div class="stack-preview__shade"></div>
-                  <div class="stack-preview__content stack-preview__content--cover">
+                  <div class="stack-preview__content stack-preview__content--cover" [attr.dir]="boardContentDirection()" [attr.lang]="boardContentLocale()">
                     <span i18n>A LivingWiki Stack</span>
                     <h4 [class]="stackTitleClass(stackCoverTitle() || board.title)">{{ stackCoverTitle() || board.title }}</h4>
                     <p>{{ stackCoverSubtitle() }}</p>
@@ -129,15 +129,15 @@
                       <img class="stack-preview__media" [class.stack-preview__media--qr]="isQrCodeCard(card)" [src]="activeCardImage" [alt]="card.title + (stackCardPhotoPosition() ? ' · photo ' + stackCardPhotoPosition() : '')" decoding="async" />
                     }
                     @if (isQrCodeCard(card)) {
-                      <div class="stack-preview__content stack-preview__content--qr-card">
+                      <div class="stack-preview__content stack-preview__content--qr-card" [attr.dir]="boardContentDirection()" [attr.lang]="boardContentLocale()">
                         <span i18n>QR code</span>
-                        <h4>{{ card.title }}</h4>
+                        <h4 dir="auto">{{ card.title }}</h4>
                         <p i18n>Open your camera and scan.</p>
                       </div>
                     } @else if (isListingContactCard(card)) {
                       @if (listingContactDetails(card); as contact) {
                         <div class="stack-preview__shade stack-preview__shade--contact"></div>
-                        <div class="stack-preview__content stack-preview__content--contact">
+                        <div class="stack-preview__content stack-preview__content--contact" [attr.dir]="boardContentDirection()" [attr.lang]="boardContentLocale()">
                           <span class="listing-contact-live__eyebrow" i18n>
                             <span class="material-symbols-outlined">waving_hand</span>
                             Let’s connect
@@ -170,11 +170,11 @@
                       }
                     } @else if (!isPhotoOnlyCard(card)) {
                       <div class="stack-preview__shade"></div>
-                      <div class="stack-preview__content">
+                      <div class="stack-preview__content" [attr.dir]="boardContentDirection()" [attr.lang]="boardContentLocale()">
                         @if (stackCardEyebrow(board, card); as eyebrow) {
                           <span>{{ eyebrow }}</span>
                         }
-                        <h4 [class]="stackTitleClass(card.title)">{{ card.title }}</h4>
+                        <h4 [class]="stackTitleClass(card.title)" dir="auto">{{ card.title }}</h4>
                         <p>{{ stackCardSummary(board, card) }}</p>
                         @if (isTalkingCard(card)) {
                           <div class="talking-card-live-actions">
@@ -212,7 +212,7 @@
                         }
                         @if (stackExpandedCardId() === card.id) {
                           <div class="stack-preview__details" role="region" aria-label="Card details" i18n-aria-label>
-                            <p>{{ card.notes }}</p>
+                            <p dir="auto">{{ card.notes }}</p>
                             <button
                               type="button"
                               [disabled]="stackCardNarrationLoading(card)"
@@ -314,7 +314,7 @@
                     <img class="stack-preview__media stack-preview__media--handoff" [src]="handoffImage" [alt]="frame.nextCard.title" />
                   }
                   <div class="stack-preview__shade stack-preview__shade--handoff"></div>
-                  <div class="stack-preview__content stack-preview__content--handoff" aria-live="polite">
+                  <div class="stack-preview__content stack-preview__content--handoff" [attr.dir]="boardContentDirection()" [attr.lang]="boardContentLocale()" aria-live="polite">
                     <span class="stack-handoff__eyebrow stack-preview__read-more" i18n>
                       <span class="material-symbols-outlined">near_me</span>
                       Next stop
@@ -545,7 +545,7 @@
                     >
                       <span class="board-translation-menu__language-code">{{ language.shortLabel }}</span>
                       <span>
-                        <strong [attr.lang]="language.id">{{ language.label }}</strong>
+                        <strong [attr.lang]="language.locale" [attr.dir]="language.direction">{{ language.label }}</strong>
                         <small i18n>Translate board content</small>
                       </span>
                       @if (boardTranslationTarget() === language.id) {
@@ -1148,7 +1148,7 @@
                     </span>
                     <span class="board-square__content">
                       <span class="board-square__title-row">
-                        <strong>{{ board.title }}</strong>
+                        <strong dir="auto">{{ board.title }}</strong>
                         @if (board.visibility === 'unlisted') {
                           <span class="board-square__privacy-lock" title="Unlisted · Anyone with the link" aria-label="Unlisted board" i18n-title i18n-aria-label i18n><span class="material-symbols-outlined" aria-hidden="true">link</span>Unlisted</span>
                         } @else if (board.visibility === 'private') {
@@ -1548,8 +1548,8 @@
               </div>
 
               <div class="board-editorial-hero__copy">
-                <h1 id="board-editorial-title">{{ board.title }}</h1>
-                <p>{{ board.description || templateText.message57 }}</p>
+                <h1 id="board-editorial-title" dir="auto">{{ board.title }}</h1>
+                <p dir="auto">{{ board.description || templateText.message57 }}</p>
               </div>
 
               <div class="board-editorial-hero__meta">
@@ -1852,7 +1852,7 @@
                 <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
                 <span>{{ board.parentCardTitle || templateText.message72 }}</span>
                 <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
-                <strong>{{ board.title }}</strong>
+                <strong dir="auto">{{ board.title }}</strong>
               </nav>
             }
 
@@ -1881,8 +1881,8 @@
 
               <div class="board-detail__copy">
                 <p>{{ board.parentCardId ? templateText.message54 : templateText.message56 }}</p>
-                <h1>{{ board.title }}</h1>
-                <span>{{ board.description || templateText.message73 }}</span>
+                <h1 dir="auto">{{ board.title }}</h1>
+                <span dir="auto">{{ board.description || templateText.message73 }}</span>
                 @if (selectedBoardCity(); as city) {
                   <a class="board-detail__city-tag" [routerLink]="cityBoardLink(city)" [attr.aria-label]="templateText.message391 + city.name + templateText.message392">
                     <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
@@ -2328,7 +2328,7 @@
                       <span class="tour-studio__mark material-symbols-outlined">route</span>
                       <span>
                         <small i18n>Tour Studio</small>
-                        <strong>{{ board.title }}</strong>
+                        <strong dir="auto">{{ board.title }}</strong>
                       </span>
                       <em>
                         <span class="material-symbols-outlined">cloud_done</span>
@@ -2423,7 +2423,7 @@
                                 <span class="tour-studio__stop-fallback material-symbols-outlined">{{ cardTypeIcon(card.type) }}</span>
                               }
                               <span class="tour-studio__stop-copy">
-                                <strong>{{ card.title }}</strong>
+                                <strong dir="auto">{{ card.title }}</strong>
                                 <small>{{ tourStopTravelLabel(card) }}</small>
                               </span>
                             </button>
@@ -2587,13 +2587,13 @@
                         </div>
 
                         <div class="tour-studio__inspector-copy">
-                          <h2>{{ card.title }}</h2>
+                          <h2 dir="auto">{{ card.title }}</h2>
                           <p class="tour-studio__address">
                             <span class="material-symbols-outlined">location_on</span>
                             {{ card.tour?.address || card.subtitle }}
                           </p>
                           <div class="tour-studio__story">
-                            <p>{{ card.notes || templateText.message89 }}</p>
+                            <p dir="auto">{{ card.notes || templateText.message89 }}</p>
                             <button type="button" (click)="openEditCard(card)" i18n>
                               <span class="material-symbols-outlined">edit</span>
                               Edit story
@@ -2742,8 +2742,8 @@
                             <b>{{ card.tour?.sequence }}</b>
                             Stop {{ card.tour?.sequence }}
                           </span>
-                          <h2>{{ card.title }}</h2>
-                          <p>{{ card.notes || card.subtitle }}</p>
+                          <h2 dir="auto">{{ card.title }}</h2>
+                          <p dir="auto">{{ card.notes || card.subtitle }}</p>
                           <div class="tour-experience__story-actions">
                             <button type="button" class="tour-experience__play" (click)="openTourGuideForCard(card)">
                               <span class="material-symbols-outlined">play_arrow</span>
@@ -3035,7 +3035,7 @@
                     } @else {
                       <span class="material-symbols-outlined">album</span>
                     }
-                    <strong>{{ board.title }}</strong>
+                    <strong dir="auto">{{ board.title }}</strong>
                   </div>
 
                   <section class="music-services" aria-label="Play the complete board" i18n-aria-label>
@@ -3074,7 +3074,7 @@
                     <span class="material-symbols-outlined">graphic_eq</span>
                     Live card version
                   </button>
-                  <p>{{ board.description || templateText.message97 }}</p>
+                  <p dir="auto">{{ board.description || templateText.message97 }}</p>
                   @if (forkAttributionLabel(board)) {
                     <small class="board-fork-label">{{ forkAttributionLabel(board) }}</small>
                   }
@@ -3601,7 +3601,7 @@
                       @if (isQrCodeCard(card)) {
                         <div class="qr-code-board-card">
                           <span i18n>QR code</span>
-                          <strong>{{ card.title }}</strong>
+                          <strong dir="auto">{{ card.title }}</strong>
                           <small i18n>Open your camera and scan</small>
                         </div>
                       } @else if (isListingIntroCardPlaceholder(card)) {
@@ -3684,7 +3684,7 @@
                             (click)="toggleCardExpanded(card.id, $event)"
                           >
                             <small>{{ isTalkingCard(card) ? templateText.message108 : cardTypeLabel(card.type) }}</small>
-                            <strong>{{ card.title }}</strong>
+                            <strong dir="auto">{{ card.title }}</strong>
                             @if (cardDisplaySubtitle(board, card); as summarySubtitle) {
                               <span>{{ summarySubtitle }}</span>
                             }
@@ -3720,7 +3720,7 @@
                           }
                           <span class="detail-card__rating">{{ ratingStars(card.rating) }}</span>
                         </div>
-                        <h2>{{ card.title }}</h2>
+                        <h2 dir="auto">{{ card.title }}</h2>
                         @if (cardDisplaySubtitle(board, card); as subtitle) {
                           <p class="detail-card__subtitle">{{ subtitle }}</p>
                         }
@@ -3754,7 +3754,7 @@
                           </a>
                         }
                         @if (card.notes) {
-                          <p class="detail-card__notes">{{ card.notes }}</p>
+                          <p class="detail-card__notes" dir="auto">{{ card.notes }}</p>
                         }
                         @if (isTalkingCard(card) && talkingCardActionLinks(card).length) {
                           <div class="talking-card-action-row talking-card-action-row--links-only">
@@ -3808,7 +3808,7 @@
                             </span>
                             <span class="detail-card__rating">{{ ratingStars(card.rating) }}</span>
                           </div>
-                          <h2>{{ card.title }}</h2>
+                          <h2 dir="auto">{{ card.title }}</h2>
                           @if (what3wordsAddressFor(card); as what3wordsAddress) {
                             <a class="off-grid-back-link" [href]="what3wordsUrlFor(card)" target="_blank" rel="noopener noreferrer">
                               <span>///{{ what3wordsAddress }}</span>
@@ -4046,7 +4046,7 @@
                           <strong i18n>Cards to reinforce</strong>
                           @for (card of stats.difficultCards; track card.cardId) {
                             <button type="button" (click)="startBoardStudy(card.cardId)">
-                              <span>{{ card.title }}</span>
+                              <span dir="auto">{{ card.title }}</span>
                               <small i18n>{{ card.correctPercent }}% correct</small>
                             </button>
                           }
@@ -6512,7 +6512,7 @@
                   </button>
                   <div>
                     <small i18n>Editing preview</small>
-                    <h4>{{ card.title }}</h4>
+                    <h4 dir="auto">{{ card.title }}</h4>
                   </div>
                   <button
                     type="button"
@@ -6934,7 +6934,7 @@
                       </div>
                       @if (!isPhotoOnlyCard(card)) {
                         <div class="boards-wizard-card__body">
-                          <strong>{{ card.title }}</strong>
+                          <strong dir="auto">{{ card.title }}</strong>
                           <small>{{ card.subtitle }}</small>
                           @if (hasYoutubeVideo(card)) {
                             <div class="boards-wizard-card__video-meta">
@@ -6965,7 +6965,7 @@
                               <b i18n>Exact spot</b>
                             </a>
                           }
-                          <p>{{ card.notes }}</p>
+                          <p dir="auto">{{ card.notes }}</p>
                           <div class="boards-wizard-card__tags">
                             @for (tag of card.tags; track tag) {
                               <span>{{ tag }}</span>
@@ -7291,7 +7291,7 @@
           <div class="boards-modal__head stack-studio-head">
             <div class="stack-studio-head__identity">
               <p i18n>Stack Studio</p>
-              <h3>{{ board.title }}</h3>
+              <h3 dir="auto">{{ board.title }}</h3>
               <span class="stack-studio-head__status">{{ isPhotoStudioDraft(board) ? templateText.message202 : stackScriptDirty() || stackCoverDirty() ? templateText.message203 : templateText.message204 }}</span>
             </div>
             <div class="stack-studio-head__actions">
@@ -7368,7 +7368,7 @@
                         <span class="stack-card-chip__count">{{ $index + 1 }}</span>
                       }
                       @if (!isPhotoOnlyCard(card)) {
-                        <strong>{{ card.title }}</strong>
+                        <strong dir="auto">{{ card.title }}</strong>
                       }
                     </button>
               } @empty {
@@ -8279,7 +8279,7 @@
                         <img class="stack-preview__media" [src]="stackStudioCoverImage(board)" [alt]="stackScriptBoardTitle()" />
                       }
                       <div class="stack-preview__shade"></div>
-                      <div class="stack-preview__content stack-preview__content--cover">
+                      <div class="stack-preview__content stack-preview__content--cover" [attr.dir]="boardContentDirection()" [attr.lang]="boardContentLocale()">
                         <span i18n>A LivingWiki Stack</span>
                         <h4>{{ stackScriptBoardTitle() || board.title }}</h4>
                         <p>{{ stackScriptBoardDescription() }}</p>
@@ -8292,7 +8292,7 @@
                         @if (!isPhotoOnlyCard(card)) {
                           <div class="stack-preview__shade"></div>
                           <div class="stack-preview__brand" i18n>LivingWiki</div>
-                          <div class="stack-preview__content">
+                          <div class="stack-preview__content" [attr.dir]="boardContentDirection()" [attr.lang]="boardContentLocale()">
                             <span>
                               {{ isPhotoStoryBoard(board)
                                 ? stackScriptSubtitle(card) || templateText.message249
@@ -8698,7 +8698,7 @@
           <div class="boards-modal__head">
             <div>
               <p i18n>Share Stack</p>
-              <h3>{{ board.title }}</h3>
+              <h3 dir="auto">{{ board.title }}</h3>
             </div>
             <button type="button" class="boards-icon-button" aria-label="Close" (click)="closeStackShareDialog($event)" i18n-aria-label>
               <span class="material-symbols-outlined">close</span>
@@ -9149,7 +9149,7 @@
                       <img [src]="stackCoverImage(board)" [alt]="board.title" />
                     }
                     <span class="material-symbols-outlined">play_circle</span>
-                    <div><small i18n>Interactive live view</small><strong>{{ board.title }}</strong></div>
+                    <div><small i18n>Interactive live view</small><strong dir="auto">{{ board.title }}</strong></div>
                   </div>
                   <div class="stack-share-sheet__title">
                     <p i18n>Share the live view</p>
@@ -9223,7 +9223,7 @@
         <div class="boards-modal__head">
           <div>
             <p i18n>Delete board</p>
-            <h3>{{ board.title }}</h3>
+            <h3 dir="auto">{{ board.title }}</h3>
           </div>
           <button type="button" class="boards-icon-button" aria-label="Close" (click)="closeBoardDeleteDialog($event)" i18n-aria-label>
             <span class="material-symbols-outlined">close</span>
@@ -11657,6 +11657,7 @@
   ></app-talking-card-editor>
 }
 
+@defer (when !!talkingConversationCard(); prefetch when !!stackCurrentCard()?.conversation) {
 @if (talkingConversationCard(); as talkingCard) {
   @if (talkingCard.conversation; as conversation) {
     <app-talking-card-conversation
@@ -11680,4 +11681,5 @@
       (closed)="closeTalkingCardConversation()"
     ></app-talking-card-conversation>
   }
+}
 }

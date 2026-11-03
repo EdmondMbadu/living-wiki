@@ -1,3 +1,4 @@
+import type { BoardTranslationLanguage } from './board-translation';
 export type TalkingCardActionKind = 'schedule' | 'link';
 
 export type TalkingCardAction = {
@@ -164,19 +165,25 @@ export function normalizeBoardCardConversation(value: unknown): BoardCardConvers
 
 export function talkingCardCtaLabel(
   conversation: BoardCardConversation | null | undefined,
-  language: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh' = 'en',
+  language: BoardTranslationLanguage = 'en',
 ): string {
   return conversation?.ctaLabel?.trim() || {
+    it: 'Parla con me', ko: '나와 대화하기', ar: 'تحدث معي', hi: 'मुझसे बात करें', ru: 'Поговорите со мной',
     en: 'Talk to me', fr: 'Parlez-moi', ja: '話しかける', pt: 'Fale comigo', es: 'Háblame', de: 'Sprechen Sie mit mir', zh: '和我聊聊',
   }[language];
 }
 
 export function talkingCardQuestionLabel(
   title: string | null | undefined,
-  language: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh' = 'en',
+  language: BoardTranslationLanguage = 'en',
 ): string {
   if (language !== 'en') {
     return {
+      it: 'Fai una domanda al personaggio virtuale',
+      ko: '가상 인물에게 질문하기',
+      ar: 'اطرح سؤالًا على الشخصية الافتراضية',
+      hi: 'आभासी पात्र से सवाल पूछें',
+      ru: 'Задайте вопрос виртуальному персонажу',
       de: 'Stellen Sie dem virtuellen Assistenten eine Frage',
       zh: '向虚拟助手提问',
       fr: 'Posez une question à l’agent virtuel',

@@ -1,9 +1,10 @@
+import { contentLanguageDetails } from '../../../functions/src/content-language';
 import type { BoardTranslationLanguage } from './board-translation';
 
 export function browserNarrationVoice<T extends { lang: string }>(
   voices: readonly T[], language: BoardTranslationLanguage,
 ): T | null {
-  const locale = ({ en: 'en-US', fr: 'fr-FR', ja: 'ja-JP', pt: 'pt-BR', es: 'es-US', de: 'de-DE', zh: 'zh-CN' } as const)[language];
+  const locale = contentLanguageDetails(language).locale;
   const normalize = (value: string) => value.toLowerCase().replace('_', '-');
   return voices.find((voice) => normalize(voice.lang) === locale.toLowerCase())
     ?? voices.find((voice) => language === 'zh'
@@ -15,6 +16,11 @@ export function browserNarrationVoice<T extends { lang: string }>(
 export function narrationUnavailableNotice(language: BoardTranslationLanguage): string {
   return ({
     en: 'Narration is unavailable for this card.',
+    it: 'La narrazione in questa lingua non è disponibile. Puoi comunque leggere la scheda tradotta.',
+    ko: '이 언어의 음성 안내를 사용할 수 없습니다. 번역된 카드는 계속 읽을 수 있습니다.',
+    ar: 'السرد الصوتي غير متاح بهذه اللغة. لا يزال بإمكانك قراءة البطاقة المترجمة.',
+    hi: 'इस भाषा में ऑडियो विवरण उपलब्ध नहीं है। आप अनुवादित कार्ड पढ़ सकते हैं।',
+    ru: 'Озвучивание на этом языке недоступно. Вы можете прочитать перевод карточки.',
     de: 'Die Sprachausgabe ist in dieser Sprache nicht verfügbar. Sie können die übersetzte Karte weiterhin lesen.',
     zh: '此语言的语音讲解暂不可用。您仍然可以阅读翻译后的卡片。',
     fr: 'La narration dans cette langue est indisponible. Vous pouvez toujours lire la fiche traduite.',

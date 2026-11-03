@@ -24,7 +24,7 @@ describe('localized board narration', () => {
     return component;
   }
 
-  for (const [locale, language] of [['fr', 'fr'], ['ja', 'ja'], ['pt-BR', 'pt'], ['es-419', 'es'], ['de', 'de'], ['zh-Hans', 'zh']]) {
+  for (const [locale, language] of [['fr', 'fr'], ['ja', 'ja'], ['pt-BR', 'pt'], ['es-419', 'es'], ['de', 'de'], ['zh-Hans', 'zh'], ['it-IT', 'it'], ['ko-KR', 'ko'], ['ar-SA', 'ar'], ['hi-IN', 'hi'], ['ru-RU', 'ru']]) {
     it(`uses ${language} for a plain localized board, cancels old audio, and separates its cache`, async () => {
       const c = harness(locale);
       c.syncBoardTranslationLanguage(null);
@@ -71,6 +71,21 @@ describe('localized board narration', () => {
     await c.speakTourFrame({ card: { id: 'card', notes: 'Original English' }, kind: 'stop' });
     expect(c.ensureTourAudioUrl).not.toHaveBeenCalled();
   });
+
+  for (const language of ['it', 'ko', 'ar', 'hi', 'ru']) {
+    it(`rejects delayed ${language} audio after a switch to another language`, async () => {
+      const c = harness(); c.syncBoardTranslationLanguage(language);
+      c.boardTranslationReady.set(true);
+      c.boardTranslationResult.set({boardId:'board', sourceLanguage:'en', targetLanguage:language});
+      let resolve!: (url: string) => void;
+      c.ensureTourAudioUrl = () => new Promise<string>(done => resolve = done);
+      const createAudio = spyOn(window, 'Audio');
+      const pending = c.speakTourFrame({card:{id:'card', notes:'Story'}, kind:'stop'});
+      c.syncBoardTranslationLanguage(language === 'ar' ? 'ko' : 'ar');
+      resolve('old-language.mp3'); await pending;
+      expect(createAudio).not.toHaveBeenCalled();
+    });
+  }
 
   it('ignores delayed tour audio after the reader switches language', async () => {
     const c = harness();

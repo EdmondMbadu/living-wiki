@@ -1,3 +1,4 @@
+import { CONTENT_LANGUAGES } from '../../../functions/src/content-language';
 import { browserNarrationVoice } from './narration-voice';
 
 describe('browser narration voice', () => {
@@ -12,9 +13,10 @@ describe('browser narration voice', () => {
 
   it('does not substitute an English voice for translated speech', () => {
     expect(browserNarrationVoice(voices, 'fr')).toBeNull();
-    for (const language of ['fr', 'ja', 'pt', 'es', 'de', 'zh'] as const) {
+    for (const details of CONTENT_LANGUAGES.filter(({ id }) => id !== 'en')) {
+      const language = details.id;
       expect(browserNarrationVoice([{ lang: 'en-US' }], language)).toBeNull();
-      const matching = { lang: ({ fr: 'fr-FR', ja: 'ja-JP', pt: 'pt-BR', es: 'es-MX', de: 'de-DE', zh: 'zh-CN' } as const)[language] };
+      const matching = { lang: details.locale };
       expect(browserNarrationVoice([{ lang: 'en-US' }, matching], language)).toBe(matching);
     }
   });

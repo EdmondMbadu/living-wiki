@@ -7,6 +7,11 @@ const nativeLocale: Record<Exclude<BoardTranslationLanguage, 'en'>, {
   language: string;
   accent: RegExp;
 }> = {
+  it: { locale: 'it-it', language: 'italian', accent: /italian|italiano|italy/i },
+  ko: { locale: 'ko-kr', language: 'korean', accent: /korean|seoul|south korea/i },
+  ar: { locale: 'ar-sa', language: 'arabic', accent: /modern standard|standard arabic|fusha|فصحى/i },
+  hi: { locale: 'hi-in', language: 'hindi', accent: /hindi|हिन्दी|हिंदी/i },
+  ru: { locale: 'ru-ru', language: 'russian', accent: /russian|русский/i },
   de: { locale: 'de-de', language: 'german', accent: /german|deutsch|germany/i },
   zh: { locale: 'zh-cn', language: 'chinese', accent: /mandarin|putonghua|mainland|standard chinese/i },
   fr: { locale: 'fr-fr', language: 'french', accent: /franc(e|ais|aise)|paris/i },

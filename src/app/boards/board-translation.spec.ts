@@ -5,11 +5,12 @@ import {
   isBoardTranslationLanguage,
   normalizeBoardTranslationResult,
 } from './board-translation';
-import { supportedLocale } from '../i18n/locales';
+import { SUPPORTED_LOCALES, supportedLocale } from '../i18n/locales';
+import { CONTENT_LANGUAGES, contentLanguageForLocale } from '../../../functions/src/content-language';
 
 describe('board translation overlay', () => {
   it('uses the same native language names as the site language switcher', () => {
-    for (const language of BOARD_TRANSLATION_LANGUAGES) {
+    for (const language of BOARD_TRANSLATION_LANGUAGES.filter((item) => SUPPORTED_LOCALES.some((locale) => locale.language === item.id))) {
       expect(language.label).toBe(supportedLocale(language.id).label);
     }
   });
@@ -21,6 +22,20 @@ describe('board translation overlay', () => {
       expect(boardTranslationLanguageForRoute('en', locale)).toBe('en');
     });
   }
+
+  it('maps twelve visitor languages without creating unbuilt interface routes', () => {
+    expect(CONTENT_LANGUAGES.length).toBe(12);
+    for (const language of CONTENT_LANGUAGES) {
+      expect(isBoardTranslationLanguage(language.id)).toBeTrue();
+      expect(contentLanguageForLocale(language.locale.replace('-', '_'))).toBe(language.id);
+      expect(boardTranslationLanguageForRoute(language.id, 'en-US')).toBe(language.id);
+    }
+    expect(contentLanguageForLocale('AR_eg')).toBe('ar');
+    expect(contentLanguageForLocale('ko-KR')).toBe('ko');
+    expect(contentLanguageForLocale('unsupported')).toBeNull();
+    expect(isBoardTranslationLanguage('ar-SA')).toBeFalse();
+    expect(isBoardTranslationLanguage('__proto__')).toBeFalse();
+  });
 
   it('keeps English links in their authored language and allows explicit translations', () => {
     expect(boardTranslationLanguageForRoute(null, 'en-US')).toBeNull();

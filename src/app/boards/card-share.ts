@@ -1,3 +1,5 @@
+import { SUPPORTED_LOCALES } from '../i18n/locales';
+import type { BoardTranslationLanguage } from './board-translation';
 import { isLinkReadableVisibility, type BoardVisibility } from '../board-visibility';
 import { publicBoardQrUrl } from '../board-qr-code';
 import { canonicalCardNarration } from '../../../functions/src/card-narration';
@@ -23,10 +25,11 @@ export type ShareableBoard = {
   cards: ShareableCard[];
 };
 
-export function publicCardUrl(boardId: string, cardId: string, contentLanguage?: 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh' | null): string {
+export function publicCardUrl(boardId: string, cardId: string, contentLanguage?: BoardTranslationLanguage | null): string {
   const baseUrl = publicBoardQrUrl(boardId);
-  const localizedUrl = contentLanguage && contentLanguage !== 'en'
-    ? baseUrl.replace('https://www.livingwiki.com/', `https://www.livingwiki.com/${contentLanguage}/`)
+  const siteLocale = SUPPORTED_LOCALES.find((locale) => locale.language === contentLanguage);
+  const localizedUrl = siteLocale?.subPath
+    ? baseUrl.replace('https://www.livingwiki.com/', `https://www.livingwiki.com/${siteLocale.subPath}/`)
     : baseUrl;
   return `${localizedUrl}?card=${encodeURIComponent(cardId)}`
     + (contentLanguage ? `&contentLang=${contentLanguage}` : '');

@@ -85,7 +85,7 @@ describe('TalkingCardConversationComponent', () => {
     }).compileComponents();
   });
 
-  for (const [language, expected] of [['de', 'German'], ['zh', 'Simplified Chinese']] as const) {
+  for (const [language, expected] of [['de', 'German'], ['zh', 'Simplified Chinese'], ['it', 'Italian'], ['ko', 'Korean'], ['ar', 'Modern Standard Arabic'], ['hi', 'Hindi'], ['ru', 'Russian']] as const) {
     it(`keeps ${language} in voice and typed Talking Card requests`, () => {
       const context = buildTalkingCardVoiceContext(atlas, {}, 'Property facts: a white house.', language);
       expect(context.instruction).toContain(expected);
@@ -93,6 +93,26 @@ describe('TalkingCardConversationComponent', () => {
       expect(question).toContain(expected);
       expect(question).not.toContain('undefined');
       expect(question).toContain('What can I visit?');
+    });
+  }
+
+  for (const language of ['it', 'ko', 'ar', 'hi', 'ru'] as const) {
+    it(`sends ${language} to the voice-session API and keeps typed fallback available`, async () => {
+      const fixture = TestBed.createComponent(TalkingCardConversationComponent);
+      fixture.componentRef.setInput('atlasId', 'atlas-1');
+      fixture.componentRef.setInput('contentLanguage', language);
+      fixture.componentRef.setInput('cardSubtitle', language === 'ar' ? 'قصة الشخصية' : 'A story');
+      const startVoice = spyOn(fixture.componentInstance, 'startVoice').and.resolveTo();
+      chatService.createElevenLabsVoiceSession.and.rejectWith({code:'functions/failed-precondition'});
+      fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+      startVoice.and.callThrough(); await fixture.componentInstance.startVoice(); fixture.detectChanges();
+      expect(chatService.createElevenLabsVoiceSession).toHaveBeenCalledWith(jasmine.objectContaining({voiceLanguageCode: language}));
+      expect(fixture.componentInstance.errorMessage()).toBeTruthy();
+      await fixture.componentInstance.setConversationMode('text'); fixture.detectChanges();
+      const input = fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+      expect(input.dir).toBe(language === 'ar' ? 'rtl' : 'ltr');
+      expect(input.lang).toMatch(new RegExp(`^${language}-`));
+      fixture.destroy();
     });
   }
 

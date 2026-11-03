@@ -1,3 +1,4 @@
+import { contentLanguageDetails } from './content-language';
 import { GoogleGenAI, type GenerateContentResponse } from '@google/genai';
 import { defineSecret } from 'firebase-functions/params';
 import { managedAvatarSystemInstruction, MANAGED_HARM_REFUSAL } from './avatar-response-policy';
@@ -1281,15 +1282,6 @@ export async function translateBoardTextSegments(
     return [];
   }
 
-  const languageName: Record<BoardTranslationLanguage, string> = {
-    en: 'English',
-    de: 'German',
-    zh: 'Simplified Chinese (Mandarin; use Simplified Chinese characters)',
-    fr: 'French',
-    ja: 'Japanese',
-    pt: 'Brazilian Portuguese',
-    es: 'neutral Latin American Spanish',
-  };
   const batches: BoardTranslationSegment[][] = [];
   let currentBatch: BoardTranslationSegment[] = [];
   let currentCharacters = 0;
@@ -1326,7 +1318,7 @@ export async function translateBoardTextSegments(
           const response = await generateContentWithRetry({
             model,
             contents: [
-              `Translate every text value into natural, fluent ${languageName[targetLanguage]}.`,
+              `Translate every text value into natural, fluent ${contentLanguageDetails(targetLanguage).name}.`,
               'This is user-facing content from a LivingWiki board.',
               'Return exactly one object for every input key and keep each key byte-for-byte unchanged.',
               'Translate meaning faithfully without summarizing, censoring, embellishing, or adding facts.',

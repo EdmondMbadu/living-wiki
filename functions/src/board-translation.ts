@@ -1,6 +1,7 @@
+import { isContentLanguage, type ContentLanguage } from './content-language';
 import { createHash } from 'node:crypto';
 
-export type BoardTranslationLanguage = 'en' | 'fr' | 'ja' | 'pt' | 'es' | 'de' | 'zh';
+export type BoardTranslationLanguage = ContentLanguage;
 
 export interface BoardTranslationSegment {
   key: string;
@@ -18,9 +19,7 @@ const maximumBoardTranslationCharacters = 100_000;
 const maximumFieldCharacters = 8_000;
 export const BOARD_TRANSLATION_SCHEMA_VERSION = 3;
 
-export function isBoardTranslationLanguage(value: unknown): value is BoardTranslationLanguage {
-  return value === 'en' || value === 'fr' || value === 'ja' || value === 'pt' || value === 'es' || value === 'de' || value === 'zh';
-}
+export const isBoardTranslationLanguage = isContentLanguage;
 
 export function extractBoardTranslationSource(value: unknown): BoardTranslationSource {
   const board = recordOrEmpty(value);
@@ -162,9 +161,16 @@ export function detectBoardSourceLanguage(text: string): BoardTranslationLanguag
     return 'ja';
   }
 
+  if (/\p{Script=Hangul}/u.test(text)) return 'ko';
+  if (/\p{Script=Arabic}/u.test(text)) return 'ar';
+  if (/\p{Script=Devanagari}/u.test(text)) return 'hi';
+  if (/\p{Script=Cyrillic}/u.test(text)) return 'ru';
   if (/\p{Script=Han}/u.test(text)) return 'zh';
 
   const normalized = ` ${text.toLocaleLowerCase()} `;
+  const italianSignals = normalized.match(/(?<!\p{L})(?:il|gli|della|delle|degli|nella|nelle|nel|sono|questo|questa|questi|queste|perché|anche|puoi|sulla|sulle|un|una|che|per|con)(?!\p{L})/gu)?.length ?? 0;
+  const italianDistinctive = /(?<!\p{L})(?:il|gli|della|delle|degli|nella|nelle|nel|sono|questo|questa|questi|queste|perché|puoi|sulla|sulle)(?!\p{L})/u.test(normalized);
+  if (italianDistinctive && italianSignals >= 3 && italianSignals / Math.max(1, normalized.split(/\s+/u).filter(Boolean).length) >= 0.08) return 'it';
   const germanSignals = normalized.match(/(?<!\p{L})(?:der|die|das|den|dem|des|ein|eine|einen|einem|einer|und|ist|sind|mit|für|auf|im|zum|zur|hier|dieser|diese|dieses|sich|nicht|werden)(?!\p{L})/gu)?.length ?? 0;
   const words = Math.max(1, normalized.split(/\s+/u).filter(Boolean).length);
   if (germanSignals >= 3 && germanSignals / words >= 0.08) return 'de';

@@ -41,6 +41,15 @@ describe('Talking Card model', () => {
     expect(talkingCardCtaLabel(null, 'zh')).toBe('和我聊聊');
   });
 
+  for (const [language, cta] of [['it','Parla con me'],['ko','나와 대화하기'],['ar','تحدث معي'],['hi','मुझसे बात करें'],['ru','Поговорите со мной']] as const) {
+    it(`provides ${language} character invitations without a translation request`, () => {
+      expect(talkingCardCtaLabel(null, language)).toBe(cta);
+      expect(talkingCardQuestionLabel('Character', language)).toBeTruthy();
+      expect(talkingCardQuestionLabel('Character', language)).not.toContain('Ask');
+      expect(talkingCardCtaLabel({version:1, provider:'atlas', atlasId:'a', openingMessage:'', ctaLabel:'Curated invitation'}, language)).toBe('Curated invitation');
+    });
+  }
+
   it('turns the avatar title into an unambiguous question invitation', () => {
     expect(talkingCardQuestionLabel('Edmond Mbadu')).toBe('Ask Edmond Mbadu a question');
     expect(talkingCardQuestionLabel('Ask Edmond')).toBe('Ask Edmond a question');

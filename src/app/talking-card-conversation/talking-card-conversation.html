@@ -15,7 +15,7 @@
           @else { <span class="material-symbols-outlined">record_voice_over</span> }
           <i aria-hidden="true"></i>
         </div>
-        <div><span i18n>Talking Card</span><h2 id="talking-chat-title">{{ avatarName() }}</h2><p>{{ cardSubtitle() }}</p></div>
+        <div><span i18n>Talking Card</span><h2 id="talking-chat-title">{{ avatarName() }}</h2><p [attr.dir]="contentDirection()" [attr.lang]="contentLocale()">{{ cardSubtitle() }}</p></div>
       </div>
       @if (showContactActions()) {
         <nav class="talking-chat__contact" [attr.aria-label]="contactName() ? templateText.message15 + contactName() : templateText.message16">
@@ -220,7 +220,7 @@
           <div class="talking-chat__transcript-head"><span i18n>Live transcript</span><span>{{ voiceMode() === 'speaking' ? templateText.message12 : templateText.message13 }}</span></div>
           @for (message of messages(); track message.id) {
             <article class="talking-chat__transcript-line" [class.is-user]="message.role === 'user'">
-              <span>{{ message.role === 'user' ? templateText.message14 : avatarName() }}</span><p>{{ message.text }}</p>
+              <span>{{ message.role === 'user' ? templateText.message14 : avatarName() }}</span><p dir="auto">{{ message.text }}</p>
             </article>
           } @empty {
             <p class="talking-chat__transcript-empty" i18n>Your spoken conversation will appear here.</p>
@@ -238,14 +238,14 @@
         <div class="talking-chat__messages" aria-live="polite">
           @for (message of messages(); track message.id) {
             <div class="talking-chat__message" [class.is-user]="message.role === 'user'">
-              <span>{{ message.role === 'user' ? templateText.message14 : avatarName() }}</span><p>{{ message.text }}</p>
+              <span>{{ message.role === 'user' ? templateText.message14 : avatarName() }}</span><p dir="auto">{{ message.text }}</p>
             </div>
           }
           @if (submitting()) { <div class="talking-chat__typing" aria-label="Avatar is answering" i18n-aria-label><i></i><i></i><i></i></div> }
         </div>
 
         @if (showStarters()) {
-          <div class="talking-chat__starters" aria-label="Suggested questions" i18n-aria-label>
+          <div class="talking-chat__starters" [attr.dir]="contentDirection()" [attr.lang]="contentLocale()" aria-label="Suggested questions" i18n-aria-label>
             <span i18n>Try asking</span>
             <div>
               @for (question of starters(); track question) {
@@ -257,7 +257,7 @@
 
         @if (errorMessage()) { <p class="talking-chat__error" role="alert">{{ errorMessage() }}</p> }
         <form class="talking-chat__composer" (submit)="$event.preventDefault(); send()">
-          <textarea rows="2" maxlength="2000" aria-label="Message" placeholder="Ask a question…" [ngModel]="draft()" (ngModelChange)="draft.set($event)" name="message" i18n-aria-label i18n-placeholder></textarea>
+          <textarea [attr.dir]="contentDirection()" [attr.lang]="contentLocale()" rows="2" maxlength="2000" aria-label="Message" placeholder="Ask a question…" [ngModel]="draft()" (ngModelChange)="draft.set($event)" name="message" i18n-aria-label i18n-placeholder></textarea>
           <button type="submit" [disabled]="!draft().trim() || submitting()" aria-label="Send message" i18n-aria-label><span class="material-symbols-outlined">arrow_upward</span></button>
         </form>
         <p class="talking-chat__disclaimer" i18n>AI can make mistakes. Verify important information.</p>

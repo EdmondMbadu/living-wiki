@@ -50,7 +50,7 @@ test('Live source excludes other cards and quizzes, and survives unrelated edits
   assert.equal(value.cards[0].notes, 'First card narration.');
 });
 
-for (const language of ['en', 'fr', 'ja', 'pt', 'es', 'de', 'zh']) {
+for (const language of ['en', 'fr', 'ja', 'pt', 'es', 'de', 'zh', 'it', 'ko', 'ar', 'hi', 'ru']) {
   test(`generates and caches ${language} for the selected card, independently of other cards`, async () => {
     const first = await call({ targetLanguage: language, text: 'Never trust client supplied text' });
     assert.equal(first.cardId, 'one'); assert.equal(first.targetLanguage, language); assert.equal(first.cached, false);
