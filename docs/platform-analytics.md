@@ -32,7 +32,7 @@ The Firestore emulator suite includes analytics authorization, canonical draft d
 
 ## Unified card and board activity
 
-Card, board and platform reporting use the same durable verified session ledger. The card and board endpoints enrich ledger records with retained raw conversation records, deduplicating by provider conversation or source receipt. This includes internal calls and metrics whose raw transcripts have expired. Internal calls retain minimal metadata; their questions and transcripts are not copied into visitor history. Visitor traffic remains visitor-only regardless of the selected conversation audience.
+Card, board and platform reporting use the same durable verified session ledger. The card and board endpoints enrich ledger records with retained raw conversation records, deduplicating by provider conversation or source receipt. This includes internal calls and metrics whose raw transcripts have expired. Internal calls retain minimal metadata; their questions and transcripts are not copied into visitor history. Traffic and conversations now follow the same **All activity / Visitors only / Internal only** audience selection. Owner/admin board loads and card opens are recorded in separate internal shards rather than discarded. Team-level visitor reports continue to exclude internal traffic.
 
 Verified voice seconds are split at UTC midnight; conversation counts belong to the start date. Text estimates do not contribute voice minutes. Pending sessions, unverified sessions and calls with unknown durations are reported separately. “Known participants” counts distinct recorded account/anonymous-session hashes; “Unique visitors” counts tracked browsers. Neither metric claims to count individual people. Missing browser identities are disclosed rather than invented. Last verified activity is the latest recorded verification timestamp.
 
@@ -47,3 +47,17 @@ A report includes board title/public URL, aggregate traffic and conversation met
 Access uses a cryptographically random capability in the URL fragment; only its SHA-256 hash is stored. Links use the production origin and saved slug. No sign-in is required to view a valid report. Expired/revoked links and links for deleted/transferred boards return the same unavailable response. Firestore clients cannot directly read or write grants or creation limits. Shared pages suppress workspace assistants and analytics initialization and set no-referrer, no-store and noindex policies. The fragment is never used as an analytics parameter.
 
 Reporting integration tests verify cross-page totals, audience filtering, UTC splits, missing duration/identity handling, idempotent reconciliation, capability expiry/revocation, ownership checks and aggregate-only serialization. Browser tests verify scope requests, saved-slug links, sharing controls, stale report protection and safe rendering.
+
+## Views and traffic audiences
+
+A **board view** is one successful load of actual board content. Repeated hydration or canonical-URL resolution while the same board is open does not add another view. Returning after leaving the board starts a new view, including an immediate return from analytics. Analytics dashboards and shared analytics reports do not create board or card views.
+
+A **card open** is an explicit content/conversation open or a direct QR/live-card entry after the actual card is resolved. Opening a board alone does not count every card displayed in its grid. Direct-card route reprocessing does not count the same open twice. Repeat transport delivery of an event is deduplicated by event ID.
+
+The server determines whether traffic is internal from authenticated board ownership, platform-admin roles, team membership and (for card events) avatar-administrator permissions. A client-supplied internal flag is ignored. Internal traffic uses separate daily shards and browser-identity namespaces. **All activity** combines both audiences while deduplicating period browser identities; **Visitors only** and **Internal only** remain isolated. Private-board telemetry is accepted only for authorized internal viewers, and known automation remains excluded.
+
+Global board views and card opens use the same recorded daily shards as board/card reporting. Separate indexed Firestore sums preserve legacy sparse counter maps; visitor totals are all traffic minus internal traffic at one read-only transaction snapshot. This avoids downloading every event or counting missing fields as missing documents. There is a bounded document-reading fallback while indexes build.
+
+Earlier internal visits were deliberately excluded at collection time, so there is no exact historical count to restore. Conversations do not backfill fictional page views or opens. `internalTrackingStartedAt` discloses when internal traffic recording began for a board. Newly shared report snapshots record their traffic audience explicitly; pre-existing snapshots keep their original visitor-only traffic interpretation and remain immutable.
+
+Before requesting board, card or platform reports, the client waits up to two seconds for its in-flight traffic writes. Content remains interactive while telemetry is sent. Google Analytics continues to mirror accepted visitor events only; internal activity stays in first-party reporting. The server determines the audience.

@@ -295,7 +295,7 @@ export class PlatformAnalyticsComponent {
         $localize`Voice seconds`,
         $localize`From (UTC)`,
         $localize`To (UTC)`,
-        $localize`Conversation audience`,
+        $localize`Activity audience`,
       ];
       const csv = platformCsv([
         head,

@@ -6,7 +6,7 @@ import type { AnalyticsAudience } from './analytics-activity';
 
 export type SharedAnalyticsReport = {
   board:{title:string;customSlug:string;publicUrl:string|null}; range:{from:string;to:string};audience:AnalyticsAudience;
-  generatedAt:string;verifiedAt:string|null;trackingStartedAt:string|null;
+  trafficAudience?:AnalyticsAudience;generatedAt:string;verifiedAt:string|null;trackingStartedAt:string|null;
   totals:{views:number;uniqueVisitors:number;knownParticipants?:number;cardOpens:number;outboundClicks:number;engagedVisits:number;
     conversations:number;voice:number;text:number;seconds:number;unknownDurations:number;unattributedConversations:number};
   status:{pendingVoice:number;unverifiedVoice:number;partial:boolean};

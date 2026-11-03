@@ -160,5 +160,6 @@ export async function readAnalyticsActivity(boardId: string, range: ReturnType<t
   const verifiedAt = conversations.map(row => row.verifiedAt).filter((v): v is string => !!v).sort().at(-1) || null;
   return {audience, conversations, daily, totals, pendingVoice, unverifiedVoice, verifiedAt,
     knownVisitors: new Set(visitorConversations.map(c => c.visitorKey).filter(Boolean)),
+    audienceVisitors: new Set(conversations.filter(c=>c.startedAt.slice(0,10)>=range.from).map(c=>c.visitorKey).filter(Boolean)),
     knownParticipants: new Set(conversations.map(c => c.participantKey).filter(Boolean))};
 }

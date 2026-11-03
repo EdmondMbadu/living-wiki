@@ -9,7 +9,8 @@
         <a class="analytics-back" [routerLink]="boardPath()"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span><span i18n>Back to board</span></a>
         <section class="analytics-heading"><div><span class="eyebrow" i18n>Card analytics</span><h1>{{ r.card.title }}</h1><p>{{ r.board.title }} <span aria-hidden="true">·</span> <span i18n>Activity for this card only</span></p></div><div class="analytics-links">@if(r.canViewBoardAnalytics){<a [routerLink]="boardAnalyticsPath()" i18n>Board analytics</a>}<a [routerLink]="boardPath()" [queryParams]="{card:cardId()}" i18n>View card</a>@if(r.card.talking && r.canReadTranscripts){<a [routerLink]="qaPath()"><span class="material-symbols-outlined" aria-hidden="true">fact_check</span><span i18n>Avatar QA</span></a>}</div></section>
         <div class="analytics-toolbar"><div class="analytics-dates"><span i18n>{{ r.range.from | date:'MMM d':'UTC' }} – {{ r.range.to | date:'MMM d, y':'UTC' }}</span><small i18n>Dates shown in UTC</small></div><div class="range" role="group" aria-label="Date range" i18n-aria-label>@for(option of rangeOptions;track option.days){<button type="button" [class.selected]="days()===option.days" [attr.aria-pressed]="days()===option.days" (click)="selectRange(option.days)">{{option.label}}</button>}</div><button class="refresh" type="button" [disabled]="refreshing()" (click)="load()"><span class="material-symbols-outlined" [class.spin]="refreshing()" aria-hidden="true">refresh</span><span i18n>Refresh</span></button></div>
-        <label class="activity-audience"><span i18n>Conversation audience</span><select [value]="audience()" (change)="selectAudience($any($event.target).value)">@for(option of audiences;track option.value){<option [value]="option.value">{{option.label}}</option>}</select></label>
+        <label class="activity-audience"><span i18n>Activity audience</span><select [value]="audience()" (change)="selectAudience($any($event.target).value)">@for(option of audiences;track option.value){<option [value]="option.value">{{option.label}}</option>}</select></label>
+        @if(audience()!=='visitors'){<p class="analytics-context" i18n>Earlier owner/admin views were not recorded. All activity now includes these visits; historical view counts cannot be reconstructed from conversations.</p>}
         <section class="analytics-kpis" [class.standard-card]="!r.card.talking" aria-label="Card activity summary" i18n-aria-label>
           <article><span class="material-symbols-outlined" aria-hidden="true">touch_app</span><small i18n>Card opens</small><strong>{{r.opens | number}}</strong><p><span i18n>Unique visitors:</span>{{ ' ' }}@if(visitorCountUnavailable()){<span i18n>Not recorded</span>} @else {<span>{{r.visitors | number}}</span>}</p></article>
           @if(r.card.talking){
@@ -21,11 +22,11 @@
         <div class="analytics-context">
           <p i18n>Visitor counts represent browsers, not individual people.</p>
           @if(r.trackingStartedAt){<p i18n>Detailed activity is recorded from {{r.trackingStartedAt | date:'mediumDate':'UTC'}}.</p>}
-          @else if(!visitorCountUnavailable()){<p i18n>Detailed activity will appear after the first visitor interaction.</p>}
+          @else if(!visitorCountUnavailable()){<p i18n>Views are recorded when the board or card content opens. Opening analytics does not add a content view.</p>}
           @if(visitorCountUnavailable()){<p i18n>Unique visitor counts were not recorded for these opens.</p>}
           <details>
             <summary i18n>How analytics works</summary>
-            <p i18n>Visitor traffic excludes owner/admin activity. Conversation totals follow the selected audience. Automated QA stays separate.</p>
+            <p i18n>Views, card opens and conversations follow the selected audience. All activity includes owner/admin visits. Automated QA stays separate.</p>
             <p i18n>Previously recorded activity remains available. Details that were never recorded cannot be reconstructed.</p>
             @if(r.card.talking){<p i18n>Text duration estimates observed activity between messages, with idle gaps capped at one minute. Voice duration is supplied by the provider.</p>}
           </details>

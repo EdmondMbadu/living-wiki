@@ -47,11 +47,11 @@ test('card and board views agree on verified calls, scopes and provider deduplic
   const b=await buildBoardInsights(request({audience,days:30}));
   assert.equal(c.conversations.length,count);assert.equal(c.activity.totals.seconds,seconds);
   assert.equal(b.totals.conversations,count);assert.equal(b.activity.totals.seconds,seconds);
-  assert.equal(c.visitors,1,'Visitor traffic must not change with the conversation scope');assert.equal(b.totals.uniqueVisitors,1);
+  assert.equal(c.visitors,audience==='all'?2:1,'Browser counts follow the same audience as conversations');assert.equal(b.totals.uniqueVisitors,audience==='all'?2:1);
   if(audience==='all'){
    const internal=c.conversations.find(row=>row.internal);assert.equal(internal.durationSeconds,164);
    assert.equal(internal.canReadTranscript,false);assert.equal(internal.firstQuestion,'');
-   assert.equal(c.visitors,1);assert.equal(c.activity.knownParticipants,2);
+   assert.equal(c.visitors,2);assert.equal(c.activity.knownParticipants,2);
   }
  }
  const legacy=await card.getCardAnalytics.run(request());assert.equal(legacy.conversations.length,1);
@@ -108,4 +108,62 @@ test('expired, guessed and ownership-transferred links do not disclose a report'
  await db.doc(`boards/${boardId}`).update({owner_user_id:'new-owner'});
  await assert.rejects(shares.getSharedAnalyticsReport.run({data:{token:new URL(another.url).hash.slice('#access='.length)}}),e=>e.code==='not-found');
  await assert.rejects(shares.getSharedAnalyticsReport.run({data:{token:'x'.repeat(43)}}),e=>e.code==='not-found');
+});
+
+const trafficApi=require('./lib/board-analytics');
+const trafficHelpers=require('./lib/analytics-traffic');
+let eventSerial=0;
+async function visit(type,uid,visitorId='traffic-browser-12345',extras={}){
+ return trafficApi.recordBoardAnalyticsEvent.run({...request({eventType:type,eventId:`traffic-event-${++eventSerial}-12345`,visitorId,sessionId:'traffic-session-12345',...(type==='board_view'?{cardId:null}:{}),...extras},uid),rawRequest:{headers:{'user-agent':'Mozilla/5.0'},ip:'127.0.0.1'}});
+}
+test('owner views and QR card opens count in All activity and Internal only, with visitor traffic separate',async()=>{
+ await visit('board_view',owner);await visit('card_open',owner);
+ await visit('board_view',null,'external-browser-12345');await visit('talking_card_open',null,'external-browser-12345');
+ for(const [audience,views,opens,visitors] of [['all',2,2,2],['internal',1,1,1],['visitors',1,1,1]]){
+  const board=await buildBoardInsights(request({audience})),c=await card.getCardAnalytics.run(request({audience}));
+  assert.equal(board.totals.views,views);assert.equal(board.totals.cardOpens+board.totals.talkingCardOpens,opens);assert.equal(board.totals.uniqueVisitors,visitors);
+  assert.equal(c.opens,opens);assert.equal(c.visitors,visitors);assert.ok(board.trackingStartedAt);
+  const global=await trafficHelpers.platformTraffic(today(),today(),audience);assert.deepEqual(global,{views,cardOpens:opens});
+ }
+});
+test('traffic retries are idempotent and one browser remains one unique across internal and visitor scopes',async()=>{
+ const data={eventType:'board_view',eventId:'traffic-retry-123456',visitorId:'traffic-same-browser-12345',sessionId:'traffic-session-12345',cardId:null};
+ assert.equal((await trafficApi.recordBoardAnalyticsEvent.run(request(data))).accepted,true);
+ assert.equal((await trafficApi.recordBoardAnalyticsEvent.run(request(data))).reason,'duplicate');
+ await visit('board_view',null,data.visitorId); // A distinct external load in the same browser.
+ const all=await buildBoardInsights(request({audience:'all'}));assert.equal(all.totals.views,2);assert.equal(all.totals.uniqueVisitors,1);assert.equal(all.daily.find(day=>day.day===today()).uniqueVisitors,1);
+ const visitors=await buildBoardInsights(request({audience:'visitors'}));assert.equal(visitors.totals.views,1);assert.equal(visitors.totals.uniqueVisitors,1);
+});
+test('admin and avatar-admin traffic is classified server-side; private pages and automated traffic stay protected',async()=>{
+ await db.doc('users/traffic-admin').set({role:'admin'});
+ assert.equal((await visit('board_view','traffic-admin')).internal,true);
+ await db.doc('atlases/atlas-reliable').update({admin_user_ids:['avatar-admin']});
+ assert.equal((await visit('talking_card_open','avatar-admin')).internal,true);
+ assert.equal((await visit('board_view',null,'public-browser-123456',{internal:true})).internal,false,'Browser input cannot forge the audience');
+ await db.doc(`boards/${boardId}`).update({visibility:'private'});
+ assert.equal((await visit('board_view',null)).reason,'private');
+ assert.equal((await visit('board_view',owner)).accepted,true);
+ const bot={...request({eventType:'board_view',eventId:'traffic-bot-123456',visitorId:'traffic-botbrowser-12345',sessionId:'traffic-session-12345',cardId:null}),rawRequest:{headers:{'user-agent':'SearchBot'},ip:'127.0.0.1'}};
+ assert.equal((await trafficApi.recordBoardAnalyticsEvent.run(bot)).reason,'automated');
+});
+test('global traffic sums retain sparse historical shards and use the same scope as board totals',async()=>{
+ await db.collection('board_analytics_daily_shards').doc(`${boardId}__${today()}__0`).set({board_id:boardId,day:today(),counts:{views:5}});
+ await db.collection('board_analytics_daily_shards').doc(`${boardId}__${today()}__1`).set({board_id:boardId,day:today(),counts:{card_opens:3}});
+ await visit('board_view',owner);await visit('talking_card_open',owner);
+ assert.deepEqual(await trafficHelpers.platformTraffic(today(),today(),'all'),{views:6,cardOpens:4});
+ assert.deepEqual(await trafficHelpers.platformTraffic(today(),today(),'visitors'),{views:5,cardOpens:3});
+ assert.deepEqual(await trafficHelpers.platformTraffic(today(),today(),'internal'),{views:1,cardOpens:1});
+ await db.doc('users/traffic-admin').set({role:'admin'});
+ await db.doc('platform_analytics_meta/state').set({inventoryReady:true,boardCreationsReady:true,trackingSince:Timestamp.now()});
+ const global=await platform.getPlatformAnalytics.run({auth:{uid:'traffic-admin'},data:{from:today(),to:today(),audience:'all',refresh:true,view:'boards'}});
+ assert.equal(global.totals.views,6);assert.equal(global.totals.cardOpens,4);
+});
+test('viewing analytics does not create a content view, and shared reports preserve the selected traffic scope',async()=>{
+ await buildBoardInsights(request({audience:'all'}));await card.getCardAnalytics.run(request({audience:'all'}));
+ assert.deepEqual(await trafficHelpers.platformTraffic(today(),today(),'all'),{views:0,cardOpens:0});
+ await visit('board_view',owner);await visit('card_open',owner);
+ const shared=await shares.manageAnalyticsReportShares.run(request({action:'create',audience:'all'}));
+ assert.equal(shared.snapshot.trafficAudience,'all');assert.equal(shared.snapshot.totals.views,1);assert.equal(shared.snapshot.totals.cardOpens,1);
+ const external=await shares.manageAnalyticsReportShares.run(request({action:'create',audience:'visitors'}));
+ assert.equal(external.snapshot.totals.views,0);assert.equal(external.snapshot.totals.cardOpens,0);
 });

@@ -34,7 +34,7 @@ export function sharedAnalyticsSnapshot(report: Data, board: Data) {
     board:{title:report.board.title, customSlug:report.board.customSlug,
       publicUrl: ['public','unlisted'].includes(report.board.visibility) ? `${publicOrigin}/boards/${encodeURIComponent(slug)}` : null},
     range:{from:report.range.from,to:report.range.to}, audience:report.audience,
-    generatedAt:new Date().toISOString(), verifiedAt:report.activity.verifiedAt,
+    trafficAudience:report.audience,generatedAt:new Date().toISOString(), verifiedAt:report.activity.verifiedAt,
     trackingStartedAt:report.trackingStartedAt,
     totals:{views:report.totals.views,uniqueVisitors:report.totals.uniqueVisitors,knownParticipants:report.activity.knownParticipants,
       cardOpens:report.totals.cardOpens + (report.totals.talkingCardOpens || 0),

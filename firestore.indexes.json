@@ -607,6 +607,102 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "board_analytics_daily_shards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "day",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "counts.views",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "board_analytics_daily_shards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "internal",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "day",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "counts.views",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "board_analytics_daily_shards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "day",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "counts.card_opens",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "board_analytics_daily_shards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "internal",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "day",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "counts.card_opens",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "board_analytics_daily_shards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "day",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "counts.talking_card_opens",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "board_analytics_daily_shards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "internal",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "day",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "counts.talking_card_opens",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": [

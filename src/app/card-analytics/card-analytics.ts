@@ -116,7 +116,7 @@ export class CardAnalyticsComponent {
   }
   closeDetails():void{++this.detailSequence;this.drawer()?.nativeElement.close();this.selected.set(null);this.detailLoading.set(false);this.detailError.set('');}
   downloadCsv():void{
-    const rows=this.rows(); const headings=[$localize`Conversation audience`,$localize`Internal`,$localize`Started (UTC)`,$localize`Visitor`,$localize`Mode`,$localize`Duration (seconds)`,$localize`Duration type`,$localize`Questions`,$localize`Status`,$localize`First question`];
+    const rows=this.rows(); const headings=[$localize`Activity audience`,$localize`Internal`,$localize`Started (UTC)`,$localize`Visitor`,$localize`Mode`,$localize`Duration (seconds)`,$localize`Duration type`,$localize`Questions`,$localize`Status`,$localize`First question`];
     this.download(`card-analytics-${this.cardId()}-${this.days()}days.csv`,analyticsCsv([headings,...rows.map(c=>[this.audience(),c.internal===true,c.startedAt,c.visitor,c.mode,c.durationSeconds,c.durationKind,c.questions,c.status,c.firstQuestion])]),'text/csv;charset=utf-8');
   }
   async downloadTranscript():Promise<void>{

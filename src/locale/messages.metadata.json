@@ -2187,6 +2187,10 @@
     "source": "Featured university boards",
     "file": "src/app/city-board-collection/city-board-collection.ts"
   },
+  "1604279188828770792": {
+    "source": "Earlier owner/admin views were not recorded. All activity now includes these visits; historical view counts cannot be reconstructed from conversations.",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "1606048501103018764": {
     "source": "{$START_TAG_SPAN}grid_view{$CLOSE_TAG_SPAN} All stops ",
     "file": "src/app/boards/boards.html"
@@ -2994,6 +2998,10 @@
   "1887267745625427442": {
     "source": "Direct Chat History",
     "file": "src/app/business-detail/business-activity.ts"
+  },
+  "1887429570130057527": {
+    "source": "Daily board views in the selected audience · hover or focus a bar for exact activity",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "1888209373069138181": {
     "source": "Sign in to upload",
@@ -5739,10 +5747,6 @@
     "source": "Deep-edit the card, avatar prompt, documents, voice, and visitor actions.",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
-  "2721019423487156789": {
-    "source": "Daily public board views · hover or focus a bar for exact activity",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "2721614974061129816": {
     "source": "Selected test ",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
@@ -8347,6 +8351,10 @@
     "source": " Board creation counts use saved dates and remain after deletion. Team drafts and published copies count once. Older deleted boards may be missing. ",
     "file": "src/app/platform-analytics/platform-analytics.html"
   },
+  "3476565132373851214": {
+    "source": "Private boards record owner/admin activity only.",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "3476842083868084912": {
     "source": "Open a card’s analytics for its visitors and conversations.",
     "file": "src/app/board-insights/board-insights.html"
@@ -9346,6 +9354,10 @@
   "3775324547205984079": {
     "source": "Wait for or cancel the active generation job before starting another.",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
+  "3775626980547663559": {
+    "source": "New board and card visits will appear here.",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "3775866596727208881": {
     "source": "Used to guide business-specific answers",
@@ -10883,10 +10895,6 @@
     "source": " These are the institutions this page trusts right now. Each source stays visible even when it temporarily has zero active listings. ",
     "file": "src/app/green-jobs/green-jobs.html"
   },
-  "4221324966107302227": {
-    "source": "Detailed activity will appear after the first visitor interaction.",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "4221504296480510088": {
     "source": "As of {$INTERPOLATION}",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -11526,6 +11534,10 @@
   "4416413576346763682": {
     "source": "Pending",
     "file": "src/app/boards/boards.html"
+  },
+  "441767248195551233": {
+    "source": "Successful board loads in the selected audience",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "4419581750389237859": {
     "source": "Parks",
@@ -12506,10 +12518,6 @@
   "4709273745320055687": {
     "source": "Your first stop",
     "file": "src/app/boards/boards.html"
-  },
-  "4709588559563403789": {
-    "source": "Conversation audience",
-    "file": "src/app/board-insights/board-insights.html"
   },
   "470985312787558203": {
     "source": "Delete thread",
@@ -14046,10 +14054,6 @@
   "5170990160218179574": {
     "source": "Share page ready",
     "file": "src/app/shared-chat/shared-chat.html"
-  },
-  "5171314020937725018": {
-    "source": "{$START_TAG_SPAN}shield{$CLOSE_TAG_SPAN} Signed-in owner visits and recognized preview bots are excluded.",
-    "file": "src/app/board-insights/board-insights.html"
   },
   "5173890905763885538": {
     "source": " Estimate based on ~800 words/article. Actual cost may vary. ",
@@ -16003,6 +16007,10 @@
     "source": "Your ",
     "file": "src/app/city-board-collection/city-board-collection.ts"
   },
+  "5743701888951433883": {
+    "source": "Activity audience",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "574465079999990645": {
     "source": "The link is valid, but this thread does not contain any messages yet.",
     "file": "src/app/shared-chat/shared-chat.html"
@@ -16951,10 +16959,6 @@
     "source": "Choose a clear recording between 20 seconds and 3 minutes.",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
-  "6018467658112237467": {
-    "source": "Successful visitor board loads",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "6019601785145439394": {
     "source": "QR yard-sign riders and flyers — buyers hear you from the curb.",
     "file": "src/app/talkthrus/talkthrus.ts"
@@ -16982,10 +16986,6 @@
   "6027245369620058047": {
     "source": "Shareable report link",
     "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
-  },
-  "6030082786890657600": {
-    "source": "New visitor activity will appear here after this analytics release is deployed.",
-    "file": "src/app/board-insights/board-insights.html"
   },
   "6030322975562082447": {
     "source": "{$START_TAG_SPAN}dashboard{$CLOSE_TAG_SPAN} Return to board ",
@@ -18171,10 +18171,6 @@
     "source": "After",
     "file": "src/app/boards/boards.html"
   },
-  "637449423095666346": {
-    "source": "Visitor traffic excludes owner/admin activity. Conversation totals follow the selected audience. Automated QA stays separate.",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "6374812789573354793": {
     "source": "Remove stop photo",
     "file": "src/app/boards/boards.html"
@@ -18810,10 +18806,6 @@
   "6553132290328719114": {
     "source": "Browse topics",
     "file": "src/app/wiki/wiki.ts"
-  },
-  "6553779832931020366": {
-    "source": "{$START_TAG_SPAN}visibility_off{$CLOSE_TAG_SPAN} Tracking pauses while this board is private.",
-    "file": "src/app/board-insights/board-insights.html"
   },
   "6555705273244959882": {
     "source": "the supplied domain",
@@ -19862,10 +19854,6 @@
   "6893847117790319312": {
     "source": "LivingWiki automatically organizes your data into a structured system that updates as you learn.",
     "file": "src/app/marketing/marketing.html"
-  },
-  "6893915706525272704": {
-    "source": "Visitor board views",
-    "file": "src/app/shared-analytics/shared-analytics.html"
   },
   "6894803317960403699": {
     "source": " unique visitors, ",
@@ -23423,6 +23411,10 @@
     "source": "Private board",
     "file": "src/app/boards/boards.html"
   },
+  "7940780902747821202": {
+    "source": "Views, card opens and conversations follow the selected audience. All activity includes owner/admin visits. Automated QA stays separate.",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "7941159538449463077": {
     "source": "Re-enter your password",
     "file": "src/app/auth-action/auth-action.html"
@@ -23886,6 +23878,10 @@
   "8093646814201446191": {
     "source": "Badge",
     "file": "src/app/business-claim/business-claim.html"
+  },
+  "8094173070502781312": {
+    "source": "Views are recorded when the board or card content opens. Opening analytics does not add a content view.",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "8094416149482938944": {
     "source": "Make the walkthrough feel personal",
@@ -25294,10 +25290,6 @@
   "8530543668409168226": {
     "source": "+ more",
     "file": "src/app/business-claim/business-claim.html"
-  },
-  "8530958942092908227": {
-    "source": "Visitor views",
-    "file": "src/app/shared-analytics/shared-analytics.html"
   },
   "8531977808612981202": {
     "source": "{$START_TAG_SPAN}mail{$CLOSE_TAG_SPAN} Invitations {$START_BLOCK_IF}{$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",

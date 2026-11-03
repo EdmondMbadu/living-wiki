@@ -1,3 +1,4 @@
+import { BoardAnalyticsService } from './board-analytics.service';
 import type { AnalyticsAudience } from './analytics-activity';
 import { isPlatformBrowser } from '@angular/common';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
@@ -5,6 +6,8 @@ import { httpsCallable } from 'firebase/functions';
 import { getFirebaseFunctions } from './firebase.client';
 export type PlatformInventory = { boards: number; cards: number; talkingCards: number };
 export type PlatformTotals = {
+  views?: number;
+  cardOpens?: number;
   conversations: number;
   voice: number;
   text: number;
@@ -76,6 +79,7 @@ export type PlatformFilters = {
 };
 @Injectable({ providedIn: 'root' })
 export class PlatformAnalyticsService {
+  private readonly traffic=inject(BoardAnalyticsService);
   private readonly functions = isPlatformBrowser(inject(PLATFORM_ID))
     ? getFirebaseFunctions()
     : null;
@@ -90,7 +94,8 @@ export class PlatformAnalyticsService {
   }> {
     return this.call('getPlatformInventory', {});
   }
-  report(filters: PlatformFilters, refresh = false, exportAll = false): Promise<PlatformReport> {
+  async report(filters: PlatformFilters, refresh = false, exportAll = false): Promise<PlatformReport> {
+    await this.traffic.flush();
     return this.call('getPlatformAnalytics', { ...filters, refresh, export: exportAll });
   }
   sync(): Promise<{ jobId: string }> {

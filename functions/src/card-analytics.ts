@@ -1,4 +1,5 @@
-import { analyticsAudience, analyticsRange, readAnalyticsActivity } from './analytics-activity';
+import { trafficVisitors, trafficStartedAt } from './analytics-traffic';
+import { analyticsAudience, analyticsRange, includesAudience, readAnalyticsActivity } from './analytics-activity';
 import { recoverPicamoVoice } from './picamo-analytics';
 import { createHash, randomUUID } from 'node:crypto';
 import { FieldValue, Timestamp, type Query, type DocumentData } from 'firebase-admin/firestore';
@@ -69,10 +70,8 @@ export async function allAnalyticsDocs(query: Query<DocumentData>) {
     cursor = page.docs.at(-1);
   }
 }
-export async function uniqueAnalyticsVisitors(boardId: string, from: string, cardId?: string) {
-  const root = cardId ? trackingRef(boardId).collection('cards').doc(cardId) : trackingRef(boardId);
-  const docs = await allAnalyticsDocs(root.collection('visitors').where('last_day', '>=', from).orderBy('last_day'));
-  return new Set(docs.filter(d => d.data().days?.some((day: string) => day >= from)).map(d => d.id));
+export async function uniqueAnalyticsVisitors(boardId: string, from: string, cardId?: string, audience: 'all'|'visitors'|'internal' = 'visitors', to = new Date().toISOString().slice(0,10)) {
+  return trafficVisitors(boardId, from, to, audience, cardId);
 }
 export async function analyticsConversations(boardId: string, from: string, cardId?: string) {
   let query=sessions.where('board_id', '==', boardId).where('day', '>=', from).orderBy('day');
@@ -289,7 +288,7 @@ export const getCardAnalytics = onCall({ region:'us-central1', cors:true, timeou
   const {days, from} = range;
   const audience = analyticsAudience(request.data.audience);
   const [visitors, rows, tracking, traffic, questionDocs] = await Promise.all([
-    uniqueAnalyticsVisitors(target.boardId,from,target.cardId), readAnalyticsActivity(target.boardId,range,audience,target.cardId), trackingRef(target.boardId).get(),
+    uniqueAnalyticsVisitors(target.boardId,from,target.cardId,audience,range.to), readAnalyticsActivity(target.boardId,range,audience,target.cardId), trackingRef(target.boardId).get(),
     allAnalyticsDocs(db.collection('board_analytics_daily_shards').where('board_id','==',target.boardId).where('day','>=',from).orderBy('day')),
     target.canReadTranscripts && audience !== 'internal' ? allAnalyticsDocs(questionsCollection.where('board_id','==',target.boardId).where('card_id','==',target.cardId).where('day','>=',from).orderBy('day')) : Promise.resolve([]),
   ]);
@@ -299,13 +298,14 @@ export const getCardAnalytics = onCall({ region:'us-central1', cors:true, timeou
   }));
   const questionCounts = new Map<string, { question:string; count:number }>();
   for (const doc of questionDocs) { const q=doc.data(); if(q.card_id!==target.cardId || q.atlas_id!==target.atlasId)continue; const previous=questionCounts.get(q.question_key); questionCounts.set(q.question_key,{question:q.question,count:(previous?.count||0)+(Number(q.count)||0)}); }
-  const chatting = rows.knownVisitors;
+  const chatting = rows.audienceVisitors;
+  const scopedTraffic = traffic.filter(doc=>includesAudience(audience,doc.data().internal===true) && doc.data().day<=range.to);
   const cardVisitors = new Set([...visitors,...chatting]);
   return { audience, activity: {totals:rows.totals,daily:rows.daily,knownParticipants:rows.knownParticipants.size,unverifiedVoice:rows.unverifiedVoice,verifiedAt:rows.verifiedAt}, board:{id:target.boardId,title:target.board.title||'Untitled board',customSlug:target.board.custom_slug||''}, card:{id:target.cardId,title:target.card.title||'Untitled card', talking:!!target.atlasId},
     popularQuestions:[...questionCounts.values()].sort((a,b)=>b.count-a.count || a.question.localeCompare(b.question)).slice(0,10),
-    range:{days,from,to:range.to}, trackingStartedAt:tracking.data()?.started_at?.toDate().toISOString()||null,
-    opens:traffic.reduce((sum,d)=>{const c=d.data().cards?.[target.cardId];return sum+(Number(c?.card_opens)||0)+(Number(c?.talking_card_opens)||0);},0),
-    outboundClicks:traffic.reduce((sum,d)=>sum+(Number(d.data().cards?.[target.cardId]?.outbound_clicks)||0),0),
+    range:{days,from,to:range.to}, trackingStartedAt:trafficStartedAt(tracking.data(),audience),internalTrackingStartedAt:tracking.data()?.internal_started_at?.toDate().toISOString()||null,
+    opens:scopedTraffic.reduce((sum,d)=>{const c=d.data().cards?.[target.cardId];return sum+(Number(c?.card_opens)||0)+(Number(c?.talking_card_opens)||0);},0),
+    outboundClicks:scopedTraffic.reduce((sum,d)=>sum+(Number(d.data().cards?.[target.cardId]?.outbound_clicks)||0),0),
     canViewBoardAnalytics:target.canViewBoardAnalytics, canReadTranscripts:target.canReadTranscripts, visitors:cardVisitors.size, visitorsWhoChatted:chatting.size,
     conversations:conversations.map(({visitorKey,participantKey,atlasId,transcriptId,...c})=>({...c, firstQuestion: c.canReadTranscript ? c.firstQuestion : ''})),
     pendingVoice:rows.pendingVoice,

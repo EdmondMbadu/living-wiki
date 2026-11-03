@@ -19617,6 +19617,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     this.stackFrameIndex.set(frameIndex);
     this.stackCardPhotoIndex.set(0);
+    this.boardAnalytics.trackCardOpen(card.id);
     if (this.isTalkingCard(card)) {
       this.stackTourNarrationConsent.set(false);
       this.stackNarrationNeedsGesture.set(false);
@@ -22973,6 +22974,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const selectedId = this.selectedBoardId();
     if (selectedId === requestedRouteKey || selectedId === storedRouteBoardId) {
       this.selectedBoardId.set(board.id);
+      this.boardAnalytics.startBoardSession({boardId:board.id,boardTitle:board.title,customSlug:board.customSlug||'',
+        visibility:board.visibility,ownerUserId:board.ownerUserId,currentUserId:this.authService.uid()||'',requestedRouteKey});
     }
   }
 

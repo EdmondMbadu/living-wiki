@@ -73,6 +73,7 @@ export type BoardInsights = {
     talkingCardVoiceEnds?: number;
   }>;
   trackingStartedAt?: string | null;
+  internalTrackingStartedAt?: string | null;
   lastUpdatedAt: string;
   definitions: { uniqueVisitors: string; engagedVisits: string };
 };
@@ -131,6 +132,7 @@ export class BoardAnalyticsService {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly functions: Functions | null = this.isBrowser ? getFirebaseFunctions() : null;
   private fallbackVisitorId = '';
+  private readonly pendingWrites = new Set<Promise<unknown>>();
   visitorId(): string {
     if (!this.isBrowser) return '';
     return this.fallbackVisitorId ||= this.clientId('localStorage', 'lw_board_analytics_visitor');
@@ -138,8 +140,6 @@ export class BoardAnalyticsService {
   private current: BoardAnalyticsContext | null = null;
   private engagementTimer: ReturnType<typeof setTimeout> | null = null;
   private engagementRecorded = false;
-  private lastViewBoardId = '';
-  private lastViewAt = 0;
 
   startBoardSession(input: {
     boardId: string;
@@ -150,11 +150,7 @@ export class BoardAnalyticsService {
     currentUserId: string;
     requestedRouteKey: string;
   }): void {
-    if (!this.isBrowser || !this.functions || !input.boardId || !isLinkReadableVisibility(input.visibility)) {
-      this.stopBoardSession();
-      return;
-    }
-    if (input.currentUserId && input.currentUserId === input.ownerUserId) {
+    if (!this.isBrowser || !this.functions || !input.boardId || (!isLinkReadableVisibility(input.visibility) && !input.currentUserId)) {
       this.stopBoardSession();
       return;
     }
@@ -183,12 +179,7 @@ export class BoardAnalyticsService {
     };
     this.engagementRecorded = false;
 
-    const now = Date.now();
-    if (this.lastViewBoardId !== input.boardId || now - this.lastViewAt > 4_000) {
-      this.lastViewBoardId = input.boardId;
-      this.lastViewAt = now;
-      this.record('board_view');
-    }
+    this.record('board_view');
     this.engagementTimer = setTimeout(() => this.recordEngagementOnce(), 10_000);
   }
 
@@ -228,8 +219,16 @@ export class BoardAnalyticsService {
     this.record(eventType, { cardId });
   }
 
+  async flush(): Promise<void> {
+    if (!this.pendingWrites.size) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try { await Promise.race([Promise.allSettled([...this.pendingWrites]), new Promise<void>(resolve => {timer=setTimeout(resolve,2000);})]); }
+    finally {if(timer)clearTimeout(timer);}
+  }
+
   async getInsights(boardId: string, days: BoardInsightsRange, audience:AnalyticsAudience='all'): Promise<BoardInsights> {
     if (!this.functions) throw new Error('Board insights are not available on this device.');
+    await this.flush();
     const callable = httpsCallable<{ boardId: string; days: number; audience:AnalyticsAudience }, BoardInsights>(
       this.functions,
       'getBoardInsights',
@@ -266,24 +265,16 @@ export class BoardAnalyticsService {
       referrer: context.referrer,
       ...extra,
     };
-    const callable = httpsCallable<typeof payload, { accepted?: boolean }>(
-      this.functions,
-      'recordBoardAnalyticsEvent',
-    );
-    void callable(payload).catch(() => undefined);
-    if (mirror) {
-      void getFirebaseAnalytics().then((analytics) => {
-        if (!analytics) return;
-        logEvent(analytics, eventType, {
-          board_id: context.boardId,
-          board_slug: context.customSlug,
-          entry_route: context.entryRoute,
-          card_id: extra.cardId ?? '',
-          traffic_source: context.utmSource || 'referral',
-          campaign: context.utmCampaign,
-        });
-      }).catch(() => undefined);
-    }
+    const callable = httpsCallable<typeof payload, { accepted?: boolean; internal?: boolean }>(this.functions,'recordBoardAnalyticsEvent');
+    const write=callable(payload).then(async result=>{
+      if(!mirror || !result.data.accepted || result.data.internal)return;
+      const analytics=await getFirebaseAnalytics();
+      if(analytics)logEvent(analytics,eventType,{board_id:context.boardId,board_slug:context.customSlug,entry_route:context.entryRoute,
+        card_id:extra.cardId??'',traffic_source:context.utmSource||'referral',campaign:context.utmCampaign,
+        traffic_audience:result.data.internal?'internal':'visitors'});
+    });
+    this.pendingWrites.add(write);
+    void write.finally(()=>this.pendingWrites.delete(write)).catch(()=>undefined);
   }
 
   private clientId(storageName: 'localStorage' | 'sessionStorage', key: string): string {

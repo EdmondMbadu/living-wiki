@@ -874,3 +874,5 @@ td a {
 .analytics-tabs {display:flex;gap:20px;border-bottom:1px solid var(--pa-line);margin-bottom:24px;}
 .analytics-tabs a {padding:12px 14px;color:var(--pa-muted);font-size:14px;text-decoration:none;border-bottom:2px solid transparent;}
 .analytics-tabs a.active {color:var(--pa-green);border-color:var(--pa-green);font-weight:650;}
+
+.traffic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:18px 0}@media(max-width:600px){.traffic-grid{grid-template-columns:1fr}}

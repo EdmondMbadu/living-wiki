@@ -1,3 +1,4 @@
+import { platformTraffic } from './analytics-traffic';
 import { analyticsAudience, includesAudience } from './analytics-activity';
 import { createHash, randomUUID } from 'node:crypto';
 import { FieldValue, Timestamp, type Transaction } from 'firebase-admin/firestore';
@@ -1026,11 +1027,12 @@ export const getPlatformAnalytics = onCall(
     }
     let report = cached && cached.until > Date.now() ? cached.value : null;
     if (!report) {
-      const [inv, docs, statuses, creations] = await Promise.all([
+      const [inv, docs, statuses, creations, traffic] = await Promise.all([
         inventorySnapshot(),
         readAll(daily.where('day', '>=', dates.from).where('day', '<=', dates.to).orderBy('day')),
         readAll(pending.orderBy('__name__'), 20000),
         state.boardCreationsReady ? creationSnapshot() : Promise.resolve(null),
+        platformTraffic(dates.from, dates.to, dates.audience),
       ]);
       const empty = () => ({
         conversations: 0,
@@ -1104,7 +1106,7 @@ export const getPlatformAnalytics = onCall(
         preparing: false,
         inventory: inv.totals,
         inventoryRecords: inv.records,
-        totals: { ...totals, activeCards: activeCards.size },
+        totals: { ...totals, ...traffic, activeCards: activeCards.size },
         series: [...series.values()],
         boardCreation: creations
           ? platformBoardCreationSeries(creations, dates)

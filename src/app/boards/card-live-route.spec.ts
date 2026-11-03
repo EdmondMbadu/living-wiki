@@ -11,6 +11,7 @@ describe('shared card Live route', () => {
       { kind: 'closing' },
     ];
     Object.assign(component, {
+      boardAnalytics: {trackCardOpen:jasmine.createSpy('trackCardOpen')},
       requestedCardId: signal(cardId),
       selectedBoard: () => board,
       boardRouteLoadState: signal({ requestId: 1, routeKey: 'board', complete: true }),
@@ -52,6 +53,7 @@ describe('shared card Live route', () => {
 
     component.syncRequestedCardRoute();
     expect(component.startStackPlayback).toHaveBeenCalledTimes(1);
+    expect(component.boardAnalytics.trackCardOpen).toHaveBeenCalledOnceWith('second');
   });
 
   it('unlocks and starts the same card when the visitor taps Play', async () => {
@@ -83,6 +85,7 @@ describe('shared card Live route', () => {
     expect(component.stackTourNarrationConsent()).toBeFalse();
     expect(component.stackNarrationNeedsGesture()).toBeFalse();
     expect(component.startStackPlayback).not.toHaveBeenCalled();
+    expect(component.boardAnalytics.trackCardOpen).toHaveBeenCalledOnceWith('talking');
   });
 
   it('leaves cards without Live narration in the focused card view', () => {

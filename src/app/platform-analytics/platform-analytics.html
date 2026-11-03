@@ -132,7 +132,7 @@
                   </button>
                 }
               </div>
-              <label class="internal-toggle"><span i18n>Conversation audience</span><select [value]="audience()" (change)="selectAudience($any($event.target).value)" aria-label="Conversation audience" i18n-aria-label>@for(option of audiences;track option.value){<option [value]="option.value">{{option.label}}</option>}</select></label>
+              <label class="internal-toggle"><span i18n>Activity audience</span><select [value]="audience()" (change)="selectAudience($any($event.target).value)" aria-label="Activity audience" i18n-aria-label>@for(option of audiences;track option.value){<option [value]="option.value">{{option.label}}</option>}</select></label>
             </div>
           </div>
           <div class="date-controls">
@@ -254,6 +254,11 @@
               is not shown as measured zero.
             </p>
           }
+          <div class="traffic-grid">
+            <article class="platform-panel usage-metric"><span class="material-symbols-outlined" aria-hidden="true">visibility</span><div><small i18n>Board views</small><strong>{{totals()?.views || 0 | number}}</strong><p i18n>Successful board loads in the selected audience</p></div></article>
+            <article class="platform-panel usage-metric"><span class="material-symbols-outlined" aria-hidden="true">touch_app</span><div><small i18n>Card opens</small><strong>{{totals()?.cardOpens || 0 | number}}</strong><p i18n>Content and conversation opens</p></div></article>
+          </div>
+          <p class="coverage-note" i18n>Earlier owner/admin views were not recorded. All activity now includes these visits; historical view counts cannot be reconstructed from conversations.</p>
           <div class="usage-grid">
             <article class="platform-panel usage-metric">
               <span class="material-symbols-outlined" aria-hidden="true">call</span>
