@@ -178,6 +178,23 @@
     ],
     "headers": [
       {
+        "source": "/{,fr/,ja/,pt/,es/,de/,zh/,it/,ko/,ar/,hi/,ru/}reports{,/**}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-store"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "no-referrer"
+          },
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex, nofollow"
+          }
+        ]
+      },
+      {
         "source": "/{,fr/,ja/,pt/,es/,de/,zh/,it/,ko/,ar/,hi/,ru/}notifications{,/**}",
         "headers": [
           {

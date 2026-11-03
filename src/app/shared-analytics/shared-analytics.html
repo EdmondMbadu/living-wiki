@@ -1,0 +1,31 @@
+<div class="shared-report">
+  <header><strong>LivingWiki</strong><span i18n>Read-only analytics report</span><app-language-switcher /><app-theme-toggle /></header>
+  <main>
+    @if(loading()){<p role="status" i18n>Loading analytics report…</p>}
+    @if(error()){<section class="unavailable" role="alert"><h1 i18n>Report unavailable</h1><p>{{error()}}</p></section>}
+    @if(report();as r){
+      <section class="heading"><p class="eyebrow" i18n>Board analytics</p><h1>{{r.board.title}}</h1>
+        @if(r.board.publicUrl){<a class="board-url" [href]="r.board.publicUrl" target="_blank" rel="noopener noreferrer">{{r.board.publicUrl}}</a>}
+        <p>{{r.range.from | date:'mediumDate':'UTC'}} – {{r.range.to | date:'mediumDate':'UTC'}} UTC · <strong>{{audience()}}</strong></p>
+        <p i18n>Snapshot generated {{r.generatedAt | date:'medium':'UTC'}} UTC. This report does not update automatically.</p>
+      </section>
+      <section class="metrics" aria-label="Report metrics" i18n-aria-label>
+        <article><small i18n>Visitor board views</small><strong>{{r.totals.views | number}}</strong></article>
+        <article><small i18n>Unique visitors</small><strong>@if(!r.trackingStartedAt && r.totals.views>0){<span i18n>Not recorded</span>}@else{<span>{{r.totals.uniqueVisitors | number}}</span>}</strong></article>
+        <article><small i18n>Conversations</small><strong>{{r.totals.conversations | number}}</strong><span i18n>{{r.totals.voice}} voice · {{r.totals.text}} text</span></article>
+        <article><small i18n>Verified voice minutes</small><strong>@if(voiceTime()===null){<span i18n>Not recorded</span>}@else{<span>{{voiceTime() | number:'1.0-2'}}</span>}</strong></article>
+      </section>
+      <section class="status"><p i18n>Visitor traffic excludes owner/admin activity. Conversation totals follow the audience selected above.</p><p i18n>Unique visitors represent tracked browsers, not individual people. Voice time excludes unverified and unknown durations.</p>
+        @if(r.status.partial){<p i18n>Historical coverage is incomplete. Only recorded activity is included.</p>}
+        <p i18n>{{r.status.pendingVoice}} pending voice sessions · {{r.status.unverifiedVoice}} unverified sessions · {{r.totals.unknownDurations}} calls with unknown duration</p>
+        @if(r.totals.knownParticipants!==undefined){<p i18n>Known participants: {{r.totals.knownParticipants}}. Accounts or anonymous sessions are not a count of individual people.</p>}
+        <p i18n>{{r.totals.unattributedConversations}} conversations without a recorded browser identity. Unknown identities are not counted as unique visitors.</p>
+        <p i18n>Transcripts, questions, emails and visitor identities are not included in shared reports.</p>
+        @if(r.verifiedAt){<p i18n>Last verified activity: {{r.verifiedAt | date:'medium':'UTC'}} UTC</p>}
+      </section>
+      <section class="panel"><h2 i18n>Activity over time</h2><div class="table-wrap"><table><thead><tr><th i18n>Date (UTC)</th><th i18n>Visitor views</th><th i18n>Conversations</th><th i18n>Voice minutes</th></tr></thead><tbody>@for(day of r.daily;track day.day){<tr><td>{{day.day | date:'mediumDate':'UTC'}}</td><td>{{day.views | number}}</td><td>{{day.conversations | number}}</td><td>{{day.seconds/60 | number:'1.0-2'}}</td></tr>}</tbody></table></div></section>
+      <section class="panel"><h2 i18n>Card activity</h2><p i18n>{{r.shownCards}} of {{r.totalCards}} visible cards shown.</p><div class="table-wrap"><table><thead><tr><th i18n>Card</th><th i18n>Opens</th><th i18n>Conversations</th><th i18n>Outbound clicks</th></tr></thead><tbody>@for(card of r.cards;track $index){<tr><th scope="row">{{card.title}}</th><td>{{card.opens | number}}</td><td>{{card.conversations | number}}</td><td>{{card.outboundClicks | number}}</td></tr>}</tbody></table></div></section>
+      <footer><p i18n>This report link expires {{expiresAt() | date:'medium':'UTC'}} UTC and can be revoked by its owner.</p></footer>
+    }
+  </main>
+</div>

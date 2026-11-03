@@ -1,3 +1,4 @@
+import { analyticsAudience, analyticsRange, readAnalyticsActivity } from './analytics-activity';
 import { isLinkReadableVisibility } from './board-visibility';
 import { createHash } from 'node:crypto';
 import { FieldValue, Timestamp, type DocumentReference } from 'firebase-admin/firestore';
@@ -286,9 +287,8 @@ export const recordBoardAnalyticsEvent = onCall(
   },
 );
 
-export const getBoardInsights = onCall(
-  { region: 'us-central1', timeoutSeconds: 30, memory: '256MiB', cors: true },
-  async (request) => {
+export async function buildBoardInsights(request: {auth?: {uid: string}; data?: any}) {
+
     const userId = request.auth?.uid;
     if (!userId) throw new HttpsError('unauthenticated', 'Sign in to view board insights.');
     const boardId = cleanText(request.data?.boardId, 180);
@@ -307,7 +307,9 @@ export const getBoardInsights = onCall(
       throw new HttpsError('permission-denied', 'Only the board owner can view these insights.');
     }
 
-    const dateKeys = analyticsDateKeys(days);
+    const selectedRange = analyticsRange(request.data || {});
+    const audience = analyticsAudience(request.data?.audience);
+    const dateKeys = selectedRange.dates;
     const references = dateKeys.flatMap((day) =>
       Array.from({ length: BOARD_ANALYTICS_SHARD_COUNT }, (_, shard) =>
         db.collection('board_analytics_daily_shards').doc(`${boardId}__${day}__${shard}`)));
@@ -415,11 +417,11 @@ export const getBoardInsights = onCall(
       talkingCardVoiceEnds: 0,
     });
     const boardCards = flattenAnalyticsCards(board['cards'], true);
-    const [visitors, conversations, tracking] = await Promise.all([uniqueAnalyticsVisitors(boardId, dateKeys[0]), analyticsConversations(boardId, dateKeys[0]), trackingRef(boardId).get()]);
-    for (const conversation of conversations) visitors.add(String(conversation.data()['visitor_hash']));
+    const [visitors, conversations, tracking] = await Promise.all([uniqueAnalyticsVisitors(boardId, dateKeys[0]), readAnalyticsActivity(boardId, selectedRange, audience), trackingRef(boardId).get()]);
+    for (const visitor of conversations.knownVisitors) visitors.add(visitor);
     totals.uniqueVisitors = visitors.size;
     const conversationCounts = new Map<string, number>();
-    for (const doc of conversations) { const id = String(doc.data()['card_id']); conversationCounts.set(id, (conversationCounts.get(id) || 0) + 1); }
+    for (const row of conversations.conversations) { if (row.startedAt.slice(0,10) < dateKeys[0]) continue; const id = row.cardId; conversationCounts.set(id, (conversationCounts.get(id) || 0) + 1); }
     for (const card of boardCards) if (!cards.has(card.id)) cards.set(card.id, { opens: 0, outboundClicks: 0, talkingCardOpens: 0, talkingCardMessages: 0, talkingCardVoiceStarts: 0, talkingCardVoiceEnds: 0 });
     const cardTitles = new Map(boardCards.map((card) => [cleanText(card['id'], 180), cleanText(card['title'], 120)]));
 
@@ -430,8 +432,10 @@ export const getBoardInsights = onCall(
         customSlug: cleanText(board['custom_slug'], 60),
         visibility: board['visibility'] === 'unlisted' ? 'unlisted' : board['visibility'] === 'public' ? 'public' : 'private',
       },
-      range: { days, from: dateKeys[0], to: dateKeys.at(-1) },
-      totals: { ...totals, conversations: conversations.length },
+      range: { days:selectedRange.days, from: dateKeys[0], to: dateKeys.at(-1)! },
+      audience,
+      activity: {totals:conversations.totals,daily:conversations.daily,pendingVoice:conversations.pendingVoice,unverifiedVoice:conversations.unverifiedVoice,knownParticipants:conversations.knownParticipants.size,verifiedAt:conversations.verifiedAt},
+      totals: { ...totals, conversations: conversations.totals.conversations },
       trackingStartedAt: tracking.data()?.['started_at']?.toDate().toISOString() || null,
       daily: [...daily.values()],
       sources: Object.entries(sources)
@@ -453,5 +457,5 @@ export const getBoardInsights = onCall(
         engagedVisits: 'Visits with at least ten seconds of attention or a board interaction.',
       },
     };
-  },
-);
+}
+export const getBoardInsights = onCall({ region: 'us-central1', timeoutSeconds: 60, memory: '512MiB', cors: true }, buildBoardInsights);

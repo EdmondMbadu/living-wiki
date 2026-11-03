@@ -1,3 +1,4 @@
+import { analyticsAudiences, type AnalyticsAudience } from '../analytics-activity';
 import { PicamoAnalyticsComponent } from './picamo-analytics';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
@@ -59,7 +60,9 @@ export class PlatformAnalyticsComponent {
   readonly to = signal(new Date().toISOString().slice(0, 10));
   readonly today = new Date().toISOString().slice(0, 10);
   readonly group = signal('day');
-  readonly internal = signal(false);
+  readonly internal = signal(true);
+  readonly audience = signal<AnalyticsAudience>('all');
+  readonly audiences = analyticsAudiences;
   readonly view = signal('cards');
   readonly search = signal('');
   readonly page = signal(1);
@@ -79,6 +82,7 @@ export class PlatformAnalyticsComponent {
     to: this.to(),
     group: this.group(),
     includeInternal: this.internal(),
+    audience:this.audience(),
     view: this.view(),
     search: this.search(),
     page: this.page(),
@@ -179,8 +183,10 @@ export class PlatformAnalyticsComponent {
     this.search.set('');
     void this.load();
   }
+  selectAudience(value:AnalyticsAudience):void{this.audience.set(value);this.internal.set(value!=='visitors');this.page.set(1);void this.load();}
   setInternal(value: boolean): void {
     this.internal.set(value);
+    this.audience.set(value?'all':'visitors');
     this.page.set(1);
     void this.load();
   }
@@ -289,6 +295,7 @@ export class PlatformAnalyticsComponent {
         $localize`Voice seconds`,
         $localize`From (UTC)`,
         $localize`To (UTC)`,
+        $localize`Conversation audience`,
       ];
       const csv = platformCsv([
         head,
@@ -307,6 +314,7 @@ export class PlatformAnalyticsComponent {
             : r.seconds,
           filters.from,
           filters.to,
+          filters.audience || (filters.includeInternal ? 'all' : 'visitors'),
         ]),
       ]);
       const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));

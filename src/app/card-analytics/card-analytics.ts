@@ -1,3 +1,4 @@
+import { analyticsAudiences, type AnalyticsAudience } from '../analytics-activity';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, DestroyRef, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -33,6 +34,8 @@ export class CardAnalyticsComponent {
   private readonly title = inject(Title);
   private readonly destroyRef = inject(DestroyRef);
   readonly drawer = viewChild<ElementRef<HTMLDialogElement>>('drawer');
+  readonly audience = signal<AnalyticsAudience>('all');
+  readonly audiences = analyticsAudiences;
   readonly boardId = signal(''); readonly cardId = signal(''); readonly days = signal(30);
   readonly report = signal<CardAnalyticsReport | null>(null);
   readonly loading = signal(true); readonly refreshing = signal(false); readonly error = signal('');
@@ -43,7 +46,7 @@ export class CardAnalyticsComponent {
   readonly downloading = signal(false);
   readonly rangeOptions = [{ days:7,label:$localize`7 days` },{ days:30,label:$localize`30 days` },{ days:90,label:$localize`90 days` }];
   readonly modeOptions = [{value:'all',label:$localize`All`},{value:'text',label:$localize`Text`},{value:'voice',label:$localize`Voice`}];
-  readonly boardPath = computed(() => ['/boards', this.boardId()]);
+  readonly boardPath = computed(() => ['/boards', this.report()?.board.customSlug || this.boardId()]);
   readonly boardAnalyticsPath = computed(() => ['/manage/boards',this.boardId(),'analytics']);
   readonly qaPath = computed(() => ['/manage/boards',this.boardId(),'cards',this.cardId(),'qa']);
   readonly rows = computed(() => {
@@ -60,6 +63,12 @@ export class CardAnalyticsComponent {
     return !!report && report.opens > 0 && report.visitors === 0;
   });
   readonly chatRate = computed(() => { const r = this.report(); return r?.visitors ? (r.visitorsWhoChatted/r.visitors)*100 : 0; });
+  readonly verifiedSeconds = computed(()=>{
+    const totals=this.report()?.activity?.totals;
+    if(totals)return totals.voice>0&&totals.unknownDurations===totals.voice&&totals.seconds===0?null:totals.seconds;
+    const voice=this.report()?.conversations.filter(c=>c.mode==='voice'&&c.durationSeconds!==null)??[];
+    return voice.length?voice.reduce((sum,c)=>sum+c.durationSeconds!,0):null;
+  });
   readonly average = computed(() => {
     const rows = this.report()?.conversations.filter(c=>c.durationSeconds !== null) ?? [];
     return rows.length ? rows.reduce((n,c)=>n+c.durationSeconds!,0)/rows.length : null;
@@ -81,11 +90,12 @@ export class CardAnalyticsComponent {
   }
   async load(): Promise<void> {
     const sequence=++this.loadSequence; this.report() ? this.refreshing.set(true) : this.loading.set(true); this.error.set('');
-    try { await this.auth.waitForReady(); const data=await this.api.report(this.boardId(),this.cardId(),this.days());
+    try { await this.auth.waitForReady(); const data=await this.api.report(this.boardId(),this.cardId(),this.days(),this.audience());
       if(sequence!==this.loadSequence)return; this.report.set(data);this.page.set(1);this.title.setTitle(`${data.card.title} · Card analytics | LivingWiki`);
     } catch(e){if(sequence===this.loadSequence)this.error.set(this.friendlyError(e));}
     finally{if(sequence===this.loadSequence){this.loading.set(false);this.refreshing.set(false);}}
   }
+  selectAudience(value:AnalyticsAudience):void{this.closeDetails();this.audience.set(value);void this.load();}
   selectRange(days:number):void {if(days===this.days())return;this.closeDetails();this.days.set(days);this.report.set(null);void this.load();}
   setQuery(value:string):void{this.query.set(value);this.page.set(1);}
   setMode(value:string):void{this.mode.set(value);this.page.set(1);}
@@ -106,8 +116,8 @@ export class CardAnalyticsComponent {
   }
   closeDetails():void{++this.detailSequence;this.drawer()?.nativeElement.close();this.selected.set(null);this.detailLoading.set(false);this.detailError.set('');}
   downloadCsv():void{
-    const rows=this.rows(); const headings=[$localize`Started (UTC)`,$localize`Visitor`,$localize`Mode`,$localize`Duration (seconds)`,$localize`Duration type`,$localize`Questions`,$localize`Status`,$localize`First question`];
-    this.download(`card-analytics-${this.cardId()}-${this.days()}days.csv`,analyticsCsv([headings,...rows.map(c=>[c.startedAt,c.visitor,c.mode,c.durationSeconds,c.durationKind,c.questions,c.status,c.firstQuestion])]),'text/csv;charset=utf-8');
+    const rows=this.rows(); const headings=[$localize`Conversation audience`,$localize`Internal`,$localize`Started (UTC)`,$localize`Visitor`,$localize`Mode`,$localize`Duration (seconds)`,$localize`Duration type`,$localize`Questions`,$localize`Status`,$localize`First question`];
+    this.download(`card-analytics-${this.cardId()}-${this.days()}days.csv`,analyticsCsv([headings,...rows.map(c=>[this.audience(),c.internal===true,c.startedAt,c.visitor,c.mode,c.durationSeconds,c.durationKind,c.questions,c.status,c.firstQuestion])]),'text/csv;charset=utf-8');
   }
   async downloadTranscript():Promise<void>{
     const row=this.selected();if(!row||this.downloading())return;this.downloading.set(true);

@@ -411,6 +411,10 @@
     "source": "{$INTERPOLATION} · Focused",
     "file": "src/app/boards/boards.html"
   },
+  "1122837112490919495": {
+    "source": "Reconcile verified calls",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "1124483518753573659": {
     "source": "{count} of 5 anonymous questions remaining.",
     "file": "src/app/chat/chat.ts"
@@ -1763,6 +1767,10 @@
     "source": "{$START_TAG_SPAN}play_circle{$CLOSE_TAG_SPAN} Full playback is handled by Spotify when supported by your browser. ",
     "file": "src/app/boards/boards.html"
   },
+  "1514312389523594371": {
+    "source": "Board URL",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "151445971223881996": {
     "source": "Tour address",
     "file": "src/app/boards/boards.html"
@@ -2771,6 +2779,10 @@
     "source": "PDF, DOC/DOCX, PPT/PPTX, TXT, PNG/JPG, and supported Google Drive files",
     "file": "src/app/landing/landing.ts"
   },
+  "1812483733665880320": {
+    "source": "Conversation activity",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "18130150280455712": {
     "source": "Team-wide engagement reporting",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -2899,10 +2911,6 @@
     "source": "Opening Spotify…",
     "file": "src/app/spotify-player/spotify-player.ts"
   },
-  "1860501119422454013": {
-    "source": "Owner and administrator activity, QA tests, and visits to analytics pages are excluded.",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "1863311581510100043": {
     "source": "from your saved threads.",
     "file": "src/app/chat/chat.ts"
@@ -3030,6 +3038,10 @@
   "1898671547408147666": {
     "source": "Use my current location",
     "file": "src/app/boards/boards.ts"
+  },
+  "1901706115505233423": {
+    "source": "All activity",
+    "file": "src/app/analytics-activity.ts"
   },
   "1901785958081891430": {
     "source": "Partial period",
@@ -3166,6 +3178,10 @@
   "1942764235305429174": {
     "source": "1 request every 1.1 seconds between articles.",
     "file": "src/app/web-scraper/web-scraper.html"
+  },
+  "1942973492084736121": {
+    "source": "Create report link",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
   },
   "1943575092709699472": {
     "source": "Adding to this board",
@@ -4283,6 +4299,10 @@
     "source": "What is the LivingWiki platform?",
     "file": "src/app/marketing/marketing.html"
   },
+  "2296910706858050590": {
+    "source": "Snapshot generated {$INTERPOLATION} UTC. This report does not update automatically.",
+    "file": "src/app/shared-analytics/shared-analytics.html"
+  },
   "2299187798995800780": {
     "source": "Chat",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -4290,6 +4310,10 @@
   "2300208273493739830": {
     "source": "This will permanently remove",
     "file": "src/app/chat/chat.ts"
+  },
+  "2300379864208108065": {
+    "source": "Unique visitors represent tracked browsers, not individual people. Voice time excludes unverified and unknown durations.",
+    "file": "src/app/shared-analytics/shared-analytics.html"
   },
   "2301509444618804678": {
     "source": "Availability could not be checked. Try again.",
@@ -4314,6 +4338,10 @@
   "2311310368004263911": {
     "source": "Board description",
     "file": "src/app/boards/boards.html"
+  },
+  "231173496467443303": {
+    "source": "Report unavailable",
+    "file": "src/app/shared-analytics/shared-analytics.html"
   },
   "2312076048705890765": {
     "source": "DONE",
@@ -4582,6 +4610,10 @@
   "2379717302489613944": {
     "source": "Facility",
     "file": "src/app/fence-line/fence-line.html"
+  },
+  "2381017921729771860": {
+    "source": "This report link has expired or is no longer available.",
+    "file": "src/app/shared-analytics/shared-analytics.ts"
   },
   "2383411264307031004": {
     "source": "Adding to shared board",
@@ -4867,6 +4899,10 @@
     "source": "People per square kilometer",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "2459377112237611537": {
+    "source": "Share report",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
+  },
   "2466635436899617454": {
     "source": "Snapshot refreshed {$INTERPOLATION}",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -4902,6 +4938,10 @@
   "2477074364911363345": {
     "source": " Upload a CSV, preview rows, skip duplicates, then create all valid city Wikis with internet answers enabled. ",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "2477641917038876733": {
+    "source": "Last verified activity: {$INTERPOLATION} UTC",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "2479680894837759626": {
     "source": " We need to verify your email before granting access to the workspace. {$START_BLOCK_IF}{$START_TAG_SPAN} {$INTERPOLATION}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
@@ -5127,10 +5167,6 @@
     "source": "Previews are temporary. Select one and save it to add the voice to this wiki.",
     "file": "src/app/atlas-persona/atlas-persona.html"
   },
-  "2555504081689918106": {
-    "source": "Average conversation time",
-    "file": "src/app/card-analytics/card-analytics.html"
-  },
   "2555853257286023739": {
     "source": " Claim your business {$START_TAG_SPAN}arrow_forward{$CLOSE_TAG_SPAN}",
     "file": "src/app/business/business.html"
@@ -5302,6 +5338,10 @@
   "2601202843031151194": {
     "source": " {$INTERPOLATION} voice calls have no recorded duration. Their time is excluded. ",
     "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
+  "2601494928583976703": {
+    "source": "Share a read-only analytics report",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
   },
   "2602773901491715295": {
     "source": "Captions",
@@ -6459,10 +6499,6 @@
     "source": "Searching knowledge base",
     "file": "src/app/chat/chat.ts"
   },
-  "2976680874064921166": {
-    "source": "Private to authorized administrators. Conversations are retained for 90 days.",
-    "file": "src/app/card-analytics/card-analytics.html"
-  },
   "2976754607591419703": {
     "source": "Preview, deduplicate, and create",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -6498,6 +6534,10 @@
   "2984929693845716660": {
     "source": "Give the home a voice",
     "file": "src/app/boards/real-estate-wizard-source.html"
+  },
+  "2985534960228696982": {
+    "source": "Visitor traffic excludes owner/admin activity. Conversation totals follow the audience selected above.",
+    "file": "src/app/shared-analytics/shared-analytics.html"
   },
   "2987489971420550018": {
     "source": "Pause preview",
@@ -7195,6 +7235,10 @@
     "source": "{$START_TAG_SPAN}dashboard_customize{$CLOSE_TAG_SPAN} Copy board link",
     "file": "src/app/boards/boards.html"
   },
+  "3174148660633456541": {
+    "source": "Visitors only",
+    "file": "src/app/analytics-activity.ts"
+  },
   "3175731741443317275": {
     "source": " Reset accent ",
     "file": "src/app/teams/teams.html"
@@ -7831,6 +7875,10 @@
     "source": "Loading your voices",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
+  "3355073437459800390": {
+    "source": "Loading analytics report…",
+    "file": "src/app/shared-analytics/shared-analytics.html"
+  },
   "3358393674244870064": {
     "source": "Name this moment",
     "file": "src/app/boards/boards.html"
@@ -8198,6 +8246,10 @@
   "3453006371871045084": {
     "source": "{$INTERPOLATION} · {$INTERPOLATION_1} verified cards",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
+  },
+  "3453877931780219150": {
+    "source": "Copy report link",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.ts"
   },
   "3455527764862126356": {
     "source": "No cards match that search.",
@@ -8627,6 +8679,10 @@
     "source": "Meet Picamo™",
     "file": "src/app/kiwi/kiwi.ts"
   },
+  "3570806918561889447": {
+    "source": "Card activity",
+    "file": "src/app/shared-analytics/shared-analytics.html"
+  },
   "3573767755137279417": {
     "source": "Start voice mode in {language}",
     "file": "src/app/chat/chat.ts"
@@ -8762,6 +8818,10 @@
   "3612948129173234433": {
     "source": "Cover is current",
     "file": "src/app/boards/boards.ts"
+  },
+  "3613388781465623013": {
+    "source": "No report links have been created.",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
   },
   "3615372081756955189": {
     "source": "This gem needs a confirmed location before it can be shared.",
@@ -9215,6 +9275,10 @@
     "source": " and its source board card",
     "file": "src/app/off-grids/off-grid-editor.ts"
   },
+  "3747009024442184783": {
+    "source": "Preview report",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
+  },
   "3747186763201273460": {
     "source": "Included video sizes",
     "file": "src/app/boards/boards.html"
@@ -9547,6 +9611,10 @@
     "source": "{$INTERPOLATION} live counters",
     "file": "src/app/atlas-landing/atlas-landing.html"
   },
+  "3847243760538568730": {
+    "source": "Verified voice time",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "3850228253492178315": {
     "source": "Incinerator and coal export",
     "file": "src/app/fence-line/fence-line.ts"
@@ -9687,6 +9755,10 @@
     "source": "Search users by name, email, id, role, or provider...",
     "file": "src/app/admin-users/admin-users.html"
   },
+  "3901733599428143571": {
+    "source": "min",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "3904400808763586283": {
     "source": "Environmental Justice Atlas",
     "file": "src/app/public-wiki-catalog.ts"
@@ -9726,6 +9798,10 @@
   "3909861661057489030": {
     "source": "Delete draft…",
     "file": "src/app/boards/boards.html"
+  },
+  "3910187627685356510": {
+    "source": "Conversations matching the selected audience will appear here. Automated QA stays separate.",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "3910326530505852255": {
     "source": "These terms are a practical starting point for using LivingWiki. They are intentionally concise for now and will be refined as the product matures.",
@@ -9795,6 +9871,10 @@
     "source": "Claim business",
     "file": "src/app/profile/profile.html"
   },
+  "3930285244227165765": {
+    "source": "Transcripts, questions, emails and visitor identities are not included in shared reports.",
+    "file": "src/app/shared-analytics/shared-analytics.html"
+  },
   "3931788493945433060": {
     "source": "Close editor",
     "file": "src/app/atlas-manage/atlas-manage.ts"
@@ -9814,6 +9894,10 @@
   "3937586576085001575": {
     "source": "Every agent's own voice, one brand.",
     "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "3937735721127296980": {
+    "source": "Loading report links…",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
   },
   "3937788711652587314": {
     "source": "Add a headline and closing message before saving.",
@@ -11061,7 +11145,7 @@
   },
   "4302656268684881700": {
     "source": "Voice minutes",
-    "file": "src/app/platform-analytics/picamo-analytics.ts"
+    "file": "src/app/shared-analytics/shared-analytics.html"
   },
   "4302912603848458571": {
     "source": "Editing preview",
@@ -11310,6 +11394,10 @@
   "4375565006899694512": {
     "source": "It is live on the shared board now. Everyone viewing this board will receive the new location.",
     "file": "src/app/boards/boards.html"
+  },
+  "4377469142486285033": {
+    "source": "Revoke link",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
   },
   "4379224223006063625": {
     "source": "Duplicate check found an existing pending claim.",
@@ -12223,6 +12311,10 @@
     "source": "Start one personal LivingWiki draft",
     "file": "src/app/pricing/pricing.ts"
   },
+  "464749780222721589": {
+    "source": "Expired",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
+  },
   "4648079201550582996": {
     "source": "Shared thread",
     "file": "src/app/shared-chat/shared-chat.html"
@@ -12351,6 +12443,10 @@
     "source": "Share link + QR code",
     "file": "src/app/talkthrus/talkthrus.html"
   },
+  "4695475139814939737": {
+    "source": "{$INTERPOLATION} pending · {$INTERPOLATION_1} unverified · {$INTERPOLATION_2} unknown durations",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "4697682349001884958": {
     "source": "Close full-screen photo",
     "file": "src/app/boards/boards.html"
@@ -12410,6 +12506,10 @@
   "4709273745320055687": {
     "source": "Your first stop",
     "file": "src/app/boards/boards.html"
+  },
+  "4709588559563403789": {
+    "source": "Conversation audience",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "470985312787558203": {
     "source": "Delete thread",
@@ -12730,6 +12830,10 @@
   "4797026336287705114": {
     "source": "Featured line for the About section, shown prominently on the public page.",
     "file": "src/app/atlas-landing/atlas-landing.html"
+  },
+  "4797548016877222186": {
+    "source": "Verified voice minutes",
+    "file": "src/app/shared-analytics/shared-analytics.html"
   },
   "4797995938757696414": {
     "source": "Historic streets. Neighborhood stories.",
@@ -13103,6 +13207,10 @@
     "source": "Date preset",
     "file": "src/app/platform-analytics/picamo-analytics.html"
   },
+  "4918283805463114251": {
+    "source": "Anyone with the link can view a snapshot of the selected period. Transcripts, questions, emails and visitor identities stay private.",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
+  },
   "4918496402143101585": {
     "source": "Narration needed",
     "file": "src/app/boards/boards.ts"
@@ -13186,6 +13294,10 @@
   "4950746939750253328": {
     "source": "Ask about news, places, jobs, events, and civic life...",
     "file": "src/app/chat/chat.ts"
+  },
+  "4954755800202207764": {
+    "source": "Internal owner/admin activity only. Automated QA stays separate.",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "4955859701308605473": {
     "source": "My Songs",
@@ -13387,10 +13499,6 @@
     "source": "Social Videos Shared",
     "file": "src/app/membership/membership.ts"
   },
-  "5012023302192197160": {
-    "source": "Voice recorded · text estimated",
-    "file": "src/app/card-analytics/card-analytics.html"
-  },
   "5013133429486114776": {
     "source": "Personal onboarding + a direct line to the team",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -13486,6 +13594,10 @@
   "5041475127119195004": {
     "source": "Failed answer requests",
     "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
+  "5042878806248081627": {
+    "source": "Conversation analytics are awaiting provider verification. The server will retry automatically.",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
   },
   "5045572951005571111": {
     "source": "Joined",
@@ -13927,6 +14039,10 @@
     "source": "Agency & Team · {$seats} · payment issue, update the card in Billing",
     "file": "src/app/teams/teams.ts"
   },
+  "5170733273716302998": {
+    "source": "Report links",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
+  },
   "5170990160218179574": {
     "source": "Share page ready",
     "file": "src/app/shared-chat/shared-chat.html"
@@ -14126,6 +14242,10 @@
   "5238347383461558873": {
     "source": "Use photos from listing URL",
     "file": "src/app/boards/listing-photo-source.html"
+  },
+  "5239123133528808132": {
+    "source": "Checked {$PROCESSED} voice sessions; {$UNAVAILABLE} could not be verified. Unknown history has not been estimated.",
+    "file": "src/app/board-insights/board-insights.ts"
   },
   "5240910816467417292": {
     "source": "Recent team activity",
@@ -14399,6 +14519,10 @@
     "source": "Subscribe for weekly updates, or sign in to keep exploring the Philly guide.",
     "file": "src/app/atlas-landing/atlas-landing.html"
   },
+  "5325084306075981980": {
+    "source": "This report link expires {$INTERPOLATION} UTC and can be revoked by its owner.",
+    "file": "src/app/shared-analytics/shared-analytics.html"
+  },
   "5327783398991797788": {
     "source": "No account needed. We use your email only for this plan and its updates.",
     "file": "src/app/boards/boards.html"
@@ -14637,7 +14761,7 @@
   },
   "5382000729195938849": {
     "source": "Data status",
-    "file": "src/app/platform-analytics/platform-analytics.html"
+    "file": "src/app/board-insights/board-insights.html"
   },
   "5385110158604213209": {
     "source": "The waitlist for my city",
@@ -15102,6 +15226,10 @@
   "5537070833438696340": {
     "source": "My Trove · Starfold City",
     "file": "src/app/workspace-navigation/workspace-navigation.ts"
+  },
+  "5537315160624777907": {
+    "source": "Close report sharing",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
   },
   "5538356348478259370": {
     "source": "Choose a story approach",
@@ -15663,6 +15791,10 @@
     "source": "More ",
     "file": "src/app/city-board-collection/city-board-collection.ts"
   },
+  "5684338021331896786": {
+    "source": "Accounts or anonymous sessions, not a count of individual people",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "5685509444368134119": {
     "source": "Any channel not listed above",
     "file": "src/app/board-insights/board-insights.ts"
@@ -15910,10 +16042,6 @@
   "57507222742035991": {
     "source": "{$START_TAG_SPAN}web_asset{$CLOSE_TAG_SPAN} Cover ",
     "file": "src/app/boards/boards.html"
-  },
-  "5756140291442025722": {
-    "source": "Include internal testing",
-    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "5756850866536450016": {
     "source": "Music connection",
@@ -16851,6 +16979,10 @@
     "source": "Answer success",
     "file": "src/app/platform-analytics/picamo-analytics.html"
   },
+  "6027245369620058047": {
+    "source": "Shareable report link",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
+  },
   "6030082786890657600": {
     "source": "New visitor activity will appear here after this analytics release is deployed.",
     "file": "src/app/board-insights/board-insights.html"
@@ -16947,6 +17079,10 @@
     "source": "Transit",
     "file": "src/app/public-wikis/public-wikis.ts"
   },
+  "6055455988311698056": {
+    "source": "Private to authorized administrators. Transcript details are retained for 90 days; verified aggregate metrics remain available.",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "6056311183977942343": {
     "source": "Viewing as a reader",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -17026,6 +17162,10 @@
   "6084408288470946628": {
     "source": "A short, board-level hook",
     "file": "src/app/boards/boards.html"
+  },
+  "6084625812110942835": {
+    "source": "Link expires after",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
   },
   "6084736352831665596": {
     "source": " Explore",
@@ -17174,6 +17314,10 @@
   "6132237254164225843": {
     "source": "Verify Email | LivingWiki",
     "file": "src/app/app.routes.ts"
+  },
+  "6132601400509330919": {
+    "source": "{$INTERPOLATION} pending voice sessions · {$INTERPOLATION_1} unverified sessions · {$INTERPOLATION_2} calls with unknown duration",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "6133447870457934236": {
     "source": "Edit only when this run intentionally differs from an approved bucket.",
@@ -18026,6 +18170,10 @@
   "6371576811194810854": {
     "source": "After",
     "file": "src/app/boards/boards.html"
+  },
+  "637449423095666346": {
+    "source": "Visitor traffic excludes owner/admin activity. Conversation totals follow the selected audience. Automated QA stays separate.",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "6374812789573354793": {
     "source": "Remove stop photo",
@@ -19063,6 +19211,10 @@
     "source": "MP4, MOV, or WebM · Under 100 MB. MP4 works on the widest range of devices.",
     "file": "src/app/boards/talk-drop/talk-drop.html"
   },
+  "6666363386550203543": {
+    "source": "{$INTERPOLATION} of {$INTERPOLATION_1} visible cards shown.",
+    "file": "src/app/shared-analytics/shared-analytics.html"
+  },
   "6667331822763138432": {
     "source": "{$START_TAG_SPAN}delete{$CLOSE_TAG_SPAN} Delete selected ",
     "file": "src/app/boards/boards.html"
@@ -19523,6 +19675,10 @@
     "source": "Posts, pages, and groups",
     "file": "src/app/board-insights/board-insights.ts"
   },
+  "6829053351779252827": {
+    "source": "Report sharing is unavailable. Please try again.",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.ts"
+  },
   "683053614579539412": {
     "source": "Ask {city} anything from your sources.",
     "file": "src/app/chat/chat.ts"
@@ -19707,6 +19863,10 @@
     "source": "LivingWiki automatically organizes your data into a structured system that updates as you learn.",
     "file": "src/app/marketing/marketing.html"
   },
+  "6893915706525272704": {
+    "source": "Visitor board views",
+    "file": "src/app/shared-analytics/shared-analytics.html"
+  },
   "6894803317960403699": {
     "source": " unique visitors, ",
     "file": "src/app/board-insights/board-insights.ts"
@@ -19758,6 +19918,10 @@
   "6910474008263127000": {
     "source": "Stack actions",
     "file": "src/app/boards/boards.html"
+  },
+  "6910645068177103242": {
+    "source": "Known participants: {$INTERPOLATION}. Accounts or anonymous sessions are not a count of individual people.",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "6913187836954058848": {
     "source": "$25 per agent for agents 1–10, $19 for each agent after that. Annual: $250 and $190.",
@@ -20427,6 +20591,10 @@
     "source": "Picamo",
     "file": "src/app/platform-analytics/platform-analytics.html"
   },
+  "7096440230985171865": {
+    "source": "Revoked",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
+  },
   "7098620213960902222": {
     "source": "Video export is not included",
     "file": "src/app/talkthru-billing/talkthru-plan-dialog.ts"
@@ -20605,11 +20773,15 @@
   },
   "7152095234138763013": {
     "source": "30 days",
-    "file": "src/app/board-insights/board-insights.ts"
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
   },
   "715303097939372084": {
     "source": "Checking card images…",
     "file": "src/app/kiwi/kiwi.ts"
+  },
+  "7154353598711126651": {
+    "source": "Internal only",
+    "file": "src/app/analytics-activity.ts"
   },
   "7154465963103124552": {
     "source": "Sushi",
@@ -21039,10 +21211,6 @@
     "source": "The card could not be added.",
     "file": "src/app/boards/boards.ts"
   },
-  "7278130344649094651": {
-    "source": "Distinct browsers since tracking began",
-    "file": "src/app/board-insights/board-insights.html"
-  },
   "7279742675286490461": {
     "source": "Fuller story and flow",
     "file": "src/app/boards/boards.ts"
@@ -21050,6 +21218,10 @@
   "7280139931144204667": {
     "source": "Visitor actions",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
+  "7281756672705441416": {
+    "source": "Copy board URL",
+    "file": "src/app/board-insights/board-insights.ts"
   },
   "7287764725810172146": {
     "source": "Gem collections",
@@ -21403,6 +21575,10 @@
     "source": "{$START_TAG_SPAN}refresh{$CLOSE_TAG_SPAN} Refresh my location ",
     "file": "src/app/boards/boards.html"
   },
+  "7390920912327427243": {
+    "source": "Copy the board URL shown above.",
+    "file": "src/app/board-insights/board-insights.ts"
+  },
   "739391781989434686": {
     "source": "Add photos",
     "file": "src/app/boards/boards.ts"
@@ -21606,6 +21782,10 @@
   "7459237205491783813": {
     "source": "Follow public LivingWiki pages and keep a lightweight local knowledge home.",
     "file": "src/app/pricing/pricing.ts"
+  },
+  "745960983077820805": {
+    "source": "Distinct browsers in the selected period",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "7460126591065098408": {
     "source": "Wait for the photo to finish uploading.",
@@ -22011,6 +22191,10 @@
     "source": "Send recap",
     "file": "src/app/chat/chat.ts"
   },
+  "7584970366915261963": {
+    "source": "Board and report links",
+    "file": "src/app/board-insights/board-insights.html"
+  },
   "7585826646011739428": {
     "source": "Edit",
     "file": "src/app/admin-users/admin-users.html"
@@ -22102,6 +22286,10 @@
   "7613230708816137121": {
     "source": "Your content",
     "file": "src/app/legal/legal.ts"
+  },
+  "7613848541793135105": {
+    "source": "Internal",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "7614019480958666088": {
     "source": "Public LivingWiki boards",
@@ -22779,6 +22967,10 @@
     "source": "Choose boards",
     "file": "src/app/board-collection-create/board-collection-create.html"
   },
+  "781834528037362142": {
+    "source": "Read-only analytics report",
+    "file": "src/app/shared-analytics/shared-analytics.html"
+  },
   "7818565774709897459": {
     "source": " Current tone: {$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN} - {$INTERPOLATION_1} ",
     "file": "src/app/business-claim/business-claim.html"
@@ -22966,6 +23158,10 @@
   "7882010013989109058": {
     "source": "Ingesting document",
     "file": "src/app/library/library.html"
+  },
+  "7882663458657388785": {
+    "source": "Provider-verified voice duration",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "7883085249051559382": {
     "source": "Make card",
@@ -24487,6 +24683,10 @@
     "source": "{$START_TAG_SPAN}edit_note{$CLOSE_TAG_SPAN} Card details ",
     "file": "src/app/boards/boards.html"
   },
+  "8346888002862588199": {
+    "source": "Copy the report link from the field below.",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.ts"
+  },
   "8347011388333417442": {
     "source": "Create a new avatar",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -24538,6 +24738,10 @@
   "8355575292156070625": {
     "source": "Forgot Password | LivingWiki",
     "file": "src/app/app.routes.ts"
+  },
+  "8356815168091389464": {
+    "source": "{$INTERPOLATION} voice · {$INTERPOLATION_1} text",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "8358242905246118175": {
     "source": "Built with human imagination. Powered by Gemini and GPT.",
@@ -24959,6 +25163,10 @@
     "source": "Persona prompt",
     "file": "src/app/atlas-persona/atlas-persona.html"
   },
+  "8489064436841089655": {
+    "source": "Expires:",
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
+  },
   "84891649752772125": {
     "source": "Hide wayfinders",
     "file": "src/app/boards/boards.ts"
@@ -25087,6 +25295,10 @@
     "source": "+ more",
     "file": "src/app/business-claim/business-claim.html"
   },
+  "8530958942092908227": {
+    "source": "Visitor views",
+    "file": "src/app/shared-analytics/shared-analytics.html"
+  },
   "8531977808612981202": {
     "source": "{$START_TAG_SPAN}mail{$CLOSE_TAG_SPAN} Invitations {$START_BLOCK_IF}{$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
     "file": "src/app/teams/teams.html"
@@ -25129,7 +25341,7 @@
   },
   "8542568275115626925": {
     "source": "7 days",
-    "file": "src/app/board-insights/board-insights.ts"
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
   },
   "8545922858081740513": {
     "source": "Realtime voice is ready",
@@ -25146,10 +25358,6 @@
   "854820932183524089": {
     "source": "This badge links directly to the public business chat.",
     "file": "src/app/business-detail/business-edit.html"
-  },
-  "854959281906555205": {
-    "source": "New visitor conversations on this card will appear here. Owner activity and QA tests are excluded.",
-    "file": "src/app/card-analytics/card-analytics.html"
   },
   "8549753242044019923": {
     "source": "Conditions, therapies, medications, crisis resources, and the science of mental health — compiled from clinical literature for accessible understanding.",
@@ -25230,6 +25438,10 @@
   "8579126774460469844": {
     "source": "Load more messages",
     "file": "src/app/card-analytics/card-analytics.html"
+  },
+  "8580851310017676514": {
+    "source": "Known participants",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "8581192205995435394": {
     "source": "Start with blank stories",
@@ -25471,6 +25683,10 @@
     "source": "Creating",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "866799689190682648": {
+    "source": "Historical coverage is incomplete. Only recorded activity is included.",
+    "file": "src/app/shared-analytics/shared-analytics.html"
+  },
   "867176748195969642": {
     "source": "Harvard University",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -25514,6 +25730,10 @@
   "8687049154298551658": {
     "source": "People can see the time and confirmed names, then join from the Stack.",
     "file": "src/app/boards/boards.html"
+  },
+  "8687877657565758200": {
+    "source": "Report metrics",
+    "file": "src/app/shared-analytics/shared-analytics.html"
   },
   "8687947392811862262": {
     "source": "Deleting...",
@@ -26503,6 +26723,10 @@
     "source": "Chester facts",
     "file": "src/app/fence-line/fence-line.html"
   },
+  "8954234322952828545": {
+    "source": "Activity over time",
+    "file": "src/app/shared-analytics/shared-analytics.html"
+  },
   "8955719179313148360": {
     "source": "Clear the search or add cards with song titles, Spotify metadata, or preview URLs.",
     "file": "src/app/boards/boards.html"
@@ -26626,6 +26850,10 @@
   "8982067290261018937": {
     "source": "Neighborhoods",
     "file": "src/app/atlas-landing/atlas-landing.ts"
+  },
+  "8982689265809943191": {
+    "source": "Voice time includes only provider-verified seconds within the selected UTC dates. Conversations are counted on their start date.",
+    "file": "src/app/board-insights/board-insights.html"
   },
   "898415594139342999": {
     "source": "Michigan residents fought a giant incinerator for decades until it closed in 2019, proving fenceline organizing can win.",
@@ -26757,7 +26985,7 @@
   },
   "9019651111955599289": {
     "source": "90 days",
-    "file": "src/app/board-insights/board-insights.ts"
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
   },
   "9019779151642071529": {
     "source": "Delete thread {title}",
@@ -27363,6 +27591,10 @@
     "source": "Idea",
     "file": "src/app/boards/boards.ts"
   },
+  "9210198490125082363": {
+    "source": "{$INTERPOLATION} conversations without a recorded browser identity. Unknown identities are not counted as unique visitors.",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "9211144034861875518": {
     "source": "Cities",
     "file": "src/app/membership/membership.html"
@@ -27577,7 +27809,7 @@
   },
   "969162659595657718": {
     "source": "Copied to clipboard",
-    "file": "src/app/board-insights/board-insights.ts"
+    "file": "src/app/analytics-report-sharing/analytics-report-sharing.ts"
   },
   "970545940684571904": {
     "source": "The Fenceline Network | LivingWiki",

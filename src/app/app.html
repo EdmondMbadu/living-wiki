@@ -8,8 +8,11 @@
   </div>
 }
 <router-outlet (activate)="routeActive = true"></router-outlet>
+@if(!sharedReport()){
 <app-workspace-navigation-overlay />
 <app-spotify-player />
 <app-invitation-alert />
 <app-kiwi />
 <app-talkthru-plan-dialog />
+
+}

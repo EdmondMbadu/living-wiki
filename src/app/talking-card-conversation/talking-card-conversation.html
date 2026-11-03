@@ -43,6 +43,7 @@
 
     @if (conversationStage() === 'conversation') {<p class="talking-chat__analytics-note" i18n>Conversations may be reviewed by this avatar’s administrators.</p>}
 
+    @if(conversationStage()!=='conversation'&&analyticsNotice()){<p class="talking-chat__recap-privacy" role="status">{{analyticsNotice()}}</p>}
     @if (conversationStage() === 'recap') {
       <div class="talking-chat__recap" aria-live="polite">
         <div class="talking-chat__recap-intro">

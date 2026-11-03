@@ -10,6 +10,7 @@ const loadLibraryComponent = () => import('./library/library').then((m) => m.Lib
 const loadWikiComponent = () => import('./wiki/wiki').then((m) => m.WikiComponent);
 
 export const routes: Routes = [
+  {path:'reports/boards/:slug',loadComponent:()=>import('./shared-analytics/shared-analytics').then(m=>m.SharedAnalyticsComponent)},
   { path: 'talkthrus/billing', loadComponent: () => import('./talkthru-billing/talkthru-billing-page').then(m => m.TalkThruBillingPageComponent), canActivate: [authGuard], title: $localize`TalkThru plan | LivingWiki` },
   { path: 'talkthrus', loadComponent: () => import('./talkthrus/talkthrus').then(m => m.TalkThrusComponent), title: $localize`LivingWiki TalkThrus | A story that wins listings.` },
   { path: 'off-grids/new', loadComponent: () => import('./off-grids/off-grid-editor').then(m => m.OffGridEditorComponent), canActivate: [authGuard], title: $localize`Mark a gem | LivingWiki` },

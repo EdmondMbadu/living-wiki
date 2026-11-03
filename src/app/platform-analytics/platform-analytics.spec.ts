@@ -94,7 +94,7 @@ describe('Platform analytics', () => {
     expect(
       f.nativeElement.querySelector('a[href="/manage/boards/board/cards/card/analytics"]'),
     ).not.toBeNull();
-    expect(api.report.calls.mostRecent().args[0].includeInternal).toBeFalse();
+    expect(api.report.calls.mostRecent().args[0].includeInternal).toBeTrue();
   });
   it('reloads each filter with the right date grouping and internal scope', async () => {
     const f = TestBed.createComponent(PlatformAnalyticsComponent);

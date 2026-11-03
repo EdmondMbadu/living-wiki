@@ -166,6 +166,9 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   private analyticsSessionId = '';
   private lastTextActivityAt = 0;
   private voiceAnalyticsSessionId = '';
+  private voiceAnalyticsSyncRun=0;
+  private voiceAnalyticsSyncTimer:ReturnType<typeof setTimeout>|null=null;
+  readonly analyticsNotice=signal<string|null>(null);
   private threadId: string | null = null;
   private voiceMeterFrame: number | null = null;
   private voiceMeterLastSampleAt = 0;
@@ -277,6 +280,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.endTextAnalytics();
     this.destroyed = true;
+    if(this.voiceAnalyticsSyncTimer)clearTimeout(this.voiceAnalyticsSyncTimer);
     void this.endVoice();
   }
 
@@ -659,14 +663,28 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     if (this.analyticsSessionId && this.boardId() && this.cardId()) void this.cardAnalytics.endText(this.boardId(), this.cardId(), this.analyticsSessionId, this.anonymousVisitorId() || '').catch(() => undefined);
   }
 
-  private syncVoiceAnalytics(): void {
-    const sessionId = this.voiceAnalyticsSessionId;
-    const conversationId = this.voiceConversationId();
-    if (sessionId && conversationId) void this.cardAnalytics.syncVoice(sessionId, conversationId, this.anonymousVisitorId() || '').catch(() => undefined);
+  private syncVoiceAnalytics(final=false): void {
+    const sessionId=this.voiceAnalyticsSessionId,conversationId=this.voiceConversationId();
+    if(!sessionId||!conversationId)return;
+    const run=++this.voiceAnalyticsSyncRun;
+    if(this.voiceAnalyticsSyncTimer)clearTimeout(this.voiceAnalyticsSyncTimer);
+    const anonymous=this.anonymousVisitorId()||'';
+    const check=async(attempt:number)=>{
+      if(run!==this.voiceAnalyticsSyncRun)return;
+      let pending=true;
+      try{pending=(await this.cardAnalytics.syncVoice(sessionId,conversationId,anonymous)).pending;}
+      catch{ /* The durable server job remains available for recovery. */ }
+      if(run!==this.voiceAnalyticsSyncRun)return;
+      if(!pending){this.analyticsNotice.set(null);return;}
+      if(final)this.analyticsNotice.set($localize`Conversation analytics are awaiting provider verification. The server will retry automatically.`);
+      const delays=[1000,2000,4000,8000,15000];
+      if(final&&!this.destroyed&&attempt<delays.length)this.voiceAnalyticsSyncTimer=setTimeout(()=>void check(attempt+1),delays[attempt]);
+    };
+    void check(0);
   }
 
   private emitVoiceEndIfActive(): void {
-    this.syncVoiceAnalytics();
+    this.syncVoiceAnalytics(true);
     if (!this.voiceActivityActive) return;
     this.voiceActivityActive = false;
     this.activity.emit('voice_end');

@@ -49,6 +49,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'manage/boards/:boardId/analytics', renderMode: RenderMode.Client },
   { path: 'manage/boards/:boardId/cards/:cardId/analytics', renderMode: RenderMode.Client },
   { path: 'manage/boards/:boardId/insights', renderMode: RenderMode.Client },
+  { path: 'reports/boards/:slug', renderMode: RenderMode.Client },
   { path: 'boards/:boardId', renderMode: RenderMode.Client },
   { path: 'songs/:boardId', renderMode: RenderMode.Client },
   { path: 'trips/:boardId', renderMode: RenderMode.Client },

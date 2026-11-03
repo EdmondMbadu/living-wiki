@@ -122,7 +122,8 @@ export {
   setCustomPublicUrl,
 } from './custom-public-routes';
 export { getBoardInsights, recordBoardAnalyticsEvent } from './board-analytics';
-export { getCardAnalytics, getCardConversation, endCardTextAnalytics, syncCardVoiceAnalytics, recoverCardVoiceAnalytics } from './card-analytics';
+export { manageAnalyticsReportShares, getSharedAnalyticsReport } from './analytics-report-sharing';
+export { reconcileBoardAnalytics, getCardAnalytics, getCardConversation, endCardTextAnalytics, syncCardVoiceAnalytics, recoverCardVoiceAnalytics } from './card-analytics';
 import { beginCardText, finishCardText, issueCardVoice } from './card-analytics';
 export { getPlatformAnalytics, getPlatformInventory, startPlatformAnalyticsSync, platformAnalyticsWorker, reconcilePlatformAnalytics, syncPlatformBoardInventory, syncPlatformTeamInventory, syncPlatformConversationUsage, syncPlatformTeamUsage, syncPlatformVoiceStatus, syncPlatformInternalTextUsage } from './platform-analytics';
 import { withPlatformTextUsage } from './platform-analytics';

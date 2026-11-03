@@ -1,0 +1,15 @@
+import {provideZonelessChangeDetection} from '@angular/core';
+import {TestBed} from '@angular/core/testing';
+import {AnalyticsReportSharingComponent} from './analytics-report-sharing';
+import {AnalyticsSharingService} from '../analytics-sharing.service';
+
+describe('Analytics report sharing',()=>{
+ const link={id:'grant',createdAt:'2026-11-03T00:00:00Z',expiresAt:'2099-11-03T00:00:00Z',revoked:false,audience:'internal',range:{from:'2026-10-05',to:'2026-11-03'}};
+ let api:{list:jasmine.Spy;create:jasmine.Spy;revoke:jasmine.Spy};
+ beforeEach(async()=>{api={list:jasmine.createSpy().and.resolveTo({links:[link]}),create:jasmine.createSpy().and.resolveTo({url:'https://livingwiki.com/reports/boards/the-tate-top-20#access=test',path:'/reports/boards/the-tate-top-20#access=test'}),revoke:jasmine.createSpy().and.resolveTo({revoked:true})};
+  await TestBed.configureTestingModule({imports:[AnalyticsReportSharingComponent],providers:[provideZonelessChangeDetection(),{provide:AnalyticsSharingService,useValue:api}]}).compileComponents();});
+ async function render(){const f=TestBed.createComponent(AnalyticsReportSharingComponent);f.componentRef.setInput('boardId','board');f.componentRef.setInput('days',30);f.componentRef.setInput('audience','internal');f.componentRef.setInput('from','2026-10-05');f.componentRef.setInput('to','2026-11-03');f.detectChanges();await f.componentInstance.open();f.detectChanges();return f;}
+ it('creates the selected audience and period, previews locally and copies the production URL',async()=>{const f=await render();await f.componentInstance.create();f.detectChanges();expect(api.create).toHaveBeenCalledWith('board',30,'internal',30,'2026-10-05','2026-11-03');expect(f.nativeElement.querySelector('textarea').value).toContain('https://livingwiki.com/reports/boards/the-tate-top-20');expect(f.nativeElement.querySelector('a').getAttribute('href')).toContain('/reports/boards/the-tate-top-20');expect(f.nativeElement.textContent).toContain('Internal only');expect(f.nativeElement.textContent).toContain('Transcripts, questions, emails and visitor identities stay private');f.componentInstance.close();f.destroy();});
+ it('revokes only the selected grant and clears the generated capability',async()=>{const f=await render();await f.componentInstance.create();await f.componentInstance.revoke('grant');f.detectChanges();expect(api.revoke).toHaveBeenCalledWith('board','grant');expect(f.componentInstance.links()[0].revoked).toBeTrue();expect(f.nativeElement.querySelector('textarea')).toBeNull();f.componentInstance.close();f.destroy();});
+ it('shows a retryable error without displaying a broken report link',async()=>{api.create.and.rejectWith(Error('Service temporarily unavailable'));const f=await render();await f.componentInstance.create();f.detectChanges();expect(f.nativeElement.querySelector('[role=alert]').textContent).toContain('temporarily unavailable');expect(f.componentInstance.url()).toBe('');expect(f.componentInstance.busy()).toBeFalse();f.componentInstance.close();f.destroy();});
+});

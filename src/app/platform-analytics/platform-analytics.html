@@ -132,13 +132,7 @@
                   </button>
                 }
               </div>
-              <label class="internal-toggle"
-                ><input
-                  type="checkbox"
-                  [checked]="internal()"
-                  (change)="setInternal($any($event.target).checked)"
-                /><span i18n>Include internal testing</span></label
-              >
+              <label class="internal-toggle"><span i18n>Conversation audience</span><select [value]="audience()" (change)="selectAudience($any($event.target).value)" aria-label="Conversation audience" i18n-aria-label>@for(option of audiences;track option.value){<option [value]="option.value">{{option.label}}</option>}</select></label>
             </div>
           </div>
           <div class="date-controls">
@@ -242,7 +236,9 @@
             }
           </section>
           <p class="scope-note">
-            @if (internal()) {
+            @if (audience()==='internal') {
+              <span i18n>Internal owner/admin activity only. Automated QA stays separate.</span>
+            } @else if (internal()) {
               <span i18n
                 >Visitor and owner/admin sessions included. Automated QA stays separate.</span
               >

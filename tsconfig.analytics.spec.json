@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.spec.json",
+  "files": [
+    "src/app/board-insights/board-insights.spec.ts",
+    "src/app/card-analytics/card-analytics.spec.ts",
+    "src/app/platform-analytics/platform-analytics.spec.ts",
+    "src/app/platform-analytics/picamo-analytics.spec.ts",
+    "src/app/board-analytics.service.spec.ts",
+    "src/app/analytics-report-sharing/analytics-report-sharing.spec.ts",
+    "src/app/shared-analytics/shared-analytics.spec.ts",
+    "src/app/app.spec.ts"
+  ],
+  "include": [
+    "src/**/*.d.ts"
+  ]
+}

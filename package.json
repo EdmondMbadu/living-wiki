@@ -45,7 +45,8 @@
     "start:ko": "ng serve --configuration ko",
     "start:ar": "ng serve --configuration ar",
     "start:hi": "ng serve --configuration hi",
-    "start:ru": "ng serve --configuration ru"
+    "start:ru": "ng serve --configuration ru",
+    "test:analytics": "ng test --configuration=analytics-support --watch=false --browsers=ChromeHeadless"
   },
   "prettier": {
     "printWidth": 100,

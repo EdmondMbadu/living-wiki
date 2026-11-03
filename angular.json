@@ -261,6 +261,19 @@
                 "src/app/boards/board-studio-persistence.spec.ts",
                 "src/app/language-switcher/language-switcher.spec.ts"
               ]
+            },
+            "analytics-support": {
+              "tsConfig": "tsconfig.analytics.spec.json",
+              "include": [
+                "src/app/board-insights/board-insights.spec.ts",
+                "src/app/card-analytics/card-analytics.spec.ts",
+                "src/app/platform-analytics/platform-analytics.spec.ts",
+                "src/app/platform-analytics/picamo-analytics.spec.ts",
+                "src/app/board-analytics.service.spec.ts",
+                "src/app/analytics-report-sharing/analytics-report-sharing.spec.ts",
+                "src/app/shared-analytics/shared-analytics.spec.ts",
+                "src/app/app.spec.ts"
+              ]
             }
           }
         }

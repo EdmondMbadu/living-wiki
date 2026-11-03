@@ -1,3 +1,4 @@
+import type { AnalyticsAudience, AnalyticsActivity } from './analytics-activity';
 import { isLinkReadableVisibility, type BoardVisibility } from './board-visibility';
 import { isPlatformBrowser } from '@angular/common';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
@@ -20,6 +21,8 @@ export type BoardAnalyticsEventType =
 export type BoardInsightsRange = 7 | 30 | 90;
 
 export type BoardInsights = {
+  audience?:AnalyticsAudience;
+  activity?:AnalyticsActivity;
   board: {
     id: string;
     title: string;
@@ -225,13 +228,13 @@ export class BoardAnalyticsService {
     this.record(eventType, { cardId });
   }
 
-  async getInsights(boardId: string, days: BoardInsightsRange): Promise<BoardInsights> {
+  async getInsights(boardId: string, days: BoardInsightsRange, audience:AnalyticsAudience='all'): Promise<BoardInsights> {
     if (!this.functions) throw new Error('Board insights are not available on this device.');
-    const callable = httpsCallable<{ boardId: string; days: number }, BoardInsights>(
+    const callable = httpsCallable<{ boardId: string; days: number; audience:AnalyticsAudience }, BoardInsights>(
       this.functions,
       'getBoardInsights',
     );
-    return (await callable({ boardId, days })).data;
+    return (await callable({ boardId, days, audience })).data;
   }
 
   private recordEngagementOnce(): void {

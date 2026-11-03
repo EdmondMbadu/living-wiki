@@ -1,3 +1,4 @@
+import { analyticsAudience, includesAudience } from './analytics-activity';
 import { createHash, randomUUID } from 'node:crypto';
 import { FieldValue, Timestamp, type Transaction } from 'firebase-admin/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
@@ -243,6 +244,11 @@ export type PlatformUsage = {
   questions: number;
   failedAnswers: number;
   providerId?: string;
+  verifiedAt?: string;
+  visitorKey?: string;
+  actorKey?: string;
+  atlasId?: string;
+  status?: string;
 };
 export function platformUsageDays(value: PlatformUsage): Record<string, Data> {
   const start = Date.parse(value.startedAt);
@@ -384,6 +390,9 @@ export async function capturePlatformUsage(source: string, input: PlatformUsage)
         (value as Data)[field] = previous.value[field];
       }
     }
+    for (const field of ['visitorKey', 'actorKey', 'atlasId', 'status', 'verifiedAt'] as const) {
+      if (!value[field] && previous?.value?.[field]) value[field] = previous.value[field];
+    }
     const fingerprint = hash(JSON.stringify(value));
     if (previous?.fingerprint !== fingerprint) {
       if (previous?.value) applyContribution(tx, id, previous.value, previous.days, -1);
@@ -447,6 +456,8 @@ export async function ingestPlatformConversation(
     cardId,
     startedAt,
     internal: data.internal === true,
+    verifiedAt: iso(data.last_activity_at)||startedAt,
+    visitorKey: text(data.visitor_hash, 100), actorKey: text(data.actor_hash, 100), atlasId: text(data.atlas_id), status: text(data.status) || 'completed',
     mode: voice ? 'voice' : 'text',
     seconds:
       voice && (source === 'team' || data.duration_kind === 'recorded')
@@ -479,6 +490,8 @@ export async function recordPlatformVerifiedVoice(
     startedAt,
     mode: 'voice',
     internal: job.internal === true,
+    verifiedAt: new Date().toISOString(),
+    visitorKey: text(job.visitor_hash, 100), actorKey: text(job.actor_hash, 100), atlasId: text(job.atlas_id), status: details.status === 'done' ? 'completed' : 'interrupted',
     seconds:
       typeof details.metadata?.call_duration_secs === 'number'
         ? details.metadata.call_duration_secs
@@ -513,9 +526,26 @@ export const syncPlatformTeamUsage = onDocumentWritten(
     }
   },
 );
+/** Enrich legacy verified receipts without changing their counts or timing. */
+export async function enrichPlatformVoiceIdentity(id: string, job: Data) {
+  if (!job.conversation_id) return false;
+  const provider = await providers.doc(hash(`elevenlabs:${job.conversation_id}`)).get();
+  const usageId = provider.data()?.usageId || (await sourcePointers.doc(hash(`card:${id}`)).get()).data()?.usageId;
+  if (!usageId) return false;
+  return db.runTransaction(async tx => {
+    const ref = usage.doc(usageId), snapshot = await tx.get(ref), value = snapshot.data()?.value;
+    if (!value || value.boardId !== job.board_id || value.cardId !== job.card_id || value.providerId !== job.conversation_id) return false;
+    const next = {...value,verifiedAt:value.verifiedAt||iso(snapshot.data()?.updatedAt), ...(job.visitor_hash ? {visitorKey:job.visitor_hash} : {}),
+      ...(job.actor_hash ? {actorKey:job.actor_hash} : {}), ...(job.atlas_id ? {atlasId:job.atlas_id} : {})};
+    const fingerprint = hash(JSON.stringify(next));
+    if (snapshot.data()?.fingerprint !== fingerprint) tx.update(ref,{value:next,fingerprint,updatedAt:Timestamp.now()});
+    return true;
+  });
+}
 export async function syncPlatformPending(id: string, data?: Data) {
   const ref = pending.doc(hash(id));
   if (!data || data.status === 'done') {
+    if (data) await enrichPlatformVoiceIdentity(id, data);
     await ref.delete();
     return;
   }
@@ -582,6 +612,8 @@ export function withPlatformTextUsage<T>(
                   card_id: d.cardId,
                   atlas_id: d.atlasId,
                   internal: true,
+                  actor_hash: hash(`uid:${uid}`),
+                  visitor_hash: typeof d.analyticsVisitorId === 'string' && /^[A-Za-z0-9_-]{12,100}$/.test(d.analyticsVisitorId) ? hash(d.analyticsVisitorId) : '',
                   owner_id: b.owner_user_id || '',
                   team_id: b.team_id || '',
                   board_title: b.title || '',
@@ -937,7 +969,8 @@ function range(input: Data) {
     from,
     to,
     group: ['day', 'month', 'year'].includes(input.group) ? input.group : 'day',
-    includeInternal: input.includeInternal === true,
+    audience: analyticsAudience(input.audience ?? (input.includeInternal === true ? 'all' : 'visitors')),
+    includeInternal: input.audience ? input.audience !== 'visitors' : input.includeInternal === true,
   };
 }
 export const getPlatformAnalytics = onCall(
@@ -1014,7 +1047,7 @@ export const getPlatformAnalytics = onCall(
       const activeCards = new Set<string>();
       for (const doc of docs) {
         const row = doc.data();
-        if (row.internal && !dates.includeInternal) continue;
+        if (!includesAudience(dates.audience, row.internal === true)) continue;
         const hasActivity = count(row.conversations) > 0 || count(row.seconds) > 0;
         if (!hasActivity) continue;
         const key = `${row.boardId}:${row.cardId}`;
@@ -1060,7 +1093,7 @@ export const getPlatformAnalytics = onCall(
       }
       const statusRows = statuses
         .map((d) => d.data())
-        .filter((d) => dates.includeInternal || !d.internal);
+        .filter((d) => includesAudience(dates.audience, d.internal === true));
       const livePending = statusRows.filter(
         (d) => d.status === 'pending' && Date.parse(d.issuedAt) > Date.now() - DAY,
       ).length;

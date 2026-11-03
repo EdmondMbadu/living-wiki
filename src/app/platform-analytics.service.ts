@@ -1,3 +1,4 @@
+import type { AnalyticsAudience } from './analytics-activity';
 import { isPlatformBrowser } from '@angular/common';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { httpsCallable } from 'firebase/functions';
@@ -68,6 +69,7 @@ export type PlatformFilters = {
   to: string;
   group: string;
   includeInternal: boolean;
+  audience?:AnalyticsAudience;
   view: string;
   search: string;
   page: number;

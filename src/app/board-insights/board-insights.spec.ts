@@ -6,6 +6,7 @@ import { BehaviorSubject } from 'rxjs';
 import { AuthService } from '../auth.service';
 import { TeamsService } from '../teams/teams.service';
 import { teamsServiceStub } from '../teams/teams.testing';
+import { AnalyticsSharingService } from '../analytics-sharing.service';
 import { AtlasService } from '../atlas.service';
 import { BoardAnalyticsService, type BoardInsights } from '../board-analytics.service';
 import { BoardInsightsComponent } from './board-insights';
@@ -60,6 +61,7 @@ describe('BoardInsightsComponent', () => {
         provideRouter([]),
         { provide: ActivatedRoute, useValue: { paramMap } },
         { provide: BoardAnalyticsService, useValue: analytics },
+        { provide: AnalyticsSharingService, useValue: {list:async()=>({links:[]}),reconcile:async()=>({processed:0,unavailable:0,nextCursor:null})} },
         { provide: AuthService, useValue: auth },
         { provide: AtlasService, useValue: { activeAtlasWikiLink: signal('/wiki/philly') } },
       ],
@@ -72,7 +74,7 @@ describe('BoardInsightsComponent', () => {
     await fixture.componentInstance['load']();
     fixture.detectChanges();
 
-    expect(analytics.getInsights).toHaveBeenCalledWith('board-1', 30);
+    expect(analytics.getInsights).toHaveBeenCalledWith('board-1', 30, 'all');
     expect(fixture.nativeElement.textContent).toContain('Cape May Gems');
     expect(fixture.nativeElement.textContent).toContain('120');
     expect(fixture.nativeElement.textContent).toContain('Facebook');
@@ -88,6 +90,9 @@ describe('BoardInsightsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Campaign results');
   });
 
+  it('uses the saved slug in the visible board URL and reloads the selected activity scope',async()=>{
+    const f=TestBed.createComponent(BoardInsightsComponent);await f.componentInstance['load']();f.detectChanges();expect(f.componentInstance.publicUrl()).toContain('/boards/cape-may-gems');expect(f.nativeElement.querySelector('.canonical-board-url')?.textContent||f.nativeElement.textContent).toContain('/boards/cape-may-gems');f.componentInstance.selectAudience('internal');await f.whenStable();expect(analytics.getInsights.calls.mostRecent().args).toEqual(['board-1',30,'internal']);f.destroy();
+  });
   it('updates the attribution medium when the share source changes', async () => {
     const fixture = TestBed.createComponent(BoardInsightsComponent);
     fixture.detectChanges();

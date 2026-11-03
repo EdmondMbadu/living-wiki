@@ -26,7 +26,7 @@ describe('CardAnalyticsComponent',()=>{
  });
  async function render(){const f=TestBed.createComponent(CardAnalyticsComponent);f.detectChanges();await f.componentInstance.load();f.detectChanges();return f;}
  it('uses the card visitor denominator and real mode totals',async()=>{
-  const f=await render();expect(api.report).toHaveBeenCalledWith('board1','card1',30);expect(f.componentInstance.chatRate()).toBe(20);expect(f.componentInstance.average()).toBe(90);
+  const f=await render();expect(api.report).toHaveBeenCalledWith('board1','card1',30,'all');expect(f.componentInstance.chatRate()).toBe(20);expect(f.componentInstance.average()).toBe(90);
   expect(f.nativeElement.textContent).toContain('20% of this card’s visitors');expect(f.nativeElement.textContent).toContain('1 text · 1 voice');expect(f.nativeElement.textContent).toContain('Activity for this card only');f.destroy();
  });
  it('keeps historical opens visible without inventing a unique visitor count',async()=>{
@@ -42,6 +42,10 @@ describe('CardAnalyticsComponent',()=>{
   expect(f.nativeElement.querySelector('.analytics-kpis strong').textContent).toBe('2');expect(f.nativeElement.querySelector('.analytics-kpis p').textContent.trim()).toBe('Unique visitors: 1');
   api.report.and.resolveTo({...report,opens:0,visitors:0});await f.componentInstance.load();f.detectChanges();
   expect(f.nativeElement.querySelector('.analytics-kpis strong').textContent).toBe('0');expect(f.nativeElement.querySelector('.analytics-kpis p').textContent.trim()).toBe('Unique visitors: 0');f.destroy();
+ });
+ it('reloads the requested audience and keeps unknown voice duration separate from text estimates',async()=>{
+  const f=await render();f.componentInstance.selectAudience('internal');await f.whenStable();expect(api.report.calls.mostRecent().args[3]).toBe('internal');
+  api.report.and.resolveTo({...report,conversations:[{...report.conversations[0],durationSeconds:null,internal:true,canReadTranscript:false},{...report.conversations[1]}]});await f.componentInstance.load();f.detectChanges();expect(f.componentInstance.verifiedSeconds()).toBeNull();await f.componentInstance.openDetails({...report.conversations[0],canReadTranscript:false});expect(api.conversation).not.toHaveBeenCalled();f.destroy();
  });
  it('filters by mode and question, sorts dates and resets pagination',async()=>{
   const f=await render(),c=f.componentInstance;c.setMode('text');expect(c.rows().map(r=>r.id)).toEqual(['old']);c.setMode('all');c.setQuery('Mount Vernon');expect(c.rows().map(r=>r.id)).toEqual(['new']);c.setQuery('');c.oldest.set(true);expect(c.rows().map(r=>r.id)).toEqual(['old','new']);f.destroy();

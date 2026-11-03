@@ -1,3 +1,7 @@
+import { analyticsAudiences, type AnalyticsAudience } from '../analytics-activity';
+import { AnalyticsReportSharingComponent } from '../analytics-report-sharing/analytics-report-sharing';
+import { AnalyticsSharingService } from '../analytics-sharing.service';
+import { getPublicAppUrl } from '../firebase.config';
 import { DatePipe, DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { Component, DestroyRef, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -22,11 +26,12 @@ type TrackingSourceOption = {
 
 @Component({
   selector: 'app-board-insights',
-  imports: [RouterLink, DatePipe, DecimalPipe, ThemeToggleComponent, WorkspaceSidebarComponent, MobileMenuComponent],
+  imports: [RouterLink, DatePipe, DecimalPipe, ThemeToggleComponent, WorkspaceSidebarComponent, MobileMenuComponent, AnalyticsReportSharingComponent],
   templateUrl: './board-insights.html',
   styleUrl: './board-insights.css',
 })
 export class BoardInsightsComponent {
+  readonly copyBoardLabel=$localize`Copy board URL`;
   readonly templateText = {
     message1: $localize`Copied to clipboard`,
     message2: $localize`Copy tracked link`,
@@ -43,6 +48,10 @@ export class BoardInsightsComponent {
   private readonly title = inject(Title);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
+  private readonly sharing = inject(AnalyticsSharingService);
+  readonly audience=signal<AnalyticsAudience>('all');
+  readonly audiences=analyticsAudiences;
+  readonly recovering=signal(false);readonly recoveryNotice=signal('');readonly boardLinkCopied=signal(false);
   readonly boardId = signal('');
   readonly range = signal<BoardInsightsRange>(30);
   readonly loading = signal(true);
@@ -75,7 +84,7 @@ export class BoardInsightsComponent {
   });
   readonly publicUrl = computed(() => {
     if (!this.isBrowser) return this.publicPath();
-    return `${window.location.origin}${this.publicPath()}`;
+    return `${getPublicAppUrl() || window.location.origin}${this.publicPath()}`;
   });
   readonly trackedUrl = computed(() => {
     const base = this.publicUrl();
@@ -104,6 +113,10 @@ export class BoardInsightsComponent {
     const totals = this.insights()?.totals;
     return totals?.views ? (totals.engagedVisits / totals.views) * 100 : 0;
   });
+  readonly verifiedMinutes=computed(()=>{
+    const totals=this.insights()?.activity?.totals;
+    return totals&&totals.voice>0&&totals.unknownDurations===totals.voice&&!totals.seconds?null:(totals?.seconds||0)/60;
+  });
   readonly maxDailyViews = computed(() => Math.max(1, ...((this.insights()?.daily ?? []).map((day) => day.views))));
   readonly dailyAxisMax = computed(() => this.niceAxisMaximum(this.maxDailyViews()));
   readonly dailyYAxisTicks = computed(() => {
@@ -124,6 +137,13 @@ export class BoardInsightsComponent {
     });
   }
 
+  selectAudience(value:AnalyticsAudience):void{this.audience.set(value);void this.load();}
+  async copyBoardLink(){try{await navigator.clipboard.writeText(this.publicUrl());this.boardLinkCopied.set(true);}catch{this.copyError.set($localize`Copy the board URL shown above.`);}}
+  async reconcile(){if(this.recovering())return;this.recovering.set(true);this.recoveryNotice.set('');
+    let cursor:string|null=null,processed=0,unavailable=0;
+    try{do{const result=await this.sharing.reconcile(this.boardId(),cursor);processed+=result.processed;unavailable+=result.unavailable;cursor=result.nextCursor;}while(cursor);
+      this.recoveryNotice.set($localize`Checked ${processed}:PROCESSED: voice sessions; ${unavailable}:UNAVAILABLE: could not be verified. Unknown history has not been estimated.`);await this.load();
+    }catch(e){this.recoveryNotice.set(this.errorMessage(e));}finally{this.recovering.set(false);}}
   selectRange(days: BoardInsightsRange): void {
     if (this.range() === days) return;
     this.range.set(days);
@@ -254,7 +274,7 @@ export class BoardInsightsComponent {
     this.error.set(null);
     try {
       await this.authService.waitForReady();
-      const insights = await this.analytics.getInsights(boardId, this.range());
+      const insights = await this.analytics.getInsights(boardId, this.range(), this.audience());
       if (loadSequence !== this.loadSequence) return;
       this.insights.set(insights);
       if (!this.campaign()) this.campaign.set(`${insights.board.title} launch`);

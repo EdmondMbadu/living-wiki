@@ -1,0 +1,17 @@
+<button class="share-report" type="button" (click)="open()"><span class="material-symbols-outlined" aria-hidden="true">share</span><span i18n>Share report</span></button>
+<dialog #dialog aria-labelledby="share-report-title" (cancel)="$event.preventDefault();close()" (click)="$event.target===dialog && close()">
+  <header><h2 id="share-report-title" i18n>Share a read-only analytics report</h2><button type="button" (click)="close()" [disabled]="busy()" aria-label="Close report sharing" i18n-aria-label>×</button></header>
+  <p i18n>Anyone with the link can view a snapshot of the selected period. Transcripts, questions, emails and visitor identities stay private.</p>
+  <p class="period">{{from()}} – {{to()}} UTC · <strong>{{audienceLabel()}}</strong></p>
+  <label><span i18n>Link expires after</span><select [value]="expiresDays()" (change)="expiresDays.set(+$any($event.target).value)" [disabled]="busy()"><option value="7" i18n>7 days</option><option value="30" i18n>30 days</option><option value="90" i18n>90 days</option></select></label>
+  <button type="button" class="primary" (click)="create()" [disabled]="busy()"><span i18n>Create report link</span></button>
+  @if(url()){
+    <label class="report-url"><span i18n>Shareable report link</span><textarea readonly [value]="url()" aria-label="Shareable report link" i18n-aria-label></textarea></label>
+    <div class="actions"><button type="button" (click)="copy()">{{copied() ? copiedLabel : copyLabel}}</button><a [href]="previewPath()" target="_blank" rel="noopener noreferrer" i18n>Preview report</a></div>
+  }
+  @if(error()){<p class="error" role="alert">{{error()}}</p>}
+  <h3 i18n>Report links</h3>
+  @if(loading()){<p role="status" i18n>Loading report links…</p>}
+  @for(link of links();track link.id){<div class="existing-link"><span>{{link.range.from}} – {{link.range.to}}<small>{{audienceLabel(link.audience)}}</small><small><span i18n>Expires:</span> {{link.expiresAt | date:'mediumDate':'UTC'}} UTC</small></span>@if(link.revoked){<span i18n>Revoked</span>}@else if(expired(link.expiresAt)){<span i18n>Expired</span>}@else{<button type="button" (click)="revoke(link.id)" [disabled]="busy()" i18n>Revoke link</button>}</div>}
+  @if(!loading() && !links().length){<p i18n>No report links have been created.</p>}
+</dialog>
