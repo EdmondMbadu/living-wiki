@@ -2,6 +2,7 @@ import {
   boardCollectionFromData,
   boardCollectionOwnerParts,
   boardCollectionSlug,
+  collectionContentMatches,
 } from './board-collections.service';
 
 describe('board collections', () => {
@@ -38,7 +39,7 @@ describe('board collections', () => {
     expect(result?.customSlug).toBe('cape-may-gems');
   });
 
-  it('rejects private or empty collections', () => {
+  it('rejects private collections and retains valid empty collections', () => {
     expect(boardCollectionFromData('collection-1', {
       owner_user_id: 'owner-1',
       owner_public_slug: 'owner-one',
@@ -54,6 +55,16 @@ describe('board collections', () => {
       visibility: 'public',
       title: 'Empty list',
       board_ids: [],
-    })).toBeNull();
+    })?.boardIds).toEqual([]);
+  });
+
+  it('detects concurrent membership changes without treating custom URL changes as content edits', () => {
+    const original = boardCollectionFromData('one', {
+      owner_user_id: 'owner', owner_public_slug: 'owner', slug: 'music',
+      visibility: 'public', title: 'Music', description: '', board_ids: ['a', 'b'],
+    })!;
+    expect(collectionContentMatches(original, { ...original, customSlug: 'new-link' })).toBeTrue();
+    expect(collectionContentMatches(original, { ...original, boardIds: ['b', 'a'] })).toBeFalse();
+    expect(collectionContentMatches(original, { ...original, title: 'Renamed' })).toBeFalse();
   });
 });

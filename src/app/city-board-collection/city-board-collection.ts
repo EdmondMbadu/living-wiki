@@ -1,6 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { PlacePhotoDirective } from '../place-photo.directive';
-import { Component, HostListener, LOCALE_ID, OnDestroy, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, LOCALE_ID, OnDestroy, PLATFORM_ID, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -8,7 +8,9 @@ import { map } from 'rxjs';
 import type { AtlasItem } from '../atlas.models';
 import { AtlasService } from '../atlas.service';
 import { AuthService } from '../auth.service';
-import { BoardCollectionsService, type BoardCollection } from '../board-collections.service';
+import { BoardCollectionsService, type BoardCollection, type LoadedBoardCollection } from '../board-collections.service';
+import { BoardCollectionEditorComponent } from '../board-collection-editor/board-collection-editor';
+import { BackdropDismissDirective } from '../backdrop-dismiss.directive';
 import { CustomPublicUrlDialogComponent } from '../custom-public-url-dialog/custom-public-url-dialog';
 import type { SetCustomPublicUrlResult } from '../custom-public-url';
 import {
@@ -35,7 +37,7 @@ const SPOTLIGHT_ROTATION_MS = 5_000;
 
 @Component({
   selector: 'app-city-board-collection',
-  imports: [PlacePhotoDirective, RouterLink, ThemeToggleComponent, MobileMenuComponent, WorkspaceSidebarComponent, CustomPublicUrlDialogComponent],
+  imports: [PlacePhotoDirective, RouterLink, ThemeToggleComponent, MobileMenuComponent, WorkspaceSidebarComponent, CustomPublicUrlDialogComponent, BoardCollectionEditorComponent, BackdropDismissDirective],
   templateUrl: './city-board-collection.html',
   styleUrl: './city-board-collection.css',
 })
@@ -103,6 +105,18 @@ export class CityBoardCollectionComponent implements OnDestroy {
   readonly customUrlDialogOpen = signal(false);
   readonly spotlightProgress = signal(0);
   readonly isSignedIn = computed(() => !!this.authService.uid());
+  readonly editorTab = signal<'details' | 'boards' | null>(null);
+  readonly editorPicker = signal(false);
+  readonly moreOpen = signal(false);
+  readonly deleteOpen = signal(false);
+  readonly deleting = signal(false);
+  readonly managementError = signal<string | null>(null);
+  readonly managementNotice = signal('');
+  readonly canEditCollection = computed(() => !!this.userCollection()
+    && this.userCollection()!.ownerUserId === this.authService.uid());
+  readonly modalOpen = computed(() => !!this.editorTab() || this.deleteOpen() || this.customUrlDialogOpen());
+  private readonly deleteDialog = viewChild<ElementRef<HTMLElement>>('deleteDialog');
+  private deleteReturnFocus: HTMLElement | null = null;
   readonly canManageCollection = computed(() => {
     const collection = this.userCollection();
     return !!collection
@@ -196,7 +210,9 @@ export class CityBoardCollectionComponent implements OnDestroy {
     const count = this.boards().length;
     return `${count} ${count === 1 ? $localize`board` : $localize`boards`}`;
   });
-  readonly featuredBoards = computed(() => selectFeaturedCityBoards(this.boards(), 5));
+  readonly featuredBoards = computed(() => this.isUserCollection
+    ? this.boards().slice(0, 5)
+    : selectFeaturedCityBoards(this.boards(), 5));
   readonly activeFeatured = computed(() => {
     const featured = this.featuredBoards();
     return featured.find((board) => board.id === this.selectedFeaturedId()) ?? featured[0] ?? null;
@@ -387,18 +403,118 @@ export class CityBoardCollectionComponent implements OnDestroy {
     void this.loadCollection(this.routeSlug());
   }
 
+  openEditor(tab: 'details' | 'boards', picker = false): void {
+    if (!this.canEditCollection()) return;
+    this.moreOpen.set(false);
+    this.managementError.set(null);
+    this.editorPicker.set(picker);
+    this.editorTab.set(tab);
+    this.pauseSpotlightRotation();
+  }
+
+  closeEditor(): void {
+    this.editorTab.set(null);
+    this.resumeSpotlightRotation();
+    const collection = this.userCollection();
+    if (collection) this.canonicalizeCollectionPublicUrl(collection, this.routeSlug());
+  }
+
+  handleCollectionSaved(result: LoadedBoardCollection): void {
+    this.userCollection.set(result.collection);
+    this.boards.set(result.boards);
+    this.selectedFeaturedId.set(result.boards[0]?.id || '');
+    this.activeFilter.set('all');
+    this.searchQuery.set('');
+    this.titleService.setTitle(`${result.collection.title} | LivingWiki`);
+    this.managementNotice.set($localize`Collection saved.`);
+    this.closeEditor();
+    this.restartSpotlightRotation();
+    if (this.isBrowser) window.setTimeout(() => this.syncAllRails(), 80);
+  }
+
+  async copyCollectionLink(): Promise<void> {
+    const collection = this.userCollection();
+    if (!collection || !this.isBrowser) return;
+    this.moreOpen.set(false);
+    this.managementError.set(null);
+    const path = collection.customSlug
+      ? `/collections/${encodeURIComponent(collection.customSlug)}`
+      : `/boards/u/${encodeURIComponent(collection.ownerPublicSlug)}/collections/${encodeURIComponent(collection.slug)}`;
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}${path}`);
+      this.managementNotice.set($localize`Collection link copied.`);
+    } catch { this.managementError.set($localize`The link could not be copied. Copy the address from your browser instead.`); }
+  }
+
+  openDelete(): void {
+    if (!this.canManageCollection()) return;
+    this.deleteReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    this.moreOpen.set(false);
+    this.managementError.set(null);
+    this.deleteOpen.set(true);
+    window.setTimeout(() => this.deleteDialog()?.nativeElement.querySelector<HTMLElement>('[data-keep-collection]')?.focus());
+  }
+
+  closeDelete(): void {
+    if (this.deleting()) return;
+    this.deleteOpen.set(false);
+    // The menu item has unmounted; return to its persistent trigger instead.
+    window.setTimeout(() => {
+      if (this.deleteReturnFocus?.isConnected) this.deleteReturnFocus.focus();
+      else document.getElementById('collection-more-trigger')?.focus();
+    });
+  }
+
+  onDeleteKeydown(event: KeyboardEvent): void {
+    event.stopPropagation();
+    if (event.key === 'Escape') { event.preventDefault(); this.closeDelete(); }
+    if (event.key === 'Tab') {
+      const buttons = this.deleteDialog()?.nativeElement.querySelectorAll<HTMLButtonElement>('button:not([disabled])');
+      const first = buttons?.[0], last = buttons?.[buttons.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    }
+  }
+
+  async deleteCollection(): Promise<void> {
+    const collection = this.userCollection();
+    if (!collection || this.deleting()) return;
+    this.deleting.set(true);
+    this.managementError.set(null);
+    try {
+      await this.boardCollectionsService.delete(collection);
+      this.deleteOpen.set(false);
+      await this.router.navigate(this.parentLink());
+    } catch {
+      this.managementError.set($localize`The collection could not be deleted. Try again.`);
+    } finally { this.deleting.set(false); }
+  }
+
+  @HostListener('document:click', ['$event'])
+  closeMoreOnOutsideClick(event: MouseEvent): void {
+    if (!(event.target instanceof Element) || !event.target.closest('.collection-owner-actions')) this.moreOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  closeMoreOnEscape(): void {
+    if (this.moreOpen()) { this.moreOpen.set(false); document.getElementById('collection-more-trigger')?.focus(); }
+  }
+
   openCustomUrlDialog(): void {
+    this.moreOpen.set(false);
     if (this.canManageCollection()) this.customUrlDialogOpen.set(true);
   }
 
   closeCustomUrlDialog(): void {
     this.customUrlDialogOpen.set(false);
+    if (this.isBrowser) window.setTimeout(() => document.getElementById('collection-more-trigger')?.focus());
   }
 
   handleCustomUrlSaved(result: SetCustomPublicUrlResult): void {
     const collection = this.userCollection();
     if (!collection || result.resourceType !== 'collection' || result.resourceId !== collection.id) return;
     this.userCollection.set({ ...collection, customSlug: result.slug });
+    if (this.editorTab()) return;
     void this.router.navigate(['/collections', result.slug], {
       replaceUrl: true,
       queryParamsHandling: 'preserve',
@@ -438,7 +554,7 @@ export class CityBoardCollectionComponent implements OnDestroy {
         this.userCollection.set(loaded.collection);
         this.canonicalizeCollectionPublicUrl(loaded.collection, slug);
         this.boards.set(loaded.boards);
-        this.selectedFeaturedId.set(selectFeaturedCityBoards(loaded.boards, 5)[0]?.id ?? '');
+        this.selectedFeaturedId.set(loaded.boards[0]?.id ?? '');
         this.titleService.setTitle(`${loaded.collection.title} | LivingWiki`);
         this.restartSpotlightRotation();
         if (this.isBrowser) window.setTimeout(() => this.syncAllRails(), 80);
@@ -513,7 +629,7 @@ export class CityBoardCollectionComponent implements OnDestroy {
   }
 
   private resumeSpotlightRotation(): void {
-    if (!this.isBrowser || this.spotlightPaused() || this.featuredBoards().length < 2) return;
+    if (!this.isBrowser || this.spotlightPaused() || this.modalOpen() || this.featuredBoards().length < 2) return;
     if (this.spotlightRotationFrame !== null) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       this.spotlightProgress.set(100);

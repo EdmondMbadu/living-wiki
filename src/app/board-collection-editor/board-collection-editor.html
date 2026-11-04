@@ -1,0 +1,71 @@
+<div class="editor-backdrop" appBackdropDismiss (backdropDismiss)="requestClose()">
+  <section #dialog class="collection-editor" role="dialog" aria-modal="true" aria-labelledby="collection-editor-title"
+    [attr.inert]="customUrlOpen() ? '' : null" (keydown)="onKeydown($event)">
+    <header>
+      <div><small i18n>Board collection</small><h2 id="collection-editor-title" i18n>Edit collection</h2></div>
+      <button type="button" (click)="requestClose()" [disabled]="saving()" aria-label="Close collection editor" i18n-aria-label><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
+    </header>
+    @if (discardOpen()) {
+      <div class="editor-body">
+        <h3 i18n>Discard your changes?</h3><p i18n>Your collection has not been changed. Leave the editor or keep editing.</p>
+        <div class="editor-discard-actions"><button type="button" (click)="continueEditing()" i18n>Keep editing</button><button type="button" class="editor-danger" (click)="closed.emit()" i18n>Discard changes</button></div>
+      </div>
+    } @else {
+      <nav class="editor-tabs" aria-label="Collection settings" i18n-aria-label>
+        <button type="button" [attr.aria-pressed]="tab() === 'details'" (click)="tab.set('details')" [disabled]="saving()" i18n>Details</button>
+        <button type="button" [attr.aria-pressed]="tab() === 'boards'" (click)="tab.set('boards')" [disabled]="saving()" i18n>Boards</button>
+        <button type="button" [attr.aria-pressed]="tab() === 'link'" (click)="tab.set('link')" [disabled]="saving()" i18n>Custom URL</button>
+      </nav>
+      <div class="editor-body">
+        @if (tab() === 'details') {
+          <label><span i18n>Collection name</span><input type="text" maxlength="100" [value]="title()" (input)="title.set($any($event.target).value)" [disabled]="saving()" /></label>
+          <label><span i18n>Description <small>Optional</small></span><textarea rows="3" maxlength="280" [value]="description()" (input)="description.set($any($event.target).value)" [disabled]="saving()"></textarea></label>
+          <p i18n>Renaming your collection keeps its existing link.</p>
+        } @else if (tab() === 'boards') {
+          <div class="editor-board-heading"><strong i18n>{{ boardIds().length }} / {{ maxBoards }} boards</strong><button type="button" (click)="togglePicker()" [attr.aria-expanded]="pickerOpen()" [disabled]="saving() || boardIds().length >= maxBoards"><span class="material-symbols-outlined" aria-hidden="true">{{ pickerOpen() ? 'expand_less' : 'add' }}</span><span i18n>Add boards</span></button></div>
+          @if (pickerOpen()) {
+            <div class="editor-picker">
+              <label><span i18n>Search your public boards</span><input type="search" [value]="search()" (input)="search.set($any($event.target).value)" [disabled]="saving()" /></label>
+              @if (loading()) { <p role="status" i18n>Loading your public boards…</p> }
+              @else if (choicesError()) { <p role="alert">{{ choicesError() }}</p><button type="button" (click)="loadChoices()" i18n>Try again</button> }
+              @else {
+                <div class="editor-choices">
+                  @for (board of filteredChoices(); track board.id) {
+                    <label class="editor-choice"><input type="checkbox" [checked]="pendingIds().includes(board.id)" (change)="toggleChoice(board.id)" [disabled]="saving() || (!pendingIds().includes(board.id) && boardIds().length + pendingIds().length >= maxBoards)" /><span>{{ board.title }}<small i18n>{{ board.cardCount }} cards</small></span></label>
+                  } @empty { <p i18n>No more public boards match. Boards already in this collection are excluded.</p> }
+                </div>
+              }
+              <div class="editor-picker-actions"><span aria-live="polite" i18n>{{ pendingIds().length }} selected</span><button type="button" class="editor-primary" (click)="addSelected()" [disabled]="!pendingIds().length || saving()" i18n>Add selected</button></div>
+            </div>
+          }
+          <p i18n>Drag to arrange, or use the arrows. The first board opens the spotlight.</p>
+          <ol class="editor-board-list">
+            @for (id of boardIds(); track id; let index = $index; let last = $last) {
+              <li (dragover)="dragOver($event)" (drop)="drop(id, $event)">
+                <span class="editor-drag material-symbols-outlined" aria-hidden="true" [draggable]="!saving()" (dragstart)="dragStart(id, $event)" (dragend)="dragEnd()">drag_indicator</span>
+                @if (boardImage(id)) { <img [src]="boardImage(id)" alt="" loading="lazy" /> }
+                <span class="editor-board-name"><strong>{{ boardTitle(id) }}</strong><small>{{ index + 1 }}</small></span>
+                <div class="editor-row-actions">
+                  <button type="button" (click)="move(id, -1)" [disabled]="index === 0 || saving()" aria-label="Move board up" i18n-aria-label><span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span></button>
+                  <button type="button" (click)="move(id, 1)" [disabled]="last || saving()" aria-label="Move board down" i18n-aria-label><span class="material-symbols-outlined" aria-hidden="true">arrow_downward</span></button>
+                  <button type="button" class="editor-danger" (click)="remove(id)" [disabled]="saving()" aria-label="Remove board from collection" i18n-aria-label><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
+                </div>
+              </li>
+            } @empty { <li class="editor-empty" i18n>This collection is empty. Add boards whenever you are ready.</li> }
+          </ol>
+          <p i18n>Removing a board only removes it from this collection. The board stays in My Boards.</p>
+        } @else {
+          <h3 i18n>A memorable collection link</h3>
+          <p i18n>Set or change your custom address. Previous custom links keep working.</p>
+          @if (collection().customSlug) { <p class="editor-link">livingwiki.com/collections/{{ collection().customSlug }}</p> }
+          <button type="button" (click)="customUrlOpen.set(true)" [disabled]="saving()"><span class="material-symbols-outlined" aria-hidden="true">link</span><span i18n>Manage custom URL</span>@if (!eligible()) { <small i18n>Plus</small> }</button>
+        }
+        @if (error()) { <p class="editor-error" role="alert">{{ error() }}</p> }
+      </div>
+      <footer><button type="button" (click)="requestClose()" [disabled]="saving()" i18n>Cancel</button><button type="button" class="editor-primary" (click)="save()" [disabled]="!canSave() || pendingIds().length > 0">@if (saving()) { <span i18n>Saving…</span> } @else { <span i18n>Save changes</span> }</button></footer>
+    }
+  </section>
+</div>
+@if (customUrlOpen()) {
+  <app-custom-public-url-dialog resourceType="collection" [resourceId]="collection().id" [resourceTitle]="collection().title" [currentSlug]="collection().customSlug" [eligible]="eligible()" [publicResource]="true" (closed)="closeCustomUrl()" (saved)="customSaved.emit($event)"></app-custom-public-url-dialog>
+}

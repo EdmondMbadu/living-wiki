@@ -2,13 +2,16 @@ import { isPlatformBrowser } from '@angular/common';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
   limit,
   query,
+  runTransaction,
   serverTimestamp,
   setDoc,
+  startAfter,
   where,
   type Firestore,
 } from 'firebase/firestore';
@@ -62,6 +65,17 @@ export type LoadedBoardCollection = {
   collection: BoardCollection;
   boards: CityBoardListing[];
 };
+
+export type UpdateBoardCollectionInput = {
+  title: string;
+  description: string;
+  boardIds: string[];
+};
+
+export function collectionContentMatches(left: BoardCollection, right: BoardCollection): boolean {
+  return left.title === right.title && left.description === right.description
+    && JSON.stringify(left.boardIds) === JSON.stringify(right.boardIds);
+}
 
 export function boardCollectionSlug(value: string): string {
   return value
@@ -117,7 +131,7 @@ export function boardCollectionFromData(id: string, value: unknown): BoardCollec
   const slug = stringValue(data['slug'], 80);
   const title = stringValue(data['title'], 100);
   const boardIds = stringList(data['board_ids'], BOARD_COLLECTION_MAX_BOARDS, 180);
-  if (!id || !ownerUserId || !ownerPublicSlug || !slug || !title || !boardIds.length) return null;
+  if (!id || !ownerUserId || !ownerPublicSlug || !slug || !title || !Array.isArray(data['board_ids'])) return null;
   if (data['visibility'] !== 'public') return null;
   return {
     id,
@@ -179,6 +193,88 @@ export class BoardCollectionsService {
     const created = boardCollectionFromData(reference.id, data);
     if (!created) throw new Error('The collection could not be saved.');
     return created;
+  }
+
+  async listChoices(ownerUserId: string): Promise<BoardCollectionChoice[]> {
+    if (!this.firestore || this.authService.uid() !== ownerUserId) {
+      throw new Error($localize`Sign in as the collection owner to choose boards.`);
+    }
+    const choices: BoardCollectionChoice[] = [];
+    let cursor: Parameters<typeof startAfter>[0] | undefined;
+    do {
+      const page = await getDocs(query(
+        collection(this.firestore, 'boards'),
+        where('owner_user_id', '==', ownerUserId),
+        where('visibility', '==', 'public'),
+        ...(cursor ? [startAfter(cursor)] : []),
+        limit(100),
+      ));
+      for (const item of page.docs) {
+        const data = item.data();
+        if (data['parentCardId'] || data['parent_card_id']) continue;
+        const title = stringValue(data['title'], 100);
+        if (!title) continue;
+        choices.push({
+          id: item.id, title,
+          description: stringValue(data['description'], 280),
+          imageUrl: stringValue(data['imageUrl'], 2_000),
+          icon: stringValue(data['icon'], 64) || 'dashboard_customize',
+          tone: stringValue(data['tone'], 24),
+          kind: stringValue(data['kind'], 40),
+          cardCount: Array.isArray(data['cards']) ? data['cards'].length : 0,
+        });
+      }
+      cursor = page.size === 100 ? page.docs[page.docs.length - 1] : undefined;
+    } while (cursor);
+    return choices.sort((left, right) => left.title.localeCompare(right.title));
+  }
+
+  async update(expected: BoardCollection, input: UpdateBoardCollectionInput): Promise<LoadedBoardCollection> {
+    const uid = this.authService.uid();
+    if (!this.firestore || !uid || expected.ownerUserId !== uid) {
+      throw new Error($localize`Only the collection owner can edit this collection.`);
+    }
+    const title = stringValue(input.title, 100);
+    if (!title) throw new Error($localize`Give your collection a name.`);
+    const boardIds = [...new Set(input.boardIds)];
+    if (boardIds.length > BOARD_COLLECTION_MAX_BOARDS || boardIds.some(id => !id || id.length > 180 || id.includes('/'))) {
+      throw new Error($localize`Choose up to 50 valid boards.`);
+    }
+    const reference = doc(this.firestore, 'board_collections', expected.id);
+    const updated = await runTransaction(this.firestore, async transaction => {
+      const snapshot = await transaction.get(reference);
+      const current = snapshot.exists() ? boardCollectionFromData(snapshot.id, snapshot.data()) : null;
+      if (!current || current.ownerUserId !== uid) throw new Error($localize`This collection is no longer available.`);
+      if (!collectionContentMatches(current, expected)) {
+        throw new Error($localize`This collection changed in another window. Close the editor and refresh before trying again.`);
+      }
+      // Retain unavailable existing entries unless explicitly removed. Only new
+      // entries need to qualify; a private/deleted board must not block a rename.
+      const addedIds = boardIds.filter(id => !current.boardIds.includes(id));
+      const added = await Promise.all(addedIds.map(id => transaction.get(doc(this.firestore!, 'boards', id))));
+      if (added.some(board => !board.exists() || board.data()['owner_user_id'] !== uid
+        || board.data()['visibility'] !== 'public' || board.data()['parentCardId'] || board.data()['parent_card_id'])) {
+        throw new Error($localize`A selected board is no longer public or available. Choose your boards again.`);
+      }
+      const now = new Date().toISOString();
+      const description = stringValue(input.description, 280);
+      transaction.update(reference, {
+        title, description, board_ids: boardIds,
+        updated_at_iso: now, server_updated_at: serverTimestamp(),
+      });
+      return { ...current, title, description, boardIds, updatedAt: now };
+    });
+    return this.loadCollectionBoards(updated);
+  }
+
+  async delete(collectionItem: BoardCollection): Promise<void> {
+    const uid = this.authService.uid();
+    if (!this.firestore || !uid || (uid !== collectionItem.ownerUserId && !this.authService.isAdmin())) {
+      throw new Error($localize`Only the collection owner can delete this collection.`);
+    }
+    // The existing deletion trigger cleans up collection URLs. Board documents
+    // and their own URLs are deliberately never part of this operation.
+    await deleteDoc(doc(this.firestore, 'board_collections', collectionItem.id));
   }
 
   async listPublicForOwner(ownerKey: string): Promise<BoardCollection[]> {

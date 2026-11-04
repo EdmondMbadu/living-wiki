@@ -496,7 +496,8 @@ service cloud.firestore {
         && data.description is string
         && data.description.size() <= 280
         && data.board_ids is list
-        && data.board_ids.size() >= 1
+        // Existing collections may be emptied without deleting their boards.
+        && (request.method == 'update' || data.board_ids.size() >= 1)
         && data.board_ids.size() <= 50
         && data.created_at_iso is string
         && data.updated_at_iso is string

@@ -1,9 +1,9 @@
 <div class="city-collection-workspace">
   @if (isSignedIn()) {
-    <app-workspace-sidebar active="home" [rail]="true"></app-workspace-sidebar>
+    <app-workspace-sidebar active="home" [rail]="true" [attr.inert]="modalOpen() ? '' : null"></app-workspace-sidebar>
   }
 
-<main class="city-collection-page">
+<main class="city-collection-page" [class.city-collection-page--personal]="isUserCollection" [attr.inert]="modalOpen() ? '' : null">
   <div class="city-collection-page__glow" aria-hidden="true"></div>
 
   <header class="collection-nav">
@@ -17,13 +17,6 @@
         </a>
       </div>
       <div class="collection-nav__actions">
-        @if (canManageCollection()) {
-          <button type="button" class="collection-nav__custom-url" (click)="openCustomUrlDialog()">
-            <span class="material-symbols-outlined" aria-hidden="true">link</span>
-            <span i18n>Set custom URL</span>
-            @if (!customUrlEligible()) { <small i18n>Plus</small> }
-          </button>
-        }
         @if (collectionAvailable()) {
           <a [routerLink]="parentLink()" class="collection-nav__city-link">
             <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
@@ -73,8 +66,28 @@
               {{ collectionKindLabel() }}
             </span>
             <h1>{{ pageHeading() }}</h1>
+            @if (isUserCollection) { <p class="collection-personal-meta">{{ totalLabel() }} · {{ identitySecondary() }}</p> }
             <p>{{ collectionDescription() }}</p>
           </div>
+          <div class="collection-intro__aside">
+          @if (canManageCollection()) {
+            <div class="collection-owner-actions">
+              @if (canEditCollection()) {
+                <button type="button" class="collection-owner-primary" (click)="openEditor('boards', true)"><span class="material-symbols-outlined" aria-hidden="true">add</span><span i18n>Add boards</span></button>
+                <button type="button" (click)="openEditor('details')"><span class="material-symbols-outlined" aria-hidden="true">edit</span><span i18n>Edit collection</span></button>
+              }
+              <button id="collection-more-trigger" type="button" aria-label="More collection actions" i18n-aria-label [attr.aria-expanded]="moreOpen()" aria-controls="collection-more-menu" (click)="moreOpen.set(!moreOpen())"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
+              @if (moreOpen()) {
+                <div id="collection-more-menu" class="collection-more-menu" aria-label="Collection actions" i18n-aria-label>
+                  <button type="button" (click)="openCustomUrlDialog()"><span class="material-symbols-outlined" aria-hidden="true">link</span><span i18n>Custom URL</span>@if (!customUrlEligible()) { <small i18n>Plus</small> }</button>
+                  <button type="button" (click)="copyCollectionLink()"><span class="material-symbols-outlined" aria-hidden="true">content_copy</span><span i18n>Copy collection link</span></button>
+                  @if (canEditCollection()) { <button type="button" (click)="openEditor('boards')"><span class="material-symbols-outlined" aria-hidden="true">swap_vert</span><span i18n>Reorder boards</span></button> }
+                  <hr />
+                  <button type="button" class="collection-owner-danger" (click)="openDelete()"><span class="material-symbols-outlined" aria-hidden="true">delete_outline</span><span i18n>Delete collection…</span></button>
+                </div>
+              }
+            </div>
+          }
           <div class="collection-intro__identity">
             @if (identityImageUrl()) {
               <img [src]="identityImageUrl()" alt="" />
@@ -86,8 +99,12 @@
               @if (identitySecondary()) { <small>{{ identitySecondary() }}</small> }
             </span>
           </div>
+          </div>
         </div>
       </section>
+
+      @if (managementNotice()) { <p class="collection-management-notice" role="status">{{ managementNotice() }}</p> }
+      @if (managementError() && !deleteOpen()) { <p class="collection-management-error" role="alert">{{ managementError() }}</p> }
 
       @if (boardsLoading()) {
         <section class="collection-loading collection-loading--boards" aria-busy="true" aria-label="Loading boards" i18n-aria-label>
@@ -115,6 +132,9 @@
           <span class="collection-state__eyebrow" i18n>A collection in the making</span>
           <h2>{{ isUserCollection ? templateText.message6 : templateText.message7 + cityName() + templateText.message8 }}</h2>
           <p>{{ isUserCollection ? templateText.message9 : templateText.message10 + (isUniversity() ? 'university' : 'city') + templateText.message11 }}</p>
+          @if (canEditCollection()) {
+            <button type="button" class="collection-primary-action" (click)="openEditor('boards', true)"><span class="material-symbols-outlined" aria-hidden="true">add</span><span i18n>Add boards</span></button>
+          }
           <a [routerLink]="parentLink()" class="collection-primary-action">
             <span class="material-symbols-outlined" aria-hidden="true">{{ isUserCollection ? 'arrow_back' : 'forum' }}</span>
             {{ isUserCollection ? templateText.message1 : templateText.message12 + cityName() }}
@@ -334,6 +354,26 @@
     }
   </div>
 </main>
+
+@if (editorTab(); as tab) {
+  @if (userCollection(); as collection) {
+    <app-board-collection-editor [collection]="collection" [boards]="boards()" [initialTab]="tab" [initialPicker]="editorPicker()" [eligible]="customUrlEligible()"
+      (closed)="closeEditor()" (saved)="handleCollectionSaved($event)" (customSaved)="handleCustomUrlSaved($event)"></app-board-collection-editor>
+  }
+}
+
+@if (deleteOpen()) {
+  <div class="collection-delete-backdrop" appBackdropDismiss (backdropDismiss)="closeDelete()">
+    <section #deleteDialog class="collection-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="collection-delete-title" aria-describedby="collection-delete-copy" (keydown)="onDeleteKeydown($event)">
+      <span class="material-symbols-outlined collection-owner-danger" aria-hidden="true">delete_outline</span>
+      <h2 id="collection-delete-title" i18n>Delete “{{ pageHeading() }}”?</h2>
+      <p id="collection-delete-copy" i18n>This permanently deletes the collection and its collection links. This cannot be undone.</p>
+      <p><strong i18n>All boards will stay in My Boards.</strong></p>
+      @if (managementError()) { <p class="collection-management-error" role="alert">{{ managementError() }}</p> }
+      <div><button type="button" data-keep-collection (click)="closeDelete()" [disabled]="deleting()" i18n>Keep collection</button><button type="button" class="collection-delete-confirm" (click)="deleteCollection()" [disabled]="deleting()">@if (deleting()) { <span i18n>Deleting…</span> } @else { <span i18n>Delete collection</span> }</button></div>
+    </section>
+  </div>
+}
 
 @if (customUrlDialogOpen()) {
   @if (userCollection(); as collection) {

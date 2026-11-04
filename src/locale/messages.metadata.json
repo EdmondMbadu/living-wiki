@@ -693,7 +693,7 @@
   },
   "1205468388065142632": {
     "source": "Board collection",
-    "file": "src/app/board-collection-list/board-collection-list.html"
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "1205971432242625715": {
     "source": "Your headshot, contact card and branding travel with the story — so every replay, share and forward leads back to you.",
@@ -1049,7 +1049,7 @@
   },
   "1314562873676673298": {
     "source": "Saving…",
-    "file": "src/app/atlas-persona/atlas-persona.ts"
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "1314858263667858980": {
     "source": "Discover Articles",
@@ -1129,7 +1129,7 @@
   },
   "1342039955289279987": {
     "source": "{$INTERPOLATION} cards",
-    "file": "src/app/boards/boards.html"
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "1342826649609889809": {
     "source": "Your businesses",
@@ -1190,6 +1190,10 @@
   "1366154061375727283": {
     "source": "Start voice mode in {$INTERPOLATION}",
     "file": "src/app/business-detail/business-detail.html"
+  },
+  "1367083192898215616": {
+    "source": "Only the collection owner can edit this collection.",
+    "file": "src/app/board-collections.service.ts"
   },
   "1370922594157390261": {
     "source": "Travel to next stop",
@@ -2235,6 +2239,10 @@
     "source": "Make any changes before it joins the route.",
     "file": "src/app/boards/boards.html"
   },
+  "1620589882889851837": {
+    "source": "The collection could not be deleted. Try again.",
+    "file": "src/app/city-board-collection/city-board-collection.ts"
+  },
   "1621883294994165833": {
     "source": "Transparent PNG or WebP works best.",
     "file": "src/app/boards/boards.html"
@@ -2663,6 +2671,10 @@
     "source": "Creating link...",
     "file": "src/app/chat/chat.ts"
   },
+  "176035965100531490": {
+    "source": "Delete collection",
+    "file": "src/app/city-board-collection/city-board-collection.html"
+  },
   "1764870169538132277": {
     "source": "$0 today · card required · cancel anytime",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -3039,6 +3051,10 @@
     "source": "Team listings use a stable visitor link. Manage sharing in Board settings or on the team page.",
     "file": "src/app/boards/boards.ts"
   },
+  "1895032890407159641": {
+    "source": "Move board down",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
+  },
   "189677661134094854": {
     "source": " Text duration: first to last activity. Voice duration: verified call time. ",
     "file": "src/app/platform-analytics/picamo-analytics.html"
@@ -3401,7 +3417,7 @@
   },
   "2013119162535890375": {
     "source": "Plus",
-    "file": "src/app/boards/boards.html"
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "2013793067779404611": {
     "source": "Create or sign in before checkout.",
@@ -5803,6 +5819,10 @@
     "source": "View all",
     "file": "src/app/public-wikis/public-wikis.html"
   },
+  "2735130251182300480": {
+    "source": "Your boards could not be loaded. You can still edit the collection or try again.",
+    "file": "src/app/board-collection-editor/board-collection-editor.ts"
+  },
   "2735256604327633956": {
     "source": "Your shared workspaces",
     "file": "src/app/teams/teams.html"
@@ -5878,6 +5898,10 @@
   "2763843319651872258": {
     "source": "Choose an MP4, MOV or WebM video.",
     "file": "src/app/off-grids/pin-talk-recorder.ts"
+  },
+  "2764752393700904497": {
+    "source": "Copy collection link",
+    "file": "src/app/city-board-collection/city-board-collection.html"
   },
   "2765080493171269270": {
     "source": "Unlock more power to build, explore and share without limits.",
@@ -7099,9 +7123,17 @@
     "source": "Attempt recorded. Your best score stayed on the board.",
     "file": "src/app/answer-quiz/answer-quiz.ts"
   },
+  "3145345476278309750": {
+    "source": "Keep collection",
+    "file": "src/app/city-board-collection/city-board-collection.html"
+  },
   "3146348002114324720": {
     "source": "Joining…",
     "file": "src/app/boards/boards.ts"
+  },
+  "3147448174021526817": {
+    "source": "Add boards",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "3147591160602538496": {
     "source": "{$INTERPOLATION} v{$INTERPOLATION_1} · rubric {$INTERPOLATION_2}",
@@ -8083,6 +8115,10 @@
     "source": "Browse public Wikis",
     "file": "src/app/city-board-collection/city-board-collection.ts"
   },
+  "3406118569677532498": {
+    "source": "Unavailable board",
+    "file": "src/app/board-collection-editor/board-collection-editor.ts"
+  },
   "3406126694227837140": {
     "source": "Revert changes",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -8195,6 +8231,10 @@
     "source": "Use one fewer property scene",
     "file": "src/app/boards/boards.html"
   },
+  "3439104125508818041": {
+    "source": "Collection saved.",
+    "file": "src/app/city-board-collection/city-board-collection.ts"
+  },
   "3442817686340943129": {
     "source": "Food",
     "file": "src/app/boards/boards.ts"
@@ -8246,6 +8286,10 @@
   "3452439137280643161": {
     "source": " One created team per account. You can join other teams. ",
     "file": "src/app/account-menu/account-menu.html"
+  },
+  "3452898875619406189": {
+    "source": "The link could not be copied. Copy the address from your browser instead.",
+    "file": "src/app/city-board-collection/city-board-collection.ts"
   },
   "3453006371871045084": {
     "source": "{$INTERPOLATION} · {$INTERPOLATION_1} verified cards",
@@ -8619,6 +8663,10 @@
     "source": " map",
     "file": "src/app/city-places/city-places.ts"
   },
+  "3547955599727660086": {
+    "source": "Renaming your collection keeps its existing link.",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
+  },
   "3552395280200223605": {
     "source": "{$START_TAG_SPAN}▢{$CLOSE_TAG_SPAN} Their listing photos",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -8682,6 +8730,10 @@
   "3565166584976101678": {
     "source": "Property listing detected",
     "file": "src/app/boards/boards.html"
+  },
+  "3567352365194981065": {
+    "source": "This collection changed in another window. Close the editor and refresh before trying again.",
+    "file": "src/app/board-collections.service.ts"
   },
   "3569186524153223713": {
     "source": "Meet Picamo™",
@@ -9259,6 +9311,10 @@
     "source": "A founding-agent seat",
     "file": "src/app/talkthrus/talkthrus.html"
   },
+  "3738531388468543883": {
+    "source": "Reorder boards",
+    "file": "src/app/city-board-collection/city-board-collection.html"
+  },
   "3740540341355396056": {
     "source": "Every seller has already heard the same pitch: same photos, same AI-polished copy, same promises. When every agent sounds alike, they choose on commission. A photo can show a sunlit kitchen — you can explain why it's the heart of the home.",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -9351,6 +9407,10 @@
     "source": "Save",
     "file": "src/app/atlas-switcher/atlas-switcher.html"
   },
+  "3772614040825762526": {
+    "source": "This collection is no longer available.",
+    "file": "src/app/board-collections.service.ts"
+  },
   "3775324547205984079": {
     "source": "Wait for or cancel the active generation job before starting another.",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
@@ -9418,6 +9478,10 @@
   "3786725788701679426": {
     "source": " LivingWiki gives local businesses a place inside the living map of a city: a profile, a pin, guide placement, and signals that help people find the real local places search engines flatten. ",
     "file": "src/app/business/business.html"
+  },
+  "3786873415238947888": {
+    "source": "Custom URL",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "3790213593960300483": {
     "source": "Historically Black neighborhoods sit beside some of the largest oil refineries in the Western Hemisphere, with LNG expansion on the horizon.",
@@ -9658,6 +9722,10 @@
   "3862497674553063473": {
     "source": "Edit {$INTERPOLATION}",
     "file": "src/app/business-detail/business-edit.html"
+  },
+  "3863304149863674157": {
+    "source": "Give your collection a name.",
+    "file": "src/app/board-collections.service.ts"
   },
   "3863814686242131334": {
     "source": "{$START_TAG_SPAN}layers{$CLOSE_TAG_SPAN} Use first card ",
@@ -10279,6 +10347,10 @@
     "source": "All card images",
     "file": "src/app/boards/boards.html"
   },
+  "405492900881294881": {
+    "source": "Add selected",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
+  },
   "4056340931744707484": {
     "source": "Ending voice mode",
     "file": "src/app/chat/chat.ts"
@@ -10422,6 +10494,10 @@
   "4097717930954353033": {
     "source": " Load more conversations ",
     "file": "src/app/teams/teams.html"
+  },
+  "4097743558481384690": {
+    "source": "Move board up",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "4099000115043897691": {
     "source": "Visitor identity",
@@ -10875,6 +10951,10 @@
     "source": "My Videos | LivingWiki",
     "file": "src/app/app.routes.ts"
   },
+  "4216142977842027491": {
+    "source": "Manage custom URL",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
+  },
   "4216673580171604319": {
     "source": "warnings",
     "file": "src/app/boards/boards.ts"
@@ -11023,6 +11103,10 @@
     "source": "Upload business documents.",
     "file": "src/app/landing/landing.ts"
   },
+  "4262472317357285129": {
+    "source": "Choose up to 50 valid boards.",
+    "file": "src/app/board-collections.service.ts"
+  },
   "4262970142091008968": {
     "source": "When on, anyone with the link can view this landing page.",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -11046,6 +11130,10 @@
   "4268514799987791013": {
     "source": "Public Pulse",
     "file": "src/app/profile/profile-icons.ts"
+  },
+  "4270143906740382843": {
+    "source": "Edit collection",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "4271191303414444022": {
     "source": "Reviewed places",
@@ -11599,6 +11687,10 @@
     "source": "Let guests post a name",
     "file": "src/app/boards/boards.html"
   },
+  "44417136326348563": {
+    "source": "Drag to arrange, or use the arrows. The first board opens the spotlight.",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
+  },
   "4444098817243100843": {
     "source": "{$START_TAG_SPAN}check_circle{$CLOSE_TAG_SPAN}Ready",
     "file": "src/app/boards/boards.html"
@@ -12111,6 +12203,10 @@
     "source": "Search",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "4582747657915226685": {
+    "source": "Only the collection owner can delete this collection.",
+    "file": "src/app/board-collections.service.ts"
+  },
   "4582771110205419661": {
     "source": "Select at least one photo to edit its story.",
     "file": "src/app/boards/boards.ts"
@@ -12330,6 +12426,10 @@
   "4648079201550582996": {
     "source": "Shared thread",
     "file": "src/app/shared-chat/shared-chat.html"
+  },
+  "4648484548058349165": {
+    "source": "{$INTERPOLATION} / {$INTERPOLATION_1} boards",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "4650672670000638362": {
     "source": "My Trove",
@@ -12774,6 +12874,14 @@
   "4779990941731576091": {
     "source": "One speaker, a quiet room, and a natural delivery work best.",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
+  "4781136142628184693": {
+    "source": "Collection settings",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
+  },
+  "4781798775660987114": {
+    "source": "Removing a board only removes it from this collection. The board stays in My Boards.",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "4782691464445523030": {
     "source": " Pages: {$INTERPOLATION} ",
@@ -13899,6 +14007,10 @@
     "source": "Could not save the gem. Please retry.",
     "file": "src/app/off-grids/off-grid-editor.ts"
   },
+  "5134423859123696105": {
+    "source": "Loading your public boards…",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
+  },
   "5134485667215553135": {
     "source": "One-time payment. Lifetime access to everything, forever.",
     "file": "src/app/membership/membership.html"
@@ -14730,6 +14842,10 @@
   "5376084340764125422": {
     "source": "Exit fullscreen",
     "file": "src/app/trove/trove.ts"
+  },
+  "5377250585442583109": {
+    "source": "Close collection editor",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "5377288695600634859": {
     "source": "Your generated videos will appear here automatically.",
@@ -15610,6 +15726,10 @@
   "5639294631674454183": {
     "source": "Your starting point is used only for this search.",
     "file": "src/app/boards/boards.html"
+  },
+  "5639948796808545487": {
+    "source": "Collection actions",
+    "file": "src/app/city-board-collection/city-board-collection.html"
   },
   "564051786145937145": {
     "source": "Only the board owner or an admin can delete cards.",
@@ -16511,6 +16631,10 @@
     "source": "Edit stop",
     "file": "src/app/boards/boards.html"
   },
+  "588179810060510294": {
+    "source": "All boards will stay in My Boards.",
+    "file": "src/app/city-board-collection/city-board-collection.html"
+  },
   "5882923490690313525": {
     "source": "Say you’re interested. We’ll notify the organizer and email you when a plan is ready to confirm.",
     "file": "src/app/boards/boards.html"
@@ -16654,6 +16778,10 @@
   "5928113430136034184": {
     "source": "MA",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "5929580008206626702": {
+    "source": "Sign in as the collection owner to choose boards.",
+    "file": "src/app/board-collections.service.ts"
   },
   "5932365068219961435": {
     "source": "Roll out a personal listing experience across your team, with your brand on every TalkThru and each agent's own voice front and center.",
@@ -18051,6 +18179,10 @@
     "source": "Preparing this atlas conversation.",
     "file": "src/app/chat/chat.ts"
   },
+  "6328278155522055742": {
+    "source": "A memorable collection link",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
+  },
   "6328734173672096825": {
     "source": "Save profile",
     "file": "src/app/teams/teams.ts"
@@ -18854,6 +18986,10 @@
   "656535913656689514": {
     "source": "Needs a script",
     "file": "src/app/boards/boards.ts"
+  },
+  "6568359499195491614": {
+    "source": "This permanently deletes the collection and its collection links. This cannot be undone.",
+    "file": "src/app/city-board-collection/city-board-collection.html"
   },
   "6568496994795904409": {
     "source": "{$START_TAG_SPAN}ios_share{$CLOSE_TAG_SPAN} Share page ",
@@ -19775,6 +19911,10 @@
     "source": "Pitch slide + talk track built around their TalkThru.",
     "file": "src/app/talkthrus/talkthrus.ts"
   },
+  "68688718501654953": {
+    "source": "Collection link copied.",
+    "file": "src/app/city-board-collection/city-board-collection.ts"
+  },
   "6869615587399615312": {
     "source": "Place card",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -19854,6 +19994,10 @@
   "6893847117790319312": {
     "source": "LivingWiki automatically organizes your data into a structured system that updates as you learn.",
     "file": "src/app/marketing/marketing.html"
+  },
+  "6894518314206834502": {
+    "source": "The collection could not be saved. Try again.",
+    "file": "src/app/board-collection-editor/board-collection-editor.ts"
   },
   "6894803317960403699": {
     "source": " unique visitors, ",
@@ -20186,6 +20330,10 @@
   "6985267139889676910": {
     "source": "Owned",
     "file": "src/app/wiki-home/wiki-home.html"
+  },
+  "6986783600642734632": {
+    "source": "Discard your changes?",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "6987000622952787976": {
     "source": "Saving voice…",
@@ -20775,6 +20923,10 @@
     "source": "Sushi",
     "file": "src/app/business-badge-icons.ts"
   },
+  "7154951720131821402": {
+    "source": "Set or change your custom address. Previous custom links keep working.",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
+  },
   "7155348717487711748": {
     "source": "{$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN} Create a TalkThru ",
     "file": "src/app/teams/teams.html"
@@ -21310,6 +21462,10 @@
   "7315215537261754171": {
     "source": "Add portrait",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
+  "7315582280125620552": {
+    "source": "More collection actions",
+    "file": "src/app/city-board-collection/city-board-collection.html"
   },
   "731570025714254052": {
     "source": " Built for hyper-local discovery, so businesses appear in the city context where visitors ask questions, scan maps, and compare where to go next. ",
@@ -21911,6 +22067,10 @@
     "source": "Apply change",
     "file": "src/app/kiwi/kiwi.ts"
   },
+  "7502313164802064277": {
+    "source": "No more public boards match. Boards already in this collection are excluded.",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
+  },
   "7502375868490314701": {
     "source": "Hi! I’m here to help. What would you like to know?",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
@@ -22377,7 +22537,7 @@
   },
   "7640416587392187464": {
     "source": "{$INTERPOLATION} selected",
-    "file": "src/app/boards/boards.html"
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "7641551525689160081": {
     "source": "Search reviewed places...",
@@ -22421,7 +22581,7 @@
   },
   "7652811378040044470": {
     "source": "Deleting…",
-    "file": "src/app/boards/boards.ts"
+    "file": "src/app/city-board-collection/city-board-collection.html"
   },
   "7653606693918502530": {
     "source": "Creating 2 formats · ",
@@ -22686,6 +22846,10 @@
   "7741102765121622071": {
     "source": "Topics",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "7742726099023109199": {
+    "source": "Remove board from collection",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "7743349518574529722": {
     "source": "Search collections...",
@@ -24107,6 +24271,10 @@
     "source": "Send test email",
     "file": "src/app/atlas-manage/atlas-manage.ts"
   },
+  "8147405913310043939": {
+    "source": "A selected board is no longer public or available. Choose your boards again.",
+    "file": "src/app/board-collections.service.ts"
+  },
   "8147476970805028420": {
     "source": " ready",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -25043,6 +25211,10 @@
     "source": "Translation unavailable",
     "file": "src/app/boards/boards.html"
   },
+  "8455362890650014539": {
+    "source": "Delete collection…",
+    "file": "src/app/city-board-collection/city-board-collection.html"
+  },
   "8455581170467783884": {
     "source": "Full playlist ready",
     "file": "src/app/spotify-player/spotify-player.html"
@@ -25565,7 +25737,7 @@
   },
   "8634190498731735152": {
     "source": "Discard changes",
-    "file": "src/app/boards/boards.html"
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "8636653720347727364": {
     "source": "{$INTERPOLATION} cards from {$INTERPOLATION_1}",
@@ -26833,7 +27005,7 @@
   },
   "8981392061253349616": {
     "source": "Keep editing",
-    "file": "src/app/boards/boards.html"
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "8981724482694536509": {
     "source": "Directions",
@@ -27031,6 +27203,10 @@
     "source": "Go somewhere new",
     "file": "src/app/auth-story-panel/auth-story-panel.html"
   },
+  "9035903855787106400": {
+    "source": "This collection is empty. Add boards whenever you are ready.",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
+  },
   "90366488857282008": {
     "source": "Upgrade to create Wikis",
     "file": "src/app/wiki-home/wiki-home.ts"
@@ -27042,6 +27218,10 @@
   "9039228586774100482": {
     "source": "For agencies",
     "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "9040265911401289133": {
+    "source": "Delete “{$INTERPOLATION}”?",
+    "file": "src/app/city-board-collection/city-board-collection.html"
   },
   "9041444200911417888": {
     "source": "Selected",
@@ -27190,6 +27370,10 @@
   "9077145885828606707": {
     "source": "Billing opens Stripe, where you can change plans, update your card, download invoices or cancel.",
     "file": "src/app/talkthru-billing/talkthru-billing-page.html"
+  },
+  "90776664417727954": {
+    "source": "Your collection has not been changed. Leave the editor or keep editing.",
+    "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
   "9079818226311204704": {
     "source": "No TalkThru signups match this view.",

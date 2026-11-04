@@ -10,6 +10,7 @@ import {
 import {
   collection,
   doc,
+  deleteDoc,
   getDoc,
   getDocs,
   limit,
@@ -1459,13 +1460,45 @@ test('normal board saves preserve but cannot change a server-managed custom slug
   ));
 });
 
-test('collection writes require at least one selected board', async () => {
+test('collection creation requires at least one selected board', async () => {
   const database = testEnvironment.authenticatedContext(ownerUid).firestore();
 
   await assertFails(setDoc(
     doc(database, 'board_collections', 'collection-1'),
     publicBoardCollection({ board_ids: [] }),
   ));
+});
+
+test('collection owner can rename, reorder, empty and refill while preserving URLs', async () => {
+  const database = testEnvironment.authenticatedContext(ownerUid).firestore();
+  const reference = doc(database, 'board_collections', 'collection-1');
+  await testEnvironment.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), 'board_collections', 'collection-1'), publicBoardCollection({ custom_slug:'music-link', server_updated_at:new Date() }));
+  });
+  await assertSucceeds(updateDoc(reference, {title:'Renamed',description:'New description',board_ids:['b','a'],server_updated_at:serverTimestamp()}));
+  await assertSucceeds(updateDoc(reference, {board_ids:[],server_updated_at:serverTimestamp()}));
+  await assertSucceeds(updateDoc(reference, {board_ids:['a'],server_updated_at:serverTimestamp()}));
+  const value=(await getDoc(reference)).data();
+  assert.equal(value.slug,'favorite-places');assert.equal(value.custom_slug,'music-link');
+  await assertFails(updateDoc(reference, {custom_slug:'unregistered',server_updated_at:serverTimestamp()}));
+  await assertFails(updateDoc(reference, {owner_user_id:'other',server_updated_at:serverTimestamp()}));
+  await assertFails(updateDoc(reference, {created_at_iso:'changed',server_updated_at:serverTimestamp()}));
+  await assertFails(updateDoc(reference, {title:'x'.repeat(101),server_updated_at:serverTimestamp()}));
+  await assertFails(updateDoc(reference, {board_ids:Array.from({length:51},(_,i)=>`b-${i}`),server_updated_at:serverTimestamp()}));
+});
+
+test('deleting a collection preserves every board and denies visitors and other users', async () => {
+  await testEnvironment.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(),'board_collections','collection-1'),publicBoardCollection({server_updated_at:new Date()}));
+    await setDoc(doc(context.firestore(),'boards','wizard-board-1'),personalWizardBoard({server_updated_at:new Date()}));
+  });
+  for (const db of [testEnvironment.unauthenticatedContext().firestore(),testEnvironment.authenticatedContext('other').firestore()]) {
+    await assertFails(updateDoc(doc(db,'board_collections','collection-1'),{title:'Stolen',server_updated_at:serverTimestamp()}));
+    await assertFails(deleteDoc(doc(db,'board_collections','collection-1')));
+  }
+  const database=testEnvironment.authenticatedContext(ownerUid).firestore();
+  await assertSucceeds(deleteDoc(doc(database,'board_collections','collection-1')));
+  assert.equal((await getDoc(doc(database,'boards','wizard-board-1'))).exists(),true);
 });
 
 for (const kind of ['full', 'trailer']) {
