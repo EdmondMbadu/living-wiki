@@ -1,5 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { TERMS_CONTENT } from './terms-content';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 
 type LegalSection = {
@@ -68,75 +70,20 @@ const PRIVACY_CONTENT: LegalPageContent = {
   ],
 };
 
-const TERMS_CONTENT: LegalPageContent = {
-  eyebrow: $localize`Terms`,
-  title: $localize`Terms and Conditions`,
-  intro:
-    $localize`These terms are a practical starting point for using LivingWiki. They are intentionally concise for now and will be refined as the product matures.`,
-  updatedLabel: $localize`Last updated April 18, 2026`,
-  sections: [
-    {
-      heading: $localize`Product ownership`,
-      body: [
-        $localize`LivingWiki™ is a product of Mind Palace Inc.`,
-        $localize`LivingWiki is an independent product of Mind Palace Inc. and is not affiliated with, endorsed by, or sponsored by the Wikimedia Foundation, Wikipedia, or any related Wikimedia project.`,
-      ],
-    },
-    {
-      heading: $localize`Using the service`,
-      body: [
-        $localize`By accessing or using LivingWiki, you agree to use the product lawfully and responsibly. If you do not agree, do not use the service.`,
-        $localize`You are responsible for your account, your atlas settings, and the activity that occurs under your credentials.`,
-      ],
-    },
-    {
-      heading: $localize`Your content`,
-      body: [
-        $localize`You keep ownership of the content you upload or submit. You give LivingWiki permission to host, process, transform, index, and display that content as needed to operate the product.`,
-        $localize`You are responsible for making sure you have the rights to upload, publish, and share the material you place into the service.`,
-      ],
-    },
-    {
-      heading: $localize`Public atlases and chats`,
-      body: [
-        $localize`If you make an atlas public, you are responsible for the materials and generated content exposed through that atlas.`,
-        $localize`Public visitors may be allowed to ask questions against a public atlas. Those interactions may be logged and associated with anonymous identifiers or signed-in visitor account details.`,
-      ],
-    },
-    {
-      heading: $localize`Acceptable use`,
-      body: [
-        $localize`You may not use LivingWiki to violate the law, infringe intellectual property or privacy rights, distribute harmful material, interfere with the service, or attempt unauthorized access.`,
-        $localize`We may suspend or terminate access if we reasonably believe your use creates security, legal, operational, or abuse risks.`,
-      ],
-    },
-    {
-      heading: $localize`AI output and product changes`,
-      body: [
-        $localize`LivingWiki may generate summaries, wiki pages, citations, and chat answers using automated systems. Those outputs can be incomplete or incorrect and should be reviewed before being relied on.`,
-        $localize`LivingWiki answers are generated from available source material, public information, uploaded documents, verified local sources, and user-submitted updates, and may require human review.`,
-        $localize`We may change, improve, limit, or discontinue features at any time, including public atlas behavior, storage limits, or usage controls.`,
-      ],
-    },
-    {
-      heading: $localize`Disclaimers and liability`,
-      body: [
-        $localize`LivingWiki is provided on an as-is and as-available basis without warranties of any kind, to the fullest extent permitted by law.`,
-        $localize`To the fullest extent permitted by law, we are not liable for indirect, incidental, special, consequential, or punitive damages, or for loss of data, profits, or business arising from use of the service.`,
-      ],
-    },
-  ],
-};
-
 @Component({
   selector: 'app-legal',
   imports: [RouterLink, ThemeToggleComponent],
+  styleUrl: './legal.css',
   templateUrl: './legal.html',
 })
 export class LegalComponent {
   private readonly route = inject(ActivatedRoute);
 
+  private readonly routeData = toSignal(this.route.data, { initialValue: this.route.snapshot.data });
+
+  readonly isTerms = computed(() => this.routeData()['legalPage'] !== 'privacy');
+  readonly terms = TERMS_CONTENT;
   readonly page = computed<LegalPageContent>(() =>
-    this.route.snapshot.data['legalPage'] === 'privacy' ? PRIVACY_CONTENT : TERMS_CONTENT,
+    this.isTerms() ? TERMS_CONTENT : PRIVACY_CONTENT,
   );
 }

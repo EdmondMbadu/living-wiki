@@ -1,0 +1,262 @@
+:host {
+  display: block;
+}
+
+.legal-shell {
+  --bg: light-dark(#fff, #111);
+  --text: light-dark(#161616, #f2f2f2);
+  --muted: light-dark(#626262, #aaa);
+  --line: light-dark(#e7e7e7, #303030);
+  --accent: var(--text);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.legal-shell ::selection {
+  background: light-dark(#e5e5e5, #444);
+}
+
+.legal-shell a:focus-visible,
+.legal-shell summary:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 5px;
+}
+
+.legal-skip-link {
+  position: absolute;
+  z-index: 10;
+  inset-block-start: -5rem;
+  inset-inline-start: 2rem;
+  padding: .8rem 1.2rem;
+  background: var(--text);
+  color: var(--bg);
+}
+
+.legal-skip-link:focus {
+  inset-block-start: 1rem;
+}
+
+.legal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: .25rem;
+}
+
+.legal-home-link,
+.legal-account-link {
+  font-size: .8rem;
+  white-space: nowrap;
+}
+
+.legal-home-link {
+  padding: .6rem .75rem;
+}
+
+.legal-account-link {
+  border-radius: 2rem;
+  padding: .7rem 1.1rem;
+  background: var(--text);
+  color: var(--bg);
+}
+
+.legal-header a:hover {
+  opacity: .75;
+}
+
+.terms-page {
+  width: min(100%, 42rem);
+  margin-inline: auto;
+  padding-block: 5.5rem 5rem;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.terms-heading {
+  margin-bottom: 3.5rem;
+  text-align: center;
+}
+
+.terms-language {
+  margin-bottom: 1.5rem;
+  color: var(--muted);
+  font-size: .82rem;
+}
+
+.terms-heading h1 {
+  font-size: clamp(2.25rem, 4vw, 3.5rem);
+  font-weight: 500;
+  letter-spacing: -.045em;
+  line-height: 1.15;
+}
+
+.terms-preface p + p {
+  margin-top: 1.5rem;
+}
+
+.terms-version {
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.terms-contents {
+  margin-top: 2rem;
+  padding-block: 1rem;
+  border-block: 1px solid var(--line);
+  font-size: .9rem;
+}
+
+.terms-contents summary {
+  width: fit-content;
+  cursor: pointer;
+}
+
+.terms-contents ol {
+  display: grid;
+  gap: .5rem;
+  margin: 1rem 0 .25rem;
+  padding-inline-start: 1.4rem;
+  list-style: decimal;
+}
+
+.terms-contents a,
+.terms-inline-link,
+.terms-closing a {
+  text-decoration: underline;
+  text-underline-offset: .2em;
+  text-decoration-color: light-dark(#aaa, #666);
+}
+
+.terms-contents a:hover,
+.terms-inline-link:hover,
+.terms-closing a:hover {
+  text-decoration-color: currentColor;
+}
+
+.terms-section {
+  margin-top: 2.5rem;
+  scroll-margin-top: 2rem;
+}
+
+.terms-section h2 {
+  margin-bottom: 1.1rem;
+  font-size: 1.5rem;
+  font-weight: 550;
+  letter-spacing: -.025em;
+  line-height: 1.35;
+}
+
+.terms-section h2 a:hover {
+  text-decoration: underline;
+  text-underline-offset: .2em;
+  text-decoration-thickness: 1px;
+}
+
+.terms-section p {
+  overflow-wrap: anywhere;
+}
+
+.terms-section > p + p {
+  margin-top: 1.25rem;
+}
+
+.terms-rules {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+  padding-inline-start: 1.25rem;
+  list-style: disc;
+}
+
+.terms-rules li {
+  padding-inline-start: .25rem;
+}
+
+.terms-rules h3 {
+  margin-bottom: .35rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.terms-inline-link {
+  display: inline-block;
+  margin-top: 1.25rem;
+}
+
+.terms-closing {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  font-size: .85rem;
+}
+
+#terms-title {
+  scroll-margin-top: 2rem;
+}
+
+:host footer {
+  padding-block-end: 7rem;
+}
+
+@media (max-width: 640px) {
+  .legal-home-link {
+    display: none;
+  }
+
+  .legal-account-link {
+    padding: .65rem .85rem;
+    font-size: .75rem;
+  }
+
+  .terms-page {
+    padding-block: 3.5rem 3rem;
+    font-size: .95rem;
+  }
+
+  .terms-heading {
+    margin-bottom: 2.5rem;
+  }
+
+  .terms-section h2 {
+    font-size: 1.35rem;
+  }
+}
+
+@media print {
+  .legal-shell {
+    --bg: #fff;
+    --text: #111;
+    --muted: #555;
+    --line: #ddd;
+    color-scheme: light;
+  }
+
+  .legal-header,
+  :host footer,
+  .legal-skip-link,
+  .terms-contents,
+  .terms-closing {
+    display: none;
+  }
+
+  .terms-page {
+    width: 100%;
+    padding: 0;
+  }
+
+  .terms-section h2,
+  .terms-rules h3 {
+    break-after: avoid;
+  }
+
+  .terms-section p,
+  .terms-rules li {
+    orphans: 3;
+    widows: 3;
+  }
+}

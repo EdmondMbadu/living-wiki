@@ -1815,10 +1815,6 @@
     "source": "Loading contacts…",
     "file": "src/app/teams/teams.html"
   },
-  "1523933695581114488": {
-    "source": "AI output and product changes",
-    "file": "src/app/legal/legal.ts"
-  },
   "1526697022461205282": {
     "source": "Loading people…",
     "file": "src/app/boards/boards.html"
@@ -2766,10 +2762,6 @@
   "1806667489382256324": {
     "source": "Category",
     "file": "src/app/atlas-manage/atlas-manage.html"
-  },
-  "1808803521215323882": {
-    "source": "By accessing or using LivingWiki, you agree to use the product lawfully and responsibly. If you do not agree, do not use the service.",
-    "file": "src/app/legal/legal.ts"
   },
   "1808833822201003514": {
     "source": "A hidden fun fact, favorite memory, or private-feeling note for the back of this board.",
@@ -5927,10 +5919,6 @@
     "source": "Featured guide placement",
     "file": "src/app/business/business.ts"
   },
-  "2771157655870159022": {
-    "source": "LivingWiki™ is a product of Mind Palace Inc.",
-    "file": "src/app/legal/legal.ts"
-  },
   "2772023564304193657": {
     "source": "Enter your password",
     "file": "src/app/sign-in/sign-in.html"
@@ -6650,10 +6638,6 @@
   "3005007424603401755": {
     "source": "Cover photo",
     "file": "src/app/teams/teams.html"
-  },
-  "3005524494119284751": {
-    "source": "LivingWiki is an independent product of Mind Palace Inc. and is not affiliated with, endorsed by, or sponsored by the Wikimedia Foundation, Wikipedia, or any related Wikimedia project.",
-    "file": "src/app/legal/legal.ts"
   },
   "3005804072839305205": {
     "source": "{$START_TAG_SPAN}upload_file{$CLOSE_TAG_SPAN}Upload CSV{$TAG_INPUT}",
@@ -7431,10 +7415,6 @@
     "source": "{$START_TAG_SPAN}chat_bubble{$CLOSE_TAG_SPAN}Text",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
-  "322080564957795096": {
-    "source": "LivingWiki answers are generated from available source material, public information, uploaded documents, verified local sources, and user-submitted updates, and may require human review.",
-    "file": "src/app/legal/legal.ts"
-  },
   "3221511166288560984": {
     "source": "Why this belongs on the board.",
     "file": "src/app/boards/boards.ts"
@@ -8141,7 +8121,7 @@
   },
   "3411805131914952915": {
     "source": "Skip to content",
-    "file": "src/app/talkthrus/talkthrus.html"
+    "file": "src/app/legal/legal.html"
   },
   "3412510347304053829": {
     "source": " A majority-Black city on the Delaware River hosts Reworld Delaware Valley, formerly Covanta, burning up to 3,500 tons of waste per day. Only a tiny fraction of the trash burned here is Chester's own. ",
@@ -9363,10 +9343,6 @@
     "source": "Save identity & personality",
     "file": "src/app/atlas-persona/atlas-persona.ts"
   },
-  "3752844093994384159": {
-    "source": "Disclaimers and liability",
-    "file": "src/app/legal/legal.ts"
-  },
   "3753585561172815876": {
     "source": "Sign in with the email address the invitation was sent to.",
     "file": "src/app/teams/teams.html"
@@ -9382,10 +9358,6 @@
   "3760890619817277502": {
     "source": "Remove video from ",
     "file": "src/app/boards/boards.ts"
-  },
-  "3762793435848716944": {
-    "source": "You are responsible for making sure you have the rights to upload, publish, and share the material you place into the service.",
-    "file": "src/app/legal/legal.ts"
   },
   "3763778808717091943": {
     "source": "Play all here",
@@ -9787,10 +9759,6 @@
     "source": "This intro card is no longer available.",
     "file": "src/app/boards/boards.ts"
   },
-  "3888247328343531910": {
-    "source": "Using the service",
-    "file": "src/app/legal/legal.ts"
-  },
   "3889355052598045321": {
     "source": "Number of cards",
     "file": "src/app/boards/boards.html"
@@ -9882,10 +9850,6 @@
   "3910187627685356510": {
     "source": "Conversations matching the selected audience will appear here. Automated QA stays separate.",
     "file": "src/app/card-analytics/card-analytics.html"
-  },
-  "3910326530505852255": {
-    "source": "These terms are a practical starting point for using LivingWiki. They are intentionally concise for now and will be refined as the product matures.",
-    "file": "src/app/legal/legal.ts"
   },
   "3910646306288819373": {
     "source": "Card numbers",
@@ -11883,10 +11847,6 @@
     "source": "Counter card",
     "file": "src/app/business/business.ts"
   },
-  "4509922642254834628": {
-    "source": "We may suspend or terminate access if we reasonably believe your use creates security, legal, operational, or abuse risks.",
-    "file": "src/app/legal/legal.ts"
-  },
   "4510432308052618953": {
     "source": "Personal narrator",
     "file": "src/app/boards/boards.html"
@@ -12366,10 +12326,6 @@
   "4628922069315503791": {
     "source": "Let's talk.",
     "file": "src/app/talkthrus/talkthrus.html"
-  },
-  "4632914288342669590": {
-    "source": "Product ownership",
-    "file": "src/app/legal/legal.ts"
   },
   "4633505197540468968": {
     "source": "Current wiki",
@@ -15071,10 +15027,6 @@
     "source": "Publish ",
     "file": "src/app/teams/teams.ts"
   },
-  "5452391238532283380": {
-    "source": "You keep ownership of the content you upload or submit. You give LivingWiki permission to host, process, transform, index, and display that content as needed to operate the product.",
-    "file": "src/app/legal/legal.ts"
-  },
   "5452623943061444909": {
     "source": "Loading your videos…",
     "file": "src/app/video-library/video-library.html"
@@ -15138,10 +15090,6 @@
   "5479133824073842793": {
     "source": "Configure",
     "file": "src/app/atlas-manage/atlas-manage.html"
-  },
-  "5480316940499091585": {
-    "source": "LivingWiki may generate summaries, wiki pages, citations, and chat answers using automated systems. Those outputs can be incomplete or incorrect and should be reviewed before being relied on.",
-    "file": "src/app/legal/legal.ts"
   },
   "5481284030283031915": {
     "source": "Website",
@@ -16599,10 +16547,6 @@
     "source": "Your email has been verified. You can continue to your workspace.",
     "file": "src/app/auth-action/auth-action.ts"
   },
-  "5873983653768179541": {
-    "source": "You may not use LivingWiki to violate the law, infringe intellectual property or privacy rights, distribute harmful material, interfere with the service, or attempt unauthorized access.",
-    "file": "src/app/legal/legal.ts"
-  },
   "5875130684997376720": {
     "source": "Billing",
     "file": "src/app/teams/teams.ts"
@@ -17703,10 +17647,6 @@
     "source": "Up to 10 documents per upload",
     "file": "src/app/business-claim/business-claim.html"
   },
-  "6198800499416559784": {
-    "source": "Acceptable use",
-    "file": "src/app/legal/legal.ts"
-  },
   "6198925600248791338": {
     "source": "Discover | LivingWiki",
     "file": "src/app/app.routes.ts"
@@ -17930,10 +17870,6 @@
   "6254459922754143568": {
     "source": "Replace",
     "file": "src/app/atlas-landing/atlas-landing.html"
-  },
-  "6254556890674213213": {
-    "source": "If you make an atlas public, you are responsible for the materials and generated content exposed through that atlas.",
-    "file": "src/app/legal/legal.ts"
   },
   "6255187107413641267": {
     "source": "Failed to load Vapi voice settings.",
@@ -19286,10 +19222,6 @@
   "6645339184005075976": {
     "source": " as cover",
     "file": "src/app/boards/listing-photo-source.ts"
-  },
-  "664573589261423471": {
-    "source": "Terms and Conditions",
-    "file": "src/app/legal/legal.ts"
   },
   "6648548893016659773": {
     "source": "Shown with the Talking Card actions.",
@@ -21271,10 +21203,6 @@
     "source": "End Picamo voice conversation",
     "file": "src/app/kiwi/kiwi.ts"
   },
-  "7246435269238158783": {
-    "source": "Public atlases and chats",
-    "file": "src/app/legal/legal.ts"
-  },
   "724768127591825886": {
     "source": "Hazardous waste landfill",
     "file": "src/app/fence-line/fence-line.ts"
@@ -21646,10 +21574,6 @@
   "7365517136074263312": {
     "source": "QR code",
     "file": "src/app/boards/boards.html"
-  },
-  "7366694613586595216": {
-    "source": "LivingWiki is provided on an as-is and as-available basis without warranties of any kind, to the fullest extent permitted by law.",
-    "file": "src/app/legal/legal.ts"
   },
   "7366879854446681438": {
     "source": "communities",
@@ -22431,10 +22355,6 @@
     "source": "Unmute microphone",
     "file": "src/app/chat/chat.ts"
   },
-  "7613230708816137121": {
-    "source": "Your content",
-    "file": "src/app/legal/legal.ts"
-  },
   "7613848541793135105": {
     "source": "Internal",
     "file": "src/app/card-analytics/card-analytics.html"
@@ -22894,10 +22814,6 @@
   "7754701867165913575": {
     "source": "Subtitle {$START_SMALL_TEXT}Optional caption shown with this photo.{$CLOSE_SMALL_TEXT}",
     "file": "src/app/boards/boards.html"
-  },
-  "7754785233210243286": {
-    "source": "Public visitors may be allowed to ask questions against a public atlas. Those interactions may be logged and associated with anonymous identifiers or signed-in visitor account details.",
-    "file": "src/app/legal/legal.ts"
   },
   "7754820011467516468": {
     "source": "Search your wikis...",
@@ -24786,10 +24702,6 @@
   "8320098248167575617": {
     "source": "Alongside cards",
     "file": "src/app/boards/boards.html"
-  },
-  "8321812088863551042": {
-    "source": "You are responsible for your account, your atlas settings, and the activity that occurs under your credentials.",
-    "file": "src/app/legal/legal.ts"
   },
   "8323027781252893267": {
     "source": "{$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN} Card back ",
@@ -26787,10 +26699,6 @@
     "source": "Unlisted: anyone with this link can view and forward it. It does not appear in public discovery.",
     "file": "src/app/teams/teams.html"
   },
-  "8932306453539137298": {
-    "source": "To the fullest extent permitted by law, we are not liable for indirect, incidental, special, consequential, or punitive damages, or for loss of data, profits, or business arising from use of the service.",
-    "file": "src/app/legal/legal.ts"
-  },
   "8933329832416037471": {
     "source": "No Wikis connected yet.",
     "file": "src/app/profile/profile.html"
@@ -27465,10 +27373,6 @@
   },
   "9110925056496707410": {
     "source": "Your choices",
-    "file": "src/app/legal/legal.ts"
-  },
-  "9111194009950286597": {
-    "source": "We may change, improve, limit, or discontinue features at any time, including public atlas behavior, storage limits, or usage controls.",
     "file": "src/app/legal/legal.ts"
   },
   "9115458698382595773": {
