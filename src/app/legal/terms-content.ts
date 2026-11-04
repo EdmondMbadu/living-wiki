@@ -1,11 +1,13 @@
 // The canonical terms are authored in English. Keep this legal document in English
 // across localized routes (lang="en" in the template), rather than substituting an
 // unreviewed machine translation. Navigation and the privacy page remain localized.
+import { TERMS_UPDATED_LABEL } from './terms-policy';
+
 export const TERMS_CONTENT = {
   eyebrow: 'Our shared ground rules',
   title: 'Terms and Conditions',
   intro: 'A little clarity makes room for a lot of discovery. These terms explain how to use LivingWiki and its AI avatars responsibly, safely, and for learning.',
-  updatedLabel: 'Effective November 4, 2026 · Version 1.0',
+  updatedLabel: TERMS_UPDATED_LABEL,
   sections: [
     {
       id: 'agreement',

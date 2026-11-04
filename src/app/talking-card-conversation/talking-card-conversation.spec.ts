@@ -1,3 +1,4 @@
+import { GuestTermsService } from '../guest-terms/guest-terms.service';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { AtlasItem } from '../atlas.models';
@@ -76,6 +77,7 @@ describe('TalkingCardConversationComponent', () => {
       imports: [TalkingCardConversationComponent],
       providers: [
         provideZonelessChangeDetection(),
+        { provide: GuestTermsService, useValue: { requestConversation: async () => true } },
         { provide: BoardAnalyticsService, useValue: { visitorId: () => 'fixture_browser_12345678' } },
         { provide: CardAnalyticsService, useValue: { endText: jasmine.createSpy('endText').and.resolveTo({ accepted: true }), syncVoice: jasmine.createSpy('syncVoice').and.resolveTo({ pending: true }) } },
         { provide: AtlasService, useValue: atlasService },

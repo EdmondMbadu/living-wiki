@@ -595,6 +595,10 @@
     "source": "Use one fewer card",
     "file": "src/app/boards/boards.html"
   },
+  "1173880311827700269": {
+    "source": "Please review and accept our terms before talking to an AI avatar as a guest.",
+    "file": "src/app/guest-terms/guest-terms.html"
+  },
   "1175324416294707441": {
     "source": "{$INTERPOLATION}/4 selected",
     "file": "src/app/business-claim/business-claim.html"
@@ -814,6 +818,10 @@
   "1245705908559404950": {
     "source": "Historian",
     "file": "src/app/boards/boards.ts"
+  },
+  "1247374532019146395": {
+    "source": "Already have an account? Sign in",
+    "file": "src/app/guest-terms/guest-terms.html"
   },
   "124991802454941671": {
     "source": "No voices match “{$INTERPOLATION}”.",
@@ -3207,6 +3215,10 @@
     "source": "Messages and group chats",
     "file": "src/app/board-insights/board-insights.ts"
   },
+  "1945521159206789600": {
+    "source": "Agree and continue",
+    "file": "src/app/guest-terms/guest-terms.html"
+  },
   "1946057653061100680": {
     "source": "Copy public link",
     "file": "src/app/video-library/video-library.html"
@@ -4315,6 +4327,10 @@
     "source": "What is the LivingWiki platform?",
     "file": "src/app/marketing/marketing.html"
   },
+  "2292358055733863050": {
+    "source": "Welcome to LivingWiki",
+    "file": "src/app/guest-terms/guest-terms.html"
+  },
   "2296910706858050590": {
     "source": "Snapshot generated {$INTERPOLATION} UTC. This report does not update automatically.",
     "file": "src/app/shared-analytics/shared-analytics.html"
@@ -4810,6 +4826,10 @@
   "2425921088566824034": {
     "source": "Checking team creation availability…",
     "file": "src/app/teams/teams.html"
+  },
+  "2426547975329986384": {
+    "source": "Pornography, hateful abuse, violence promotion, impersonation, and attempts to bypass AI safeguards are prohibited.",
+    "file": "src/app/guest-terms/guest-terms.html"
   },
   "2429133737252582664": {
     "source": "Switch team",
@@ -6899,6 +6919,10 @@
     "source": "Picamo welcoming you with a city map",
     "file": "src/app/chat/chat.html"
   },
+  "3086163574432609806": {
+    "source": "I have read and agree to the {$START_LINK}Terms and Conditions{$CLOSE_LINK}.",
+    "file": "src/app/guest-terms/guest-terms.html"
+  },
   "3086749883613379075": {
     "source": "Public wiki",
     "file": "src/app/wiki/wiki.html"
@@ -7290,6 +7314,10 @@
   "3180135722751253645": {
     "source": "Loading chat",
     "file": "src/app/chat/chat.ts"
+  },
+  "3180837256753051529": {
+    "source": "We remember your acceptance in this browser. If you clear browser storage or use another device, you will be asked again.",
+    "file": "src/app/guest-terms/guest-terms.html"
   },
   "3181015128176551788": {
     "source": "Unlock your personal narrator voice",
@@ -9610,6 +9638,10 @@
   "3831519612399754459": {
     "source": "{$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG} You can keep editing, and your draft keeps saving. Finish when the images are ready.",
     "file": "src/app/boards/boards.html"
+  },
+  "3831642961274653567": {
+    "source": "You can keep browsing without accepting. Accept the terms when you are ready to talk to an AI avatar.",
+    "file": "src/app/guest-terms/guest-terms.html"
   },
   "3832232923476527550": {
     "source": "Only the tour owner can add stops.",
@@ -12686,6 +12718,10 @@
   "4740623127780801826": {
     "source": "Stripe checkout and this business claim will be attached to this account.",
     "file": "src/app/business-claim/business-claim.html"
+  },
+  "4740931120111886185": {
+    "source": "Picamo and all our AI avatars are exclusively for educational purposes.",
+    "file": "src/app/guest-terms/guest-terms.html"
   },
   "4741365775680406794": {
     "source": "{$INTERPOLATION} questions · get your score instantly",
@@ -16303,6 +16339,10 @@
     "source": "Your score is on the leaderboard.",
     "file": "src/app/boards/boards.ts"
   },
+  "5806654359633445594": {
+    "source": "Read the Privacy Policy",
+    "file": "src/app/guest-terms/guest-terms.html"
+  },
   "5808215467937565652": {
     "source": "Run summary",
     "file": "src/app/web-scraper/web-scraper.html"
@@ -17918,6 +17958,10 @@
   "6269202464699193298": {
     "source": "Arabic",
     "file": "src/app/business-claim/business-claim.ts"
+  },
+  "6269277167176055112": {
+    "source": "The terms are available in English.",
+    "file": "src/app/guest-terms/guest-terms.html"
   },
   "6269691152684662737": {
     "source": " Google Drive import is available after Google Picker OAuth is configured for this app. ",
@@ -22739,6 +22783,10 @@
     "source": " matching voices",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
+  "773313783239256912": {
+    "source": "We could not save your acceptance. Allow browser storage and try again, or sign in to your account.",
+    "file": "src/app/guest-terms/guest-terms.html"
+  },
   "7733949442202720953": {
     "source": "Existing city profile found.",
     "file": "src/app/business-claim/business-claim.html"
@@ -22798,6 +22846,10 @@
   "7750187499038739309": {
     "source": "Friends can drop locations here",
     "file": "src/app/boards/boards.html"
+  },
+  "7750629275954304336": {
+    "source": "Before you continue",
+    "file": "src/app/guest-terms/guest-terms.html"
   },
   "775153140303396828": {
     "source": " Start a conversation ",

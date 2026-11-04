@@ -1,3 +1,4 @@
+import { GuestTermsService } from '../guest-terms/guest-terms.service';
 import { contentLanguageDetails, contentLanguageVoicePreference } from '../../../functions/src/content-language';
 import type { BoardTranslationLanguage } from '../boards/board-translation';
 import { Component, computed, HostListener, inject, input, OnDestroy, OnInit, output, signal } from '@angular/core';
@@ -159,6 +160,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   };
   private readonly atlasService = inject(AtlasService);
   private readonly chatService = inject(ChatService);
+  private readonly guestTerms = inject(GuestTermsService);
   private readonly authService = inject(AuthService);
   private voiceConversation: VoiceConversation | null = null;
   private readonly trafficAnalytics = inject(BoardAnalyticsService);
@@ -288,6 +290,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     const question = this.draft().trim();
     const atlas = this.atlas();
     if (!question || !atlas || this.submitting()) return;
+    if (!await this.guestTerms.requestConversation() || this.destroyed || this.submitting()) return;
     if (!this.analyticsSessionId || Date.now() - this.lastTextActivityAt > 30 * 60_000) {
       this.analyticsSessionId = crypto.randomUUID();
       this.threadId = null;
@@ -368,6 +371,8 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   async startVoice(): Promise<void> {
     const atlas = this.atlas();
     if (!atlas || this.conversationStage() !== 'conversation'
+      || this.voiceStatus() === 'connecting' || this.voiceStatus() === 'connected') return;
+    if (!await this.guestTerms.requestConversation() || this.destroyed
       || this.voiceStatus() === 'connecting' || this.voiceStatus() === 'connected') return;
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       this.voiceStatus.set('error');

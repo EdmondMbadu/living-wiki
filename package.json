@@ -46,6 +46,7 @@
     "start:ar": "ng serve --configuration ar",
     "start:hi": "ng serve --configuration hi",
     "start:ru": "ng serve --configuration ru",
+    "test:guest-terms": "ng test --ts-config=tsconfig.guest-terms.spec.json --include=src/app/guest-terms/*.spec.ts --watch=false --browsers=ChromeHeadless",
     "test:analytics": "ng test --configuration=analytics-support --watch=false --browsers=ChromeHeadless"
   },
   "prettier": {

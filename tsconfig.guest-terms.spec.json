@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.spec.json",
+  "files": [
+    "src/app/guest-terms/guest-terms.service.spec.ts",
+    "src/app/guest-terms/guest-terms-actions.spec.ts",
+    "src/app/guest-terms/guest-terms-shell.spec.ts",
+    "src/app/guest-terms/guest-terms.guard.spec.ts",
+    "src/app/guest-terms/guest-terms.spec.ts"
+  ],
+  "include": ["src/**/*.d.ts"]
+}

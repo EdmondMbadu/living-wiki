@@ -45,6 +45,28 @@ ng build
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
+## Guest terms acceptance
+
+Signed-out visitors can browse without accepting terms. The first time they start
+an avatar voice or typed conversation, `GuestTermsService.requestConversation()`
+waits for authentication restoration and opens a consent dialog if needed. No
+conversation request or microphone connection starts before acceptance. Existing
+signed-in accounts and returning guests who have accepted the current policy skip
+the dialog. Not now, Escape, dismissing the dialog, or navigating away cancels the
+pending conversation while leaving browsing available. Old `/guest-terms` URLs
+redirect to browsing instead of forcing a standalone acceptance screen.
+
+Acceptance is stored under `livingwiki.guest-terms-acceptance` in localStorage, with
+an acceptance timestamp and the version/effective date from
+`src/app/legal/terms-policy.ts`. A different device, cleared storage, or a revised
+policy requires acceptance again when starting a conversation. Failed storage
+keeps the conversation blocked, with a recovery message. This is a browser
+interaction gate and a local acceptance record, not a server-side audit log or API
+authorization boundary.
+
+Run `npm run test:guest-terms` for isolated persistence, dialog, conversation, and
+navigation tests. They use fake storage, not a real visitor’s acceptance record.
+
 ## Internationalization
 
 The shared site language switcher offers English, French, Japanese, Brazilian Portuguese, Latin American Spanish, German, Simplified Chinese, Italian, Korean, Arabic, Hindi, and Russian. Angular builds a separate localized application per locale, so navigation, page controls, accessibility labels, and locale-aware formatting use the selected interface language without runtime translation requests.

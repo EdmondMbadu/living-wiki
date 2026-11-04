@@ -1,0 +1,32 @@
+<div class="guest-terms-shell">
+  <main aria-labelledby="guest-terms-title">
+    <p class="eyebrow" i18n>Welcome to LivingWiki</p>
+    <h1 id="guest-terms-title" i18n>Before you continue</h1>
+    <p class="intro" i18n>Please review and accept our terms before talking to an AI avatar as a guest.</p>
+    <p class="purpose" i18n>Picamo and all our AI avatars are exclusively for educational purposes.</p>
+    <p class="rules" i18n>Pornography, hateful abuse, violence promotion, impersonation, and attempts to bypass AI safeguards are prohibited.</p>
+    <p class="policy" lang="en" dir="ltr">{{ policyLabel }}</p>
+    <p class="terms-language" i18n>The terms are available in English.</p>
+
+    <form (submit)="accept($event)">
+      <label class="agreement">
+        <input #agreement type="checkbox" [checked]="agreed()" (change)="setAgreed(agreement.checked)" [disabled]="submitting()" />
+        <span i18n>I have read and agree to the <a routerLink="/terms" target="_blank" rel="noopener noreferrer">Terms and Conditions</a>.</span>
+      </label>
+      <p class="privacy"><a routerLink="/privacy" target="_blank" rel="noopener noreferrer" i18n>Read the Privacy Policy</a></p>
+
+      @if (error()) {
+        <p class="notice" role="alert" i18n>We could not save your acceptance. Allow browser storage and try again, or sign in to your account.</p>
+      }
+      @if (declined()) {
+        <p class="notice" role="status" i18n>You can keep browsing without accepting. Accept the terms when you are ready to talk to an AI avatar.</p>
+      }
+      <div class="actions">
+        <button type="submit" class="continue" [disabled]="!agreed() || submitting()" i18n>Agree and continue</button>
+        <button type="button" class="decline" (click)="decline()" [disabled]="submitting()" i18n>Not now</button>
+      </div>
+    </form>
+    <p class="remember" i18n>We remember your acceptance in this browser. If you clear browser storage or use another device, you will be asked again.</p>
+    <p class="sign-in"><a routerLink="/sign-in" [queryParams]="{ redirectTo: returnTo() }" i18n>Already have an account? Sign in</a></p>
+  </main>
+</div>

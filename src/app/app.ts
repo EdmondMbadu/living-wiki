@@ -11,15 +11,18 @@ import { ThemeService } from './theme.service';
 import { WorkspaceNavigationOverlayComponent } from './workspace-navigation/workspace-navigation-overlay';
 import { InvitationAlertComponent } from './notifications/invitation-alert';
 import { KiwiComponent } from './kiwi/kiwi';
+import { GuestTermsDialogComponent } from './guest-terms/guest-terms-dialog';
+import { GuestTermsService } from './guest-terms/guest-terms.service';
 import { TalkThruPlanDialogComponent } from './talkthru-billing/talkthru-plan-dialog';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SpotifyPlayerComponent, WorkspaceNavigationOverlayComponent, InvitationAlertComponent, KiwiComponent, TalkThruPlanDialogComponent],
+  imports: [RouterOutlet, SpotifyPlayerComponent, WorkspaceNavigationOverlayComponent, InvitationAlertComponent, KiwiComponent, TalkThruPlanDialogComponent, GuestTermsDialogComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App {
+  readonly guestTerms = inject(GuestTermsService);
   private readonly router=inject(Router);
   readonly sharedReport=toSignal(this.router.events.pipe(filter((event):event is NavigationEnd=>event instanceof NavigationEnd),map(event=>isAnalyticsReportPath(event.urlAfterRedirects))),{initialValue:typeof window!=='undefined'&&isAnalyticsReportPath(window.location.pathname)});
   constructor() { applyDocumentLocale(inject(DOCUMENT), inject(LOCALE_ID)); }

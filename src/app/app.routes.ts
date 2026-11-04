@@ -1,3 +1,6 @@
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { safeGuestReturnTo } from './guest-terms/guest-terms-navigation';
 import { Routes } from '@angular/router';
 import { PublicWikisComponent } from './public-wikis/public-wikis';
 import { adminGuard, authGuard, boardsRootRedirectGuard, guestOnlyGuard } from './auth.guards';
@@ -10,6 +13,12 @@ const loadLibraryComponent = () => import('./library/library').then((m) => m.Lib
 const loadWikiComponent = () => import('./wiki/wiki').then((m) => m.WikiComponent);
 
 export const routes: Routes = [
+  // Old preview/bookmarked consent URLs return to browsing; consent now opens
+  // only from an explicit avatar conversation request.
+  { path: 'guest-terms', redirectTo: ({ queryParams }) => {
+    const router = inject(Router);
+    return router.parseUrl(safeGuestReturnTo(queryParams['returnTo'] ?? null, router));
+  } },
   {path:'reports/boards/:slug',loadComponent:()=>import('./shared-analytics/shared-analytics').then(m=>m.SharedAnalyticsComponent)},
   { path: 'talkthrus/billing', loadComponent: () => import('./talkthru-billing/talkthru-billing-page').then(m => m.TalkThruBillingPageComponent), canActivate: [authGuard], title: $localize`TalkThru plan | LivingWiki` },
   { path: 'talkthrus', loadComponent: () => import('./talkthrus/talkthrus').then(m => m.TalkThrusComponent), title: $localize`LivingWiki TalkThrus | A story that wins listings.` },

@@ -1,5 +1,6 @@
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { GuestTermsService } from './guest-terms/guest-terms.service';
 import { App } from './app';
 import { SpotifyPlaybackService } from './spotify-playback.service';
 import { provideRouter } from '@angular/router';
@@ -13,6 +14,7 @@ describe('App', () => {
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
+        { provide: GuestTermsService, useValue: { promptOpen: signal(false) } },
         { provide: TeamsService, useFactory: teamsServiceStub },
         provideZonelessChangeDetection(),
         provideRouter([]),

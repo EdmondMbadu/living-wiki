@@ -1,3 +1,4 @@
+import { GuestTermsService } from '../guest-terms/guest-terms.service';
 import { PicamoTrackingService } from '../picamo-tracking.service';
 import { AfterViewChecked, Component, ElementRef, HostListener, LOCALE_ID, OnDestroy, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -495,6 +496,7 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
   private readonly answerCardService = inject(AnswerCardService);
   private readonly answerQuizService = inject(AnswerQuizService);
   private readonly chatService = inject(ChatService);
+  private readonly guestTerms = inject(GuestTermsService);
   private readonly documentsService = inject(DocumentsService);
   private readonly wikiService = inject(WikiService);
   private readonly placeReviewsService = inject(PlaceReviewsService);
@@ -3850,6 +3852,8 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
       return;
     }
 
+    if (!await this.guestTerms.requestConversation() || this.isSubmitting()) return;
+
     const submittedThreadId = this.activeThreadId();
     const shouldStartNewPublicThread = !this.isWorkspaceMode() && !submittedThreadId;
     if (!submittedThreadId && this.isWorkspaceMode()) {
@@ -4448,6 +4452,8 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
     if (this.realtimeVoiceActive()) {
       return;
     }
+
+    if (!await this.guestTerms.requestConversation() || this.realtimeVoiceActive()) return;
 
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       this.realtimeVoiceStatus.set('error');
