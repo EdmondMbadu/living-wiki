@@ -114,6 +114,7 @@
               <label
                 ><span class="sr-only" i18n>Date preset</span
                 ><select [value]="preset()" (change)="selectPreset($any($event.target).value)">
+                  <option value="month" i18n>This month</option>
                   <option value="30" i18n>Last 30 days</option>
                   <option value="365" i18n>Last 12 months</option>
                   <option value="years" i18n>Last 5 years</option>
@@ -155,6 +156,165 @@
               Apply dates</button
             ><span i18n>Dates shown in UTC</span>
           </div>
+          <p class="scope-note">
+            @if (audience()==='internal') {
+              <span i18n>Internal owner/admin activity only. Automated QA stays separate.</span>
+            } @else if (internal()) {
+              <span i18n
+                >Visitor and owner/admin sessions included. Automated QA stays separate.</span
+              >
+            } @else {
+              <span i18n
+                >Visitor activity. Owner/admin sessions and automated QA are excluded.</span
+              >
+            }
+          </p>
+          @if (r.coverage?.partial) {
+            <p class="coverage-note" i18n>
+              Historical coverage is incomplete. Totals reflect recorded activity; missing history
+              is not shown as measured zero.
+            </p>
+          }
+          <section class="platform-panel voice-panel" aria-labelledby="voice-usage-title">
+            <header class="voice-heading">
+              <span class="voice-icon material-symbols-outlined" aria-hidden="true">graphic_eq</span>
+              <div>
+                <h2 id="voice-usage-title" i18n>Voice conversation minutes</h2>
+                <p i18n>Verified call duration</p>
+              </div>
+            </header>
+            <div class="voice-metrics">
+              <article class="voice-metric voice-metric-current">
+                <h3 i18n>This month</h3>
+                <strong>
+                  @if (monthUsage(); as month) {
+                    {{ time(month.seconds) }}
+                  } @else {
+                    <span i18n>Unavailable</span>
+                  }
+                </strong>
+                <p>{{ monthDates }}</p>
+                @if (monthUsage()?.partial) {
+                  <p class="voice-coverage" i18n>Partial coverage</p>
+                }
+              </article>
+              <article class="voice-metric">
+                <h3 i18n>Selected period total</h3>
+                <strong>{{ time(voiceSeconds(totals())) }}</strong>
+                <p>{{ periodDates() }}</p>
+              </article>
+              <article class="voice-metric">
+                <h3 i18n>Conversations</h3>
+                <strong>
+                  @if (unavailable()) {
+                    <span i18n>Not recorded</span>
+                  } @else {
+                    {{ totals()?.conversations || 0 | number }}
+                  }
+                </strong>
+                @if (!unavailable()) {
+                  <p i18n>
+                    {{ totals()?.voice || 0 | number }} voice ·
+                    {{ totals()?.text || 0 | number }} text
+                  </p>
+                }
+              </article>
+              <article class="voice-metric">
+                <h3 i18n>Active talking cards</h3>
+                <strong>
+                  @if (unavailable()) {
+                    <span i18n>Not recorded</span>
+                  } @else {
+                    {{ totals()?.activeCards || 0 | number }}
+                  }
+                </strong>
+                <p i18n>Used during this period</p>
+              </article>
+            </div>
+            <div class="trend-layout">
+              <section class="voice-trend" aria-labelledby="voice-trend-title">
+                <header>
+                  <h3 id="voice-trend-title" i18n>Voice minutes over time</h3>
+                  <small i18n>Minutes</small>
+                </header>
+                @if (series().length) {
+                  <div class="voice-chart-scroll">
+                    <div class="chart voice-chart" [style.--bucket-count]="series().length">
+                      <div class="y-axis" aria-hidden="true">
+                        @for (tick of ticks(); track $index) {
+                          <span [style.top.%]="$index * 25">{{ tick | number: '1.0-2' }}</span>
+                        }
+                      </div>
+                      <div class="plot">
+                        <div class="gridlines" aria-hidden="true">
+                          @for (tick of ticks(); track $index) {
+                            <i></i>
+                          }
+                        </div>
+                        <div class="chart-bars">
+                          @for (bucket of series(); track bucket.period) {
+                            @let seconds = voiceSeconds(bucket, bucket.recorded);
+                            <div class="chart-day">
+                              <button
+                                type="button"
+                                [class.unrecorded]="seconds === null"
+                                [class.current]="bucket.period === monthStart.slice(0, 7)"
+                                [attr.aria-label]="bucket.period + ' · ' + time(seconds)"
+                                [attr.aria-describedby]="bucket.partial ? 'voice-partial-coverage' : null"
+                              >
+                                <span class="voice-bar" [style.height.%]="seconds === null ? null : barHeight(seconds)"></span>
+                                <span class="chart-tooltip" aria-hidden="true">
+                                  {{ bucket.period }} · {{ time(seconds) }}
+                                  @if (bucket.partial) {
+                                    <small i18n>Partial coverage</small>
+                                  }
+                                </span>
+                              </button>
+                              @if (series().length > 31 ? $index % 5 === 0 : showPeriod($index)) {
+                                <small>{{ voicePeriodLabel(bucket.period) }}</small>
+                              }
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="voice-legend">
+                    <span><i class="voice-key" aria-hidden="true"></i><span i18n>Verified call duration</span></span>
+                    <span><i class="voice-key voice-key-unrecorded" aria-hidden="true"></i><span i18n>Not recorded</span></span>
+                  </p>
+                  @if (r.coverage?.partial) {
+                    <span class="sr-only" id="voice-partial-coverage" i18n>Partial coverage</span>
+                  }
+                  @if (!unavailable() && !totals()?.conversations && !totals()?.seconds) {
+                    <p class="chart-empty" i18n>No recorded conversations in this period.</p>
+                  }
+                }
+              </section>
+              <aside class="status-panel">
+                <h3 i18n>Data status</h3>
+                <p>
+                  <span class="status-dot"></span><strong>{{ r.pending || 0 | number }}</strong
+                  ><span i18n>voice sessions pending now</span>
+                </p>
+                <p>
+                  <span class="status-dot"></span
+                  ><strong>{{ totals()?.failedAnswers || 0 | number }}</strong
+                  ><span i18n>failed answers in this period</span>
+                </p>
+                @if (r.unverified) {
+                  <p>
+                    <span class="status-dot"></span><strong>{{ r.unverified | number }}</strong
+                    ><span i18n>voice sessions could not be verified</span>
+                  </p>
+                }
+                @if (totals()?.unknownDurations) {
+                  <p i18n>{{ totals()?.unknownDurations }} voice durations were not recorded.</p>
+                }
+                <small i18n>Pending and unknown durations are excluded from minutes.</small>
+              </aside>
+            </div>
+          </section>
           <section
             class="platform-panel trend-panel creation-panel"
             aria-label="Boards created over time"
@@ -235,148 +395,11 @@
               }
             }
           </section>
-          <p class="scope-note">
-            @if (audience()==='internal') {
-              <span i18n>Internal owner/admin activity only. Automated QA stays separate.</span>
-            } @else if (internal()) {
-              <span i18n
-                >Visitor and owner/admin sessions included. Automated QA stays separate.</span
-              >
-            } @else {
-              <span i18n
-                >Visitor activity. Owner/admin sessions and automated QA are excluded.</span
-              >
-            }
-          </p>
-          @if (r.coverage?.partial) {
-            <p class="coverage-note" i18n>
-              Historical coverage is incomplete. Totals reflect recorded activity; missing history
-              is not shown as measured zero.
-            </p>
-          }
           <div class="traffic-grid">
             <article class="platform-panel usage-metric"><span class="material-symbols-outlined" aria-hidden="true">visibility</span><div><small i18n>Board views</small><strong>{{totals()?.views || 0 | number}}</strong><p i18n>Successful board loads in the selected audience</p></div></article>
             <article class="platform-panel usage-metric"><span class="material-symbols-outlined" aria-hidden="true">touch_app</span><div><small i18n>Card opens</small><strong>{{totals()?.cardOpens || 0 | number}}</strong><p i18n>Content and conversation opens</p></div></article>
           </div>
           <p class="coverage-note" i18n>Earlier owner/admin views were not recorded. All activity now includes these visits; historical view counts cannot be reconstructed from conversations.</p>
-          <div class="usage-grid">
-            <article class="platform-panel usage-metric">
-              <span class="material-symbols-outlined" aria-hidden="true">call</span>
-              <div>
-                <small i18n>Voice conversation minutes</small
-                ><strong>{{ time(voiceSeconds(totals())) }}</strong>
-                <p i18n>Verified call duration</p>
-              </div>
-            </article>
-            <article class="platform-panel usage-metric">
-              <span class="material-symbols-outlined" aria-hidden="true">forum</span>
-              <div>
-                <small i18n>Conversations</small
-                ><strong>
-                  @if (unavailable()) {
-                    <span i18n>Not recorded</span>
-                  } @else {
-                    {{ totals()?.conversations || 0 | number }}
-                  }
-                </strong>
-                <p i18n>
-                  {{ totals()?.voice || 0 | number }} voice ·
-                  {{ totals()?.text || 0 | number }} text
-                </p>
-              </div>
-            </article>
-            <article class="platform-panel usage-metric">
-              <span class="material-symbols-outlined" aria-hidden="true">graphic_eq</span>
-              <div>
-                <small i18n>Active talking cards</small
-                ><strong>
-                  @if (unavailable()) {
-                    <span i18n>Not recorded</span>
-                  } @else {
-                    {{ totals()?.activeCards || 0 | number }}
-                  }
-                </strong>
-                <p i18n>Used during this period</p>
-              </div>
-            </article>
-          </div>
-          <div class="trend-layout">
-            <section class="platform-panel trend-panel">
-              <header>
-                <h2 i18n>Voice minutes over time</h2>
-                <small i18n>Minutes</small>
-              </header>
-              @if (series().length) {
-                <div class="chart">
-                  <div class="y-axis" aria-hidden="true">
-                    @for (tick of ticks(); track $index) {
-                      <span>{{ tick | number: '1.0-1' }}</span>
-                    }
-                  </div>
-                  <div class="plot">
-                    <div class="gridlines" aria-hidden="true">
-                      @for (tick of ticks(); track $index) {
-                        <i></i>
-                      }
-                    </div>
-                    <div class="chart-bars">
-                      @for (bucket of series(); track bucket.period) {
-                        <div class="chart-day">
-                          <button
-                            type="button"
-                            [class.unrecorded]="!bucket.recorded || voiceSeconds(bucket) === null"
-                            [style.height.%]="
-                              bucket.recorded && voiceSeconds(bucket) !== null
-                                ? barHeight(bucket.seconds)
-                                : 100
-                            "
-                            [attr.aria-label]="
-                              bucket.period +
-                              ': ' +
-                              time(bucket.recorded ? voiceSeconds(bucket) : null)
-                            "
-                          >
-                            <span class="chart-tooltip"
-                              >{{ bucket.period }} ·
-                              {{ time(bucket.recorded ? voiceSeconds(bucket) : null) }}</span
-                            >
-                          </button>
-                          @if (showPeriod($index)) {
-                            <small>{{ periodLabel(bucket.period) }}</small>
-                          }
-                        </div>
-                      }
-                    </div>
-                  </div>
-                </div>
-                @if (!totals()?.conversations && !totals()?.seconds) {
-                  <p class="chart-empty" i18n>No recorded conversations in this period.</p>
-                }
-              }
-            </section>
-            <aside class="platform-panel status-panel">
-              <h2 i18n>Data status</h2>
-              <p>
-                <span class="status-dot"></span><strong>{{ r.pending || 0 | number }}</strong
-                ><span i18n>voice sessions pending now</span>
-              </p>
-              <p>
-                <span class="status-dot"></span
-                ><strong>{{ totals()?.failedAnswers || 0 | number }}</strong
-                ><span i18n>failed answers in this period</span>
-              </p>
-              @if (r.unverified) {
-                <p>
-                  <span class="status-dot"></span><strong>{{ r.unverified | number }}</strong
-                  ><span i18n>voice sessions could not be verified</span>
-                </p>
-              }
-              @if (totals()?.unknownDurations) {
-                <p i18n>{{ totals()?.unknownDurations }} voice durations were not recorded.</p>
-              }
-              <small i18n>Pending and unknown durations are excluded from minutes.</small>
-            </aside>
-          </div>
         </section>
         <section class="platform-panel breakdown-panel">
           <header>

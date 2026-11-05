@@ -7,6 +7,10 @@ import { teamsServiceStub } from '../teams/teams.testing';
 import { PlatformAnalyticsService, PlatformReport } from '../platform-analytics.service';
 import { PlatformAnalyticsComponent, platformCsv, platformVoiceTime } from './platform-analytics';
 
+function voiceBucket(period: string, seconds: number, recorded = true, partial = false) {
+  return { period, seconds, conversations: 0, voice: 0, unknownDurations: 0, recorded, partial };
+}
+
 const result = (): PlatformReport => ({
   preparing: false,
   inventory: { boards: 3, cards: 10, talkingCards: 4 },
@@ -100,15 +104,87 @@ describe('Platform analytics', () => {
     const f = TestBed.createComponent(PlatformAnalyticsComponent);
     await f.whenStable();
     const c = f.componentInstance;
+    api.report.calls.reset();
     c.selectPreset('years');
     await f.whenStable();
-    expect(api.report.calls.mostRecent().args[0].group).toBe('year');
+    expect(api.report.calls.first().args[0].group).toBe('year');
+    expect(api.report.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({
+      group: 'month', from: c.monthStart, to: c.today,
+    }));
     c.setInternal(true);
     await f.whenStable();
     expect(api.report.calls.mostRecent().args[0].includeInternal).toBeTrue();
     c.setView('users');
     await f.whenStable();
     expect(api.report.calls.mostRecent().args[0].view).toBe('users');
+  });
+  it('defaults to twelve monthly buckets and shows current month usage beside the period total', async () => {
+    const today = new Date();
+    const to = today.toISOString().slice(0, 10);
+    const from = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 11, 1))
+      .toISOString().slice(0, 10);
+    const month = to.slice(0, 7);
+    api.report.and.resolveTo({
+      ...result(),
+      range: { from, to, group: 'month', includeInternal: true },
+      series: [voiceBucket(from.slice(0, 7), 0, false, true), voiceBucket(month, 60)],
+    });
+    const f = TestBed.createComponent(PlatformAnalyticsComponent);
+    await f.whenStable();
+    f.detectChanges();
+    expect(api.report).toHaveBeenCalledOnceWith(jasmine.objectContaining({ from, to, group: 'month' }), false);
+    const panel = f.nativeElement.querySelector('.voice-panel');
+    expect(panel.querySelector('.voice-metric-current strong').textContent.trim()).toBe('1 min');
+    expect(panel.querySelectorAll('.voice-metric strong')[1].textContent.trim()).toBe('1.3 min');
+    expect(panel.querySelector('button.current').getAttribute('aria-label')).toBe(month + ' · 1 min');
+    expect(panel.querySelector('button.unrecorded').getAttribute('aria-label')).toContain('Not recorded');
+  });
+  it('keeps the current month independent of historical dates and uses the selected audience', async () => {
+    const f = TestBed.createComponent(PlatformAnalyticsComponent);
+    await f.whenStable();
+    const c = f.componentInstance;
+    c.selectAudience('visitors');
+    await f.whenStable();
+    api.report.calls.reset();
+    const historical = { ...result(), coverage: { partial: true, unrecorded: true } };
+    const current = { ...result(), totals: { ...result().totals!, seconds: 120 } };
+    api.report.and.callFake((filters) =>
+      Promise.resolve(filters.from === c.monthStart ? current : historical),
+    );
+    c.setDate('from', '2025-01-01');
+    c.setDate('to', '2025-01-31');
+    c.setGroup('year');
+    await f.whenStable();
+    expect(api.report.calls.first().args[0].to).toBe(c.today);
+    await c.applyDates();
+    expect(api.report.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({
+      from: c.monthStart, to: c.today, audience: 'visitors',
+    }));
+    expect(c.unavailable()).toBeTrue();
+    expect(c.monthUsage()?.seconds).toBe(120);
+  });
+  it('sums current-month days and keeps a tracked zero distinct from missing history', async () => {
+    const f = TestBed.createComponent(PlatformAnalyticsComponent);
+    await f.whenStable();
+    const c = f.componentInstance;
+    api.report.calls.reset();
+    api.report.and.resolveTo({
+      ...result(),
+      series: [
+        voiceBucket('2025-01-01', 0, false, true),
+        voiceBucket(c.monthStart, 0),
+      ],
+    });
+    c.setGroup('day');
+    await f.whenStable();
+    expect(api.report.calls.count()).toBe(1);
+    expect(c.monthUsage()).toEqual({ seconds: 0, partial: false });
+    api.report.and.resolveTo({
+      ...result(),
+      series: [voiceBucket(c.monthStart, 0, false, true)],
+    });
+    await c.load();
+    expect(c.monthUsage()).toEqual({ seconds: null, partial: true });
   });
   it('does not replace the latest request with a late older response', async () => {
     let resolve!: (r: PlatformReport) => void;

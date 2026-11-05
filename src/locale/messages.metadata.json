@@ -4255,6 +4255,10 @@
     "source": "Signed-in visitors can chat freely with this atlas",
     "file": "src/app/chat/chat.ts"
   },
+  "2268744334194766457": {
+    "source": "Partial coverage",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "2269791630488417644": {
     "source": "No voices match that search.",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -15773,7 +15777,7 @@
   },
   "5643561794785412000": {
     "source": "Unavailable",
-    "file": "src/app/public-wikis/public-wikis.ts"
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "5647336084875131601": {
     "source": "Board creation progress",
@@ -19322,6 +19326,10 @@
   "6649028433715707493": {
     "source": "No reviewed places yet",
     "file": "src/app/city-places/city-places.html"
+  },
+  "6649499795914153719": {
+    "source": "Selected period total",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "6650633628037596693": {
     "source": "Try again",
@@ -25166,6 +25174,10 @@
   "8424500371671047486": {
     "source": "Use a Twilio SMS-capable number, or a Vapi setup that exposes Twilio SMS webhooks.",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "842657237693374355": {
+    "source": "This month",
+    "file": "src/app/platform-analytics/platform-analytics.html"
   },
   "8430737794384598679": {
     "source": "Start with an idea, something you have, or a place to explore.",
