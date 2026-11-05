@@ -6,8 +6,10 @@
         <span class="city-weekly__title" i18n>Weekly {{ preference.cityName || cityText }} updates</span>
         <button type="button" role="switch" [attr.aria-checked]="preference.enabled" aria-label="Weekly city email updates" i18n-aria-label
           [disabled]="busy() || !!error()" (click)="toggle()" class="city-weekly__toggle" [class.is-on]="preference.enabled">
-          <span class="city-weekly__knob" aria-hidden="true"></span>
-          <span>{{ busy() ? savingText : preference.enabled ? onText : offText }}</span>
+          <span class="city-weekly__track" aria-hidden="true">
+            <span class="city-weekly__knob"></span>
+          </span>
+          <span class="city-weekly__toggle-label">{{ busy() ? savingText : preference.enabled ? onText : offText }}</span>
         </button>
       </div>
       <p>
@@ -17,6 +19,7 @@
         @else if (!preference.available) { <span i18n>Updates for this city are currently unavailable. Your preference is saved.</span> }
         @else { <span i18n>One email a week to your account email. Automatically follows your saved city.</span> }
       </p>
+      @if (!preference.citySlug) { <a routerLink="/home" i18n>Choose a city</a> }
       @if (preference.enabled && !preference.emailVerified) { <a routerLink="/verify-email" i18n>Verify email</a> }
     } @else if (busy()) {
       <p i18n>Loading weekly city updates…</p>

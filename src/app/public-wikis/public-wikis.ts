@@ -1,4 +1,3 @@
-import { CityWeeklyUpdatesComponent } from '../city-weekly-updates/city-weekly-updates';
 import { isBoardVisibility, type BoardVisibility } from '../board-visibility';
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { PlacePhotoDirective } from '../place-photo.directive';
@@ -669,7 +668,6 @@ interface PublicWikiFeelingSticker {
 @Component({
   selector: 'app-public-wikis',
   imports: [
-    CityWeeklyUpdatesComponent,
     PlacePhotoDirective,
     DecimalPipe,
     RouterLink,

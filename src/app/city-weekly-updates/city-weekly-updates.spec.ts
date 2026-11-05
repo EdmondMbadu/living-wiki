@@ -5,7 +5,7 @@ import { AuthService } from '../auth.service';
 import { CityWeeklyUpdatesComponent } from './city-weekly-updates';
 import { CityWeeklyUpdatesService, type CityWeeklySettings } from './city-weekly-updates.service';
 
-describe('Home weekly city updates', () => {
+describe('Profile weekly city updates', () => {
   const initial: CityWeeklySettings = { enabled: true, citySlug: 'philly', cityName: 'Philadelphia', available: true, emailVerified: true };
   let preference: jasmine.Spy;
   let profile: ReturnType<typeof signal<any>>;

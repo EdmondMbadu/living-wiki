@@ -18,12 +18,14 @@ import {
 } from './profile-icons';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 import { WorkspaceSidebarComponent } from '../workspace-sidebar/workspace-sidebar';
+import { CityWeeklyUpdatesComponent } from '../city-weekly-updates/city-weekly-updates';
 
 type ProfileTab = 'account' | 'wikis' | 'business' | 'links';
 
 @Component({
   selector: 'app-profile',
   imports: [
+    CityWeeklyUpdatesComponent,
     RouterLink,
     AtlasBadgeComponent,
     AccountMenuComponent,

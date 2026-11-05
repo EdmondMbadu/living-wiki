@@ -12621,7 +12621,7 @@
   },
   "4704052443330157891": {
     "source": "Choose a city",
-    "file": "src/app/public-wikis/public-wikis.ts"
+    "file": "src/app/city-weekly-updates/city-weekly-updates.html"
   },
   "4705279671123705507": {
     "source": "cover photo",

@@ -5288,10 +5288,10 @@ async function buildNewsletterEmail(params: {
     : '';
 
   const deliveryReason = params.accountCityUpdate
-    ? `You received this email because ${params.atlasName} is your saved home city and weekly city updates are on for your account. Change your city or manage updates from Home: ${publicAppUrl}/home`
+    ? `You received this email because ${params.atlasName} is your saved home city and weekly city updates are on for your account. Manage weekly updates from Profile: ${publicAppUrl}/profile. Change your city from Home: ${publicAppUrl}/home`
     : `You received this email because you subscribed to weekly updates for ${params.atlasName}.`;
   const deliveryReasonHtml = params.accountCityUpdate
-    ? `You received this email because <strong style="color:#34443b;">${safeAtlasName}</strong> is your saved home city and weekly city updates are on for your account. <a href="${publicAppUrl}/home" style="color:#1c7c41;text-decoration:underline;">Manage your city and updates from Home</a>.`
+    ? `You received this email because <strong style="color:#34443b;">${safeAtlasName}</strong> is your saved home city and weekly city updates are on for your account. <a href="${publicAppUrl}/profile" style="color:#1c7c41;text-decoration:underline;">Manage weekly updates from Profile</a>. <a href="${publicAppUrl}/home" style="color:#1c7c41;text-decoration:underline;">Change your city from Home</a>.`
     : `You received this Living Wiki email because you subscribed to weekly updates for <strong style="color:#34443b;">${safeAtlasName}</strong>.`;
 
   const text = `${params.subject}
@@ -5396,8 +5396,8 @@ export const unsubscribeCityWeeklyUpdates = onRequest({ region: callableRegion }
   const valid = await cityWeeklyUpdates.unsubscribe(uid, token);
   sendUnsubscribeHtml(res, valid ? 200 : 400, {
     title: valid ? 'You are unsubscribed' : 'Unsubscribe link is invalid',
-    message: valid ? 'Weekly city updates are off for your account. Changing your city will not turn them back on. You can turn them on again from Home.' : 'Open Home to manage your weekly city updates.',
-    actionUrl: `${publicAppUrl}/home`, actionLabel: 'Open Home',
+    message: valid ? 'Weekly city updates are off for your account. Changing your city will not turn them back on. You can turn them on again from Profile.' : 'Open Profile to manage your weekly city updates.',
+    actionUrl: `${publicAppUrl}/profile`, actionLabel: 'Open Profile',
   });
 });
 

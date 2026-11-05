@@ -196,7 +196,7 @@ export class CityWeeklyUpdates {
           if (fresh?.status !== 'active') continue;
           email = emailOf(fresh.email);
           if (!email) continue;
-          // A Home opt-out also suppresses overlapping visitor subscriptions.
+          // A Profile opt-out also suppresses overlapping visitor subscriptions.
           try {
             const user = await this.auth.getUserByEmail(email);
             if (user.emailVerified) {

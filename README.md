@@ -322,8 +322,9 @@ notice in the Talking Card editor.
 
 ## Weekly updates for an account’s home city
 
-Signed-in Home includes a **Weekly city updates** switch underneath the city
-chooser. It follows `users/{uid}.preferredCitySlug` (also reads the legacy
+The **Account** tab in Profile includes the saved city name and a **Weekly city
+updates** switch. Home keeps the city chooser without the email setting. Updates
+follow `users/{uid}.preferredCitySlug` (also reads the legacy
 `preferred_city_slug`), never the display/local-storage fallback. Selecting a
 university does not silently save the displayed city. Failed city saves show a
 retry action; rapid selections save in order.
@@ -341,14 +342,15 @@ subscription for that email/account was unsubscribed. Explicit re-enabling is
 supported. Switching off also stops matching visitor subscriptions; switching
 cities never enables an opted-out account. Both the new account unsubscribe link
 and existing visitor unsubscribe links turn account updates off. Account email
-footers explain why the message was sent and link to Home. Preferences, tokens,
+footers explain why the message was sent, link to Profile to manage updates, and
+link to Home to change the saved city. Preferences, tokens,
 cached content, and delivery receipts remain inaccessible to client SDKs under
 the existing deny-by-default Firestore rules.
 
 `sendWeeklyAtlasNewsletters` reuses existing newsletter generation, schedules,
 templates and SendGrid. Public city wikis with no enabled/disabled newsletter
 setting use the existing Monday 09:00 defaults in their city timezone (fallback:
-America/New_York). Explicitly disabled newsletters stay paused, shown on Home as
+America/New_York). Explicitly disabled newsletters stay paused, shown in Profile as
 unavailable. Existing configured schedules remain in effect. City/recipient reads
 are paginated; weekly content is cached per city/scheduled edition. Missed or
 rejected sends can retry later on the scheduled day.
