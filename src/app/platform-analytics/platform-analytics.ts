@@ -1,7 +1,7 @@
 import { analyticsAudiences, type AnalyticsAudience } from '../analytics-activity';
 import { PicamoAnalyticsComponent } from './picamo-analytics';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { Component, DestroyRef, LOCALE_ID, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
@@ -46,7 +46,7 @@ export function platformCsv(rows: unknown[][]): string {
 }
 @Component({
   selector: 'app-platform-analytics',
-  imports: [RouterLink, DatePipe, DecimalPipe, ThemeToggleComponent, AccountMenuComponent, PicamoAnalyticsComponent],
+  imports: [RouterLink, CurrencyPipe, DatePipe, DecimalPipe, ThemeToggleComponent, AccountMenuComponent, PicamoAnalyticsComponent],
   templateUrl: './platform-analytics.html',
   styleUrl: './platform-analytics.css',
 })
@@ -143,6 +143,11 @@ export class PlatformAnalyticsComponent {
   );
   readonly unavailable = computed(() => this.report()?.coverage?.unrecorded === true);
   readonly time = platformVoiceTime;
+  readonly voiceCostRate = 0.165;
+  readonly voiceCostLabel = $localize`Estimated cost`;
+  voiceCost(seconds: number | null | undefined): number | null {
+    return seconds == null ? null : (seconds / 60) * this.voiceCostRate;
+  }
   voiceSeconds(
     row: { seconds?: number; voice?: number; unknownDurations?: number } | null | undefined,
     recorded = !this.unavailable(),

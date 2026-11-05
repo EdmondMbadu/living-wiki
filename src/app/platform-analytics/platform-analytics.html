@@ -186,21 +186,33 @@
             <div class="voice-metrics">
               <article class="voice-metric voice-metric-current">
                 <h3 i18n>This month</h3>
-                <strong>
-                  @if (monthUsage(); as month) {
-                    {{ time(month.seconds) }}
-                  } @else {
-                    <span i18n>Unavailable</span>
+                @let month = monthUsage();
+                <div class="voice-metric-value">
+                  <strong>
+                    @if (month) {
+                      {{ time(month.seconds) }}
+                    } @else {
+                      <span i18n>Unavailable</span>
+                    }
+                  </strong>
+                  @if ((voiceCost(month?.seconds) | currency: 'USD'); as cost) {
+                    <p class="voice-cost"><b>{{ cost }}</b><span>{{ voiceCostLabel }}</span></p>
                   }
-                </strong>
+                </div>
                 <p>{{ monthDates }}</p>
-                @if (monthUsage()?.partial) {
+                @if (month?.partial) {
                   <p class="voice-coverage" i18n>Partial coverage</p>
                 }
               </article>
-              <article class="voice-metric">
+              <article class="voice-metric voice-metric-total">
                 <h3 i18n>Selected period total</h3>
-                <strong>{{ time(voiceSeconds(totals())) }}</strong>
+                @let periodSeconds = voiceSeconds(totals());
+                <div class="voice-metric-value">
+                  <strong>{{ time(periodSeconds) }}</strong>
+                  @if ((voiceCost(periodSeconds) | currency: 'USD'); as cost) {
+                    <p class="voice-cost"><b>{{ cost }}</b><span>{{ voiceCostLabel }}</span></p>
+                  }
+                </div>
                 <p>{{ periodDates() }}</p>
               </article>
               <article class="voice-metric">
@@ -231,6 +243,10 @@
                 <p i18n>Used during this period</p>
               </article>
             </div>
+            <p class="voice-cost-note" i18n>
+              Estimates use {{ voiceCostRate | currency: 'USD' : 'symbol' : '1.3-3' }} per verified
+              minute. See ElevenLabs for billed charges.
+            </p>
             <div class="trend-layout">
               <section class="voice-trend" aria-labelledby="voice-trend-title">
                 <header>
@@ -254,17 +270,24 @@
                         <div class="chart-bars">
                           @for (bucket of series(); track bucket.period) {
                             @let seconds = voiceSeconds(bucket, bucket.recorded);
+                            @let cost = voiceCost(seconds) | currency: 'USD';
                             <div class="chart-day">
                               <button
                                 type="button"
                                 [class.unrecorded]="seconds === null"
                                 [class.current]="bucket.period === monthStart.slice(0, 7)"
-                                [attr.aria-label]="bucket.period + ' · ' + time(seconds)"
+                                [attr.aria-label]="
+                                  bucket.period + ' · ' + time(seconds) +
+                                  (cost ? ' · ' + voiceCostLabel + ' ' + cost : '')
+                                "
                                 [attr.aria-describedby]="bucket.partial ? 'voice-partial-coverage' : null"
                               >
                                 <span class="voice-bar" [style.height.%]="seconds === null ? null : barHeight(seconds)"></span>
                                 <span class="chart-tooltip" aria-hidden="true">
                                   {{ bucket.period }} · {{ time(seconds) }}
+                                  @if (cost) {
+                                    <small class="voice-tooltip-cost"><b>{{ cost }}</b> {{ voiceCostLabel }}</small>
+                                  }
                                   @if (bucket.partial) {
                                     <small i18n>Partial coverage</small>
                                   }

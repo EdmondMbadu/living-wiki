@@ -2867,6 +2867,10 @@
     "source": "Cover",
     "file": "src/app/boards/boards.html"
   },
+  "1840297917120924770": {
+    "source": " Estimates use {$INTERPOLATION} per verified minute. See ElevenLabs for billed charges. ",
+    "file": "src/app/platform-analytics/platform-analytics.html"
+  },
   "1840730786595289411": {
     "source": "Close create Wiki dialog",
     "file": "src/app/wiki-home/wiki-home.html"
@@ -5082,6 +5086,10 @@
   "2509507091667851698": {
     "source": "Review invitation {$START_TAG_SPAN}→{$CLOSE_TAG_SPAN}",
     "file": "src/app/notifications/notifications.html"
+  },
+  "2510741784888393227": {
+    "source": "Estimated cost",
+    "file": "src/app/platform-analytics/platform-analytics.ts"
   },
   "2510855716218023915": {
     "source": "Use the cards below as the plan. Open full notes for the broader context and caveats.",

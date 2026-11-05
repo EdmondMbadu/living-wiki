@@ -136,8 +136,12 @@ describe('Platform analytics', () => {
     const panel = f.nativeElement.querySelector('.voice-panel');
     expect(panel.querySelector('.voice-metric-current strong').textContent.trim()).toBe('1 min');
     expect(panel.querySelectorAll('.voice-metric strong')[1].textContent.trim()).toBe('1.3 min');
-    expect(panel.querySelector('button.current').getAttribute('aria-label')).toBe(month + ' · 1 min');
-    expect(panel.querySelector('button.unrecorded').getAttribute('aria-label')).toContain('Not recorded');
+    expect(panel.querySelector('.voice-metric-current .voice-cost').textContent).toContain('$0.17');
+    expect(panel.querySelectorAll('.voice-cost')[1].textContent).toContain('$0.21');
+    expect(panel.querySelector('button.current').getAttribute('aria-label'))
+      .toBe(month + ' · 1 min · Estimated cost $0.17');
+    expect(panel.querySelector('button.unrecorded').getAttribute('aria-label'))
+      .toBe(from.slice(0, 7) + ' · Not recorded');
   });
   it('keeps the current month independent of historical dates and uses the selected audience', async () => {
     const f = TestBed.createComponent(PlatformAnalyticsComponent);
