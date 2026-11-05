@@ -272,12 +272,10 @@
 
 .talking-editor__sponsorship { display: grid; gap: 18px; }
 .talking-editor__sponsor-fields { display: grid; gap: 18px; border: 0; padding: 0; margin: 0; min-width: 0; }
-.talking-editor__sponsorship select { width: 100%; padding: 12px; border: 1px solid var(--border, #dce3de); border-radius: 10px; background: var(--surface, #fff); color: inherit; font: inherit; }
-.talking-editor__board-sponsor { padding: 16px; border: 1px solid var(--border, #dce3de); border-radius: 12px; }
-.talking-editor__board-sponsor summary { cursor: pointer; font-weight: 650; }
-.talking-editor__board-sponsor summary span { font-size: 12px; opacity: .7; margin-left: 8px; }
-.talking-editor__board-sponsor > p { margin: 14px 0; font-size: 13px; line-height: 1.6; }
-.talking-editor__board-sponsor > label { margin-top: 16px; }
-.talking-editor__sponsor-preview { display: grid; justify-items: start; gap: 10px; padding: 20px; background: var(--bg, #f6f8f5); border: 1px solid var(--border, #dce3de); border-radius: 12px; }
-.talking-editor__sponsor-preview p { margin: 0; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.talking-editor__sponsor-fields .talking-editor__secondary { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 10px 16px; border-radius: 10px; font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
 .talking-editor__tabs--sections { flex-wrap: wrap; }
+
+.talking-editor__sponsor-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.talking-editor__sponsor-options button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 10px 20px; border: 1px solid var(--border, #dce3de); border-radius: 10px; background: var(--surface); color: var(--muted); font: inherit; font-size: 14px; font-weight: 650; cursor: pointer; }
+.talking-editor__sponsor-options button.is-active { color: var(--text); border-color: var(--accent, #47784b); background: var(--soft-fill); box-shadow: inset 0 0 0 1px var(--accent, #47784b); }
+.talking-editor__sponsor-options button:disabled { opacity: .6; cursor: wait; }

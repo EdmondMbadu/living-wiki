@@ -136,6 +136,59 @@ describe('TalkingCardEditorComponent', () => {
     }).compileComponents();
   });
 
+  it('shows only Off or Add a sponsor when creating an avatar, with no board settings', async () => {
+    const fixture = TestBed.createComponent(TalkingCardEditorComponent), page = fixture.componentInstance;
+    fixture.componentRef.setInput('boardId', 'new-avatar-board');
+    fixture.componentRef.setInput('boardSponsorship', { name: 'Existing board sponsor', message: 'An existing acknowledgement.' });
+    fixture.detectChanges(); await fixture.whenStable(); await new Promise(resolve => setTimeout(resolve, 0));
+    const panel = fixture.nativeElement.querySelector('.talking-editor__sponsorship') as HTMLElement;
+    expect(panel.textContent).toContain('Off'); expect(panel.textContent).toContain('Add a sponsor');
+    expect(panel.textContent?.toLowerCase()).not.toContain('board acknowledgement');
+    expect(panel.querySelector('select')).toBeNull(); expect(panel.querySelector('input')).toBeNull();
+    expect(page.sponsorMode()).toBe('off'); expect(page.effectiveSponsor()).toBeNull();
+    panel.querySelectorAll<HTMLButtonElement>('.talking-editor__sponsor-options button')[1].click();
+    fixture.detectChanges(); await fixture.whenStable();
+    const name = panel.querySelector<HTMLInputElement>('#talking-sponsor-name')!;
+    name.value = 'William Penn Foundation'; name.dispatchEvent(new Event('input'));
+    fixture.detectChanges(); await fixture.whenStable();
+    expect(panel.querySelector<HTMLTextAreaElement>('#talking-sponsor-message')?.value).toBe('Our conversation today has been generously supported by a grant from William Penn Foundation.');
+    expect(panel.querySelector('details')).toBeNull();
+    expect(panel.querySelector<HTMLTextAreaElement>('#talking-sponsor-message')?.value).toContain('William Penn Foundation.');
+    expect(page.sponsorValid()).toBeTrue();
+    panel.querySelectorAll<HTMLButtonElement>('.talking-editor__sponsor-options button')[0].click(); fixture.detectChanges();
+    expect(panel.querySelector('input')).toBeNull(); expect(page.effectiveSponsor()).toBeNull();
+    expect(page.sponsorValid()).toBeTrue(); fixture.destroy();
+  });
+
+  it('saves a new avatar sponsorship as an explicit choice without changing a shared board default', async () => {
+    const fixture = TestBed.createComponent(TalkingCardEditorComponent), page = fixture.componentInstance;
+    fixture.componentRef.setInput('boardId', 'new-avatar-board');
+    fixture.componentRef.setInput('boardSponsorship', { name: 'Board sponsor', message: 'Keep this board setting.' });
+    fixture.detectChanges(); await fixture.whenStable();
+    page.selectedAtlasId.set('george');
+    const saved = spyOn(page.saved, 'emit');
+    await page.save(); expect(saved.calls.mostRecent().args[0].sponsorship).toEqual({ mode: 'off' });
+    expect(saved.calls.mostRecent().args[0].boardSponsorship).toBeUndefined();
+    await page.completeSave('Retry fixture');
+    page.setSponsorEnabled(true); page.updateSponsorName('William Penn Foundation');
+    await page.save();
+    expect(saved.calls.mostRecent().args[0].sponsorship).toEqual({ mode: 'custom', name: 'William Penn Foundation', message: 'Our conversation today has been generously supported by a grant from William Penn Foundation.' });
+    expect(saved.calls.mostRecent().args[0].boardSponsorship).toBeUndefined(); fixture.destroy();
+  });
+
+  it('restores older creation drafts without enabling inherited sponsorship or changing board settings', async () => {
+    draftStore.load.and.resolveTo({ key: 'board:older-draft', version: 1, boardId: 'older-draft', mode: 'existing',
+      selectedAtlasId: 'george', createdAtlasId: '', name: 'George Washington', role: '', personaPrompt: '',
+      openingMessage: 'Ask me about history.', ctaLabel: 'Talk to me', placement: 'end', actions: [], catalogVoiceId: '',
+      voiceChoice: 'default', publishAvatar: false, imageFile: null, uploadedImageUrl: '', documentFiles: [], updatedAt: '',
+      sponsorDraft: { mode: 'inherit', name: '', message: '', boardEdited: true, boardEnabled: true, boardName: 'Old draft sponsor', boardMessage: 'Do not apply this shared draft setting.' } });
+    const fixture = TestBed.createComponent(TalkingCardEditorComponent), page = fixture.componentInstance;
+    fixture.componentRef.setInput('boardId', 'older-draft'); fixture.detectChanges(); await fixture.whenStable();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(page.sponsorMode()).toBe('off'); expect(page.effectiveSponsor()).toBeNull();
+    expect(page.sponsorChoice()).toEqual({ mode: 'off' }); fixture.destroy();
+  });
+
   it('waits for saved settings before allowing sponsorship edits or saves', async () => {
     let finish!: (value: null) => void;
     draftStore.load.and.returnValue(new Promise(resolve => finish = resolve));
@@ -152,8 +205,8 @@ describe('TalkingCardEditorComponent', () => {
     const fixture = TestBed.createComponent(TalkingCardEditorComponent), page = fixture.componentInstance;
     fixture.detectChanges(); await fixture.whenStable();
     const prefix = 'Our conversation today has been generously supported by a grant from ';
-    expect(page.sponsorMessage()).toBe(prefix); expect(page.boardSponsorMessage()).toBe(prefix);
-    expect(page.sponsorMode()).toBe('inherit'); expect(page.boardSponsorEnabled()).toBeFalse();
+    expect(page.sponsorMessage()).toBe(prefix);
+    expect(page.sponsorMode()).toBe('off');
     expect(page.effectiveSponsor()).toBeNull(); expect(page.sponsorValid()).toBeTrue();
     page.sponsorMode.set('custom'); fixture.detectChanges(); await fixture.whenStable();
     const textarea = fixture.nativeElement.querySelector('.talking-editor__sponsorship textarea') as HTMLTextAreaElement;
@@ -168,49 +221,61 @@ describe('TalkingCardEditorComponent', () => {
   it('completes the default sentence from a name while preserving custom wording', async () => {
     const fixture = TestBed.createComponent(TalkingCardEditorComponent), page = fixture.componentInstance;
     fixture.detectChanges(); await fixture.whenStable(); page.sponsorMode.set('custom');
-    page.updateSponsorName('William Penn Foundation', 'card');
+    page.updateSponsorName('William Penn Foundation');
     expect(page.sponsorMessage()).toBe('Our conversation today has been generously supported by a grant from William Penn Foundation.');
-    page.updateSponsorName('Another sponsor', 'card'); expect(page.sponsorMessage()).toContain('from Another sponsor.');
-    page.updateSponsorMessage('Thank you to our local supporters.', 'card'); page.updateSponsorName('A new name', 'card');
+    page.updateSponsorName('Another sponsor'); expect(page.sponsorMessage()).toContain('from Another sponsor.');
+    const expandedMessage = page.sponsorMessage() + ' Thank you for joining this educational conversation.';
+    page.updateSponsorMessage(expandedMessage);
+    expect(page.sponsorName()).toBe('Another sponsor'); expect(page.sponsorMessage()).toBe(expandedMessage);
+    page.updateSponsorMessage('Thank you to our local supporters.'); page.updateSponsorName('A new name');
     expect(page.sponsorMessage()).toBe('Thank you to our local supporters.');
     expect(page.sponsorValid()).toBeTrue(); fixture.destroy();
   });
 
-  it('uses the same prefilled message and name completion for board sponsorship', async () => {
-    const fixture = TestBed.createComponent(TalkingCardEditorComponent), page = fixture.componentInstance;
-    fixture.detectChanges(); await fixture.whenStable(); page.boardSponsorEnabled.set(true);
-    expect(page.sponsorValid()).toBeFalse();
-    page.updateSponsorMessage(page.boardSponsorMessage() + 'William Penn Foundation.', 'board');
-    expect(page.boardSponsorName()).toBe('William Penn Foundation'); expect(page.boardSponsorEdited()).toBeTrue();
-    expect(page.sponsorValid()).toBeTrue(); expect(page.effectiveSponsor()?.message).toContain('William Penn Foundation.');
-    page.updateSponsorMessage('Our conversation today has been generously supported by a grant from ', 'board');
-    expect(page.sponsorValid()).toBeFalse(); expect(page.effectiveSponsor()).toBeNull(); fixture.destroy();
-  });
 
-  it('inherits board sponsorship, validates custom text, and supports disabling a card', async () => {
+
+
+  for (const editing of [false, true]) {
+    it(`shows a directly editable default message in the ${editing ? 'edit' : 'creation'} form and saves custom wording`, async () => {
+      const fixture = TestBed.createComponent(TalkingCardEditorComponent), page = fixture.componentInstance;
+      fixture.componentRef.setInput('boardId', 'historic-board');
+      if (editing) fixture.componentRef.setInput('editingCard', { id: 'guide-card', title: 'George Washington', subtitle: '', imageUrl: '', placement: 'keep', conversation: { version: 1, provider: 'atlas', atlasId: 'george', openingMessage: 'Ask me about history.', sponsorship: { mode: 'off' } } });
+      fixture.detectChanges(); await fixture.whenStable(); await new Promise(resolve => setTimeout(resolve, 0));
+      page.selectedAtlasId.set('george'); if (editing) page.setEditorSection('sponsorship'); fixture.detectChanges();
+      const panel = fixture.nativeElement.querySelector('.talking-editor__sponsorship') as HTMLElement;
+      expect(panel.querySelector('select')).toBeNull(); expect(panel.querySelector('details')).toBeNull();
+      expect(panel.textContent?.toLowerCase()).not.toContain('board acknowledgement');
+      page.setSponsorEnabled(true); fixture.detectChanges(); await fixture.whenStable();
+      const name = panel.querySelector<HTMLInputElement>('#talking-sponsor-name')!;
+      name.value = 'William Penn'; name.dispatchEvent(new Event('input')); fixture.detectChanges(); await fixture.whenStable();
+      const message = panel.querySelector<HTMLTextAreaElement>('#talking-sponsor-message')!;
+      expect(message.value).toBe('Our conversation today has been generously supported by a grant from William Penn.');
+      expect(message.closest('details')).toBeNull(); expect(message.disabled).toBeFalse();
+      message.value = 'This educational conversation is made possible by William Penn.'; message.dispatchEvent(new Event('input'));
+      fixture.detectChanges(); await fixture.whenStable();
+      page.updateSponsorName('William Penn Foundation');
+      expect(page.sponsorMessage()).toBe(message.value);
+      const saved = spyOn(page.saved, 'emit'); await page.save();
+      expect(saved.calls.mostRecent().args[0].sponsorship).toEqual({ mode: 'custom', name: 'William Penn Foundation', message: message.value });
+      expect(saved.calls.mostRecent().args[0].boardSponsorship).toBeUndefined(); fixture.destroy();
+    });
+  }
+
+  it('preserves an existing inherited acknowledgement as editable text without exposing shared settings', async () => {
     const fixture = TestBed.createComponent(TalkingCardEditorComponent), page = fixture.componentInstance;
-    const sponsor = { name: 'William Penn Foundation', message: 'This conversation is supported by the William Penn Foundation of Philadelphia.' };
+    const sponsor = { name: 'William Penn Foundation', message: 'An existing approved sponsor message.' };
     fixture.componentRef.setInput('boardId', 'historic-board'); fixture.componentRef.setInput('boardSponsorship', sponsor);
-    fixture.detectChanges(); await fixture.whenStable();
-    expect(page.effectiveSponsor()).toEqual(sponsor); expect(page.sponsorValid()).toBeTrue();
-    page.sponsorMode.set('custom'); expect(page.sponsorValid()).toBeFalse();
-    page.sponsorName.set('Local sponsor'); page.sponsorMessage.set('Approved exact wording.');
-    expect(page.sponsorValid()).toBeTrue(); expect(page.effectiveSponsor()?.message).toBe('Approved exact wording.');
-    page.sponsorMessage.set('x'.repeat(501)); expect(page.sponsorValid()).toBeFalse();
-    page.sponsorMode.set('off'); expect(page.effectiveSponsor()).toBeNull(); expect(page.sponsorValid()).toBeTrue();
-    fixture.destroy();
-  });
-  it('saves card overrides and a changed board default together without adding sponsor text to the persona', async () => {
-    const fixture = TestBed.createComponent(TalkingCardEditorComponent), page = fixture.componentInstance;
-    fixture.componentRef.setInput('boardId', 'historic-board'); fixture.detectChanges(); await fixture.whenStable();
-    page.selectedAtlasId.set('george'); page.openingMessage.set('Ask me about history.');
-    page.sponsorMode.set('custom'); page.sponsorName.set('Card sponsor'); page.sponsorMessage.set('Card acknowledgement.');
-    page.boardSponsorEdited.set(true); page.boardSponsorEnabled.set(true); page.boardSponsorName.set('Board sponsor'); page.boardSponsorMessage.set('Board acknowledgement.');
+    fixture.componentRef.setInput('editingCard', { id: 'guide-card', title: 'George Washington', subtitle: '', imageUrl: '', placement: 'keep', conversation: { version: 1, provider: 'atlas', atlasId: 'george', openingMessage: 'Ask me about history.' } });
+    fixture.detectChanges(); await fixture.whenStable(); await new Promise(resolve => setTimeout(resolve, 0));
+    page.setEditorSection('sponsorship'); fixture.detectChanges(); await fixture.whenStable();
+    expect(page.sponsorMode()).toBe('custom'); expect(page.effectiveSponsor()).toEqual(sponsor);
+    const panel = fixture.nativeElement.querySelector('.talking-editor__sponsorship') as HTMLElement;
+    expect(panel.querySelector<HTMLTextAreaElement>('#talking-sponsor-message')?.value).toBe(sponsor.message);
+    expect(panel.textContent?.toLowerCase()).not.toContain('board acknowledgement');
+    page.setSponsorEnabled(false); expect(page.effectiveSponsor()).toBeNull(); expect(page.sponsorValid()).toBeTrue();
     const saved = spyOn(page.saved, 'emit'); await page.save();
-    const result = saved.calls.mostRecent().args[0];
-    expect(result.sponsorship).toEqual({ mode: 'custom', name: 'Card sponsor', message: 'Card acknowledgement.' });
-    expect(result.boardSponsorship).toEqual({ name: 'Board sponsor', message: 'Board acknowledgement.' });
-    expect(page.personaPrompt()).not.toContain('acknowledgement.'); fixture.destroy();
+    expect(saved.calls.mostRecent().args[0].sponsorship).toEqual({ mode: 'off' });
+    expect(saved.calls.mostRecent().args[0].boardSponsorship).toBeUndefined(); fixture.destroy();
   });
 
   it('does not overwrite a board default changed elsewhere when only card settings are saved', async () => {

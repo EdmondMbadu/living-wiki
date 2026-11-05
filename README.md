@@ -280,10 +280,13 @@ For more information on using the Angular CLI, including detailed command refere
 
 ## Talking Card sponsorship acknowledgements
 
-Edit a Talking Card and open **Sponsorship**. Choose the board acknowledgement,
-a custom acknowledgement for this card, or Off. The expandable board setting
-updates all inheriting cards on this board when saved; custom and Off cards are
-unchanged. Sponsor name is limited to 120 characters and exact message to 500.
+Avatar creation and **Edit Talking Card → Sponsorship** use the same **Off** /
+**Add a sponsor** controls. New avatars start Off. Enter a name to fill the default
+message, then edit the visible **Sponsor message** field freely. Custom wording is
+preserved when changing the name. There are no shared-board controls in the editor.
+An existing inherited acknowledgement is loaded as editable local text; saving
+changes only that card's explicit sponsorship choice, never a shared default.
+Sponsor name is limited to 120 characters and exact message to 500.
 Sponsorship is public visitor-facing text and is saved separately from the avatar
 persona, so it requires no knowledge rebuild and does not follow the avatar onto
 other boards. Unsaved settings are retained in the editor's local draft. When moving an existing
