@@ -1,5 +1,5 @@
-import { parseQaQuestionSuite, qaExampleSuite, qaGenerationPrompt, QA_QUESTION_MAX_BYTES, type QaQuestionSuite } from '../../../functions/src/avatar-qa-questions';
-import { DOCUMENT, DatePipe, isPlatformBrowser } from '@angular/common';
+import { parseQaQuestionSuite, qaExampleSuite, qaQuestionStarter, qaGenerationPrompt, QA_QUESTION_MAX_BYTES, type QaQuestionSuite } from '../../../functions/src/avatar-qa-questions';
+import { DOCUMENT, DatePipe, NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import { afterNextRender, Component, DestroyRef, Injector, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -15,7 +15,7 @@ const STRESS_RUNNING_NOTICE = 'Your stress test is running. You can leave this p
 const PRIVATE_RUNNING_NOTICE = 'Your private test is running. You can leave this page and return to the results.';
 
 @Component({
-  selector: 'app-avatar-qa', imports: [RouterLink, FormsModule, DatePipe, MobileMenuComponent, ThemeToggleComponent],
+  selector: 'app-avatar-qa', imports: [RouterLink, FormsModule, DatePipe, NgTemplateOutlet, MobileMenuComponent, ThemeToggleComponent],
   templateUrl: './avatar-qa.html', styleUrl: './avatar-qa.css',
 })
 export class AvatarQaComponent {
@@ -48,16 +48,23 @@ export class AvatarQaComponent {
   readonly importEditorOpen = signal(false);
   readonly importExportOpen = signal(false);
   readonly importReviewed = signal(false);
+  readonly importVisibleCount = signal(5);
   readonly readingImport = signal(false);
   readonly exportContext = signal('');
+  readonly exportCount = signal<number | null>(50);
+  readonly exportCountValid = computed(() => Number.isInteger(this.exportCount()) && Number(this.exportCount()) >= 1 && Number(this.exportCount()) <= 50);
   readonly exportingAnswers = signal(false);
   readonly importedSuite = computed(() => {
     if (!this.importReviewed()) return null;
     try { return parseQaQuestionSuite(this.importJson()); } catch { return null; }
   });
   readonly importCategories = computed(() => new Set(this.importedSuite()?.questions.map(q => q.category) || []).size);
+  readonly visibleImportQuestions = computed(() => this.importedSuite()?.questions.slice(0, this.importVisibleCount()) || []);
   readonly importNameValid = computed(() => !!this.importName().trim() && this.importName().length <= 120 && this.importGenerator().length <= 120);
-  readonly generationPrompt = computed(() => qaGenerationPrompt(this.data()?.target.avatarName || 'Your avatar', this.exportContext()));
+  readonly canStartImported = computed(() => !!this.importedSuite() && this.importNameValid() && !this.starting() && !this.readingImport()
+    && !this.activeRun() && !this.repairBusy() && this.data()?.attemptsRemaining !== 0);
+  readonly generationPrompt = computed(() => this.exportCountValid()
+    ? qaGenerationPrompt(this.data()?.target.avatarName || 'Your avatar', this.exportContext(), this.exportCount()!) : 'Choose a whole number from 1 to 50 to prepare the AI instructions.');
   readonly exampleJson = computed(() => {
     const suite = qaExampleSuite(this.data()?.target.avatarName || 'Your avatar');
     return JSON.stringify({ ...suite, questions: suite.questions.slice(0, 2) }, null, 2);
@@ -142,6 +149,7 @@ export class AvatarQaComponent {
       this.importSequence++; this.questionSource.set('generate'); this.importJson.set(''); this.importName.set('');
       this.importGenerator.set(''); this.importError.set(''); this.importEditorOpen.set(false); this.importExportOpen.set(false);
       this.importReviewed.set(false); this.readingImport.set(false); this.exportContext.set(''); this.exportingAnswers.set(false);
+      this.importVisibleCount.set(5); this.exportCount.set(50);
       if (this.timer) clearTimeout(this.timer);
       this.data.set(null); this.direct.set(null); this.error.set(''); this.questionError.set(''); this.notice.set('');
       this.starting.set(false); this.asking.set(false); this.assessing.set(false); this.exporting.set(false); this.cancelling.set(false);
@@ -190,10 +198,12 @@ export class AvatarQaComponent {
 
   reviewImport(): void {
     this.importError.set(''); this.importReviewed.set(false);
+    this.importVisibleCount.set(5);
     try {
       const suite = parseQaQuestionSuite(this.importJson());
       this.importName.set(suite.suiteName); this.importGenerator.set(suite.generatedBy || '');
       this.importReviewed.set(true); this.importEditorOpen.set(false); this.importExportOpen.set(false);
+      afterNextRender(() => this.document.getElementById('qa-import-review-title')?.focus(), { injector: this.injector });
     } catch (error) { this.importError.set(this.message(error)); }
   }
 
@@ -228,12 +238,21 @@ export class AvatarQaComponent {
 
   editImport(): void { this.importReviewed.set(false); this.openImportEditor(); }
 
+  showMoreImported(): void { this.importVisibleCount.update(count => Math.min(count + 5, this.importedSuite()?.questions.length || 5)); }
+
+  collapseImported(): void {
+    this.importVisibleCount.set(5);
+    afterNextRender(() => this.document.getElementById('qa-import-list-title')?.focus(), { injector: this.injector });
+  }
+
   downloadExamples(): void {
-    this.downloadJson(qaExampleSuite(this.data()?.target.avatarName || 'Your avatar'), 'avatar-qa-example.json');
-    this.notice.set('Example questions downloaded. Share them with the AI prompt.');
+    if (!this.exportCountValid()) return;
+    this.downloadJson(qaQuestionStarter(this.data()?.target.avatarName || 'Your avatar', this.exportContext(), this.exportCount()!), 'avatar-qa-example.json');
+    this.notice.set('Example JSON downloaded with the AI instructions inside. Upload it to another AI to generate your questions.');
   }
 
   async copyGenerationPrompt(): Promise<void> {
+    if (!this.exportCountValid()) return;
     const epoch = this.epoch;
     try {
       await navigator.clipboard.writeText(this.generationPrompt());
@@ -243,8 +262,7 @@ export class AvatarQaComponent {
 
   async startImported(): Promise<void> {
     const original = this.importedSuite();
-    if (!original || !this.importNameValid() || this.starting() || this.readingImport() || this.activeRun()
-      || this.repairBusy() || this.data()?.attemptsRemaining === 0) return;
+    if (!original || !this.canStartImported()) return;
     const suite: QaQuestionSuite = { ...original, suiteName: this.importName().trim() };
     if (this.importGenerator().trim()) suite.generatedBy = this.importGenerator().trim(); else delete suite.generatedBy;
     const epoch = this.epoch, boundaries = this.boundaries().trim();

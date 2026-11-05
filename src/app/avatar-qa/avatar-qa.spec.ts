@@ -1,4 +1,4 @@
-import { qaExampleSuite } from '../../../functions/src/avatar-qa-questions';
+import { qaExampleSuite, qaQuestionStarter, parseQaQuestionSuite } from '../../../functions/src/avatar-qa-questions';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
@@ -94,6 +94,63 @@ describe('AvatarQaComponent', () => {
     page.data.set({ ...workspace, attemptsRemaining: 0 }); await page.startImported();
     page.data.set({ ...workspace, runs: [runFixture({ status: 'running' })] }); await page.startImported();
     expect(service.command.calls.allArgs().some(args => args[2] === 'startImported')).toBeFalse(); fixture.destroy();
+  });
+
+  it('previews five, expands progressively or all at once, and resets each new review', async () => {
+    const fixture = await render(), page = fixture.componentInstance, root = fixture.nativeElement as HTMLElement;
+    const suite = qaExampleSuite('Maya');
+    suite.questions = Array.from({ length: 50 }, (_, i) => ({ ...suite.questions[i % 6], id: `EXT-${String(i + 1).padStart(3, '0')}`, question: `Unique question ${i + 1}?` }));
+    page.questionSource.set('import'); page.setImportJson(JSON.stringify(suite)); page.reviewImport(); fixture.detectChanges();
+    const rows = () => root.querySelectorAll('.qa-import-questions li').length;
+    const button = (label: string) => Array.from(root.querySelectorAll('button')).find(b => b.textContent?.trim() === label)!;
+    expect(rows()).toBe(5); expect(root.textContent).toContain('Showing 5 of 50');
+    button('Show 5 more').click(); fixture.detectChanges(); expect(rows()).toBe(10);
+    button('Show all 50').click(); fixture.detectChanges(); expect(rows()).toBe(50);
+    expect(root.textContent).not.toContain('Show 5 more');
+    button('Show fewer').click(); fixture.detectChanges(); await fixture.whenStable(); expect(rows()).toBe(5);
+    expect(document.activeElement?.id).toBe('qa-import-list-title');
+    button('Show all 50').click(); fixture.detectChanges();
+    page.setImportJson(JSON.stringify(qaExampleSuite('New test'))); page.reviewImport(); fixture.detectChanges();
+    expect(rows()).toBe(5); button('Show 1 more').click(); fixture.detectChanges(); expect(rows()).toBe(6);
+    expect(root.textContent).not.toContain('Show 1 more'); fixture.destroy();
+  });
+
+  it('both Run buttons submit all 50 questions and block a second click while starting', async () => {
+    const fixture = await render(), page = fixture.componentInstance, root = fixture.nativeElement as HTMLElement;
+    const suite = qaExampleSuite('Maya');
+    suite.questions = Array.from({ length: 50 }, (_, i) => ({ ...suite.questions[i % 6], id: `T${i}`, question: `Question ${i}?` }));
+    page.questionSource.set('import'); page.setImportJson(JSON.stringify(suite)); page.reviewImport(); fixture.detectChanges();
+    const buttons = () => Array.from(root.querySelectorAll<HTMLButtonElement>('.qa-import-start'));
+    expect(buttons().length).toBe(2); expect(buttons().every(b => b.textContent?.includes('Run all 50 questions'))).toBeTrue();
+    page.data.set({ ...workspace, attemptsRemaining: 0 }); fixture.detectChanges(); expect(buttons().every(b => b.disabled)).toBeTrue();
+    page.data.set(workspace); fixture.detectChanges();
+    let complete!: (value: unknown) => void;
+    service.command.and.callFake((_b: string, _c: string, action: string) => action === 'startImported' ? new Promise(resolve => complete = resolve) : Promise.resolve(workspace));
+    buttons()[1].click(); fixture.detectChanges();
+    expect(buttons().every(b => b.disabled && b.textContent?.includes('Starting test…'))).toBeTrue();
+    await page.startImported();
+    const calls = service.command.calls.allArgs().filter(args => args[2] === 'startImported');
+    expect(calls.length).toBe(1); expect(calls[0][3].suite.questions).toEqual(suite.questions);
+    expect(root.querySelectorAll('.qa-import-questions li').length).toBe(5);
+    complete({ runId: 'run50' }); await fixture.whenStable(); fixture.detectChanges();
+    buttons()[0].click(); await fixture.whenStable();
+    // The second, intentional run uses the top control and the full suite too.
+    const next = service.command.calls.allArgs().filter(args => args[2] === 'startImported');
+    expect(next.length).toBe(2); expect(next[1][3].suite.questions.length).toBe(50);
+    complete({ runId: 'run50-again' }); await fixture.whenStable(); fixture.destroy();
+  });
+
+  it('downloads self-contained AI instructions with the selected count and rejects invalid counts', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    const download = spyOn<any>(page, 'downloadJson');
+    page.exportContext.set('Portrayed in 1799.'); page.exportCount.set(12); page.downloadExamples();
+    const starter = download.calls.mostRecent().args[0] as ReturnType<typeof qaQuestionStarter>;
+    expect(starter.generationInstructions).toBe(page.generationPrompt());
+    expect(starter.generationInstructions).toContain('exactly 12');
+    expect(starter.generationInstructions).not.toContain(workspace.target.personaPrompt);
+    expect(parseQaQuestionSuite(JSON.stringify(starter)).questions.length).toBe(6);
+    for (const count of [null, 0, 51, 2.5]) { page.exportCount.set(count); page.downloadExamples(); await page.copyGenerationPrompt(); }
+    expect(download.calls.count()).toBe(1); fixture.destroy();
   });
 
   it('reuses uncertain imported start IDs and gives changed payloads a new ID', async () => {

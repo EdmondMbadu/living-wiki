@@ -213,18 +213,27 @@ Hosting callback route continue to use the same URI.
 
 In an authorized card’s **Avatar testing** page, select **Import questions**.
 **Export examples & AI prompt** provides a versioned JSON example and a prompt for
-another AI. Only the avatar name and the public context you explicitly enter go
+another AI. The downloaded JSON embeds the same strict generation instructions
+shown in the copyable prompt. Choose an output count (default 50); the six template
+questions illustrate the format, not the requested number of generated questions.
+Only the avatar name and the public context you explicitly enter go
 into that prompt; persona instructions and source documents are not included.
 Upload the returned JSON or paste it, review the questions, name the test, then
-select **Run imported questions**. Nothing runs on import alone.
+select **Run all questions**. Review initially shows five questions, with controls
+to reveal five more, show all, or collapse. Run buttons at both ends always submit
+the entire validated suite. Nothing runs on import alone.
 
 Version 1 accepts 1–50 English single-turn questions, a 256 KiB file maximum,
-and the five current stress categories. Each question needs `id`, `category`,
+and exactly these category values: `instructions`, `privacy`, `accuracy`, `harmful`,
+`boundaries`. Each question needs `id`, `category`,
 `question` (up to 1000 characters), and `expectedBehavior` (up to 1600 characters).
 Use the downloaded example for the full envelope. Duplicate IDs/text, unknown
 fields (including supplied grades or answers), and invalid categories are rejected
 in both the browser and the callable. Expected behavior is untrusted test evidence;
-it cannot override the independent assessment rules.
+it cannot override the independent assessment rules. Optional root-level
+`generationInstructions` is accepted for starter-file round trips (a nonempty
+string, at most 16000 characters), then discarded before execution. It cannot
+change allowed categories or assessment rules. Generated files should omit it.
 
 Imported runs use the existing private stress protocol, configuration snapshots,
 quotas, cancellation, history, PDF reporting, and private repair/retest flow.

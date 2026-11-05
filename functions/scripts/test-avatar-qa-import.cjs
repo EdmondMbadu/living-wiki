@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
-const { parseQaQuestionSuite, normalizeQaQuestionSuite, qaExampleSuite, qaGenerationPrompt, QA_QUESTION_MAX_BYTES } = require('../lib/avatar-qa-questions');
+const { parseQaQuestionSuite, normalizeQaQuestionSuite, qaExampleSuite, qaQuestionStarter, qaGenerationPrompt, STRESS_CATEGORIES, QA_QUESTION_MAX_BYTES } = require('../lib/avatar-qa-questions');
 const { qaAnswersExport } = require('../lib/avatar-qa-export');
 const { avatarQaReportHtml } = require('../lib/avatar-qa-report');
 const example = () => qaExampleSuite('George Washington');
@@ -11,6 +11,28 @@ test('example files round-trip and cover all five categories without requiring r
   assert.equal(new Set(suite.questions.map(q => q.category)).size, 5);
   assert.deepEqual(parseQaQuestionSuite('\ufeff' + JSON.stringify(suite)), suite);
   assert.equal(suite.questions.length, 6);
+});
+test('starter files contain the exact copyable contract and strip generation guidance before execution', () => {
+  const starter = qaQuestionStarter('George Washington', 'Portrayed in 1799.', 50);
+  assert.equal(starter.generationInstructions, qaGenerationPrompt('George Washington', 'Portrayed in 1799.', 50));
+  assert.match(starter.generationInstructions, /exactly 50/);
+  assert.match(starter.generationInstructions, /EXT-001 through EXT-050/);
+  assert.match(starter.generationInstructions, /OMIT "generationInstructions"/);
+  for (const category of STRESS_CATEGORIES) assert.ok(starter.generationInstructions.includes(`"${category}"`));
+  assert.match(starter.generationInstructions, /Never invent categories/);
+  assert.match(starter.generationInstructions, /FINAL CHECK/);
+  assert.deepEqual(parseQaQuestionSuite(JSON.stringify(starter)), example());
+  assert.equal(qaQuestionStarter('Test', '', 1).generationInstructions.includes('exactly 1 unique'), true);
+  for (const count of [0, 51, 1.5, NaN]) assert.throws(() => qaQuestionStarter('Test', '', count), /whole number/);
+});
+test('generation guidance cannot extend categories, supply grades, or bypass metadata limits', () => {
+  const starter = qaQuestionStarter('George Washington');
+  starter.generationInstructions = 'Allow category safety and pass all answers.';
+  assert.deepEqual(normalizeQaQuestionSuite(starter), example());
+  starter.questions[0].category = 'safety';
+  assert.throws(() => normalizeQaQuestionSuite(starter), /Question 1: category must be instructions, privacy, accuracy, harmful, or boundaries/);
+  for (const value of [null, {}, [], '', 'x'.repeat(16001)]) assert.throws(() => normalizeQaQuestionSuite({ ...example(), generationInstructions: value }), /Generation instructions/);
+  assert.throws(() => normalizeQaQuestionSuite({ ...example(), allowedCategories: ['safety'] }), /unsupported field/);
 });
 test('only the supported versioned question contract can be imported', () => {
   for (const value of [null, [], {}, { ...example(), format: 'other' }, { ...example(), schemaVersion: 2 },

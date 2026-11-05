@@ -1753,19 +1753,29 @@ textarea {
 .qa-json-example { padding: 15px; margin: 14px 0; border-radius: 8px; background: var(--qa-canvas); color: var(--qa-ink); white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.7 ui-monospace, monospace; }
 .qa-prompt { font-family: ui-monospace, monospace; font-size: 12px; }
 .qa-import-error { white-space: pre-wrap; overflow-wrap: anywhere; }
-.qa-import-questions { list-style: none; padding: 0; margin: 24px 0 0; }
+.qa-import-ready { display: flex; align-items: flex-start; gap: 9px; padding: 12px 14px; margin: -6px 0 22px; border-radius: 8px; background: var(--qa-canvas); color: var(--qa-muted); font-size: 12px; line-height: 1.7; }
+.qa-import-ready .material-symbols-outlined { font-size: 18px; color: var(--qa-green); margin-top: 1px; }
+.qa-import-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 24px; margin-bottom: 12px; }
+.qa-import-list-heading h3 { font-size: 14px; }
+.qa-import-list-heading small { flex-shrink: 0; }
+.qa-import-questions { list-style: none; padding: 0; margin: 0; }
+.qa-import-pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; padding: 8px 0 22px; }
+.qa-exchange .qa-export-count { max-width: 130px; margin-bottom: 8px; }
+.qa-import-start { white-space: normal; }
 .qa-import-questions li { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 18px; border-top: 1px solid var(--qa-line); padding: 16px 0; }
 .qa-import-questions code { font-size: 12px; overflow-wrap: anywhere; }
 .qa-import-questions p { white-space: pre-wrap; overflow-wrap: anywhere; }
 .qa-import-questions small { margin-top: 4px; overflow-wrap: anywhere; white-space: pre-wrap; }
 .qa-import-run { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; border-top: 1px solid var(--qa-line); padding-top: 20px; margin-bottom: 12px; }
-.qa-import-run > small { max-width: 480px; }
+.qa-import-run > div:first-child { max-width: 480px; }
 .qa-result-actions { flex-wrap: wrap; }
 @media (max-width: 720px) {
   .qa-exchange { padding: 18px; }
   .qa-export-grid, .qa-import-metadata { grid-template-columns: minmax(0, 1fr); gap: 18px; }
   .qa-import-questions li { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .qa-exchange-heading { flex-wrap: wrap; }
+  .qa-exchange-heading .qa-import-start { width: 100%; }
+  .qa-import-run > .qa-import-actions { width: 100%; justify-content: space-between; }
 }
 
 .qa-example-preview { margin: 14px 0; }
