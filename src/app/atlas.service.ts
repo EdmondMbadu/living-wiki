@@ -1404,6 +1404,12 @@ export class AtlasService {
     return data.config;
   }
 
+  async previewSponsorship(boardId: string, atlasId: string, sponsor: { name: string; message: string }): Promise<AtlasSpeechAudioResponse> {
+    if (!this.functions) throw new Error('Functions unavailable.');
+    const callable = httpsCallable<unknown, AtlasSpeechAudioResponse>(this.functions, 'synthesizeChatAnswerSpeech', { timeout: 30_000 });
+    return (await callable({ mode: 'sponsorship', preview: true, boardId, atlasId, sponsor })).data;
+  }
+
   async previewAtlasSpeechVoice(
     atlasId: string,
     text: string,

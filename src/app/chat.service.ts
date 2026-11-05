@@ -630,6 +630,12 @@ export class ChatService {
     }
   }
 
+  async sponsorshipSpeech(options: { boardId: string; cardId: string; atlasId: string; anonymousVisitorId: string | null; expectedMessage: string }): Promise<ChatAnswerSpeechResponse | null> {
+    if (!this.functions) return null;
+    const callable = httpsCallable<unknown, ChatAnswerSpeechResponse>(this.functions, 'synthesizeChatAnswerSpeech', { timeout: 30_000 });
+    return (await callable({ ...options, mode: 'sponsorship' })).data;
+  }
+
   async synthesizeAnswerSpeech(
     text: string,
     question?: string | null,

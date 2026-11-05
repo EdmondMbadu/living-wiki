@@ -1,3 +1,4 @@
+import { normalizeSponsorship, normalizeSponsorshipChoice, resolveSponsorship, type Sponsorship, type SponsorshipChoice } from '../../../functions/src/talking-card-sponsorship';
 import { Component, computed, effect, HostListener, inject, input, OnDestroy, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -32,7 +33,17 @@ import { TalkingCardKnowledgeService } from './talking-card-knowledge.service';
 
 type EditorMode = 'existing' | 'new';
 type VoiceChoice = 'default' | 'catalog' | 'personal' | 'saved';
-type EditorSection = 'card' | 'knowledge' | 'voice' | 'actions';
+type EditorSection = 'card' | 'knowledge' | 'voice' | 'actions' | 'sponsorship';
+const SPONSOR_MESSAGE_PREFIX = 'Our conversation today has been generously supported by a grant from ';
+
+function defaultSponsorMessage(name: string): string {
+  const sponsor = name.trim();
+  return sponsor ? `${SPONSOR_MESSAGE_PREFIX}${sponsor}${/[.!?]$/.test(sponsor) ? '' : '.'}` : SPONSOR_MESSAGE_PREFIX;
+}
+
+function completeSponsorMessage(message: string): boolean {
+  return !!message.trim() && message.trim() !== SPONSOR_MESSAGE_PREFIX.trim();
+}
 
 @Component({
   selector: 'app-talking-card-editor',
@@ -138,6 +149,21 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   readonly avatarSearch = signal('');
   readonly name = signal('');
   readonly role = signal('');
+  readonly boardSponsorship = input<Sponsorship | null>(null);
+  readonly sponsorMode = signal<'inherit' | 'custom' | 'off'>('inherit');
+  readonly sponsorName = signal('');
+  readonly sponsorMessage = signal(SPONSOR_MESSAGE_PREFIX);
+  readonly boardSponsorEnabled = signal(false);
+  readonly boardSponsorEdited = signal(false);
+  readonly boardSponsorName = signal('');
+  readonly boardSponsorMessage = signal(SPONSOR_MESSAGE_PREFIX);
+  readonly sponsorPreviewError = signal('');
+  readonly boardSponsorDraft = computed(() => this.boardSponsorEnabled() && completeSponsorMessage(this.boardSponsorMessage()) ? normalizeSponsorship({ name: this.boardSponsorName(), message: this.boardSponsorMessage() }) : null);
+  readonly sponsorChoice = computed<SponsorshipChoice>(() => this.sponsorMode() === 'custom'
+    ? { mode: 'custom', name: this.sponsorName().trim(), message: this.sponsorMessage().trim() } : { mode: this.sponsorMode() === 'off' ? 'off' : 'inherit' });
+  readonly effectiveSponsor = computed(() => this.sponsorMode() === 'custom' && !completeSponsorMessage(this.sponsorMessage()) ? null : resolveSponsorship(this.boardSponsorDraft(), this.sponsorChoice()));
+  readonly sponsorValid = computed(() => (!this.boardSponsorEnabled() || !!this.boardSponsorDraft()) && (this.sponsorMode() !== 'custom' || completeSponsorMessage(this.sponsorMessage()) && !!normalizeSponsorship(this.sponsorChoice())));
+  readonly personaRuntimeWarning = computed(() => this.personaPrompt().length > 7600);
   readonly personaPrompt = signal('');
   readonly openingMessage = signal($localize`Hi! I’m here to help. What would you like to know?`);
   readonly ctaLabel = signal($localize`Talk to me`);
@@ -265,7 +291,9 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     return null;
   });
   readonly canSave = computed(() => {
+    if (!this.draftReady()) return false;
     if (this.saving() || this.imageProcessing() || this.voiceConfigLoading() || this.personalVoiceCreating()) return false;
+    if (!this.sponsorValid()) return false;
     if (!this.openingMessage().trim() || !!this.actionFormMessage()) return false;
     if (this.isEditing() && !this.name().trim()) return false;
     if (this.mode() === 'existing') {
@@ -287,6 +315,8 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    const sponsor = this.boardSponsorship();
+    this.boardSponsorEnabled.set(!!sponsor); this.boardSponsorName.set(sponsor?.name || ''); this.boardSponsorMessage.set(sponsor?.message || SPONSOR_MESSAGE_PREFIX);
     if (this.editingCard()) {
       await this.initializeEditingCard();
     } else {
@@ -423,6 +453,9 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     this.openingMessage.set(card.conversation.openingMessage || $localize`Hi! I’m here to help. What would you like to know?`);
     this.ctaLabel.set(card.conversation.ctaLabel?.trim() || $localize`Talk to me`);
     this.actions.set(normalizeTalkingCardActions(card.conversation.actions));
+    const sponsor = normalizeSponsorshipChoice(card.conversation.sponsorship);
+    this.sponsorMode.set(sponsor.mode);
+    if (sponsor.mode === 'custom') { this.sponsorName.set(sponsor.name); this.sponsorMessage.set(sponsor.message); }
     this.placement.set(card.placement);
     try {
       const atlas = await this.atlasService.getAccessibleAtlasById(card.conversation.atlasId);
@@ -624,6 +657,46 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     this.realEstateAdditionalGuidance.set(guidance);
     const agency = this.realEstateAgency(this.role());
     this.personaPrompt.set(buildListingAgentPersonaPrompt(this.name(), agency, guidance));
+  }
+
+  updateSponsorName(value: string, scope: 'card' | 'board'): void {
+    const name = scope === 'board' ? this.boardSponsorName : this.sponsorName;
+    const message = scope === 'board' ? this.boardSponsorMessage : this.sponsorMessage;
+    const withoutPunctuation = (text: string) => text.trim().replace(/[.!?]$/, '');
+    const usingDefault = message() === SPONSOR_MESSAGE_PREFIX
+      || withoutPunctuation(message()) === withoutPunctuation(defaultSponsorMessage(name()));
+    name.set(value);
+    if (usingDefault) message.set(defaultSponsorMessage(value));
+    if (scope === 'board') this.boardSponsorEdited.set(true);
+  }
+
+  updateSponsorMessage(value: string, scope: 'card' | 'board'): void {
+    const name = scope === 'board' ? this.boardSponsorName : this.sponsorName;
+    const message = scope === 'board' ? this.boardSponsorMessage : this.sponsorMessage;
+    message.set(value);
+    if (value.startsWith(SPONSOR_MESSAGE_PREFIX)) {
+      const sponsor = value.slice(SPONSOR_MESSAGE_PREFIX.length).trim().replace(/[.!?]$/, '');
+      if (sponsor.length <= 120) name.set(sponsor);
+    }
+    if (scope === 'board') this.boardSponsorEdited.set(true);
+  }
+
+  async previewSponsorship(): Promise<void> {
+    const sponsor = this.effectiveSponsor();
+    if (!sponsor || !this.selectedAtlasId() || this.saving()) return;
+    if (this.voicePreviewPlayingKey() === 'sponsorship' || this.voicePreviewLoadingKey() === 'sponsorship') { this.stopVoicePreview(); return; }
+    this.stopVoicePreview(); const run = ++this.previewRun;
+    this.voicePreviewLoadingKey.set('sponsorship'); this.sponsorPreviewError.set('');
+    try {
+      const result = await this.atlasService.previewSponsorship(this.boardId(), this.selectedAtlasId(), sponsor);
+      if (run !== this.previewRun) return;
+      const url = this.voiceAudioUrl(result); if (!url) throw new Error('No preview audio was returned.');
+      const audio = new Audio(url); this.previewAudio = audio;
+      audio.onended = () => { if (this.previewAudio === audio) this.stopVoicePreview(); };
+      audio.onerror = () => { if (this.previewAudio === audio) { this.stopVoicePreview(); this.sponsorPreviewError.set('The preview could not be played. Your message can still be saved.'); } };
+      await audio.play(); if (run === this.previewRun) this.voicePreviewPlayingKey.set('sponsorship');
+    } catch { if (run === this.previewRun) { this.stopVoicePreview(); this.sponsorPreviewError.set('The preview is unavailable. Your message can still be saved.'); } }
+    finally { if (run === this.previewRun) this.voicePreviewLoadingKey.set(null); }
   }
 
   async toggleVoicePreview(
@@ -1052,6 +1125,8 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
         openingMessage: this.openingMessage().trim().slice(0, 500),
         ctaLabel: this.ctaLabel().trim().slice(0, 48) || 'Talk to me',
         actions,
+        sponsorship: this.sponsorChoice(),
+        ...(this.boardSponsorEdited() && JSON.stringify(this.boardSponsorDraft()) !== JSON.stringify(this.boardSponsorship()) ? { boardSponsorship: this.boardSponsorDraft() } : {}),
         placement: this.placement(),
       });
     } catch (error) {
@@ -1122,6 +1197,11 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
         : record.personaPrompt);
       this.openingMessage.set(record.openingMessage);
       this.ctaLabel.set(record.ctaLabel);
+      if (record.sponsorDraft) {
+        const d = record.sponsorDraft;
+        this.sponsorMode.set(d.mode); this.sponsorName.set(d.name); this.sponsorMessage.set(d.message || defaultSponsorMessage(d.name));
+        if (d.boardEdited) { this.boardSponsorEdited.set(true); this.boardSponsorEnabled.set(d.boardEnabled); this.boardSponsorName.set(d.boardName); this.boardSponsorMessage.set(d.boardMessage || defaultSponsorMessage(d.boardName)); }
+      }
       this.actions.set(normalizeTalkingCardActions(record.actions));
       this.placement.set(record.placement);
       this.catalogVoiceId.set(record.catalogVoiceId);
@@ -1172,6 +1252,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       openingMessage: this.openingMessage(),
       ctaLabel: this.ctaLabel(),
       actions: this.actions(),
+      sponsorDraft: { mode: this.sponsorMode(), name: this.sponsorName(), message: this.sponsorMessage(), boardEdited: this.boardSponsorEdited(), boardEnabled: this.boardSponsorEnabled(), boardName: this.boardSponsorName(), boardMessage: this.boardSponsorMessage() },
       placement: this.placement(),
       catalogVoiceId: this.catalogVoiceId(),
       personalVoiceId: this.personalVoiceId(),

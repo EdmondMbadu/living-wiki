@@ -43,6 +43,7 @@ describe('TalkingCardConversationComponent', () => {
     canAdminAtlas: jasmine.createSpy('canAdminAtlas').and.returnValue(false),
   };
   const chatService = {
+    sponsorshipSpeech: jasmine.createSpy('sponsorshipSpeech').and.resolveTo(null),
     askScoped: jasmine.createSpy('askScoped'),
     askPublic: jasmine.createSpy('askPublic'),
     createElevenLabsVoiceSession: jasmine.createSpy('createElevenLabsVoiceSession'),
@@ -61,6 +62,7 @@ describe('TalkingCardConversationComponent', () => {
   };
 
   beforeEach(async () => {
+    chatService.sponsorshipSpeech.calls.reset(); chatService.sponsorshipSpeech.and.resolveTo(null);
     atlasService.getTalkingCardAvatar.calls.reset();
     atlasService.getTalkingCardAvatar.and.resolveTo(atlas);
     chatService.askScoped.calls.reset();
@@ -356,6 +358,88 @@ describe('TalkingCardConversationComponent', () => {
 
     expect(fixture.componentInstance.conversationStage()).toBe('recap');
     expect(fixture.componentInstance.completionReason()).toBe('ended');
+  });
+
+  const sponsor = { name: 'William Penn Foundation', message: 'Our conversation today has been generously supported by a grant from the William Penn Foundation of Philadelphia.' };
+  async function sponsoredConversation(mode: 'voice' | 'text' = 'voice') {
+    const fixture = TestBed.createComponent(TalkingCardConversationComponent);
+    fixture.componentRef.setInput('atlasId', 'atlas-1'); fixture.componentRef.setInput('boardId', 'board-1'); fixture.componentRef.setInput('cardId', 'card-1');
+    fixture.componentRef.setInput('sponsorship', sponsor);
+    spyOn(fixture.componentInstance, 'startVoice').and.resolveTo(); fixture.componentInstance.conversationMode.set(mode);
+    fixture.detectChanges(); await fixture.whenStable();
+    fixture.componentInstance.recapTranscript.set([{ role: 'user', text: 'What can I learn about your life?' }, { role: 'agent', text: 'You can explore the historical record and the events that shaped my decisions.' }]);
+    return fixture;
+  }
+  it('plays an exact closing acknowledgement after disconnecting and then opens the recap', async () => {
+    const fixture = await sponsoredConversation(), page = fixture.componentInstance;
+    const audio = { play: jasmine.createSpy('play').and.resolveTo(), pause: jasmine.createSpy('pause'), removeAttribute: jasmine.createSpy('removeAttribute'), load: jasmine.createSpy('load'), onended: null as (() => void) | null, onerror: null };
+    spyOn(window, 'Audio').and.returnValue(audio as unknown as HTMLAudioElement);
+    chatService.sponsorshipSpeech.and.resolveTo({ audioUrl: 'https://example.test/sponsor.mp3' });
+    const end = spyOn(page, 'endVoice').and.resolveTo();
+    await page.finishConversation(); await fixture.whenStable(); fixture.detectChanges();
+    expect(end).toHaveBeenCalledTimes(1); expect(page.conversationStage()).toBe('closing');
+    expect(audio.play).toHaveBeenCalledTimes(1); expect(page.sponsorPlayback()).toBe('playing');
+    expect(fixture.nativeElement.textContent).toContain(sponsor.message);
+    expect(fixture.nativeElement.querySelector('.talking-chat__mode-switch')).toBeNull();
+    expect(chatService.sponsorshipSpeech.calls.mostRecent().args[0].expectedMessage).toBe(sponsor.message);
+    await page.finishConversation(); expect(audio.play).toHaveBeenCalledTimes(1);
+    audio.onended!(); fixture.detectChanges(); expect(page.conversationStage()).toBe('recap');
+    expect(page.recapTranscript().some(item => item.text === sponsor.message)).toBeFalse(); fixture.destroy();
+  });
+  it('skips pending audio without late playback or a second closing message', async () => {
+    const fixture = await sponsoredConversation(), page = fixture.componentInstance;
+    let finish!: (value: unknown) => void;
+    chatService.sponsorshipSpeech.and.callFake(() => new Promise(resolve => finish = resolve));
+    const audio = spyOn(window, 'Audio');
+    await page.finishConversation(); expect(page.conversationStage()).toBe('closing');
+    page.continueToRecap(); expect(page.conversationStage()).toBe('recap');
+    finish({ audioUrl: 'https://example.test/late.mp3' }); await fixture.whenStable();
+    expect(audio).not.toHaveBeenCalled(); fixture.destroy();
+  });
+  it('falls through to visible acknowledgement if speech synthesis or autoplay fails', async () => {
+    const fixture = await sponsoredConversation(), page = fixture.componentInstance;
+    chatService.sponsorshipSpeech.and.rejectWith(new Error('Unavailable'));
+    await page.finishConversation(); await fixture.whenStable(); fixture.detectChanges();
+    expect(page.conversationStage()).toBe('recap'); expect(page.sponsorPlayback()).toBe('unavailable');
+    expect(fixture.nativeElement.textContent).toContain(sponsor.message);
+    expect(fixture.nativeElement.querySelector('#talking-card-recap-email')).not.toBeNull(); fixture.destroy();
+  });
+  it('continues to recap when the browser blocks audio playback', async () => {
+    const fixture = await sponsoredConversation(), page = fixture.componentInstance;
+    chatService.sponsorshipSpeech.and.resolveTo({ audioUrl: 'https://example.test/approved.mp3' });
+    const audio = { play: jasmine.createSpy('play').and.rejectWith(new Error('NotAllowedError')), pause: jasmine.createSpy('pause'), removeAttribute: jasmine.createSpy('removeAttribute'), load: jasmine.createSpy('load'), onended: null, onerror: null };
+    spyOn(window, 'Audio').and.returnValue(audio as unknown as HTMLAudioElement);
+    await page.finishConversation(); await fixture.whenStable();
+    expect(page.conversationStage()).toBe('recap'); expect(page.sponsorPlayback()).toBe('unavailable');
+    expect(audio.pause).toHaveBeenCalled(); fixture.destroy();
+  });
+  it('never waits longer than three seconds for closing audio and ignores a late response', async () => {
+    const fixture = await sponsoredConversation(), page = fixture.componentInstance;
+    let finish!: (value: unknown) => void;
+    chatService.sponsorshipSpeech.and.callFake(() => new Promise(resolve => finish = resolve));
+    const audio = spyOn(window, 'Audio');
+    jasmine.clock().install();
+    try {
+      await page.finishConversation(); expect(page.conversationStage()).toBe('closing');
+      jasmine.clock().tick(3001); expect(page.conversationStage()).toBe('recap');
+      finish({ audioUrl: 'https://example.test/late.mp3' }); await Promise.resolve(); await Promise.resolve();
+      expect(audio).not.toHaveBeenCalled();
+    } finally { jasmine.clock().uninstall(); fixture.destroy(); }
+  });
+
+  for (const reason of ['closed', 'interrupted'] as const) {
+    it(`does not autoplay after a ${reason} conversation`, async () => {
+      const fixture = await sponsoredConversation();
+      await fixture.componentInstance.finishConversation(reason); fixture.detectChanges();
+      expect(fixture.componentInstance.conversationStage()).toBe('recap');
+      expect(chatService.sponsorshipSpeech).not.toHaveBeenCalled(); expect(fixture.nativeElement.textContent).toContain(sponsor.message); fixture.destroy();
+    });
+  }
+  it('shows text sponsorship without autoplay and stops playback on close', async () => {
+    const fixture = await sponsoredConversation('text'), page = fixture.componentInstance;
+    await page.finishConversation(); fixture.detectChanges();
+    expect(page.conversationStage()).toBe('recap'); expect(chatService.sponsorshipSpeech).not.toHaveBeenCalled();
+    const close = spyOn(page.closed, 'emit'); page.dismissRecap(); expect(close).toHaveBeenCalledTimes(1); fixture.destroy();
   });
 
   it('offers a recap in place instead of closing after a meaningful conversation', async () => {

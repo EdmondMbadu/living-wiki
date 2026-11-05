@@ -205,4 +205,26 @@ describe('published board Studio saves', () => {
     expect(c.stackPublishedVideoReady()).toBeFalse();
     expect(c.stackPublishedTrailerReady()).toBeFalse();
   });
+  it('saves board acknowledgement and card override in one Talking Card write', async () => {
+    const c = harness();
+    const sponsor = { name: 'Board sponsor', message: 'Approved board acknowledgement.' };
+    const card = { ...board.cards[0], subtitle: '', imageUrl: '', imageUrls: [], conversation: { version: 1, provider: 'atlas', atlasId: 'avatar', openingMessage: 'Hello' } };
+    c.talkingCardEditorBoard = () => ({ ...board, cards: [card] }); c.listingTalkingCardSetup = () => null;
+    c.persistTalkingCardAndFinish = jasmine.createSpy('atomic save').and.resolveTo();
+    await c.addTalkingCard({ cardId: card.id, atlasId: 'avatar', title: 'Guide', subtitle: '', imageUrl: '', openingMessage: 'Ask me about history.', ctaLabel: 'Talk to me', actions: [], placement: 'keep', sponsorship: { mode: 'off' }, boardSponsorship: sponsor });
+    const saved = c.persistTalkingCardAndFinish.calls.mostRecent().args[0];
+    expect(saved.sponsorship).toEqual(sponsor); expect(saved.cards[0].conversation.sponsorship).toEqual({ mode: 'off' });
+    expect(saved.cards[0].conversation.openingMessage).toBe('Ask me about history.');
+  });
+
+  it('preserves an existing card acknowledgement when an older caller omits the new fields', async () => {
+    const c = harness();
+    const choice = { mode: 'custom', name: 'Sponsor', message: 'Approved acknowledgement.' };
+    const card = { ...board.cards[0], subtitle: '', imageUrl: '', imageUrls: [], conversation: { version: 1, provider: 'atlas', atlasId: 'avatar', openingMessage: 'Hello', sponsorship: choice } };
+    c.talkingCardEditorBoard = () => ({ ...board, cards: [card] }); c.listingTalkingCardSetup = () => null;
+    c.persistTalkingCardAndFinish = jasmine.createSpy('save').and.resolveTo();
+    await c.addTalkingCard({ cardId: card.id, atlasId: 'avatar', title: 'Guide', subtitle: '', imageUrl: '', openingMessage: 'Hello', ctaLabel: 'Talk to me', actions: [], placement: 'keep' });
+    expect(c.persistTalkingCardAndFinish.calls.mostRecent().args[0].cards[0].conversation.sponsorship).toEqual(choice);
+  });
+
 });

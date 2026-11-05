@@ -1,3 +1,4 @@
+import { normalizeSponsorship, resolveSponsorship, sponsorshipEmail, type Sponsorship } from './talking-card-sponsorship';
 import { contentLanguageVoicePreference } from './content-language';
 import { issuePicamoVoice } from './picamo-analytics';
 export { getPicamoAnalytics, recordPicamoAssistantInteraction, syncPicamoVoiceAnalytics } from './picamo-analytics';
@@ -4383,8 +4384,10 @@ function buildVoiceConversationSummaryEmail(params: {
   talkingCardActions?: TalkingCardSummaryAction[];
   realEstate?: RealEstateTalkingCardRecapContext | null;
   talkingCardAvatar?: { name: string; imageUrl: string | null } | null;
+  sponsorship?: Sponsorship | null;
 }) {
   const isTalkingCard = params.source === 'talking_card';
+  const sponsor = sponsorshipEmail(isTalkingCard ? params.sponsorship ?? null : null);
   const placeName = params.subjectName || params.cityName || params.atlasName || 'this wiki';
   const recapLabel = isTalkingCard ? 'conversation recap' : 'voice recap';
   const realEstate = isTalkingCard ? params.realEstate ?? null : null;
@@ -4529,6 +4532,7 @@ ${contact ? `Questions or want to arrange a showing?\n${contactText}` : ''}
 
 Transcript:
 ${params.summary.transcriptText}
+${sponsor.text}
 
 The Living Wiki Team`;
 
@@ -4582,6 +4586,7 @@ The Living Wiki Team`;
           <p style="margin:0 0 12px;color:#0d1f15;font-size:13px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;">Transcript excerpt</p>
           ${transcriptHtml}
         </div>
+        ${sponsor.html}
         <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
         <p style="color:#9ca3af;font-size:13px;margin:0;">The Living Wiki Team</p>
       </div>
@@ -18897,6 +18902,7 @@ function getPublicChatVisitorContext(request: {
 }
 
 type TalkingCardSummaryContext = {
+  sponsorship: Sponsorship | null;
   boardId: string;
   boardTitle: string;
   cardId: string;
@@ -18992,10 +18998,19 @@ async function loadTalkingCardSummaryContext(params: {
   }
 
   const cards = Array.isArray(board.cards) ? board.cards : [];
-  const card = cards.find((value): value is Record<string, unknown> => {
-    if (!value || typeof value !== 'object') return false;
-    return String((value as Record<string, unknown>).id ?? '') === target.cardId;
-  });
+  const findCard = (items: unknown[], depth = 0): Record<string, unknown> | null => {
+    if (depth > 8) return null;
+    for (const value of items) {
+      if (!value || typeof value !== 'object') continue;
+      const item = value as Record<string, unknown>;
+      if (!isOwner && (item['authorOnly'] === true || item['visibility'] === 'author-only' || Array.isArray(item['tags']) && item['tags'].includes('author-only'))) continue;
+      if (String(item['id'] ?? '') === target.cardId) return item;
+      const nested = Array.isArray(item['relatedCards']) ? findCard(item['relatedCards'], depth + 1) : null;
+      if (nested) return nested;
+    }
+    return null;
+  };
+  const card = findCard(cards);
   if (!card) {
     throw new HttpsError('not-found', 'This Talking Card is no longer on the board.');
   }
@@ -19024,6 +19039,7 @@ async function loadTalkingCardSummaryContext(params: {
     cardId: target.cardId,
     cardTitle,
     boardUrl: `${publicAppUrl}/boards/${encodeURIComponent(routeKey)}`,
+    sponsorship: resolveSponsorship(board['sponsorship'], conversation?.['sponsorship']),
     actions: talkingCardSummaryActions(conversation?.actions),
     realEstate: buildRealEstateTalkingCardRecapContext(board, card),
   };
@@ -19228,6 +19244,7 @@ export const sendVoiceConversationSummary = onCall(
       talkingCardActions: talkingCardContext?.actions ?? [],
       realEstate,
       talkingCardAvatar,
+      sponsorship: talkingCardContext?.sponsorship ?? null,
     });
     const [response] = await sgMail.send({
       to: recipientEmail,
@@ -19255,6 +19272,7 @@ export const sendVoiceConversationSummary = onCall(
       card_id: talkingCardContext?.cardId ?? null,
       card_title: talkingCardContext?.cardTitle ?? null,
       talking_card_actions: talkingCardContext?.actions ?? [],
+      sponsorship: talkingCardContext?.sponsorship ?? null,
       real_estate_property: realEstate ? {
         title: realEstate.propertyTitle,
         subtitle: realEstate.propertySubtitle,
@@ -21966,7 +21984,9 @@ export const synthesizeChatAnswerSpeech = onCall(
     if (!request.auth?.uid && !normalizeAnonymousVisitorId(request.data?.anonymousVisitorId)) {
       throw new HttpsError('unauthenticated', 'Authentication or anonymousVisitorId is required.');
     }
-    const requestedMode = request.data?.mode === 'stack-trailer'
+    const requestedMode = request.data?.mode === 'sponsorship'
+      ? 'sponsorship'
+      : request.data?.mode === 'stack-trailer'
       ? 'stack-trailer'
       : request.data?.mode === 'stack-video'
       ? 'stack-video'
@@ -21987,6 +22007,25 @@ export const synthesizeChatAnswerSpeech = onCall(
     const requestedAtlasId = normalizeAtlasId(request.data?.atlasId);
     const boardId = String(request.data?.boardId ?? '').trim();
     const requestedCardId = String(request.data?.cardId ?? '').trim().slice(0, 160);
+    let sponsorText: string | null = null;
+    if (requestedMode === 'sponsorship') {
+      if (!requestedAtlasId || !boardId) throw new HttpsError('invalid-argument', 'An avatar and board are required.');
+      if (request.data?.preview === true) {
+        const board = await db.collection('boards').doc(boardId).get();
+        if (!request.auth?.uid || !board.exists || board.data()?.owner_user_id !== request.auth.uid) throw new HttpsError('permission-denied', 'Only the board owner can preview sponsorship changes.');
+        await loadAtlasForVoiceAccess(requestedAtlasId, request.auth.uid);
+        const sponsor = normalizeSponsorship(request.data?.sponsor);
+        if (!sponsor) throw new HttpsError('invalid-argument', 'Enter a sponsor name and message of at most 500 characters.');
+        sponsorText = sponsor.message;
+      } else {
+        await loadTalkingCardAtlas(requestedAtlasId, request.auth?.uid ?? null, request.data);
+        const context = await loadTalkingCardSummaryContext({ boardId, cardId: requestedCardId, atlasId: requestedAtlasId, requesterUid: request.auth?.uid ?? null });
+        if (!context.sponsorship) throw new HttpsError('failed-precondition', 'This card has no sponsorship acknowledgement.');
+        // The browser can detect an edit during an open session without playing stale text.
+        if (request.data?.expectedMessage !== context.sponsorship.message) throw new HttpsError('failed-precondition', 'The acknowledgement has changed. Continue with the visible recap.');
+        sponsorText = context.sponsorship.message;
+      }
+    }
     let requestedBoard: Record<string, unknown> | null = null;
     let requestedStackVideoCard: Record<string, unknown> | null = null;
     if (requestedMode === 'stack-video' || requestedMode === 'stack-trailer') {
@@ -22023,15 +22062,16 @@ export const synthesizeChatAnswerSpeech = onCall(
       throw new HttpsError('invalid-argument', 'The selected narrator voice is not available.');
     }
     if (!requestedNarratorId && requestedAtlasId) {
-      await loadAtlasForVoiceAccess(requestedAtlasId, request.auth?.uid ?? null);
+      if (requestedMode !== 'sponsorship') await loadAtlasForVoiceAccess(requestedAtlasId, request.auth?.uid ?? null);
       const atlasVoice = await loadAtlasSpeechVoiceConfig(requestedAtlasId);
-      requestedNarratorVoiceId = atlasVoice.provider_voice_id ?? '';
+      requestedNarratorVoiceId = atlasVoice.provider_voice_id ?? (requestedMode === 'sponsorship' ? defaultAtlasRealtimeVoice?.providerVoiceId ?? '' : '');
     }
-    const text = requestedMode === 'stack-video' && requestedStackVideoCard
+    if (requestedMode === 'sponsorship' && requestedNarratorId) throw new HttpsError('invalid-argument', 'The avatar voice is selected automatically.');
+    const text = sponsorText ?? (requestedMode === 'stack-video' && requestedStackVideoCard
       ? stackVideoNarrationTextFromCard(requestedStackVideoCard, normalizeSpeechText)
       : requestedMode === 'full' || requestedMode === 'tour' || requestedMode === 'stack-video' || requestedMode === 'stack-trailer' || requestedMode === 'voice-preview'
         ? normalizeSpeechText(request.data?.text)
-        : buildSpeechRecapText(request.data?.question, request.data?.text);
+        : buildSpeechRecapText(request.data?.question, request.data?.text));
     if (!text) {
       throw new HttpsError('invalid-argument', 'Answer text is required.');
     }
@@ -22203,7 +22243,7 @@ export const synthesizeChatAnswerSpeech = onCall(
     const stackVideoNarrationRevisionKey = requestedMode === 'stack-video'
       ? stackVideoNarrationRevisionCacheKey(requestedStackVideoCard)
       : '';
-    const voiceIds = isPersonalNarrator || requiresNativeNarration
+    const voiceIds = isPersonalNarrator || requiresNativeNarration || requestedMode === 'sponsorship'
       ? [primaryVoiceId]
       : Array.from(new Set([
           primaryVoiceId,

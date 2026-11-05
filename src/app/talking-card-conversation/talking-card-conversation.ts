@@ -1,3 +1,4 @@
+import { normalizeSponsorship, type Sponsorship } from '../../../functions/src/talking-card-sponsorship';
 import { GuestTermsService } from '../guest-terms/guest-terms.service';
 import { contentLanguageDetails, contentLanguageVoicePreference } from '../../../functions/src/content-language';
 import type { BoardTranslationLanguage } from '../boards/board-translation';
@@ -19,7 +20,7 @@ type VoiceConversation = Awaited<ReturnType<typeof import('@elevenlabs/client').
 type ConversationMode = 'voice' | 'text';
 type VoiceMode = 'speaking' | 'listening' | null;
 type ConversationCompletionReason = 'ended' | 'closed' | 'interrupted';
-type ConversationStage = 'conversation' | 'recap' | 'sent';
+type ConversationStage = 'conversation' | 'closing' | 'recap' | 'sent';
 
 const TALKING_CARD_RECAP_MIN_LENGTH = 40;
 const TALKING_CARD_RECAP_MAX_MESSAGES = 40;
@@ -179,6 +180,14 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   private finishingConversation = false;
   private recapOffered = false;
   private destroyed = false;
+  private sponsorAudio: HTMLAudioElement | null = null;
+  private sponsorAudioPromise: Promise<string | null> | null = null;
+  private sponsorAudioKey = '';
+  private sponsorPlaybackRun = 0;
+  private sponsorTimer?: ReturnType<typeof setTimeout>;
+  readonly sponsorPlayback = signal<'idle' | 'loading' | 'playing' | 'unavailable'>('idle');
+  readonly sponsorship = input<Sponsorship | null>(null);
+  readonly sponsor = computed(() => normalizeSponsorship(this.sponsorship()));
 
   readonly atlasId = input.required<string>();
   readonly boardId = input('');
@@ -282,6 +291,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.endTextAnalytics();
     this.destroyed = true;
+    this.stopSponsorAudio();
     if(this.voiceAnalyticsSyncTimer)clearTimeout(this.voiceAnalyticsSyncTimer);
     void this.endVoice();
   }
@@ -479,6 +489,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
         return;
       }
       this.voiceConversation = conversation;
+      if (this.sponsor()) void this.prepareSponsorAudio();
       this.startVoiceMeter(conversation);
       try {
         conversation.sendContextualUpdate(voiceContext.instruction, { contextId: `talking-card-identity-${atlas.id}` });
@@ -559,6 +570,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
 
   dismissRecap(): void {
     if (this.recapSending()) return;
+    this.stopSponsorAudio();
     this.closed.emit();
   }
 
@@ -581,6 +593,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.stopSponsorAudio();
     this.recapSending.set(true);
     this.recapError.set(null);
     try {
@@ -658,10 +671,69 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     this.recapEmail.set(this.authService.email().trim());
     this.recapError.set(null);
     this.conversationStage.set('recap');
-    if (typeof document !== 'undefined') {
+    if (reason === 'ended' && this.conversationMode() === 'voice' && this.sponsor()) {
+      this.conversationStage.set('closing'); void this.playSponsorAcknowledgement();
+    }
+    if (this.conversationStage() === 'recap' && typeof document !== 'undefined') {
       queueMicrotask(() => document.getElementById('talking-card-recap-email')?.focus());
     }
     return true;
+  }
+
+  private prepareSponsorAudio(): Promise<string | null> {
+    const sponsor = this.sponsor();
+    if (!sponsor) return Promise.resolve(null);
+    const key = JSON.stringify([this.atlasId(), this.boardId(), this.cardId(), sponsor.message]);
+    if (this.sponsorAudioPromise && this.sponsorAudioKey === key) return this.sponsorAudioPromise;
+    this.sponsorAudioKey = key;
+    const prepared = this.chatService.sponsorshipSpeech({ boardId: this.boardId(), cardId: this.cardId(), atlasId: this.atlasId(),
+      anonymousVisitorId: this.isSignedIn() ? null : this.anonymousVisitorId(), expectedMessage: sponsor.message })
+      .then(response => response?.audioUrl || null).catch(() => null);
+    this.sponsorAudioPromise = prepared;
+    void prepared.then(url => { if (!url && this.sponsorAudioPromise === prepared) this.sponsorAudioPromise = null; });
+    return prepared;
+  }
+
+  async playSponsorAcknowledgement(): Promise<void> {
+    if (!this.sponsor() || this.destroyed || this.sponsorPlayback() === 'loading' || this.sponsorPlayback() === 'playing') return;
+    this.stopSponsorAudio(); const run = this.sponsorPlaybackRun;
+    this.sponsorPlayback.set('loading');
+    // A cold cache or a blocked audio device must never hold the visitor here.
+    this.sponsorTimer = setTimeout(() => this.completeSponsorAudio(true), 3000);
+    try {
+      const url = await this.prepareSponsorAudio();
+      if (this.destroyed || run !== this.sponsorPlaybackRun) return;
+      if (!url) { this.completeSponsorAudio(true); return; }
+      if (this.sponsorTimer) clearTimeout(this.sponsorTimer);
+      const audio = new Audio(url); this.sponsorAudio = audio;
+      audio.onended = () => { if (run === this.sponsorPlaybackRun) this.completeSponsorAudio(); };
+      audio.onerror = () => { if (run === this.sponsorPlaybackRun) this.completeSponsorAudio(true); };
+      this.sponsorTimer = setTimeout(() => this.completeSponsorAudio(true), 60_000);
+      await audio.play();
+      if (this.destroyed || run !== this.sponsorPlaybackRun) { audio.pause(); return; }
+      this.sponsorPlayback.set('playing');
+    } catch { if (run === this.sponsorPlaybackRun) this.completeSponsorAudio(true); }
+  }
+
+  continueToRecap(): void { this.completeSponsorAudio(); }
+
+  private completeSponsorAudio(unavailable = false): void {
+    this.stopSponsorAudio();
+    this.sponsorPlayback.set(unavailable ? 'unavailable' : 'idle');
+    if (!this.destroyed && this.conversationStage() === 'closing') {
+      this.conversationStage.set('recap');
+      queueMicrotask(() => { if (!this.destroyed) document.getElementById('talking-card-recap-email')?.focus(); });
+    }
+  }
+
+  private stopSponsorAudio(): void {
+    this.sponsorPlaybackRun++;
+    if (this.sponsorTimer) clearTimeout(this.sponsorTimer);
+    if (this.sponsorAudio) {
+      this.sponsorAudio.onended = null; this.sponsorAudio.onerror = null;
+      this.sponsorAudio.pause(); this.sponsorAudio.removeAttribute('src'); this.sponsorAudio.load(); this.sponsorAudio = null;
+    }
+    this.sponsorPlayback.set('idle');
   }
 
   private endTextAnalytics(): void {

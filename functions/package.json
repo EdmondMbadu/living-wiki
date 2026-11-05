@@ -57,7 +57,8 @@
     "serve": "npm run build && firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions",
     "lint": "tsc -p tsconfig.json --noEmit",
-    "test:tour-itinerary": "npm run build && node --test scripts/test-board-wizard-tour-itinerary.cjs"
+    "test:tour-itinerary": "npm run build && node --test scripts/test-board-wizard-tour-itinerary.cjs",
+    "test:sponsorship": "npm run build && node --test scripts/test-talking-card-sponsorship.cjs"
   },
   "dependencies": {
     "@google/genai": "^1.16.0",

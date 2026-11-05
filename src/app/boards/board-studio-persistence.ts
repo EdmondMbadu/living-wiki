@@ -40,13 +40,13 @@ export function boardStudioPatch(record: Record<string, unknown>, kind: BoardStu
     : kind === 'cover'
       ? ['title', 'description', 'imageUrl', ...mediaInvalidationFields]
       : kind === 'fresh-narration' || kind === 'cards'
-        ? ['cards', ...mediaInvalidationFields]
+        ? ['cards', 'sponsorship', ...mediaInvalidationFields]
         : kind === 'settings'
           ? ['title', 'description', 'visibility', 'showCardNumbers', 'insideCardsDisplay', 'askVisitorLanguage',
             'photoStudioDraft', ...mediaInvalidationFields]
           : [...finalScreenFields, 'socialVideoRenderVersion', 'socialLandscapeVideoRenderVersion'];
   return {
-    ...Object.fromEntries([...fields, 'updated_at_iso'].map((field) => [field,
+    ...Object.fromEntries([...fields, 'updated_at_iso'].filter(field => field !== 'sponsorship' || (kind === 'cards' && record[field] !== undefined)).map((field) => [field,
       field === 'askVisitorLanguage' ? record[field] ?? false : record[field]])),
     // Lets Firestore evaluate this focused write before legacy full-board rules.
     studioSaveNonce: globalThis.crypto.randomUUID(),

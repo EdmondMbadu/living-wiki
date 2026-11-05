@@ -11649,6 +11649,7 @@
     #talkingCardEditor
     [boardId]="talkingBoard.id"
     [boardTitle]="talkingBoard.title"
+    [boardSponsorship]="talkingBoard.sponsorship || null"
     [boardVisibility]="talkingBoard.visibility"
     [editingCard]="talkingCardEditorValue()"
     [prefill]="talkingCardEditorPrefill()"
@@ -11669,6 +11670,7 @@
       [cardSubtitle]="talkingCard.subtitle"
       [imageUrl]="talkingCard.imageUrl"
       [openingMessage]="conversation.openingMessage"
+      [sponsorship]="resolveSponsorship(talkingConversationBoard()?.sponsorship, conversation.sponsorship)"
       [actions]="talkingCardActionLinks(talkingCard)"
       [starterQuestions]="talkingCardStarterQuestions(talkingCard)"
       [boardContext]="talkingCardBoardContext(talkingConversationBoard(), talkingCard)"

@@ -271,6 +271,23 @@ service cloud.firestore {
         );
     }
 
+    // Optional public board acknowledgement: owner-managed plain text only.
+    function isValidBoardSponsorship(data) {
+      let value = data.get('sponsorship', null);
+      return value == null || (value is map
+        && value.keys().hasOnly(['name', 'message'])
+        && value.name is string && value.name.size() > 0 && value.name.size() <= 120
+        && value.message is string && value.message.size() > 0 && value.message.size() <= 500);
+    }
+
+    function validBoardSponsorshipMutation() {
+      // Existing values were validated when created or changed. Avoid validating
+      // that same map on unrelated full-board edits near the expression limit.
+      return (request.method == 'update'
+        && request.resource.data.get('sponsorship', null) == resource.data.get('sponsorship', null))
+        || isValidBoardSponsorship(request.resource.data);
+    }
+
     function personalBoardKeys() {
       return [
         'id',
@@ -340,6 +357,7 @@ service cloud.firestore {
         'narrationStyle',
         'narrationSecondsPerCard',
         'stackNarratorVoiceId',
+        'sponsorship',
         'stickers',
         'tourMeta',
         'nearbyGems',
@@ -1047,7 +1065,7 @@ service cloud.firestore {
           )
           || (
             request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-              'title', 'description', 'imageUrl', 'cards',
+              'title', 'description', 'imageUrl', 'cards', 'sponsorship',
               'socialVideoRenderVersion', 'socialLandscapeVideoRenderVersion',
               'trailerVideoRenderVersion', 'trailerLandscapeVideoRenderVersion',
               'trailerVideoSourceFingerprint', 'studioSaveNonce', 'updated_at_iso', 'server_updated_at'
@@ -1063,6 +1081,7 @@ service cloud.firestore {
               || request.resource.data.title.size() >= 1)
             && validDetailsString('description', 5000)
             && validDetailsString('imageUrl', 2500)
+            && isValidBoardSponsorship(request.resource.data)
             && request.resource.data.cards is list
             && request.resource.data.cards.size() <= 200
             && request.resource.data.socialVideoRenderVersion == ''
@@ -1217,7 +1236,9 @@ service cloud.firestore {
         && request.resource.data.visibility == 'private'
         && hasNearbyGemsGenerationGrant(request.resource.data, boardId, true)
         && request.resource.data.keys().hasOnly(personalBoardKeys())
-        && hasNoCityPublishingMetadata(request.resource.data)
+        && isValidBoardSponsorship(request.resource.data)
+        && request.resource.data.get('atlas_id', null) == null
+        && request.resource.data.get('generated_for_atlas_id', null) == null
         && request.resource.data.title is string
         && request.resource.data.title.size() >= 1
         && request.resource.data.title.size() <= 240
@@ -1240,7 +1261,9 @@ service cloud.firestore {
         && request.resource.data.visibility in ['public', 'unlisted', 'private']
         && hasNearbyGemsGenerationGrant(request.resource.data, boardId, false)
         && request.resource.data.keys().hasOnly(personalBoardKeys())
-        && hasNoCityPublishingMetadata(request.resource.data)
+        && isValidBoardSponsorship(request.resource.data)
+        && request.resource.data.get('atlas_id', null) == null
+        && request.resource.data.get('generated_for_atlas_id', null) == null
         && request.resource.data.title is string
         && request.resource.data.title.size() >= 1
         && request.resource.data.title.size() <= 240
@@ -1252,89 +1275,99 @@ service cloud.firestore {
         )
         && request.resource.data.server_updated_at == request.time;
 
-      allow create, update: if isSignedIn()
+      function validPersonalBoard() {
+        // Reuse the document map: repeating its full access path in this large
+        // validator wastes the evaluation budget when optional settings are used.
+        let data = request.resource.data;
+        return isSignedIn()
         && personalBoardMutation()
-        && request.resource.data.owner_user_id == request.auth.uid
-        && request.resource.data.id == boardId
+        && data.owner_user_id == request.auth.uid
+        && data.id == boardId
         && (request.method == 'create' || resource.data.owner_user_id == request.auth.uid)
+        // Reject legacy/server-only fields before evaluating visibility/plan rules.
+        // This keeps unrelated focused saves below the expression budget.
+        && data.keys().hasOnly(personalBoardKeys())
+        && validBoardSponsorshipMutation()
+        && data.get('atlas_id', null) == null
+        && data.get('generated_for_atlas_id', null) == null
         && safeFullBoardVisibilityMutation()
-        && request.resource.data.visibility in ['public', 'unlisted', 'private']
+        && data.visibility in ['public', 'unlisted', 'private']
         && (
-          request.resource.data.visibility in ['public', 'unlisted']
-          || isPhotoStudioDraft(request.resource.data)
+          data.visibility in ['public', 'unlisted']
+          || isPhotoStudioDraft(data)
           || isPlatformAdmin()
           || hasActivePersonalWikiPlan()
         )
-        && request.resource.data.keys().hasOnly(personalBoardKeys())
-        && hasNoCityPublishingMetadata(request.resource.data)
         // Required fields are already accessed and type-checked below. Avoid
         // a redundant hasAll list so full saves stay within the expression limit.
-        && request.resource.data.owner_public_slug is string
-        && request.resource.data.owner_public_slug.size() >= 2
-        && request.resource.data.owner_public_slug.size() <= 80
-        && request.resource.data.owner_public_slug.matches('^[a-z0-9]+(-[a-z0-9]+)*$')
+        && data.owner_public_slug is string
+        && data.owner_public_slug.size() >= 2
+        && data.owner_public_slug.size() <= 80
+        && data.owner_public_slug.matches('^[a-z0-9]+(-[a-z0-9]+)*$')
         && (
-          !request.resource.data.keys().hasAny(['custom_slug'])
+          !data.keys().hasAny(['custom_slug'])
           || (
-            request.resource.data.custom_slug is string
-            && request.resource.data.custom_slug.size() >= 3
-            && request.resource.data.custom_slug.size() <= 60
-            && request.resource.data.custom_slug.matches('^[a-z0-9]+(-[a-z0-9]+)*$')
+            data.custom_slug is string
+            && data.custom_slug.size() >= 3
+            && data.custom_slug.size() <= 60
+            && data.custom_slug.matches('^[a-z0-9]+(-[a-z0-9]+)*$')
           )
         )
         && (request.method == 'create'
-          ? !request.resource.data.keys().hasAny(['custom_slug'])
-          : request.resource.data.get('custom_slug', null) == resource.data.get('custom_slug', null))
-        && request.resource.data.owner_display_name is string
-        && request.resource.data.owner_display_name.size() <= 120
-        && request.resource.data.owner_photo_url is string
-        && request.resource.data.owner_photo_url.size() <= 2000
-        && request.resource.data.owner_profile_icon is string
-        && request.resource.data.owner_profile_icon.size() <= 64
+          ? !data.keys().hasAny(['custom_slug'])
+          : data.get('custom_slug', null) == resource.data.get('custom_slug', null))
+        && data.owner_display_name is string
+        && data.owner_display_name.size() <= 120
+        && data.owner_photo_url is string
+        && data.owner_photo_url.size() <= 2000
+        && data.owner_profile_icon is string
+        && data.owner_profile_icon.size() <= 64
         && (
-          request.resource.data.owner_profile_picture_type == null
-          || request.resource.data.owner_profile_picture_type in ['icon', 'image']
+          data.owner_profile_picture_type == null
+          || data.owner_profile_picture_type in ['icon', 'image']
         )
-        && request.resource.data.title is string
-        && request.resource.data.title.size() >= 1
-        && request.resource.data.title.size() <= 240
-        && request.resource.data.description is string
-        && request.resource.data.description.size() <= 5000
-        && request.resource.data.backNote is string
-        && request.resource.data.backNote.size() <= 300
-        && request.resource.data.icon is string
-        && request.resource.data.icon.size() <= 64
-        && request.resource.data.tone in ['teal', 'coral', 'yellow', 'green', 'blue', 'sky', 'purple']
-        && request.resource.data.imageUrl is string
-        && request.resource.data.imageUrl.size() <= 2000
-        && request.resource.data.logoUrl is string
-        && request.resource.data.logoUrl.size() <= 2000
-        && request.resource.data.logoLinkUrl is string
-        && request.resource.data.logoLinkUrl.size() <= 240
-        && request.resource.data.stackCtaLabel is string
-        && request.resource.data.stackCtaLabel.size() <= 48
-        && request.resource.data.stackCtaUrl is string
-        && request.resource.data.stackCtaUrl.size() <= 240
-        && request.resource.data.socialVideoUrl is string
-        && request.resource.data.socialVideoUrl.size() <= 2000
-        && request.resource.data.socialVideoMimeType is string
-        && request.resource.data.socialVideoMimeType.size() <= 120
-        && request.resource.data.socialVideoUpdatedAt is string
-        && request.resource.data.socialVideoUpdatedAt.size() <= 80
-        && request.resource.data.socialVideoRatio in ['vertical', 'square', 'landscape']
-        && hasValidSocialVideoClosingScreen(request.resource.data)
-        && hasValidBoardNarrationLength(request.resource.data)
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 240
+        && data.description is string
+        && data.description.size() <= 5000
+        && data.backNote is string
+        && data.backNote.size() <= 300
+        && data.icon is string
+        && data.icon.size() <= 64
+        && data.tone in ['teal', 'coral', 'yellow', 'green', 'blue', 'sky', 'purple']
+        && data.imageUrl is string
+        && data.imageUrl.size() <= 2000
+        && data.logoUrl is string
+        && data.logoUrl.size() <= 2000
+        && data.logoLinkUrl is string
+        && data.logoLinkUrl.size() <= 240
+        && data.stackCtaLabel is string
+        && data.stackCtaLabel.size() <= 48
+        && data.stackCtaUrl is string
+        && data.stackCtaUrl.size() <= 240
+        && data.socialVideoUrl is string
+        && data.socialVideoUrl.size() <= 2000
+        && data.socialVideoMimeType is string
+        && data.socialVideoMimeType.size() <= 120
+        && data.socialVideoUpdatedAt is string
+        && data.socialVideoUpdatedAt.size() <= 80
+        && data.socialVideoRatio in ['vertical', 'square', 'landscape']
+        && hasValidSocialVideoClosingScreen(data)
+        && hasValidBoardNarrationLength(data)
         && (
-          !request.resource.data.keys().hasAny(['stackNarratorVoiceId'])
-          || isValidStackNarratorVoiceId(request.resource.data.stackNarratorVoiceId)
+          !data.keys().hasAny(['stackNarratorVoiceId'])
+          || isValidStackNarratorVoiceId(data.stackNarratorVoiceId)
         )
-        && request.resource.data.stickers is list
-        && request.resource.data.stickers.size() <= 48
-        && request.resource.data.cards is list
-        && request.resource.data.cards.size() <= 200
-        && request.resource.data.created_at_iso is string
-        && request.resource.data.updated_at_iso is string
-        && request.resource.data.server_updated_at == request.time;
+        && data.stickers is list
+        && data.stickers.size() <= 48
+        && data.cards is list
+        && data.cards.size() <= 200
+        && data.created_at_iso is string
+        && data.updated_at_iso is string
+        && data.server_updated_at == request.time;
+      }
+      allow create, update: if validPersonalBoard();
 
       // A personal copy is created from a public source board with fresh card
       // IDs and no generated media. Keep this path intentionally narrow and

@@ -20,6 +20,7 @@
         <button type="button" role="tab" [attr.aria-selected]="editorSection() === 'card'" [class.is-active]="editorSection() === 'card'" (click)="setEditorSection('card')" i18n>Card</button>
         <button type="button" role="tab" [attr.aria-selected]="editorSection() === 'knowledge'" [class.is-active]="editorSection() === 'knowledge'" (click)="setEditorSection('knowledge')" i18n>Prompt & documents</button>
         <button type="button" role="tab" [attr.aria-selected]="editorSection() === 'voice'" [class.is-active]="editorSection() === 'voice'" (click)="setEditorSection('voice')" i18n>Voice</button>
+        <button type="button" role="tab" [attr.aria-selected]="editorSection() === 'sponsorship'" [class.is-active]="editorSection() === 'sponsorship'" (click)="setEditorSection('sponsorship')">Sponsorship</button>
         <button type="button" role="tab" [attr.aria-selected]="editorSection() === 'actions'" [class.is-active]="editorSection() === 'actions'" (click)="setEditorSection('actions')" i18n>Actions</button>
       </div>
     } @else if (!isRealEstateSetup()) {
@@ -242,7 +243,7 @@
             <label>
               <span i18n>System prompt *</span>
               <textarea rows="8" maxlength="40000" [ngModel]="personaPrompt()" (ngModelChange)="personaPrompt.set($event)" placeholder="Describe who this avatar is, how it should answer, and what it must never invent." i18n-placeholder></textarea>
-              <small i18n>Grounding, citations, and safety rules still remain automatic.</small>
+              <small i18n>Grounding, citations, and safety rules still remain automatic.</small><small>{{ personaPrompt().length }} characters saved · Conversations use approximately the first 8,000 characters; identity instructions also take space.</small>@if (personaRuntimeWarning()) { <p class="talking-editor__notice" role="status">Instructions near the end may be omitted. Shorten this prompt and put sponsor acknowledgements in Sponsorship.</p> }
             </label>
           } @else {
             <p class="talking-editor__notice" i18n><span class="material-symbols-outlined">lock</span>The avatar creator manages its system prompt and knowledge.</p>
@@ -496,6 +497,36 @@
         </section>
       }
       @if (errorMessage()) { <p class="talking-editor__error" role="alert">{{ errorMessage() }}</p> }
+
+      @if (!isEditing() || editorSection() === 'sponsorship') {
+        <section class="talking-editor__edit-section talking-editor__sponsorship" aria-labelledby="sponsor-settings-title">
+          <header class="talking-editor__section-heading"><span class="material-symbols-outlined" aria-hidden="true">handshake</span><span><strong id="sponsor-settings-title">Sponsorship</strong><small>A clear acknowledgement at the end of the conversation and in the recap email.</small></span></header>
+          @if (!draftReady()) { <p role="status">Loading saved sponsorship settings…</p> }
+          <fieldset class="talking-editor__sponsor-fields" [disabled]="!draftReady() || saving()" aria-label="Sponsorship settings">
+          <label for="sponsor-mode"><span>Acknowledgement for this card</span><select id="sponsor-mode" [ngModel]="sponsorMode()" (ngModelChange)="sponsorMode.set($event)"><option value="inherit">Use board acknowledgement</option><option value="custom">Custom acknowledgement for this card</option><option value="off">Off for this card</option></select></label>
+          @if (sponsorMode() === 'custom') {
+            <label><span>Sponsor name</span><input maxlength="120" [ngModel]="sponsorName()" (ngModelChange)="updateSponsorName($event, 'card')" placeholder="William Penn Foundation of Philadelphia" /></label>
+            <label><span>Exact acknowledgement to say</span><textarea rows="4" maxlength="500" [ngModel]="sponsorMessage()" (ngModelChange)="updateSponsorMessage($event, 'card')"></textarea><small>Add the sponsor name at the end, or enter it above. {{ sponsorMessage().length }}/500 characters · Spoken exactly as written.</small></label>
+          }
+          <details class="talking-editor__board-sponsor" [open]="sponsorMode() === 'inherit'">
+            <summary>Board acknowledgement <span>{{ boardSponsorEnabled() ? boardSponsorName() || 'Setup needed' : 'Not configured' }}</span></summary>
+            <p>Shared by cards on {{ boardTitle() }} that use the board acknowledgement. Other boards and this avatar’s personality are unaffected.</p>
+            <label class="talking-editor__check"><input type="checkbox" [ngModel]="boardSponsorEnabled()" (ngModelChange)="boardSponsorEnabled.set($event); boardSponsorEdited.set(true)" /><span>Enable board acknowledgement</span></label>
+            @if (boardSponsorEnabled()) {
+              <label><span>Board sponsor name</span><input maxlength="120" [ngModel]="boardSponsorName()" (ngModelChange)="updateSponsorName($event, 'board')" placeholder="William Penn Foundation of Philadelphia" /></label>
+              <label><span>Board acknowledgement text</span><textarea rows="4" maxlength="500" [ngModel]="boardSponsorMessage()" (ngModelChange)="updateSponsorMessage($event, 'board')"></textarea><small>Add the sponsor name at the end, or enter it above. {{ boardSponsorMessage().length }}/500 characters</small></label>
+              <small>Saving updates the acknowledgement for every card on this board that inherits it.</small>
+            }
+          </details>
+          @if (effectiveSponsor(); as sponsor) {
+            <div class="talking-editor__sponsor-preview"><small>Visitors will see and hear</small><strong>{{ sponsor.name }}</strong><p>{{ sponsor.message }}</p><button type="button" class="talking-editor__secondary" (click)="previewSponsorship()" [disabled]="!selectedAtlasId() || saving()">{{ voicePreviewLoadingKey() === 'sponsorship' ? 'Cancel preview' : voicePreviewPlayingKey() === 'sponsorship' ? 'Stop preview' : 'Preview voice message' }}</button><small>Uses the avatar’s saved voice. Save voice changes before previewing. A new avatar must be saved first.</small></div>
+          } @else if (sponsorMode() === 'inherit' && !boardSponsorEnabled()) { <p class="talking-editor__notice">No acknowledgement will be delivered until a board sponsor is configured.</p> }
+          @if (!sponsorValid()) { <p class="talking-editor__error" role="alert">Enter a sponsor name and acknowledgement text for each enabled setting before saving.</p> }
+          @if (sponsorPreviewError()) { <p class="talking-editor__notice" role="status">{{ sponsorPreviewError() }}</p> }
+          <small>Voice visitors can skip the closing message. Typed conversations show the text without autoplaying audio. No wiki rebuild is needed.</small>
+          </fieldset>
+        </section>
+      }
     </div>
 
     <footer class="talking-editor__footer">

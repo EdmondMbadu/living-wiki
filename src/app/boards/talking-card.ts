@@ -1,3 +1,4 @@
+import { normalizeSponsorshipChoice, type Sponsorship, type SponsorshipChoice } from '../../../functions/src/talking-card-sponsorship';
 import type { BoardTranslationLanguage } from './board-translation';
 export type TalkingCardActionKind = 'schedule' | 'link';
 
@@ -17,6 +18,7 @@ export type BoardCardConversation = {
   ctaLabel?: string;
   actions?: TalkingCardAction[];
   starters?: string[];
+  sponsorship?: SponsorshipChoice;
 };
 
 export type TalkingCardEditorPrefill = {
@@ -36,6 +38,8 @@ export type TalkingCardEditorPrefill = {
 
 export type TalkingCardEditorResult = {
   cardId?: string;
+  sponsorship?: SponsorshipChoice;
+  boardSponsorship?: Sponsorship | null;
   atlasId: string;
   title: string;
   subtitle: string;
@@ -157,6 +161,7 @@ export function normalizeBoardCardConversation(value: unknown): BoardCardConvers
     provider: 'atlas',
     atlasId,
     openingMessage,
+    ...(data['sponsorship'] ? { sponsorship: normalizeSponsorshipChoice(data['sponsorship']) } : {}),
     ...(ctaLabel ? { ctaLabel } : {}),
     ...(actions.length ? { actions } : {}),
     ...(starters.length ? { starters } : {}),

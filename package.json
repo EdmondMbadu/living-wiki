@@ -48,7 +48,8 @@
     "start:ru": "ng serve --configuration ru",
     "test:guest-terms": "ng test --ts-config=tsconfig.guest-terms.spec.json --include=src/app/guest-terms/*.spec.ts --watch=false --browsers=ChromeHeadless",
     "test:avatar-qa": "ng test --ts-config=tsconfig.avatar-qa.spec.json --include=src/app/avatar-qa/*.spec.ts --watch=false --browsers=ChromeHeadless",
-    "test:analytics": "ng test --configuration=analytics-support --watch=false --browsers=ChromeHeadless"
+    "test:analytics": "ng test --configuration=analytics-support --watch=false --browsers=ChromeHeadless",
+    "test:sponsorship": "ng test --ts-config=tsconfig.sponsorship.spec.json --include=src/app/talking-card-conversation/*.spec.ts --include=src/app/talking-card-editor/talking-card-editor.spec.ts --include=src/app/boards/talking-card.spec.ts --include=src/app/boards/board-studio-persistence.spec.ts --include=src/app/boards/board-studio-save.spec.ts --watch=false --browsers=ChromeHeadless"
   },
   "prettier": {
     "printWidth": 100,

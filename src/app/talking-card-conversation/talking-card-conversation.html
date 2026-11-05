@@ -44,6 +44,14 @@
     @if (conversationStage() === 'conversation') {<p class="talking-chat__analytics-note" i18n>Conversations may be reviewed by this avatar’s administrators.</p>}
 
     @if(conversationStage()!=='conversation'&&analyticsNotice()){<p class="talking-chat__recap-privacy" role="status">{{analyticsNotice()}}</p>}
+    @if (conversationStage() === 'closing') {
+      <div class="talking-chat__sponsor-closing" aria-live="polite">
+        <span class="material-symbols-outlined" aria-hidden="true">handshake</span><small>Thank you for the conversation</small><h3>Acknowledging our sponsor</h3>
+        @if (sponsor(); as acknowledgement) { <strong>{{ acknowledgement.name }}</strong><p>{{ acknowledgement.message }}</p> }
+        <small>{{ sponsorPlayback() === 'playing' ? 'Playing the closing acknowledgement…' : 'Preparing the closing acknowledgement…' }} Your microphone is off.</small>
+        <button type="button" class="talking-chat__sponsor-continue" (click)="continueToRecap()">Skip to recap <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></button>
+      </div>
+    }
     @if (conversationStage() === 'recap') {
       <div class="talking-chat__recap" aria-live="polite">
         <div class="talking-chat__recap-intro">
@@ -63,6 +71,13 @@
           <span class="material-symbols-outlined" aria-hidden="true">summarize</span>
           <p>{{ recapPreview() }}</p>
         </div>
+
+        @if (sponsor(); as acknowledgement) {
+          <section class="talking-chat__sponsor-note" aria-label="Sponsorship acknowledgement"><small>Sponsorship acknowledgement</small><p>{{ acknowledgement.message }}</p>
+            <button type="button" (click)="playSponsorAcknowledgement()" [disabled]="sponsorPlayback() === 'loading' || sponsorPlayback() === 'playing'">{{ sponsorPlayback() === 'playing' ? 'Playing acknowledgement…' : sponsorPlayback() === 'loading' ? 'Preparing audio…' : 'Play acknowledgement' }}</button>
+            @if (sponsorPlayback() === 'unavailable') { <small role="status">Audio is unavailable. The acknowledgement is shown here and will be included in your email.</small> }
+          </section>
+        }
 
         <form class="talking-chat__recap-form" (submit)="sendRecap($event)">
           <label for="talking-card-recap-email">{{ isSignedIn() ? templateText.message6 : templateText.message7 }}</label>
@@ -144,7 +159,7 @@
         </div>
         <button type="button" class="talking-chat__recap-done" (click)="dismissRecap()" i18n>Done</button>
       </div>
-    } @else {
+    } @else if (conversationStage() === 'conversation') {
       <div class="talking-chat__mode-switch" role="tablist" aria-label="Conversation mode" i18n-aria-label>
         <button
           type="button"

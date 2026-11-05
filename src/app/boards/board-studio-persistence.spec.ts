@@ -96,4 +96,12 @@ describe('board Studio persistence contracts', () => {
     }
     expect(boardDetailsPatch(previous, previous)['photoStudioDraft']).toBeUndefined();
   });
+  it('includes a board acknowledgement only in card saves, never fresh narration writes', () => {
+    const sponsor = { name: 'Sponsor', message: 'Approved acknowledgement.' };
+    const record = { cards: [], sponsorship: sponsor, updated_at_iso: 'now' };
+    expect(boardStudioPatch(record, 'cards')['sponsorship']).toEqual(sponsor);
+    expect('sponsorship' in boardStudioPatch(record, 'fresh-narration')).toBeFalse();
+    expect('sponsorship' in boardStudioPatch({ cards: [] }, 'cards')).toBeFalse();
+  });
+
 });

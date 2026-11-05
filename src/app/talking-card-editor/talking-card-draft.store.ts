@@ -21,6 +21,7 @@ export interface TalkingCardDraftRecord {
   ctaLabel: string;
   placement: 'start' | 'end' | 'keep';
   actions?: TalkingCardAction[];
+  sponsorDraft?: { mode: 'inherit' | 'custom' | 'off'; name: string; message: string; boardEdited?: boolean; boardEnabled: boolean; boardName: string; boardMessage: string };
   catalogVoiceId: string;
   personalVoiceId?: string;
   voiceChoice: TalkingCardDraftVoiceChoice;
@@ -190,6 +191,7 @@ export class TalkingCardDraftStore {
       ctaLabel: this.stringValue(record.ctaLabel).slice(0, 48),
       placement,
       actions: normalizeTalkingCardActions(record.actions),
+      ...(record.sponsorDraft ? { sponsorDraft: { mode: record.sponsorDraft.mode === 'custom' || record.sponsorDraft.mode === 'off' ? record.sponsorDraft.mode : 'inherit', name: this.stringValue(record.sponsorDraft.name).slice(0,120), message: this.stringValue(record.sponsorDraft.message).slice(0,500), boardEdited: record.sponsorDraft.boardEdited === true, boardEnabled: record.sponsorDraft.boardEnabled === true, boardName: this.stringValue(record.sponsorDraft.boardName).slice(0,120), boardMessage: this.stringValue(record.sponsorDraft.boardMessage).slice(0,500) } } : {}),
       catalogVoiceId: this.stringValue(record.catalogVoiceId),
       personalVoiceId: this.stringValue(record.personalVoiceId),
       voiceChoice,

@@ -1,3 +1,4 @@
+import { normalizeSponsorship, resolveSponsorship, type Sponsorship } from '../../../functions/src/talking-card-sponsorship';
 import { BoardTranslationCache, boardTranslationSourceSignature, mergeBoardTranslationProgress } from './board-translation-cache';
 import { contentLanguageDetails, contentLanguageForLocale } from '../../../functions/src/content-language';
 import { LiveLanguageDialogComponent } from './live-language-dialog';
@@ -613,6 +614,7 @@ type BoardCard = {
 };
 
 type Board = {
+  sponsorship?: Sponsorship | null;
   id: string;
   teamId?: string;
   teamVoiceName?: string;
@@ -2457,6 +2459,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const boardId = this.specialCardEditorBoardId();
     return boardId ? this.boards().find((board) => board.id === boardId) ?? null : null;
   });
+  readonly resolveSponsorship = resolveSponsorship;
   readonly talkingCardEditorBoardId = signal<string | null>(null);
   readonly talkingCardEditingCardId = signal<string | null>(null);
   readonly listingTalkingCardSetup = signal<{ boardId: string; placeholderCardId: string } | null>(null);
@@ -8258,6 +8261,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           atlasId: result.atlasId,
           openingMessage: result.openingMessage,
           ctaLabel: result.ctaLabel,
+          ...(result.sponsorship ? { sponsorship: result.sponsorship } : existing.conversation.sponsorship ? { sponsorship: existing.conversation.sponsorship } : {}),
           ...(existing.conversation.starters?.length ? { starters: existing.conversation.starters } : {}),
           ...(result.actions.length ? { actions: result.actions } : {}),
         },
@@ -8268,7 +8272,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         cards = cards.filter((card) => card.id !== updated.id);
         cards = result.placement === 'start' ? [updated, ...cards] : [...cards, updated];
       }
-      const nextBoard = { ...board, cards, updatedAt: now };
+      const nextBoard = { ...board, cards, ...(result.boardSponsorship !== undefined ? { sponsorship: result.boardSponsorship } : {}), updatedAt: now };
       await this.persistTalkingCardAndFinish(nextBoard);
       return;
     }
@@ -8296,6 +8300,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           atlasId: result.atlasId,
           openingMessage: result.openingMessage,
           ctaLabel: result.ctaLabel,
+          ...(result.sponsorship ? { sponsorship: result.sponsorship } : {}),
           starters: [
             'What are this home’s key features?',
             'What should I know before scheduling a showing?',
@@ -8311,7 +8316,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         return;
       }
       const cards = placeListingTalkingCard(board.cards, card, listingSetup.placeholderCardId);
-      const nextBoard = { ...board, cards, updatedAt: now };
+      const nextBoard = { ...board, cards, ...(result.boardSponsorship !== undefined ? { sponsorship: result.boardSponsorship } : {}), updatedAt: now };
       await this.persistTalkingCardAndFinish(nextBoard);
       return;
     }
@@ -8334,6 +8339,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         atlasId: result.atlasId,
         openingMessage: result.openingMessage,
         ctaLabel: result.ctaLabel,
+        ...(result.sponsorship ? { sponsorship: result.sponsorship } : {}),
         ...(result.actions.length ? { actions: result.actions } : {}),
       },
       createdAt: now,
@@ -8344,7 +8350,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const cards = result.placement === 'start' ? [card, ...board.cards] : [...board.cards, card];
-    const nextBoard = { ...board, cards, updatedAt: now };
+    const nextBoard = { ...board, cards, ...(result.boardSponsorship !== undefined ? { sponsorship: result.boardSponsorship } : {}), updatedAt: now };
     await this.persistTalkingCardAndFinish(nextBoard);
   }
 
@@ -23950,6 +23956,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     );
     return {
       id,
+      ...(data['sponsorship'] !== undefined ? { sponsorship: normalizeSponsorship(data['sponsorship']) } : {}),
       ...(typeof data['team_id'] === 'string' ? { teamId: data['team_id'], teamRevision: Number(data['team_revision']) || 0,
         teamStatus: String(data['team_status'] || 'published'), teamDraft: this.teamContextId() === data['team_id'],
         teamPublishedVisibility: data['published_visibility'] === 'unlisted' || data['visibility'] === 'unlisted' ? 'unlisted' : 'public',

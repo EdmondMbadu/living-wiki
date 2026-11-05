@@ -277,3 +277,41 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
 # living-atlast
+
+## Talking Card sponsorship acknowledgements
+
+Edit a Talking Card and open **Sponsorship**. Choose the board acknowledgement,
+a custom acknowledgement for this card, or Off. The expandable board setting
+updates all inheriting cards on this board when saved; custom and Off cards are
+unchanged. Sponsor name is limited to 120 characters and exact message to 500.
+Sponsorship is public visitor-facing text and is saved separately from the avatar
+persona, so it requires no knowledge rebuild and does not follow the avatar onto
+other boards. Unsaved settings are retained in the editor's local draft. When moving an existing
+sponsor acknowledgement here, remove the old sponsorship instruction from the
+avatar prompt to avoid a second, model-generated acknowledgement.
+
+At the end of a meaningful voice conversation, the app disconnects the microphone,
+shows the exact acknowledgement, plays cached speech in the saved avatar voice,
+and offers the recap. **Skip to recap** remains available. Preparing audio is
+limited to three seconds at closing; failed or blocked playback falls through to
+the visible acknowledgement and recap. Closing the dialog, interrupted calls,
+and typed conversations do not autoplay. Manual playback is available in the
+recap. Acknowledgements are separate from the conversation transcript and AI summary.
+
+The speech callable checks board/card access and resolves the saved message on the
+server. It refuses stale text and does not accept visitor-supplied speech content
+or narrator choices in sponsorship mode. Previewing unsaved wording requires board
+ownership. Recap email reads saved sponsorship independently and includes its exact
+text in both plain-text and escaped HTML, even if the generated summary omits it.
+Disabling sponsorship takes effect on subsequent requests; existing audio is never
+served without rechecking access. A failed preview does not block saving.
+
+Validation: `npm run test:sponsorship`, `npm --prefix functions run test:sponsorship`,
+`npm run test:firestore-rules`, and `npm run build`.
+
+Rollout requires the updated `synthesizeChatAnswerSpeech` and
+`sendVoiceConversationSummary` functions, Firestore rules, and Hosting. If using
+team boards, also deploy `teamCommand` to preserve sponsorship in published snapshots. Deploy the
+backend and rules before Hosting. This does not rebuild avatar knowledge or change
+existing persona prompts. Long persona prompts now show an effective runtime-limit
+notice in the Talking Card editor.

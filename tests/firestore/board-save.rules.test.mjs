@@ -1722,3 +1722,20 @@ for (const visibility of ['public', 'unlisted', 'private']) {
     });
   }
 }
+
+test('sponsorship defaults save atomically with cards and only the board owner can change them', async () => {
+  const database = testEnvironment.authenticatedContext(ownerUid).firestore();
+  const ref = doc(database, 'boards', 'wizard-board-1');
+  const sponsor = { name: 'William Penn Foundation', message: 'Our conversation is supported by the William Penn Foundation of Philadelphia.' };
+  await assertSucceeds(setDoc(ref, personalWizardBoard({ sponsorship: sponsor })));
+  await assertSucceeds(setDoc(ref, personalWizardBoard({ sponsorship: sponsor, title: 'Updated sponsored board' })));
+  const patch = boardStudioPatch({ cards: [], sponsorship: sponsor, socialVideoRenderVersion: '', socialLandscapeVideoRenderVersion: '', trailerVideoRenderVersion: '', trailerLandscapeVideoRenderVersion: '', trailerVideoSourceFingerprint: '', updated_at_iso: new Date().toISOString() }, 'cards');
+  await assertSucceeds(updateDoc(ref, { ...patch, server_updated_at: serverTimestamp() }));
+  assert.deepEqual((await getDoc(ref)).data().sponsorship, sponsor);
+  const foreign = doc(testEnvironment.authenticatedContext('different-user').firestore(), 'boards', 'wizard-board-1');
+  await assertFails(updateDoc(foreign, { ...patch, sponsorship: null, studioSaveNonce: crypto.randomUUID(), server_updated_at: serverTimestamp() }));
+  for (const invalid of [{ name: 'Sponsor', message: 'x'.repeat(501) }, { name: '', message: 'A message' }, { name: 'Sponsor', message: 'A message', enabled: true }, 'wrong type']) {
+    await assertFails(updateDoc(ref, { ...patch, sponsorship: invalid, studioSaveNonce: crypto.randomUUID(), server_updated_at: serverTimestamp() }));
+  }
+  await assertSucceeds(updateDoc(ref, { ...patch, sponsorship: null, studioSaveNonce: crypto.randomUUID(), server_updated_at: serverTimestamp() }));
+});

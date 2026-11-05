@@ -269,3 +269,15 @@
 .talking-editor__spin { animation: talking-spin 1s linear infinite; }
 @keyframes talking-spin { to { transform: rotate(360deg); } }
 @media (max-width: 650px) { .talking-editor-backdrop { padding: 0; place-items: end stretch; } .talking-editor { max-height: 94vh; border-radius: 24px 24px 0 0; } .talking-editor__header, .talking-editor__body, .talking-editor__footer { padding-left: 18px; padding-right: 18px; } .talking-editor__tabs,.talking-editor__scope-note { margin-inline: 18px; } .talking-editor__tabs--sections { overflow-x: auto; } .talking-editor__tabs--sections button { flex: 0 0 auto; min-width: 88px; } .talking-editor__grid { grid-template-columns: 1fr; } .talking-editor__portrait-editor { align-items: flex-start; flex-wrap: wrap; } .talking-editor__real-estate-identity { grid-template-columns: 78px minmax(0, 1fr); align-items: start; } .talking-editor__real-estate-portrait { width: 78px; height: 78px; } .talking-editor__real-estate-voice { grid-template-columns: auto minmax(0, 1fr); } .talking-editor__real-estate-voice button { min-height: 38px; justify-content: center; } .talking-editor__voice-picker > header { align-items: flex-start; flex-direction: column; } .talking-editor__voice-option { grid-template-columns: minmax(0, 1fr); } .talking-editor__voice-preview { min-height: 38px; } .talking-editor__selected-voice { grid-template-columns: auto minmax(0, 1fr); } .talking-editor__selected-voice button { grid-column: 1 / -1; min-height: 38px; } .talking-editor__personal-library > header { align-items: flex-start; } .talking-editor__personal-actions { padding-left: 10px; } .talking-editor__voice-capture { align-items: stretch; flex-direction: column; } .talking-editor__voice-capture > span { text-align: center; } .talking-editor__footer { flex-wrap: wrap; } .talking-editor__draft-state { flex: 1 0 100%; } }
+
+.talking-editor__sponsorship { display: grid; gap: 18px; }
+.talking-editor__sponsor-fields { display: grid; gap: 18px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.talking-editor__sponsorship select { width: 100%; padding: 12px; border: 1px solid var(--border, #dce3de); border-radius: 10px; background: var(--surface, #fff); color: inherit; font: inherit; }
+.talking-editor__board-sponsor { padding: 16px; border: 1px solid var(--border, #dce3de); border-radius: 12px; }
+.talking-editor__board-sponsor summary { cursor: pointer; font-weight: 650; }
+.talking-editor__board-sponsor summary span { font-size: 12px; opacity: .7; margin-left: 8px; }
+.talking-editor__board-sponsor > p { margin: 14px 0; font-size: 13px; line-height: 1.6; }
+.talking-editor__board-sponsor > label { margin-top: 16px; }
+.talking-editor__sponsor-preview { display: grid; justify-items: start; gap: 10px; padding: 20px; background: var(--bg, #f6f8f5); border: 1px solid var(--border, #dce3de); border-radius: 12px; }
+.talking-editor__sponsor-preview p { margin: 0; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.talking-editor__tabs--sections { flex-wrap: wrap; }

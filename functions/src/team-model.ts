@@ -1,3 +1,4 @@
+import { normalizeSponsorship, normalizeSponsorshipChoice } from './talking-card-sponsorship';
 import boardContentLimits from './board-content-limits.json';
 /** Pure team policy and projection helpers. Keep this module independent of Firebase. */
 export type TeamRole = 'admin' | 'member';
@@ -144,7 +145,7 @@ export function teamPageProjection(id: string, team: TeamRecord): TeamRecord {
 // Public snapshots are allowlisted, not a private document with a handful of fields removed.
 const BOARD_FIELDS =
   `id kind title description icon tone imageUrl logoUrl logoLinkUrl stackCtaLabel stackCtaUrl
-  insideCardsDisplay showCardNumbers askVisitorLanguage narrationStyle narrationSecondsPerCard stackNarratorVoiceId
+  sponsorship insideCardsDisplay showCardNumbers askVisitorLanguage narrationStyle narrationSecondsPerCard stackNarratorVoiceId
   socialVideoUrl socialVideoMimeType socialVideoRatio socialLandscapeVideoUrl socialLandscapeVideoMimeType
   trailerVideoUrl trailerVideoMimeType trailerVideoRatio trailerLandscapeVideoUrl trailerLandscapeVideoMimeType
   socialVideoClosingHeadline socialVideoClosingMessage socialVideoClosingShowQrCode socialVideoClosingImage
@@ -187,6 +188,7 @@ export function publicTeamCard(card: TeamRecord, depth = 0): TeamRecord | null {
       'actions',
       'starters',
     ]);
+    if (card['conversation']['sponsorship']) result['conversation']['sponsorship'] = normalizeSponsorshipChoice(card['conversation']['sponsorship']);
   }
   if (Array.isArray(card['relatedCards'])) {
     result['relatedCards'] = card['relatedCards']
@@ -205,6 +207,7 @@ export function publicTeamBoard(
 ): TeamRecord {
   return {
     ...select(board, BOARD_FIELDS),
+    ...(board['sponsorship'] !== undefined ? { sponsorship: normalizeSponsorship(board['sponsorship']) } : {}),
     team_id: teamId,
     owner_user_id: `team:${teamId}`,
     ...(board['reserved_custom_slug'] ? { custom_slug: board['reserved_custom_slug'] } : {}),

@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.spec.json",
+  "files": [
+    "src/app/talking-card-conversation/talking-card-conversation.spec.ts",
+    "src/app/talking-card-editor/talking-card-editor.spec.ts",
+    "src/app/boards/talking-card.spec.ts",
+    "src/app/boards/board-studio-persistence.spec.ts",
+    "src/app/boards/board-studio-save.spec.ts"
+  ],
+  "include": [
+    "src/**/*.d.ts"
+  ]
+}

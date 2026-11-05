@@ -483,3 +483,13 @@
 }
 
 .talking-chat__analytics-note{margin:0;padding:7px 20px;text-align:center;font-size:10px;line-height:1.5;color:var(--muted,#6b786e)}
+
+.talking-chat__sponsor-closing { display: grid; justify-items: center; gap: 16px; padding: 32px 24px; text-align: center; }
+.talking-chat__sponsor-closing > .material-symbols-outlined { font-size: 34px; color: #47784b; }
+.talking-chat__sponsor-closing h3 { margin: 0; font-size: 24px; }
+.talking-chat__sponsor-closing p { max-width: 540px; font-size: 18px; line-height: 1.75; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.talking-chat__sponsor-closing small, .talking-chat__sponsor-note small { opacity: .7; font-size: 12px; line-height: 1.6; }
+.talking-chat__sponsor-continue { display: inline-flex; align-items: center; gap: 10px; background: #47784b; color: white; border: 0; border-radius: 10px; padding: 13px 18px; font-weight: 650; cursor: pointer; }
+.talking-chat__sponsor-note { padding: 18px; margin-bottom: 20px; border: 1px solid rgba(100,120,105,.25); border-radius: 12px; }
+.talking-chat__sponsor-note p { line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0; }
+.talking-chat__sponsor-note button { border: 0; background: none; color: inherit; text-decoration: underline; padding: 8px 0; cursor: pointer; font-size: 12px; }
