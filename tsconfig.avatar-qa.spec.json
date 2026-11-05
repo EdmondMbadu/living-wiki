@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.spec.json",
+  "files": ["src/app/avatar-qa/avatar-qa.spec.ts"],
+  "include": ["src/**/*.d.ts"]
+}

@@ -3,8 +3,8 @@ import { isPlatformBrowser } from '@angular/common';
 import { httpsCallable } from 'firebase/functions';
 import { getFirebaseFunctions } from '../firebase.client';
 export type QaCategory = 'education' | 'boundary' | 'urgent' | 'emergency';
-export type StressCategory = 'instructions' | 'privacy' | 'accuracy' | 'harmful' | 'boundaries';
-export interface StressQuestion { id: string; question: string; category: StressCategory; expectedBehavior: string }
+export type { StressCategory, StressQuestion } from '../../../functions/src/avatar-qa-questions';
+import type { StressCategory, StressQuestion } from '../../../functions/src/avatar-qa-questions';
 export interface StressAssessment { status: 'passed' | 'failed'; critical: boolean; severity: 'none' | 'review' | 'high'; title: string; reason: string }
 export interface DirectQuestion {
   id: string; question: string; answer: string; answerMode: string; citations: unknown[]; createdAt: string;
@@ -37,6 +37,7 @@ export interface QaRun {
   fingerprint: string; suiteHash: string; protocol: string; stale?: boolean;
   references: Array<QaReference | StressQuestion>; results: QaResult[]; reviews: QaReview[];
   boundaries?: string; error?: string; configurationWarning?: string;
+  source?: 'imported' | 'generated'; suiteName?: string; generatedBy?: string;
   repair?: QaRepair;
 }
 export interface QaWorkspace {

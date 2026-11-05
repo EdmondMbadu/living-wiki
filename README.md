@@ -209,6 +209,43 @@ It is case-sensitive and must not include a trailing slash. Deploy both Function
 after changing the Spotify OAuth integration so the authorization request, token exchange, and
 Hosting callback route continue to use the same URI.
 
+## Importing external avatar QA questions
+
+In an authorized card’s **Avatar testing** page, select **Import questions**.
+**Export examples & AI prompt** provides a versioned JSON example and a prompt for
+another AI. Only the avatar name and the public context you explicitly enter go
+into that prompt; persona instructions and source documents are not included.
+Upload the returned JSON or paste it, review the questions, name the test, then
+select **Run imported questions**. Nothing runs on import alone.
+
+Version 1 accepts 1–50 English single-turn questions, a 256 KiB file maximum,
+and the five current stress categories. Each question needs `id`, `category`,
+`question` (up to 1000 characters), and `expectedBehavior` (up to 1600 characters).
+Use the downloaded example for the full envelope. Duplicate IDs/text, unknown
+fields (including supplied grades or answers), and invalid categories are rejected
+in both the browser and the callable. Expected behavior is untrusted test evidence;
+it cannot override the independent assessment rules.
+
+Imported runs use the existing private stress protocol, configuration snapshots,
+quotas, cancellation, history, PDF reporting, and private repair/retest flow.
+**Export answers JSON** downloads questions, actual responses and assessments,
+without exporting the private configuration snapshot or persona. Importing a test
+does not modify the avatar. Responses are persisted before assessment, including
+when the evaluator fails or a worker times out. A final score still requires every
+question to be assessed.
+
+Validation:
+
+```bash
+npm run test:avatar-qa
+npm --prefix functions run test:avatar-qa
+npm run build
+```
+
+For rollout, deploy `avatarQaCommand`, `runAvatarQaCase`, and
+`recoverAvatarQaCases` with the functions deployment helper, then deploy Hosting.
+Deploying the frontend alone does not add the new backend actions.
+
 ## Running unit tests
 
 To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:

@@ -1,5 +1,6 @@
-import { DatePipe, isPlatformBrowser } from '@angular/common';
-import { Component, DestroyRef, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { parseQaQuestionSuite, qaExampleSuite, qaGenerationPrompt, QA_QUESTION_MAX_BYTES, type QaQuestionSuite } from '../../../functions/src/avatar-qa-questions';
+import { DOCUMENT, DatePipe, isPlatformBrowser } from '@angular/common';
+import { afterNextRender, Component, DestroyRef, Injector, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -20,6 +21,8 @@ const PRIVATE_RUNNING_NOTICE = 'Your private test is running. You can leave this
 export class AvatarQaComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
+  private readonly document = inject(DOCUMENT);
   private readonly auth = inject(AuthService);
   private readonly service = inject(AvatarQaService);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
@@ -35,7 +38,30 @@ export class AvatarQaComponent {
   private askRequest = { key: '', id: '' };
   private repairRequest = { key: '', id: '' };
   private boundariesEdited = false;
+  private importSequence = 0;
 
+  readonly questionSource = signal<'generate' | 'import'>('generate');
+  readonly importJson = signal('');
+  readonly importName = signal('');
+  readonly importGenerator = signal('');
+  readonly importError = signal('');
+  readonly importEditorOpen = signal(false);
+  readonly importExportOpen = signal(false);
+  readonly importReviewed = signal(false);
+  readonly readingImport = signal(false);
+  readonly exportContext = signal('');
+  readonly exportingAnswers = signal(false);
+  readonly importedSuite = computed(() => {
+    if (!this.importReviewed()) return null;
+    try { return parseQaQuestionSuite(this.importJson()); } catch { return null; }
+  });
+  readonly importCategories = computed(() => new Set(this.importedSuite()?.questions.map(q => q.category) || []).size);
+  readonly importNameValid = computed(() => !!this.importName().trim() && this.importName().length <= 120 && this.importGenerator().length <= 120);
+  readonly generationPrompt = computed(() => qaGenerationPrompt(this.data()?.target.avatarName || 'Your avatar', this.exportContext()));
+  readonly exampleJson = computed(() => {
+    const suite = qaExampleSuite(this.data()?.target.avatarName || 'Your avatar');
+    return JSON.stringify({ ...suite, questions: suite.questions.slice(0, 2) }, null, 2);
+  });
   readonly data = signal<QaWorkspace | null>(null);
   readonly loading = signal(true);
   readonly refreshing = signal(false);
@@ -113,6 +139,9 @@ export class AvatarQaComponent {
       this.boardId = params.get('boardId') || ''; this.cardId = params.get('cardId') || '';
       this.selectedRunId = ''; this.startRequest = { key: '', id: '' }; this.askRequest = { key: '', id: '' };
       this.repairRequest = { key: '', id: '' }; this.repairBusy.set('');
+      this.importSequence++; this.questionSource.set('generate'); this.importJson.set(''); this.importName.set('');
+      this.importGenerator.set(''); this.importError.set(''); this.importEditorOpen.set(false); this.importExportOpen.set(false);
+      this.importReviewed.set(false); this.readingImport.set(false); this.exportContext.set(''); this.exportingAnswers.set(false);
       if (this.timer) clearTimeout(this.timer);
       this.data.set(null); this.direct.set(null); this.error.set(''); this.questionError.set(''); this.notice.set('');
       this.starting.set(false); this.asking.set(false); this.assessing.set(false); this.exporting.set(false); this.cancelling.set(false);
@@ -152,6 +181,121 @@ export class AvatarQaComponent {
   chooseCount(value: number): void { this.count.set(value); this.customCount.set(null); }
   setCustomCount(value: number | null): void { this.customCount.set(value); this.count.set(value); }
   setBoundaries(value: string): void { this.boundariesEdited = true; this.boundaries.set(value); }
+
+  setImportJson(value: string): void {
+    this.importSequence++;
+    this.readingImport.set(false);
+    this.importJson.set(value); this.importReviewed.set(false); this.importError.set('');
+  }
+
+  reviewImport(): void {
+    this.importError.set(''); this.importReviewed.set(false);
+    try {
+      const suite = parseQaQuestionSuite(this.importJson());
+      this.importName.set(suite.suiteName); this.importGenerator.set(suite.generatedBy || '');
+      this.importReviewed.set(true); this.importEditorOpen.set(false); this.importExportOpen.set(false);
+    } catch (error) { this.importError.set(this.message(error)); }
+  }
+
+  async importFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const epoch = this.epoch, sequence = ++this.importSequence;
+    this.importReviewed.set(false); this.importError.set(''); this.readingImport.set(true);
+    try {
+      if (file.size > QA_QUESTION_MAX_BYTES) throw new Error('The file exceeds 256 KB. Split it into smaller tests.');
+      const raw = await file.text();
+      if (!this.current(epoch) || sequence !== this.importSequence) return;
+      this.importJson.set(raw); this.reviewImport();
+    } catch (error) {
+      if (this.current(epoch) && sequence === this.importSequence) this.importError.set(this.message(error));
+    } finally {
+      input.value = '';
+      if (this.current(epoch) && sequence === this.importSequence) this.readingImport.set(false);
+    }
+  }
+
+  openImportEditor(): void {
+    this.importExportOpen.set(false); this.importEditorOpen.set(true);
+    afterNextRender(() => (this.document.getElementById('qa-question-json') as HTMLTextAreaElement | null)?.focus(), { injector: this.injector });
+  }
+
+  toggleImportExport(): void {
+    this.importExportOpen.update(open => !open); this.importEditorOpen.set(false);
+    if (this.importExportOpen()) afterNextRender(() => this.document.getElementById('qa-export-title')?.scrollIntoView({ block: 'start' }), { injector: this.injector });
+  }
+
+  editImport(): void { this.importReviewed.set(false); this.openImportEditor(); }
+
+  downloadExamples(): void {
+    this.downloadJson(qaExampleSuite(this.data()?.target.avatarName || 'Your avatar'), 'avatar-qa-example.json');
+    this.notice.set('Example questions downloaded. Share them with the AI prompt.');
+  }
+
+  async copyGenerationPrompt(): Promise<void> {
+    const epoch = this.epoch;
+    try {
+      await navigator.clipboard.writeText(this.generationPrompt());
+      if (this.current(epoch)) this.notice.set('AI prompt copied. Share it with the example JSON.');
+    } catch { if (this.current(epoch)) this.notice.set('Clipboard unavailable. Select and copy the prompt shown below.'); }
+  }
+
+  async startImported(): Promise<void> {
+    const original = this.importedSuite();
+    if (!original || !this.importNameValid() || this.starting() || this.readingImport() || this.activeRun()
+      || this.repairBusy() || this.data()?.attemptsRemaining === 0) return;
+    const suite: QaQuestionSuite = { ...original, suiteName: this.importName().trim() };
+    if (this.importGenerator().trim()) suite.generatedBy = this.importGenerator().trim(); else delete suite.generatedBy;
+    const epoch = this.epoch, boundaries = this.boundaries().trim();
+    const key = JSON.stringify(['imported', suite, boundaries]);
+    if (this.startRequest.key !== key) this.startRequest = { key, id: crypto.randomUUID() };
+    this.starting.set(true); this.error.set(''); this.notice.set('');
+    try {
+      const response = await this.service.command<{ runId: string }>(this.boardId, this.cardId, 'startImported',
+        { requestId: this.startRequest.id, suite, boundaries });
+      if (!this.current(epoch)) return;
+      this.selectedRunId = response.runId;
+      this.showAll.set(true); this.filter.set('all'); this.search.set('');
+      await this.load();
+      // A successful start followed by a failed refresh must keep the same key;
+      // retrying then retrieves that run instead of charging for another test.
+      if (this.current(epoch) && !this.error()) this.startRequest = { key: '', id: '' };
+      if (this.current(epoch) && this.running()) this.notice.set(STRESS_RUNNING_NOTICE);
+    } catch (error) {
+      if (this.current(epoch)) { this.error.set(this.message(error)); if (!this.uncertain(error)) this.startRequest = { key: '', id: '' }; }
+    } finally { if (this.current(epoch)) this.starting.set(false); }
+  }
+
+  private downloadJson(value: unknown, filename: string): void {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' }));
+    const link = document.createElement('a'); link.href = url; link.download = filename;
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async exportAnswers(): Promise<void> {
+    const run = this.run();
+    if (!run || this.running() || this.exportingAnswers()) return;
+    const epoch = this.epoch;
+    this.exportingAnswers.set(true); this.error.set('');
+    try {
+      const output = await this.service.command(this.boardId, this.cardId, 'exportAnswers', { runId: run.id });
+      if (!this.current(epoch)) return;
+      this.downloadJson(output, `avatar-answers-${run.id.slice(0, 12)}.json`);
+      this.notice.set('Questions, answers and assessments downloaded.');
+    } catch (error) { if (this.current(epoch)) this.error.set(this.message(error)); }
+    finally { if (this.current(epoch)) this.exportingAnswers.set(false); }
+  }
+
+  resultExpectedBehavior(result: QaResult): string {
+    const question = this.run()?.references.find(q => q.id === result.id);
+    return question && 'expectedBehavior' in question ? question.expectedBehavior : '';
+  }
+
+  runSource(run: { source?: string; suiteName?: string; repair?: unknown; protocol?: string }): string {
+    return `${run.repair ? 'Improvement · ' : ''}${run.source === 'imported' ? 'Imported questions' : run.protocol === PROTOCOL ? 'Generated questions' : 'Historical wording test'}${run.suiteName ? ' · ' + run.suiteName : ''}`;
+  }
 
   async start(): Promise<void> {
     if (this.starting() || this.activeRun() || this.repairBusy() || this.data()?.attemptsRemaining === 0 || !this.validCount()) return;

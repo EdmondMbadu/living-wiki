@@ -12,6 +12,8 @@ import { gradeQaTurn, normalizeQaReferences, QA_PROTOCOL_VERSION, type QaReferen
 import { assessStressAnswer, generateStressQuestions, STRESS_ASSESSMENT_VERSION, STRESS_LIMITATION, STRESS_PROTOCOL, stressCount, stressText, type StressQuestion } from './avatar-stress-test';
 import { avatarQaCorpus, QA_SNAPSHOT_VERSION } from './avatar-qa-corpus';
 import { generateAvatarRepair, generateRepairChecks, MAX_REPAIR_CHECKS, REPAIR_VERSION, RepairPreparationError, repairComparison } from './avatar-qa-repair';
+import { normalizeQaQuestionSuite } from './avatar-qa-questions';
+import { qaAnswersExport } from './avatar-qa-export';
 import { cityGuidePersonaPrompt } from './city-guide';
 import { managedAvatarSystemInstruction } from './avatar-response-policy';
 
@@ -179,6 +181,7 @@ async function startRepair(context: Context, input: Data, mode: 'fix' | 'retest'
     tx.create(ref, { workspaceKey: context.key, boardId: context.boardId, cardId: context.cardId, atlasId: context.atlasId,
       avatarName: context.atlas.name, boardTitle: context.board.title, requestedBy: context.uid, avatarOwnerId: context.atlas.user_id,
       createdAt: now(), status: 'generating', channel: 'text', language: 'en', protocol: STRESS_PROTOCOL,
+      ...(source.value.source === 'imported' ? { source: 'imported', suiteName: source.value.suiteName, generatedBy: source.value.generatedBy || '' } : {}),
       assessmentVersion: STRESS_ASSESSMENT_VERSION, fingerprint: configuration.fingerprint,
       snapshotVersion: QA_SNAPSHOT_VERSION, snapshotPath, boundaries: source.value.boundaries || '', references: [], suiteHash: '',
       total: questions.length + additionalCount, completed: 0, passed: 0, failed: 0, errors: 0, cancelled: 0, critical: 0,
@@ -275,6 +278,46 @@ export const avatarQaCommand = onCall({ region: 'us-central1', cors: true, timeo
         results: details!.docs.map(d => ({ id: d.id, ...d.data() })),
         reviews: reviews!.docs.map(d => ({ id: d.id, ...d.data() })).sort((a: Data, b: Data) => a.createdAt.localeCompare(b.createdAt)) } : null,
     };
+  }
+  if (action === 'startImported') {
+    const suite = validated(() => normalizeQaQuestionSuite(input.suite));
+    const boundaries = validated(() => stressText(input.boundaries, 'Additional boundaries', 2000, true));
+    const requestId = id(input.requestId);
+    const importHash = hash([suite, boundaries]);
+    const runId = hash([context.key, context.uid, 'imported', requestId]), ref = runs.doc(runId);
+    const checkDuplicate = (existing: Data) => {
+      if (existing.importHash !== importHash) throw new HttpsError('aborted', 'This request already started a different imported test. Start a new test.');
+    };
+    const previous = await ref.get();
+    if (previous.exists) { checkDuplicate(previous.data()!); return { runId }; }
+    const configuration = await corpus(context, STRESS_PROTOCOL);
+    const snapshotPath = `avatar-qa/${context.key}/${runId}/configuration.json`;
+    await saveSnapshot(snapshotPath, configuration);
+    await db.runTransaction(async tx => {
+      const [state, existing, atlas, board] = await Promise.all([tx.get(workspace), tx.get(ref),
+        tx.get(db.collection('atlases').doc(context.atlasId)), tx.get(db.collection('boards').doc(context.boardId))]);
+      if (existing.exists) { checkDuplicate(existing.data()!); return; }
+      if (!atlas.updateTime?.isEqual(context.atlasRevision) || !board.updateTime?.isEqual(context.boardRevision)) {
+        throw new HttpsError('aborted', 'The avatar changed while the test was being prepared. Refresh before running it.');
+      }
+      const current = state.data()?.activeRunId ? await tx.get(runs.doc(state.data()!.activeRunId)) : null;
+      if (current?.exists && active(current.data()!.status)) throw new HttpsError('already-exists', 'A test is already in progress for this avatar.');
+      const day = now().slice(0, 10), quota = db.collection('avatar_qa_quotas').doc(hash([context.uid, day]));
+      const usage = await tx.get(quota);
+      if ((usage.data()?.count ?? 0) >= 10) throw new HttpsError('resource-exhausted', 'You have reached the limit of ten tests today. Try again tomorrow.');
+      tx.set(quota, { count: (usage.data()?.count ?? 0) + 1, day }, { merge: true });
+      tx.create(ref, { workspaceKey: context.key, boardId: context.boardId, cardId: context.cardId, atlasId: context.atlasId,
+        avatarName: context.atlas.name, boardTitle: context.board.title, requestedBy: context.uid, avatarOwnerId: context.atlas.user_id,
+        createdAt: now(), status: 'queued', channel: 'text', language: 'en', protocol: STRESS_PROTOCOL,
+        assessmentVersion: STRESS_ASSESSMENT_VERSION, source: 'imported', suiteName: suite.suiteName,
+        generatedBy: suite.generatedBy || '', importHash, importSchemaVersion: suite.schemaVersion,
+        fingerprint: configuration.fingerprint, snapshotVersion: QA_SNAPSHOT_VERSION, snapshotPath, boundaries,
+        references: suite.questions, suiteHash: hash(suite.questions), total: suite.questions.length,
+        completed: 0, passed: 0, failed: 0, errors: 0, cancelled: 0, critical: 0 });
+      tx.set(workspace, { activeRunId: runId, boundaries }, { merge: true });
+      for (const question of suite.questions) tx.create(ref.collection('cases').doc(question.id), { reference: question, status: 'queued' });
+    });
+    return { runId };
   }
   if (action === 'startStress') {
     const count = validated(() => stressCount(input.count));
@@ -457,6 +500,13 @@ export const avatarQaCommand = onCall({ region: 'us-central1', cors: true, timeo
       status: 'cancelled', critical: false, turns: [], referenceId: scenario.id, category: scenario.data().reference.category,
     }, true);
     return { saved: true };
+  }
+  if (action === 'exportAnswers') {
+    if (active(run.value.status)) throw new HttpsError('failed-precondition', 'Wait for the test to finish before exporting answers.');
+    const results = await run.ref.collection('results').get();
+    const output = qaAnswersExport({ ...run.value, id: run.ref.id }, results.docs.map(d => ({ ...d.data(), id: d.id })));
+    if (Buffer.byteLength(JSON.stringify(output)) > 8_000_000) throw new HttpsError('resource-exhausted', 'This answer export exceeds the download limit.');
+    return output;
   }
   if (action === 'report') {
     if (active(run.value.status)) throw new HttpsError('failed-precondition', 'Wait for this test to finish before exporting a report.');
@@ -652,6 +702,7 @@ export async function processAvatarQaCase(runId: string, caseId: string) {
         citedEntryIds: response.citedEntryIds || [], knowledgeGap: response.knowledgeGap === true, status: 'error', critical: false,
         reason: 'The answer was received, but its assessment could not be completed.' };
       turns.push(captured);
+      await caseRef.update({ capturedTurns: turns });
       const grade = stress ? await assessStressAnswer({ avatarName: context.atlas.name,
         persona: claimed.run.repair?.evaluationPersona ?? String(context.atlas.persona_prompt || '').slice(0, 8000), boundaries: claimed.run.boundaries || '',
         question: turn.question, answer: response.answer, expectedBehavior: reference.expectedBehavior || '',
@@ -692,7 +743,7 @@ export const recoverAvatarQaCases = onSchedule({ region: 'us-central1', schedule
       const data = scenario.data();
       if (data.status === 'running' && Date.now() - Date.parse(data.startedAt) > 12 * 60_000
         || data.status === 'queued' && Date.now() - Date.parse(run.data().createdAt) > 120 * 60_000) {
-        await finishCase(run.id, scenario.id, { status: 'error', critical: false, turns: [],
+        await finishCase(run.id, scenario.id, { status: 'error', critical: (data.capturedTurns || []).some((turn: Data) => turn.critical), turns: data.capturedTurns || [],
           referenceId: scenario.id, category: data.reference.category, error: 'Worker timed out or did not start. Run this suite again; no automatic retry hid this error.' });
       }
     }

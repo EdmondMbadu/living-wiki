@@ -1,3 +1,4 @@
+import { qaExampleSuite } from '../../../functions/src/avatar-qa-questions';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
@@ -39,6 +40,134 @@ describe('AvatarQaComponent', () => {
     expect(root.querySelector('.qa-rail-brand img')?.getAttribute('src')).toBe('/assets/image/lucky-paper-crane.png');
     fixture.destroy();
   });
+  it('offers question import without changing the existing generated-test default', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    expect(page.questionSource()).toBe('generate');
+    const source = fixture.nativeElement.querySelectorAll('.qa-question-source button');
+    source[1].click(); fixture.detectChanges();
+    expect(page.questionSource()).toBe('import');
+    expect(fixture.nativeElement.textContent).toContain('Export examples & AI prompt');
+    expect(fixture.nativeElement.textContent).toContain('Upload JSON');
+    expect(fixture.nativeElement.querySelector('.qa-counts')).toBeNull();
+    expect(service.command.calls.allArgs().some(args => args[2] === 'startImported')).toBeFalse(); fixture.destroy();
+  });
+
+  it('shows only the selected import step and focuses the paste field', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    page.questionSource.set('import'); page.toggleImportExport(); fixture.detectChanges();
+    expect(page.importExportOpen()).toBeTrue();
+    page.openImportEditor(); fixture.detectChanges(); await fixture.whenStable();
+    expect(page.importExportOpen()).toBeFalse(); expect(page.importEditorOpen()).toBeTrue();
+    expect(document.activeElement?.id).toBe('qa-question-json'); fixture.destroy();
+  });
+
+  it('rejects malformed imports without starting a test and clears stale reviews after editing', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    page.questionSource.set('import');
+    page.setImportJson('{bad'); page.reviewImport(); await page.startImported();
+    expect(page.importError()).toContain('Invalid JSON'); expect(page.importedSuite()).toBeNull();
+    page.setImportJson(JSON.stringify(qaExampleSuite('Maya'))); page.reviewImport();
+    expect(page.importedSuite()?.questions.length).toBe(6);
+    page.setImportJson('{}'); expect(page.importedSuite()).toBeNull(); await page.startImported();
+    expect(service.command.calls.allArgs().some(args => args[2] === 'startImported')).toBeFalse(); fixture.destroy();
+  });
+
+  it('reviews valid questions without executing them, then sends the exact suite only on Run', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    const suite = qaExampleSuite('Maya');
+    page.setImportJson(JSON.stringify(suite)); page.reviewImport(); fixture.detectChanges();
+    expect(service.command.calls.allArgs().some(args => args[2] === 'startImported')).toBeFalse();
+    page.importName.set('Reviewed external challenge'); page.importGenerator.set('External reviewer'); page.setBoundaries('No unauthorized contracts.');
+    service.command.and.callFake(async (_b: string, _c: string, action: string) => action === 'startImported' ? { runId: 'imported-run' } : workspace);
+    await page.startImported();
+    const call = service.command.calls.allArgs().find(args => args[2] === 'startImported')!;
+    expect(call[0]).toBe('b1'); expect(call[1]).toBe('c1'); expect(call[3].suite.questions).toEqual(suite.questions);
+    expect(call[3].suite.suiteName).toBe('Reviewed external challenge'); expect(call[3].suite.generatedBy).toBe('External reviewer');
+    expect(call[3].boundaries).toBe('No unauthorized contracts.'); expect(page.showAll()).toBeTrue(); fixture.destroy();
+  });
+
+  it('does not allow blank test names, active tests or exhausted quotas to start imported runs', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    page.setImportJson(JSON.stringify(qaExampleSuite('Maya'))); page.reviewImport();
+    page.importName.set(' '); await page.startImported();
+    page.importName.set('My test');
+    page.data.set({ ...workspace, attemptsRemaining: 0 }); await page.startImported();
+    page.data.set({ ...workspace, runs: [runFixture({ status: 'running' })] }); await page.startImported();
+    expect(service.command.calls.allArgs().some(args => args[2] === 'startImported')).toBeFalse(); fixture.destroy();
+  });
+
+  it('reuses uncertain imported start IDs and gives changed payloads a new ID', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    page.setImportJson(JSON.stringify(qaExampleSuite('Maya'))); page.reviewImport();
+    service.command.and.rejectWith(Object.assign(new Error('Network timeout'), { code: 'functions/deadline-exceeded' }));
+    await page.startImported(); const first = service.command.calls.mostRecent().args[3].requestId;
+    await page.startImported(); expect(service.command.calls.mostRecent().args[3].requestId).toBe(first);
+    page.importName.set('Another suite'); await page.startImported();
+    expect(service.command.calls.mostRecent().args[3].requestId).not.toBe(first); fixture.destroy();
+  });
+
+  it('keeps the same import request if starting succeeds but loading the new run fails', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    page.setImportJson(JSON.stringify(qaExampleSuite('Maya'))); page.reviewImport();
+    service.command.and.callFake(async (_b: string, _c: string, action: string) => {
+      if (action === 'startImported') return { runId: 'acknowledged-run' };
+      throw new Error('Refresh unavailable');
+    });
+    await page.startImported();
+    const first = service.command.calls.allArgs().filter(args => args[2] === 'startImported').at(-1)![3].requestId;
+    await page.startImported();
+    const next = service.command.calls.allArgs().filter(args => args[2] === 'startImported').at(-1)![3].requestId;
+    expect(next).toBe(first); expect(page.error()).toContain('Refresh unavailable'); fixture.destroy();
+  });
+
+  it('uploads JSON safely and rejects oversized files before reading them', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    const raw = JSON.stringify(qaExampleSuite('Maya'));
+    const input = { files: [new File([raw], 'questions.json')], value: 'questions.json' };
+    await page.importFile({ target: input } as unknown as Event);
+    expect(page.importedSuite()?.questions.length).toBe(6); expect(input.value).toBe('');
+    const text = jasmine.createSpy('text');
+    await page.importFile({ target: { files: [{ size: 262145, text }], value: 'huge.json' } } as unknown as Event);
+    expect(text).not.toHaveBeenCalled(); expect(page.importedSuite()).toBeNull(); expect(page.importError()).toContain('256 KB'); fixture.destroy();
+  });
+
+  it('ignores an unfinished file read when switching to another avatar', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    let finish!: (value: string) => void;
+    const file = { size: 100, text: () => new Promise<string>(resolve => finish = resolve) };
+    const reading = page.importFile({ target: { files: [file], value: 'old.json' } } as unknown as Event);
+    params.next(convertToParamMap({ boardId: 'other-board', cardId: 'other-card' }));
+    finish(JSON.stringify(qaExampleSuite('Old avatar'))); await reading;
+    expect(page.importedSuite()).toBeNull(); expect(page.importJson()).toBe(''); fixture.destroy();
+  });
+
+  it('keeps private persona instructions out of the external AI prompt', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    page.data.set({ ...workspace, target: { ...workspace.target, personaPrompt: 'PRIVATE PROMPT SECRET' } });
+    page.exportContext.set('Public context: educational guide in 1799.');
+    expect(page.generationPrompt()).toContain('1799'); expect(page.generationPrompt()).toContain('Maya Chen');
+    expect(page.generationPrompt()).not.toContain('PRIVATE PROMPT SECRET'); fixture.destroy();
+  });
+
+  it('shows imported provenance, expected behavior and captured answers even if grading failed', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    const question = qaExampleSuite('Maya').questions[0];
+    const run = runFixture({ source: 'imported', suiteName: 'External questions', references: [question], results: [{ id: question.id, referenceId: question.id, category: question.category, status: 'error', critical: false, turns: [{ question: question.question, expectedAnswer: '', actualAnswer: 'The captured answer.', answerMode: 'wiki', reason: 'Evaluator unavailable.', status: 'error', critical: false, citations: [], citedEntryIds: [] }] }] });
+    page.data.set({ ...workspace, selectedRun: run, runs: [run] }); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Imported questions · External questions');
+    expect(fixture.nativeElement.textContent).toContain(question.expectedBehavior);
+    expect(fixture.nativeElement.textContent).toContain('The captured answer.');
+    expect(fixture.nativeElement.textContent).toContain('Could not assess'); fixture.destroy();
+  });
+
+  it('exports answers through the focused endpoint and preserves failures', async () => {
+    const fixture = await render(), page = fixture.componentInstance;
+    page.data.set({ ...workspace, selectedRun: runFixture() });
+    service.command.and.rejectWith(new Error('Export temporarily unavailable'));
+    await page.exportAnswers(); expect(service.command.calls.mostRecent().args[2]).toBe('exportAnswers');
+    expect(page.error()).toContain('Export temporarily unavailable'); expect(page.exportingAnswers()).toBeFalse(); fixture.destroy();
+  });
+
   it('defaults to 25, supports presets and rejects invalid custom counts', async () => {
     const fixture = await render(), page = fixture.componentInstance;
     expect(page.count()).toBe(25);

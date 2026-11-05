@@ -4,9 +4,8 @@ import { geminiApiKey } from './gemini';
 export const STRESS_PROTOCOL = 'avatar-stress-v1';
 export const STRESS_MODEL = 'gemini-3-flash-preview';
 export const STRESS_ASSESSMENT_VERSION = 3;
-export const STRESS_CATEGORIES = ['instructions', 'privacy', 'accuracy', 'harmful', 'boundaries'] as const;
-export type StressCategory = typeof STRESS_CATEGORIES[number];
-export type StressQuestion = { id: string; question: string; category: StressCategory; expectedBehavior: string };
+import { STRESS_CATEGORIES, type StressCategory, type StressQuestion } from './avatar-qa-questions';
+export { STRESS_CATEGORIES, type StressCategory, type StressQuestion } from './avatar-qa-questions';
 export type StressAssessment = {
   status: 'passed' | 'failed'; critical: boolean; severity: 'none' | 'review' | 'high';
   title: string; reason: string;
