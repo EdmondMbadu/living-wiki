@@ -1,3 +1,4 @@
+import { CityWeeklyUpdatesComponent } from '../city-weekly-updates/city-weekly-updates';
 import { isBoardVisibility, type BoardVisibility } from '../board-visibility';
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { PlacePhotoDirective } from '../place-photo.directive';
@@ -668,6 +669,7 @@ interface PublicWikiFeelingSticker {
 @Component({
   selector: 'app-public-wikis',
   imports: [
+    CityWeeklyUpdatesComponent,
     PlacePhotoDirective,
     DecimalPipe,
     RouterLink,
@@ -802,6 +804,9 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
   readonly mobileSelectedCitySlug = signal<string | null>('philly');
   readonly mobileSelectedUniversitySlug = signal<string | null>(null);
   readonly isSavingHomePreference = signal(false);
+  readonly homePreferenceError = signal<string | null>(null);
+  private pendingHomePreferences: { preferredCitySlug: string | null; preferredUniversitySlug: string | null } | null = null;
+  private homePreferenceSaveQueue: Promise<void> = Promise.resolve();
   readonly homeRailState = signal<Record<string, { back: boolean; forward: boolean }>>({});
   readonly cityTemperatures = signal<Record<string, CityTemperatureReading>>({});
   readonly cityTemperatureCoordinates = signal<Record<string, CityTemperatureCoordinates>>({});
@@ -1363,7 +1368,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
     this.searchTerm.set('');
     this.closeDirectoryAutocomplete();
     this.saveHomePreferencesLocally();
-    await this.saveHomePreferencesToProfile();
+    await this.saveHomePreferencesToProfile(!this.mobileDirectoryIsUniversities());
   }
 
   async clearHomeDirectoryPreference(): Promise<void> {
@@ -1373,7 +1378,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
       this.mobileSelectedCitySlug.set(null);
     }
     this.saveHomePreferencesLocally();
-    await this.saveHomePreferencesToProfile();
+    await this.saveHomePreferencesToProfile(!this.mobileDirectoryIsUniversities());
     setTimeout(() => this.directorySearchInput?.nativeElement.focus(), 0);
   }
 
@@ -1565,7 +1570,7 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
     this.mobileSelectedCitySlug.set(wiki.slug ?? null);
     this.mobileAllCitiesOpen.set(false);
     this.saveHomePreferencesLocally();
-    void this.saveHomePreferencesToProfile();
+    void this.saveHomePreferencesToProfile(true);
   }
 
   mobileSectionAddLink(section: MobileHomeSection): string {
@@ -3046,19 +3051,38 @@ export class PublicWikisComponent implements OnInit, AfterViewChecked, OnDestroy
     }));
   }
 
-  private async saveHomePreferencesToProfile(): Promise<void> {
+  async retryHomePreferenceSave(): Promise<void> {
+    if (this.pendingHomePreferences) await this.persistHomePreferences(this.pendingHomePreferences);
+  }
+
+  private async saveHomePreferencesToProfile(cityChanged = false): Promise<void> {
     if (!this.isBrowser || !this.authService.uid()) return;
+    await this.persistHomePreferences({
+      preferredCitySlug: cityChanged ? this.mobileSelectedCitySlug() : (this.pendingHomePreferences ? this.pendingHomePreferences.preferredCitySlug : this.authService.profile()?.preferredCitySlug ?? null),
+      preferredUniversitySlug: this.mobileSelectedUniversitySlug(),
+    });
+  }
+
+  private async persistHomePreferences(preferences: { preferredCitySlug: string | null; preferredUniversitySlug: string | null }): Promise<void> {
+    const uid = this.authService.uid();
+    this.pendingHomePreferences = preferences;
     this.isSavingHomePreference.set(true);
-    try {
-      await this.authService.updateHomePreferences({
-        preferredCitySlug: this.mobileSelectedCitySlug(),
-        preferredUniversitySlug: this.mobileSelectedUniversitySlug(),
-      });
-    } catch {
-      // A later preference change will retry the profile sync.
-    } finally {
-      this.isSavingHomePreference.set(false);
-    }
+    this.homePreferenceError.set(null);
+    const save = this.homePreferenceSaveQueue.then(async () => {
+      if (this.authService.uid() !== uid) return;
+      try {
+        await this.authService.updateHomePreferences(preferences);
+        if (this.pendingHomePreferences === preferences) {
+          this.pendingHomePreferences = null;
+          this.homePreferenceError.set(null);
+        }
+      } catch {
+        this.homePreferenceError.set($localize`Your home preference could not be saved. Weekly emails still follow your last saved city.`);
+      }
+    });
+    this.homePreferenceSaveQueue = save;
+    await save;
+    if (this.homePreferenceSaveQueue === save) this.isSavingHomePreference.set(false);
   }
 
   globalRegionForWiki(wiki: PublicWikiCatalogItem): string {

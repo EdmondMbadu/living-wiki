@@ -1,0 +1,17 @@
+:host { display: block; margin: 0 1.5rem 1.4rem; color: var(--home-title, var(--text)); }
+.city-weekly { display: flex; gap: .65rem; padding: .9rem 1rem; border: 1px solid var(--border, #ddd); border-radius: 14px; background: var(--surface, #fff); }
+.city-weekly__icon { color: var(--muted, #666); font-size: 20px; margin-top: 3px; }
+.city-weekly__body { flex: 1; min-width: 0; }
+.city-weekly__row { display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
+.city-weekly__title { font-size: .85rem; font-weight: 650; }
+p { margin: .35rem 0 0; font-size: .75rem; line-height: 1.5; color: var(--muted, #666); }
+.city-weekly__toggle { display: inline-flex; align-items: center; gap: .4rem; flex-shrink: 0; min-height: 32px; padding: .2rem .55rem; border-radius: 20px; border: 1px solid var(--border, #ddd); font-size: .75rem; font-weight: 600; cursor: pointer; }
+.city-weekly__knob { width: 8px; height: 8px; border-radius: 50%; background: #888; }
+.is-on .city-weekly__knob { background: #23864c; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--accent, #23864c); outline-offset: 3px; }
+.city-weekly__error { color: var(--danger, #ac3030); }
+.city-weekly__error button, a { text-decoration: underline; font-size: .75rem; }
+.city-weekly__status { display: block; color: var(--muted, #666); font-size: .7rem; }
+.city-weekly__status:empty { display: none; }
+@media (max-width: 600px) { :host { margin: 0 1rem 1rem; } }

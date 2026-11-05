@@ -1,3 +1,4 @@
+import { CityWeeklyUpdates, cityUpdatePages, cityUpdateWeek, publicCity } from './city-weekly-updates';
 import { normalizeSponsorship, resolveSponsorship, sponsorshipEmail, type Sponsorship } from './talking-card-sponsorship';
 import { contentLanguageVoicePreference } from './content-language';
 import { issuePicamoVoice } from './picamo-analytics';
@@ -3237,8 +3238,7 @@ function isNewsletterDue(config: AtlasNewsletterConfig, now = new Date()): { due
   const due =
     config.enabled &&
     local.dayOfWeek === config.day_of_week &&
-    local.hour === sendHour &&
-    local.minute >= sendMinute &&
+    (local.hour * 60 + local.minute >= sendHour * 60 + sendMinute) &&
     config.last_sent_key !== local.key;
   return { due, key: local.key };
 }
@@ -5254,6 +5254,7 @@ async function buildNewsletterEmail(params: {
   previewText: string;
   chatUrl: string;
   unsubscribeUrl?: string | null;
+  accountCityUpdate?: boolean;
 }) {
   const safeAtlasName = escapeHtml(params.atlasName);
   const safeSubject = escapeHtml(params.subject);
@@ -5286,12 +5287,21 @@ async function buildNewsletterEmail(params: {
     ? `\n\nSource links:\n${sources.map((source) => `- ${source.title}: ${source.url}`).join('\n')}`
     : '';
 
+  const deliveryReason = params.accountCityUpdate
+    ? `You received this email because ${params.atlasName} is your saved home city and weekly city updates are on for your account. Change your city or manage updates from Home: ${publicAppUrl}/home`
+    : `You received this email because you subscribed to weekly updates for ${params.atlasName}.`;
+  const deliveryReasonHtml = params.accountCityUpdate
+    ? `You received this email because <strong style="color:#34443b;">${safeAtlasName}</strong> is your saved home city and weekly city updates are on for your account. <a href="${publicAppUrl}/home" style="color:#1c7c41;text-decoration:underline;">Manage your city and updates from Home</a>.`
+    : `You received this Living Wiki email because you subscribed to weekly updates for <strong style="color:#34443b;">${safeAtlasName}</strong>.`;
+
   const text = `${params.subject}
 
 ${bodyMarkdown}${sourceText}
 
 Open this wiki:
-${params.chatUrl}${unsubscribeText}`;
+${params.chatUrl}
+
+${deliveryReason}${unsubscribeText}`;
 
   const html = `
     <div style="display:none;max-height:0;overflow:hidden;color:transparent;">${safePreview}</div>
@@ -5316,7 +5326,7 @@ ${params.chatUrl}${unsubscribeText}`;
           </div>
           <hr style="border:none;border-top:1px solid #e5ece7;margin:28px 0 18px;">
           <p style="margin:0;color:#7a8780;font-size:12px;line-height:1.65;">
-            You received this Living Wiki email because you subscribed to weekly updates for <strong style="color:#34443b;">${safeAtlasName}</strong>.
+            ${deliveryReasonHtml}
             ${safeUnsubscribeUrl ? `You can <a href="${safeUnsubscribeUrl}" style="color:#1c7c41;text-decoration:underline;font-weight:700;">unsubscribe from these Living Wiki updates</a> at any time.` : ''}
           </p>
           <p style="margin:10px 0 0;color:#9aa6a0;font-size:12px;line-height:1.55;">
@@ -5338,6 +5348,7 @@ async function sendNewsletterEmail(params: {
   previewText: string;
   chatUrl: string;
   unsubscribeUrl?: string | null;
+  accountCityUpdate?: boolean;
 }): Promise<string | null> {
   const apiKey = sendgridApiKey.value();
   if (!apiKey) {
@@ -5361,16 +5372,41 @@ async function sendNewsletterEmail(params: {
     : null;
 }
 
-async function listActiveAtlasSubscriptions(atlasId: string) {
-  const subscriptionsSnapshot = await db
-    .collection('atlas_subscriptions')
-    .where('atlas_id', '==', atlasId)
-    .limit(1000)
-    .get();
+const cityWeeklyUpdates = new CityWeeklyUpdates(db, {
+  getUser: uid => getAuth().getUser(uid),
+  getUserByEmail: email => getAuth().getUserByEmail(email),
+}, publicFunctionsBaseUrl);
 
-  return subscriptionsSnapshot.docs
-    .map((snapshot) => ({ id: snapshot.id, data: snapshot.data() as Record<string, unknown>, ref: snapshot.ref }))
-    .filter((subscription) => subscription.data.status === 'active' && typeof subscription.data.email === 'string' && subscription.data.email);
+export const cityWeeklyUpdatesPreference = onCall({ region: callableRegion, cors: true }, async request => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in to manage weekly city updates.');
+  if (request.data?.action === 'set') {
+    if (typeof request.data.enabled !== 'boolean') throw new HttpsError('invalid-argument', 'Choose whether weekly city updates are on or off.');
+    await cityWeeklyUpdates.setEnabled(request.auth.uid, request.data.enabled);
+  } else if (request.data?.action !== 'get') {
+    throw new HttpsError('invalid-argument', 'Unknown weekly city updates action.');
+  }
+  return cityWeeklyUpdates.settings(request.auth.uid);
+});
+
+export const unsubscribeCityWeeklyUpdates = onRequest({ region: callableRegion }, async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (req.method !== 'GET') { res.status(405).send('Method not allowed.'); return; }
+  const uid = typeof req.query.uid === 'string' ? req.query.uid : '';
+  const token = typeof req.query.token === 'string' ? req.query.token : '';
+  const valid = await cityWeeklyUpdates.unsubscribe(uid, token);
+  sendUnsubscribeHtml(res, valid ? 200 : 400, {
+    title: valid ? 'You are unsubscribed' : 'Unsubscribe link is invalid',
+    message: valid ? 'Weekly city updates are off for your account. Changing your city will not turn them back on. You can turn them on again from Home.' : 'Open Home to manage your weekly city updates.',
+    actionUrl: `${publicAppUrl}/home`, actionLabel: 'Open Home',
+  });
+});
+
+async function listActiveAtlasSubscriptions(atlasId: string) {
+  const subscriptions = [];
+  for await (const page of cityUpdatePages(db.collection('atlas_subscriptions').where('atlas_id', '==', atlasId))) {
+    subscriptions.push(...page.map(snapshot => ({ id: snapshot.id, data: snapshot.data() as Record<string, unknown>, ref: snapshot.ref })));
+  }
+  return subscriptions.filter(subscription => subscription.data.status === 'active' && typeof subscription.data.email === 'string' && subscription.data.email);
 }
 
 async function ensureSubscriptionUnsubscribeToken(subscription: {
@@ -15747,6 +15783,8 @@ export const unsubscribeAtlasSubscription = onRequest(
       );
     }
 
+    await cityWeeklyUpdates.optOutEmail(normalizeUserEmail(subscription?.email));
+
     const atlasSlug = typeof subscription?.atlas_slug === 'string' && subscription.atlas_slug.trim()
       ? subscription.atlas_slug.trim()
       : null;
@@ -17726,19 +17764,25 @@ export const sendWeeklyAtlasNewsletters = onSchedule(
     secrets: [sendgridApiKey, geminiApiKey],
   },
   async () => {
-    const snapshot = await db
-      .collection('atlases')
-      .where('newsletter_config.enabled', '==', true)
-      .limit(100)
-      .get();
-
-    for (const atlasSnapshot of snapshot.docs) {
+    const candidates = new Map<string, FirebaseFirestore.QueryDocumentSnapshot>();
+    for (const query of [db.collection('atlases').where('newsletter_config.enabled', '==', true), db.collection('atlases').where('is_public', '==', true)]) {
+      for await (const page of cityUpdatePages(query)) {
+        for (const atlas of page) {
+          if (atlas.data().newsletter_config?.enabled === true || publicCity(atlas.data())) candidates.set(atlas.id, atlas);
+        }
+      }
+    }
+    const week = cityUpdateWeek();
+    for (const atlasSnapshot of candidates.values()) {
       const atlas = atlasSnapshot.data() as Record<string, unknown>;
       const fallbackTimezone =
         atlas.city_config && typeof atlas.city_config === 'object' && typeof (atlas.city_config as Record<string, unknown>).timezone === 'string'
           ? String((atlas.city_config as Record<string, unknown>).timezone)
           : 'America/New_York';
       const config = normalizeNewsletterConfig(atlas.newsletter_config, fallbackTimezone);
+      // Public cities without newsletter settings use the existing Monday 09:00
+      // defaults. Explicit administrator pauses always win.
+      if (publicCity(atlas) && (atlas.newsletter_config as Record<string, unknown> | undefined)?.enabled === undefined) config.enabled = true;
       const due = isNewsletterDue(config);
       if (!due.due) {
         continue;
@@ -17748,7 +17792,8 @@ export const sendWeeklyAtlasNewsletters = onSchedule(
       const atlasName = atlasDisplayName(atlas, atlasId);
       const atlasSlug = typeof atlas.slug === 'string' && atlas.slug.trim() ? atlas.slug.trim() : atlasId;
       const subscriptions = await listActiveAtlasSubscriptions(atlasId);
-      if (subscriptions.length === 0) {
+      const includeAccounts = publicCity(atlas);
+      if (subscriptions.length === 0 && !(includeAccounts && await cityWeeklyUpdates.hasAccounts(atlasSlug))) {
         await atlasSnapshot.ref.set(
           {
             newsletter_config: {
@@ -17765,29 +17810,22 @@ export const sendWeeklyAtlasNewsletters = onSchedule(
       }
 
       try {
-        const content = await generateAtlasNewsletterContent({ atlasId, atlas, config });
-        let sentCount = 0;
-        const messageIds: string[] = [];
-        for (const subscription of subscriptions) {
-          const email = normalizeUserEmail(subscription.data.email);
-          if (!email) {
-            continue;
-          }
-          const token = await ensureSubscriptionUnsubscribeToken(subscription);
-          const messageId = await sendNewsletterEmail({
-            recipientEmail: email,
-            atlasName,
-            subject: content.subject,
-            markdown: content.markdown,
-            previewText: content.previewText,
-            chatUrl: `${publicAppUrl}/chat/${encodeURIComponent(atlasSlug)}`,
-            unsubscribeUrl: buildSubscriptionUnsubscribeUrl(subscription.id, token),
-          });
-          sentCount += 1;
-          if (messageId) {
-            messageIds.push(messageId);
-          }
-        }
+        const contentRef = db.collection('atlas_newsletter_content').doc(createHash('sha256').update(`${atlasId}:${due.key}`).digest('hex'));
+        const cachedContent = (await contentRef.get()).data();
+        const content = cachedContent
+          ? { subject: String(cachedContent.subject), markdown: String(cachedContent.markdown), previewText: String(cachedContent.previewText) }
+          : await generateAtlasNewsletterContent({ atlasId, atlas, config });
+        if (!cachedContent) await contentRef.set({ ...content, atlas_id: atlasId, schedule_key: due.key, created_at: FieldValue.serverTimestamp() });
+        const { sentCount, failedCount, uncertainCount, messageIds } = await cityWeeklyUpdates.deliver({
+          atlasId, slug: atlasSlug, includeAccounts, week, subscriptions,
+          manualUnsubscribeUrl: async subscription => buildSubscriptionUnsubscribeUrl(subscription.id, await ensureSubscriptionUnsubscribeToken(subscription)),
+          send: (recipientEmail, unsubscribeUrl, accountCityUpdate) => sendNewsletterEmail({
+            recipientEmail, atlasName, accountCityUpdate, subject: content.subject, markdown: content.markdown,
+            previewText: content.previewText, chatUrl: `${publicAppUrl}/chat/${encodeURIComponent(atlasSlug)}`, unsubscribeUrl,
+          }),
+        });
+        if (failedCount) throw new Error(`${failedCount} weekly deliveries failed; recipient claims prevent duplicate retries.`);
+        if (uncertainCount) logger.warn('Weekly city deliveries require provider review before retrying.', { atlasId, uncertainCount });
 
         await atlasSnapshot.ref.set(
           {
@@ -17807,6 +17845,8 @@ export const sendWeeklyAtlasNewsletters = onSchedule(
           atlas_id: atlasId,
           atlas_name: atlasName,
           mode: 'scheduled',
+          status: uncertainCount ? 'needs_review' : 'sent',
+          uncertain_recipient_count: uncertainCount,
           recipient_count: sentCount,
           subject: content.subject,
           sendgrid_message_ids: messageIds.slice(0, 20),

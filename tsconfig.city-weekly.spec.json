@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.spec.json",
+  "files": [
+    "src/app/city-weekly-updates/city-weekly-updates.spec.ts",
+    "src/app/public-wikis/public-wikis.spec.ts"
+  ],
+  "include": ["src/**/*.d.ts"]
+}

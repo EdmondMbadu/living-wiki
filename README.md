@@ -318,3 +318,57 @@ team boards, also deploy `teamCommand` to preserve sponsorship in published snap
 backend and rules before Hosting. This does not rebuild avatar knowledge or change
 existing persona prompts. Long persona prompts now show an effective runtime-limit
 notice in the Talking Card editor.
+
+
+## Weekly updates for an account’s home city
+
+Signed-in Home includes a **Weekly city updates** switch underneath the city
+chooser. It follows `users/{uid}.preferredCitySlug` (also reads the legacy
+`preferred_city_slug`), never the display/local-storage fallback. Selecting a
+university does not silently save the displayed city. Failed city saves show a
+retry action; rapid selections save in order.
+
+Existing and new accounts are eligible without a migration or another Home visit.
+The weekly sender reads the current Firebase Auth record for the verified email,
+checks the account is enabled, and rechecks the saved city and email preference
+before sending. Accounts with no saved city, unverified email, a deleted/disabled
+Auth account, or no public city wiki are skipped. No confirmation email is sent
+when an account becomes eligible or changes city.
+
+`cityWeeklyUpdatesPreference` is an authenticated get/set callable. Its private
+`city_weekly_updates/{uid}` record defaults on unless a previous visitor
+subscription for that email/account was unsubscribed. Explicit re-enabling is
+supported. Switching off also stops matching visitor subscriptions; switching
+cities never enables an opted-out account. Both the new account unsubscribe link
+and existing visitor unsubscribe links turn account updates off. Account email
+footers explain why the message was sent and link to Home. Preferences, tokens,
+cached content, and delivery receipts remain inaccessible to client SDKs under
+the existing deny-by-default Firestore rules.
+
+`sendWeeklyAtlasNewsletters` reuses existing newsletter generation, schedules,
+templates and SendGrid. Public city wikis with no enabled/disabled newsletter
+setting use the existing Monday 09:00 defaults in their city timezone (fallback:
+America/New_York). Explicitly disabled newsletters stay paused, shown on Home as
+unavailable. Existing configured schedules remain in effect. City/recipient reads
+are paginated; weekly content is cached per city/scheduled edition. Missed or
+rejected sends can retry later on the scheduled day.
+
+Transactional receipts in `city_weekly_deliveries` prevent repeat automatic sends
+per account and account email in a UTC Monday–Sunday week, including after a city
+change. Matching visitor signup mail is deduplicated per city/email/week. Existing
+intentional visitor subscriptions to other cities are independent. Explicit
+provider 4xx rejections release the claim for retry; a lost response or interrupted
+send retains its `sending`/`uncertain` claim to avoid a possible duplicate. Such
+receipts need provider-log review before manual recovery; a subsequent run records
+`needs_review`. SendGrid does not provide an exactly-once send guarantee. Run
+recipient counts describe that invocation, not cumulative retry totals.
+
+Validation: `npm run test:city-weekly`, `npm run test:city-weekly:backend`,
+`npm run i18n:check`, and `npm run build:hosting`. Backend tests use the local
+Firestore emulator and a mocked email provider; they send no real email.
+
+Rollout: deploy `cityWeeklyUpdatesPreference`, `unsubscribeCityWeeklyUpdates`,
+`unsubscribeAtlasSubscription`, and `sendWeeklyAtlasNewsletters` before Hosting.
+No Firestore rules/index changes or profile backfill are required. Deployment
+activates automatic eligibility for existing accounts, so keep administrator
+newsletter pauses in place for any city that should not send yet.

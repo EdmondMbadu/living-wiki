@@ -49,7 +49,9 @@
     "test:guest-terms": "ng test --ts-config=tsconfig.guest-terms.spec.json --include=src/app/guest-terms/*.spec.ts --watch=false --browsers=ChromeHeadless",
     "test:avatar-qa": "ng test --ts-config=tsconfig.avatar-qa.spec.json --include=src/app/avatar-qa/*.spec.ts --watch=false --browsers=ChromeHeadless",
     "test:analytics": "ng test --configuration=analytics-support --watch=false --browsers=ChromeHeadless",
-    "test:sponsorship": "ng test --ts-config=tsconfig.sponsorship.spec.json --include=src/app/talking-card-conversation/*.spec.ts --include=src/app/talking-card-editor/talking-card-editor.spec.ts --include=src/app/boards/talking-card.spec.ts --include=src/app/boards/board-studio-persistence.spec.ts --include=src/app/boards/board-studio-save.spec.ts --watch=false --browsers=ChromeHeadless"
+    "test:sponsorship": "ng test --ts-config=tsconfig.sponsorship.spec.json --include=src/app/talking-card-conversation/*.spec.ts --include=src/app/talking-card-editor/talking-card-editor.spec.ts --include=src/app/boards/talking-card.spec.ts --include=src/app/boards/board-studio-persistence.spec.ts --include=src/app/boards/board-studio-save.spec.ts --watch=false --browsers=ChromeHeadless",
+    "test:city-weekly": "ng test --ts-config=tsconfig.city-weekly.spec.json --include='src/app/city-weekly-updates/*.spec.ts' --include=src/app/public-wikis/public-wikis.spec.ts --watch=false --browsers=ChromeHeadless",
+    "test:city-weekly:backend": "node scripts/run-firestore-rule-tests.mjs tests/firestore/city-weekly-updates.integration.test.mjs"
   },
   "prettier": {
     "printWidth": 100,

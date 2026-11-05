@@ -741,4 +741,43 @@ describe('PublicWikisComponent home pagination', () => {
     expect(component.mobileSelectedUniversitySlug()).toBeNull();
     expect(component.mobileSelectedCitySlug()).toBe('philly');
   });
+
+  it('does not save a displayed fallback city when only the university changes', async () => {
+    const component = createComponent();
+    (component as any).isBrowser = true;
+    const auth = TestBed.inject(AuthService);
+    const save = spyOn(auth, 'updateHomePreferences').and.resolveTo();
+    component.setHomeDirectoryCategory('Universities');
+    await component.selectHomeDirectoryPreference({ slug: 'mit' } as any);
+    expect(save).toHaveBeenCalledOnceWith({ preferredCitySlug: null, preferredUniversitySlug: 'mit' });
+  });
+
+  it('shows failed city saves and lets the user retry without falsely updating the account', async () => {
+    const component = createComponent();
+    (component as any).isBrowser = true;
+    const auth = TestBed.inject(AuthService);
+    const save = spyOn(auth, 'updateHomePreferences').and.rejectWith(new Error('Offline'));
+    await component.selectHomeDirectoryPreference({ slug: 'boston' } as any);
+    expect(component.homePreferenceError()).toContain('last saved city');
+    expect(component.isSavingHomePreference()).toBeFalse();
+    save.and.resolveTo();
+    await component.retryHomePreferenceSave();
+    expect(save).toHaveBeenCalledWith({ preferredCitySlug: 'boston', preferredUniversitySlug: null });
+    expect(component.homePreferenceError()).toBeNull();
+  });
+
+  it('serializes rapid city changes so the latest selection is saved last', async () => {
+    const component = createComponent();
+    (component as any).isBrowser = true;
+    const auth = TestBed.inject(AuthService);
+    let finish!: () => void;
+    const save = spyOn(auth, 'updateHomePreferences').and.returnValues(new Promise<void>(resolve => finish = resolve), Promise.resolve());
+    const first = component.selectHomeDirectoryPreference({ slug: 'boston' } as any);
+    await Promise.resolve();
+    const second = component.selectHomeDirectoryPreference({ slug: 'chicago' } as any);
+    expect(save).toHaveBeenCalledTimes(1);
+    finish(); await Promise.all([first, second]);
+    expect(save.calls.mostRecent().args[0].preferredCitySlug).toBe('chicago');
+    expect(component.isSavingHomePreference()).toBeFalse();
+  });
 });

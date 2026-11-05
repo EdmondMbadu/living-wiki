@@ -1,0 +1,29 @@
+<div class="city-weekly" [attr.aria-busy]="busy()">
+  <span class="material-symbols-outlined city-weekly__icon" aria-hidden="true">mail</span>
+  <div class="city-weekly__body">
+    @if (settings(); as preference) {
+      <div class="city-weekly__row">
+        <span class="city-weekly__title" i18n>Weekly {{ preference.cityName || cityText }} updates</span>
+        <button type="button" role="switch" [attr.aria-checked]="preference.enabled" aria-label="Weekly city email updates" i18n-aria-label
+          [disabled]="busy() || !!error()" (click)="toggle()" class="city-weekly__toggle" [class.is-on]="preference.enabled">
+          <span class="city-weekly__knob" aria-hidden="true"></span>
+          <span>{{ busy() ? savingText : preference.enabled ? onText : offText }}</span>
+        </button>
+      </div>
+      <p>
+        @if (!preference.enabled) { <span i18n>Off for your account. Changing cities keeps updates off.</span> }
+        @else if (!preference.citySlug) { <span i18n>Choose and save a home city to start receiving updates.</span> }
+        @else if (!preference.emailVerified) { <span i18n>Verify your account email to receive your weekly update.</span> }
+        @else if (!preference.available) { <span i18n>Updates for this city are currently unavailable. Your preference is saved.</span> }
+        @else { <span i18n>One email a week to your account email. Automatically follows your saved city.</span> }
+      </p>
+      @if (preference.enabled && !preference.emailVerified) { <a routerLink="/verify-email" i18n>Verify email</a> }
+    } @else if (busy()) {
+      <p i18n>Loading weekly city updates…</p>
+    }
+    @if (error()) {
+      <p role="alert" class="city-weekly__error">{{ error() }} <button type="button" (click)="load()" [disabled]="busy()" i18n>Reload setting</button></p>
+    }
+    <span class="city-weekly__status" role="status" aria-live="polite">{{ saved() ? savedText : '' }}</span>
+  </div>
+</div>

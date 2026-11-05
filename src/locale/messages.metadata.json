@@ -1355,6 +1355,10 @@
     "source": "{$INTERPOLATION} Wikis available in this workspace.",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "1410584001249601657": {
+    "source": "Updates for this city are currently unavailable. Your preference is saved.",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.html"
+  },
   "1413424828978142970": {
     "source": "Sign in to create a nearby gems board.",
     "file": "src/app/boards/boards.ts"
@@ -4819,6 +4823,10 @@
     "source": "Scrapper | LivingWiki",
     "file": "src/app/app.routes.ts"
   },
+  "2424877465435488745": {
+    "source": "Weekly {$INTERPOLATION} updates",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.html"
+  },
   "2425235224966763770": {
     "source": "Final card",
     "file": "src/app/boards/boards.html"
@@ -4938,6 +4946,10 @@
   "2459377112237611537": {
     "source": "Share report",
     "file": "src/app/analytics-report-sharing/analytics-report-sharing.html"
+  },
+  "2462476681958208339": {
+    "source": "Could not confirm your change. Reload the setting before trying again.",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.ts"
   },
   "2466635436899617454": {
     "source": "Snapshot refreshed {$INTERPOLATION}",
@@ -8311,6 +8323,10 @@
     "source": "No cards match that search.",
     "file": "src/app/boards/boards.html"
   },
+  "3457490173401684922": {
+    "source": "Preference saved.",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.ts"
+  },
   "3457523013112820868": {
     "source": "Agency / team",
     "file": "src/app/admin-users/talkthru-interests-admin.ts"
@@ -8475,6 +8491,10 @@
     "source": "What the tour voice will say at this stop",
     "file": "src/app/boards/boards.html"
   },
+  "3494168025440998100": {
+    "source": "Verify your account email to receive your weekly update.",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.html"
+  },
   "3496615278735103700": {
     "source": "Refresh notes",
     "file": "src/app/city-pulse-admin/city-pulse-admin.html"
@@ -8482,6 +8502,14 @@
   "3499872556062704308": {
     "source": "15–30 sec",
     "file": "src/app/boards/boards.html"
+  },
+  "3500458863157551898": {
+    "source": "Off",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.ts"
+  },
+  "3501542403252312299": {
+    "source": "Choose and save a home city to start receiving updates.",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.html"
   },
   "3503826227323978723": {
     "source": "Search private & unlisted boards...",
@@ -10997,7 +11025,7 @@
   },
   "4227831333725112678": {
     "source": "Verify email",
-    "file": "src/app/teams/teams.html"
+    "file": "src/app/city-weekly-updates/city-weekly-updates.html"
   },
   "4227941290110272228": {
     "source": "Update URL",
@@ -11062,6 +11090,10 @@
   "4250387770595943704": {
     "source": "Only the board owner can add cards.",
     "file": "src/app/boards/boards.ts"
+  },
+  "4251176901801625317": {
+    "source": "One email a week to your account email. Automatically follows your saved city.",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.html"
   },
   "4253083563723704709": {
     "source": "{$START_TAG_SPAN}progress_activity{$CLOSE_TAG_SPAN}Loading knowledge…",
@@ -13835,6 +13867,10 @@
     "source": "Sort friends",
     "file": "src/app/boards/boards.html"
   },
+  "5089102319755987004": {
+    "source": "Could not load your weekly city update setting.",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.ts"
+  },
   "5090209836643637979": {
     "source": "Loading your plan…",
     "file": "src/app/talkthru-billing/talkthru-billing-page.html"
@@ -15843,6 +15879,10 @@
     "source": "Off Grid gems",
     "file": "src/app/off-grids/off-grids.html"
   },
+  "5669451256426654217": {
+    "source": "Weekly city email updates",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.html"
+  },
   "5670251735546841727": {
     "source": "Drag to reorder",
     "file": "src/app/boards/boards.html"
@@ -17391,6 +17431,10 @@
     "source": " Accept invitation ",
     "file": "src/app/teams/teams.html"
   },
+  "611921922480834631": {
+    "source": "Loading weekly city updates…",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.html"
+  },
   "6120163038965330754": {
     "source": " This creates a live city Wiki from your fields, with a generated guide voice and internet answers by default. ",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -18050,6 +18094,10 @@
   "6300806796199073767": {
     "source": "Updating route…",
     "file": "src/app/boards/boards.html"
+  },
+  "6301737249625053859": {
+    "source": "Your home preference could not be saved. Weekly emails still follow your last saved city.",
+    "file": "src/app/public-wikis/public-wikis.ts"
   },
   "6302259753338450242": {
     "source": "Add documents",
@@ -19586,6 +19634,10 @@
   "6761904559939749701": {
     "source": "Open listing ↗",
     "file": "src/app/admin-users/talkthru-interests-admin.html"
+  },
+  "6762100275005885567": {
+    "source": "Retry saving",
+    "file": "src/app/public-wikis/public-wikis.html"
   },
   "676246940122041564": {
     "source": "Create Board Trailer in 2 formats",
@@ -21274,6 +21326,10 @@
   "7260119081107004912": {
     "source": "Boards created over time",
     "file": "src/app/platform-analytics/platform-analytics.html"
+  },
+  "7266152718599545354": {
+    "source": "Off for your account. Changing cities keeps updates off.",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.html"
   },
   "7266750530049736349": {
     "source": "Opening message *",
@@ -25747,6 +25803,10 @@
     "source": "Why does {topic} matter?",
     "file": "src/app/chat/chat.ts"
   },
+  "864638895174450014": {
+    "source": "Reload setting",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.html"
+  },
   "8647051357443103957": {
     "source": "The Fenceline {$START_TAG_SPAN}Network{$CLOSE_TAG_SPAN}",
     "file": "src/app/fence-line/fence-line.html"
@@ -27018,6 +27078,10 @@
   "8989521748386649100": {
     "source": "Replace image",
     "file": "src/app/boards/boards.ts"
+  },
+  "8990769651805334695": {
+    "source": "On",
+    "file": "src/app/city-weekly-updates/city-weekly-updates.ts"
   },
   "8991021255842491809": {
     "source": " I’ll choose a time ",

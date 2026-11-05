@@ -210,7 +210,14 @@
           }
         </div>
         </div>
+        @if (!mobileDirectoryIsUniversities()) {
+          <app-city-weekly-updates></app-city-weekly-updates>
+        }
       </section>
+
+      @if (homePreferenceError()) {
+        <p role="alert" class="home-preference-error">{{ homePreferenceError() }} <button type="button" (click)="retryHomePreferenceSave()" [disabled]="isSavingHomePreference()" i18n>Retry saving</button></p>
+      }
 
       <section id="mobile-discover" class="mobile-discover-section" aria-label="Discover boards" i18n-aria-label>
         <div class="mobile-discover-head">

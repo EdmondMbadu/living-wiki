@@ -3799,3 +3799,6 @@ button.mobile-talk-action {
     width: 100%;
   }
 }
+
+.home-preference-error { padding: .8rem 1rem; border-radius: 12px; color: var(--danger, #ac3030); background: var(--surface, #fff); font-size: .85rem; }
+.home-preference-error button { text-decoration: underline; margin-left: .4rem; }
