@@ -1,6 +1,7 @@
 import {
   isListingGroupCard,
   listingCardPresentationImages,
+  liveCardPresentationImages,
   normalizeListingCardPresentation,
 } from './listing-card-presentation';
 
@@ -10,6 +11,12 @@ describe('listing card presentation', () => {
       imageUrl: 'cover.jpg',
       imageUrls: ['cover.jpg', 'second.jpg'],
     })).toEqual(['cover.jpg']);
+  });
+
+  it('rotates ordinary card photos in Live View, even on cards without a saved cover', () => {
+    expect(liveCardPresentationImages({
+      imageUrls: ['a.jpg', 'a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg'],
+    })).toEqual(['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg']);
   });
 
   it('keeps selected photos in order and fills the remaining slots from the card', () => {

@@ -234,8 +234,8 @@ import {
   type SpecialCardDraft,
 } from './card-creation';
 import {
-  isListingGroupCard,
   listingCardPresentationImages,
+  liveCardPresentationImages,
   normalizeListingCardPresentation,
   type ListingCardPresentation,
 } from './listing-card-presentation';
@@ -3874,7 +3874,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   });
   readonly stackCurrentCardPresentationImages = computed(() => {
     const card = this.stackCurrentCard();
-    return card ? listingCardPresentationImages(card) : [];
+    return card ? this.stackCardPresentationImages(card) : [];
   });
   readonly stackCurrentCardImage = computed(() => {
     const images = this.stackCurrentCardPresentationImages();
@@ -17942,6 +17942,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   stackCardSummary(board: Board, card: BoardCard): string {
     const subtitle = this.cardDisplaySubtitle(board, card);
+    if (card.tags.includes('real-estate') && (card.tags.includes('story-intro') || card.tags.includes('agent-intro'))) {
+      return cardNotesSummary(card.notes) || subtitle;
+    }
     const summary = cardPresentationSubtitle(
       card.shortSummary || subtitle,
       this.boardShowsCardNumbers(board),
@@ -17952,7 +17955,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   stackCardPresentationImages(card: BoardCard): string[] {
-    return listingCardPresentationImages(card);
+    const images = liveCardPresentationImages(card);
+    return this.isQrCodeCard(card) ? images.slice(0, 1) : images;
   }
 
   stackCardPhotoPosition(): string {
@@ -19975,13 +19979,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stackCardPhotoTimer = null;
   }
 
-  private scheduleStackCardPhotoSequence(resetIndex: boolean): void {
+  private scheduleStackCardPhotoSequence(resetIndex: boolean, intervalMs = this.stackFrameDurationMs): void {
     this.clearStackCardPhotoTimer();
     const frame = this.stackCurrentFrame();
     const card = frame.kind === 'card' ? frame.card : null;
-    const images = card ? listingCardPresentationImages(card) : [];
+    const images = card ? this.stackCardPresentationImages(card) : [];
     if (resetIndex) this.stackCardPhotoIndex.set(0);
-    if (!card || !isListingGroupCard(card) || images.length < 2 || !this.stackDirectView() || !this.stackPlaying()) {
+    if (!card || images.length < 2 || !this.stackDirectView() || !this.stackPlaying()) {
       return;
     }
     const currentIndex = Math.max(0, Math.min(this.stackCardPhotoIndex(), images.length - 1));
@@ -19992,8 +19996,16 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.stackCardPhotoTimer = null;
       if (!this.stackPlaying() || this.stackCurrentCard()?.id !== cardId) return;
       this.stackCardPhotoIndex.update((index) => Math.min(index + 1, images.length - 1));
-      this.scheduleStackCardPhotoSequence(false);
-    }, this.stackFrameDurationMs);
+      this.scheduleStackCardPhotoSequence(false, intervalMs);
+    }, intervalMs);
+  }
+
+  private paceStackCardPhotos(durationMs: number): number {
+    const remaining = this.stackCurrentCardPresentationImages().length - this.stackCardPhotoIndex();
+    if (remaining < 2) return durationMs;
+    const intervalMs = Math.min(this.stackFrameDurationMs, Math.max(1_000, durationMs / remaining));
+    this.scheduleStackCardPhotoSequence(false, intervalMs);
+    return Math.max(durationMs, intervalMs * remaining);
   }
 
   private preloadStackCardPhoto(url: string | undefined): void {
@@ -20149,10 +20161,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
     try {
       await audio.play();
+      if (!this.isStackNarrationCurrent(token, frameKey) || this.tourAudio !== audio) return;
       this.stackNarrationNeedsGesture.set(false);
       console.debug('Live card audio started', { cardId: frame.card.id, language: narrationLanguage,
         durationMs: Date.now() - this.liveFrameEnteredAt });
       syncProgressDuration();
+      if (autoAdvance && this.stackPlaying() && Number.isFinite(audio.duration) && audio.duration > 0) {
+        this.paceStackCardPhotos(audio.duration * 1000);
+      }
       this.prefetchNextStackNarration(frameKey);
     } catch {
       if (!this.isStackNarrationCurrent(token, frameKey) || this.tourAudio !== audio) {
@@ -20196,8 +20212,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     utterance.pitch = 1;
     this.tourSpeechUtterance = utterance;
     this.tourSpeechPlaying.set(true);
-    utterance.onstart = () => this.stackNarrationNeedsGesture.set(false);
     const estimatedSpeechMs = Math.max(this.stackFrameDurationMs, Math.ceil(utterance.text.trim().split(/\s+/).length / 2.45 * 1000));
+    utterance.onstart = () => {
+      if (this.tourSpeechUtterance !== utterance || !this.isStackNarrationCurrent(token, frameKey)) return;
+      this.stackNarrationNeedsGesture.set(false);
+      if (autoAdvance && this.stackPlaying()) this.paceStackCardPhotos(estimatedSpeechMs);
+    };
     this.stackActiveFrameDurationMs.set(Date.now() - startedAt + estimatedSpeechMs + 450);
 
     utterance.onend = () => {
@@ -20285,12 +20305,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.clearStackPlaybackTimer();
+    const frameDelayMs = this.paceStackCardPhotos(delayMs);
     this.stackPlaybackTimer = setTimeout(() => {
       if (token !== this.stackTourNarrationSwitchToken || !this.stackPlaying() || !this.isNarratedStackLiveView()) {
         return;
       }
       this.advanceStackFrame();
-    }, delayMs);
+    }, frameDelayMs);
   }
 
   private async copyTextToClipboard(text: string): Promise<boolean> {

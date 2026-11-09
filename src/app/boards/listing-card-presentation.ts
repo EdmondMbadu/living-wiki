@@ -50,10 +50,7 @@ export function normalizeListingCardPresentation(value: unknown): ListingCardPre
   };
 }
 
-/**
- * Live View and generated video share this exact visual plan. Legacy and
- * ordinary multi-photo cards intentionally remain one-cover chapters.
- */
+/** Generated videos keep ordinary cards as one-cover chapters. */
 export function listingCardPresentationImages(card: ListingPresentationCardLike): string[] {
   const cover = typeof card.imageUrl === 'string' ? card.imageUrl : '';
   const presentation = card.listingPresentation;
@@ -65,6 +62,12 @@ export function listingCardPresentationImages(card: ListingPresentationCardLike)
   const selected = uniqueUrls(presentation.presentationImageUrls)
     .filter((url) => allowed.has(url));
   return uniqueUrls([cover, ...selected, ...available]).slice(0, MAX_LISTING_PRESENTATION_IMAGES);
+}
+
+export function liveCardPresentationImages(card: ListingPresentationCardLike): string[] {
+  return isListingGroupCard(card)
+    ? listingCardPresentationImages(card)
+    : uniqueUrls([card.imageUrl, ...(card.imageUrls ?? [])]).slice(0, MAX_LISTING_PRESENTATION_IMAGES);
 }
 
 export function isListingGroupCard(card: ListingPresentationCardLike | null | undefined): boolean {

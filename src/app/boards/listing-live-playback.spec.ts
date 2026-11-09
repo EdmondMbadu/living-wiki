@@ -10,13 +10,18 @@ describe('Live contact ending playback', () => {
     notes: 'Ask Alex about a showing.', stackNarration: 'Call Alex.',
     contactDetails: { name: 'Alex', phone: '2125550100', email: 'alex@example.com' } };
 
-  function harness() {
+  function harness(room = { id: 'room', title: 'Kitchen' }) {
     const c: any = Object.create(BoardsComponent.prototype);
-    const frames = buildStackStoryFrames([{ id: 'room', title: 'Kitchen' }, contact], false, contact)
+    const frames = buildStackStoryFrames([room, contact], false, contact)
       .map((frame, index, all) => ({ ...frame, index, total: all.length }));
     Object.assign(c, {
       stackFrames: () => frames, stackFrameCount: () => frames.length,
       stackFrameIndex: signal(1), stackCurrentFrame: computed(() => frames[c.stackFrameIndex()]),
+      stackCurrentCard: computed(() => c.stackCurrentFrame().card ?? null),
+      stackCurrentCardPresentationImages: computed(() => {
+        const card = c.stackCurrentCard();
+        return card ? c.stackCardPresentationImages(card) : [];
+      }),
       stackPlaying: signal(true), stackDirectView: () => true, isBrowser: true,
       stackFrameDurationMs: 4200, stackActiveFrameDurationMs: signal(4200),
       stackCardPhotoIndex: signal(0), stackExpandedCardId: signal(null),
@@ -28,9 +33,10 @@ describe('Live contact ending playback', () => {
       selectedBoard: () => ({ id: 'board' }),
       boardTranslationResult: () => null, boardTranslationTarget: () => null,
       boardTranslationReady: () => false,
+      liveLanguageOpen: () => false, originalSelectedBoard: () => null,
       tourAudioNotice: signal(null), tourAudioLoadingKey: signal(null), tourSpeechPlaying: signal(false),
       ensureTourAudioUrl: jasmine.createSpy('audio').and.resolveTo('mock.wav'),
-      syncStackLivePreviewAfterFrameChange: () => {}, scheduleStackCardPhotoSequence: () => {},
+      syncStackLivePreviewAfterFrameChange: () => {}, preloadStackCardPhoto: () => {},
       prefetchNextStackNarration: jasmine.createSpy('prefetch'),
       unlockStackNarrationAudio: jasmine.createSpy('unlock').and.resolveTo(undefined),
     });
@@ -39,6 +45,33 @@ describe('Live contact ending playback', () => {
     c.stackNarrationAudio = audio;
     return { c, audio };
   }
+
+  it('shows the remaining photos before leaving a card with a short talk track', async () => {
+    const room = { id: 'room', title: 'Kitchen', tags: [], notes: 'Here is the kitchen.',
+      imageUrls: ['a.jpg', 'b.jpg', 'c.jpg'] };
+    const { c, audio } = harness(room);
+    c.previousStackFrame();
+    c.nextStackFrame();
+    await settle();
+    expect(audio.play).toHaveBeenCalledTimes(1);
+    audio.onended();
+    jasmine.clock().tick(1_000);
+    expect(c.stackCurrentCard()).toBe(room);
+    expect(c.stackCardPhotoIndex()).toBe(1);
+    jasmine.clock().tick(1_000);
+    expect(c.stackCardPhotoIndex()).toBe(2);
+    jasmine.clock().tick(1_000);
+    expect(c.stackCurrentCard()).toBe(contact);
+  });
+
+  it('uses the current notes for an older listing welcome card', () => {
+    const { c } = harness();
+    c.cardDisplaySubtitle = () => 'Welcome to the property';
+    expect(c.stackCardSummary({}, {
+      tags: ['real-estate', 'story-intro'], notes: 'Come see what makes this home special.',
+      shortSummary: 'An earlier welcome message.',
+    })).toBe('Come see what makes this home special.');
+  });
 
   it('plays the original contact card script, then advances to a separate silent ending', async () => {
     const { c, audio } = harness();

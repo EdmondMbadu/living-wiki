@@ -291,7 +291,9 @@
                       @if (presentationImages.length > 1) {
                         <nav class="stack-card-photo-nav" [attr.aria-label]="templateText.message369 + card.title">
                           <span class="stack-card-photo-nav__label">
-                            <strong>{{ stackListingGroupLabel(card) }}</strong>
+                            @if (stackListingGroupLabel(card); as groupLabel) {
+                              <strong>{{ groupLabel }}</strong>
+                            }
                             <small i18n>{{ stackCardPhotoPosition() }} used in Live View</small>
                           </span>
                           <span class="stack-card-photo-nav__dots">
