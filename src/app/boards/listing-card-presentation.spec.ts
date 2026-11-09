@@ -12,7 +12,7 @@ describe('listing card presentation', () => {
     })).toEqual(['cover.jpg']);
   });
 
-  it('uses only the explicit, card-owned listing presentation subset', () => {
+  it('keeps selected photos in order and fills the remaining slots from the card', () => {
     const listingPresentation = normalizeListingCardPresentation({
       kind: 'listing-group',
       groupKey: 'kitchen',
@@ -20,13 +20,13 @@ describe('listing card presentation', () => {
       confidence: 0.93,
       reviewStatus: 'verified',
       sourcePhotoCount: 6,
-      presentationImageUrls: ['second.jpg', 'third.jpg', 'outside-card.jpg'],
+      presentationImageUrls: ['third.jpg', 'outside-card.jpg'],
     });
     expect(listingCardPresentationImages({
       imageUrl: 'cover.jpg',
-      imageUrls: ['cover.jpg', 'second.jpg', 'third.jpg'],
+      imageUrls: ['cover.jpg', 'second.jpg', 'third.jpg', 'fourth.jpg', 'fifth.jpg'],
       listingPresentation,
-    })).toEqual(['cover.jpg', 'second.jpg', 'third.jpg']);
+    })).toEqual(['cover.jpg', 'third.jpg', 'second.jpg', 'fourth.jpg']);
     expect(isListingGroupCard({ listingPresentation })).toBeTrue();
   });
 

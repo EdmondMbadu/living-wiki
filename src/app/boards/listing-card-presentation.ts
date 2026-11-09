@@ -60,10 +60,11 @@ export function listingCardPresentationImages(card: ListingPresentationCardLike)
   if (!presentation || presentation.kind !== 'listing-group') {
     return uniqueUrls([cover]).slice(0, 1);
   }
-  const allowed = new Set(uniqueUrls([cover, ...(card.imageUrls ?? [])]));
+  const available = uniqueUrls([cover, ...(card.imageUrls ?? [])]);
+  const allowed = new Set(available);
   const selected = uniqueUrls(presentation.presentationImageUrls)
     .filter((url) => allowed.has(url));
-  return uniqueUrls([cover, ...selected]).slice(0, MAX_LISTING_PRESENTATION_IMAGES);
+  return uniqueUrls([cover, ...selected, ...available]).slice(0, MAX_LISTING_PRESENTATION_IMAGES);
 }
 
 export function isListingGroupCard(card: ListingPresentationCardLike | null | undefined): boolean {

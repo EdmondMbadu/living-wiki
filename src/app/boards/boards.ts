@@ -222,7 +222,7 @@ import {
   type TalkingCardEditorValue,
 } from './talking-card';
 import { cardPresentationSubtitle } from './card-numbering';
-import { cardNotesForPersistence, cardNotesSummary } from './card-notes';
+import { cardNotesForPersistence, cardNotesSummary, cardSummaryAfterEdit } from './card-notes';
 import { cardPhotoLimit } from './board-card-photo-limit';
 import {
   CARD_CREATION_OPTIONS,
@@ -10227,6 +10227,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       title,
       subtitle,
       notes: persistedNotes,
+      shortSummary: cardSummaryAfterEdit(existing, persistedNotes, subtitle),
       ...(existing && (draftTour?.guideScript || persistedNotes) !== (existing.tour?.guideScript || existing.notes)
         ? { stackNarrationSource: draftTour?.guideScript || persistedNotes } : {}),
       ...(contactEdit ? {
@@ -10251,10 +10252,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         listingPresentation: {
           ...existing.listingPresentation,
           sourcePhotoCount: imageUrls.length,
-          presentationImageUrls: this.uniqueImageUrls([
+          presentationImageUrls: listingCardPresentationImages({
             imageUrl,
-            ...existing.listingPresentation.presentationImageUrls,
-          ]).filter((url) => imageUrls.includes(url)).slice(0, 4),
+            imageUrls,
+            listingPresentation: existing.listingPresentation,
+          }),
         },
       } : {}),
       audioPreviewUrl: draft.audioPreviewUrl.trim(),
@@ -16702,6 +16704,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         const narration = draft.narration.trim();
         const title = draft.title.trim() || card.title;
         const subtitle = draft.subtitle.trim();
+        const notes = card.tour ? card.notes : narration;
         const isContactCard = this.isListingContactCard(card) && !card.tour;
         const contact = isContactCard
           ? contactDetailsForListingCard({ ...card, title, subtitle })
@@ -16710,7 +16713,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           ...withSavedNarration(card, narration, this.stackScriptLengthSourceNarrations()[card.id] || narration),
           title,
           subtitle,
-          notes: card.tour ? card.notes : narration,
+          notes,
+          shortSummary: cardSummaryAfterEdit(card, notes, subtitle),
           tour: card.tour ? { ...card.tour, guideScript: narration } : card.tour,
           ...(isContactCard ? {
             stackNarration: narration,

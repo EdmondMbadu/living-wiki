@@ -78,6 +78,13 @@ describe('script adjustment persistence', () => {
     expect(c.stackBoard().cards[0].stackNarrationSource).toBe(source);
   });
 
+  it('refreshes the Live View summary when a saved script replaces the notes', async () => {
+    const c = harness([{ id: 'room', title: 'Kitchen', notes: fullScript, shortSummary: 'The original preview.' }]);
+    c.updateStackScriptCard('room', 'narration', 'The kitchen faces the courtyard.');
+    expect(await c.saveStackScript(c.stackBoard())).toBeTrue();
+    expect(c.stackBoard().cards[0].shortSummary).toBe('The kitchen faces the courtyard.');
+  });
+
   it('preserves contact actions when saving and translating a shorter spoken closing', async () => {
     const c = harness([{ id:'contact',title:'Contact Alex',tags:['listing-contact'],notes:fullScript,
       contactDetails:{name:'Alex',organization:'Example Realty',phone:'2125550100',email:'alex@example.com'} }]);
@@ -87,7 +94,7 @@ describe('script adjustment persistence', () => {
     expect(listingContactCardDetails(card).phoneHref).toBe('tel:2125550100');
     expect(listingContactCardDetails(card).emailHref).toBe('mailto:alex@example.com');
     expect(card.stackNarration).toBe(card.notes);
-    const translated = applyBoardTranslation(c.stackBoard(), [{key:'cards.0.stackNarration',text:'Contactez Alex pour une visite.'}]);
+    const translated = applyBoardTranslation(c.stackBoard(), [{key:'cardsById.contact.stackNarration',text:'Contactez Alex pour une visite.'}]);
     expect(c.persistedStackCardNarrationText(translated.cards[0])).toBe('Contactez Alex pour une visite.');
     expect(translated.cards[0].contactDetails).toEqual(card.contactDetails);
   });

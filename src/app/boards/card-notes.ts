@@ -13,3 +13,15 @@ export function cardNotesForPersistence(value: string): string {
 export function cardNotesSummary(value: string): string {
   return value.replace(/\s+/g, ' ').trim().slice(0, CARD_NOTES_SUMMARY_LENGTH);
 }
+
+export function cardSummaryAfterEdit(
+  previous: { notes: string; subtitle: string; shortSummary?: string } | null,
+  notes: string,
+  subtitle: string,
+): string {
+  if (previous?.notes === notes && previous.subtitle === subtitle && previous.shortSummary !== undefined) {
+    return previous.shortSummary;
+  }
+  if (previous?.subtitle !== subtitle && subtitle) return cardNotesSummary(subtitle);
+  return cardNotesSummary(notes) || cardNotesSummary(subtitle);
+}
