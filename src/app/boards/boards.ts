@@ -222,7 +222,13 @@ import {
   type TalkingCardEditorValue,
 } from './talking-card';
 import { cardPresentationSubtitle } from './card-numbering';
-import { cardNotesForPersistence, cardNotesSummary, cardSummaryAfterEdit } from './card-notes';
+import {
+  cardNotesForPersistence,
+  cardNotesSummary,
+  cardSummaryAfterEdit,
+  liveCardDisplayExcerpt,
+  LIVE_CARD_DISPLAY_TEXT_LIMIT,
+} from './card-notes';
 import { cardPhotoLimit } from './board-card-photo-limit';
 import {
   CARD_CREATION_OPTIONS,
@@ -478,6 +484,8 @@ type StackScriptCardDraft = {
   title: string;
   subtitle: string;
   narration: string;
+  // Undefined keeps the saved value. An empty edit restores the automatic preview.
+  liveDisplayText?: string;
 };
 type StackLinkShareTarget = Extract<ShareTarget, 'x' | 'facebook' | 'linkedin' | 'reddit' | 'whatsapp'> | 'more';
 type StackVideoPair = Record<StackDeliveryRatio, StackVideoResult>;
@@ -562,6 +570,7 @@ type BoardCard = {
   imageContext?: string;
   mediaKind?: BoardMediaKind;
   shortSummary?: string;
+  liveDisplayText?: string;
   rank?: number;
   nearby?: NearbyGemCardMetrics;
   contactDetails?: ListingContactData;
@@ -754,6 +763,7 @@ type CardDraft = {
   title: string;
   subtitle: string;
   notes: string;
+  liveDisplayText: string;
   contactName: string;
   contactOrganization: string;
   contactPhone: string;
@@ -3059,10 +3069,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     stackCtaUrl: '',
     stickers: [],
   });
+  readonly liveCardDisplayTextLimit = LIVE_CARD_DISPLAY_TEXT_LIMIT;
   readonly cardDraft = signal<CardDraft>({
     title: '',
     subtitle: '',
     notes: '',
+    liveDisplayText: '',
     contactName: '',
     contactOrganization: '',
     contactPhone: '',
@@ -3105,6 +3117,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     tourLegInstruction: '',
     tourLegNavScript: '',
     tourLegEncodedPolyline: '',
+  });
+  readonly cardDraftSupportsLiveDisplayText = computed(() => {
+    const draft = this.cardDraft();
+    const card = { ...draft, tags: draft.tags.split(',').map((tag) => tag.trim()) };
+    return !this.isQrCodeCard(card) && !this.isPhotoOnlyCard(card);
   });
   readonly relatedCardDraft = signal<RelatedCardDraft>({
     title: '',
@@ -8736,6 +8753,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       title: '',
       subtitle: '',
       notes: '',
+      liveDisplayText: '',
       contactName: '',
       contactOrganization: '',
       contactPhone: '',
@@ -8803,6 +8821,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       title: card.title,
       subtitle: card.subtitle,
       notes: contact ? listingContactScript(card) : card.notes,
+      liveDisplayText: card.liveDisplayText ?? '',
       contactName: contact?.name ?? '',
       contactOrganization: contact?.agency ?? '',
       contactPhone: contact?.phone ?? '',
@@ -10227,6 +10246,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       title,
       subtitle,
       notes: persistedNotes,
+      liveDisplayText: liveCardDisplayExcerpt(draft.liveDisplayText),
       shortSummary: cardSummaryAfterEdit(existing, persistedNotes, subtitle),
       ...(existing && (draftTour?.guideScript || persistedNotes) !== (existing.tour?.guideScript || existing.notes)
         ? { stackNarrationSource: draftTour?.guideScript || persistedNotes } : {}),
@@ -16334,11 +16354,11 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stackCoverError.set(null);
   }
 
-  updateStackScriptCard(cardId: string, field: keyof StackScriptCardDraft, value: string): void {
+  updateStackScriptCard<K extends keyof StackScriptCardDraft>(cardId: string, field: K, value: StackScriptCardDraft[K]): void {
     if (field === 'narration') {
       this.stopStackPlayback();
       this.clearStackScriptShortenUndo();
-      this.stackScriptLengthSourceNarrations.update((sources) => ({ ...sources, [cardId]: value }));
+      this.stackScriptLengthSourceNarrations.update((sources) => ({ ...sources, [cardId]: value ?? '' }));
     }
     this.stackScriptCardDrafts.update((drafts) => ({
       ...drafts,
@@ -16346,6 +16366,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         title: drafts[cardId]?.title ?? '',
         subtitle: drafts[cardId]?.subtitle ?? '',
         narration: drafts[cardId]?.narration ?? '',
+        liveDisplayText: drafts[cardId]?.liveDisplayText,
         [field]: value,
       },
     }));
@@ -16358,6 +16379,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   stackScriptSubtitle(card: BoardCard): string {
     return this.stackScriptCardDrafts()[card.id]?.subtitle ?? card.subtitle;
+  }
+
+  stackScriptDisplayText(board: Board, card: BoardCard): string {
+    return this.stackScriptCardDrafts()[card.id]?.liveDisplayText ?? this.stackCardSummary(board, card);
   }
 
   stackScriptNarration(card: BoardCard): string {
@@ -16384,6 +16409,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   resetStackScriptCard(card: BoardCard): void {
     this.updateStackScriptCard(card.id, 'title', card.title);
     this.updateStackScriptCard(card.id, 'subtitle', card.subtitle);
+    this.updateStackScriptCard(card.id, 'liveDisplayText', undefined);
     this.updateStackScriptCard(card.id, 'narration', card.tour?.guideScript || this.persistedStackCardNarrationText(card) || '');
   }
 
@@ -16704,6 +16730,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         const narration = draft.narration.trim();
         const title = draft.title.trim() || card.title;
         const subtitle = draft.subtitle.trim();
+        const liveDisplayText = draft.liveDisplayText === undefined
+          ? card.liveDisplayText
+          : liveCardDisplayExcerpt(draft.liveDisplayText);
+        const previousNarration = card.tour?.guideScript || this.persistedStackCardNarrationText(card);
+        if (title === card.title && subtitle === card.subtitle && narration === previousNarration) {
+          return (liveDisplayText ?? '') === (card.liveDisplayText ?? '') ? card : { ...card, liveDisplayText, updatedAt: now };
+        }
         const notes = card.tour ? card.notes : narration;
         const isContactCard = this.isListingContactCard(card) && !card.tour;
         const contact = isContactCard
@@ -16714,6 +16747,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           title,
           subtitle,
           notes,
+          liveDisplayText,
           shortSummary: cardSummaryAfterEdit(card, notes, subtitle),
           tour: card.tour ? { ...card.tour, guideScript: narration } : card.tour,
           ...(isContactCard ? {
@@ -17941,17 +17975,21 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   stackCardSummary(board: Board, card: BoardCard): string {
+    if (card.liveDisplayText?.trim()) return liveCardDisplayExcerpt(card.liveDisplayText);
+    if (this.isListingContactCard(card)) {
+      return card.tags.includes('real-estate') || card.tags.includes('listing-contact')
+        ? this.templateText.message3 : this.templateText.message4;
+    }
     const subtitle = this.cardDisplaySubtitle(board, card);
     if (card.tags.includes('real-estate') && (card.tags.includes('story-intro') || card.tags.includes('agent-intro'))) {
-      return cardNotesSummary(card.notes) || subtitle;
+      return liveCardDisplayExcerpt(card.notes || subtitle);
     }
     const summary = cardPresentationSubtitle(
       card.shortSummary || subtitle,
       this.boardShowsCardNumbers(board),
     );
-    if (summary && summary !== subtitle) return summary;
-    const sentence = card.notes.match(/^(.{1,155}?[.!?])(?:\s|$)/)?.[1] ?? '';
-    return sentence || subtitle;
+    if (summary && summary !== subtitle) return liveCardDisplayExcerpt(summary);
+    return liveCardDisplayExcerpt(card.notes || subtitle);
   }
 
   stackCardPresentationImages(card: BoardCard): string[] {
@@ -19593,6 +19631,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         id: card.id,
         title: drafts[card.id]?.title ?? card.title,
         subtitle: drafts[card.id]?.subtitle ?? card.subtitle,
+        liveDisplayText: drafts[card.id]?.liveDisplayText ?? card.liveDisplayText ?? '',
         narration: drafts[card.id]?.narration ?? (card.tour?.guideScript || this.persistedStackCardNarrationText(card) || ''),
       })),
     });
@@ -24147,6 +24186,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       imageContext: typeof data['imageContext'] === 'string' ? data['imageContext'] : '',
       mediaKind: this.isBoardMediaKind(data['mediaKind']) ? data['mediaKind'] : 'none',
       shortSummary: typeof data['shortSummary'] === 'string' ? data['shortSummary'] : (typeof data['subtitle'] === 'string' ? data['subtitle'] : ''),
+      ...(typeof data['liveDisplayText'] === 'string' ? { liveDisplayText: data['liveDisplayText'] } : {}),
       rank: typeof data['rank'] === 'number' ? Math.max(0, Math.min(100, Math.trunc(data['rank']))) : this.rankFromTags(data['tags']),
       nearby: this.normalizeNearbyGemMetrics(data['nearby']),
       contactDetails: this.normalizeListingContactData(data['contactDetails']),

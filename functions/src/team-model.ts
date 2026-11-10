@@ -156,7 +156,7 @@ const CARD_FIELDS =
   `id title type subtitle notes imageUrl imageUrls imageSource imageAlt text url videoUrl videoId youtubeVideoId
   stackScript caption address location latitude longitude price currency sourceUrl productUrl merchant
   tags stickers createdAt updatedAt scope status rating contactDetails stackNarration listingPresentation
-  shortSummary entityName entityType mediaKind audioPreviewUrl googleMapsUrl locationLat locationLng
+  shortSummary liveDisplayText entityName entityType mediaKind audioPreviewUrl googleMapsUrl locationLat locationLng
   youtubeVideoTitle youtubeChannelTitle youtubeThumbnailUrl youtubeDurationSeconds
   listingContact listingIntro listingTalkingCard listingSection
   contactName contactEmail contactPhone agency introMessage conversation`.split(/\s+/);

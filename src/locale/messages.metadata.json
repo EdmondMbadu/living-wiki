@@ -28127,6 +28127,10 @@
     "source": "Translated {$INTERPOLATION} of {$INTERPOLATION_1} text sections.",
     "file": "src/app/boards/boards.html"
   },
+  "cardNotesSpokenLabel": {
+    "source": "Notes / spoken text",
+    "file": "src/app/boards/boards.html"
+  },
   "duplicateBoardMenu": {
     "source": "Duplicate board",
     "file": "src/app/boards/boards.html"
@@ -28149,6 +28153,14 @@
   },
   "liveAskVisitorLanguageHelp": {
     "source": "Otherwise, Live opens in English or their saved language. Visitors can always change language using the globe.",
+    "file": "src/app/boards/boards.html"
+  },
+  "liveCardDisplayTextHint": {
+    "source": "Shown on the tile. Leave blank to use an automatic preview.",
+    "file": "src/app/boards/boards.html"
+  },
+  "liveCardDisplayTextLabel": {
+    "source": "Live View display text (optional)",
     "file": "src/app/boards/boards.html"
   },
   "liveChooseLanguage": {
@@ -28174,6 +28186,10 @@
   "scanTalkingCard": {
     "source": "Scan to open this Talking Card in Live view and start a conversation.",
     "file": "src/app/boards/card-share-dialog.html"
+  },
+  "studioCardDisplayTextLabel": {
+    "source": "Card display text (optional)",
+    "file": "src/app/boards/boards.html"
   },
   "tapToHearCard": {
     "source": "Tap to hear this card",

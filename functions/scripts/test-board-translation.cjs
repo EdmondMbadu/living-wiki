@@ -50,10 +50,12 @@ const board = {
 const source = extractBoardTranslationSource(board);
 const contactSource = extractBoardTranslationSource({ cards: [
   {id:'setup', title:'Setup', notes:'Author instructions.', authorOnly:true},
-  {id:'contact', title:'Contact', notes:'Contact Alex.', stackNarration:'Call Alex for a viewing.', contactDetails:{phone:'2125550100'}},
+  {id:'contact', title:'Contact', notes:'Contact Alex.', liveDisplayText:'Questions about the listing?', stackNarration:'Call Alex for a viewing.', contactDetails:{phone:'2125550100'}},
 ] });
 assert.ok(!contactSource.segments.some(segment => segment.key.startsWith('cardsById.setup.')));
 assert.ok(contactSource.segments.some(segment => segment.key === 'cardsById.contact.stackNarration'));
+assert.equal(contactSource.segments.find(segment => segment.key === 'cardsById.contact.liveDisplayText')?.text,
+  'Questions about the listing?');
 assert.ok(!contactSource.segments.some(segment => segment.text === '2125550100'));
 assert.ok(source.segments.some((segment) => segment.key === 'board.title'));
 assert.ok(source.segments.some((segment) => segment.key === 'cardsById.card-1.tour.legToNext.navScript'));

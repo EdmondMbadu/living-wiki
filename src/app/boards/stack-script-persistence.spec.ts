@@ -29,7 +29,6 @@ function harness(records: any[] = [{ id: 'room', title: 'Kitchen', notes: fullSc
     stackScriptOriginalSnapshot: signal(''), stackScriptSavedAt: signal(''),
     publishedStackVideoFiles: new Map(), publishedStackTrailerFiles: new Map(),
     stackPublishedVideoReady: signal(true), stackPublishedTrailerReady: signal(true),
-    stackScriptSnapshot: () => JSON.stringify(c.stackScriptCardDrafts()),
     stackScriptMissingCount: () => 0, canEditBoard: () => true, isPhotoStudioDraft: () => false,
     isPhotoStoryBoard: () => false, applyStackCoverState: () => {}, setStackShareMessage: () => {},
     stopStackPlayback: jasmine.createSpy('stop playback'),
@@ -83,6 +82,27 @@ describe('script adjustment persistence', () => {
     c.updateStackScriptCard('room', 'narration', 'The kitchen faces the courtyard.');
     expect(await c.saveStackScript(c.stackBoard())).toBeTrue();
     expect(c.stackBoard().cards[0].shortSummary).toBe('The kitchen faces the courtyard.');
+    expect(c.stackBoard().cards[0].liveDisplayText).toBeUndefined();
+    expect(c.stackScriptDisplayText(c.stackBoard(), c.stackBoard().cards[0])).toBe('The kitchen faces the courtyard.');
+  });
+
+  it('saves and clears the display text without writing over the spoken source', async () => {
+    const c = harness([{ id: 'room', title: 'Kitchen', notes: '', shortSummary: 'The original narration.' }]);
+    const original = c.stackScriptSnapshot();
+    expect(c.stackScriptDisplayText(c.stackBoard(), c.stackBoard().cards[0])).toBe('The original narration.');
+    c.updateStackScriptCard('room', 'liveDisplayText', 'A kitchen made for gathering.');
+    expect(c.stackScriptSnapshot()).not.toBe(original);
+    expect(await c.saveStackScript(c.stackBoard())).toBeTrue();
+    let card = c.stackBoard().cards[0];
+    expect(c.stackScriptDisplayText(c.stackBoard(), card)).toBe('A kitchen made for gathering.');
+    expect(card.notes).toBe('');
+    expect(c.stackScriptNarration(card)).toBe('The original narration.');
+    c.updateStackScriptCard('room', 'liveDisplayText', '');
+    expect(c.stackScriptDisplayText(c.stackBoard(), card)).toBe('');
+    expect(await c.saveStackScript(c.stackBoard())).toBeTrue();
+    card = c.stackBoard().cards[0];
+    expect(c.stackScriptDisplayText(c.stackBoard(), card)).toBe('The original narration.');
+    expect(c.stackScriptNarration(card)).toBe('The original narration.');
   });
 
   it('preserves contact actions when saving and translating a shorter spoken closing', async () => {

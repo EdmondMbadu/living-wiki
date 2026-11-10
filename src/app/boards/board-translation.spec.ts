@@ -66,6 +66,7 @@ describe('board translation overlay', () => {
         id: 'plaza',
         title: 'Steinbeck Plaza',
         notes: 'Meet here.',
+        liveDisplayText: 'Historic plaza',
         googleMapsUrl: 'https://maps.google.com/example',
         what3wordsAddress: '///candy.sage.sticks',
         price: '$10',
@@ -76,6 +77,7 @@ describe('board translation overlay', () => {
     const translated = applyBoardTranslation(board, [
       { key: 'board.title', text: 'Lieux' },
       { key: 'cardsById.plaza.notes', text: 'Rendez-vous ici.' },
+      { key: 'cardsById.plaza.liveDisplayText', text: 'Place historique' },
       { key: 'cardsById.plaza.tags.0', text: 'histoire' },
       { key: 'cardsById.plaza.googleMapsUrl', text: 'https://malicious.example' },
       { key: 'cardsById.plaza.what3wordsAddress', text: '///wrong.words.here' },
@@ -83,6 +85,7 @@ describe('board translation overlay', () => {
 
     expect(translated.title).toBe('Lieux');
     expect(translated.cards[0].notes).toBe('Rendez-vous ici.');
+    expect(translated.cards[0].liveDisplayText).toBe('Place historique');
     expect(translated.cards[0].googleMapsUrl).toBe(board.cards[0].googleMapsUrl);
     expect(translated.cards[0].what3wordsAddress).toBe(board.cards[0].what3wordsAddress);
     expect(translated.cards[0].price).toBe('$10');

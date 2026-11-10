@@ -73,6 +73,15 @@ describe('Live contact ending playback', () => {
     })).toBe('Come see what makes this home special.');
   });
 
+  it('uses authored display text independently of what the card says aloud', () => {
+    const { c } = harness();
+    const card = { title: 'Kitchen', liveDisplayText: 'A kitchen made for gathering.',
+      notes: 'The kitchen opens to the dining room and overlooks the garden.', tags: [] };
+    expect(c.stackCardSummary({}, card)).toBe(card.liveDisplayText);
+    expect(c.stackCardHasMore({}, card)).toBeTrue();
+    expect(c.persistedStackCardNarrationText(card)).toBe(card.notes);
+  });
+
   it('plays the original contact card script, then advances to a separate silent ending', async () => {
     const { c, audio } = harness();
     c.advanceStackFrame();

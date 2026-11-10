@@ -149,7 +149,7 @@
                           @if (contact.agency) {
                             <span class="listing-contact-live__agency">{{ contact.agency }}</span>
                           }
-                          <p class="listing-contact-live__invitation">{{ card.tags.includes('real-estate') || card.tags.includes('listing-contact') ? templateText.message3 : templateText.message4 }}</p>
+                          <p class="listing-contact-live__invitation">{{ stackCardSummary(board, card) }}</p>
                           @if (contact.phoneHref || contact.emailHref) {
                             <div class="listing-contact-live__actions" [class.listing-contact-live__actions--single]="!contact.phoneHref || !contact.emailHref">
                               @if (contact.phoneHref) {
@@ -175,7 +175,9 @@
                           <span>{{ eyebrow }}</span>
                         }
                         <h4 [class]="stackTitleClass(card.title)" dir="auto">{{ card.title }}</h4>
-                        <p>{{ stackCardSummary(board, card) }}</p>
+                        @if (stackCardSummary(board, card); as displayText) {
+                          <p class="stack-preview__display-text">{{ displayText }}</p>
+                        }
                         @if (isTalkingCard(card)) {
                           <div class="talking-card-live-actions">
                             <button type="button" class="talking-card-cta talking-card-cta--live" (click)="openTalkingCardConversation(card, $event, 'live')">
@@ -7608,6 +7610,22 @@
                                     <input type="text" maxlength="90" [value]="stackScriptSubtitle(card)" (input)="updateStackScriptCard(card.id, 'subtitle', $any($event.target).value)" />
                                   </label>
                                 }
+                                @if (!isQrCodeCard(card) && !isPhotoOnlyCard(card)) {
+                                  <label>
+                                    <span>
+                                      <span [id]="'studio-display-text-label-' + card.id" i18n="@@studioCardDisplayTextLabel">Card display text (optional)</span>
+                                      <small [id]="'studio-display-text-hint-' + card.id" i18n="@@liveCardDisplayTextHint">Shown on the tile. Leave blank to use an automatic preview.</small>
+                                    </span>
+                                    <textarea
+                                      rows="2"
+                                      [maxLength]="liveCardDisplayTextLimit"
+                                      [value]="stackScriptDisplayText(board, card)"
+                                      [attr.aria-labelledby]="'studio-display-text-label-' + card.id"
+                                      [attr.aria-describedby]="'studio-display-text-hint-' + card.id"
+                                      (input)="updateStackScriptCard(card.id, 'liveDisplayText', $any($event.target).value)"
+                                    ></textarea>
+                                  </label>
+                                }
                                 <label>
                                   @if (isPhotoStoryBoard(board) && !card.tour) {
                                     <span i18n>Story / narration <small>Shown on the card and read aloud in the Stack.</small></span>
@@ -10692,8 +10710,10 @@
               <label>
                 @if (isEditingPhotoStoryCard()) {
                   <span i18n>Story / narration <small>Shown on the card and read aloud in the Stack.</small></span>
-                } @else {
+                } @else if (cardDraft().tourSequence) {
                   <span i18n>Notes</span>
+                } @else {
+                  <span i18n="@@cardNotesSpokenLabel">Notes / spoken text</span>
                 }
                 <textarea
                   rows="3"
@@ -10749,6 +10769,21 @@
               }
             </section>
 
+          }
+
+          @if (cardDraftSupportsLiveDisplayText()) {
+            <label>
+              <span id="live-card-display-text-label" i18n="@@liveCardDisplayTextLabel">Live View display text (optional)</span>
+              <textarea
+                rows="2"
+                [maxLength]="liveCardDisplayTextLimit"
+                [value]="cardDraft().liveDisplayText"
+                (input)="updateCardDraft('liveDisplayText', $any($event.target).value)"
+                aria-labelledby="live-card-display-text-label"
+                aria-describedby="live-card-display-text-hint"
+              ></textarea>
+              <small id="live-card-display-text-hint" i18n="@@liveCardDisplayTextHint">Shown on the tile. Leave blank to use an automatic preview.</small>
+            </label>
           }
 
           @if (imageUploadError()) {

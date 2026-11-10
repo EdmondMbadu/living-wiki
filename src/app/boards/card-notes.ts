@@ -1,4 +1,11 @@
+import { narrationSummary } from '../../../functions/src/narration-text';
+
 const CARD_NOTES_SUMMARY_LENGTH = 160;
+export const LIVE_CARD_DISPLAY_TEXT_LIMIT = 120;
+
+export function liveCardDisplayExcerpt(value: string | null | undefined): string {
+  return narrationSummary(value ?? '', LIVE_CARD_DISPLAY_TEXT_LIMIT);
+}
 
 /**
  * Prepare user-authored card notes for persistence without imposing an

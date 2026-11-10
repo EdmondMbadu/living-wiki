@@ -33,6 +33,7 @@ export function collectBoardTranslationSegments(value: unknown, maximumCharacter
     addSegment(segments, `${prefix}.title`, card['title']);
     addSegment(segments, `${prefix}.subtitle`, card['subtitle']);
     addSegment(segments, `${prefix}.notes`, card['notes']);
+    addSegment(segments, `${prefix}.liveDisplayText`, card['liveDisplayText']);
     addSegment(segments, `${prefix}.stackNarration`, card['stackNarration']);
     // The client materializes a missing shortSummary from subtitle. Translate
     // that displayed fallback too, or narration can read its English copy.
