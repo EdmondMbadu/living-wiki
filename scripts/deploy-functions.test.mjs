@@ -40,6 +40,24 @@ test('recovers just the failed targets reported in the deployment log', () => {
   assert.throws(() => deploymentPlan(['--failed-log=deploy.log'], available, () => 'Deploy complete!'));
 });
 
+test('prefers final failures over earlier quota errors that succeeded on retry', () => {
+  const log = `functions: failed to update function projects/project/locations/us-central1/functions/function0
+✔ functions[function0(us-central1)] Successful update operation.
+[error] Error: There was an error deploying functions:
+[error] - Error Failed to update function function1 in region us-central1
+[error] - Error Failed to create function function2 in region us-central1`;
+  assert.deepEqual(deploymentPlan(['--failed-log=firebase-debug.log'], available, () => log).batches, [['function1', 'function2']]);
+});
+
+test('drops recovered functions when the debug log also contains a later deployment', () => {
+  const log = `[error] Error: There was an error deploying functions:
+[error] - Error Failed to update function function1 in region us-central1
+[error] - Error Failed to create function function2 in region us-central1
+✔ functions[function1(us-central1)] Successful update operation.
+✔ Deploy complete!`;
+  assert.deepEqual(deploymentPlan(['--failed-log=firebase-debug.log'], available, () => log).batches, [['function2']]);
+});
+
 test('requires Firebase to report completion even if it exits zero after a quota failure', () => {
   assert.equal(firebaseDeployStatus(0, 'HTTP Error: 429; failed to update function'), 1);
   assert.equal(firebaseDeployStatus(0, '✔ Deploy complete!'), 0);

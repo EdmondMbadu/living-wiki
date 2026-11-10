@@ -10,8 +10,18 @@ const batchIntervalMs = 60_000;
 const usage = 'Specify function names, --failed-log=PATH, or --all.';
 
 export function failedFunctionsFromLog(log) {
-  const failures = log.matchAll(/\bFailed to (?:update|create) function (?:projects\/[^/\s]+\/locations\/[^/\s]+\/functions\/)?([A-Za-z][A-Za-z0-9_]*)(?=\s|$)/gi);
-  return [...new Set(Array.from(failures, (match) => match[1]))];
+  const summary = 'There was an error deploying functions:';
+  const summaryStart = log.lastIndexOf(summary);
+  // Firebase may report a failed attempt and then succeed on retry. When it
+  // prints a final summary, that list is the source of truth for recovery.
+  const output = summaryStart < 0 ? log : log.slice(summaryStart + summary.length);
+  const updates = output.matchAll(/\bFailed to (?:update|create) function (?:projects\/[^/\s]+\/locations\/[^/\s]+\/functions\/)?([A-Za-z][A-Za-z0-9_]*)(?=\s|$)|\bfunctions\[([A-Za-z][A-Za-z0-9_]*)\([^)]+\)\]\s+Successful (?:update|create) operation\./gi);
+  const failed = new Set();
+  for (const [, failure, success] of updates) {
+    if (failure) failed.add(failure);
+    else failed.delete(success);
+  }
+  return [...failed];
 }
 
 export function deploymentPlan(args, available, readLog = readFileSync) {
