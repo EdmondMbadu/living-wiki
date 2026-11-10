@@ -8,57 +8,96 @@ import { formatVoiceSeconds, VoiceCreditsService, type VoiceCreditWallet } from 
 @Component({
   selector: 'app-voice-limits-admin',
   imports: [FormsModule, DatePipe],
-  styleUrl: './voice-usage.css',
+  styleUrl: './voice-limits-admin.css',
   template: `
-    @if (service.status(); as status) {
+    @if (loading()) {
+      <p role="status">Loading voice limits…</p>
+    } @else if (loadFailed()) {
+      <p role="alert">Voice limits could not be loaded.</p>
+      <button class="limits-save" type="button" (click)="loadPolicy()">Retry voice limits</button>
+    } @else if (service.status(); as status) {
       @if (status.admin && status.policy; as policy) {
-        <section class="voice-credits-panel" aria-label="Voice limits">
-          <h2>Voice limits</h2>
-          <p>{{ status.enabled ? 'On · Voice credits and sponsored limits are active.' : 'Off · Visitors can talk using the existing voice flow.' }}</p>
-          <div class="voice-credits-actions" role="group" aria-label="Voice limits On or Off">
-            <button type="button" [attr.aria-pressed]="status.enabled" [disabled]="busy() || status.enabled"
-              (click)="save(true)">On</button>
-            <button type="button" [attr.aria-pressed]="!status.enabled" [disabled]="busy() || !status.enabled"
-              (click)="save(false)">Off</button>
-          </div>
-          @if (policy.changedAt) {
-            <small>Last changed {{ policy.changedAt | date:'medium' }} by {{ policy.changedBy }}</small>
-          }
+        <section class="limits-panel" aria-labelledby="voice-limits-title">
+          <header class="limits-header">
+            <span class="limits-icon material-symbols-outlined" aria-hidden="true">graphic_eq</span>
+            <div class="limits-heading">
+              <h2 id="voice-limits-title">Voice limits</h2>
+              <p>{{ status.enabled ? 'Sponsored minutes and paid voice credits are active.' : 'Visitors can talk without voice credit limits.' }}</p>
+            </div>
+            <div class="limits-switch" role="group" aria-label="Voice limits On or Off"
+              [attr.aria-describedby]="!status.relayConfigured || !status.checkoutConfigured ? 'voice-limits-setup' : null">
+              <button type="button" [attr.aria-pressed]="status.enabled" [disabled]="busy() || status.enabled || !status.relayConfigured || !status.checkoutConfigured"
+                (click)="save(true)">On</button>
+              <button type="button" [attr.aria-pressed]="!status.enabled" [disabled]="busy() || !status.enabled"
+                (click)="save(false)">Off</button>
+            </div>
+          </header>
           @if (!status.relayConfigured || !status.checkoutConfigured) {
-            <p>Configure the voice relay and credit pack price before turning limits on.</p>
+            <div class="limits-setup" id="voice-limits-setup">
+              <span class="material-symbols-outlined" aria-hidden="true">info</span>
+              <div><strong>Setup required</strong><p>Connect the voice relay and set a Stripe credit pack price to turn limits on.</p></div>
+            </div>
           }
-          <form class="voice-credits-actions" (ngSubmit)="save(status.enabled)">
-            <label>Monthly minutes per creator
-              <input type="number" min="0" max="100000" step="1" name="monthly" required [(ngModel)]="monthly">
-            </label>
-            <label>Default sponsored minutes per board
-              <input type="number" min="0" max="100000" step="1" name="perBoard" required [(ngModel)]="perBoard">
-            </label>
-            <button type="submit" [disabled]="busy()">Save defaults</button>
+          <form class="limits-defaults" (ngSubmit)="save(status.enabled)">
+            <h3>Monthly defaults</h3>
+            <div class="limits-fields">
+              <label for="voice-limits-monthly">
+                <strong>Minutes per creator</strong>
+                <span>Shared across all their boards</span>
+                <span class="limits-input">
+                  <input id="voice-limits-monthly" type="number" min="0" max="100000" step="1" name="monthly" required [(ngModel)]="monthly">
+                  <span aria-hidden="true">min</span>
+                </span>
+              </label>
+              <label for="voice-limits-per-board">
+                <strong>Sponsored minutes per board</strong>
+                <span>Default cap for a single board</span>
+                <span class="limits-input">
+                  <input id="voice-limits-per-board" type="number" min="0" max="100000" step="1" name="perBoard" required [(ngModel)]="perBoard">
+                  <span aria-hidden="true">min</span>
+                </span>
+              </label>
+              <button class="limits-save" type="submit" [disabled]="busy()">Save defaults</button>
+            </div>
           </form>
-          <p role="status">{{ busy() ? 'Updating voice limits…' : message() }}</p>
+          <p class="limits-feedback" role="status">{{ busy() ? 'Updating voice limits…' : message() }}</p>
+          @if (policy.changedAt) {
+            <small class="limits-history">Last changed {{ policy.changedAt | date:'medium' }} by {{ policy.changedBy }}</small>
+          }
         </section>
+      } @else {
+        <p>Voice limits can be managed by super admins.</p>
       }
-    } @else if (message()) {
-      <p role="alert">{{ message() }}</p>
     }
   `,
 })
 export class VoiceLimitsAdminComponent implements OnInit {
   readonly service = inject(VoiceCreditsService);
+  readonly loading = signal(true);
+  readonly loadFailed = signal(false);
   readonly busy = signal(false);
   readonly message = signal('');
   monthly = 60;
   perBoard = 20;
 
-  async ngOnInit() {
+  ngOnInit() {
+    void this.loadPolicy();
+  }
+
+  async loadPolicy() {
+    this.loading.set(true);
+    this.loadFailed.set(false);
     try {
       const status = await this.service.refresh();
       if (status.policy) {
         this.monthly = status.policy.monthlyMinutes;
         this.perBoard = status.policy.boardMinutes;
       }
-    } catch { this.message.set('Voice limits could not be loaded. Refresh to try again.'); }
+    } catch {
+      this.loadFailed.set(true);
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   async save(enabled: boolean) {

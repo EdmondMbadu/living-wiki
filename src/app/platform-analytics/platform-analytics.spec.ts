@@ -65,8 +65,10 @@ const result = (): PlatformReport => ({
 describe('Platform analytics', () => {
   let api: { report: jasmine.Spy; sync: jasmine.Spy };
   const voiceStatus = signal<VoiceCreditPolicy>({ enabled: false, admin: false });
+  let refreshVoiceStatus: jasmine.Spy;
   beforeEach(async () => {
     voiceStatus.set({ enabled: false, admin: false });
+    refreshVoiceStatus = jasmine.createSpy('refreshVoiceStatus').and.callFake(async () => voiceStatus());
     api = {
       report: jasmine.createSpy().and.resolveTo(result()),
       sync: jasmine.createSpy().and.resolveTo({ jobId: 'sync' }),
@@ -77,7 +79,7 @@ describe('Platform analytics', () => {
         provideZonelessChangeDetection(),
         provideRouter([]),
         { provide: PlatformAnalyticsService, useValue: api },
-        { provide: VoiceCreditsService, useValue: { status: voiceStatus, refresh: async () => voiceStatus() } },
+        { provide: VoiceCreditsService, useValue: { status: voiceStatus, refresh: refreshVoiceStatus } },
         { provide: TeamsService, useValue: teamsServiceStub() },
         {
           provide: AuthService,
@@ -105,6 +107,21 @@ describe('Platform analytics', () => {
     } });
     f.detectChanges();
     expect(f.nativeElement.querySelector(`${selector} [aria-pressed="true"]`)?.textContent.trim()).toBe('Off');
+  });
+  it('lets a super admin recover from a failed policy request without reloading analytics', async () => {
+    refreshVoiceStatus.and.rejectWith(new Error('deadline exceeded'));
+    const f = TestBed.createComponent(PlatformAnalyticsComponent);
+    await f.whenStable();
+    const panel = f.nativeElement.querySelector('app-voice-limits-admin') as HTMLElement;
+    const retry = panel.querySelector('button');
+    expect(retry?.textContent).toContain('Retry voice limits');
+    const policy: VoiceCreditPolicy = { enabled: false, admin: true, policy: {
+      changedAt: 0, changedBy: null, monthlyMinutes: 60, boardMinutes: 20,
+    } };
+    refreshVoiceStatus.and.callFake(async () => { voiceStatus.set(policy); return policy; });
+    retry?.click();
+    await f.whenStable();
+    expect(panel.querySelector('[aria-pressed="true"]')?.textContent?.trim()).toBe('Off');
   });
   it('renders returned inventory and scoped navigation without sample values', async () => {
     const f = TestBed.createComponent(PlatformAnalyticsComponent);

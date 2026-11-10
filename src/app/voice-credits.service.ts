@@ -78,7 +78,7 @@ export class VoiceCreditsService {
 
   private async command<T = unknown>(action: string, data: Record<string, unknown> = {}): Promise<T> {
     if (!this.browser) throw new Error('Voice credits are available in the browser.');
-    return (await httpsCallable<Record<string, unknown>, T>(getFirebaseFunctions(), 'voiceCreditsCommand', { timeout: action === 'status' ? 5_000 : 30_000 })({ action, ...data })).data;
+    return (await httpsCallable<Record<string, unknown>, T>(getFirebaseFunctions(), 'voiceCreditsCommand', { timeout: 30_000 })({ action, ...data })).data;
   }
 }
 
