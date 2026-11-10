@@ -41,13 +41,6 @@
     @if (!canAddVoice() && !saved()) {
       <p i18n>Your voice library is full. Remove a saved voice to make room for a new one.</p>
     }
-    <div aria-live="polite">
-      @if (working() === 'save') { <p i18n>Saving your voice…</p> }
-      @if (saved(); as voice) {
-        <p i18n><strong>{{ voice.name }}</strong> is saved in My voices. Choose it for this board or assign it to a card in the Script tab.</p>
-        <button type="button" (click)="useVoice.emit(voice)" i18n>Use as board voice</button>
-      }
-    </div>
     <div class="designer__announcement" role="status">
       @if (working() === 'generate') { <span i18n>Creating your voice previews. This can take up to a minute.</span> }
       @else if (result) { <span i18n>Listen and choose a voice</span> }
@@ -89,9 +82,26 @@
           [disabled]="!!working()" [value]="name()" (input)="name.set($any($event.target).value)">
       </label>
       <button type="button" class="designer__primary"
-        [disabled]="!!working() || !canAddVoice() || selectedIndex() === null || !name().trim()"
-        (click)="save()" i18n>Save to My voices</button>
+        [disabled]="working() === 'generate' || !canAddVoice() || selectedIndex() === null || !name().trim()"
+        [attr.aria-disabled]="working() === 'save' ? 'true' : null"
+        (click)="save()">
+        @if (working() === 'save') {
+          <span class="designer__spinner" aria-hidden="true"></span>
+          <span i18n>Saving your voice…</span>
+        } @else {
+          <span i18n>Save to My voices</span>
+        }
+      </button>
     }
+    <div aria-live="polite">
+      @if (working() === 'save') {
+        <span class="designer__announcement" i18n>Saving your voice…</span>
+      }
+      @if (saved(); as voice) {
+        <p i18n><strong>{{ voice.name }}</strong> is saved in My voices. Choose it for this board or assign it to a card in the Script tab.</p>
+        <button type="button" (click)="useVoice.emit(voice)" i18n>Use as board voice</button>
+      }
+    </div>
     @if (error()) { <p class="designer__error" role="alert">{{ error() }}</p> }
   </div>
 </details>

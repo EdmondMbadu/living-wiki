@@ -79,18 +79,15 @@ button {
 }
 
 .designer__primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 15%, var(--surface));
   padding: 0.55rem 0.8rem;
 }
 
-.designer__generate {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.designer__generate[aria-disabled='true'] { cursor: wait; }
+.designer__primary[aria-disabled='true'] { cursor: wait; }
 
 .designer__spinner {
   box-sizing: border-box;

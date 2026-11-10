@@ -22,7 +22,7 @@ export type DocxExportResult = Omit<DocxCallableResult, 'downloadUrl' | 'storage
   localDownloadUrl: string;
 };
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class DocxExportService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly authService = inject(AuthService);

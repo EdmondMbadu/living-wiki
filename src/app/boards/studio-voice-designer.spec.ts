@@ -43,11 +43,23 @@ describe('Studio voice designer', () => {
     expect(button('Save to My voices').disabled).toBeTrue();
     root.querySelectorAll<HTMLInputElement>('input[type=radio]')[1].click();
     fixture.detectChanges();
-    button('Save to My voices').click();
+    let completeSave!: (library: PersonalVoiceLibrary) => void;
+    provider.saveStudioVoice.and.returnValue(new Promise((resolve) => { completeSave = resolve; }));
+    const saveButton = button('Save to My voices');
+    saveButton.click();
+    fixture.detectChanges();
+    expect(saveButton.textContent?.trim()).toBe('Saving your voice…');
+    expect(saveButton.querySelector('.designer__spinner')).not.toBeNull();
+    expect(saveButton.getAttribute('aria-disabled')).toBe('true');
+    saveButton.click();
+    expect(saved).not.toHaveBeenCalled();
+
+    completeSave({ voice, voices: [voice] } as PersonalVoiceLibrary);
     await fixture.whenStable();
     fixture.detectChanges();
 
     expect(provider.saveStudioVoice).toHaveBeenCalledOnceWith('preview-session', 1, 'Flamingo');
+    expect(root.textContent).toContain('Flamingo is saved in My voices');
     expect(saved).toHaveBeenCalledWith(jasmine.objectContaining({ voice }));
     expect(use).not.toHaveBeenCalled();
     button('Use as board voice').click();
