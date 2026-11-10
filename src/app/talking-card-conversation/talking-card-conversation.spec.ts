@@ -7,6 +7,7 @@ import { AuthService } from '../auth.service';
 import { BoardAnalyticsService } from '../board-analytics.service';
 import { CardAnalyticsService } from '../card-analytics.service';
 import { ChatService } from '../chat.service';
+import { VoiceCreditsService, type VoiceCreditPolicy } from '../voice-credits.service';
 import {
   buildTalkingCardVoiceContext,
   meaningfulTalkingCardTranscript,
@@ -53,6 +54,11 @@ describe('TalkingCardConversationComponent', () => {
   const signedIn = signal(false);
   const userEmail = signal('');
   const userName = signal('');
+  const voiceCredits = {
+    status: signal<VoiceCreditPolicy | null>(null),
+    refresh: jasmine.createSpy('refreshVoiceCredits'),
+    quote: jasmine.createSpy('quoteVoiceCredits'),
+  };
   const authService = {
     isAuthenticated: signedIn,
     email: userEmail,
@@ -75,6 +81,11 @@ describe('TalkingCardConversationComponent', () => {
     signedIn.set(false);
     userEmail.set('');
     userName.set('');
+    voiceCredits.status.set(null);
+    voiceCredits.refresh.calls.reset();
+    voiceCredits.refresh.and.callFake(async () => voiceCredits.status());
+    voiceCredits.quote.calls.reset();
+    voiceCredits.quote.and.resolveTo({ seconds: 75 });
     await TestBed.configureTestingModule({
       imports: [TalkingCardConversationComponent],
       providers: [
@@ -85,8 +96,48 @@ describe('TalkingCardConversationComponent', () => {
         { provide: AtlasService, useValue: atlasService },
         { provide: AuthService, useValue: authService },
         { provide: ChatService, useValue: chatService },
+        { provide: VoiceCreditsService, useValue: voiceCredits },
       ],
     }).compileComponents();
+  });
+
+  it('shows the sponsored allowance before starting a public voice session', async () => {
+    voiceCredits.status.set({ enabled: true, admin: false });
+    const fixture = TestBed.createComponent(TalkingCardConversationComponent);
+    fixture.componentRef.setInput('atlasId', atlas.id);
+    fixture.componentRef.setInput('boardId', 'board-1');
+    fixture.componentRef.setInput('cardId', 'card-1');
+    fixture.componentRef.setInput('publicVoiceCredits', true);
+    const start = spyOn(fixture.componentInstance, 'startVoice').and.resolveTo();
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    fixture.detectChanges();
+    expect(start).not.toHaveBeenCalled();
+    expect(voiceCredits.quote).toHaveBeenCalledWith('board-1', 'card-1', jasmine.any(String));
+    expect(fixture.nativeElement.textContent).toContain('Up to 1:15 of sponsored voice time available.');
+  });
+
+  it('offers paid continuation and text when the sponsored allowance is exhausted', async () => {
+    voiceCredits.status.set({ enabled: true, admin: false });
+    voiceCredits.quote.and.rejectWith(Object.assign(new Error('Sponsored session used.'), {
+      details: { voiceCreditReason: 'free-used' },
+    }));
+    signedIn.set(true);
+    const fixture = TestBed.createComponent(TalkingCardConversationComponent);
+    fixture.componentRef.setInput('atlasId', atlas.id);
+    fixture.componentRef.setInput('boardId', 'board-1');
+    fixture.componentRef.setInput('cardId', 'card-1');
+    fixture.componentRef.setInput('publicVoiceCredits', true);
+    const start = spyOn(fixture.componentInstance, 'startVoice').and.resolveTo();
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Continue in text');
+    const button = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+      .find((element) => element.textContent?.includes('Continue with my credits'));
+    expect(button).toBeDefined();
+    button?.click();
+    expect(start).toHaveBeenCalledOnceWith(true);
   });
 
   for (const [language, expected] of [['de', 'German'], ['zh', 'Simplified Chinese'], ['it', 'Italian'], ['ko', 'Korean'], ['ar', 'Modern Standard Arabic'], ['hi', 'Hindi'], ['ru', 'Russian']] as const) {

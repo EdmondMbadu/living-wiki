@@ -140,6 +140,9 @@ export { getTeamInsights, submitTeamContact, manageTeamContacts, getTeamConversa
 // provider and secret are configured; full deploys validate every exported endpoint.
 import { issueTeamVoiceSession, teamVoiceBinding, teamWorkingBoard } from './team-voice';
 import { loadTalkingCardAtlas } from './talking-card-access';
+import { fulfillVoiceCreditPurchase, refundVoiceCreditPurchase, reserveBoardVoice, voiceCreditsBoardHost, voiceCreditsEnabled } from './voice-credits';
+import { analyticsTarget } from './card-analytics';
+export { voiceCreditsCommand, reconcileVoiceCredits } from './voice-credits';
 export { getTalkingCardAvatar } from './talking-card-access';
 export { talkThruBillingCommand, enforceTalkThruListingLimit } from './talkthru-billing';
 import {
@@ -1320,7 +1323,9 @@ export const stripeBusinessWebhook = onRequest(
       switch (event.type) {
         case 'checkout.session.completed': {
           const session = event.data.object as Stripe.Checkout.Session;
-          if (session.metadata?.source === 'business_claim') {
+          if (session.metadata?.source === 'voice_credits') {
+            await fulfillVoiceCreditPurchase(session);
+          } else if (session.metadata?.source === 'business_claim') {
             await markBusinessCheckoutPaid(session);
           } else if (session.metadata?.source === 'user_pricing') {
             await markUserCheckoutPaid(session);
@@ -1328,6 +1333,22 @@ export const stripeBusinessWebhook = onRequest(
             await markMembershipCheckoutPaid(session);
           } else if (session.metadata?.source === 'talkthru') {
             await handleTalkThruCheckoutCompleted(session);
+          }
+          break;
+        }
+        case 'checkout.session.async_payment_succeeded':
+          await fulfillVoiceCreditPurchase(event.data.object as Stripe.Checkout.Session);
+          break;
+        case 'charge.refunded':
+          await refundVoiceCreditPurchase(event.data.object as Stripe.Charge);
+          break;
+        case 'charge.dispute.created':
+        case 'charge.dispute.closed': {
+          const dispute = event.data.object as Stripe.Dispute;
+          if (typeof dispute.charge === 'string') {
+            await refundVoiceCreditPurchase(await getStripeClient().charges.retrieve(dispute.charge), {
+              id: dispute.id, closed: event.type === 'charge.dispute.closed', lost: dispute.status === 'lost',
+            });
           }
           break;
         }
@@ -16653,6 +16674,13 @@ export const createElevenLabsVoiceSession = onCall(
       throw new HttpsError('unauthenticated', 'Authentication or anonymousVisitorId is required.');
     }
     const requestedTeamBoardId = textValue(request.data?.boardId, 180) || '';
+    const voiceBoardId = requestedTeamBoardId;
+    const voiceCardId = textValue(request.data?.cardId, 180) || '';
+    const boardVoiceRequest = !!(voiceBoardId || voiceCardId || request.data?.experience === 'talking-card');
+    const managedBoardVoice = boardVoiceRequest && await voiceCreditsEnabled();
+    if (managedBoardVoice && (!atlasId || !/^[A-Za-z0-9_-]{1,180}$/.test(voiceBoardId) || !/^[A-Za-z0-9_-]{1,180}$/.test(voiceCardId))) {
+      throw new HttpsError('invalid-argument', 'Choose a valid board and avatar to start voice.');
+    }
     const listingVoice = requestedTeamBoardId ? await teamVoiceBinding(requestedTeamBoardId, uid) : null;
     if (listingVoice) {
       const hasAvatar = (cards: Array<Record<string, any>>): boolean => cards.some(card =>
@@ -16743,7 +16771,7 @@ export const createElevenLabsVoiceSession = onCall(
       });
     }
     let visitorId = uid ?? anonymousVisitorId ?? `visitor_${randomUUID()}`;
-    const requestedConnectionType = request.data?.connectionType === 'websocket' ? 'websocket' : 'webrtc';
+    const requestedConnectionType = managedBoardVoice || request.data?.connectionType === 'websocket' ? 'websocket' : 'webrtc';
     const params = new URLSearchParams({
       agent_id: agentId,
       environment: 'production',
@@ -16835,9 +16863,34 @@ export const createElevenLabsVoiceSession = onCall(
         ].filter(Boolean).join(' ').trim()
       : '';
 
+    let reservation: Awaited<ReturnType<typeof reserveBoardVoice>> = null;
+    if (voiceBoardId && voiceCardId && atlasId && (managedBoardVoice || await voiceCreditsEnabled())) {
+      const publicBoard = listingVoice
+        ? (await db.doc(`boards/${voiceBoardId}`).get()).data()
+        : (await analyticsTarget(voiceBoardId, voiceCardId, uid ?? undefined)).board;
+      if (publicBoard && isLinkReadableVisibility(publicBoard.visibility)) {
+        const host = voiceCreditsBoardHost(publicBoard);
+        if (!host) throw new HttpsError('failed-precondition', 'This board has no voice credit account.');
+        reservation = await reserveBoardVoice({
+          uid: request.auth?.token.firebase?.sign_in_provider === 'anonymous' ? undefined : uid ?? undefined,
+          claim: request.auth?.token.voiceCreditsSuperAdmin,
+          guest: anonymousVisitorId,
+          network: request.rawRequest.ip,
+          boardId: voiceBoardId,
+          cardId: voiceCardId,
+          atlasId,
+          expectedHost: host,
+          paid: request.data?.voiceCreditMode === 'paid',
+          upstream: signedUrl,
+          providerUserId: /^(?:card|team)_/.test(visitorId) ? visitorId : `credit_${randomUUID()}`,
+          agentId,
+        });
+      }
+    }
     return {
-      conversationToken: conversationToken || null,
-      signedUrl: signedUrl || null,
+      conversationToken: reservation ? null : conversationToken || null,
+      signedUrl: reservation?.signedUrl ?? (signedUrl || null),
+      ...(reservation ? { voiceCredits: { seconds: reservation.seconds, paid: reservation.paid } } : {}),
       connectionType: requestedConnectionType,
       agentId,
       userId: visitorId,

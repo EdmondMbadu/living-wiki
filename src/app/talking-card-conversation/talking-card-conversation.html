@@ -216,6 +216,28 @@
           <strong class="talking-chat__voice-label">{{ voiceStateLabel() }}</strong>
           <span class="talking-chat__voice-subtitle">{{ voiceStateSubtitle() }}</span>
 
+          @if (voiceTimeRemaining(); as remaining) {
+            <p aria-label="Voice time remaining">{{ formatVoiceTime(remaining) }} left</p>
+            @if (remaining <= 30) { <p role="status">Less than 30 seconds left in this session.</p> }
+          } @else if (creditsEnabled() && voiceStatus() === 'idle' && !creditPrompt()) {
+            <p>{{ sponsoredQuote() === null
+              ? 'Up to 3 minutes of sponsored voice time when available.'
+              : 'Up to ' + formatVoiceTime(sponsoredQuote()!) + ' of sponsored voice time available.' }}</p>
+          }
+          @if (creditNotice()) { <p role="status">{{ creditNotice() }}</p> }
+          @if (creditsEnabled() && creditPrompt()) {
+            <div class="talking-chat__voice-controls">
+              @if (creditPrompt() === 'buy') {
+                <button type="button" class="talking-chat__retry-voice" [disabled]="creditBusy()" (click)="buyVoiceCredits()">
+                  {{ creditBusy() ? 'Opening checkout…' : 'Buy voice credits' }}
+                </button>
+              } @else {
+                <button type="button" class="talking-chat__retry-voice" [disabled]="voiceStatus() === 'connecting'" (click)="continueWithVoiceCredits()">Continue with my credits</button>
+                <small>Uses your balance for up to 10 minutes per session.</small>
+              }
+              <button type="button" class="talking-chat__retry-voice" (click)="setConversationMode('text')">Continue in text</button>
+            </div>
+          }
           @if (errorMessage()) {
             <p class="talking-chat__voice-error" role="alert">{{ errorMessage() }}</p>
           }

@@ -9399,6 +9399,9 @@
           </button>
         </header>
 
+        @if (voiceCreditStatus.status()?.enabled && isLinkReadableVisibility(settingsBoard.visibility)) {
+          <a class="boards-ghost-action" routerLink="/voice-usage" [queryParams]="{ team: settingsBoard.teamId || null }">Manage sponsored voice minutes</a>
+        }
         <form class="boards-form board-settings-form" (submit)="saveBoardSettings($event)">
           <div class="board-settings-summary">
             @if (stackCoverImage(settingsBoard); as settingsCover) {
@@ -11740,6 +11743,7 @@
     <app-talking-card-conversation
       [atlasId]="conversation.atlasId"
       [boardId]="talkingConversationBoard()?.id || ''"
+      [publicVoiceCredits]="isLinkReadableVisibility(talkingConversationBoard()?.visibility)"
       [boardTitle]="talkingConversationBoard()?.title || ''"
       [cardId]="talkingCard.id"
       [cardTitle]="talkingCard.title"

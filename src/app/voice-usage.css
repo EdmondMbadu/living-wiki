@@ -1,0 +1,11 @@
+.voice-usage-page { max-width: 58rem; padding: 2rem 1rem; margin: 0 auto; }
+.voice-credits-panel { padding: 1.15rem; margin: 1rem 0; border: 1px solid var(--line, #c5ced0); border-radius: 0.85rem; }
+.voice-credits-panel h2 { margin: 0 0 0.5rem; }
+.voice-credits-panel p { margin: 0.5rem 0; }
+.voice-credits-actions { display: flex; flex-wrap: wrap; align-items: end; gap: 0.75rem; margin: 0.75rem 0; }
+.voice-credits-board { padding: 0.75rem 0; border-top: 1px solid var(--line, #c5ced0); }
+label { display: grid; gap: 0.35rem; }
+button, input, select { padding: 0.5rem 0.7rem; color: inherit; border: 1px solid var(--line, #c5ced0); background: var(--surface, #fff); border-radius: 0.45rem; }
+button { cursor: pointer; }
+button[aria-pressed="true"] { font-weight: 700; border-color: var(--accent, #19654a); }
+button:disabled { cursor: default; }

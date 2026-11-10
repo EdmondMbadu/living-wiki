@@ -5,6 +5,7 @@ import { AuthService } from '../auth.service';
 import { TeamsService } from '../teams/teams.service';
 import { teamsServiceStub } from '../teams/teams.testing';
 import { PlatformAnalyticsService, PlatformReport } from '../platform-analytics.service';
+import { VoiceCreditsService, type VoiceCreditPolicy } from '../voice-credits.service';
 import { PlatformAnalyticsComponent, platformCsv, platformVoiceTime } from './platform-analytics';
 
 function voiceBucket(period: string, seconds: number, recorded = true, partial = false) {
@@ -63,7 +64,9 @@ const result = (): PlatformReport => ({
 });
 describe('Platform analytics', () => {
   let api: { report: jasmine.Spy; sync: jasmine.Spy };
+  const voiceStatus = signal<VoiceCreditPolicy>({ enabled: false, admin: false });
   beforeEach(async () => {
+    voiceStatus.set({ enabled: false, admin: false });
     api = {
       report: jasmine.createSpy().and.resolveTo(result()),
       sync: jasmine.createSpy().and.resolveTo({ jobId: 'sync' }),
@@ -74,6 +77,7 @@ describe('Platform analytics', () => {
         provideZonelessChangeDetection(),
         provideRouter([]),
         { provide: PlatformAnalyticsService, useValue: api },
+        { provide: VoiceCreditsService, useValue: { status: voiceStatus, refresh: async () => voiceStatus() } },
         { provide: TeamsService, useValue: teamsServiceStub() },
         {
           provide: AuthService,
@@ -89,6 +93,18 @@ describe('Platform analytics', () => {
         },
       ],
     }).compileComponents();
+  });
+  it('shows the Off switch to a super admin even when analytics are preparing', async () => {
+    api.report.and.resolveTo({ preparing: true });
+    const f = TestBed.createComponent(PlatformAnalyticsComponent);
+    await f.whenStable();
+    const selector = '[aria-label="Voice limits On or Off"]';
+    expect(f.nativeElement.querySelector(selector)).toBeNull();
+    voiceStatus.set({ enabled: false, admin: true, policy: {
+      changedAt: 0, changedBy: null, monthlyMinutes: 60, boardMinutes: 20,
+    } });
+    f.detectChanges();
+    expect(f.nativeElement.querySelector(`${selector} [aria-pressed="true"]`)?.textContent.trim()).toBe('Off');
   });
   it('renders returned inventory and scoped navigation without sample values', async () => {
     const f = TestBed.createComponent(PlatformAnalyticsComponent);

@@ -4,6 +4,7 @@ import { provideRouter, Router } from '@angular/router';
 import { AtlasService } from '../atlas.service';
 import { AuthService } from '../auth.service';
 import { TeamsService } from '../teams/teams.service';
+import { VoiceCreditsService, type VoiceCreditPolicy } from '../voice-credits.service';
 import {
   WorkspaceNavigationOverlayService,
   WorkspaceNavigationService,
@@ -16,6 +17,7 @@ describe('WorkspaceNavigationService', () => {
   const uid = signal('user-1');
   const activeMemberships = signal<{ teamId: string }[]>([]);
   const profile = signal({ preferredCitySlug: 'my-living-wiki-las-vegas' });
+  const voiceStatus = signal<VoiceCreditPolicy | null>(null);
 
   beforeEach(() => {
     window.localStorage.removeItem('lw-board-actions:user-1');
@@ -23,10 +25,12 @@ describe('WorkspaceNavigationService', () => {
     uid.set('user-1');
     activeMemberships.set([]);
     profile.set({ preferredCitySlug: 'my-living-wiki-las-vegas' });
+    voiceStatus.set(null);
 
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
+        { provide: VoiceCreditsService, useValue: { status: voiceStatus } },
         { provide: TeamsService, useValue: { activeMemberships, sidebarRoute: () => '/teams/team-1' } },
         provideRouter([{ path: '**', component: NavigationTestPageComponent }]),
         {
@@ -83,6 +87,16 @@ describe('WorkspaceNavigationService', () => {
     service.refreshSavedBoards();
 
     expect(service.primaryItems().some((item) => item.key === 'saved')).toBeTrue();
+  });
+
+  it('only shows Voice Usage under More when voice limits are on', () => {
+    const service = TestBed.inject(WorkspaceNavigationService);
+    expect(service.moreItems().some((item) => item.key === 'voice-usage')).toBeFalse();
+    voiceStatus.set({ enabled: true, admin: false });
+    expect(service.moreItems().find((item) => item.key === 'voice-usage')?.route).toBe('/voice-usage');
+    expect(service.primaryItems().some((item) => item.key === 'voice-usage')).toBeFalse();
+    voiceStatus.set({ enabled: false, admin: false });
+    expect(service.moreItems().some((item) => item.key === 'voice-usage')).toBeFalse();
   });
 
   it('shows Teams only after an active membership is available', () => {
@@ -147,7 +161,11 @@ describe('WorkspaceNavigationService', () => {
 
 describe('WorkspaceNavigationOverlayService', () => {
   it('keeps More and About mutually exclusive', () => {
-    const service = new WorkspaceNavigationOverlayService();
+    TestBed.configureTestingModule({ providers: [
+      provideZonelessChangeDetection(),
+      { provide: VoiceCreditsService, useValue: { refresh: async () => ({ enabled: false, admin: false }) } },
+    ] });
+    const service = TestBed.inject(WorkspaceNavigationOverlayService);
 
     service.openMore();
     expect(service.moreOpen()).toBeTrue();

@@ -1,3 +1,4 @@
+import { VoiceCreditsService } from '../voice-credits.service';
 import { isPlatformBrowser } from '@angular/common';
 import { DestroyRef, Injectable, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
@@ -29,7 +30,8 @@ export type WorkspaceNavigationKey =
   | 'scrapper'
   | 'wiki'
   | 'profile'
-  | 'settings';
+  | 'settings'
+  | 'voice-usage';
 
 export interface WorkspaceNavigationItem {
   key: WorkspaceNavigationKey;
@@ -68,6 +70,7 @@ const SIDEBAR_STORAGE_KEY = 'lw-sidebar-collapsed';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceNavigationService {
+  private readonly voiceCredits = inject(VoiceCreditsService);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly teams = inject(TeamsService);
@@ -142,6 +145,7 @@ export class WorkspaceNavigationService {
     { key: 'scrapper', label: $localize`Scraper`, icon: 'travel_explore', route: '/scrapper' },
     { key: 'wiki', label: $localize`Wiki Reader`, icon: 'menu_book', route: this.atlasService.activeAtlasWikiLink() },
     { key: 'profile', label: $localize`Profile`, icon: 'account_circle', route: '/profile' },
+    ...(this.voiceCredits.status()?.enabled ? [{ key: 'voice-usage' as const, label: 'Voice Usage', icon: 'graphic_eq', route: '/voice-usage' }] : []),
     { key: 'settings', label: $localize`Settings`, icon: 'settings', route: '/atlases' },
   ]);
 
@@ -231,6 +235,8 @@ export class WorkspaceNavigationService {
         return path === '/wiki';
       case 'profile':
         return path === '/profile';
+      case 'voice-usage':
+        return path === '/voice-usage';
       case 'settings':
         return path === '/atlases';
     }
@@ -280,6 +286,7 @@ export class WorkspaceNavigationService {
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceNavigationOverlayService {
+  private readonly voiceCredits = inject(VoiceCreditsService);
   readonly moreOpen = signal(false);
   readonly aboutOpen = signal(false);
   private returnFocusElement: HTMLElement | null = null;
@@ -288,6 +295,7 @@ export class WorkspaceNavigationOverlayService {
     this.captureOrigin(origin);
     this.aboutOpen.set(false);
     this.moreOpen.set(true);
+    void this.voiceCredits.refresh().catch(() => undefined);
   }
 
   openAbout(origin?: EventTarget | null): void {

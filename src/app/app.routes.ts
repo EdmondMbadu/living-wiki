@@ -247,6 +247,7 @@ export const routes: Routes = [
     title: $localize`Atlas Settings | LivingWiki`,
     canActivate: [authGuard],
   },
+  { path: 'voice-usage', loadComponent: () => import('./voice-usage').then((m) => m.VoiceUsageComponent), canActivate: [authGuard], title: 'Voice Usage | LivingWiki' },
   {
     path: 'admin/analytics',
     loadComponent: () => import('./platform-analytics/platform-analytics').then(m => m.PlatformAnalyticsComponent),

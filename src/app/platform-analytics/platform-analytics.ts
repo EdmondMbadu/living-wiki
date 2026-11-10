@@ -1,3 +1,4 @@
+import { VoiceLimitsAdminComponent } from '../voice-usage';
 import { analyticsAudiences, type AnalyticsAudience } from '../analytics-activity';
 import { PicamoAnalyticsComponent } from './picamo-analytics';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -46,7 +47,7 @@ export function platformCsv(rows: unknown[][]): string {
 }
 @Component({
   selector: 'app-platform-analytics',
-  imports: [RouterLink, CurrencyPipe, DatePipe, DecimalPipe, ThemeToggleComponent, AccountMenuComponent, PicamoAnalyticsComponent],
+  imports: [VoiceLimitsAdminComponent, RouterLink, CurrencyPipe, DatePipe, DecimalPipe, ThemeToggleComponent, AccountMenuComponent, PicamoAnalyticsComponent],
   templateUrl: './platform-analytics.html',
   styleUrl: './platform-analytics.css',
 })

@@ -1,3 +1,4 @@
+import { VoiceCreditsService } from '../voice-credits.service';
 import { normalizeSponsorship, resolveSponsorship, type Sponsorship } from '../../../functions/src/talking-card-sponsorship';
 import { BoardTranslationCache, boardTranslationSourceSignature, mergeBoardTranslationProgress } from './board-translation-cache';
 import { contentLanguageDetails, contentLanguageForLocale } from '../../../functions/src/content-language';
@@ -2492,7 +2493,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const board = this.listingIntroEditorBoard();
     return target && board ? board.cards.find((card) => card.id === target.cardId) ?? null : null;
   });
+  readonly voiceCreditStatus = inject(VoiceCreditsService);
   readonly talkingConversationCardId = signal<string | null>(null);
+  private readonly requestedVoiceCreditCard = signal<string | null>(null);
   readonly talkingConversationSurface = signal<'board' | 'live'>('board');
   readonly talkingCardEditorBoard = computed(() => {
     const boardId = this.talkingCardEditorBoardId();
@@ -4155,7 +4158,17 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       });
     });
 
+    effect(() => {
+      const id = this.requestedVoiceCreditCard();
+      const board = this.selectedBoard();
+      if (!id || !board || !this.isBrowser) return;
+      const card = board.cards.find((item) => item.id === id && !item.authorOnly && item.conversation?.atlasId);
+      if (!card) return;
+      this.requestedVoiceCreditCard.set(null);
+      untracked(() => this.openTalkingCardConversation(card));
+    });
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      this.requestedVoiceCreditCard.set(params.get('voiceCard'));
       this.requestedCardId.set(params.get('card'));
       const view = params.get('view') ?? params.get('stack');
       const wantsFriends = params.get('friends') === '1';
@@ -7399,6 +7412,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   openBoardSettings(board: Board, event?: Event): void {
+    void this.voiceCreditStatus.refresh().catch(() => undefined);
     event?.preventDefault();
     event?.stopPropagation();
     if (!this.canEditBoard(board)) {

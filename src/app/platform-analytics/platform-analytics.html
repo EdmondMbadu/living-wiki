@@ -33,6 +33,7 @@
         <small i18n>Updated {{ report()?.updatedAt | date: 'medium' : 'UTC' }} UTC</small>
       }
     </section>
+    <app-voice-limits-admin />
     <nav class="analytics-tabs" aria-label="Analytics sections" i18n-aria-label>
       <a [routerLink]="[]" [queryParams]="{tab: null}" queryParamsHandling="merge" [class.active]="tab() === 'overview'" [attr.aria-current]="tab() === 'overview' ? 'page' : null" i18n>Overview</a>
       <a [routerLink]="[]" [queryParams]="{tab: 'picamo'}" queryParamsHandling="merge" [class.active]="tab() === 'picamo'" [attr.aria-current]="tab() === 'picamo' ? 'page' : null" i18n>Picamo</a>

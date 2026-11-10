@@ -87,6 +87,7 @@ type ChatAnswerSpeechResponse = {
 };
 
 export type ElevenLabsVoiceSessionResponse = {
+  voiceCredits?: { seconds: number; paid: boolean };
   conversationToken?: string | null;
   signedUrl?: string | null;
   connectionType?: 'websocket' | 'webrtc' | null;
@@ -664,6 +665,7 @@ export class ChatService {
   async createElevenLabsVoiceSession(options: {
     analyticsVisitorId?: string;
     experience?: 'talking-card';
+    voiceCreditMode?: 'paid';
     boardId?: string | null;
     cardId?: string | null;
     atlasId?: string | null;
@@ -684,6 +686,7 @@ export class ChatService {
       {
         analyticsVisitorId?: string;
         experience?: 'talking-card';
+        voiceCreditMode?: 'paid';
         boardId?: string | null;
         cardId?: string | null;
         atlasId?: string | null;
@@ -702,6 +705,7 @@ export class ChatService {
     const { data } = await createVoiceSession({
       analyticsVisitorId: options.analyticsVisitorId,
       experience: options.experience,
+      voiceCreditMode: options.voiceCreditMode,
       boardId: options.boardId ?? null,
       cardId: options.cardId ?? null,
       atlasId: options.atlasId ?? null,

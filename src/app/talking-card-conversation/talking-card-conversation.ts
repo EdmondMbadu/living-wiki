@@ -1,3 +1,4 @@
+import { formatVoiceSeconds, VoiceCreditsService } from '../voice-credits.service';
 import { normalizeSponsorship, type Sponsorship } from '../../../functions/src/talking-card-sponsorship';
 import { GuestTermsService } from '../guest-terms/guest-terms.service';
 import { contentLanguageDetails, contentLanguageVoicePreference } from '../../../functions/src/content-language';
@@ -206,6 +207,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   readonly contactName = input('');
   readonly contactPhoneHref = input('');
   readonly contactEmailHref = input('');
+  readonly publicVoiceCredits = input(false);
   readonly surface = input<'board' | 'live'>('board');
   readonly closed = output<void>();
   readonly activity = output<'message' | 'voice_start' | 'voice_end'>();
@@ -218,6 +220,18 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   readonly draft = signal('');
   readonly submitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  private readonly voiceCredits = inject(VoiceCreditsService);
+  readonly creditsEnabled = computed(() => this.publicVoiceCredits() && this.voiceCredits.status()?.enabled === true
+    && !this.voiceCredits.status()?.admin);
+  readonly creditPrompt = signal<'continue' | 'buy' | null>(null);
+  readonly creditNotice = signal('');
+  readonly sponsoredQuote = signal<number | null>(null);
+  readonly creditBusy = signal(false);
+  readonly voiceTimeRemaining = signal<number | null>(null);
+  readonly formatVoiceTime = formatVoiceSeconds;
+  private voiceCreditTimer?: ReturnType<typeof setInterval>;
+  private managedVoice = false;
+  private temporaryGuestId?: string;
   readonly voiceStatus = signal<'idle' | 'connecting' | 'connected' | 'error'>('idle');
   readonly conversationMode = signal<ConversationMode>('voice');
   readonly voiceMode = signal<VoiceMode>(null);
@@ -283,8 +297,20 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     this.atlas.set(atlas);
     this.unavailable.set(!atlas);
     this.loadingAtlas.set(false);
-    if (atlas && typeof window !== 'undefined' && this.conversationMode() === 'voice') {
-      await this.startVoice();
+    if (!atlas || this.destroyed || typeof window === 'undefined') return;
+    const url = new URL(location.href);
+    if (url.searchParams.get('voiceCard') === this.cardId()) {
+      this.restoreVoiceCreditConversation();
+      return;
+    }
+    const credits = this.publicVoiceCredits() ? await this.voiceCredits.refresh().catch(() => null) : null;
+    if (this.destroyed || this.conversationMode() !== 'voice') return;
+    if (!credits?.enabled || credits.admin) { await this.startVoice(); return; }
+    try {
+      const quote = await this.voiceCredits.quote(this.boardId(), this.cardId(), this.anonymousVisitorId());
+      if (!this.destroyed && this.voiceStatus() === 'idle') this.sponsoredQuote.set(quote?.seconds ?? null);
+    } catch (error) {
+      if (!this.destroyed && this.voiceStatus() === 'idle') this.showCreditLimit(error);
     }
   }
 
@@ -378,7 +404,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     this.activity.emit('message');
   }
 
-  async startVoice(): Promise<void> {
+  async startVoice(paid = false): Promise<void> {
     const atlas = this.atlas();
     if (!atlas || this.conversationStage() !== 'conversation'
       || this.voiceStatus() === 'connecting' || this.voiceStatus() === 'connected') return;
@@ -392,6 +418,10 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     this.voiceStatus.set('connecting');
     this.voiceMode.set(null);
     this.errorMessage.set(null);
+    this.creditPrompt.set(null);
+    this.creditNotice.set('');
+    this.managedVoice = false;
+    this.stopVoiceCreditTimer();
     const attempt = ++this.voiceAttempt;
     try {
       const language = this.contentLanguage();
@@ -400,6 +430,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
         this.chatService.createElevenLabsVoiceSession({
           analyticsVisitorId: this.trafficAnalytics.visitorId(),
           experience: 'talking-card',
+          ...(paid ? { voiceCreditMode: 'paid' as const } : {}),
           boardId: this.boardId(),
           cardId: this.cardId(),
           atlasId: atlas.id,
@@ -413,6 +444,9 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
         import('@elevenlabs/client'),
       ]);
       if (!session) throw new Error('Voice service is unavailable.');
+      if (attempt !== this.voiceAttempt || this.destroyed) return;
+      this.managedVoice = !!session.voiceCredits;
+      if (session.voiceCredits) this.voiceTimeRemaining.set(session.voiceCredits.seconds);
       this.voiceAnalyticsSessionId = /^(?:card|team)_/.test(session.userId) ? session.userId : '';
       const connection = session.signedUrl
         ? { signedUrl: session.signedUrl, connectionType: 'websocket' as const }
@@ -460,6 +494,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
           this.voiceActivityActive = true;
           this.voiceStatus.set('connected');
           this.activity.emit('voice_start');
+          if (session.voiceCredits) this.startVoiceCreditTimer(session.voiceCredits.seconds);
         },
         onDisconnect: (details) => {
           this.handleVoiceDisconnect(attempt, details);
@@ -492,7 +527,12 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       if (this.sponsor()) void this.prepareSponsorAudio();
       this.startVoiceMeter(conversation);
       try {
-        conversation.sendContextualUpdate(voiceContext.instruction, { contextId: `talking-card-identity-${atlas.id}` });
+        const previous = this.messages().filter((item) => item.role === 'user').length
+          ? this.messages().slice(-12).map((item) => `${item.role}: ${item.text.slice(0, 450)}`).join('\n')
+          : '';
+        conversation.sendContextualUpdate(previous
+          ? `${voiceContext.instruction}\nRecent conversation for context only:\n${previous}`
+          : voiceContext.instruction, { contextId: `talking-card-identity-${atlas.id}` });
       } catch {
         // Dynamic variables already carry the same instruction. Contextual
         // update is an additional guard for older shared-agent prompts.
@@ -501,6 +541,11 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       if (attempt !== this.voiceAttempt) return;
       this.voiceConversation = null;
       this.stopVoiceMeter();
+      this.stopVoiceCreditTimer();
+      if (this.showCreditLimit(error, paid)) {
+        this.voiceStatus.set('idle');
+        return;
+      }
       this.voiceStatus.set('error');
       this.voiceMode.set(null);
       const unavailableByLanguage = {
@@ -532,6 +577,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   }
 
   async endVoice(): Promise<void> {
+    this.stopVoiceCreditTimer();
     this.voiceAttempt += 1;
     const conversation = this.voiceConversation;
     this.voiceConversation = null;
@@ -835,7 +881,10 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     this.voiceMuted.set(false);
     this.errorMessage.set(message);
     this.emitVoiceEndIfActive();
-    this.offerRecap('interrupted');
+    if (this.managedVoice) {
+      this.stopVoiceCreditTimer();
+      this.creditPrompt.set('continue');
+    } else this.offerRecap('interrupted');
     if (conversation) void conversation.endSession().catch(() => undefined);
   }
 
@@ -848,6 +897,19 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     this.voiceMode.set(null);
     this.voiceMuted.set(false);
     this.emitVoiceEndIfActive();
+    const time = this.voiceTimeRemaining();
+    this.stopVoiceCreditTimer();
+    if (this.managedVoice) {
+      if (('closeCode' in details && details.closeCode === 4000) || time !== null && time <= 2) {
+        this.voiceStatus.set('idle');
+        this.creditPrompt.set('continue');
+        this.creditNotice.set('Your voice time for this session has ended.');
+      } else if (details.reason !== 'user') {
+        this.creditPrompt.set('continue');
+        this.creditNotice.set('Voice disconnected. You can retry or continue in text.');
+      }
+      return;
+    }
     if (details.reason === 'error') {
       this.errorMessage.set(details.message || details.closeReason || $localize`The voice conversation was interrupted.`);
     }
@@ -856,13 +918,104 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     }
   }
 
+  private showCreditLimit(error: unknown, paid = false): boolean {
+    const details = error && typeof error === 'object' && 'details' in error
+      ? error.details as { voiceCreditReason?: string; availableAt?: number } | undefined : undefined;
+    if (!details?.voiceCreditReason || details.voiceCreditReason === 'in-progress' && !paid) return false;
+    this.creditPrompt.set(details.voiceCreditReason === 'balance' ? 'buy' : 'continue');
+    this.creditNotice.set(details.availableAt
+      ? `Your next sponsored session is available ${new Date(details.availableAt).toLocaleString()}.`
+      : error instanceof Error ? error.message : 'Choose how to continue.');
+    return true;
+  }
+
+  async continueWithVoiceCredits(): Promise<void> {
+    if (!this.isSignedIn()) {
+      this.saveVoiceCreditConversation();
+      location.assign(`/sign-in?redirectTo=${encodeURIComponent(this.voiceCreditReturnPath())}`);
+      return;
+    }
+    await this.startVoice(true);
+  }
+
+  async buyVoiceCredits(): Promise<void> {
+    if (this.creditBusy()) return;
+    this.saveVoiceCreditConversation();
+    this.creditBusy.set(true);
+    try { await this.voiceCredits.checkout(this.voiceCreditReturnPath()); }
+    catch (error) { this.creditNotice.set(error instanceof Error ? error.message : 'Checkout could not start.'); }
+    finally { this.creditBusy.set(false); }
+  }
+
+  private voiceCreditReturnPath(): string {
+    const params = new URLSearchParams({ voiceCard: this.cardId(), contentLang: this.contentLanguage() });
+    return `/boards/${encodeURIComponent(this.boardId())}?${params}`;
+  }
+
+  private saveVoiceCreditConversation(): void {
+    try {
+      sessionStorage.setItem(`voice-credit-resume:${this.boardId()}:${this.cardId()}`, JSON.stringify({
+        expires: Date.now() + 3_600_000,
+        messages: this.messages().slice(-30).map((item) => ({ ...item, text: item.text.slice(0, 2000) })),
+      }));
+    } catch { /* The board link remains usable without browser storage. */ }
+  }
+
+  private restoreVoiceCreditConversation(): void {
+    const key = `voice-credit-resume:${this.boardId()}:${this.cardId()}`;
+    try {
+      const record = JSON.parse(sessionStorage.getItem(key) || 'null');
+      sessionStorage.removeItem(key);
+      if (record?.expires > Date.now() && Array.isArray(record.messages)) this.messages.set(record.messages);
+    } catch { /* The conversation can start without a stored transcript. */ }
+    this.creditPrompt.set('continue');
+    const url = new URL(location.href);
+    void Promise.all([this.voiceCredits.refresh(), this.voiceCredits.confirmCheckout(url)]).then(([status, notice]) => {
+      if (this.destroyed) return;
+      this.creditNotice.set(notice);
+      if (!status.enabled) this.creditPrompt.set(null);
+      if (!new URL(location.href).searchParams.has('voiceSession')) {
+        const current = new URL(location.href);
+        current.searchParams.delete('voiceCard');
+        history.replaceState(history.state, '', current.href);
+      }
+    }).catch((error) => this.creditNotice.set(error instanceof Error ? error.message : 'Payment could not be confirmed.'));
+  }
+
+  private startVoiceCreditTimer(seconds: number): void {
+    const deadline = Date.now() + seconds * 1000;
+    let checkModeAt = Date.now() + 5_000;
+    this.voiceCreditTimer = setInterval(() => {
+      const now = Date.now();
+      this.voiceTimeRemaining.set(Math.max(0, Math.ceil((deadline - now) / 1000)));
+      if (now >= checkModeAt) {
+        checkModeAt = now + 5_000;
+        const timer = this.voiceCreditTimer;
+        void this.voiceCredits.refresh().then((status) => {
+          if (this.voiceCreditTimer === timer && !status.enabled) {
+            this.managedVoice = false;
+            this.stopVoiceCreditTimer();
+          }
+        }).catch(() => undefined);
+      }
+    }, 500);
+  }
+
+  private stopVoiceCreditTimer(): void {
+    if (this.voiceCreditTimer) clearInterval(this.voiceCreditTimer);
+    this.voiceCreditTimer = undefined;
+    this.voiceTimeRemaining.set(null);
+  }
+
   private anonymousVisitorId(): string | null {
     if (typeof window === 'undefined') return null;
     const key = 'livingwiki:talking-card-visitor';
-    const existing = window.localStorage.getItem(key);
-    if (existing) return existing;
-    const value = this.id();
-    window.localStorage.setItem(key, value);
+    const value = this.temporaryGuestId ??= this.id();
+    try {
+      const existing = window.localStorage.getItem(key);
+      if (existing) return existing;
+      window.localStorage.setItem(key, value);
+    } catch { /* This tab can still identify its guest when storage is unavailable. */ }
     return value;
   }
 }
