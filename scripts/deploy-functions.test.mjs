@@ -1,9 +1,22 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { deploymentPlan, deployBatches, firebaseDeployStatus } from './deploy-functions.mjs';
 
 const names = Array.from({ length: 15 }, (_, index) => `function${index}`);
 const available = new Set(names);
+
+test('predeploy blocks direct function deployments and allows the batched runner', () => {
+  const guard = fileURLToPath(new URL('./require-batched-functions-deploy.mjs', import.meta.url));
+  const run = (marker) => spawnSync(process.execPath, [guard], {
+    encoding: 'utf8', env: { ...process.env, LIVINGWIKI_BATCHED_FUNCTIONS_DEPLOY: marker },
+  });
+  const direct = run('');
+  assert.equal(direct.status, 1);
+  assert.match(direct.stderr, /npm run deploy:all/);
+  assert.equal(run('1').status, 0);
+});
 
 test('deploys only named exports in small batches and deduplicates targets', () => {
   const plan = deploymentPlan([...names, names[0]], available);

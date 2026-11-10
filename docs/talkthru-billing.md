@@ -60,7 +60,7 @@ Nothing has to be created by hand in the Stripe dashboard.
 ## Release checklist
 
 1. Deploy functions before hosting:
-   `firebase deploy --only functions:talkThruBillingCommand,functions:enforceTalkThruListingLimit,functions:stripeBusinessWebhook,functions:generateBoardWizardBatch,functions:teamCommand --project living-atlas-7622a`
+   `npm run deploy:functions -- talkThruBillingCommand enforceTalkThruListingLimit stripeBusinessWebhook generateBoardWizardBatch teamCommand`
    (`stripeBusinessWebhook` now also uses the existing `SENDGRID_API_KEY` secret.)
 2. Deploy hosting: `npm run build:hosting && firebase deploy --only hosting --project living-atlas-7622a`
 3. Sign in as a platform admin → account menu → **TalkThru plan** → **Stripe setup** → **Set up / fix Stripe**. It uses the same Stripe key as production (`STRIPE_SECRET_KEY`), shows Test or Live mode, and reports **Ready** or exactly what is left. The only thing it cannot do is create a webhook endpoint from scratch, because its signing secret must be stored in Firebase. The existing endpoint already exists for the other plans.

@@ -15,7 +15,7 @@ The workspace includes:
 - Shared real-estate TalkThru creation through the existing board wizard and editor.
 - Listing photo-source choice: use the URL gallery or upload up to 24 photos, remove photos, and choose a cover. The URL remains required for property facts. Uploaded photos replace the scraped gallery and use the same room classification and grounded narration pipeline. Team photos remain in private `team-media` until explicit publication; draft preferences preserve their storage references and cover order. Failed uploads can retry without re-uploading successful files, and uncertain rooms remain marked for review.
 
-The listing-upload frontend requires updated `generateBoardWizardBatch` and `teamCommand` callables. Deploy both with `firebase deploy --only functions:generateBoardWizardBatch,functions:teamCommand --project living-atlas-7622a` before releasing the frontend. Existing Storage rules already cover these private team and owner-scoped personal uploads.
+The listing-upload frontend requires updated `generateBoardWizardBatch` and `teamCommand` callables. Deploy both with `npm run deploy:functions -- generateBoardWizardBatch teamCommand` before releasing the frontend. Existing Storage rules already cover these private team and owner-scoped personal uploads.
 - Representative assignment, separately selected shared voice, revision history, unpublished-change indicators, explicit publication, QR downloads, and team-owned video assets.
 - Accepted members, pending invitations, roles, public-profile opt-in, shared-voice consent, leaving/removing members, and owner transfer.
 - Views, unique engaged participants, chat sessions/messages, verified voice minutes, explicit contact requests, private conversations, and activity/notifications.
@@ -28,7 +28,7 @@ Team admins can save an individual setting without completing the rest of the pr
 
 Remove logo and Remove cover photo update the preview immediately and take effect on Save; Cancel restores the saved images. Removing a cover resets its focal point. Removal withdraws the image from the team page and membership indexes, not from existing public Storage URLs (branding objects remain immutable). Failed saves preserve the draft. The dialog backdrop handler must return void: returning false for clicks inside the dialog cancels native submit and checkbox behavior.
 
-Deploy the updated `teamCommand` callable before serving the partial-update frontend: `firebase deploy --only functions:teamCommand --project living-atlas-7622a`. Existing full-form clients remain compatible with the updated backend.
+Deploy the updated `teamCommand` callable before serving the partial-update frontend: `npm run deploy:functions -- teamCommand`. Existing full-form clients remain compatible with the updated backend.
 
 The Save button also invokes the handler directly and prevents the duplicate native submit action, so cancelling the browser's default action cannot silently swallow the save. Stale forms without an opening revision show an actionable error instead of returning silently. Settings errors appear next to Save and receive focus/scroll into view; drafts remain intact on failure. After a development hot reload, refresh the page and reopen settings to initialize a fresh editing session.
 

@@ -85,7 +85,11 @@ export function firebaseDeployStatus(status, output) {
 
 function runFirebase(parameters, cwd) {
   return new Promise((resolveRun, reject) => {
-    const child = spawn('firebase', parameters, { cwd, stdio: ['inherit', 'pipe', 'pipe'] });
+    const child = spawn('firebase', parameters, {
+      cwd,
+      env: { ...process.env, LIVINGWIKI_BATCHED_FUNCTIONS_DEPLOY: '1' },
+      stdio: ['inherit', 'pipe', 'pipe'],
+    });
     let completed = false;
     for (const [source, destination] of [[child.stdout, process.stdout], [child.stderr, process.stderr]]) {
       let tail = '';

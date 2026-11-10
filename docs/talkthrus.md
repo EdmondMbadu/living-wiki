@@ -29,7 +29,7 @@ Deploy the changed inquiry callable and admin read callable before Hosting. The 
 
 ```sh
 npm --prefix functions run build
-firebase deploy --only functions:submitTalkThruInterest,functions:listTalkThruInterests,functions:updateTalkThruInterest,functions:sendTalkThruInterestEmails,functions:retryTalkThruInterestEmails --project living-atlas-7622a
+npm run deploy:functions -- submitTalkThruInterest listTalkThruInterests updateTalkThruInterest sendTalkThruInterestEmails retryTalkThruInterestEmails
 npm run build:hosting
 firebase deploy --only hosting --project living-atlas-7622a
 ```
