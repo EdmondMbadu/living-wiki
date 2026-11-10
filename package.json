@@ -19,6 +19,7 @@
     "build:hosting": "npm run i18n:check && ng build --configuration production && node scripts/prepare-hosting-runtime-config.mjs && node scripts/check-board-performance.mjs",
     "deploy:hosting": "firebase deploy --only hosting",
     "deploy:functions": "node scripts/deploy-functions.mjs",
+    "deploy:all": "node scripts/deploy-functions.mjs --all --with-app",
     "test:deploy": "node --test scripts/deploy-functions.test.mjs",
     "deploy:board-saves": "firebase deploy --only firestore:rules,hosting",
     "watch": "ng build --watch --configuration development",

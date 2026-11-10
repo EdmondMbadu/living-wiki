@@ -108,7 +108,7 @@ shared locale manifest, so it does not require page-by-page changes.
 
 This repo is configured for Firebase project `living-atlas-7622a`. Functions target `nodejs22` in `firebase.json` and Node 22 in `functions/package.json`; the lockfile agrees. Node 20 is decommissioned and must not be restored. See the [Firebase runtime guidance](https://firebase.google.com/docs/functions/manage-functions).
 
-The Hosting predeploy hook runs `npm run build:hosting`, so a plain `firebase deploy` rebuilds all twelve interfaces and checks production performance budgets before publishing. This prevents deployment of a stale seven-language build. Deployment itself is a separate operation from local validation.
+The Hosting predeploy hook runs `npm run build:hosting` and checks all twelve interfaces and production performance budgets before publishing.
 
 For website changes, use `npm run deploy:hosting`. For backend changes or recovery from a partial deployment, deploy only the affected functions:
 
@@ -118,7 +118,16 @@ npm run deploy:functions -- translateBoard translateLiveCard
 npm run deploy:functions -- --dry-run translateBoard translateLiveCard
 ```
 
-The helper validates names against the compiled exports and updates five functions at a time by default. It refuses to overlap another Firebase deployment, stops at the first failed batch, and prints the unfinished targets for retry. Use `--batch-size=1` if the regional CPU quota is still exhausted. Hosting and database rules are deployed separately, so a function retry does not rebuild all twelve interfaces.
+For a full release, use `npm run deploy:all`. It deploys functions in batches of five with at least 60 seconds between batch starts, then publishes Firestore, Storage, and Hosting after the functions succeed. Use `npm run deploy:all -- --dry-run` to inspect the plan.
+
+The helper validates names against the compiled exports, stops at the first failed batch, and prints the remaining targets for retry. If a previous Firebase run logged explicit failures, pass the log to recover just those targets:
+
+```bash
+npm run deploy:functions -- --failed-log=/path/to/deploy.log --batch-size=1 --dry-run
+npm run deploy:functions -- --failed-log=/path/to/deploy.log --batch-size=1
+```
+
+Use `--batch-size=1` when recovering from a regional CPU quota error. If a single function still hits that quota, wait for capacity or check the project's regional CPU limit. A functions-only retry does not rebuild Hosting.
 
 Deploying every function together can exceed Cloud Run's regional CPU quota and write-rate limit. Existing healthy revisions can remain active when a new revision fails, so `ACTIVE` alone does not prove that the latest code deployed. Check the deployment result and the latest revision. Firebase recommends [deploying only changed functions and using groups of ten or fewer](https://firebase.google.com/docs/functions/manage-functions#deploy_functions).
 

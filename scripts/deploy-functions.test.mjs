@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { deploymentPlan, deployBatches } from './deploy-functions.mjs';
+import { deploymentPlan, deployBatches, firebaseDeployStatus } from './deploy-functions.mjs';
 
 const names = Array.from({ length: 15 }, (_, index) => `function${index}`);
 const available = new Set(names);
@@ -13,14 +13,37 @@ test('deploys only named exports in small batches and deduplicates targets', () 
 
 test('supports a read-only plan, comma-separated targets and smaller CPU recovery batches', () => {
   assert.deepEqual(deploymentPlan(['--dry-run', '--batch-size=1', names.slice(0, 2).join(',')], available), {
-    dryRun: true, batches: [[names[0]], [names[1]]],
+    dryRun: true, batches: [[names[0]], [names[1]]], withApp: false, batchSize: 1,
   });
 });
 
 test('rejects empty, invalid, wildcard and unknown targets before any deployment', () => {
-  for (const args of [[], ['--dry-run'], ['functions'], ['--all'], ['*'], ['missing'], ['function0;echo'], ['--batch-size=0', 'function0'], ['--batch-size=11', 'function0']]) {
+  for (const args of [[], ['--dry-run'], ['functions'], ['--all', 'function0'], ['*'], ['missing'], ['function0;echo'], ['--batch-size=0', 'function0'], ['--batch-size=11', 'function0']]) {
     assert.throws(() => deploymentPlan(args, available));
   }
+});
+
+test('plans an explicit full app deployment using only named exports', () => {
+  const plan = deploymentPlan(['--all', '--with-app', '--dry-run'], available);
+  assert.deepEqual(plan.batches.flat(), [...names].sort());
+  assert.ok(plan.batches.every((batch) => batch.length <= 5));
+  assert.equal(plan.withApp, true);
+});
+
+test('recovers just the failed targets reported in the deployment log', () => {
+  const log = `functions: failed to update function projects/project/locations/us-central1/functions/function1
+- Error Failed to update function function0 in region us-central1
+- Error Failed to update function function1 in region us-central1
+✔ functions[function2(us-central1)] Successful update operation.`;
+  const plan = deploymentPlan(['--failed-log=deploy.log'], available, () => log);
+  assert.deepEqual(plan.batches, [['function1', 'function0']]);
+  assert.throws(() => deploymentPlan(['--failed-log=deploy.log'], available, () => 'Deploy complete!'));
+});
+
+test('requires Firebase to report completion even if it exits zero after a quota failure', () => {
+  assert.equal(firebaseDeployStatus(0, 'HTTP Error: 429; failed to update function'), 1);
+  assert.equal(firebaseDeployStatus(0, '✔ Deploy complete!'), 0);
+  assert.equal(firebaseDeployStatus(2, '✔ Deploy complete!'), 2);
 });
 
 test('waits for a batch to finish before starting another and stops at the first failure', async () => {

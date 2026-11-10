@@ -1,23 +1,45 @@
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
 
-export function deploymentPlan(args, available) {
+const project = 'living-atlas-7622a';
+const batchIntervalMs = 60_000;
+const usage = 'Specify function names, --failed-log=PATH, or --all.';
+
+export function failedFunctionsFromLog(log) {
+  const failures = log.matchAll(/\bFailed to (?:update|create) function (?:projects\/[^/\s]+\/locations\/[^/\s]+\/functions\/)?([A-Za-z][A-Za-z0-9_]*)(?=\s|$)/gi);
+  return [...new Set(Array.from(failures, (match) => match[1]))];
+}
+
+export function deploymentPlan(args, available, readLog = readFileSync) {
   let batchSize = 5;
   let dryRun = false;
+  let all = false;
+  let withApp = false;
   const names = [];
   for (const arg of args) {
     if (arg === '--dry-run') dryRun = true;
+    else if (arg === '--all') all = true;
+    else if (arg === '--with-app') withApp = true;
     else if (arg.startsWith('--batch-size=')) batchSize = Number(arg.slice(13));
+    else if (arg.startsWith('--failed-log=')) {
+      const path = arg.slice('--failed-log='.length);
+      const failed = failedFunctionsFromLog(readLog(path, 'utf8'));
+      if (!failed.length) throw new Error(`No failed function updates found in ${path}.`);
+      names.push(...failed);
+    }
     else if (arg.startsWith('-')) throw new Error(`Unknown option: ${arg}`);
     else names.push(...arg.split(',').filter(Boolean));
   }
   if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 10) {
     throw new Error('Batch size must be between 1 and 10.');
   }
-  const unique = [...new Set(names)];
-  if (!unique.length) throw new Error('Specify the functions to update: npm run deploy:functions -- functionOne functionTwo');
+  if (all && names.length) throw new Error('--all cannot be combined with named functions or --failed-log.');
+  const unique = all ? [...available].sort() : [...new Set(names)];
+  if (!unique.length) throw new Error(usage);
   for (const name of unique) {
     if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(name) || !available.has(name)) {
       throw new Error(`Unknown function: ${name}`);
@@ -25,7 +47,7 @@ export function deploymentPlan(args, available) {
   }
   const batches = [];
   for (let index = 0; index < unique.length; index += batchSize) batches.push(unique.slice(index, index + batchSize));
-  return { batches, dryRun };
+  return { batches, dryRun, withApp, batchSize };
 }
 
 /** Stop at the first failure; never start the next batch while one is running. */
@@ -39,14 +61,44 @@ export async function deployBatches(batches, run) {
 
 function otherDeployment() {
   const result = spawnSync('ps', ['-A', '-o', 'pid=,command='], { encoding: 'utf8' });
-  return (result.stdout ?? '').split('\n').some((line) =>
-    /(?:^|[/\s])firebase(?:\.js)?\s+deploy(?:\s|$)/.test(line));
+  return (result.stdout ?? '').split('\n').some((line) => {
+    const match = line.match(/^\s*(\d+)\s+(.*)$/);
+    return match && Number(match[1]) !== process.pid
+      && /(?:^|[/\s])(?:firebase(?:\.js)?\s+deploy|deploy-functions\.mjs)(?:\s|$)/.test(match[2]);
+  });
+}
+
+export function firebaseDeployStatus(status, output) {
+  // The CLI can exit zero after logging a quota error without completing deployment.
+  return status || (/Deploy complete!/i.test(output) ? 0 : 1);
+}
+
+function runFirebase(parameters, cwd) {
+  return new Promise((resolveRun, reject) => {
+    const child = spawn('firebase', parameters, { cwd, stdio: ['inherit', 'pipe', 'pipe'] });
+    let completed = false;
+    for (const [source, destination] of [[child.stdout, process.stdout], [child.stderr, process.stderr]]) {
+      let tail = '';
+      source.setEncoding('utf8');
+      source.on('data', (chunk) => {
+        destination.write(chunk);
+        const output = tail + chunk;
+        if (firebaseDeployStatus(0, output) === 0) completed = true;
+        tail = output.slice(-32);
+      });
+    }
+    child.on('error', reject);
+    child.on('close', (status, signal) => {
+      if (signal) reject(new Error(`Deployment interrupted (${signal}); no later batches were started.`));
+      else resolveRun(firebaseDeployStatus(status, completed ? 'Deploy complete!' : ''));
+    });
+  });
 }
 
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  if (!args.length) throw new Error('Specify the functions to update: npm run deploy:functions -- functionOne functionTwo');
+  if (!args.length) throw new Error(usage);
   if (!dryRun && otherDeployment()) {
     throw new Error('Another Firebase deployment is running. Let it finish before starting a targeted deployment.');
   }
@@ -57,26 +109,42 @@ async function main() {
   if (build.status !== 0) { process.exitCode = build.status || 1; return; }
   // Firebase normally supplies this during discovery. Loading exports here only
   // inspects trigger metadata; no handlers are invoked.
-  process.env.GCLOUD_PROJECT ??= 'living-atlas-7622a';
-  process.env.FIREBASE_CONFIG ??= JSON.stringify({ projectId: 'living-atlas-7622a', storageBucket: 'living-atlas-7622a.firebasestorage.app' });
+  process.env.GCLOUD_PROJECT ??= project;
+  process.env.FIREBASE_CONFIG ??= JSON.stringify({ projectId: project, storageBucket: `${project}.firebasestorage.app` });
   const require = createRequire(new URL('../functions/package.json', import.meta.url));
   const endpoints = require('../functions/lib/index.js');
   const available = new Set(Object.keys(endpoints).filter((name) => endpoints[name]?.__endpoint || endpoints[name]?.__trigger));
   const plan = deploymentPlan(args, available);
   console.log(`${plan.dryRun ? 'Plan' : 'Deploy'}: ${plan.batches.flat().length} functions in ${plan.batches.length} sequential batches.`);
-  const result = await deployBatches(plan.batches, async (batch, index) => {
-    const parameters = ['deploy', '--project', 'living-atlas-7622a', '--only', batch.map((name) => `functions:${name}`).join(',')];
-    console.log(`\n[${index + 1}/${plan.batches.length}] ${batch.join(', ')}`);
+  let nextBatchStart = 0;
+  const deploy = async (targets) => {
+    const parameters = ['deploy', '--project', project, '--only', targets, '--non-interactive'];
     if (plan.dryRun) { console.log(`firebase ${parameters.join(' ')}`); return 0; }
-    const deployed = spawnSync('firebase', parameters, { cwd: root, stdio: 'inherit' });
-    if (deployed.error) throw deployed.error;
-    if (deployed.signal) throw new Error(`Deployment interrupted (${deployed.signal}); no later batches were started.`);
-    return deployed.status ?? 1;
+    if (otherDeployment()) throw new Error('Another Firebase deployment is running. Let it finish before continuing.');
+    return runFirebase(parameters, root);
+  };
+  const result = await deployBatches(plan.batches, async (batch, index) => {
+    console.log(`\n[${index + 1}/${plan.batches.length}] ${batch.join(', ')}`);
+    const waitMs = nextBatchStart - performance.now();
+    if (!plan.dryRun && waitMs > 0) {
+      console.log(`Waiting ${Math.ceil(waitMs / 1000)} seconds before the next function batch.`);
+      await delay(waitMs);
+    }
+    nextBatchStart = performance.now() + batchIntervalMs;
+    return deploy(batch.map((name) => `functions:${name}`).join(','));
   });
   if (result.remaining.length) {
     console.error('\nStopped after a failed batch. Earlier successful batches do not need another deployment.');
-    console.error(`Retry the unfinished batches: npm run deploy:functions -- ${result.remaining.join(' ')}`);
-  } else if (!plan.dryRun) console.log('\nAll requested function updates completed.');
+    const flags = [`--batch-size=${plan.batchSize}`, ...(plan.withApp ? ['--with-app'] : [])];
+    console.error(`Retry the unfinished batches: npm run deploy:functions -- ${[...flags, ...result.remaining].join(' ')}`);
+  } else {
+    if (!plan.dryRun) console.log('\nAll requested function updates completed.');
+    if (plan.withApp) {
+      console.log('\nDeploying Firestore, Storage, and Hosting.');
+      result.status = await deploy('firestore,storage,hosting');
+      if (result.status) console.error(`Retry only the app resources: firebase deploy --project ${project} --only firestore,storage,hosting`);
+    }
+  }
   process.exitCode = result.status;
 }
 
