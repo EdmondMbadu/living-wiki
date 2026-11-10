@@ -41,6 +41,20 @@ function harness(): any {
 }
 
 describe('published board Studio saves', () => {
+  it('requests each card’s saved narrator for a full video', async () => {
+    const c = harness();
+    const flamingo = { id: 'flamingo', title: 'Flamingo', notes: 'I balance on one leg.', narratorVoiceId: 'personal-voice:flamingo' };
+    const lion = { id: 'lion', title: 'Lion', notes: 'Listen to my pride.', narratorVoiceId: 'personal-voice:lion' };
+    c.ensureTourAudioUrl = jasmine.createSpy('speech').and.resolveTo('https://example.com/narration.mp3');
+    const narration = await c.stackVideoNarration([flamingo, lion, board.cards[0]], board);
+    expect(narration.cardAudioUrls.length).toBe(3);
+    expect(c.ensureTourAudioUrl.calls.allArgs().map((args: unknown[]) => args.slice(2, 6))).toEqual([
+      ['personal-voice:flamingo', board.id, 'stack-video', 'flamingo'],
+      ['personal-voice:lion', board.id, 'stack-video', 'lion'],
+      ['calm-documentary', board.id, 'stack-video', 'case-1'],
+    ]);
+  });
+
   it('uploads only the changed cover and writes its download URL without touching legacy content', async () => {
     const c = harness();
     const previous = { ...board, description: 'Legacy text. '.repeat(40), logoUrl: 'data:image/png;base64,old-logo',

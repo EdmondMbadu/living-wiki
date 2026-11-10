@@ -89,6 +89,10 @@ export function normalizeStackNarratorVoiceId(value: unknown): string {
     : DEFAULT_STACK_NARRATOR_VOICE_ID;
 }
 
+export function stackCardNarratorId(cardVoice?: string, boardVoice?: string, teamId?: string): string | undefined {
+  return (!teamId && cardVoice) || boardVoice;
+}
+
 export function stackNarratorVoiceRequiresPaidPlan(value: unknown): boolean {
   // Every signed-in account receives one personal voice. Membership controls
   // how many voices can be created, not whether an existing voice can be used.

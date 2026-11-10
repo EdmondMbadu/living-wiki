@@ -10,7 +10,9 @@ describe('Live contact ending playback', () => {
     notes: 'Ask Alex about a showing.', stackNarration: 'Call Alex.',
     contactDetails: { name: 'Alex', phone: '2125550100', email: 'alex@example.com' } };
 
-  function harness(room = { id: 'room', title: 'Kitchen' }) {
+  function harness(room: {
+    id: string; title: string; tags?: string[]; notes?: string; imageUrls?: string[]; narratorVoiceId?: string;
+  } = { id: 'room', title: 'Kitchen' }) {
     const c: any = Object.create(BoardsComponent.prototype);
     const frames = buildStackStoryFrames([room, contact], false, contact)
       .map((frame, index, all) => ({ ...frame, index, total: all.length }));
@@ -71,6 +73,20 @@ describe('Live contact ending playback', () => {
       tags: ['real-estate', 'story-intro'], notes: 'Come see what makes this home special.',
       shortSummary: 'An earlier welcome message.',
     })).toBe('Come see what makes this home special.');
+  });
+
+  it('uses the card narrator when assigned and the board narrator on the next card', async () => {
+    const card = { id: 'flamingo', title: 'Flamingo', tags: [], notes: 'I balance on one leg.',
+      narratorVoiceId: 'personal-voice:flamingo' };
+    const { c } = harness(card);
+    await c.replayStackCardNarration(card);
+    await settle();
+    expect(c.ensureTourAudioUrl.calls.mostRecent().args.slice(1, 6))
+      .toEqual(['I balance on one leg.', 'personal-voice:flamingo', 'board', 'tour', 'flamingo']);
+    c.nextStackFrame();
+    await settle();
+    expect(c.ensureTourAudioUrl.calls.mostRecent().args.slice(1, 6))
+      .toEqual(['Call Alex.', 'voice', 'board', 'tour', 'contact']);
   });
 
   it('uses authored display text independently of what the card says aloud', () => {

@@ -70,6 +70,7 @@ import { generateQrSvgDataUrl } from '../qr-code';
 import { publicBoardQrUrl } from '../board-qr-code';
 import { CardShareDialogComponent } from './card-share-dialog';
 import { CardFocusDialogComponent } from './card-focus-dialog';
+import { StudioVoiceDesigner } from './studio-voice-designer';
 import { directLiveCard } from './card-share';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 import { WorkspaceSidebarComponent } from '../workspace-sidebar/workspace-sidebar';
@@ -378,6 +379,7 @@ import {
   filterStackNarratorVoices,
   isPersonalStackNarratorVoiceId,
   normalizeStackNarratorVoiceId,
+  stackCardNarratorId,
   personalStackNarratorVoiceId,
   personalVoiceIdFromStackNarrator,
   stackNarratorVoiceRequiresPaidPlan,
@@ -486,6 +488,7 @@ type StackScriptCardDraft = {
   narration: string;
   // Undefined keeps the saved value. An empty edit restores the automatic preview.
   liveDisplayText?: string;
+  narratorVoiceId?: string;
 };
 type StackLinkShareTarget = Extract<ShareTarget, 'x' | 'facebook' | 'linkedin' | 'reddit' | 'whatsapp'> | 'more';
 type StackVideoPair = Record<StackDeliveryRatio, StackVideoResult>;
@@ -571,6 +574,7 @@ type BoardCard = {
   mediaKind?: BoardMediaKind;
   shortSummary?: string;
   liveDisplayText?: string;
+  narratorVoiceId?: string;
   rank?: number;
   nearby?: NearbyGemCardMetrics;
   contactDetails?: ListingContactData;
@@ -1734,7 +1738,7 @@ type BoardLoadContext = {
 
 @Component({
   selector: 'app-boards',
-  imports: [LiveLanguageDialogComponent, BoardVisibilityControlComponent, ListingLiveClosingComponent, PlacePhotoDirective, RealEstateWizardSourceComponent, ListingPhotoSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective, CardShareDialogComponent, CardFocusDialogComponent],
+  imports: [StudioVoiceDesigner, LiveLanguageDialogComponent, BoardVisibilityControlComponent, ListingLiveClosingComponent, PlacePhotoDirective, RealEstateWizardSourceComponent, ListingPhotoSourceComponent, TeamContactComponent, TalkDropComponent, WorkspaceSidebarComponent, MobileMenuComponent, ThemeToggleComponent, AccountMenuComponent, RouterLink, BoardCollectionCreateComponent, BoardCollectionListComponent, CustomPublicUrlDialogComponent, BoardPromoImageDialogComponent, NearbyGemsBoardComponent, TalkingCardEditorComponent, TalkingCardConversationComponent, BackdropDismissDirective, CardShareDialogComponent, CardFocusDialogComponent],
   providers: [DocxExportService],
   templateUrl: './boards.html',
   styleUrls: ['../teams/team-board-context.css', './boards.css', './boards-mobile-create.css', './tour-experience.css', './board-wizard-drafts.css', './board-wizard-media-mode.css', './board-narration-style.css', './board-wizard-redesign.css', './real-estate-wizard-modal.css', './card-image-tools.css', './wizard-card-editor.css', './youtube-video.css', './board-live-entry.css', './board-learning.css', './tour-order.css', './tour-stop-editor.css', './stack-audio.css', './stack-voice.css', './stack-script.css', './stack-listing-groups.css', './listing-contact-card.css', './listing-talking-card.css', './card-type-chooser.css', './stack-cover-final.css', './stack-doc-export.css', './stack-studio-redesign.css', './board-city-tag.css', './board-custom-link.css', './nearby-gems-gallery.css', './talking-card.css', './board-settings.css', './live-language.css', './talk-drop/board-talk-drop.css'],
@@ -2340,6 +2344,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   @ViewChild('stackVoiceLibrary')
   private stackVoiceLibrary?: ElementRef<HTMLElement>;
 
+  @ViewChild(StudioVoiceDesigner)
+  private studioVoiceDesigner?: StudioVoiceDesigner;
+
   @ViewChild('tourMapCanvas')
   set tourMapCanvasRef(value: ElementRef<HTMLElement> | undefined) {
     const nextElement = value?.nativeElement ?? null;
@@ -2918,6 +2925,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly stackVoiceLibrarySearchQuery = signal('');
   readonly stackVoiceLibraryFilter = signal<StackVoiceLibraryFilter>('All');
   readonly stackSoundTab = signal<StackSoundTab>('voice');
+  readonly stackVoiceTabVisited = signal(false);
   readonly stackScriptBoardTitle = signal('');
   readonly stackScriptBoardDescription = signal('');
   readonly stackScriptCardDrafts = signal<Record<string, StackScriptCardDraft>>({});
@@ -3823,13 +3831,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     );
   });
   readonly stackVisibleNarratorVoices = computed(() => this.stackFilteredNarratorVoices());
-  readonly stackSelectedNarratorName = computed(() =>
-    !this.stackVideoNarrationEnabled()
-      ? $localize`No narration`
-      : this.stackBoard()?.teamId ? this.stackBoard()?.teamVoiceName || 'Team voice'
+  readonly stackBoardNarratorName = computed(() =>
+    this.stackBoard()?.teamId ? this.stackBoard()?.teamVoiceName || 'Team voice'
       : isPersonalStackNarratorVoiceId(this.stackNarratorVoiceId())
       ? this.personalVoiceForNarratorId(this.stackNarratorVoiceId())?.name || $localize`Your voice`
       : this.stackSelectedNarratorVoice()?.name || $localize`Warm Storyteller`,
+  );
+  readonly stackSelectedNarratorName = computed(() =>
+    this.stackVideoNarrationEnabled() ? this.stackBoardNarratorName() : $localize`No narration`,
   );
   readonly personalVoiceEligible = computed(() =>
     this.teamContextId() ? true : this.personalVoiceServerEligible()
@@ -11585,8 +11594,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const audioUrl = await this.ensureTourAudioUrl(
       this.tourAudioKey(frame),
       text,
-      this.selectedBoard()?.stackNarratorVoiceId,
-      this.selectedBoard()?.id,
+      stackCardNarratorId(frame.card.narratorVoiceId, this.selectedBoard()?.stackNarratorVoiceId, this.selectedBoard()?.teamId),
+      boardId,
       'tour',
       frame.card.id,
     );
@@ -14980,7 +14989,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const text = this.stackNarrationTextForTourFrame(tour).trim();
     if (!text) return;
     void this.ensureTourAudioUrl(tour.card.tour ? this.tourAudioKey(tour) : this.stackCardAudioKey(tour.card), text,
-      this.stackNarratorVoiceId(), this.selectedBoard()?.id, 'tour', tour.card.id, false, true);
+      stackCardNarratorId(tour.card.narratorVoiceId, this.stackNarratorVoiceId(), this.selectedBoard()?.teamId),
+      this.selectedBoard()?.id, 'tour', tour.card.id, false, true);
   }
 
   toggleBoardTranslationMenu(): void {
@@ -15322,7 +15332,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   private buildBoardCopy(board: Board, now: string, title: string, isFork: boolean, childBoards?: Map<string, Board>): Board {
-    const cards = board.cards.map((card) => this.duplicateCardWithBoardInside(card, now, true, childBoards));
+    const cards = board.cards.map((card) => {
+      const copy = this.duplicateCardWithBoardInside(card, now, true, childBoards);
+      return isFork && isPersonalStackNarratorVoiceId(copy.narratorVoiceId) ? { ...copy, narratorVoiceId: '' } : copy;
+    });
     const copiedCards = this.remapCopiedTourLegs(board.cards, cards);
     const forked: Board = {
       ...board,
@@ -16336,7 +16349,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   setStackSoundTab(tab: StackSoundTab): void {
     this.stopStackAudioPreview();
     this.stopStackVoicePreview();
+    this.studioVoiceDesigner?.pausePreviews();
     this.stackScriptShortenMenuOpen.set(false);
+    if (tab === 'voice') this.stackVoiceTabVisited.set(true);
     this.stackSoundTab.set(tab);
   }
 
@@ -16355,6 +16370,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   updateStackScriptCard<K extends keyof StackScriptCardDraft>(cardId: string, field: K, value: StackScriptCardDraft[K]): void {
+    if (field === 'narratorVoiceId') {
+      this.stopStackVoicePreview();
+      this.stopStackPlayback();
+    }
     if (field === 'narration') {
       this.stopStackPlayback();
       this.clearStackScriptShortenUndo();
@@ -16367,6 +16386,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         subtitle: drafts[cardId]?.subtitle ?? '',
         narration: drafts[cardId]?.narration ?? '',
         liveDisplayText: drafts[cardId]?.liveDisplayText,
+        narratorVoiceId: drafts[cardId]?.narratorVoiceId,
         [field]: value,
       },
     }));
@@ -16383,6 +16403,20 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   stackScriptDisplayText(board: Board, card: BoardCard): string {
     return this.stackScriptCardDrafts()[card.id]?.liveDisplayText ?? this.stackCardSummary(board, card);
+  }
+
+  stackScriptCardVoice(card: BoardCard): string {
+    return this.stackScriptCardDrafts()[card.id]?.narratorVoiceId ?? card.narratorVoiceId ?? '';
+  }
+
+  studioVoiceLibraryUpdated(response: PersonalNarratorVoiceResponse): void {
+    this.applyPersonalNarratorVoiceResponse(response);
+  }
+
+  studioVoicePreviewStarted(): void {
+    this.stopStackVoicePreview();
+    this.stopStackAudioPreview();
+    this.stopStackPlayback();
   }
 
   stackScriptNarration(card: BoardCard): string {
@@ -16410,6 +16444,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.updateStackScriptCard(card.id, 'title', card.title);
     this.updateStackScriptCard(card.id, 'subtitle', card.subtitle);
     this.updateStackScriptCard(card.id, 'liveDisplayText', undefined);
+    if (this.stackScriptCardDrafts()[card.id]?.narratorVoiceId !== undefined) {
+      this.updateStackScriptCard(card.id, 'narratorVoiceId', undefined);
+    }
     this.updateStackScriptCard(card.id, 'narration', card.tour?.guideScript || this.persistedStackCardNarrationText(card) || '');
   }
 
@@ -16608,22 +16645,23 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (!this.isBrowser || !board || !text) return;
     if (this.stackScriptPreviewLoadingCardId() === card.id || this.stackVoicePreviewingId() === `studio-script:${card.id}`) {
       this.stopStackVoicePreview();
-      this.stackScriptPreviewLoadingCardId.set(null);
       return;
     }
     this.stopStackVoicePreview();
+    const run = this.stackVoicePreviewRun;
     this.stackScriptPreviewLoadingCardId.set(card.id);
     this.stackScriptError.set(null);
     try {
       const url = await this.ensureTourAudioUrl(
         `stack-script-preview:${card.id}:r${Math.max(0, Math.trunc(card.videoNarrationRevision ?? 0))}:${text}`,
         text,
-        this.stackNarratorVoiceId(),
+        stackCardNarratorId(this.stackScriptCardVoice(card), this.stackNarratorVoiceId(), board.teamId),
         board.id,
-        'stack-video',
+        board.teamId ? 'stack-video' : 'tour',
         card.id,
         true,
       );
+      if (run !== this.stackVoicePreviewRun) return;
       if (!url) throw new Error('Preview audio was not returned.');
       const audio = new Audio(url);
       audio.preload = 'auto';
@@ -16634,11 +16672,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       };
       this.stackVoicePreview = audio;
       await audio.play();
-      this.stackVoicePreviewingId.set(`studio-script:${card.id}`);
+      if (run === this.stackVoicePreviewRun) this.stackVoicePreviewingId.set(`studio-script:${card.id}`);
     } catch (error) {
-      this.stackScriptError.set(error instanceof Error ? error.message : $localize`This script preview could not be played.`);
+      if (run === this.stackVoicePreviewRun) {
+        this.stackScriptError.set(error instanceof Error ? error.message : $localize`This script preview could not be played.`);
+      }
     } finally {
-      this.stackScriptPreviewLoadingCardId.set(null);
+      if (run === this.stackVoicePreviewRun) this.stackScriptPreviewLoadingCardId.set(null);
     }
   }
 
@@ -16674,7 +16714,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       const url = await this.ensureTourAudioUrl(
         `stack-video:${savedCard.id}:r${revision}:${savedText}`,
         savedText,
-        this.stackNarratorVoiceId(),
+        stackCardNarratorId(savedCard.narratorVoiceId, this.stackNarratorVoiceId(), nextBoard.teamId),
         nextBoard.id,
         'stack-video',
         savedCard.id,
@@ -16733,9 +16773,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         const liveDisplayText = draft.liveDisplayText === undefined
           ? card.liveDisplayText
           : liveCardDisplayExcerpt(draft.liveDisplayText);
+        const narratorVoiceId = board.teamId ? card.narratorVoiceId : draft.narratorVoiceId ?? card.narratorVoiceId;
+        const voiceEdit = narratorVoiceId !== undefined ? { narratorVoiceId } : {};
         const previousNarration = card.tour?.guideScript || this.persistedStackCardNarrationText(card);
         if (title === card.title && subtitle === card.subtitle && narration === previousNarration) {
-          return (liveDisplayText ?? '') === (card.liveDisplayText ?? '') ? card : { ...card, liveDisplayText, updatedAt: now };
+          return (liveDisplayText ?? '') === (card.liveDisplayText ?? '')
+            && (narratorVoiceId ?? '') === (card.narratorVoiceId ?? '')
+            ? card
+            : { ...card, ...voiceEdit, liveDisplayText, updatedAt: now };
         }
         const notes = card.tour ? card.notes : narration;
         const isContactCard = this.isListingContactCard(card) && !card.tour;
@@ -16748,6 +16793,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           subtitle,
           notes,
           liveDisplayText,
+          ...voiceEdit,
           shortSummary: cardSummaryAfterEdit(card, notes, subtitle),
           tour: card.tour ? { ...card.tour, guideScript: narration } : card.tour,
           ...(isContactCard ? {
@@ -17287,6 +17333,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   async toggleStackVoicePreview(voice: StackNarratorVoice, event?: Event): Promise<void> {
     event?.preventDefault();
     event?.stopPropagation();
+    this.studioVoiceDesigner?.pausePreviews();
     if (!this.isBrowser) return;
     if (this.isStackVoicePreviewing(voice.id)) {
       this.stopStackVoicePreview();
@@ -17353,6 +17400,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     }
     this.stackVoicePreviewingId.set(null);
     this.stackVoicePreviewLoadingId.set(null);
+    this.stackScriptPreviewLoadingCardId?.set(null);
   }
 
   openPersonalVoiceSetup(voice: PersonalNarratorVoice | null = null): void {
@@ -17534,17 +17582,46 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   async deletePersonalNarratorVoice(board: Board, voice: PersonalNarratorVoice): Promise<void> {
     if (this.personalVoiceDeleting() || !this.isBrowser) return;
-    const confirmed = window.confirm(`Permanently delete “${voice.name}” and its source recording? Boards using this voice will return to Warm Storyteller.`);
+    const confirmed = window.confirm(voice.source === 'designed'
+      ? `Permanently delete “${voice.name}”? Cards using it will return to their board voice.`
+      : `Permanently delete “${voice.name}” and its source recording? Cards using it will return to their board voice.`);
     if (!confirmed) return;
     this.personalVoiceDeleting.set(true);
     this.personalVoiceDeletingId.set(voice.id);
     this.personalVoiceError.set(null);
     this.stopStackVoicePreview();
     try {
+      const removedIds = new Set([personalStackNarratorVoiceId(voice.id)]);
+      if (voice.id === this.personalVoiceDefaultId()) removedIds.add(PERSONAL_STACK_NARRATOR_VOICE_ID);
+      const usesDeletedVoice = (id?: string) => !!id && removedIds.has(id);
       this.applyPersonalNarratorVoiceResponse(await this.personalVoiceService.deleteVoice(voice.id));
       this.personalVoiceSetupOpen.set(false);
-      if (this.personalVoiceSelected(voice)) {
-        this.selectStackNarratorVoice(board, DEFAULT_STACK_NARRATOR_VOICE_ID);
+      const withoutDeletedVoice = <T extends { narratorVoiceId?: string }>(card: T): T =>
+        usesDeletedVoice(card.narratorVoiceId) ? { ...card, narratorVoiceId: '' } : card;
+      const uid = this.authService.uid();
+      this.boards.update((boards) => boards.map((item) => {
+        if (item.ownerUserId !== uid) return item;
+        const cards = item.cards.map(withoutDeletedVoice);
+        const resetDefault = usesDeletedVoice(item.stackNarratorVoiceId);
+        if (!resetDefault && cards.every((card, index) => card === item.cards[index])) return item;
+        return {
+          ...item,
+          cards,
+          ...invalidatedNarrationMedia(),
+          stackNarratorVoiceId: resetDefault ? DEFAULT_STACK_NARRATOR_VOICE_ID : item.stackNarratorVoiceId,
+        };
+      }));
+      if (this.stackBoard()?.id === board.id) {
+        this.stackScriptCardDrafts.update((drafts) => Object.fromEntries(Object.entries(drafts).map(([id, draft]) => [
+          id, withoutDeletedVoice(draft),
+        ])));
+        // Apply the server's deletion to the saved baseline while preserving other pending edits.
+        this.stackScriptOriginalSnapshot.update((value) => {
+          if (!value) return value;
+          const snapshot = JSON.parse(value) as { cards: Array<{ narratorVoiceId?: string }> };
+          return JSON.stringify({ ...snapshot, cards: snapshot.cards.map(withoutDeletedVoice) });
+        });
+        if (usesDeletedVoice(this.stackNarratorVoiceId())) this.stackNarratorVoiceId.set(DEFAULT_STACK_NARRATOR_VOICE_ID);
       }
     } catch (error) {
       this.personalVoiceError.set(this.cardImageActionErrorMessage(error, $localize`Your personal voice could not be deleted.`));
@@ -17571,6 +17648,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   async togglePersonalVoicePreview(board: Board, voice: PersonalNarratorVoice, event?: Event): Promise<void> {
     event?.preventDefault();
     event?.stopPropagation();
+    this.studioVoiceDesigner?.pausePreviews();
     if (!this.isBrowser) return;
     const narratorVoiceId = this.personalNarratorId(voice);
     if (this.isStackVoicePreviewing(narratorVoiceId)) {
@@ -18068,7 +18146,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   stackCardNarrationLoading(card: BoardCard): boolean {
     return this.tourAudioLoadingKey() === this.narrationAudioRequestKey(
       this.stackCardAudioKey(card),
-      this.stackNarratorVoiceId(),
+      stackCardNarratorId(card.narratorVoiceId, this.stackNarratorVoiceId(), this.stackBoard()?.teamId),
       this.stackCardNarrationText(card),
     );
   }
@@ -18203,7 +18281,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const frame = this.stackTourFrameFromStackFrame(this.stackCurrentFrame());
     return !!frame && this.tourAudioLoadingKey() === this.narrationAudioRequestKey(
       this.tourAudioKey(frame),
-      this.stackNarratorVoiceId(),
+      stackCardNarratorId(frame.card.narratorVoiceId, this.stackNarratorVoiceId(), this.stackBoard()?.teamId),
       this.stackNarrationTextForTourFrame(frame),
     );
   }
@@ -19038,7 +19116,6 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
 
   private async stackVideoNarration(cards: BoardCard[], board: Board): Promise<StackVideoNarration | null> {
     if (!cards.length) return null;
-    const voiceId = this.stackNarratorVoiceId();
     const cardAudioUrls: Array<string | null> = Array.from({ length: cards.length }, () => null);
     const batchSize = 4;
     for (let offset = 0; offset < cards.length; offset += batchSize) {
@@ -19049,7 +19126,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           const url = await this.ensureTourAudioUrl(
             `stack-video:${card.id}:r${Math.max(0, Math.trunc(card.videoNarrationRevision ?? 0))}:${text}`,
             text,
-            voiceId,
+            stackCardNarratorId(card.narratorVoiceId, this.stackNarratorVoiceId(), board.teamId),
             board.id,
             'stack-video',
             card.id,
@@ -19504,6 +19581,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.stackAudioError.set(null);
     this.stackVoiceError.set(null);
     this.stackSoundTab.set('script');
+    this.stackVoiceTabVisited.set(false);
     this.personalVoiceSetupOpen.set(false);
     this.personalVoiceError.set(null);
     this.stackFrameIndex.set(0);
@@ -19632,6 +19710,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         title: drafts[card.id]?.title ?? card.title,
         subtitle: drafts[card.id]?.subtitle ?? card.subtitle,
         liveDisplayText: drafts[card.id]?.liveDisplayText ?? card.liveDisplayText ?? '',
+        narratorVoiceId: drafts[card.id]?.narratorVoiceId ?? card.narratorVoiceId ?? '',
         narration: drafts[card.id]?.narration ?? (card.tour?.guideScript || this.persistedStackCardNarrationText(card) || ''),
       })),
     });
@@ -20138,8 +20217,9 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const frameKey = this.stackTourFrameKey(frame);
     this.stackActiveFrameDurationMs.set(120_000);
     const audioKey = frame.card.tour ? this.tourAudioKey(frame) : this.stackCardAudioKey(frame.card);
-    const boardId = this.stackBoard()?.id || this.selectedBoard()?.id;
-    const audioUrl = await this.ensureTourAudioUrl(audioKey, text, this.stackNarratorVoiceId(), boardId, 'tour', frame.card.id);
+    const board = this.stackBoard() ?? this.selectedBoard();
+    const voiceId = stackCardNarratorId(frame.card.narratorVoiceId, this.stackNarratorVoiceId(), board?.teamId);
+    const audioUrl = await this.ensureTourAudioUrl(audioKey, text, voiceId, board?.id, 'tour', frame.card.id);
     const currentTourFrame = this.stackTourFrameFromStackFrame(this.stackCurrentFrame());
     if (!this.isStackNarrationCurrent(token, frameKey)
       || this.boardSpeechLanguage() !== narrationLanguage
@@ -20308,12 +20388,12 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     const audioKey = tourFrame.card.tour
       ? this.tourAudioKey(tourFrame)
       : this.stackCardAudioKey(tourFrame.card);
-    const boardId = this.stackBoard()?.id || this.selectedBoard()?.id;
+    const board = this.stackBoard() ?? this.selectedBoard();
     void this.ensureTourAudioUrl(
       audioKey,
       text,
-      this.stackNarratorVoiceId(),
-      boardId,
+      stackCardNarratorId(tourFrame.card.narratorVoiceId, this.stackNarratorVoiceId(), board?.teamId),
+      board?.id,
       'tour',
       tourFrame.card.id,
       false,
@@ -24187,6 +24267,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       mediaKind: this.isBoardMediaKind(data['mediaKind']) ? data['mediaKind'] : 'none',
       shortSummary: typeof data['shortSummary'] === 'string' ? data['shortSummary'] : (typeof data['subtitle'] === 'string' ? data['subtitle'] : ''),
       ...(typeof data['liveDisplayText'] === 'string' ? { liveDisplayText: data['liveDisplayText'] } : {}),
+      ...(typeof data['narratorVoiceId'] === 'string' && normalizeStackNarratorVoiceId(data['narratorVoiceId']) === data['narratorVoiceId']
+        ? { narratorVoiceId: data['narratorVoiceId'] } : {}),
       rank: typeof data['rank'] === 'number' ? Math.max(0, Math.min(100, Math.trunc(data['rank']))) : this.rankFromTags(data['tags']),
       nearby: this.normalizeNearbyGemMetrics(data['nearby']),
       contactDetails: this.normalizeListingContactData(data['contactDetails']),

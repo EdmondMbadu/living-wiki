@@ -5,6 +5,7 @@ import { ref as storageRef, uploadBytesResumable } from 'firebase/storage';
 import { AuthService } from './auth.service';
 import { getFirebaseFunctions, getFirebaseStorage } from './firebase.client';
 import { personalStackNarratorVoiceId } from './boards/stack-voice';
+import type { ContentLanguage } from '../../functions/src/content-language';
 
 export interface PersonalVoice {
   id: string;
@@ -15,6 +16,14 @@ export interface PersonalVoice {
   updatedAt: string;
   sampleDurationSeconds: number | null;
   voiceRevision: number;
+  source?: 'recorded' | 'designed';
+  designLanguage?: ContentLanguage | null;
+}
+
+export interface StudioVoiceDesign {
+  sessionId: string;
+  previewText: string;
+  previews: Array<{ index: number; audioBase64: string; contentType: string }>;
 }
 
 export interface PersonalVoiceLibrary {
@@ -135,6 +144,20 @@ export class PersonalVoiceService {
     );
     const { data } = await callable({});
     return normalizePersonalVoiceLibrary(data);
+  }
+
+  async designStudioVoice(description: string, language: ContentLanguage): Promise<StudioVoiceDesign> {
+    const callable = httpsCallable<{ description: string; language: ContentLanguage }, StudioVoiceDesign>(
+      this.requireFunctions(), 'designStudioNarratorVoice', { timeout: 120_000 },
+    );
+    return (await callable({ description, language })).data;
+  }
+
+  async saveStudioVoice(sessionId: string, index: number, name: string): Promise<PersonalVoiceLibrary> {
+    const callable = httpsCallable<{ sessionId: string; index: number; name: string }, PersonalVoiceLibraryWireResponse>(
+      this.requireFunctions(), 'saveStudioNarratorVoice', { timeout: 120_000 },
+    );
+    return normalizePersonalVoiceLibrary((await callable({ sessionId, index, name })).data);
   }
 
   async createVoice(input: CreatePersonalVoiceInput): Promise<PersonalVoiceLibrary> {

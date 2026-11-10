@@ -213,7 +213,8 @@
 .stack-script-intro__fields input,
 .stack-script-intro__fields textarea,
 .stack-script-card__editor input,
-.stack-script-card__editor textarea {
+.stack-script-card__editor textarea,
+.stack-script-card__editor select {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
@@ -235,7 +236,8 @@
 .stack-script-intro__fields input:focus,
 .stack-script-intro__fields textarea:focus,
 .stack-script-card__editor input:focus,
-.stack-script-card__editor textarea:focus {
+.stack-script-card__editor textarea:focus,
+.stack-script-card__editor select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent);
 }

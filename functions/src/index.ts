@@ -1,6 +1,7 @@
 import { CityWeeklyUpdates, cityUpdatePages, cityUpdateWeek, publicCity } from './city-weekly-updates';
 import { normalizeSponsorship, resolveSponsorship, sponsorshipEmail, type Sponsorship } from './talking-card-sponsorship';
 import { contentLanguageVoicePreference } from './content-language';
+import { invalidatedNarrationMedia } from './card-narration';
 import { issuePicamoVoice } from './picamo-analytics';
 export { getPicamoAnalytics, recordPicamoAssistantInteraction, syncPicamoVoiceAnalytics } from './picamo-analytics';
 export { avatarQaCommand, prepareAvatarQaRun, runAvatarQaCase, recoverAvatarQaCases } from './avatar-qa';
@@ -245,7 +246,6 @@ import {
   normalizeBoardNarrationSeconds,
 } from './board-narration-length';
 import {
-  allowedStoredTourHandoffTexts,
   effectiveStoredTourHandoffText,
   isGenericStoredTourHandoffScript,
   storedTourHandoffCard,
@@ -262,7 +262,10 @@ import {
   cityPlaceSearchGoogleResultLimit,
 } from './city-place-search';
 import {
+  boardAllowsNarrationText,
+  normalizeNarrationAuthorizationText,
   normalizeNarrationSpeechText as normalizeSpeechText,
+  publicNarratorCardScope,
   sharedStackNarrationCacheMode,
   shouldUseProviderVoicePreviewUrl,
   stackTrailerNarrationMatchesPreparedScript,
@@ -16148,6 +16151,110 @@ function validateAtlasVoiceDesignInput(data: unknown, atlasName: string): {
   return { description, previewText, modelId };
 }
 
+async function reserveVoiceDesignGeneration(
+  rateRef: FirebaseFirestore.DocumentReference,
+  scope: Record<string, string>,
+): Promise<void> {
+  const nowMs = Date.now();
+  await db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(rateRef);
+    const previousMs = Number(snapshot.data()?.last_generated_at_ms ?? 0);
+    if (Number.isFinite(previousMs) && nowMs - previousMs < atlasSpeechVoiceDesignCooldownMs) {
+      throw new HttpsError('resource-exhausted', 'Wait a few seconds before generating another set of voices.');
+    }
+    const storedWindowStartMs = Number(snapshot.data()?.window_started_at_ms ?? 0);
+    const currentWindow = Number.isFinite(storedWindowStartMs)
+      && storedWindowStartMs > 0
+      && nowMs - storedWindowStartMs < atlasSpeechVoiceDesignRateWindowMs;
+    const windowStartedAtMs = currentWindow ? storedWindowStartMs : nowMs;
+    const windowCount = currentWindow ? Number(snapshot.data()?.window_count ?? 0) : 0;
+    if (Number.isFinite(windowCount) && windowCount >= atlasSpeechVoiceDesignRateWindowMax) {
+      throw new HttpsError(
+        'resource-exhausted',
+        'The hourly voice design limit has been reached. Try again later.',
+      );
+    }
+    transaction.set(rateRef, {
+      ...scope,
+      last_generated_at_ms: nowMs,
+      window_started_at_ms: windowStartedAtMs,
+      window_count: (Number.isFinite(windowCount) ? windowCount : 0) + 1,
+      updated_at: FieldValue.serverTimestamp(),
+    }, { merge: true });
+  });
+}
+
+async function generateElevenLabsVoiceDesign(
+  description: string,
+  previewText: string | null,
+  modelId: 'eleven_multilingual_ttv_v2' | 'eleven_ttv_v3',
+  scope: Record<string, string>,
+) {
+  const apiKey = elevenLabsApiKey.value();
+  if (!apiKey) {
+    throw new HttpsError('failed-precondition', 'ElevenLabs is not configured.');
+  }
+  const designUrl = new URL('https://api.elevenlabs.io/v1/text-to-voice/design');
+  designUrl.searchParams.set('output_format', 'mp3_22050_32');
+  let response: Response;
+  try {
+    response = await fetchWithTimeout(designUrl.toString(), {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        voice_description: description,
+        ...(previewText ? { text: previewText } : { auto_generate_text: true }),
+        model_id: modelId,
+        stream_previews: false,
+        should_enhance: true,
+        guidance_scale: 5,
+      }),
+    }, elevenLabsVoiceDesignRequestTimeoutMs);
+  } catch (error) {
+    logger.warn('ElevenLabs voice design request failed.', {
+      ...scope,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    throw new HttpsError('unavailable', 'Voice design is temporarily unavailable. Try again shortly.');
+  }
+  if (!response.ok) {
+    const body = (await response.text().catch(() => '')).slice(0, 500);
+    logger.warn('ElevenLabs voice design rejected.', { ...scope, status: response.status, body });
+    throw new HttpsError(
+      response.status === 429 ? 'resource-exhausted' : 'failed-precondition',
+      response.status === 429
+        ? 'The voice-design quota is temporarily exhausted. Try again later.'
+        : 'ElevenLabs could not design that voice. Refine the description and try again.',
+    );
+  }
+  const data = await response.json() as { previews?: unknown; text?: unknown };
+  const previews = (Array.isArray(data.previews) ? data.previews : [])
+    .map((value, index) => {
+      const preview = value && typeof value === 'object' ? value as Record<string, unknown> : {};
+      const generatedVoiceId = textValue(preview['generated_voice_id'], 160);
+      const audioBase64 = typeof preview['audio_base_64'] === 'string' ? preview['audio_base_64'] : '';
+      if (!generatedVoiceId || !audioBase64) return null;
+      return {
+        id: generatedVoiceId,
+        audioBase64,
+        contentType: textValue(preview['media_type'], 80) ?? 'audio/mpeg',
+        durationSeconds: Number.isFinite(Number(preview['duration_secs']))
+          ? Number(preview['duration_secs'])
+          : null,
+        label: `Voice ${index + 1}`,
+      };
+    })
+    .filter((value): value is NonNullable<typeof value> => value !== null)
+    .slice(0, 3);
+  if (previews.length === 0) {
+    throw new HttpsError('internal', 'ElevenLabs did not return any voice previews.');
+  }
+  return { previews, previewText: textValue(data.text, atlasSpeechVoicePreviewTextMaxLength) ?? previewText ?? '' };
+}
+
 export const getAtlasSpeechVoiceConfig = onCall({ region: callableRegion, cors: true }, async (request) => {
   if (!request.auth?.uid) {
     throw new HttpsError('unauthenticated', 'Authentication is required.');
@@ -16181,97 +16288,10 @@ export const designAtlasSpeechVoice = onCall(
     const { description, previewText, modelId } = validateAtlasVoiceDesignInput(request.data, atlasName);
     const rateRef = db.collection(atlasSpeechVoiceDesignRateCollection)
       .doc(createHash('sha256').update(`${request.auth.uid}:${atlasId}`).digest('hex'));
-    const nowMs = Date.now();
-    await db.runTransaction(async (transaction) => {
-      const snapshot = await transaction.get(rateRef);
-      const previousMs = Number(snapshot.data()?.last_generated_at_ms ?? 0);
-      if (Number.isFinite(previousMs) && nowMs - previousMs < atlasSpeechVoiceDesignCooldownMs) {
-        throw new HttpsError('resource-exhausted', 'Wait a few seconds before generating another set of voices.');
-      }
-      const storedWindowStartMs = Number(snapshot.data()?.window_started_at_ms ?? 0);
-      const currentWindow = Number.isFinite(storedWindowStartMs)
-        && storedWindowStartMs > 0
-        && nowMs - storedWindowStartMs < atlasSpeechVoiceDesignRateWindowMs;
-      const windowStartedAtMs = currentWindow ? storedWindowStartMs : nowMs;
-      const windowCount = currentWindow ? Number(snapshot.data()?.window_count ?? 0) : 0;
-      if (Number.isFinite(windowCount) && windowCount >= atlasSpeechVoiceDesignRateWindowMax) {
-        throw new HttpsError(
-          'resource-exhausted',
-          'This wiki has reached its hourly voice-design limit. Try again after the current window resets.',
-        );
-      }
-      transaction.set(rateRef, {
-        atlas_id: atlasId,
-        user_id: request.auth!.uid,
-        last_generated_at_ms: nowMs,
-        window_started_at_ms: windowStartedAtMs,
-        window_count: (Number.isFinite(windowCount) ? windowCount : 0) + 1,
-        updated_at: FieldValue.serverTimestamp(),
-      }, { merge: true });
-    });
-
-    const apiKey = elevenLabsApiKey.value();
-    if (!apiKey) {
-      throw new HttpsError('failed-precondition', 'ElevenLabs is not configured.');
-    }
-    const designUrl = new URL('https://api.elevenlabs.io/v1/text-to-voice/design');
-    designUrl.searchParams.set('output_format', 'mp3_22050_32');
-    let response: Response;
-    try {
-      response = await fetchWithTimeout(designUrl.toString(), {
-        method: 'POST',
-        headers: {
-          'xi-api-key': apiKey,
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          voice_description: description,
-          text: previewText,
-          model_id: modelId,
-          stream_previews: false,
-          should_enhance: true,
-          guidance_scale: 5,
-        }),
-      }, elevenLabsVoiceDesignRequestTimeoutMs);
-    } catch (error) {
-      logger.warn('ElevenLabs voice design request failed.', {
-        atlasId,
-        errorMessage: error instanceof Error ? error.message : String(error),
-      });
-      throw new HttpsError('unavailable', 'Voice design is temporarily unavailable. Try again shortly.');
-    }
-    if (!response.ok) {
-      const body = (await response.text().catch(() => '')).slice(0, 500);
-      logger.warn('ElevenLabs voice design rejected.', { atlasId, status: response.status, body });
-      throw new HttpsError(
-        response.status === 429 ? 'resource-exhausted' : 'failed-precondition',
-        response.status === 429
-          ? 'The voice-design quota is temporarily exhausted. Try again later.'
-          : 'ElevenLabs could not design that voice. Refine the description and try again.',
-      );
-    }
-    const data = await response.json() as { previews?: unknown; text?: unknown };
-    const previews = (Array.isArray(data.previews) ? data.previews : [])
-      .map((value, index) => {
-        const preview = value && typeof value === 'object' ? value as Record<string, unknown> : {};
-        const generatedVoiceId = textValue(preview['generated_voice_id'], 160);
-        const audioBase64 = typeof preview['audio_base_64'] === 'string' ? preview['audio_base_64'] : '';
-        if (!generatedVoiceId || !audioBase64) return null;
-        return {
-          id: generatedVoiceId,
-          audioBase64,
-          contentType: textValue(preview['media_type'], 80) ?? 'audio/mpeg',
-          durationSeconds: Number.isFinite(Number(preview['duration_secs']))
-            ? Number(preview['duration_secs'])
-            : null,
-          label: `Voice ${index + 1}`,
-        };
-      })
-      .filter((value): value is NonNullable<typeof value> => value !== null)
-      .slice(0, 3);
-    if (previews.length === 0) {
-      throw new HttpsError('internal', 'ElevenLabs did not return any voice previews.');
-    }
+    const scope = { atlas_id: atlasId, user_id: request.auth.uid };
+    await reserveVoiceDesignGeneration(rateRef, scope);
+    const design = await generateElevenLabsVoiceDesign(description, previewText, modelId, scope);
+    const { previews } = design;
 
     const sessionRef = db.collection(atlasSpeechVoiceDesignSessionCollection).doc();
     await sessionRef.set({
@@ -16289,7 +16309,7 @@ export const designAtlasSpeechVoice = onCall(
     return {
       sessionId: sessionRef.id,
       description,
-      previewText: textValue(data.text, atlasSpeechVoicePreviewTextMaxLength) ?? previewText,
+      previewText: design.previewText,
       previews,
     };
   },
@@ -21048,6 +21068,8 @@ type PersonalNarratorVoiceRecord = {
   created_at?: unknown;
   updated_at?: unknown;
   voice_revision?: unknown;
+  source?: unknown;
+  design_language?: unknown;
 };
 
 function personalNarratorVoiceResponse(
@@ -21062,6 +21084,8 @@ function personalNarratorVoiceResponse(
     narratorVoiceId: `${personalStackNarratorVoiceId}:${voiceId}`,
     name: record.name.slice(0, 48),
     status: 'ready',
+    source: record.source === 'designed' ? 'designed' : 'recorded',
+    designLanguage: isBoardTranslationLanguage(record.design_language) ? record.design_language : null,
     sampleDurationSeconds: typeof record.sample_duration_seconds === 'number'
       ? record.sample_duration_seconds
       : null,
@@ -21316,66 +21340,13 @@ async function deleteElevenLabsPersonalVoice(
   }
 }
 
-function normalizeNarrationAuthorizationText(value: unknown): string {
-  return String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, maxSpeechTextLength);
-}
-
-function personalNarrationTextsFromCard(value: unknown): Set<string> {
-  const card = value && typeof value === 'object' ? value as Record<string, unknown> : {};
-  const allowed = new Set<string>();
-  const add = (candidate: unknown) => {
-    const normalized = normalizeNarrationAuthorizationText(candidate);
-    if (normalized) allowed.add(normalized);
-  };
-  add(card['notes']);
-  add(card['stackNarration']);
-  add(card['shortSummary']);
-  add(card['subtitle']);
-  add(card['title']);
-  if (typeof card['title'] === 'string' && card['title'].trim()) {
-    add(`${card['title'].trim()}.`);
-  }
-
-  const tour = card['tour'] && typeof card['tour'] === 'object'
-    ? card['tour'] as Record<string, unknown>
-    : {};
-  add(tour['guideScript']);
-  const leg = tour['legToNext'] && typeof tour['legToNext'] === 'object'
-    ? tour['legToNext'] as Record<string, unknown>
-    : {};
-  add(leg['navScript']);
-  add(leg['instruction']);
-
-  const title = String(card['title'] ?? '').trim();
-  const detail = String(card['shortSummary'] ?? card['subtitle'] ?? card['notes'] ?? '').trim();
-  const firstSentence = detail.match(/^(.{1,320}?[.!?。！？])(?:\s|$)/u)?.[1] ?? detail.slice(0, 280);
-  add(`${title}. ${firstSentence.trim()}`.trim().slice(0, 420));
-  return allowed;
-}
-
-function boardAllowsNarrationText(
-  board: Record<string, unknown>,
-  text: string,
-  language: BoardTranslationLanguage = 'en',
-): boolean {
-  const requestedText = normalizeNarrationAuthorizationText(text);
-  if (!requestedText) return false;
-  if (normalizeNarrationAuthorizationText(board['trailerVideoScript']) === requestedText) return true;
-  if (!Array.isArray(board['cards'])) return false;
-  if (board['cards'].some((card) => personalNarrationTextsFromCard(card).has(requestedText))) {
-    return true;
-  }
-  return Array.from(allowedStoredTourHandoffTexts(board, language)).some(
-    (handoff) => normalizeNarrationAuthorizationText(handoff) === requestedText,
-  );
-}
-
 async function boardAllowsCachedTranslatedNarration(
   boardId: string,
   board: Record<string, unknown>,
   language: BoardTranslationLanguage,
   text: string,
   cardId: string,
+  restrictToCard = false,
 ): Promise<boolean> {
   const cards = Array.isArray(board['cards']) ? board['cards'] as Array<Record<string, unknown>> : [];
   if (cardId && !cards.some((card) => card['id'] === cardId && card['authorOnly'] !== true)) return false;
@@ -21384,7 +21355,7 @@ async function boardAllowsCachedTranslatedNarration(
     // against current source text before allowing translated narration.
     const translated = await liveNarrationBoard(board, cardId, async (id) =>
       (await db.collection('board_card_translations').doc(liveCardTranslationCacheId(boardId, language, id)).get()).data());
-    if (translated && boardAllowsNarrationText(translated, text, language)) return true;
+    if (translated && boardAllowsNarrationText(translated, text, language, restrictToCard ? cardId : undefined)) return true;
   }
   let source;
   try {
@@ -21420,7 +21391,7 @@ async function boardAllowsCachedTranslatedNarration(
       target[field] = segment.text;
     }
   }
-  return boardAllowsNarrationText(translated, text, language);
+  return boardAllowsNarrationText(translated, text, language, restrictToCard ? cardId : undefined);
 }
 
 export const getPersonalNarratorVoice = onCall(
@@ -21444,6 +21415,215 @@ export const getPersonalNarratorVoice = onCall(
 );
 
 export const listPersonalNarratorVoices = getPersonalNarratorVoice;
+
+function studioVoiceDesignRef(userId: string) {
+  return personalNarratorParentRef(userId).collection('voice_design').doc('current');
+}
+
+export const designStudioNarratorVoice = onCall(
+  { region: callableRegion, timeoutSeconds: 90, memory: '512MiB', cors: true, secrets: [elevenLabsApiKey] },
+  async (request) => {
+    const userId = request.auth?.uid;
+    if (!userId || request.auth?.token.firebase?.sign_in_provider === 'anonymous') {
+      throw new HttpsError('unauthenticated', 'Sign in to design a voice.');
+    }
+    const description = textValue(request.data?.description, 880) ?? '';
+    const language = request.data?.language;
+    if (!description || !isBoardTranslationLanguage(language)) {
+      throw new HttpsError('invalid-argument', 'Describe your voice and choose a narration language.');
+    }
+    const [entitlement, library] = await Promise.all([
+      personalNarratorEligibility(userId),
+      ensurePersonalNarratorVoiceLibrary(userId),
+    ]);
+    if (entitlement.voiceLimit !== null && library.voices.length >= entitlement.voiceLimit) {
+      throw new HttpsError('resource-exhausted', 'Your voice library is full. Free up a slot to design another voice.');
+    }
+    const sessionRef = studioVoiceDesignRef(userId);
+    const sessionId = personalNarratorVoicesRef(userId).doc().id;
+    const previewText = language === 'en'
+      ? 'Welcome! I’m glad you’re here. Come a little closer and look around. There’s always something surprising to discover when you take a moment to notice the details.'
+      : null;
+    const languageName = contentLanguageVoicePreference(language).language;
+    const providerDescription = `Clear, intelligible human speech in ${languageName}. ${description}`;
+    await reserveVoiceDesignGeneration(
+      db.collection(atlasSpeechVoiceDesignRateCollection).doc(createHash('sha256').update(`studio:${userId}`).digest('hex')),
+      { user_id: userId },
+    );
+    const design = await generateElevenLabsVoiceDesign(providerDescription, previewText, 'eleven_multilingual_ttv_v2', {
+      user_id: userId,
+    });
+    await db.runTransaction(async (transaction) => {
+      const current = (await transaction.get(sessionRef)).data();
+      if (current?.['status'] === 'creating' && Number(current['expires_at_ms']) > Date.now()) {
+        throw new HttpsError('aborted', 'A voice is still being saved. Wait for it to finish before generating again.');
+      }
+      transaction.set(sessionRef, {
+        session_id: sessionId,
+        description: providerDescription,
+        language,
+        generated_voice_ids: design.previews.map((preview) => preview.id),
+        status: 'preview',
+        expires_at_ms: Date.now() + atlasSpeechVoiceDesignSessionTtlMs,
+      });
+    });
+    return {
+      sessionId,
+      previewText: design.previewText,
+      previews: design.previews.map(({ audioBase64, contentType }, index) => ({ index, audioBase64, contentType })),
+    };
+  },
+);
+
+export const saveStudioNarratorVoice = onCall(
+  { region: callableRegion, timeoutSeconds: 90, memory: '512MiB', cors: true, secrets: [elevenLabsApiKey] },
+  async (request) => {
+    const userId = request.auth?.uid;
+    if (!userId || request.auth?.token.firebase?.sign_in_provider === 'anonymous') {
+      throw new HttpsError('unauthenticated', 'Sign in to save a voice.');
+    }
+    const sessionId = textValue(request.data?.sessionId, 64) ?? '';
+    const name = textValue(request.data?.name, 48) ?? '';
+    const index = request.data?.index;
+    if (!/^[A-Za-z0-9]{20}$/.test(sessionId) || !name || !Number.isInteger(index) || index < 0 || index > 2) {
+      throw new HttpsError('invalid-argument', 'Choose a voice preview and enter a name.');
+    }
+    const apiKey = elevenLabsApiKey.value();
+    if (!apiKey) throw new HttpsError('failed-precondition', 'ElevenLabs is not configured.');
+    const [entitlement] = await Promise.all([
+      personalNarratorEligibility(userId),
+      ensurePersonalNarratorVoiceLibrary(userId),
+    ]);
+    const parentRef = personalNarratorParentRef(userId);
+    const voicesRef = personalNarratorVoicesRef(userId);
+    const voiceRef = voicesRef.doc(sessionId);
+    const sessionRef = studioVoiceDesignRef(userId);
+    const reservation = await db.runTransaction(async (transaction) => {
+      const voices = await transaction.get(voicesRef);
+      const existing = voices.docs.find((snapshot) => snapshot.id === sessionId)?.data();
+      if (existing?.['status'] === 'ready' && existing['source'] === 'designed') return null;
+      const session = (await transaction.get(sessionRef)).data();
+      const generatedVoiceId = session?.['generated_voice_ids']?.[index];
+      if (!session || session['session_id'] !== sessionId || Number(session['expires_at_ms']) < Date.now()
+        || typeof generatedVoiceId !== 'string') {
+        throw new HttpsError('failed-precondition', 'This preview set has expired. Generate new previews to continue.');
+      }
+      if (session['status'] === 'creating' || existing) {
+        throw new HttpsError('aborted', 'This voice is already being saved. Try again in a moment.');
+      }
+      if (session['status'] !== 'preview') {
+        throw new HttpsError('failed-precondition', 'Generate new previews to save another voice.');
+      }
+      const active = voices.docs.filter((snapshot) => ['ready', 'creating'].includes(snapshot.data()['status']));
+      if (entitlement.voiceLimit !== null && active.length >= entitlement.voiceLimit) {
+        throw new HttpsError('resource-exhausted', 'Your voice library is full. Free up a slot to save this voice.');
+      }
+      transaction.create(voiceRef, {
+        owner_user_id: userId,
+        name,
+        status: 'creating',
+        source: 'designed',
+        design_language: session['language'],
+        created_at: FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
+      });
+      transaction.update(sessionRef, {
+        status: 'creating',
+        expires_at_ms: Date.now() + personalNarratorReservationTtlMs,
+      });
+      transaction.set(parentRef, {
+        owner_user_id: userId,
+        schema_version: 2,
+        voice_count: active.length + 1,
+        updated_at: FieldValue.serverTimestamp(),
+      }, { merge: true });
+      return { generatedVoiceId, description: session['description'], language: session['language'] };
+    });
+
+    if (reservation) {
+      let providerVoiceId = '';
+      try {
+        const response = await fetchWithTimeout('https://api.elevenlabs.io/v1/text-to-voice', {
+          method: 'POST',
+          headers: { 'xi-api-key': apiKey, 'content-type': 'application/json' },
+          body: JSON.stringify({
+            voice_name: name,
+            voice_description: reservation.description,
+            generated_voice_id: reservation.generatedVoiceId,
+            labels: { product: 'LivingWiki', language: reservation.language },
+          }),
+        }, elevenLabsVoiceDesignRequestTimeoutMs);
+        if (!response.ok) {
+          const body = await response.text().catch(() => '');
+          logger.warn('Studio voice save rejected by provider.', { status: response.status, body: body.slice(0, 500) });
+          const atCapacity = response.status === 429 || /voice_limit|voice_slots|voice_capacity/i.test(body);
+          throw new HttpsError(
+            atCapacity ? 'resource-exhausted' : 'failed-precondition',
+            atCapacity ? 'Voice design is at capacity right now. Try again later.'
+              : 'This preview could not be saved. Try another preview or generate a new set.',
+          );
+        }
+        const saved = await response.json() as Record<string, unknown>;
+        providerVoiceId = textValue(saved['voice_id'], 160) ?? '';
+        if (!providerVoiceId) throw new HttpsError('internal', 'The voice provider did not return a saved voice.');
+        await db.runTransaction(async (transaction) => {
+          const [current, parent, session] = await Promise.all([
+            transaction.get(voiceRef), transaction.get(parentRef), transaction.get(sessionRef),
+          ]);
+          if (current.data()?.['status'] !== 'creating'
+            || session.data()?.['session_id'] !== sessionId || session.data()?.['status'] !== 'creating') {
+            throw new HttpsError('aborted', 'The voice reservation expired. Generate new previews and try again.');
+          }
+          transaction.update(voiceRef, {
+            status: 'ready',
+            provider_voice_id: providerVoiceId,
+            voice_revision: 1,
+            updated_at: FieldValue.serverTimestamp(),
+          });
+          transaction.set(sessionRef, { session_id: sessionId, status: 'consumed' });
+          if (!parent.data()?.['default_voice_id']) {
+            transaction.set(parentRef, { default_voice_id: sessionId }, { merge: true });
+          }
+        });
+      } catch (error) {
+        const released = await db.runTransaction(async (transaction) => {
+          const [current, parent, session] = await Promise.all([
+            transaction.get(voiceRef), transaction.get(parentRef), transaction.get(sessionRef),
+          ]);
+          if (current.data()?.['status'] === 'ready') return false;
+          if (current.data()?.['status'] === 'creating') {
+            transaction.delete(voiceRef);
+            transaction.set(parentRef, {
+              voice_count: Math.max(0, Number(parent.data()?.['voice_count'] ?? 1) - 1),
+              updated_at: FieldValue.serverTimestamp(),
+            }, { merge: true });
+          }
+          if (session.data()?.['session_id'] === sessionId && session.data()?.['status'] === 'creating') {
+            transaction.update(sessionRef, { status: 'preview' });
+          }
+          return true;
+        }).catch((cleanupError) => {
+          logger.error('Studio voice reservation cleanup failed.', { cleanupError, userId, sessionId });
+          return null;
+        });
+        if (released && providerVoiceId) {
+          await deleteElevenLabsPersonalVoice(apiKey, providerVoiceId, false).catch((cleanupError) => {
+            logger.error('Studio provider voice cleanup failed.', { cleanupError, userId, sessionId });
+          });
+        }
+        if (released !== false) {
+          if (error instanceof HttpsError) throw error;
+          logger.warn('Studio voice save failed.', { error, userId, sessionId });
+          throw new HttpsError('unavailable', 'The voice could not be saved right now. Try again.');
+        }
+      }
+    }
+    const library = await ensurePersonalNarratorVoiceLibrary(userId);
+    const voice = library.voices.find(({ id }) => id === sessionId);
+    if (!voice) throw new HttpsError('not-found', 'This voice is no longer in your library.');
+    return { ...personalNarratorLibraryResponse(library, entitlement), voice: personalNarratorVoiceResponse(voice.record, voice.id) };
+  },
+);
 
 export const createPersonalNarratorVoice = onCall(
   {
@@ -21542,10 +21722,13 @@ export const createPersonalNarratorVoice = onCall(
       if (!previousSnapshot.exists || previous?.owner_user_id !== userId || previous.status !== 'ready') {
         throw new HttpsError('not-found', 'The personal narrator to replace could not be found.');
       }
+      if (previous.source === 'designed') {
+        throw new HttpsError('failed-precondition', 'Design a new voice to replace this character.');
+      }
     } else {
       await db.runTransaction(async (transaction) => {
-        const parentSnapshot = await transaction.get(parentRef);
-        const voiceCount = Math.max(0, Number(parentSnapshot.data()?.['voice_count'] ?? 0));
+        const voices = await transaction.get(personalNarratorVoicesRef(userId));
+        const voiceCount = voices.docs.filter((snapshot) => ['ready', 'creating'].includes(snapshot.data()['status'])).length;
         if (entitlement.voiceLimit !== null && voiceCount >= entitlement.voiceLimit) {
           throw new HttpsError(
             'resource-exhausted',
@@ -21827,20 +22010,28 @@ export const deletePersonalNarratorVoice = onCall(
     const boardSnapshot = await db.collection('boards').where('owner_user_id', '==', userId).get();
     const narratorVoiceId = `${personalStackNarratorVoiceId}:${voiceId}`;
     const isDefaultVoice = library.defaultVoiceId === voiceId;
-    const personalBoards = boardSnapshot.docs.filter(
-      (doc) => doc.data()?.stackNarratorVoiceId === narratorVoiceId
-        || (isDefaultVoice && doc.data()?.stackNarratorVoiceId === personalStackNarratorVoiceId),
-    );
-    for (let offset = 0; offset < personalBoards.length; offset += 450) {
-      const batch = db.batch();
-      personalBoards.slice(offset, offset + 450).forEach((doc) => {
-        batch.update(doc.ref, {
-          stackNarratorVoiceId: 'warm-storyteller',
+    const usesVoice = (value: unknown) => value === narratorVoiceId
+      || (isDefaultVoice && value === personalStackNarratorVoiceId);
+    const personalBoards = boardSnapshot.docs.filter((doc) => usesVoice(doc.data()['stackNarratorVoiceId'])
+      || (Array.isArray(doc.data()['cards']) && doc.data()['cards'].some((card: Record<string, unknown> | null) => usesVoice(card?.['narratorVoiceId']))));
+    for (const board of personalBoards) {
+      await db.runTransaction(async (transaction) => {
+        const current = (await transaction.get(board.ref)).data();
+        if (!current || current['owner_user_id'] !== userId) return;
+        const resetBoardVoice = usesVoice(current['stackNarratorVoiceId']);
+        const cards: Array<Record<string, unknown> | null> = Array.isArray(current['cards']) ? current['cards'] : [];
+        const resetCards = cards.some((card) => usesVoice(card?.['narratorVoiceId']));
+        if (!resetBoardVoice && !resetCards) return;
+        transaction.update(board.ref, {
+          ...(resetBoardVoice ? { stackNarratorVoiceId: 'warm-storyteller' } : {}),
+          ...(resetCards ? { cards: cards.map((card) => usesVoice(card?.['narratorVoiceId'])
+            ? { ...card, narratorVoiceId: '' } : card) } : {}),
+          ...invalidatedNarrationMedia(),
+          updated_at_iso: new Date().toISOString(),
           updated_at: FieldValue.serverTimestamp(),
           server_updated_at: FieldValue.serverTimestamp(),
         });
       });
-      await batch.commit();
     }
     const remainingVoiceIds = library.voices
       .map(({ id }) => id)
@@ -21862,8 +22053,8 @@ export const deletePersonalNarratorVoice = onCall(
           provider_voice_id: remainingDefaultVoice.record.provider_voice_id,
           name: remainingDefaultVoice.record.name,
           status: remainingDefaultVoice.record.status,
-          sample_storage_path: remainingDefaultVoice.record.sample_storage_path,
-          sample_duration_seconds: remainingDefaultVoice.record.sample_duration_seconds,
+          sample_storage_path: remainingDefaultVoice.record.sample_storage_path ?? FieldValue.delete(),
+          sample_duration_seconds: remainingDefaultVoice.record.sample_duration_seconds ?? FieldValue.delete(),
           voice_revision: remainingDefaultVoice.record.voice_revision ?? 1,
         } : isDefaultVoice ? {
           provider_voice_id: FieldValue.delete(),
@@ -22041,7 +22232,7 @@ export const synthesizeChatAnswerSpeech = onCall(
         : request.data?.mode === 'full'
           ? 'full'
           : 'recap';
-    const requestedNarratorId = String(request.data?.narratorVoiceId ?? '').trim();
+    let requestedNarratorId = String(request.data?.narratorVoiceId ?? '').trim();
     const requestedContentLanguage = request.data?.contentLanguage === undefined
       ? 'en'
       : request.data?.contentLanguage;
@@ -22094,6 +22285,10 @@ export const synthesizeChatAnswerSpeech = onCall(
         if (!requestedStackVideoCard) {
           throw new HttpsError('permission-denied', 'This narration card does not belong to the selected board.');
         }
+        const savedCardVoice = requestedStackVideoCard['narratorVoiceId'];
+        if (!requestedBoard['team_id'] && typeof savedCardVoice === 'string' && savedCardVoice) {
+          requestedNarratorId = savedCardVoice;
+        }
       }
     }
     const requestedPersonalNarrator = isPersonalNarratorSelection(requestedNarratorId);
@@ -22134,6 +22329,7 @@ export const synthesizeChatAnswerSpeech = onCall(
     let personalVoiceOwnerId = '';
     let personalVoiceId = '';
     let personalVoiceRevision = 1;
+    let isDesignedNarrator = false;
     if (isPersonalNarrator) {
       const teamBinding = boardId ? await teamVoiceBinding(boardId, request.auth?.uid || null) : null;
       if (teamBinding) {
@@ -22157,12 +22353,15 @@ export const synthesizeChatAnswerSpeech = onCall(
         }
         personalVoiceOwnerId = String(board['owner_user_id'] ?? '').trim();
         const isOwner = !!request.auth?.uid && request.auth.uid === personalVoiceOwnerId;
-        const approvedPublicText = boardAllowsNarrationText(board, text)
-          || requestedMode === 'tour' && await boardAllowsCachedTranslatedNarration(
-            boardId, board, requestedContentLanguage, text, requestedCardId);
-        const canUsePublicNarration = isLinkReadableVisibility(board['visibility'])
-          && board['stackNarratorVoiceId'] === requestedNarratorId
-          && approvedPublicText;
+        let canUsePublicNarration = false;
+        if (!isOwner && isLinkReadableVisibility(board['visibility'])) {
+          const scope = publicNarratorCardScope(board, requestedNarratorId, requestedMode, requestedCardId);
+          if (scope) {
+            canUsePublicNarration = boardAllowsNarrationText(board, text, requestedContentLanguage, scope.cardId)
+              || requestedMode === 'tour' && await boardAllowsCachedTranslatedNarration(
+                boardId, board, requestedContentLanguage, text, requestedCardId, !!scope.cardId);
+          }
+        }
         if (!personalVoiceOwnerId || (!isOwner && !canUsePublicNarration)) {
           throw new HttpsError('permission-denied', 'This personal narrator is not available for that text.');
         }
@@ -22178,6 +22377,7 @@ export const synthesizeChatAnswerSpeech = onCall(
         ?? '';
       const selectedVoice = library.voices.find(({ id }) => id === personalVoiceId);
       const voice = selectedVoice?.record;
+      isDesignedNarrator = voice?.source === 'designed';
       requestedNarratorVoiceId = voice?.status === 'ready' && typeof voice.provider_voice_id === 'string'
         ? voice.provider_voice_id
         : '';
@@ -22195,7 +22395,7 @@ export const synthesizeChatAnswerSpeech = onCall(
 
     let primaryVoiceId = requestedNarratorVoiceId || chatAnswerVoiceId;
     const requiresNativeNarration = ['tour', 'stack-video'].includes(requestedMode) && requestedContentLanguage !== 'en';
-    if (requiresNativeNarration && requestedLibraryVoice?.nativeLanguage !== requestedContentLanguage) {
+    if (requiresNativeNarration && !isDesignedNarrator && requestedLibraryVoice?.nativeLanguage !== requestedContentLanguage) {
       const preference = contentLanguageVoicePreference(requestedContentLanguage);
       try {
         const matchingVoice = await resolveElevenLabsVoiceForPreference(
@@ -22256,11 +22456,11 @@ export const synthesizeChatAnswerSpeech = onCall(
       };
     }
 
-    const speechModel = requestedMode === 'tour' || requestedMode === 'stack-video'
+    const speechModel = isDesignedNarrator || requestedMode === 'tour' || requestedMode === 'stack-video'
       ? tourGuideSpeechModel
       : chatAnswerSpeechModel;
     const voiceSettings = requestedMode === 'tour' || requestedMode === 'stack-video'
-      ? isPersonalNarrator
+      ? isPersonalNarrator && !isDesignedNarrator
         ? {
             stability: 0.6,
             similarity_boost: 0.86,

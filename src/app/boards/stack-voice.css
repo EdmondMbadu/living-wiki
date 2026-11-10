@@ -94,6 +94,10 @@
   padding-top: 0.85rem;
 }
 
+.stack-voice-picker[hidden] {
+  display: none;
+}
+
 .stack-voice-picker--prominent {
   margin: 0;
   border-top: 0;

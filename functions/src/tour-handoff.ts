@@ -192,13 +192,18 @@ export function effectiveStoredTourHandoffText(
 export function allowedStoredTourHandoffTexts(
   board: Record<string, unknown>,
   language: StoredTourHandoffLanguage = 'en',
+  cardId?: string,
 ): Set<string> {
-  const cards = orderedStoredTourHandoffCards(Array.isArray(board['cards']) ? board['cards'] : []);
+  const cards = orderedStoredTourHandoffCards(
+    Array.isArray(board['cards']) ? board['cards'].filter((value) => record(value)['authorOnly'] !== true) : [],
+  );
   const mode: StoredTourHandoffMode = board['kind'] === 'driving-tour' ? 'driving' : 'walking';
   const allowed = new Set<string>();
   cards.slice(0, -1).forEach((card, index) => {
     const nextCard = cards[index + 1];
-    if (nextCard) allowed.add(effectiveStoredTourHandoffText(card, nextCard, mode, language));
+    if (nextCard && (!cardId || card.id === cardId)) {
+      allowed.add(effectiveStoredTourHandoffText(card, nextCard, mode, language));
+    }
   });
   return allowed;
 }

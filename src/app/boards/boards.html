@@ -7634,6 +7634,26 @@
                                   }
                                   <textarea rows="5" maxlength="3000" [value]="stackScriptNarration(card)" (input)="updateStackScriptCard(card.id, 'narration', $any($event.target).value)"></textarea>
                                 </label>
+                                @if (!board.teamId) {
+                                  <label>
+                                    <span i18n>Card voice <small>Choose a voice for this card or use the board voice.</small></span>
+                                    <select class="stack-script-card__voice" (change)="updateStackScriptCard(card.id, 'narratorVoiceId', $any($event.target).value)">
+                                      <option value="" [selected]="!stackScriptCardVoice(card)" i18n>Board voice ({{ stackBoardNarratorName() }})</option>
+                                      @if (personalNarratorVoices().length) {
+                                        <optgroup label="My voices" i18n-label>
+                                          @for (voice of personalNarratorVoices(); track voice.id) {
+                                            <option [value]="personalNarratorId(voice)" [selected]="stackScriptCardVoice(card) === personalNarratorId(voice)">{{ voice.name }}</option>
+                                          }
+                                        </optgroup>
+                                      }
+                                      <optgroup label="Voice catalog" i18n-label>
+                                        @for (voice of stackNarratorVoices; track voice.id) {
+                                          <option [value]="voice.id" [selected]="stackScriptCardVoice(card) === voice.id">{{ voice.name }}</option>
+                                        }
+                                      </optgroup>
+                                    </select>
+                                  </label>
+                                }
                                 <div class="stack-script-card__actions">
                                   <span i18n>{{ stackScriptCardWordCount(card) }} words · ~{{ stackScriptCardEstimatedSeconds(card) }}s</span>
                                   <button type="button" [disabled]="stackScriptPreviewLoadingCardId() === card.id || stackScriptRegeneratingCardId() === card.id" (click)="previewStackScriptCard(card, $event)" i18n>
@@ -7689,8 +7709,9 @@
                         </button>
                       </footer>
                     </div>
-                  } @else if (stackSoundTab() === 'voice') {
-                    <div class="stack-voice-picker stack-voice-picker--prominent">
+                  }
+                  @if (stackVoiceTabVisited()) {
+                    <div class="stack-voice-picker stack-voice-picker--prominent" [hidden]="stackSoundTab() !== 'voice'">
                       <div class="stack-voice-picker__head">
                         <div>
                           <span i18n>Video narration</span>
@@ -7755,7 +7776,16 @@
                           <p i18n>Only voices shared with this team are available. {{ stackStudioDirty() ? templateText.message234 : templateText.message235 }}</p>
                         </section>
                       }
-                      @if (stackVideoNarrationEnabled() && !board.teamId) {
+                      @if (!board.teamId) {
+                        <app-studio-voice-designer
+                          [defaultLanguage]="talkingConversationLanguage()"
+                          [canAddVoice]="personalVoiceCanAdd()"
+                          (voiceSaved)="studioVoiceLibraryUpdated($event)"
+                          (useVoice)="selectStackNarratorVoice(board, personalNarratorId($event))"
+                          (previewStarted)="studioVoicePreviewStarted()"
+                        />
+                      }
+                      @if (!board.teamId) {
                       <section class="stack-personal-voice-library" aria-labelledby="personal-voice-library-title">
                         <div class="stack-personal-voice__identity">
                           <span class="stack-personal-voice__icon material-symbols-outlined">graphic_eq</span>
@@ -7779,7 +7809,11 @@
                                   <div class="stack-personal-voice__row">
                                     <div>
                                       <strong>{{ voice.name }}</strong>
-                                      <p i18n>Private · reusable across your boards</p>
+                                      @if (voice.source === 'designed') {
+                                        <p i18n>Designed voice · private</p>
+                                      } @else {
+                                        <p i18n>Private · reusable across your boards</p>
+                                      }
                                     </div>
                                     @if (personalVoiceSelected(voice)) {
                                       <span class="stack-personal-voice__selected" i18n>Selected</span>
@@ -7799,7 +7833,9 @@
                                       {{ isStackVoicePreviewing(personalNarratorId(voice)) ? templateText.message200 : templateText.message13 }}
                                     </button>
                                     <button type="button" (click)="renamePersonalNarratorVoice(voice)" i18n>Rename</button>
-                                    <button type="button" (click)="openPersonalVoiceSetup(voice)" i18n>Replace</button>
+                                    @if (voice.source !== 'designed') {
+                                      <button type="button" (click)="openPersonalVoiceSetup(voice)" i18n>Replace</button>
+                                    }
                                     <button type="button" class="stack-personal-voice__delete" [disabled]="personalVoiceDeleting()" (click)="deletePersonalNarratorVoice(board, voice)">
                                       {{ personalVoiceDeletingId() === voice.id ? templateText.message190 : templateText.message237 }}
                                     </button>
@@ -7896,6 +7932,8 @@
                         </section>
                       }
 
+                      }
+                      @if (stackVideoNarrationEnabled() && !board.teamId) {
                       <section class="stack-voice-recommendations" aria-labelledby="stack-recommended-voices-title">
                         <header class="stack-voice-recommendations__head">
                           <div>
@@ -8080,7 +8118,8 @@
                         </small>
                       }
                     </div>
-                  } @else {
+                  }
+                  @if (stackSoundTab() === 'music') {
                     <div class="stack-music-panel">
                       <div class="stack-music-panel__summary">
                         <p>

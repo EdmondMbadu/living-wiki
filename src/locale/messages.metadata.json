@@ -75,6 +75,10 @@
     "source": "{$INTERPOLATION} Talk with {$INTERPOLATION_1} through the {$INTERPOLATION_2} city wiki.",
     "file": "src/app/business-detail/business-detail.html"
   },
+  "1022922324880847141": {
+    "source": "Use as board voice",
+    "file": "src/app/boards/studio-voice-designer.html"
+  },
   "102361498485682322": {
     "source": "Name this specific promotion",
     "file": "src/app/board-insights/board-insights.html"
@@ -2103,6 +2107,10 @@
     "source": "This board uses the parent board’s {$INTERPOLATION} visibility.",
     "file": "src/app/boards/boards.html"
   },
+  "1580675784595347304": {
+    "source": "Design a voice",
+    "file": "src/app/boards/studio-voice-designer.html"
+  },
   "1581817172310226389": {
     "source": "New related card",
     "file": "src/app/boards/boards.ts"
@@ -3830,6 +3838,10 @@
   "2136947233569403067": {
     "source": "Use this voice",
     "file": "src/app/boards/boards.ts"
+  },
+  "2137584686048358740": {
+    "source": "Lion",
+    "file": "src/app/boards/studio-voice-designer.ts"
   },
   "2139624252600668024": {
     "source": "Checkout could not be started. Please try again.",
@@ -6367,6 +6379,10 @@
     "source": "Enter a valid email address so we can keep you updated.",
     "file": "src/app/boards/boards.ts"
   },
+  "2918683658719540989": {
+    "source": "A warm lion character with a deep, resonant chest voice, a measured pace, gentle authority, and crisp pronunciation. Speak as if welcoming visitors into your home.",
+    "file": "src/app/boards/studio-voice-designer.ts"
+  },
   "2918765658703023711": {
     "source": "Refresh jobs",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
@@ -7099,6 +7115,10 @@
     "source": "Stop",
     "file": "src/app/boards/boards.html"
   },
+  "3134625889451562311": {
+    "source": "Describe a character, hear a few options, and save your favorite.",
+    "file": "src/app/boards/studio-voice-designer.html"
+  },
   "3135994256278133060": {
     "source": "Banner URL",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -7414,6 +7434,10 @@
   "3203796314104356620": {
     "source": "Asthma hospitalization rates are among the highest in the U.S.",
     "file": "src/app/fence-line/fence-line.ts"
+  },
+  "3207212563016076553": {
+    "source": "Try an example",
+    "file": "src/app/boards/studio-voice-designer.html"
   },
   "3207515771220354317": {
     "source": "Checking this square with what3words…",
@@ -9119,6 +9143,10 @@
     "source": "Upgrade to create private LivingWikis",
     "file": "src/app/pricing/pricing.ts"
   },
+  "3675749465674923703": {
+    "source": "Saving your voice…",
+    "file": "src/app/boards/studio-voice-designer.html"
+  },
   "3676305033706189085": {
     "source": "Founding-business status",
     "file": "src/app/business/business.ts"
@@ -9530,6 +9558,10 @@
   "3791564161071494999": {
     "source": "After the tour",
     "file": "src/app/boards/listing-live-closing.html"
+  },
+  "3792545599775315706": {
+    "source": "Generate new options",
+    "file": "src/app/boards/studio-voice-designer.html"
   },
   "3795389415231165102": {
     "source": "Latest estimate",
@@ -9990,6 +10022,10 @@
   "3930285244227165765": {
     "source": "Transcripts, questions, emails and visitor identities are not included in shared reports.",
     "file": "src/app/shared-analytics/shared-analytics.html"
+  },
+  "3931032705016333661": {
+    "source": "Card voice {$START_SMALL_TEXT}Choose a voice for this card or use the board voice.{$CLOSE_SMALL_TEXT}",
+    "file": "src/app/boards/boards.html"
   },
   "3931788493945433060": {
     "source": "Close editor",
@@ -10630,6 +10666,10 @@
   "412498577306597103": {
     "source": "Create and grow a Wiki",
     "file": "src/app/wiki-home/wiki-home.html"
+  },
+  "4126293396993509841": {
+    "source": "Generate previews",
+    "file": "src/app/boards/studio-voice-designer.html"
   },
   "4126686258872900471": {
     "source": "The board inside this card could not be loaded.",
@@ -12227,6 +12267,10 @@
     "source": "Close DOCX export",
     "file": "src/app/boards/boards.html"
   },
+  "4579550117552609600": {
+    "source": "Your voice library is full. Remove a saved voice to make room for a new one.",
+    "file": "src/app/boards/studio-voice-designer.html"
+  },
   "458004593774555987": {
     "source": "More ways to add a photo",
     "file": "src/app/boards/boards.html"
@@ -12562,6 +12606,10 @@
   "4686804012829313707": {
     "source": "Wiki | LivingWiki",
     "file": "src/app/app.routes.ts"
+  },
+  "468723499083945336": {
+    "source": "Save to My voices",
+    "file": "src/app/boards/studio-voice-designer.html"
   },
   "468748795322485464": {
     "source": "JPG, PNG, or WebP up to 10 MB. The image is cropped to fill the video.",
@@ -13026,6 +13074,10 @@
   "4814285799071780083": {
     "source": "Remove",
     "file": "src/app/atlas-landing/atlas-landing.html"
+  },
+  "4814352174547385246": {
+    "source": "A friendly flamingo character with a bright, higher register, a light, lilting rhythm, and playful emphasis. Speak clearly at an easy pace for young visitors.",
+    "file": "src/app/boards/studio-voice-designer.ts"
   },
   "4814396241751117214": {
     "source": "Meet the TalkThru.",
@@ -15491,6 +15543,10 @@
     "source": "Uses an energetic, youthful point of view without forced slang.",
     "file": "src/app/boards/board-narration-style.ts"
   },
+  "5565678198502055925": {
+    "source": "Preview language",
+    "file": "src/app/boards/studio-voice-designer.html"
+  },
   "5568209569960932511": {
     "source": "Cancel upload",
     "file": "src/app/boards/talk-drop/talk-drop.html"
@@ -16175,6 +16231,10 @@
     "source": "Team logo file",
     "file": "src/app/teams/teams.html"
   },
+  "5746190217061803435": {
+    "source": "Board voice ({$INTERPOLATION})",
+    "file": "src/app/boards/boards.html"
+  },
   "5746525344557064924": {
     "source": "Upload in progress",
     "file": "src/app/library/library.html"
@@ -16395,6 +16455,10 @@
     "source": "Read the Privacy Policy",
     "file": "src/app/guest-terms/guest-terms.html"
   },
+  "5806697513970179062": {
+    "source": "Voice {$INTERPOLATION}",
+    "file": "src/app/boards/studio-voice-designer.html"
+  },
   "5808215467937565652": {
     "source": "Run summary",
     "file": "src/app/web-scraper/web-scraper.html"
@@ -16526,6 +16590,10 @@
   "5839928502816434484": {
     "source": "View membership options",
     "file": "src/app/custom-public-url-dialog/custom-public-url-dialog.html"
+  },
+  "5840108710767052512": {
+    "source": "Flamingo",
+    "file": "src/app/boards/studio-voice-designer.ts"
   },
   "5840654029885029666": {
     "source": "Loading updates…",
@@ -16927,6 +16995,10 @@
     "source": "We collect account information such as name, email address, authentication details, and basic profile metadata needed to operate the workspace.",
     "file": "src/app/legal/legal.ts"
   },
+  "5960520882296529293": {
+    "source": "A curious museum guide with a warm mid-range voice, a conversational rhythm, and a hint of wonder. Give the listener time to picture the details.",
+    "file": "src/app/boards/studio-voice-designer.ts"
+  },
   "5962319588931300494": {
     "source": "Contact ",
     "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
@@ -17222,6 +17294,10 @@
   "6045974080809490051": {
     "source": "Recent Wikis",
     "file": "src/app/wiki-home/wiki-home.html"
+  },
+  "6048628398200658349": {
+    "source": "Voice catalog",
+    "file": "src/app/boards/boards.html"
   },
   "6048852053110701325": {
     "source": "Let request decide",
@@ -18163,6 +18239,10 @@
     "source": "Both included",
     "file": "src/app/boards/boards.html"
   },
+  "6316432749546252345": {
+    "source": "Creating your voice previews. This can take up to a minute.",
+    "file": "src/app/boards/studio-voice-designer.html"
+  },
   "6316893118281915263": {
     "source": "Ready to find your next discovery? Let’s explore together.",
     "file": "src/app/public-wikis/public-wikis.ts"
@@ -18230,6 +18310,10 @@
   "6329527860716404148": {
     "source": "Training, apprenticeships, and on-ramps into green-sector work.",
     "file": "src/app/green-jobs/green-jobs.html"
+  },
+  "6329780593903043638": {
+    "source": "Designed voice · private",
+    "file": "src/app/boards/boards.html"
   },
   "6329814932302388096": {
     "source": "Picamo is saving the cards and images. Please wait.",
@@ -20375,6 +20459,10 @@
     "source": "Owned",
     "file": "src/app/wiki-home/wiki-home.html"
   },
+  "6985869835706830627": {
+    "source": "The voice could not be saved. Try again.",
+    "file": "src/app/boards/studio-voice-designer.ts"
+  },
   "6986783600642734632": {
     "source": "Discard your changes?",
     "file": "src/app/board-collection-editor/board-collection-editor.html"
@@ -20943,6 +21031,10 @@
     "source": "Boston's sustainability, innovation, and civic data — universities, transit, climate resilience, healthcare, and the innovation economy.",
     "file": "src/app/city-atlas-templates.ts"
   },
+  "7150518038358635200": {
+    "source": "e.g. Sunny the Flamingo",
+    "file": "src/app/boards/studio-voice-designer.html"
+  },
   "7151341604549519642": {
     "source": "The avatar could not answer right now.",
     "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
@@ -21342,6 +21434,10 @@
   "7260119081107004912": {
     "source": "Boards created over time",
     "file": "src/app/platform-analytics/platform-analytics.html"
+  },
+  "7261067629555985957": {
+    "source": "A friendly character with a bright, high voice and a playful rhythm…",
+    "file": "src/app/boards/studio-voice-designer.html"
   },
   "7266152718599545354": {
     "source": "Off for your account. Changing cities keeps updates off.",
@@ -22451,6 +22547,10 @@
     "source": "Sending…",
     "file": "src/app/boards/boards.ts"
   },
+  "7608666141846770741": {
+    "source": "Listen and choose a voice",
+    "file": "src/app/boards/studio-voice-designer.html"
+  },
   "7608976698334106230": {
     "source": "Atlas | LivingWiki",
     "file": "src/app/app.routes.ts"
@@ -22626,6 +22726,10 @@
   "7654466722917921634": {
     "source": "Unique visitors",
     "file": "src/app/board-insights/board-insights.html"
+  },
+  "7654659171790913615": {
+    "source": "{$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG} is saved in My voices. Choose it for this board or assign it to a card in the Script tab.",
+    "file": "src/app/boards/studio-voice-designer.html"
   },
   "7656367055170684811": {
     "source": "Boards views",
@@ -25507,6 +25611,10 @@
     "source": "{$START_TAG_SPAN}mail{$CLOSE_TAG_SPAN} Invitations {$START_BLOCK_IF}{$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
     "file": "src/app/teams/teams.html"
   },
+  "8532223421832218110": {
+    "source": "Voice previews could not be generated. Try again.",
+    "file": "src/app/boards/studio-voice-designer.ts"
+  },
   "853405760766823790": {
     "source": "Additional QR code cleared.",
     "file": "src/app/business-detail/business-edit.ts"
@@ -27403,6 +27511,10 @@
     "source": "Team invitations and updates, all in one place.",
     "file": "src/app/notifications/notifications.html"
   },
+  "9075559298316694849": {
+    "source": "Museum guide",
+    "file": "src/app/boards/studio-voice-designer.ts"
+  },
   "90761460509166634": {
     "source": "Back to Users",
     "file": "src/app/platform-analytics/platform-analytics.html"
@@ -27702,6 +27814,10 @@
   "9176988609887108566": {
     "source": "Your first Done For You listing free",
     "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "9178319369640461063": {
+    "source": "How should the voice sound?",
+    "file": "src/app/boards/studio-voice-designer.html"
   },
   "9178816529218542032": {
     "source": "Service health",

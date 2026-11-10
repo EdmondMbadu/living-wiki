@@ -1,4 +1,5 @@
 import { canonicalCardNarration } from './card-narration';
+import { allowedStoredTourHandoffTexts, type StoredTourHandoffLanguage } from './tour-handoff';
 export type StackVideoNarrationCard = Record<string, unknown>;
 
 const maxNarrationSpeechTextLength = 4000;
@@ -43,6 +44,85 @@ export function stackVideoNarrationCardFromBoard(
     return String(card['id'] ?? '').trim() === cardId;
   });
   return match && typeof match === 'object' ? match as StackVideoNarrationCard : null;
+}
+
+export function normalizeNarrationAuthorizationText(value: unknown): string {
+  return String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, maxNarrationSpeechTextLength);
+}
+
+function personalNarrationTextsFromCard(value: unknown): Set<string> {
+  const card = value && typeof value === 'object' ? value as Record<string, unknown> : {};
+  const allowed = new Set<string>();
+  if (card['authorOnly'] === true) return allowed;
+  const add = (candidate: unknown) => {
+    const normalized = normalizeNarrationAuthorizationText(candidate);
+    if (normalized) allowed.add(normalized);
+  };
+  add(card['notes']);
+  add(card['stackNarration']);
+  add(card['shortSummary']);
+  add(card['subtitle']);
+  add(card['title']);
+  if (typeof card['title'] === 'string' && card['title'].trim()) {
+    add(`${card['title'].trim()}.`);
+  }
+
+  const tour = card['tour'] && typeof card['tour'] === 'object'
+    ? card['tour'] as Record<string, unknown>
+    : {};
+  add(tour['guideScript']);
+  const leg = tour['legToNext'] && typeof tour['legToNext'] === 'object'
+    ? tour['legToNext'] as Record<string, unknown>
+    : {};
+  add(leg['navScript']);
+  add(leg['instruction']);
+
+  const title = String(card['title'] ?? '').trim();
+  const detail = String(card['shortSummary'] ?? card['subtitle'] ?? card['notes'] ?? '').trim();
+  const firstSentence = detail.match(/^(.{1,320}?[.!?。！？])(?:\s|$)/u)?.[1] ?? detail.slice(0, 280);
+  add(`${title}. ${firstSentence.trim()}`.trim().slice(0, 420));
+  return allowed;
+}
+
+export function boardAllowsNarrationText(
+  board: Record<string, unknown>,
+  text: string,
+  language: StoredTourHandoffLanguage = 'en',
+  cardId?: string,
+): boolean {
+  const requestedText = normalizeNarrationAuthorizationText(text);
+  if (!requestedText) return false;
+  if (cardId) {
+    const card = stackVideoNarrationCardFromBoard(board, cardId);
+    if (!card || card['authorOnly'] === true) return false;
+    return normalizeNarrationSpeechText(canonicalCardNarration(card)) === requestedText
+      || personalNarrationTextsFromCard(card).has(requestedText)
+      || Array.from(allowedStoredTourHandoffTexts(board, language, cardId)).some(
+        (handoff) => normalizeNarrationAuthorizationText(handoff) === requestedText,
+      );
+  }
+  if (normalizeNarrationAuthorizationText(board['trailerVideoScript']) === requestedText) return true;
+  if (!Array.isArray(board['cards'])) return false;
+  if (board['cards'].some((card) => personalNarrationTextsFromCard(card).has(requestedText))) {
+    return true;
+  }
+  return Array.from(allowedStoredTourHandoffTexts(board, language)).some(
+    (handoff) => normalizeNarrationAuthorizationText(handoff) === requestedText,
+  );
+}
+
+// Boards without overrides keep the existing board-level authorization path.
+export function publicNarratorCardScope(
+  board: Record<string, unknown>, narratorId: string, mode: string, cardId: string,
+): { cardId?: string } | null {
+  const hasOverrides = !board['team_id'] && Array.isArray(board['cards'])
+    && board['cards'].some((value) => value?.['narratorVoiceId']);
+  if (!hasOverrides || mode === 'stack-trailer') {
+    return board['stackNarratorVoiceId'] === narratorId ? {} : null;
+  }
+  const card = mode === 'tour' ? stackVideoNarrationCardFromBoard(board, cardId) : null;
+  if (!card || card['authorOnly'] === true) return null;
+  return (card['narratorVoiceId'] || board['stackNarratorVoiceId']) === narratorId ? { cardId } : null;
 }
 
 export function stackVideoNarrationTextFromCard(

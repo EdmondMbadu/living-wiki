@@ -1,0 +1,108 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.designer {
+  border: 1px solid var(--line);
+  border-radius: 0.95rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+summary {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.85rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+summary::-webkit-details-marker { display: none; }
+
+summary::after {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-inline-start: auto;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+details[open] summary::after { transform: rotate(225deg); }
+summary .material-symbols-outlined { color: var(--accent); }
+summary small { display: block; margin-top: 0.2rem; color: var(--muted); }
+
+.designer__body {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.85rem;
+  border-top: 1px solid var(--line);
+}
+
+label { display: grid; gap: 0.35rem; }
+.designer__language { max-width: 20rem; }
+
+textarea, select, input[type='text'] {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  padding: 0.55rem 0.65rem;
+}
+
+textarea { resize: vertical; }
+
+.designer__examples {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+button {
+  justify-self: start;
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 650;
+  padding: 0.42rem 0.65rem;
+  cursor: pointer;
+}
+
+.designer__primary {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, var(--surface));
+  padding: 0.55rem 0.8rem;
+}
+
+button:disabled { opacity: 0.55; cursor: default; }
+fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+legend { font-weight: 750; padding: 0; }
+p { margin: 0; }
+p + button { margin-top: 0.4rem; }
+.designer__sample { color: var(--muted); font-size: 0.9rem; margin: 0.35rem 0 0.6rem; }
+.designer__options { display: grid; gap: 0.4rem; }
+
+.designer__option {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.85rem;
+  padding: 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+}
+
+.designer__option--selected { border-color: var(--accent); }
+.designer__option label { display: flex; align-items: center; cursor: pointer; }
+audio { width: min(100%, 18rem); height: 2.2rem; }
+.designer__error { border-inline-start: 3px solid var(--accent); padding-inline-start: 0.5rem; }

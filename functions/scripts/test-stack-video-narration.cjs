@@ -2,6 +2,8 @@ const assert = require('node:assert/strict');
 const {
   sharedStackNarrationCacheMode,
   shouldUseProviderVoicePreviewUrl,
+  boardAllowsNarrationText,
+  publicNarratorCardScope,
   normalizeNarrationSpeechText,
   stackTrailerNarrationMatchesPreparedScript,
   stackVideoNarrationCardFromBoard,
@@ -62,6 +64,25 @@ assert.equal(stackVideoNarrationRevisionFromCard({ videoNarrationRevision: -10 }
 assert.equal(stackVideoNarrationRevisionFromCard({ videoNarrationRevision: 'not-a-number' }), 0);
 assert.equal(stackVideoNarrationRevisionCacheKey({ videoNarrationRevision: 0 }), '');
 assert.equal(stackVideoNarrationRevisionCacheKey({ videoNarrationRevision: 5 }), ':r5');
+
+const characterBoard = {
+  stackNarratorVoiceId: 'personal-voice:guide',
+  cards: [
+    { id: 'flamingo', narratorVoiceId: 'personal-voice:flamingo', title: 'Flamingo', notes: 'I balance on one leg.' },
+    { id: 'lion', narratorVoiceId: 'personal-voice:lion', title: 'Lion', notes: 'Listen to my pride.' },
+    { id: 'exit', title: 'Exit', notes: 'Thank you for visiting.' },
+    { id: 'draft', narratorVoiceId: 'personal-voice:lion', authorOnly: true, notes: 'Private script.' },
+  ],
+};
+const scope = publicNarratorCardScope(characterBoard, 'personal-voice:flamingo', 'tour', 'flamingo');
+assert.deepEqual(scope, { cardId: 'flamingo' });
+assert.equal(boardAllowsNarrationText(characterBoard, 'I balance on one leg.', 'en', scope.cardId), true);
+assert.equal(boardAllowsNarrationText(characterBoard, 'Listen to my pride.', 'en', scope.cardId), false);
+assert.equal(publicNarratorCardScope(characterBoard, 'personal-voice:lion', 'tour', 'flamingo'), null);
+assert.equal(publicNarratorCardScope(characterBoard, 'personal-voice:guide', 'tour', 'flamingo'), null);
+assert.equal(publicNarratorCardScope(characterBoard, 'personal-voice:guide', 'tour', ''), null);
+assert.equal(publicNarratorCardScope(characterBoard, 'personal-voice:lion', 'tour', 'draft'), null);
+assert.deepEqual(publicNarratorCardScope(characterBoard, 'personal-voice:guide', 'tour', 'exit'), { cardId: 'exit' });
 
 const fallback = boardTrailerFallbackScript({
   title: 'Ten Dishes That Explain Philadelphia',
