@@ -2,6 +2,7 @@ import {
   DEFAULT_STACK_NARRATOR_VOICE_ID,
   PERSONAL_STACK_NARRATOR_VOICE_ID,
   STACK_NARRATOR_VOICES,
+  STACK_STUDIO_NARRATOR_VOICES,
   RECOMMENDED_STACK_NARRATOR_VOICES,
   normalizeStackNarratorVoiceId,
   isPersonalStackNarratorVoiceId,
@@ -13,12 +14,20 @@ import {
   stackNarratorVoiceById,
 } from './stack-voice';
 import stackNarratorVoiceCatalog from '../../../functions/src/stack-narrator-voices.json';
+import stackLibraryVoiceCatalog from '../../../functions/src/stack-library-voices.json';
+import stackLibraryVoicePreviews from '../../../functions/src/stack-library-voice-previews.json';
 
 describe('Stack narrator voice catalog', () => {
-  it('offers forty-one distinct narrator choices', () => {
+  it('offers 200 distinct Studio voices and preserves the original catalog', () => {
     expect(STACK_NARRATOR_VOICES.length).toBe(41);
-    expect(new Set(STACK_NARRATOR_VOICES.map((voice) => voice.id)).size).toBe(41);
-    expect(new Set(stackNarratorVoiceCatalog.map((voice) => voice.providerVoiceId)).size).toBe(41);
+    expect(STACK_STUDIO_NARRATOR_VOICES.length).toBe(200);
+    expect(new Set(STACK_STUDIO_NARRATOR_VOICES.map((voice) => voice.id)).size).toBe(200);
+    expect(new Set([...stackNarratorVoiceCatalog, ...stackLibraryVoiceCatalog].map((voice) => voice.providerVoiceId)).size).toBe(200);
+    expect(Object.keys(stackLibraryVoicePreviews).sort()).toEqual(stackLibraryVoiceCatalog.map((voice) => voice.providerVoiceId).sort());
+    const french = stackLibraryVoiceCatalog.find((voice) => voice.nativeLanguage === 'fr')!;
+    const id = `shared-${french.providerVoiceId}`;
+    expect(normalizeStackNarratorVoiceId(id)).toBe(id);
+    expect(filterStackNarratorVoices(STACK_STUDIO_NARRATOR_VOICES, 'French', 'All').some((voice) => voice.id === id)).toBeTrue();
     expect(stackNarratorVoiceById('teenage-girl')).toEqual(jasmine.objectContaining({
       name: 'Teenage Girl',
       presentation: 'Female',

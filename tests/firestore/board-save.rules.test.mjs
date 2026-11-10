@@ -27,6 +27,7 @@ const ownerUid = 'board-owner';
 let testEnvironment;
 const boardContentLimits = JSON.parse(await readFile(new URL('../../functions/src/board-content-limits.json', import.meta.url), 'utf8'));
 const voiceCatalog = JSON.parse(await readFile(new URL('../../functions/src/stack-narrator-voices.json', import.meta.url), 'utf8'));
+const libraryVoiceCatalog = JSON.parse(await readFile(new URL('../../functions/src/stack-library-voices.json', import.meta.url), 'utf8'));
 const firestoreRules = await readFile(new URL('../../firestore.rules', import.meta.url), 'utf8');
 const videoPersistenceSource = await readFile(new URL('../../src/app/boards/board-video-persistence.ts', import.meta.url), 'utf8');
 const { boardVideoMetadataPatch } = await import(`data:text/javascript;base64,${Buffer.from(ts.transpileModule(
@@ -41,6 +42,10 @@ test('Firestore accepts every narrator voice offered by the app', () => {
   const match = firestoreRules.match(/function isValidStackNarratorVoiceId\(value\) \{\s*return value in \[([\s\S]*?)\]/);
   assert.ok(match, 'narrator voice rule allowlist exists');
   const allowed = [...match[1].matchAll(/'([^']+)'/g)].map((entry) => entry[1]);
+  const libraryMatch = firestoreRules.match(/value\.matches\('\^shared-\('\s*\+([\s\S]*?)\)\$'\)/);
+  assert.ok(libraryMatch, 'shared voice rule matches only exact provider IDs');
+  const libraryIds = libraryMatch[1].replace(/['+\s]/g, '').split('|');
+  assert.deepEqual(libraryIds.sort(), libraryVoiceCatalog.map((voice) => voice.providerVoiceId).sort());
   assert.deepEqual(allowed.sort(), [...voiceCatalog.map((voice) => voice.id), 'personal-voice'].sort());
 });
 
@@ -623,6 +628,12 @@ test('all small Studio saves work on a published board and preserve unrelated fi
 
   await saveStep('music preference', boardAudioPreferencePatch('none', 0.2, '2026-09-23T04:00:00.000Z'));
   await saveStep('voice preference', boardVoicePreferencePatch('calm-documentary', '2026-09-23T05:00:00.000Z'));
+  const libraryVoiceId = `shared-${libraryVoiceCatalog[0].providerVoiceId}`;
+  await saveStep('library voice preference', boardVoicePreferencePatch(libraryVoiceId, '2026-09-23T05:01:00.000Z'));
+  await assertFails(updateDoc(reference, {
+    ...boardVoicePreferencePatch('shared-NotAnApprovedVoiceId', '2026-09-23T05:02:00.000Z'),
+    server_updated_at: serverTimestamp(),
+  }));
 
   const saved = (await assertSucceeds(getDoc(reference))).data();
   assert.equal(saved.title, 'Cases with captions');
@@ -634,7 +645,7 @@ test('all small Studio saves work on a published board and preserve unrelated fi
   assert.equal(saved.insideCardsDisplay, 'alongside');
   assert.equal(saved.socialVideoClosingHeadline, 'Read the full board');
   assert.equal(saved.socialVideoAudioTrackId, 'none');
-  assert.equal(saved.stackNarratorVoiceId, 'calm-documentary');
+  assert.equal(saved.stackNarratorVoiceId, libraryVoiceId);
   assert.equal(saved.socialVideoUrl, 'https://example.com/full.mp4');
   assert.equal(saved.trailerVideoUrl, 'https://example.com/trailer.mp4');
   assert.equal(saved.legacy_board_field, 'preserve me');

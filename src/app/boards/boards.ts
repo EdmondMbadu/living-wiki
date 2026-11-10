@@ -373,7 +373,7 @@ import {
   DEFAULT_STACK_NARRATOR_VOICE_ID,
   PERSONAL_STACK_NARRATOR_VOICE_ID,
   RECOMMENDED_STACK_NARRATOR_VOICES,
-  STACK_NARRATOR_VOICES,
+  STACK_STUDIO_NARRATOR_VOICES,
   STACK_NARRATOR_VOICE_PRESENTATIONS,
   filterStackNarratorVoices,
   isPersonalStackNarratorVoiceId,
@@ -2378,7 +2378,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly stackExportTargets = STACK_EXPORT_TARGETS;
   readonly stackLinkShareTargets = STACK_LINK_SHARE_TARGETS;
   readonly stackAudioTracks = STACK_AUDIO_TRACKS;
-  readonly stackNarratorVoices = STACK_NARRATOR_VOICES;
+  readonly stackNarratorVoices = STACK_STUDIO_NARRATOR_VOICES;
   readonly recommendedStackNarratorVoices = RECOMMENDED_STACK_NARRATOR_VOICES;
   readonly stackVoiceLibraryFilters: readonly StackVoiceLibraryFilter[] = [
     'All',

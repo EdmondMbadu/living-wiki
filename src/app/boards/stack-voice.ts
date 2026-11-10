@@ -1,4 +1,5 @@
 import stackNarratorVoiceCatalog from '../../../functions/src/stack-narrator-voices.json';
+import stackLibraryVoiceCatalog from '../../../functions/src/stack-library-voices.json';
 
 export const DEFAULT_STACK_NARRATOR_VOICE_ID = 'warm-storyteller';
 export const PERSONAL_STACK_NARRATOR_VOICE_ID = 'personal-voice';
@@ -37,6 +38,21 @@ export const STACK_NARRATOR_VOICES: readonly StackNarratorVoice[] = catalog.map(
   sampleText: entry.sampleText,
 }));
 
+export const STACK_STUDIO_NARRATOR_VOICES: readonly StackNarratorVoice[] = [
+  ...STACK_NARRATOR_VOICES,
+  ...stackLibraryVoiceCatalog.map((voice) => ({
+    id: `shared-${voice.providerVoiceId}`,
+    name: voice.name,
+    presentation: voice.presentation as StackVoicePresentation,
+    accent: voice.accent,
+    style: voice.style,
+    description: voice.style,
+    icon: 'record_voice_over',
+    recommended: false,
+    sampleText: 'Welcome to LivingWiki. Let’s explore the people, places, and details behind this story.',
+  })),
+];
+
 export const RECOMMENDED_STACK_NARRATOR_VOICES: readonly StackNarratorVoice[] =
   STACK_NARRATOR_VOICES.filter((voice) => voice.recommended);
 
@@ -47,7 +63,7 @@ export const STACK_NARRATOR_VOICE_PRESENTATIONS: readonly StackVoicePresentation
 ];
 
 export function stackNarratorVoiceById(voiceId: string): StackNarratorVoice | null {
-  return STACK_NARRATOR_VOICES.find((voice) => voice.id === voiceId) ?? null;
+  return STACK_STUDIO_NARRATOR_VOICES.find((voice) => voice.id === voiceId) ?? null;
 }
 
 export function filterStackNarratorVoices(

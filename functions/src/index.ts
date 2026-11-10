@@ -40,6 +40,8 @@ import sgMail from '@sendgrid/mail';
 import Stripe from 'stripe';
 import { allowedCheckoutOrigins, getStripeClient, stripeSecretKey, stripeWebhookSecret } from './stripe-client';
 import stackNarratorVoiceCatalog from './stack-narrator-voices.json';
+import stackLibraryVoiceCatalog from './stack-library-voices.json';
+import stackLibraryVoicePreviews from './stack-library-voice-previews.json';
 import { selectAtlasRealtimeVoice } from './atlas-realtime-voice';
 import { selectNativeVoice } from './native-voice';
 import { agentNativeLanguageReadiness } from './agent-language';
@@ -397,9 +399,11 @@ const elevenLabsPremadeNarratorVoiceIds = [
   'EXAVITQu4vr4xnSDxMaL',
   'pNInz6obpgDQGcFmaJgB',
 ];
-const stackNarratorVoiceIds = Object.fromEntries(
+const stackNarratorVoiceIds = new Map(
   stackNarratorVoiceCatalog.map((voice) => [voice.id, voice.providerVoiceId]),
-) as Readonly<Record<string, string>>;
+);
+const stackLibraryVoices = new Map(stackLibraryVoiceCatalog.map((voice) => [`shared-${voice.providerVoiceId}`, voice]));
+const stackLibraryPreviewUrls: Readonly<Record<string, string>> = stackLibraryVoicePreviews;
 const defaultAtlasRealtimeVoice = stackNarratorVoiceCatalog.find((voice) => voice.id === 'warm-storyteller')
   ?? stackNarratorVoiceCatalog[0];
 const personalStackNarratorVoiceId = 'personal-voice';
@@ -22093,8 +22097,9 @@ export const synthesizeChatAnswerSpeech = onCall(
       }
     }
     const requestedPersonalNarrator = isPersonalNarratorSelection(requestedNarratorId);
+    const requestedLibraryVoice = stackLibraryVoices.get(requestedNarratorId);
     let requestedNarratorVoiceId = requestedNarratorId && !requestedPersonalNarrator
-      ? stackNarratorVoiceIds[requestedNarratorId as keyof typeof stackNarratorVoiceIds]
+      ? requestedLibraryVoice?.providerVoiceId ?? stackNarratorVoiceIds.get(requestedNarratorId) ?? ''
       : '';
     if (requestedNarratorId
       && !requestedPersonalNarrator
@@ -22190,7 +22195,7 @@ export const synthesizeChatAnswerSpeech = onCall(
 
     let primaryVoiceId = requestedNarratorVoiceId || chatAnswerVoiceId;
     const requiresNativeNarration = ['tour', 'stack-video'].includes(requestedMode) && requestedContentLanguage !== 'en';
-    if (requiresNativeNarration) {
+    if (requiresNativeNarration && requestedLibraryVoice?.nativeLanguage !== requestedContentLanguage) {
       const preference = contentLanguageVoicePreference(requestedContentLanguage);
       try {
         const matchingVoice = await resolveElevenLabsVoiceForPreference(
@@ -22215,23 +22220,24 @@ export const synthesizeChatAnswerSpeech = onCall(
     // Premade voices expose a provider-hosted preview_url. Instant voice clones
     // often do not, so personal previews must use the normal TTS path below.
     if (shouldUseProviderVoicePreviewUrl(requestedMode, isPersonalNarrator)) {
-      const previewResponse = await fetch(
-        `https://api.elevenlabs.io/v1/voices/${encodeURIComponent(primaryVoiceId)}`,
-        { headers: { 'xi-api-key': apiKey } },
-      );
-      if (!previewResponse.ok) {
-        const previewBody = await previewResponse.text().catch(() => '');
-        logger.warn('ElevenLabs voice preview lookup failed', {
-          status: previewResponse.status,
-          voiceId: primaryVoiceId,
-          body: previewBody.slice(0, 500),
-        });
-        throw new HttpsError('unavailable', 'This voice preview is temporarily unavailable.');
+      let previewUrl = requestedLibraryVoice ? stackLibraryPreviewUrls[primaryVoiceId] ?? '' : '';
+      if (!requestedLibraryVoice) {
+        const previewResponse = await fetch(
+          `https://api.elevenlabs.io/v1/voices/${encodeURIComponent(primaryVoiceId)}`,
+          { headers: { 'xi-api-key': apiKey } },
+        );
+        if (!previewResponse.ok) {
+          const previewBody = await previewResponse.text().catch(() => '');
+          logger.warn('ElevenLabs voice preview lookup failed', {
+            status: previewResponse.status,
+            voiceId: primaryVoiceId,
+            body: previewBody.slice(0, 500),
+          });
+          throw new HttpsError('unavailable', 'This voice preview is temporarily unavailable.');
+        }
+        const previewData = await previewResponse.json() as Record<string, unknown>;
+        previewUrl = typeof previewData['preview_url'] === 'string' ? previewData['preview_url'].trim() : '';
       }
-      const previewData = await previewResponse.json() as Record<string, unknown>;
-      const previewUrl = typeof previewData['preview_url'] === 'string'
-        ? previewData['preview_url'].trim()
-        : '';
       if (!previewUrl.startsWith('https://')) {
         logger.warn('ElevenLabs voice did not provide a secure preview URL', {
           voiceId: primaryVoiceId,
@@ -22283,7 +22289,7 @@ export const synthesizeChatAnswerSpeech = onCall(
     const stackVideoNarrationRevisionKey = requestedMode === 'stack-video'
       ? stackVideoNarrationRevisionCacheKey(requestedStackVideoCard)
       : '';
-    const voiceIds = isPersonalNarrator || requiresNativeNarration || requestedMode === 'sponsorship'
+    const voiceIds = isPersonalNarrator || requestedLibraryVoice || requiresNativeNarration || requestedMode === 'sponsorship'
       ? [primaryVoiceId]
       : Array.from(new Set([
           primaryVoiceId,
