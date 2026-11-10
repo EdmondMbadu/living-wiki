@@ -7,6 +7,7 @@
     </span>
   </summary>
   <div class="designer__body">
+    @let result = design();
     <label>
       <strong i18n>How should the voice sound?</strong>
       <textarea rows="3" maxlength="880" [disabled]="!!working()" [value]="description()"
@@ -27,39 +28,61 @@
         }
       </select>
     </label>
-    <button type="button" class="designer__primary" [disabled]="!!working() || !canAddVoice() || !description().trim()" (click)="generate()">
-      @if (design()) { <span i18n>Generate new options</span> }
+    <button type="button" class="designer__primary designer__generate"
+      [disabled]="working() === 'save' || !canAddVoice() || !description().trim()"
+      [attr.aria-disabled]="working() === 'generate' ? 'true' : null"
+      (click)="generate()">
+      @if (working() === 'generate') {
+        <span class="designer__spinner" aria-hidden="true"></span>
+        <span i18n>Generating...</span>
+      } @else if (result) { <span i18n>Generate new options</span> }
       @else { <span i18n>Generate previews</span> }
     </button>
     @if (!canAddVoice() && !saved()) {
       <p i18n>Your voice library is full. Remove a saved voice to make room for a new one.</p>
     }
     <div aria-live="polite">
-      @if (working() === 'generate') { <p i18n>Creating your voice previews. This can take up to a minute.</p> }
       @if (working() === 'save') { <p i18n>Saving your voice…</p> }
       @if (saved(); as voice) {
         <p i18n><strong>{{ voice.name }}</strong> is saved in My voices. Choose it for this board or assign it to a card in the Script tab.</p>
         <button type="button" (click)="useVoice.emit(voice)" i18n>Use as board voice</button>
       }
     </div>
-    @if (design(); as result) {
+    <div class="designer__announcement" role="status">
+      @if (working() === 'generate') { <span i18n>Creating your voice previews. This can take up to a minute.</span> }
+      @else if (result) { <span i18n>Listen and choose a voice</span> }
+    </div>
+    @if (working() === 'generate' || result) {
       <fieldset>
         <legend i18n>Listen and choose a voice</legend>
-        @if (result.previewText) { <p class="designer__sample">{{ result.previewText }}</p> }
-        <div class="designer__options">
-          @for (preview of previews(); track preview.index) {
-            <div class="designer__option" [class.designer__option--selected]="selectedIndex() === preview.index">
-              <label>
-                <input type="radio" name="studio-designed-voice" [checked]="selectedIndex() === preview.index"
-                  [disabled]="!!working()" (change)="selectedIndex.set(preview.index)">
-                <span [id]="'studio-voice-option-' + preview.index" i18n>Voice {{ preview.index + 1 }}</span>
-              </label>
-              <audio #player controls preload="none" [src]="preview.url" (play)="onPreviewPlay(player)"
-                [attr.aria-labelledby]="'studio-voice-option-' + preview.index"></audio>
+        <div [attr.aria-busy]="working() === 'generate'">
+          @if (working() === 'generate') {
+            <p class="designer__sample" i18n>Creating your voice previews. This can take up to a minute.</p>
+            <div class="designer__options" aria-hidden="true">
+              @for (index of [0, 1, 2]; track index) {
+                <div class="designer__option designer__option--placeholder"><span></span><span></span></div>
+              }
+            </div>
+          } @else if (result) {
+            @if (result.previewText) { <p class="designer__sample">{{ result.previewText }}</p> }
+            <div class="designer__options">
+              @for (preview of previews(); track preview.index) {
+                <div class="designer__option" [class.designer__option--selected]="selectedIndex() === preview.index">
+                  <label>
+                    <input type="radio" name="studio-designed-voice" [checked]="selectedIndex() === preview.index"
+                      [disabled]="!!working()" (change)="selectedIndex.set(preview.index)">
+                    <span [id]="'studio-voice-option-' + preview.index" i18n>Voice {{ preview.index + 1 }}</span>
+                  </label>
+                  <audio #player controls preload="none" [src]="preview.url" (play)="onPreviewPlay(player)"
+                    [attr.aria-labelledby]="'studio-voice-option-' + preview.index"></audio>
+                </div>
+              }
             </div>
           }
         </div>
       </fieldset>
+    }
+    @if (result) {
       <label>
         <strong i18n>Voice name</strong>
         <input type="text" maxlength="48" placeholder="e.g. Sunny the Flamingo" i18n-placeholder

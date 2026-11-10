@@ -1,6 +1,6 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { PersonalVoiceService, type PersonalVoice, type PersonalVoiceLibrary } from '../personal-voice.service';
+import { PersonalVoiceService, type PersonalVoice, type PersonalVoiceLibrary, type StudioVoiceDesign } from '../personal-voice.service';
 import { StudioVoiceDesigner } from './studio-voice-designer';
 
 describe('Studio voice designer', () => {
@@ -66,5 +66,35 @@ describe('Studio voice designer', () => {
 
     expect(designer.previews()).toEqual([]);
     expect(provider.saveStudioVoice).not.toHaveBeenCalled();
+  });
+
+  it('keeps the preview area visible and prevents duplicate requests while regenerating', async () => {
+    const fixture = TestBed.createComponent(StudioVoiceDesigner);
+    const designer = fixture.componentInstance;
+    designer.useExample(designer.examples[0]);
+    await designer.generate();
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    root.querySelector('details')!.open = true;
+    const previewArea = root.querySelector('fieldset');
+    const generate = root.querySelector<HTMLButtonElement>('.designer__generate')!;
+    let complete!: (result: StudioVoiceDesign) => void;
+    provider.designStudioVoice.and.returnValue(new Promise((resolve) => { complete = resolve; }));
+
+    generate.click();
+    fixture.detectChanges();
+    expect(generate.textContent?.trim()).toBe('Generating...');
+    expect(generate.getAttribute('aria-disabled')).toBe('true');
+    expect(root.querySelector('fieldset')).toBe(previewArea);
+    expect(previewArea?.querySelector('[aria-busy="true"]')).not.toBeNull();
+    expect(root.querySelectorAll('audio').length).toBe(0);
+    generate.click();
+    expect(provider.designStudioVoice).toHaveBeenCalledTimes(2);
+
+    complete({ sessionId: 'next-session', previewText: 'A new sample.', previews });
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(generate.textContent?.trim()).toBe('Generate new options');
+    expect(root.querySelectorAll('audio').length).toBe(3);
   });
 });
