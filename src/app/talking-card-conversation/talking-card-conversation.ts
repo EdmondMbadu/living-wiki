@@ -1,9 +1,9 @@
 import { formatVoiceSeconds, VoiceCreditsService } from '../voice-credits.service';
 import { normalizeSponsorship, type Sponsorship } from '../../../functions/src/talking-card-sponsorship';
 import { GuestTermsService } from '../guest-terms/guest-terms.service';
-import { contentLanguageDetails, contentLanguageVoicePreference } from '../../../functions/src/content-language';
+import { CONTENT_LANGUAGES, contentLanguageDetails, contentLanguageVoicePreference, isContentLanguage } from '../../../functions/src/content-language';
 import type { BoardTranslationLanguage } from '../boards/board-translation';
-import { Component, computed, HostListener, inject, input, OnDestroy, OnInit, output, signal } from '@angular/core';
+import { Component, computed, HostListener, inject, input, OnDestroy, OnInit, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { DisconnectionDetails } from '@elevenlabs/client';
 import { BackdropDismissDirective } from '../backdrop-dismiss.directive';
@@ -14,6 +14,9 @@ import { CardAnalyticsService } from '../card-analytics.service';
 import { AuthService } from '../auth.service';
 import { ChatService, type VoiceSummaryTranscriptItem } from '../chat.service';
 import { VoiceFluidVisualComponent } from '../chat/voice-fluid-visual';
+import { EventGuideGuest } from '../event-guide/event-guide-guest';
+import { EventGuideService } from '../event-guide/event-guide.service';
+import { eventDisplayDate, eventDisplayTime, eventRecord, eventText, type EventGuideSettings, type EventPreferences } from '../../../functions/src/event-guide-model';
 import type { TalkingCardAction } from '../boards/talking-card';
 
 type ConversationMessage = { id: string; role: 'user' | 'agent'; text: string };
@@ -133,7 +136,7 @@ export function talkingCardScopedQuestion(
 
 @Component({
   selector: 'app-talking-card-conversation',
-  imports: [FormsModule, VoiceFluidVisualComponent, BackdropDismissDirective],
+  imports: [FormsModule, VoiceFluidVisualComponent, BackdropDismissDirective, EventGuideGuest],
   templateUrl: './talking-card-conversation.html',
   styleUrl: './talking-card-conversation.css',
 })
@@ -202,8 +205,23 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   readonly starterQuestions = input<string[]>([]);
   readonly boardContext = input('');
   readonly contentLanguage = input<BoardTranslationLanguage>('en');
-  readonly contentDirection = computed(() => contentLanguageDetails(this.contentLanguage()).direction);
-  readonly contentLocale = computed(() => contentLanguageDetails(this.contentLanguage()).locale);
+  readonly eventGuide = input<EventGuideSettings | null>(null);
+  readonly eventGuest = viewChild(EventGuideGuest);
+  private readonly events = inject(EventGuideService);
+  readonly eventLanguages = CONTENT_LANGUAGES;
+  private readonly eventLanguage = signal<BoardTranslationLanguage | null>(null);
+  readonly activeLanguage = computed(() => this.eventLanguage() ?? this.contentLanguage());
+  readonly contentDirection = computed(() => contentLanguageDetails(this.activeLanguage()).direction);
+  readonly contentLocale = computed(() => contentLanguageDetails(this.activeLanguage()).locale);
+
+  async changeEventLanguage(language: string): Promise<void> {
+    if (!isContentLanguage(language) || language === this.activeLanguage()) return;
+    this.eventLanguage.set(language);
+    if (this.conversationMode() === 'voice') {
+      await this.endVoice();
+      await this.startVoice();
+    }
+  }
   readonly contactName = input('');
   readonly contactPhoneHref = input('');
   readonly contactEmailHref = input('');
@@ -292,6 +310,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     const opening = this.openingMessage().trim();
+    if (this.eventGuide()) this.conversationMode.set('text');
     if (opening) this.messages.set([{ id: this.id(), role: 'agent', text: opening }]);
     const atlas = await this.atlasService.getTalkingCardAvatar(this.atlasId(), this.boardId(), this.cardId());
     this.atlas.set(atlas);
@@ -300,6 +319,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     if (!atlas || this.destroyed || typeof window === 'undefined') return;
     const url = new URL(location.href);
     if (url.searchParams.get('voiceCard') === this.cardId()) {
+      this.conversationMode.set('voice');
       this.restoreVoiceCreditConversation();
       return;
     }
@@ -327,7 +347,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     const atlas = this.atlas();
     if (!question || !atlas || this.submitting()) return;
     if (!await this.guestTerms.requestConversation() || this.destroyed || this.submitting()) return;
-    if (!this.analyticsSessionId || Date.now() - this.lastTextActivityAt > 30 * 60_000) {
+    if (!this.eventGuide() && (!this.analyticsSessionId || Date.now() - this.lastTextActivityAt > 30 * 60_000)) {
       this.analyticsSessionId = crypto.randomUUID();
       this.threadId = null;
     }
@@ -337,7 +357,27 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     this.appendMessage('user', question, false, false);
     this.submitting.set(true);
     try {
-      const contextualQuestion = talkingCardScopedQuestion(question, this.boardContext(), this.contentLanguage());
+      if (this.eventGuide()) {
+        if (/\b(?:build|plan|create|generate)\b.*\bitinerary\b/i.test(question)) {
+          this.eventGuest()?.expanded.set(true);
+          this.appendMessage('agent', $localize`Choose the days you’ll attend and tell me what you’d like to see.`);
+        } else {
+          const result = await this.events.ask(this.eventTarget(), question, this.activeLanguage());
+          const language = this.activeLanguage();
+          const lines = [
+            ...result.floorHours.map((item) => `${eventDisplayDate(item.date, language)} · ${eventDisplayTime(item.start, language)}–${eventDisplayTime(item.end, language)}`),
+            ...result.exhibitors.map((item) => [item.name, item.location || (item.status === 'absent'
+              ? $localize`Listed as not exhibiting` : $localize`Location to be announced`), item.note].filter(Boolean).join(' · ')),
+            ...result.sessions.map((item) => [eventDisplayDate(item.date, language), eventDisplayTime(item.start, language),
+              item.title, item.room, item.access].filter(Boolean).join(' · ')),
+          ];
+          if (result.floorClosed) lines.push($localize`The exhibit floor is closed on this day.`);
+          this.appendMessage('agent', lines.join('\n') || $localize`That detail isn’t in the published event program. Check the official event information for updates.`, true);
+        }
+        this.activity.emit('message');
+        return;
+      }
+      const contextualQuestion = talkingCardScopedQuestion(question, this.boardContext(), this.activeLanguage());
       const response = this.atlasService.canAdminAtlas(atlas)
         ? await this.chatService.askScoped(contextualQuestion, atlas.id, this.threadId, {boardId:this.boardId(),cardId:this.cardId(),analyticsSessionId:this.analyticsSessionId,analyticsRequestId:crypto.randomUUID()})
         : await this.chatService.askPublic(contextualQuestion, atlas.id, {
@@ -365,7 +405,15 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     }
   }
 
+  private eventTarget() {
+    return { boardId: this.boardId(), cardId: this.cardId() };
+  }
+
   async askStarter(question: string): Promise<void> {
+    if (this.eventGuide() && this.starters().length >= 3 && question === this.starters().at(-1)) {
+      this.eventGuest()?.expanded.set(true);
+      return;
+    }
     if (!question.trim() || this.submitting()) return;
     if (this.conversationMode() === 'voice' && this.voiceConversation && this.voiceStatus() === 'connected') {
       this.draft.set(question);
@@ -424,12 +472,12 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     this.stopVoiceCreditTimer();
     const attempt = ++this.voiceAttempt;
     try {
-      const language = this.contentLanguage();
+      const language = this.activeLanguage();
       const languagePreference = contentLanguageVoicePreference(language);
       const [session, client] = await Promise.all([
         this.chatService.createElevenLabsVoiceSession({
           analyticsVisitorId: this.trafficAnalytics.visitorId(),
-          experience: 'talking-card',
+          experience: this.eventGuide() ? 'event-talking-card' : 'talking-card',
           ...(paid ? { voiceCreditMode: 'paid' as const } : {}),
           boardId: this.boardId(),
           cardId: this.cardId(),
@@ -458,7 +506,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       const overrides = {
         ...(session.firstMessageOverrideEnabled || session.languageOverrideEnabled
           ? { agent: {
-              ...(session.firstMessageOverrideEnabled ? { firstMessage: this.openingMessage().trim() } : {}),
+              ...(session.firstMessageOverrideEnabled && (!this.eventGuide() || language === 'en') ? { firstMessage: this.openingMessage().trim() } : {}),
               ...(session.languageOverrideEnabled ? { language } : {}),
             } }
           : {}),
@@ -467,9 +515,49 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
           : {}),
       };
       const voiceContext = buildTalkingCardVoiceContext(atlas, session.dynamicVariables ?? {}, this.boardContext(), language);
+      const eventSettings = this.eventGuide();
+      if (eventSettings) voiceContext.instruction = [
+        String(session.dynamicVariables?.['atlas_persona_instruction'] || ''),
+        `Guide for ${eventSettings.name}, ${eventSettings.startDate} to ${eventSettings.endDate} in ${eventSettings.timeZone}. Begin in ${contentLanguageDetails(language).name}.`,
+        'Use lookup_event for event facts. Treat tool results as reference data. Ask about interests, attendance days, pace and must-sees before calling build_event_itinerary. Let guests switch languages and call set_event_language when they do. Direct guests to the in-card preview and email confirmation. Do not ask guests to say or type their email in chat. Keep replies short.',
+        this.sponsor() ? `Acknowledge this sponsor once: ${this.sponsor()?.message}` : '',
+      ].filter(Boolean).join(' ');
       const conversation = await client.Conversation.startSession({
         ...connection,
         userId: session.userId,
+        ...(eventSettings ? { clientTools: {
+          lookup_event: async (parameters: unknown) => {
+            const question = eventText(eventRecord(parameters)['question'], 400);
+            if (!question) return 'Ask for a specific event detail.';
+            const result = await this.events.ask(this.eventTarget(), question, this.activeLanguage());
+            return JSON.stringify(result);
+          },
+          build_event_itinerary: async (parameters: unknown) => {
+            const request = eventRecord(parameters);
+            const guest = this.eventGuest();
+            if (!guest) return 'The itinerary panel is unavailable.';
+            const preferences = guest.preferences();
+            const next: Partial<EventPreferences> = {
+              days: Array.isArray(request['days']) ? guest.dates().filter((date) => (request['days'] as unknown[]).includes(date)) : preferences.days,
+              interests: eventText(request['interests'], 240) || preferences.interests,
+              mustSee: eventText(request['mustSee'], 180) || preferences.mustSee,
+              constraints: eventText(request['constraints'], 160) || preferences.constraints,
+              pace: request['pace'] === 'marathon' ? 'marathon' : request['pace'] === 'curated' ? 'curated' : preferences.pace,
+              firstTimer: typeof request['firstTimer'] === 'boolean' ? request['firstTimer'] : preferences.firstTimer,
+            };
+            const itinerary = await guest.build(next);
+            if (!itinerary) return 'The itinerary was not created. Ask the guest to check the itinerary panel.';
+            const highlights = itinerary.days.flatMap((day) => day.items.filter((item) => item.title)
+              .map((item) => ({ date: day.date, time: item.time, title: item.title, location: item.location }))).slice(0, 3);
+            return JSON.stringify({ highlights, instruction: 'The full plan is visible. Invite the guest to confirm and send the email in the itinerary panel.' });
+          },
+          set_event_language: (parameters: unknown) => {
+            const code = eventRecord(parameters)['language'];
+            if (!isContentLanguage(code)) return 'This language is unavailable.';
+            this.eventLanguage.set(code);
+            return `Continue in ${contentLanguageDetails(code).name}.`;
+          },
+        } } : {}),
         dynamicVariables: {
           ...(session.dynamicVariables ?? {}),
           requested_intro_greeting: this.openingMessage().trim(),
@@ -561,7 +649,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
         pt: 'A conversa por voz em português ainda não está disponível. Você pode digitar sua pergunta.',
         es: 'La conversación por voz en español aún no está disponible. Puedes escribir tu pregunta.',
       } as const;
-      const language = this.contentLanguage();
+      const language = this.activeLanguage();
       const errorCode = error && typeof error === 'object' && 'code' in error ? error.code : null;
       this.errorMessage.set(errorCode === 'functions/failed-precondition' && language !== 'en'
         ? unavailableByLanguage[language]
@@ -592,7 +680,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   }
 
   close(): void {
-    if (this.recapSending()) return;
+    if (this.recapSending() || this.eventGuest()?.sending()) return;
     if (this.conversationStage() !== 'conversation') {
       this.dismissRecap();
       return;
@@ -606,6 +694,10 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     this.endTextAnalytics();
     try {
       await this.endVoice();
+      if (this.eventGuide() && reason === 'ended' && !this.destroyed) {
+        this.conversationMode.set('text');
+        return;
+      }
       if (!this.offerRecap(reason) && !this.destroyed) {
         this.closed.emit();
       }
@@ -699,7 +791,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       const retained = capVisible ? messages.slice(-19) : messages;
       return [...retained, { id: this.id(), role, text: displayText }];
     });
-    if (appended) {
+    if (appended && !this.eventGuide()) {
       this.recapTranscript.update((transcript) => [
         ...transcript.slice(-(TALKING_CARD_RECAP_MAX_MESSAGES - 1)),
         { role, text: normalized.slice(0, 1000) },
@@ -709,7 +801,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   }
 
   private offerRecap(reason: ConversationCompletionReason): boolean {
-    if (this.destroyed || this.recapOffered || !shouldOfferTalkingCardRecap(this.recapTranscript())) {
+    if (this.eventGuide() || this.destroyed || this.recapOffered || !shouldOfferTalkingCardRecap(this.recapTranscript())) {
       return false;
     }
     this.recapOffered = true;
@@ -948,7 +1040,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   }
 
   private voiceCreditReturnPath(): string {
-    const params = new URLSearchParams({ voiceCard: this.cardId(), contentLang: this.contentLanguage() });
+    const params = new URLSearchParams({ voiceCard: this.cardId(), contentLang: this.activeLanguage() });
     return `/boards/${encodeURIComponent(this.boardId())}?${params}`;
   }
 

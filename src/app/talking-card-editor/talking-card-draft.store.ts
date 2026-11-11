@@ -1,5 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
+import type { EventDataset, EventGuideSettings } from '../../../functions/src/event-guide-model';
 import { normalizeTalkingCardActions, type TalkingCardAction } from '../boards/talking-card';
 
 export type TalkingCardDraftMode = 'existing' | 'new';
@@ -29,6 +30,7 @@ export interface TalkingCardDraftRecord {
   imageFile: File | null;
   uploadedImageUrl: string;
   documentFiles: File[];
+  eventDraft?: { settings: EventGuideSettings; dataset: Partial<EventDataset> };
   updatedAt: string;
 }
 
@@ -199,6 +201,7 @@ export class TalkingCardDraftStore {
       imageFile,
       uploadedImageUrl: this.stringValue(record.uploadedImageUrl).slice(0, 2000),
       documentFiles,
+      ...(record.eventDraft?.settings && record.eventDraft.dataset ? { eventDraft: record.eventDraft } : {}),
       updatedAt: this.stringValue(record.updatedAt),
     };
   }

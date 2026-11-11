@@ -75,6 +75,10 @@
     "source": "{$INTERPOLATION} Talk with {$INTERPOLATION_1} through the {$INTERPOLATION_2} city wiki.",
     "file": "src/app/business-detail/business-detail.html"
   },
+  "1018492008369499286": {
+    "source": "Use this address to send me this itinerary.",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "1022922324880847141": {
     "source": "Use as board voice",
     "file": "src/app/boards/studio-voice-designer.html"
@@ -230,6 +234,10 @@
   "1060628518810112247": {
     "source": "Loading Stack",
     "file": "src/app/boards/boards.html"
+  },
+  "1060855968942767193": {
+    "source": "Marathon",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "1062575677191129935": {
     "source": "https://rocketgoals.beehiiv.com/",
@@ -891,6 +899,10 @@
     "source": "Text chats and voice conversations with the assistant and city guides.",
     "file": "src/app/platform-analytics/picamo-analytics.html"
   },
+  "126465565654116096": {
+    "source": "Minutes between venues or halls",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "1266372829686289709": {
     "source": "Tell the story behind this photo.",
     "file": "src/app/boards/boards.ts"
@@ -938,6 +950,10 @@
   "1283415712586391060": {
     "source": " Next {$START_TAG_SPAN}chevron_right{$CLOSE_TAG_SPAN}",
     "file": "src/app/boards/boards.html"
+  },
+  "1286337105616491613": {
+    "source": "Confirmed location *",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "1286522934584534916": {
     "source": "Route & map",
@@ -1102,6 +1118,10 @@
   "1320693770019516171": {
     "source": "this board",
     "file": "src/app/boards/boards.ts"
+  },
+  "1321273825816761655": {
+    "source": "Enter manually",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "1321935095257796088": {
     "source": "Up to four secure public links, including one scheduling action.",
@@ -2115,6 +2135,10 @@
     "source": "New related card",
     "file": "src/app/boards/boards.ts"
   },
+  "1581830038570740193": {
+    "source": "Event itinerary",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "158221464148581588": {
     "source": "How people are doing",
     "file": "src/app/boards/boards.html"
@@ -2375,6 +2399,10 @@
     "source": "Golden Hour Square",
     "file": "src/app/boards/stack-audio.ts"
   },
+  "1664272583235790222": {
+    "source": "Official event link",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "1664626626431615020": {
     "source": "{$INTERPOLATION} scenes",
     "file": "src/app/boards/boards.html"
@@ -2510,6 +2538,10 @@
   "1713271461473302108": {
     "source": "Mode",
     "file": "src/app/card-analytics/card-analytics.html"
+  },
+  "1715538045281341954": {
+    "source": "Event guide",
+    "file": "src/app/boards/boards.ts"
   },
   "1717944657826721850": {
     "source": "Add seats in Billing",
@@ -3050,6 +3082,10 @@
   "1889689983209172360": {
     "source": "Tune these gems",
     "file": "src/app/boards/boards.ts"
+  },
+  "1890143780720205997": {
+    "source": "Avatar & card",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "1890174366404475460": {
     "source": "Sign in to create a board.",
@@ -4043,6 +4079,10 @@
     "source": "Make ",
     "file": "src/app/boards/boards.ts"
   },
+  "2196050712062485342": {
+    "source": "Your itinerary email is on its way.",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "2197766708659073086": {
     "source": "Select a date to see its recent conversations.",
     "file": "src/app/platform-analytics/picamo-analytics.html"
@@ -4150,6 +4190,10 @@
   "2229906683541898266": {
     "source": "Like board",
     "file": "src/app/boards/boards.ts"
+  },
+  "2231567984326326581": {
+    "source": "The file could not be read.",
+    "file": "src/app/event-guide/event-guide.service.ts"
   },
   "2231928286070187157": {
     "source": "Campuses",
@@ -5151,6 +5195,10 @@
     "source": "Score ready. Sign in to add it to the leaderboard.",
     "file": "src/app/answer-quiz/answer-quiz.ts"
   },
+  "2522853280167645778": {
+    "source": "Closing time must be after opening time.",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "2524682353251130286": {
     "source": "Tone",
     "file": "src/app/boards/boards.html"
@@ -5775,6 +5823,10 @@
     "source": "Noodles",
     "file": "src/app/business-badge-icons.ts"
   },
+  "2706142123061420693": {
+    "source": "Event details",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "2706730550203140359": {
     "source": "adding the card",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
@@ -6091,6 +6143,10 @@
     "source": "This card may have been removed.",
     "file": "src/app/boards/card-share-dialog.html"
   },
+  "2810656446596458050": {
+    "source": "Add an exhibitor",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "2817737674707432852": {
     "source": "Close share options",
     "file": "src/app/answer-card/answer-card.html"
@@ -6363,6 +6419,10 @@
     "source": "Use my location",
     "file": "src/app/off-grids/off-grid-copy.ts"
   },
+  "2915916059932778972": {
+    "source": "Review import",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "2917153737159129879": {
     "source": "What should this board be about? Describe it in a sentence.",
     "file": "src/app/kiwi/kiwi.ts"
@@ -6423,6 +6483,10 @@
     "source": "Picamo voice was interrupted. Please try again.",
     "file": "src/app/kiwi/kiwi.ts"
   },
+  "2932391385093697460": {
+    "source": "Event Talking Card",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
   "293344152000220895": {
     "source": "will be removed from My Videos. Its source board will not be deleted.",
     "file": "src/app/video-library/video-library.html"
@@ -6458,6 +6522,10 @@
   "2940756236215867987": {
     "source": "Card details",
     "file": "src/app/boards/boards.html"
+  },
+  "294085087682895901": {
+    "source": "e.g. CES 2027",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "2941170033894605998": {
     "source": "Question {$INTERPOLATION} of {$INTERPOLATION_1}",
@@ -6506,6 +6574,10 @@
   "2949848596707725099": {
     "source": "Sign out",
     "file": "src/app/account-menu/account-menu.ts"
+  },
+  "295014115939450724": {
+    "source": "Exhibitor name *",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "2950516762204674600": {
     "source": "Forgot Password",
@@ -7027,6 +7099,10 @@
     "source": "{$START_TAG_STRONG}For in-feed playback{$CLOSE_TAG_STRONG}, attach the MP4 as native media. The permanent video-page link remains available above as an optional fallback.",
     "file": "src/app/boards/boards.html"
   },
+  "310456714136841804": {
+    "source": "Enter the exhibitor’s name and any confirmed location.",
+    "file": "src/app/event-guide/event-guide-setup.ts"
+  },
   "3104789030240019173": {
     "source": "active fights",
     "file": "src/app/fence-line/fence-line.html"
@@ -7090,6 +7166,10 @@
   "3122457688505124547": {
     "source": "Don’t Just Search. Let’s Go. | LivingWiki",
     "file": "src/app/membership/membership.ts"
+  },
+  "3123258047203486819": {
+    "source": "View and edit exhibitors",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "3127552806282514231": {
     "source": "Watch Picamo fill this board in. You can edit it while it works.",
@@ -7435,6 +7515,10 @@
     "source": "Asthma hospitalization rates are among the highest in the U.S.",
     "file": "src/app/fence-line/fence-line.ts"
   },
+  "3206363948993398404": {
+    "source": "Set up the event program and the avatar that will guide guests.",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "3207212563016076553": {
     "source": "Try an example",
     "file": "src/app/boards/studio-voice-designer.html"
@@ -7474,6 +7558,10 @@
   "3214368587943331898": {
     "source": "Nested under",
     "file": "src/app/boards/boards.html"
+  },
+  "3216641143037129231": {
+    "source": "Workshop",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "3217061682083634246": {
     "source": "Close voice recap dialog",
@@ -7678,6 +7766,10 @@
   "3269863581027014491": {
     "source": "MAKE PICAMO YOURS",
     "file": "src/app/kiwi/kiwi.html"
+  },
+  "3271491331984204514": {
+    "source": "What are the exhibit hours?",
+    "file": "src/app/boards/boards.ts"
   },
   "32725357558423761": {
     "source": "Edit in account admin",
@@ -7938,6 +8030,10 @@
   "3343854326092404333": {
     "source": "Badge side icons",
     "file": "src/app/business-claim/business-claim.html"
+  },
+  "3344565155789185310": {
+    "source": "Browse or drop here",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "3345512471687795386": {
     "source": "Asia",
@@ -8403,6 +8499,10 @@
     "source": "Used during this period",
     "file": "src/app/platform-analytics/platform-analytics.html"
   },
+  "3465754766399229509": {
+    "source": "Location to be announced",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "3465942650835858981": {
     "source": "Maintenance",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -8486,6 +8586,10 @@
   "3482829677766881082": {
     "source": "Personal plan",
     "file": "src/app/pricing/pricing.ts"
+  },
+  "3483064284098189323": {
+    "source": "Event Talking Card setup",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "3483228516252511129": {
     "source": "Sign in to continue asking grounded questions.",
@@ -9106,6 +9210,10 @@
   "3655881289553210551": {
     "source": "Open saved board drafts",
     "file": "src/app/boards/boards.html"
+  },
+  "3656603085097776398": {
+    "source": "Privacy notice",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "3657960137137772710": {
     "source": "{$START_TAG_STRONG}Clean dataset:{$CLOSE_TAG_STRONG} keep jobs and pathways separate, store one record per opportunity, and add dedupe/expiry rules as the source list grows.",
@@ -10135,6 +10243,10 @@
     "source": "Email address",
     "file": "src/app/atlas-landing/atlas-landing.html"
   },
+  "3967996664797465134": {
+    "source": "Check the exhibit floor hours.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "3968543372096442680": {
     "source": "Open the Wiki view to inspect compiled topics, summaries, and citations.",
     "file": "src/app/wiki-home/wiki-home.html"
@@ -10166,6 +10278,10 @@
   "3973731259268556501": {
     "source": "We could not confirm verification for this session. Open the latest email, let the verification link finish, then try again.",
     "file": "src/app/verify-email/verify-email.ts"
+  },
+  "3973931101896534797": {
+    "source": "Date",
+    "file": "src/app/event-guide/event-guide-setup.ts"
   },
   "3974101423381281920": {
     "source": "Submit claim request",
@@ -10230,6 +10346,10 @@
   "3987510668393448469": {
     "source": "Explore properties",
     "file": "src/app/public-wikis/public-wikis.html"
+  },
+  "3987640590222727109": {
+    "source": "Guide language",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
   "3988690826693452371": {
     "source": "City / market",
@@ -10311,6 +10431,10 @@
     "source": "All board types",
     "file": "src/app/boards/boards.html"
   },
+  "4014453334442633020": {
+    "source": "Exhibitors",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "4016927738917337389": {
     "source": "Use internet mode",
     "file": "src/app/chat/chat.ts"
@@ -10390,6 +10514,10 @@
   "4041526982471014840": {
     "source": "Your team could not be opened. Please try again.",
     "file": "src/app/talkthrus/talkthrus.ts"
+  },
+  "4043243353854724123": {
+    "source": "Day off",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "4045102710065486963": {
     "source": "Used as the main storefront visual.",
@@ -10551,6 +10679,10 @@
     "source": " Scroll to zoom · drag to pan · hover cities ",
     "file": "src/app/dymaxion/dymaxion.html"
   },
+  "4090790305166286009": {
+    "source": "Exhibitor name",
+    "file": "src/app/event-guide/event-guide-setup.ts"
+  },
   "4094182605938335952": {
     "source": "Loading boards…",
     "file": "src/app/boards/boards.ts"
@@ -10618,6 +10750,10 @@
   "4109858931002571285": {
     "source": "These source files are unavailable",
     "file": "src/app/library/library.html"
+  },
+  "4111860649370638583": {
+    "source": "Worksheet",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "4112934951064604990": {
     "source": "Cards per board",
@@ -10782,6 +10918,10 @@
   "4153557894858935010": {
     "source": "Cancelled · access until {$date}",
     "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
+  },
+  "4154257640511634867": {
+    "source": "Privacy notice link",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "4155395024816191514": {
     "source": "The Card Wizard could not prepare this related card.",
@@ -11207,6 +11347,10 @@
     "source": "Open share page",
     "file": "src/app/answer-card/answer-card.html"
   },
+  "4267277063431678350": {
+    "source": "Edit Event Talking Card",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "4268514799987791013": {
     "source": "Public Pulse",
     "file": "src/app/profile/profile-icons.ts"
@@ -11262,6 +11406,10 @@
   "4283705614585024973": {
     "source": "Return to LivingWiki and choose another public university.",
     "file": "src/app/city-board-collection/city-board-collection.ts"
+  },
+  "428415058457380094": {
+    "source": "Auto detect",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "428649348470571163": {
     "source": "Picamo analytics",
@@ -11394,6 +11542,10 @@
   "4317403937819279479": {
     "source": "Location: Local Node 077",
     "file": "src/app/landing/landing.html"
+  },
+  "4318136235253507179": {
+    "source": "For example, shorter walks",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "4318266411072670781": {
     "source": "Type a message…",
@@ -11618,6 +11770,10 @@
   "4386977525322322103": {
     "source": "Additional QR code saved.",
     "file": "src/app/business-detail/business-edit.ts"
+  },
+  "4387344907404571799": {
+    "source": "Exhibit floor hours",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "4388712199830758321": {
     "source": "Resend verification email",
@@ -11879,6 +12035,10 @@
     "source": "Custom URLs are a paid feature.",
     "file": "src/app/custom-public-url-dialog/custom-public-url-dialog.html"
   },
+  "4482212767234884847": {
+    "source": "Time zone *",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "4482250044927111961": {
     "source": "Reading the source page",
     "file": "src/app/boards/boards.ts"
@@ -12038,6 +12198,10 @@
   "4523925949639920708": {
     "source": "Beyond the Strip",
     "file": "src/app/chat/chat.ts"
+  },
+  "4525173617680385109": {
+    "source": "Reading event records…",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "4525653509874500052": {
     "source": "All members",
@@ -12883,6 +13047,10 @@
     "source": "Explore · Learn · Connect",
     "file": "src/app/auth-story-panel/auth-story-panel.html"
   },
+  "4760689237520935879": {
+    "source": "Check the event name, dates, time zone, and links.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "4763709237936069505": {
     "source": " · awaiting enrichment",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
@@ -13054,6 +13222,10 @@
   "4805068354673369728": {
     "source": " {$INTERPOLATION} already ingested in this atlas · {$INTERPOLATION_1} new ",
     "file": "src/app/web-scraper/web-scraper.html"
+  },
+  "4806702105719569812": {
+    "source": "Loading saved event records…",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "4808589666930368915": {
     "source": "Draft",
@@ -13423,6 +13595,10 @@
     "source": " No ready personal voices were found. Create a voice in your profile, then return here. ",
     "file": "src/app/teams/teams.html"
   },
+  "4920727687628437476": {
+    "source": "Working on your itinerary…",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "4921123297056204437": {
     "source": " Found {$INTERPOLATION} article{$INTERPOLATION_1} ",
     "file": "src/app/web-scraper/web-scraper.html"
@@ -13450,6 +13626,10 @@
   "493724287502794340": {
     "source": "Industry Atlas",
     "file": "src/app/public-wiki-catalog.ts"
+  },
+  "4938722419677657472": {
+    "source": "CES 2027 demo concierge",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "4939106272228431349": {
     "source": "Add first card",
@@ -13947,6 +14127,10 @@
     "source": "Added admin",
     "file": "src/app/wiki-home/wiki-home.html"
   },
+  "5093056435376290859": {
+    "source": "Location status",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "509510051761641614": {
     "source": "Related card preview",
     "file": "src/app/boards/boards.html"
@@ -14111,6 +14295,10 @@
     "source": "No temp",
     "file": "src/app/public-wikis/public-wikis.ts"
   },
+  "5137007379268780856": {
+    "source": "Add at least one session for guests to explore.",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "5137439220826427060": {
     "source": "Local leaders",
     "file": "src/app/fence-line/fence-line.html"
@@ -14187,6 +14375,10 @@
     "source": "jenny@example.com",
     "file": "src/app/boards/boards.html"
   },
+  "5154720194294972890": {
+    "source": "Hours unknown",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "5154918267779221621": {
     "source": "admin@example.com",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -14231,6 +14423,10 @@
     "source": "Area or nearest town {$START_TAG_SPAN}optional{$CLOSE_TAG_SPAN}{$TAG_INPUT}",
     "file": "src/app/off-grids/off-grid-editor.html"
   },
+  "5162686434580248853": {
+    "source": "Start",
+    "file": "src/app/event-guide/event-guide-setup.ts"
+  },
   "5163560639548210218": {
     "source": "Your voice could not be deleted.",
     "file": "src/app/talking-card-editor/talking-card-editor.ts"
@@ -14242,6 +14438,10 @@
   "5164821362134878891": {
     "source": "Show the board as written",
     "file": "src/app/boards/boards.html"
+  },
+  "5170055940231583094": {
+    "source": "Event schedule",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "517030919058496055": {
     "source": "Selected included voice",
@@ -14426,6 +14626,10 @@
   "5226487613079461597": {
     "source": "Opening your gem…",
     "file": "src/app/off-grids/off-grid-editor.html"
+  },
+  "5229746381304184221": {
+    "source": "PDF, Markdown, Word, TXT, CSV, Excel, or JSON · 6 MB max",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "5232192856903168350": {
     "source": "Picture search results",
@@ -15051,6 +15255,10 @@
     "source": " Preview titles are inferred from link text and nearby headings. Review the list before queueing ingestion. ",
     "file": "src/app/web-scraper/web-scraper.html"
   },
+  "5416385724406309971": {
+    "source": "Update preview",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "5420117234346762042": {
     "source": "Page Not Found | LivingWiki",
     "file": "src/app/app.routes.ts"
@@ -15094,6 +15302,10 @@
   "5433782699501161466": {
     "source": "Schedule",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
+  "5434160350843843689": {
+    "source": "Alternatives",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "5435537047862890482": {
     "source": " more places",
@@ -15170,6 +15382,10 @@
   "5452798498597950632": {
     "source": "Guest · ",
     "file": "src/app/boards/boards.html"
+  },
+  "545449211376952898": {
+    "source": "Your itinerary could not be built.",
+    "file": "src/app/event-guide/event-guide-guest.ts"
   },
   "5454904335465320721": {
     "source": "1. Create Account",
@@ -15271,6 +15487,10 @@
     "source": "Best Sushi in Philly",
     "file": "src/app/membership/membership.html"
   },
+  "5495676136158732653": {
+    "source": "Time range",
+    "file": "src/app/event-guide/event-guide-setup.ts"
+  },
   "5496021206221109109": {
     "source": "Your private voice remains in your library; visitors only hear it when this guide speaks.",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -15286,6 +15506,10 @@
   "5497987268452737660": {
     "source": "Profile picture reset to your premade icon.",
     "file": "src/app/profile/profile.ts"
+  },
+  "5499502741704668384": {
+    "source": "End time *",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "5499604116275260135": {
     "source": "State *",
@@ -15607,6 +15831,10 @@
     "source": "Traffic sources",
     "file": "src/app/board-insights/board-insights.html"
   },
+  "5578387132058860621": {
+    "source": "{$INTERPOLATION} added",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "5578427258347431697": {
     "source": "Explore a live TalkThru ↗",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -15755,6 +15983,10 @@
     "source": "Unit ID, official name, city, and state are required.",
     "file": "src/app/atlas-manage/atlas-manage.ts"
   },
+  "5617415652183537995": {
+    "source": "Start time *",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "561803020364050431": {
     "source": "Queueing complete. Background ingestion continues in Source Files.",
     "file": "src/app/web-scraper/web-scraper.ts"
@@ -15775,6 +16007,10 @@
     "source": "https://example.com/listing",
     "file": "src/app/kiwi/kiwi.html"
   },
+  "5625640136577567856": {
+    "source": "Guide visitors through an event, answer schedule questions, and email personalized itineraries.",
+    "file": "src/app/boards/card-creation.ts"
+  },
   "5627072660785451875": {
     "source": "cards",
     "file": "src/app/boards/boards.html"
@@ -15790,6 +16026,10 @@
   "5631664310550195097": {
     "source": "Rename atlas",
     "file": "src/app/atlas-switcher/atlas-switcher.html"
+  },
+  "5631985933332968332": {
+    "source": "That detail isn’t in the published event program. Check the official event information for updates.",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
   },
   "563272627948836175": {
     "source": "Methods",
@@ -15902,6 +16142,10 @@
   "5661831613856753923": {
     "source": "Drop a card on {$INTERPOLATION}.",
     "file": "src/app/boards/boards.html"
+  },
+  "5662488818873852603": {
+    "source": "The exhibit floor is closed on this day.",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
   },
   "5662874745745812722": {
     "source": "Images required",
@@ -16070,6 +16314,10 @@
   "5698046514233867599": {
     "source": "Choose",
     "file": "src/app/boards/boards.html"
+  },
+  "569810117417137811": {
+    "source": "Generate itinerary",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "5699019814357231897": {
     "source": "You know this board beautifully.",
@@ -16327,6 +16575,10 @@
     "source": "Manage sharing",
     "file": "src/app/boards/boards.ts"
   },
+  "5774597961878520310": {
+    "source": "Enter a secure HTTPS link or leave it blank.",
+    "file": "src/app/event-guide/event-guide-setup.ts"
+  },
   "5775346636203685655": {
     "source": "Undo",
     "file": "src/app/boards/boards.html"
@@ -16443,6 +16695,10 @@
     "source": "{$INTERPOLATION} card{$INTERPOLATION_1} still need an image.",
     "file": "src/app/boards/boards.html"
   },
+  "5803586852938802299": {
+    "source": "Must-see sessions or exhibitors",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "5804464620173552066": {
     "source": "No extra actions yet. The conversation button will remain the only visitor action.",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -16458,6 +16714,10 @@
   "5806697513970179062": {
     "source": "Voice {$INTERPOLATION}",
     "file": "src/app/boards/studio-voice-designer.html"
+  },
+  "5807279253247332896": {
+    "source": "Your itinerary",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "5808215467937565652": {
     "source": "Run summary",
@@ -16799,6 +17059,10 @@
     "source": "Show description",
     "file": "src/app/boards/board-promo-image-dialog.html"
   },
+  "5903110565317428249": {
+    "source": "Session",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "5903517032352278387": {
     "source": "Tell the story in your own words.",
     "file": "src/app/off-grids/off-grid-editor.html"
@@ -16995,9 +17259,17 @@
     "source": "We collect account information such as name, email address, authentication details, and basic profile metadata needed to operate the workspace.",
     "file": "src/app/legal/legal.ts"
   },
+  "5958567575081359079": {
+    "source": "Interests",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "5960520882296529293": {
     "source": "A curious museum guide with a warm mid-range voice, a conversational rhythm, and a hint of wonder. Give the listener time to picture the details.",
     "file": "src/app/boards/studio-voice-designer.ts"
+  },
+  "5961730753997685905": {
+    "source": "Closes",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "5962319588931300494": {
     "source": "Contact ",
@@ -17250,6 +17522,10 @@
   "60352816361248234": {
     "source": " Choose an article from the left to read compiled knowledge from the source documents. ",
     "file": "src/app/wiki/wiki.html"
+  },
+  "6036319317682470149": {
+    "source": "Rebuild itinerary",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "6036400827568487024": {
     "source": "You are pinning",
@@ -17551,6 +17827,10 @@
     "source": "This account cannot edit {$INTERPOLATION}.",
     "file": "src/app/business-detail/business-edit.html"
   },
+  "6126591174265675195": {
+    "source": "Discard preview",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "6127083157980446361": {
     "source": "YouTube · LinkedIn · Desktop",
     "file": "src/app/boards/boards.html"
@@ -17586,6 +17866,10 @@
   "6144154546407086739": {
     "source": "Public Wiki | LivingWiki",
     "file": "src/app/app.routes.ts"
+  },
+  "6144560567624134516": {
+    "source": "Date *",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "6145437130739785842": {
     "source": " Saved ",
@@ -17670,6 +17954,10 @@
   "6165308040554736592": {
     "source": "X opened with your challenge.",
     "file": "src/app/boards/boards.ts"
+  },
+  "6166002323668686785": {
+    "source": "Keynote",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "6166411589217463623": {
     "source": "Search pictures",
@@ -17771,6 +18059,10 @@
     "source": "Make photo ",
     "file": "src/app/boards/boards.ts"
   },
+  "6186122377067463678": {
+    "source": "What’s on today?",
+    "file": "src/app/boards/boards.ts"
+  },
   "6187415062918811052": {
     "source": "Browse source files",
     "file": "src/app/landing/landing.html"
@@ -17782,6 +18074,10 @@
   "6188111134863382108": {
     "source": "Describe the cards you want to add",
     "file": "src/app/boards/boards.ts"
+  },
+  "6189058336749497081": {
+    "source": "Send itinerary",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "6189286144787606969": {
     "source": "Create video in 2 formats",
@@ -18002,6 +18298,10 @@
   "6248287384332777383": {
     "source": "Your next listing appointment deserves {$START_EMPHASISED_TEXT}your voice.{$CLOSE_EMPHASISED_TEXT}",
     "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "624925444336989488": {
+    "source": "Last program day *",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "6249672124945827121": {
     "source": "Business page changes saved.",
@@ -18239,6 +18539,10 @@
     "source": "Both included",
     "file": "src/app/boards/boards.html"
   },
+  "6316402243348763220": {
+    "source": "More details",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "6316432749546252345": {
     "source": "Creating your voice previews. This can take up to a minute.",
     "file": "src/app/boards/studio-voice-designer.html"
@@ -18379,6 +18683,10 @@
     "source": "Your quiz is live for everyone who can view this board.",
     "file": "src/app/boards/boards.html"
   },
+  "6355643881604818898": {
+    "source": "Choose the days you’ll attend and tell me what you’d like to see.",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
+  },
   "6355877369916592480": {
     "source": "Example introduction language",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -18422,6 +18730,10 @@
   "6367751413467188072": {
     "source": "Market",
     "file": "src/app/business-claim/business-claim.html"
+  },
+  "6371251954110129681": {
+    "source": "Event setup",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "6371576811194810854": {
     "source": "After",
@@ -18615,6 +18927,10 @@
     "source": "Roughly 1.2 million tons of waste burned per year",
     "file": "src/app/fence-line/fence-line.html"
   },
+  "6422884635762569003": {
+    "source": "{$INTERPOLATION} sessions added",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "6423210280939340786": {
     "source": "Ready",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -18766,6 +19082,10 @@
   "6465904963626393309": {
     "source": "Where Locals Linger: 10 Places to Sit for Hours",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
+  "6465962969074499155": {
+    "source": "Use these records",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "6469648340622611172": {
     "source": "Clear separation of evidence and inference",
@@ -19007,6 +19327,10 @@
     "source": "Video downloaded. Attach it in the app where you want to share it.",
     "file": "src/app/video-library/video-library.ts"
   },
+  "6538392439887103623": {
+    "source": "Pace",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "6540078961640336249": {
     "source": "Roughly 1,000 residents relocated after lead and arsenic were found in yards.",
     "file": "src/app/fence-line/fence-line.ts"
@@ -19146,6 +19470,10 @@
   "6572297564733673785": {
     "source": " Annual {$START_TAG_SPAN} Save ~17% {$CLOSE_TAG_SPAN}",
     "file": "src/app/business/business.html"
+  },
+  "6572489852541248915": {
+    "source": "Enter a session title, date, and an end time after the start.",
+    "file": "src/app/event-guide/event-guide-setup.ts"
   },
   "6573816479415118193": {
     "source": "{$INTERPOLATION} members · Private workspace",
@@ -19511,6 +19839,10 @@
     "source": "Your password has been updated. Sign in with your new password.",
     "file": "src/app/auth-action/auth-action.ts"
   },
+  "6681019333263566074": {
+    "source": "Saving the event program…",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "6683719390811157856": {
     "source": "Clear business search",
     "file": "src/app/admin-users/admin-users.html"
@@ -19594,6 +19926,10 @@
   "6717463420033746681": {
     "source": "Listen to ",
     "file": "src/app/kiwi/kiwi.ts"
+  },
+  "671770180250428182": {
+    "source": "Access requirements",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "6718126171774613745": {
     "source": "Search ",
@@ -19846,6 +20182,10 @@
   "6809792544467630537": {
     "source": "Knowledge Map",
     "file": "src/app/profile/profile-icons.ts"
+  },
+  "6810380208036402320": {
+    "source": "Build my itinerary",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "6812045426915689593": {
     "source": " All {$START_BOLD_TEXT}{$INTERPOLATION}{$CLOSE_BOLD_TEXT}",
@@ -20259,6 +20599,10 @@
     "source": "{$START_TAG_SPAN}{$CLOSE_TAG_SPAN} Loading ",
     "file": "src/app/city-places/city-places.html"
   },
+  "6930577476940948397": {
+    "source": "Official event information",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
   "6932865105766151309": {
     "source": "Upload",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -20499,6 +20843,10 @@
     "source": "Live preview",
     "file": "src/app/business-claim/business-claim.html"
   },
+  "7000549293376218458": {
+    "source": "Upload schedule",
+    "file": "src/app/event-guide/event-guide-setup.ts"
+  },
   "7000649363168371045": {
     "source": "Save changes",
     "file": "src/app/admin-users/talkthru-interests-admin.html"
@@ -20522,6 +20870,10 @@
   "7003142405440233286": {
     "source": "Hello, and welcome to my LivingWiki. I enjoy sharing the people, places, and ideas that make every story memorable. As we explore these cards together, I will point out the details, connections, and moments that matter most.",
     "file": "src/app/boards/boards.html"
+  },
+  "7003826819757856838": {
+    "source": "Upload a file",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "7004337725787492378": {
     "source": "Sign up free in seconds.",
@@ -20999,6 +21351,10 @@
     "source": "We’ll choose the strongest matches available.",
     "file": "src/app/boards/boards.html"
   },
+  "7138168252373099382": {
+    "source": "First program day *",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "7139999409916594388": {
     "source": "Leaderboard",
     "file": "src/app/answer-quiz/answer-quiz.html"
@@ -21031,6 +21387,10 @@
     "source": "Boston's sustainability, innovation, and civic data — universities, transit, climate resilience, healthcare, and the innovation economy.",
     "file": "src/app/city-atlas-templates.ts"
   },
+  "7148647811631825878": {
+    "source": "The itinerary could not be sent.",
+    "file": "src/app/event-guide/event-guide-guest.ts"
+  },
   "7150518038358635200": {
     "source": "e.g. Sunny the Flamingo",
     "file": "src/app/boards/studio-voice-designer.html"
@@ -21058,6 +21418,10 @@
   "7154465963103124552": {
     "source": "Sushi",
     "file": "src/app/business-badge-icons.ts"
+  },
+  "715462332820509217": {
+    "source": "Choose at least one day you’ll attend.",
+    "file": "src/app/event-guide/event-guide-guest.ts"
   },
   "7154951720131821402": {
     "source": "Set or change your custom address. Previous custom links keep working.",
@@ -21418,6 +21782,10 @@
   "7249432451235428907": {
     "source": "Duplicate / created",
     "file": "src/app/atlas-manage/atlas-manage.html"
+  },
+  "7251106256213008148": {
+    "source": "Booth confirmed",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "7251928143048856792": {
     "source": "Upload property photos",
@@ -21835,6 +22203,10 @@
     "source": "Choose a background music mood",
     "file": "src/app/boards/boards.html"
   },
+  "7383729479605722663": {
+    "source": "Venue or hall",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "7384104243389196009": {
     "source": "Your PinTalk stays private with this gem.",
     "file": "src/app/off-grids/off-grid-copy.ts"
@@ -21894,6 +22266,10 @@
   "7409965486830822003": {
     "source": "A TalkThru can use up to 24 uploaded photos.",
     "file": "src/app/boards/boards.ts"
+  },
+  "741032232822975798": {
+    "source": "Imported records",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "7410432243549869948": {
     "source": "Duration",
@@ -22303,6 +22679,10 @@
     "source": "Photo choices for ",
     "file": "src/app/kiwi/kiwi.ts"
   },
+  "7524139819922013513": {
+    "source": "Saved records could not be loaded.",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "7524295457674216642": {
     "source": "Retry analytics",
     "file": "src/app/teams/teams.ts"
@@ -22403,6 +22783,10 @@
     "source": "Could not grade this quiz.",
     "file": "src/app/answer-quiz/answer-quiz.ts"
   },
+  "7560107000425798648": {
+    "source": "View and edit sessions",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "7561184798203755217": {
     "source": "Public access",
     "file": "src/app/landing/landing.ts"
@@ -22502,6 +22886,10 @@
   "7590767207440303327": {
     "source": "shared struggles",
     "file": "src/app/fence-line/fence-line.html"
+  },
+  "7590931902818488926": {
+    "source": "Not exhibiting",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "7590985378631917549": {
     "source": " Apply dates",
@@ -22630,6 +23018,10 @@
   "7627544798203088407": {
     "source": "Discover",
     "file": "src/app/workspace-navigation/workspace-navigation.ts"
+  },
+  "7628837142551156997": {
+    "source": "Save your entry or finish reviewing the import.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "7629062430072933229": {
     "source": "Population year",
@@ -23195,6 +23587,10 @@
     "source": "Outbound clicks",
     "file": "src/app/card-analytics/card-analytics.html"
   },
+  "7799704345521411308": {
+    "source": "Save entry",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "7801066442268234034": {
     "source": "Study card",
     "file": "src/app/boards/boards.html"
@@ -23370,6 +23766,10 @@
   "785999261333048502": {
     "source": "End voice",
     "file": "src/app/chat/chat.ts"
+  },
+  "7860418101283165917": {
+    "source": "Closed",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "7861389751355579174": {
     "source": "Analytics",
@@ -23807,6 +24207,10 @@
     "source": " {$INTERPOLATION} is selected. Complete checkout to unlock AI tone, company documents, conversation details, and 200+ conversation minutes. ",
     "file": "src/app/business-claim/business-claim.html"
   },
+  "7968201145848654387": {
+    "source": "Hide itinerary",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "7972108768684850816": {
     "source": "Reusable profile",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -23834,6 +24238,10 @@
   "7977264469363560650": {
     "source": "Checkout could not be started. Please try again in a moment.",
     "file": "src/app/membership/membership.ts"
+  },
+  "797736654580622249": {
+    "source": "Talk to Amy",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "7978016760143010119": {
     "source": "Visits from links created here, ranked by tracked views.",
@@ -24098,6 +24506,10 @@
   "8058495689153782394": {
     "source": " “{$INTERPOLATION}” ",
     "file": "src/app/city-places/city-places.html"
+  },
+  "8058604284017809498": {
+    "source": "Event name *",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "805935341664252510": {
     "source": "What should someone know before they go?",
@@ -24507,6 +24919,10 @@
     "source": "Current atlas",
     "file": "src/app/web-scraper/web-scraper.html"
   },
+  "8180317343123878053": {
+    "source": "Listed as not exhibiting",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
+  },
   "8180799168800036372": {
     "source": "Upgrade to add more",
     "file": "src/app/boards/boards.ts"
@@ -24543,6 +24959,10 @@
     "source": "Why it belongs here, accessibility notes, or what to notice",
     "file": "src/app/boards/boards.html"
   },
+  "8195123549047108170": {
+    "source": "It’s my first time at this event",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "8196385484667295706": {
     "source": "Visitor rate not recorded",
     "file": "src/app/card-analytics/card-analytics.html"
@@ -24578,6 +24998,10 @@
   "8200204097093169452": {
     "source": "Included in the image",
     "file": "src/app/boards/board-promo-image-dialog.html"
+  },
+  "8200947172767568091": {
+    "source": "Session type",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "8201517868061824997": {
     "source": "Show my profile on the public team page",
@@ -24678,6 +25102,10 @@
   "8231104500547197039": {
     "source": "Voice mode needs setup",
     "file": "src/app/chat/chat.ts"
+  },
+  "8232828312821957393": {
+    "source": "Upload exhibitors",
+    "file": "src/app/event-guide/event-guide-setup.ts"
   },
   "8233725113513578646": {
     "source": "Only your team can see this setup card",
@@ -24786,6 +25214,10 @@
   "8274259595280068924": {
     "source": "Logo link",
     "file": "src/app/boards/boards.html"
+  },
+  "8274747206568330738": {
+    "source": "Session title *",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "827694795276168989": {
     "source": "Executives were convicted for bribing a legislator to fight EPA listing.",
@@ -25087,6 +25519,10 @@
     "source": "es",
     "file": "src/app/public-wikis/public-wikis.ts"
   },
+  "83714456098188131": {
+    "source": "Continue to avatar",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "8372563878248042826": {
     "source": "{$INTERPOLATION} beds",
     "file": "src/app/boards/boards.html"
@@ -25122,6 +25558,10 @@
   "8381769229751772914": {
     "source": "The board could not be published. It is still private.",
     "file": "src/app/boards/boards.ts"
+  },
+  "8383195195404894832": {
+    "source": "Using this file replaces the current records for this section.",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "8383265682711941087": {
     "source": "Discovery preview",
@@ -25174,6 +25614,10 @@
   "8396464908757909108": {
     "source": "{$START_TAG_SPAN}link{$CLOSE_TAG_SPAN} Set custom URL ",
     "file": "src/app/boards/nearby-gems-board/nearby-gems-board.html"
+  },
+  "8397875688216543056": {
+    "source": "Talk to the event guide",
+    "file": "src/app/boards/boards.ts"
   },
   "8398563139722852164": {
     "source": "Agent Pro · included with your team plan",
@@ -25346,6 +25790,14 @@
   "8446875339104617088": {
     "source": "Planned",
     "file": "src/app/boards/boards.ts"
+  },
+  "8451256355435461058": {
+    "source": "Map columns",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
+  "8452671349113242908": {
+    "source": "Load Amy’s CES 2027 demo",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "8453274604209064197": {
     "source": "Business guide profile",
@@ -25779,6 +26231,10 @@
     "source": "Use this picture",
     "file": "src/app/boards/boards.ts"
   },
+  "8585078016203103642": {
+    "source": "The file could not be imported.",
+    "file": "src/app/event-guide/event-guide-setup.ts"
+  },
   "8585558416935641261": {
     "source": "Ask up to 5 questions without signing in. {count} remaining.",
     "file": "src/app/chat/chat.ts"
@@ -26027,6 +26483,10 @@
     "source": "Ask your Wiki",
     "file": "src/app/chat/chat.ts"
   },
+  "8678440236971211667": {
+    "source": "Add Event Talking Card",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "8681250242487608593": {
     "source": "Your rating",
     "file": "src/app/city-places/city-places.html"
@@ -26166,6 +26626,14 @@
   "8720093607726336341": {
     "source": "Open this page in your browser to continue.",
     "file": "src/app/talkthru-billing/talkthru-billing.service.ts"
+  },
+  "8720184121728768764": {
+    "source": "The program dates must include every session.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
+  "8721196680877750916": {
+    "source": "Upload a schedule or add a session.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "8721861281513890587": {
     "source": "Properties",
@@ -26387,6 +26855,10 @@
     "source": "Tell us what you want. You can review every card before saving.",
     "file": "src/app/boards/boards.html"
   },
+  "878802295294691928": {
+    "source": "Room or location",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "8788575214415953399": {
     "source": "rental",
     "file": "src/app/boards/boards.ts"
@@ -26426,6 +26898,10 @@
   "8793263420062140927": {
     "source": "AI drafts an editable title and narration for every photo.",
     "file": "src/app/boards/boards.html"
+  },
+  "8794842498974801449": {
+    "source": "Which days are you attending?",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "8795884999538081154": {
     "source": "Special perks. Early access. Better value for life.",
@@ -26531,6 +27007,10 @@
     "source": "Find your business",
     "file": "src/app/business-claim/business-claim.html"
   },
+  "8822132739670809842": {
+    "source": "Area confirmed",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "8822268956859227230": {
     "source": "Team workspace",
     "file": "src/app/kiwi/kiwi.ts"
@@ -26606,6 +27086,10 @@
   "8842123318392393416": {
     "source": "Updates",
     "file": "src/app/notifications/notifications.html"
+  },
+  "8842547827515030812": {
+    "source": "Links, floor hours & travel",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "8843134590212886305": {
     "source": "Ready to create the page",
@@ -27015,6 +27499,10 @@
     "source": "Minimize official Spotify player",
     "file": "src/app/spotify-player/spotify-player.ts"
   },
+  "8947831791201053238": {
+    "source": "Curated highlights",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "8949980368324060194": {
     "source": "Collapse all",
     "file": "src/app/boards/boards.html"
@@ -27094,6 +27582,10 @@
   "8969236416679568161": {
     "source": "Welcome! Here’s what I’d love you to notice as you explore this board…",
     "file": "src/app/boards/boards.html"
+  },
+  "8970895653301489215": {
+    "source": "Explore the show floor",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "8971516712821636286": {
     "source": "Select it again to retry.",
@@ -27555,6 +28047,10 @@
     "source": "logo",
     "file": "src/app/teams/teams.ts"
   },
+  "9090852594821859699": {
+    "source": "Welcome! Ask me about the event, or let’s build an itinerary for your visit.",
+    "file": "src/app/boards/boards.ts"
+  },
   "9091020232558718668": {
     "source": "Explore network",
     "file": "src/app/fence-line/fence-line.html"
@@ -27650,6 +28146,10 @@
   "9122674476747675182": {
     "source": "Your exact square could not be found. Please try again.",
     "file": "src/app/boards/boards.ts"
+  },
+  "9123760278498205706": {
+    "source": "Add a session",
+    "file": "src/app/event-guide/event-guide-setup.html"
   },
   "9126184066234340397": {
     "source": "place-first titles",
@@ -27751,6 +28251,10 @@
     "source": "Documentary",
     "file": "src/app/boards/board-narration-style.ts"
   },
+  "9157149676288955239": {
+    "source": "Booth number",
+    "file": "src/app/event-guide/event-guide-setup.ts"
+  },
   "9160547948808925817": {
     "source": "Agent Pro · complimentary",
     "file": "src/app/talkthru-billing/talkthru-billing-page.ts"
@@ -27778,6 +28282,10 @@
   "916581608141208398": {
     "source": "This chat is unavailable",
     "file": "src/app/chat/chat.html"
+  },
+  "9166605153904064833": {
+    "source": "Planning needs",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "916995495995123604": {
     "source": "Agency & Team · {$seats} · cancelled, ends at period end",
@@ -27814,6 +28322,10 @@
   "9176988609887108566": {
     "source": "Your first Done For You listing free",
     "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "9178194339099607507": {
+    "source": "Choose a file up to 6 MB.",
+    "file": "src/app/event-guide/event-guide.service.ts"
   },
   "9178319369640461063": {
     "source": "How should the voice sound?",
@@ -27891,6 +28403,10 @@
     "source": " Add as a new business instead ",
     "file": "src/app/business-claim/business-claim.html"
   },
+  "9197626231240625268": {
+    "source": "Details link",
+    "file": "src/app/event-guide/event-guide-setup.html"
+  },
   "9199677421881026415": {
     "source": "WhatsApp",
     "file": "src/app/answer-card/answer-card.html"
@@ -27906,6 +28422,10 @@
   "920232928891867801": {
     "source": " Included ",
     "file": "src/app/pricing/pricing.html"
+  },
+  "9203801203319304509": {
+    "source": "View itinerary",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "9203853982818549778": {
     "source": "Delete board",
@@ -28063,6 +28583,10 @@
     "source": "Queueing URL for background ingestion",
     "file": "src/app/web-scraper/web-scraper.ts"
   },
+  "952861460636806415": {
+    "source": "Lunch and recharge",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "952885720200096797": {
     "source": "Team cover photo file",
     "file": "src/app/teams/teams.html"
@@ -28150,6 +28674,10 @@
   "973471983361373451": {
     "source": "Could not copy the Vapi tool URL.",
     "file": "src/app/atlas-manage/atlas-manage.ts"
+  },
+  "97625123026564739": {
+    "source": "The event guide is unavailable.",
+    "file": "src/app/event-guide/event-guide.service.ts"
   },
   "977845988490698724": {
     "source": " is thinking…",

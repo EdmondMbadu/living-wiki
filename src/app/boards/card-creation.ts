@@ -1,5 +1,5 @@
-export type CardCreationKind = 'general' | 'talking' | 'intro' | 'contact' | 'qr-code';
-export type SpecialCardCreationKind = Exclude<CardCreationKind, 'general' | 'talking'>;
+export type CardCreationKind = 'general' | 'talking' | 'event-talking' | 'intro' | 'contact' | 'qr-code';
+export type SpecialCardCreationKind = Exclude<CardCreationKind, 'general' | 'talking' | 'event-talking'>;
 
 export type SpecialCardDraft = {
   kind: SpecialCardCreationKind;
@@ -20,6 +20,7 @@ export const CARD_CREATION_OPTIONS: ReadonlyArray<{
 }> = [
   { kind: 'general', title: $localize`General card`, description: $localize`Describe a place, idea, memory, recommendation, or anything else.`, icon: 'sticky_note_2' },
   { kind: 'talking', title: $localize`Talking Card`, description: $localize`Let visitors ask your virtual agent questions by text or voice.`, icon: 'record_voice_over' },
+  { kind: 'event-talking', title: $localize`Event Talking Card`, description: $localize`Guide visitors through an event, answer schedule questions, and email personalized itineraries.`, icon: 'event_available' },
   { kind: 'intro', title: $localize`Intro card`, description: $localize`Welcome visitors and introduce the story in your own words.`, icon: 'waving_hand' },
   { kind: 'contact', title: $localize`Contact card`, description: $localize`Share a name, phone number, email, and optional organization.`, icon: 'contact_mail' },
   { kind: 'qr-code', title: $localize`QR code card`, description: $localize`Add a QR code people can scan.`, icon: 'qr_code_2' },

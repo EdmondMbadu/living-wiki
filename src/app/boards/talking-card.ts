@@ -1,4 +1,5 @@
 import { normalizeSponsorshipChoice, type Sponsorship, type SponsorshipChoice } from '../../../functions/src/talking-card-sponsorship';
+import { eventSettings, type EventGuideSettings } from '../../../functions/src/event-guide-model';
 import type { BoardTranslationLanguage } from './board-translation';
 export type TalkingCardActionKind = 'schedule' | 'link';
 
@@ -19,10 +20,11 @@ export type BoardCardConversation = {
   actions?: TalkingCardAction[];
   starters?: string[];
   sponsorship?: SponsorshipChoice;
+  event?: EventGuideSettings;
 };
 
 export type TalkingCardEditorPrefill = {
-  experience?: 'real-estate';
+  experience?: 'real-estate' | 'event';
   draftKey?: string;
   propertyTitle?: string;
   imageUrl?: string;
@@ -40,6 +42,7 @@ export type TalkingCardEditorResult = {
   cardId?: string;
   sponsorship?: SponsorshipChoice;
   boardSponsorship?: Sponsorship | null;
+  event?: EventGuideSettings;
   atlasId: string;
   title: string;
   subtitle: string;
@@ -150,6 +153,7 @@ export function normalizeBoardCardConversation(value: unknown): BoardCardConvers
   const openingMessage = cleanString(data['openingMessage'], OPENING_MESSAGE_MAX_LENGTH);
   const ctaLabel = cleanString(data['ctaLabel'], CTA_LABEL_MAX_LENGTH);
   const actions = normalizeTalkingCardActions(data['actions']);
+  const event = eventSettings(data['event']);
   const starters = Array.isArray(data['starters'])
     ? Array.from(new Set(data['starters']
         .map((item) => cleanString(item, STARTER_MAX_LENGTH))
@@ -164,6 +168,7 @@ export function normalizeBoardCardConversation(value: unknown): BoardCardConvers
     ...(data['sponsorship'] ? { sponsorship: normalizeSponsorshipChoice(data['sponsorship']) } : {}),
     ...(ctaLabel ? { ctaLabel } : {}),
     ...(actions.length ? { actions } : {}),
+    ...(event ? { event } : {}),
     ...(starters.length ? { starters } : {}),
   };
 }

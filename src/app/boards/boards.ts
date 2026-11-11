@@ -2479,6 +2479,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly resolveSponsorship = resolveSponsorship;
   readonly talkingCardEditorBoardId = signal<string | null>(null);
   readonly talkingCardEditingCardId = signal<string | null>(null);
+  readonly eventTalkingCardSetup = signal(false);
   readonly listingTalkingCardSetup = signal<{ boardId: string; placeholderCardId: string } | null>(null);
   readonly listingIntroEditorTarget = signal<{ boardId: string; cardId: string } | null>(null);
   readonly listingIntroMessage = signal('');
@@ -2516,6 +2517,13 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     };
   });
   readonly talkingCardEditorPrefill = computed<TalkingCardEditorPrefill | null>(() => {
+    if (this.eventTalkingCardSetup()) return {
+      experience: 'event', draftKey: 'event-guide',
+      role: $localize`Event guide`,
+      personaPrompt: 'You are an AI event concierge. Keep answers short, friendly and grounded in the event program. Say when a detail is unavailable. Use the event tools for schedules, exhibits, and itinerary planning.',
+      openingMessage: $localize`Welcome! Ask me about the event, or let’s build an itinerary for your visit.`,
+      ctaLabel: $localize`Talk to the event guide`,
+    };
     const setup = this.listingTalkingCardSetup();
     const board = setup ? this.boards().find((candidate) => candidate.id === setup.boardId) : null;
     if (!board) return null;
@@ -2558,7 +2566,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (selected?.cards.some((card) => card.id === cardId)) return selected;
     return this.boards().find((board) => board.cards.some((card) => card.id === cardId)) ?? null;
   });
-  readonly talkingConversationLanguage = computed(() => this.boardSpeechLanguage());
+  private readonly requestedEventLanguage = signal<BoardTranslationLanguage | null>(null);
+  readonly talkingConversationLanguage = computed(() => this.talkingConversationCard()?.conversation?.event
+    ? this.requestedEventLanguage() || this.boardSpeechLanguage()
+    : this.boardSpeechLanguage());
   readonly talkingConversationContact = computed(() => {
     const card = this.talkingConversationCard();
     const board = this.talkingConversationBoard();
@@ -4195,6 +4206,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         this.stackShareDirectOpenedFor = '';
       }
       this.tourBoardView.set(view === 'cards' ? 'cards' : 'route');
+      const languageHint = params.get('lang');
+      this.requestedEventLanguage.set(isBoardTranslationLanguage(languageHint) ? languageHint : null);
       const contentLanguage = params.get('contentLang');
       this.syncBoardTranslationLanguage(contentLanguage);
       this.boardLearnDirectRequested = params.get('learn') === 'quiz';
@@ -8219,8 +8232,14 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.listingTalkingCardSetup.set(null);
+    this.eventTalkingCardSetup.set(false);
     this.talkingCardEditingCardId.set(null);
     this.talkingCardEditorBoardId.set(board.id);
+  }
+
+  openEventTalkingCardEditor(board: Board): void {
+    this.openTalkingCardEditor(board.id);
+    this.eventTalkingCardSetup.set(true);
   }
 
   openListingTalkingCardSetup(board: Board, placeholderCard?: BoardCard, event?: Event): void {
@@ -8230,6 +8249,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       this.boardsSyncError.set($localize`Only the board owner can set up this Talking Card.`);
       return;
     }
+    this.eventTalkingCardSetup.set(false);
     this.listingTalkingCardSetup.set({
       boardId: board.id,
       placeholderCardId: placeholderCard && this.isListingTalkingCardPlaceholder(placeholderCard) ? placeholderCard.id : '',
@@ -8247,6 +8267,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.listingTalkingCardSetup.set(null);
+    this.eventTalkingCardSetup.set(false);
     this.talkingCardEditingCardId.set(card.id);
     this.talkingCardEditorBoardId.set(board.id);
   }
@@ -8259,6 +8280,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.listingTalkingCardSetup.set(null);
+    this.eventTalkingCardSetup.set(false);
     this.boardSettingsBoardId.set(null);
     this.boardSettingsError.set(null);
     this.talkingCardEditingCardId.set(null);
@@ -8266,6 +8288,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   closeTalkingCardEditor(): void {
+    this.eventTalkingCardSetup.set(false);
     this.talkingCardEditorBoardId.set(null);
     this.talkingCardEditingCardId.set(null);
     this.listingTalkingCardSetup.set(null);
@@ -8301,6 +8324,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
           openingMessage: result.openingMessage,
           ctaLabel: result.ctaLabel,
           ...(result.sponsorship ? { sponsorship: result.sponsorship } : existing.conversation.sponsorship ? { sponsorship: existing.conversation.sponsorship } : {}),
+          ...((result.event || existing.conversation.event) ? { event: result.event || existing.conversation.event } : {}),
           ...(existing.conversation.starters?.length ? { starters: existing.conversation.starters } : {}),
           ...(result.actions.length ? { actions: result.actions } : {}),
         },
@@ -8370,7 +8394,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       rating: 5,
       imageUrl: result.imageUrl,
       imageUrls: result.imageUrl ? [result.imageUrl] : [],
-      tags: ['talking-card', 'conversational-guide'],
+      tags: ['talking-card', 'conversational-guide', ...(result.event ? ['event-talking-card'] : [])],
       tour: null,
       conversation: {
         version: 1,
@@ -8379,6 +8403,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         openingMessage: result.openingMessage,
         ctaLabel: result.ctaLabel,
         ...(result.sponsorship ? { sponsorship: result.sponsorship } : {}),
+        ...(result.event ? { event: result.event, starters: [$localize`What’s on today?`, $localize`What are the exhibit hours?`, $localize`Build my itinerary`] } : {}),
         ...(result.actions.length ? { actions: result.actions } : {}),
       },
       createdAt: now,
@@ -8619,6 +8644,10 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (kind === 'talking') {
       if (isRealEstateTalkThru(board)) this.openListingTalkingCardSetup(board);
       else this.openTalkingCardEditor(board.id);
+      return;
+    }
+    if (kind === 'event-talking') {
+      this.openEventTalkingCardEditor(board);
       return;
     }
     this.openSpecialCardEditor(board, kind);
@@ -19766,6 +19795,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     if (this.isTalkingCard(card)) {
       this.stackTourNarrationConsent.set(false);
       this.stackNarrationNeedsGesture.set(false);
+      if (card.conversation?.event) untracked(() => this.openTalkingCardConversation(card, undefined, 'live'));
       return;
     }
     this.stackTourNarrationConsent.set(true);

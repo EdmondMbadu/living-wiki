@@ -11723,18 +11723,20 @@
   }
 }
 
-@if (talkingCardEditorBoard(); as talkingBoard) {
-  <app-talking-card-editor
-    #talkingCardEditor
-    [boardId]="talkingBoard.id"
-    [boardTitle]="talkingBoard.title"
-    [boardSponsorship]="talkingBoard.sponsorship || null"
-    [boardVisibility]="talkingBoard.visibility"
-    [editingCard]="talkingCardEditorValue()"
-    [prefill]="talkingCardEditorPrefill()"
-    (closed)="closeTalkingCardEditor()"
-    (saved)="addTalkingCard($event)"
-  ></app-talking-card-editor>
+@defer (when !!talkingCardEditorBoard()) {
+  @if (talkingCardEditorBoard(); as talkingBoard) {
+    <app-talking-card-editor
+      #talkingCardEditor
+      [boardId]="talkingBoard.id"
+      [boardTitle]="talkingBoard.title"
+      [boardSponsorship]="talkingBoard.sponsorship || null"
+      [boardVisibility]="talkingBoard.visibility"
+      [editingCard]="talkingCardEditorValue()"
+      [prefill]="talkingCardEditorPrefill()"
+      (closed)="closeTalkingCardEditor()"
+      (saved)="addTalkingCard($event)"
+    ></app-talking-card-editor>
+  }
 }
 
 @defer (when !!talkingConversationCard(); prefetch when !!stackCurrentCard()?.conversation) {
@@ -11754,6 +11756,7 @@
       [actions]="talkingCardActionLinks(talkingCard)"
       [starterQuestions]="talkingCardStarterQuestions(talkingCard)"
       [boardContext]="talkingCardBoardContext(talkingConversationBoard(), talkingCard)"
+      [eventGuide]="conversation.event || null"
       [contentLanguage]="talkingConversationLanguage()"
       [contactName]="talkingConversationContact()?.name || ''"
       [contactPhoneHref]="talkingConversationContact()?.phoneHref || ''"

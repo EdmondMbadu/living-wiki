@@ -19,6 +19,7 @@ function harness(): any {
     specialCardError: signal(null),
     talkingCardEditorBoardId: signal(null),
     talkingCardEditingCardId: signal(null),
+    eventTalkingCardSetup: signal(false),
     listingTalkingCardSetup: signal(null),
     openGeneralCardEditor: jasmine.createSpy('openGeneralCardEditor'),
     openSpecialCardEditor: jasmine.createSpy('openSpecialCardEditor'),
@@ -58,6 +59,19 @@ describe('Adding a Talking Card from the board card chooser', () => {
     component.openCreateCard('history');
     component.selectCardCreationType('talking');
     expect(component.talkingCardEditorBoardId()).toBe('history');
+  });
+
+  it('selects event setup from the chooser and clears that mode when reopened as a regular card', () => {
+    const { component, board } = harness();
+    component.openCreateCard(board.id);
+    component.selectCardCreationType('event-talking');
+    expect(component.talkingCardEditorBoardId()).toBe(board.id);
+    expect(component.eventTalkingCardSetup()).toBeTrue();
+    expect(component.openSpecialCardEditor).not.toHaveBeenCalled();
+    component.closeTalkingCardEditor();
+    component.openCreateCard(board.id);
+    component.selectCardCreationType('talking');
+    expect(component.eventTalkingCardSetup()).toBeFalse();
   });
 
   it('retains the specialized setup for a real-estate board', () => {

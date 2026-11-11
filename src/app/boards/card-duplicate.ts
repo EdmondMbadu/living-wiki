@@ -40,6 +40,10 @@ export function duplicateCardRecord<T extends DuplicableCard>(
       action && typeof action === 'object' ? { ...action } : action);
   }
 
+  if (conversation?.['event'] && typeof conversation['event'] === 'object') {
+    conversation['event'] = { ...conversation['event'] };
+  }
+
   return {
     ...card,
     id: createId(),

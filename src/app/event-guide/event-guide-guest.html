@@ -1,0 +1,77 @@
+<div class="event-guide event-guide__guest">
+  <button type="button" [attr.aria-expanded]="expanded()" (click)="expanded.set(!expanded())">
+    @if (expanded()) { <span i18n>Hide itinerary</span> }
+    @else if (plan()) { <span i18n>View itinerary</span> }
+    @else { <span i18n>Build my itinerary</span> }
+  </button>
+  @if (expanded()) {
+    <section class="event-guide__guest-panel" aria-label="Event itinerary" i18n-aria-label>
+      <fieldset [disabled]="busy()">
+        <h3 i18n>Which days are you attending?</h3>
+        <div class="event-guide__days">
+          @for (date of dates(); track date) {
+            <label class="event-guide__check"><input type="checkbox" [ngModel]="preferences().days.includes(date)" (ngModelChange)="toggleDay(date, $event)">{{ formatDate(date) }}</label>
+          }
+        </div>
+        <div class="event-guide__grid">
+          <label><span i18n>Interests</span><input maxlength="240" [ngModel]="preferences().interests" (ngModelChange)="setPreference('interests', $event)"></label>
+          <label><span i18n>Must-see sessions or exhibitors</span><input maxlength="180" [ngModel]="preferences().mustSee" (ngModelChange)="setPreference('mustSee', $event)"></label>
+          <label><span i18n>Planning needs</span><input maxlength="160" placeholder="For example, shorter walks" [ngModel]="preferences().constraints" (ngModelChange)="setPreference('constraints', $event)" i18n-placeholder></label>
+          <label><span i18n>Pace</span><select [ngModel]="preferences().pace" (ngModelChange)="setPreference('pace', $event)">
+            <option value="curated" i18n>Curated highlights</option><option value="marathon" i18n>Marathon</option>
+          </select></label>
+        </div>
+        <label class="event-guide__check"><input type="checkbox" [ngModel]="preferences().firstTimer" (ngModelChange)="setPreference('firstTimer', $event)"><span i18n>It’s my first time at this event</span></label>
+        <button type="button" [disabled]="!preferences().days.length" (click)="build()">
+          @if (plan()) { <span i18n>Rebuild itinerary</span> } @else { <span i18n>Generate itinerary</span> }
+        </button>
+      </fieldset>
+      @if (busy()) { <p role="status" i18n>Working on your itinerary…</p> }
+      @if (error()) { <p role="alert">{{ error() }}</p> }
+      @if (plan(); as itinerary) {
+        <section class="event-guide__source" aria-live="polite">
+          <h3 i18n>Your itinerary</h3>
+          <p>{{ settings().timeZone }}</p>
+          @for (day of itinerary.days; track day.date) {
+            <section>
+              <h4>{{ formatDate(day.date) }}</h4>
+              @if (day.attending) {
+                <ul>
+                  @for (item of day.items; track $index) {
+                    <li>{{ formatTime(item.start) }}@if (!item.endEstimated) {–{{ formatTime(item.end) }}} ·
+                      @if (item.url && item.title) {
+                        <a [href]="item.url" target="_blank" rel="noopener noreferrer" dir="auto">{{ item.title }}</a>
+                      } @else if (item.title) { <strong dir="auto">{{ item.title }}</strong> }
+                      @else if (item.kind === 'Break') { <strong i18n>Lunch and recharge</strong> }
+                      @else { <strong i18n>Explore the show floor</strong> }
+                      @if (item.location) { <span dir="auto"> · {{ item.location }}</span> }
+                      @if (item.note) { <br><small dir="auto">{{ item.note }}</small> }
+                    </li>
+                  }
+                </ul>
+                @if (day.alternatives.length) {
+                  <details><summary i18n>Alternatives</summary><ul>
+                    @for (item of day.alternatives; track $index) {
+                      <li dir="auto">{{ formatTime(item.start) }} · {{ item.title }} @if (item.note) { <small>{{ item.note }}</small> }</li>
+                    }
+                  </ul></details>
+                }
+              } @else { <p i18n>Day off</p> }
+            </section>
+          }
+          @for (warning of itinerary.warnings; track $index) { <p>{{ warning }}</p> }
+        </section>
+        @if (sent()) {
+          <p role="status" i18n>Your itinerary email is on its way.</p>
+        } @else {
+          <form class="event-guide__source" (submit)="send($event)">
+            <label><span i18n>Email address</span><input type="email" name="eventEmail" autocomplete="email" required maxlength="254" [disabled]="busy()" [ngModel]="email()" (ngModelChange)="email.set($event); consent.set(false)"></label>
+            <label class="event-guide__check"><input type="checkbox" name="eventConsent" required [disabled]="busy()" [ngModel]="consent()" (ngModelChange)="consent.set($event)"><span i18n>Use this address to send me this itinerary.</span></label>
+            @if (settings().privacyUrl) { <a [href]="settings().privacyUrl" target="_blank" rel="noopener noreferrer" i18n>Privacy notice</a> }
+            <button type="submit" [disabled]="busy() || !email().trim() || !consent()" i18n>Send itinerary</button>
+          </form>
+        }
+      }
+    </section>
+  }
+</div>

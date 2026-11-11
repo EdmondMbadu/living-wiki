@@ -1,16 +1,47 @@
 <div class="talking-editor-backdrop" appBackdropDismiss (backdropDismiss)="close()">
-  <section class="talking-editor" role="dialog" aria-modal="true" aria-labelledby="talking-editor-title" (click)="$event.stopPropagation()">
+  <section class="talking-editor" [class.talking-editor--event]="isEventSetup()" role="dialog" aria-modal="true" aria-labelledby="talking-editor-title" (click)="$event.stopPropagation()">
     <header class="talking-editor__header">
       <div>
         <span class="talking-editor__eyebrow">{{ boardTitle() }}</span>
-        <h2 id="talking-editor-title">{{ isEditing() ? templateText.message1 : isRealEstateSetup() ? templateText.message2 : templateText.message3 }}</h2>
-        <p>{{ isEditing() ? templateText.message4 : isRealEstateSetup() ? templateText.message5 : templateText.message6 }}</p>
+        <h2 id="talking-editor-title">{{ isEventSetup() ? eventEditorTitle() : isEditing() ? templateText.message1 : isRealEstateSetup() ? templateText.message2 : templateText.message3 }}</h2>
+        @if (isEventSetup()) {
+          <p i18n>Set up the event program and the avatar that will guide guests.</p>
+        } @else {
+          <p>{{ isEditing() ? templateText.message4 : isRealEstateSetup() ? templateText.message5 : templateText.message6 }}</p>
+        }
       </div>
       <button type="button" class="talking-editor__icon" aria-label="Close Talking Card editor" [disabled]="saving()" (click)="close()" i18n-aria-label>
         <span class="material-symbols-outlined">close</span>
       </button>
     </header>
 
+    @if (isEventSetup()) {
+      <nav class="talking-editor__event-nav" aria-label="Event Talking Card setup" i18n-aria-label>
+        <button type="button" [attr.aria-current]="eventStep() === 'event' ? 'step' : null" [disabled]="saving() || eventImporting()" (click)="showEventStep('event')">
+          <span class="material-symbols-outlined" aria-hidden="true">event_available</span><span i18n>Event setup</span>
+        </button>
+        <button type="button" [attr.aria-current]="eventStep() === 'avatar' ? 'step' : null" [disabled]="saving() || eventImporting()" (click)="showEventStep('avatar')">
+          <span class="material-symbols-outlined" aria-hidden="true">record_voice_over</span><span i18n>Avatar &amp; card</span>
+        </button>
+      </nav>
+
+      <div class="talking-editor__body" [hidden]="eventStep() !== 'event'">
+        @defer (on immediate) {
+          <app-event-guide-setup [boardId]="boardId()" [cardId]="editingCard()?.id || ''" [disabled]="saving() || eventImporting()"
+            [(settings)]="eventSettingsDraft" [(dataset)]="eventDatasetDraft" [(importing)]="eventImporting" [(reviewing)]="eventReviewing" />
+        }
+        @if (!isEditing() && !eventSettingsDraft().name.trim() && !eventSettingsDraft().datasetId && !eventDatasetDraft().sessions?.length && !eventReviewing()) {
+          <button type="button" class="talking-editor__demo" [disabled]="eventImporting() || saving()" (click)="loadCesEventDemo()">
+            <span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span><span i18n>Load Amy’s CES 2027 demo</span>
+          </button>
+        }
+        @if (errorMessage()) { <p class="talking-editor__error" role="alert">{{ errorMessage() }}</p> }
+      </div>
+    } @else {
+      <ng-container [ngTemplateOutlet]="avatarNavigation" />
+    }
+
+    <ng-template #avatarNavigation>
     @if (isEditing()) {
       <div class="talking-editor__scope-note">
         <span class="material-symbols-outlined">info</span>
@@ -30,7 +61,12 @@
       </div>
     }
 
-    <div class="talking-editor__body">
+    </ng-template>
+
+    <div class="talking-editor__body" [hidden]="isEventSetup() && eventStep() !== 'avatar'">
+      @if (isEventSetup()) {
+        <ng-container [ngTemplateOutlet]="avatarNavigation" />
+      }
       @if (canListAvatar() && (mode() === 'new' || selectedAtlas())) {
         <label class="talking-editor__check">
           <input id="talking-avatar-publication" type="checkbox" [ngModel]="publishAvatar()" (ngModelChange)="publishAvatar.set($event)" />
@@ -522,14 +558,21 @@
 
     <footer class="talking-editor__footer">
       <span class="talking-editor__draft-state" aria-live="polite">
-        @if (draftStatus() === 'restored') { <span class="material-symbols-outlined" aria-hidden="true">history</span> Draft restored }
+        @if (isEventSetup() && eventSetupIssue()) { {{ eventSetupIssue() }} }
+        @else if (draftStatus() === 'restored') { <span class="material-symbols-outlined" aria-hidden="true">history</span> Draft restored }
         @else if (draftStatus() === 'saved') { <span class="material-symbols-outlined" aria-hidden="true">cloud_done</span> Draft saved on this device }
       </span>
       <button type="button" class="talking-editor__secondary" [disabled]="saving()" (click)="close()" i18n>Cancel</button>
+      @if (isEventSetup() && eventStep() === 'event') {
+        <button type="button" class="talking-editor__primary" [disabled]="!!eventSetupIssue() || eventImporting()" (click)="showEventStep('avatar')">
+          <span i18n>Continue to avatar</span><span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+        </button>
+      } @else {
       <button type="button" class="talking-editor__primary" [disabled]="!canSave()" (click)="save()">
         @if (saving()) { <span class="material-symbols-outlined talking-editor__spin">progress_activity</span> {{ saveStage() || templateText.message42 }} }
-        @else { <span class="material-symbols-outlined">{{ isEditing() ? 'save' : 'record_voice_over' }}</span> {{ isEditing() ? templateText.message43 : isRealEstateSetup() ? templateText.message44 : templateText.message45 }} }
+        @else { <span class="material-symbols-outlined">{{ isEditing() ? 'save' : 'record_voice_over' }}</span> {{ isEditing() ? templateText.message43 : isRealEstateSetup() ? templateText.message44 : isEventSetup() ? eventEditorTitle() : templateText.message45 }} }
       </button>
+      }
     </footer>
   </section>
 </div>

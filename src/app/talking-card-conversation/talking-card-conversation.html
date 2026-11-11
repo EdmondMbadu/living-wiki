@@ -2,6 +2,7 @@
   <section
     class="talking-chat"
     [class.is-voice-mode]="conversationStage() === 'conversation' && conversationMode() === 'voice'"
+    [class.has-event-guide]="!!eventGuide()"
     [class.has-recap]="conversationStage() !== 'conversation'"
     role="dialog"
     aria-modal="true"
@@ -15,7 +16,7 @@
           @else { <span class="material-symbols-outlined">record_voice_over</span> }
           <i aria-hidden="true"></i>
         </div>
-        <div><span i18n>Talking Card</span><h2 id="talking-chat-title">{{ avatarName() }}</h2><p [attr.dir]="contentDirection()" [attr.lang]="contentLocale()">{{ cardSubtitle() }}</p></div>
+        <div>@if (eventGuide()) { <span i18n>Event Talking Card</span> } @else { <span i18n>Talking Card</span> }<h2 id="talking-chat-title">{{ avatarName() }}</h2><p [attr.dir]="contentDirection()" [attr.lang]="contentLocale()">{{ cardSubtitle() }}</p></div>
       </div>
       @if (showContactActions()) {
         <nav class="talking-chat__contact" [attr.aria-label]="contactName() ? templateText.message15 + contactName() : templateText.message16">
@@ -35,13 +36,26 @@
       <button
         type="button"
         class="talking-chat__close"
-        [disabled]="recapSending()"
+        [disabled]="recapSending() || eventGuest()?.sending()"
         [attr.aria-label]="conversationStage() === 'conversation' ? templateText.message17 : templateText.message18"
         (click)="close()"
       ><span class="material-symbols-outlined">close</span></button>
     </header>
 
-    @if (conversationStage() === 'conversation') {<p class="talking-chat__analytics-note" i18n>Conversations may be reviewed by this avatar’s administrators.</p>}
+    @if (eventGuide(); as event) {
+      <div class="talking-chat__event" [attr.dir]="contentDirection()" [attr.lang]="contentLocale()">
+        <div class="talking-chat__event-tools">
+          <label><span i18n>Guide language</span>
+            <select [ngModel]="activeLanguage()" (ngModelChange)="changeEventLanguage($event)">
+              @for (language of eventLanguages; track language.id) { <option [value]="language.id">{{ language.label }}</option> }
+            </select>
+          </label>
+          @if (event.informationUrl) { <a [href]="event.informationUrl" target="_blank" rel="noopener noreferrer" i18n>Official event information</a> }
+        </div>
+        <app-event-guide-guest [boardId]="boardId()" [cardId]="cardId()" [settings]="event" [language]="activeLanguage()" />
+      </div>
+    }
+    @if (!eventGuide() && conversationStage() === 'conversation') {<p class="talking-chat__analytics-note" i18n>Conversations may be reviewed by this avatar’s administrators.</p>}
 
     @if(conversationStage()!=='conversation'&&analyticsNotice()){<p class="talking-chat__recap-privacy" role="status">{{analyticsNotice()}}</p>}
     @if (conversationStage() === 'closing') {

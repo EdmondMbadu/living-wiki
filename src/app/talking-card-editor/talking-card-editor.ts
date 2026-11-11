@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { normalizeSponsorship, resolveSponsorship, type Sponsorship, type SponsorshipChoice } from '../../../functions/src/talking-card-sponsorship';
 import { Component, computed, effect, HostListener, inject, input, OnDestroy, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -29,6 +30,10 @@ import {
   type PersonalVoiceLibrary,
 } from '../personal-voice.service';
 import { TalkingCardDraftStore, type TalkingCardDraftRecord } from './talking-card-draft.store';
+import { CES_DEMO_GREETING, CES_DEMO_NAME, CES_DEMO_PERSONA } from '../event-guide/event-guide-ces2027';
+import { EventGuideSetup } from '../event-guide/event-guide-setup';
+import { EventGuideService } from '../event-guide/event-guide.service';
+import { eventSettings, type EventDataset, type EventGuideSettings } from '../../../functions/src/event-guide-model';
 import { TalkingCardKnowledgeService } from './talking-card-knowledge.service';
 
 type EditorMode = 'existing' | 'new';
@@ -47,7 +52,7 @@ function completeSponsorMessage(message: string): boolean {
 
 @Component({
   selector: 'app-talking-card-editor',
-  imports: [FormsModule, BackdropDismissDirective],
+  imports: [FormsModule, BackdropDismissDirective, NgTemplateOutlet, EventGuideSetup],
   templateUrl: './talking-card-editor.html',
   styleUrl: './talking-card-editor.css',
 })
@@ -114,6 +119,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     message59: $localize`Optional context for visitors`,
   };
   private readonly atlasService = inject(AtlasService);
+  private readonly eventGuide = inject(EventGuideService);
   private readonly documentsService = inject(DocumentsService);
   private readonly talkingCardKnowledgeService = inject(TalkingCardKnowledgeService);
   private readonly draftStore = inject(TalkingCardDraftStore);
@@ -212,6 +218,63 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   readonly publicAtlasesLoaded = signal(false);
   readonly draftReady = signal(false);
   readonly draftStatus = signal<'restored' | 'saved' | null>(null);
+  readonly isEventSetup = computed(() => this.prefill()?.experience === 'event' || !!this.editingCard()?.conversation.event);
+  readonly eventSettingsDraft = signal<EventGuideSettings>({
+    datasetId: '', name: '', startDate: '', endDate: '', timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    informationUrl: '', privacyUrl: '', travelMinutes: 30,
+  });
+  readonly eventDatasetDraft = signal<Partial<EventDataset>>({});
+  readonly eventImporting = signal(false);
+  readonly eventReviewing = signal(false);
+  readonly eventStep = signal<'event' | 'avatar'>('event');
+
+  showEventStep(step: 'event' | 'avatar'): void {
+    if (this.saving() || this.eventImporting()) return;
+    if (step === 'event') this.stopVoicePreview();
+    this.eventStep.set(step);
+  }
+  readonly eventEditorTitle = computed(() => this.isEditing() ? $localize`Edit Event Talking Card` : $localize`Add Event Talking Card`);
+
+  async loadCesEventDemo(): Promise<void> {
+    if (this.eventImporting() || this.saving() || this.isEditing() || this.createdAtlasId()) return;
+    this.eventImporting.set(true);
+    this.errorMessage.set(null);
+    try {
+      const dataset = await this.eventGuide.demo(this.boardId());
+      this.setMode('new');
+      this.name.set('Amy');
+      this.role.set($localize`CES 2027 demo concierge`);
+      this.personaPrompt.set(CES_DEMO_PERSONA);
+      this.openingMessage.set(CES_DEMO_GREETING);
+      this.ctaLabel.set($localize`Talk to Amy`);
+      this.eventSettingsDraft.set({
+        datasetId: '', name: CES_DEMO_NAME, startDate: '2027-01-05', endDate: '2027-01-09', timeZone: 'America/Los_Angeles',
+        informationUrl: 'https://www.ces.tech/schedule/', privacyUrl: '', travelMinutes: 30,
+      });
+      this.eventDatasetDraft.set(dataset);
+    } catch (error) {
+      this.errorMessage.set(this.saveErrorMessage(error));
+    } finally {
+      this.eventImporting.set(false);
+    }
+  }
+  readonly eventSetupIssue = computed(() => {
+    const settings = this.eventSettingsDraft();
+    const sessions = this.eventDatasetDraft().sessions;
+    if (this.eventReviewing()) return $localize`Save your entry or finish reviewing the import.`;
+    if (!(sessions?.length ?? settings.datasetId)) return $localize`Upload a schedule or add a session.`;
+    if (!eventSettings({ ...settings, datasetId: settings.datasetId || '0'.repeat(64) })) {
+      return $localize`Check the event name, dates, time zone, and links.`;
+    }
+    if (sessions?.some((session) => session.date < settings.startDate || session.date > settings.endDate)) {
+      return $localize`The program dates must include every session.`;
+    }
+    if (this.eventDatasetDraft().floorHours?.some((entry) => entry.start >= entry.end && !(entry.start === 0 && entry.end === 0))) {
+      return $localize`Check the exhibit floor hours.`;
+    }
+    return '';
+  });
+
   readonly isEditing = computed(() => !!this.editingCard());
   readonly isRealEstateSetup = computed(() => !this.isEditing() && this.prefill()?.experience === 'real-estate');
   readonly realEstateAdditionalGuidance = signal('');
@@ -291,6 +354,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     if (!this.draftReady()) return false;
     if (this.saving() || this.imageProcessing() || this.voiceConfigLoading() || this.personalVoiceCreating()) return false;
     if (!this.sponsorValid()) return false;
+    if (this.isEventSetup() && (this.eventImporting() || !!this.eventSetupIssue())) return false;
     if (!this.openingMessage().trim() || !!this.actionFormMessage()) return false;
     if (this.isEditing() && !this.name().trim()) return false;
     if (this.mode() === 'existing') {
@@ -313,6 +377,8 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
 
   async ngOnInit(): Promise<void> {
     if (this.editingCard()) {
+      const settings = this.editingCard()?.conversation.event;
+      if (settings) this.eventSettingsDraft.set(settings);
       await this.initializeEditingCard();
     } else {
       this.applyPrefill();
@@ -337,6 +403,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       this.imagePreviewUrl.set(imageUrl);
       this.uploadedImageUrl.set(imageUrl);
     }
+    if (this.isEventSetup()) { this.mode.set('new'); return; }
     if (!this.isRealEstateSetup()) return;
     this.mode.set('new');
     this.placement.set('end');
@@ -983,6 +1050,13 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     this.errorMessage.set(null);
     this.actionValidationMessage.set(null);
     try {
+      let event: EventGuideSettings | undefined;
+      if (this.isEventSetup()) {
+        this.saveStage.set($localize`Saving the event program…`);
+        event = await this.eventGuide.save(this.boardId(), this.eventSettingsDraft(), this.eventDatasetDraft());
+        this.eventSettingsDraft.set(event);
+        await this.persistDraftNow();
+      }
       let atlas: AtlasItem | null = this.selectedAtlas();
       let atlasId = atlas?.id ?? '';
       let title = this.isEditing() || this.isRealEstateSetup()
@@ -1123,6 +1197,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
         title,
         subtitle,
         imageUrl,
+        ...(event ? { event } : {}),
         ...(this.isEditing() || this.isRealEstateSetup() ? { personaPrompt: this.personaPrompt().trim().slice(0, 40000) } : {}),
         openingMessage: this.openingMessage().trim().slice(0, 500),
         ctaLabel: this.ctaLabel().trim().slice(0, 48) || 'Talk to me',
@@ -1225,6 +1300,10 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
         || (this.isRealEstateSetup() ? this.prefill()?.imageUrl?.trim() || '' : '');
       this.uploadedImageUrl.set(restoredImageUrl);
       this.documentFiles.set(record.documentFiles);
+      if (this.isEventSetup() && record.eventDraft) {
+        this.eventSettingsDraft.set(record.eventDraft.settings);
+        this.eventDatasetDraft.set(record.eventDraft.dataset);
+      }
       if (record.imageFile) {
         const previous = this.imagePreviewUrl();
         if (previous.startsWith('blob:')) URL.revokeObjectURL(previous);
@@ -1271,6 +1350,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       imageFile: this.imageFile(),
       uploadedImageUrl: this.uploadedImageUrl(),
       documentFiles: this.documentFiles(),
+      ...(this.isEventSetup() ? { eventDraft: { settings: this.eventSettingsDraft(), dataset: this.eventDatasetDraft() } } : {}),
       updatedAt: new Date().toISOString(),
     };
   }

@@ -664,7 +664,7 @@ export class ChatService {
 
   async createElevenLabsVoiceSession(options: {
     analyticsVisitorId?: string;
-    experience?: 'talking-card';
+    experience?: 'talking-card' | 'event-talking-card';
     voiceCreditMode?: 'paid';
     boardId?: string | null;
     cardId?: string | null;
@@ -685,7 +685,7 @@ export class ChatService {
     const createVoiceSession = httpsCallable<
       {
         analyticsVisitorId?: string;
-        experience?: 'talking-card';
+        experience?: 'talking-card' | 'event-talking-card';
         voiceCreditMode?: 'paid';
         boardId?: string | null;
         cardId?: string | null;

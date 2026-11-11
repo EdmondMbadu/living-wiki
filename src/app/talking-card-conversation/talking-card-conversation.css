@@ -493,3 +493,14 @@
 .talking-chat__sponsor-note { padding: 18px; margin-bottom: 20px; border: 1px solid rgba(100,120,105,.25); border-radius: 12px; }
 .talking-chat__sponsor-note p { line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0; }
 .talking-chat__sponsor-note button { border: 0; background: none; color: inherit; text-decoration: underline; padding: 8px 0; cursor: pointer; font-size: 12px; }
+
+.talking-chat.has-event-guide { grid-template-rows: auto auto auto minmax(0, 1fr); }
+.talking-chat__event { padding: .65rem 1rem; display: grid; gap: .5rem; max-height: 40dvh; overflow: auto; }
+.has-event-guide.is-voice-mode .talking-chat__event { max-height: 28dvh; }
+.has-event-guide .talking-chat__voice-experience,
+.has-event-guide .talking-chat__text-experience { overflow-y: auto; }
+.has-event-guide .talking-chat__text-experience { grid-template-rows: minmax(0, 1fr) auto auto auto auto; }
+.talking-chat__event-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1rem; }
+.talking-chat__event-tools label { display: flex; align-items: center; gap: .5rem; }
+.talking-chat__event-tools select { font: inherit; max-width: 11rem; padding: .3rem; border-radius: .35rem; }
+.talking-chat__event-tools a { color: inherit; text-decoration: underline; }

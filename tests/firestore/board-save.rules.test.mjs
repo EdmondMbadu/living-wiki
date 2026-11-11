@@ -1686,6 +1686,29 @@ for (const visibility of ['public', 'unlisted', 'private']) {
 }
 
 
+test('an owner can save an event guide reference and its dataset stays server-only', async () => {
+  const stored = personalWizardBoard({ id: 'event-card-board', visibility: 'unlisted' });
+  const owner = testEnvironment.authenticatedContext(ownerUid).firestore();
+  const reference = doc(owner, 'boards', stored.id);
+  await assertSucceeds(setDoc(reference, stored));
+  const datasetId = 'e'.repeat(64);
+  const conversation = {
+    version: 1, provider: 'atlas', atlasId: 'amy', openingMessage: 'Welcome to CES.',
+    event: { datasetId, name: 'CES 2027', startDate: '2027-01-05', endDate: '2027-01-09',
+      timeZone: 'America/Los_Angeles', informationUrl: '', privacyUrl: '', travelMinutes: 30 },
+  };
+  const patch = boardStudioPatch({
+    ...stored, cards: [{ id: 'event', title: 'Amy', conversation }], updated_at_iso: new Date().toISOString(),
+    socialVideoRenderVersion: '', socialLandscapeVideoRenderVersion: '', trailerVideoRenderVersion: '',
+    trailerLandscapeVideoRenderVersion: '', trailerVideoSourceFingerprint: '',
+  }, 'cards');
+  await assertSucceeds(updateDoc(reference, { ...patch, server_updated_at: serverTimestamp() }));
+  assert.deepEqual((await getDoc(reference)).data().cards[0].conversation, conversation);
+  const dataset = doc(owner, 'event_guide_datasets', datasetId);
+  await assertFails(getDoc(dataset));
+  await assertFails(setDoc(dataset, { owner: ownerUid, data: {} }));
+});
+
 test('every board save rule uses the shared title and description limits', () => {
   const boardRules = firestoreRules.split('match /boards/{boardId}')[1].split('\n    match /')[0];
   const titleLimits = [...boardRules.matchAll(/(?:request\.resource\.data\.title\.size\(\) <= |validDetailsString\('title', )(\d+)/g)].map(match => Number(match[1]));

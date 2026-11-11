@@ -71,6 +71,19 @@ describe('shared card Live route', () => {
     expect(component.syncStackNarrationAfterFrameChange).toHaveBeenCalledWith({ autoAdvance: true, forceNarration: true });
   });
 
+  it('opens the Event Talking Card directly from its shared QR route without starting microphone access', () => {
+    const eventCard = { id: 'event', title: 'Amy', conversation: { atlasId: 'amy-avatar', event: { name: 'CES 2027' } } };
+    const component = harness('event', [eventCard]);
+    component.openTalkingCardConversation = jasmine.createSpy('openTalkingCardConversation');
+
+    component.syncRequestedCardRoute();
+    component.syncRequestedCardRoute();
+
+    expect(component.openTalkingCardConversation).toHaveBeenCalledOnceWith(eventCard, undefined, 'live');
+    expect(component.startStackPlayback).not.toHaveBeenCalled();
+    expect(component.stackNarrationNeedsGesture()).toBeFalse();
+  });
+
   it('opens the talking card in Live view ready for the visitor to start a conversation', () => {
     const component = harness('talking', [
       { id: 'first', title: 'First' },

@@ -101,6 +101,30 @@ describe('TalkingCardConversationComponent', () => {
     }).compileComponents();
   });
 
+  it('opens an event guide with text, the itinerary button, and the voice tab visible', async () => {
+    const fixture = TestBed.createComponent(TalkingCardConversationComponent);
+    fixture.componentRef.setInput('atlasId', atlas.id);
+    fixture.componentRef.setInput('boardId', 'event-board');
+    fixture.componentRef.setInput('cardId', 'event-card');
+    fixture.componentRef.setInput('eventGuide', {
+      datasetId: 'a'.repeat(64), name: 'CES 2027', startDate: '2027-01-05', endDate: '2027-01-09',
+      timeZone: 'America/Los_Angeles', informationUrl: '', privacyUrl: '', travelMinutes: 30,
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const dialog: HTMLElement = fixture.nativeElement.querySelector('.talking-chat.has-event-guide');
+    const button: HTMLButtonElement = dialog.querySelector('.event-guide__guest > button')!;
+    const composer: HTMLTextAreaElement = dialog.querySelector('.talking-chat__composer textarea')!;
+    expect(button.textContent).toContain('Build my itinerary');
+    expect(composer.getBoundingClientRect().bottom).toBeLessThan(dialog.getBoundingClientRect().bottom);
+    expect(dialog.querySelectorAll('[role=tab]').length).toBe(2);
+    expect(chatService.createElevenLabsVoiceSession).not.toHaveBeenCalled();
+    button.click();
+    fixture.detectChanges();
+    expect(dialog.textContent).toContain('Which days are you attending?');
+  });
+
   it('shows the sponsored allowance before starting a public voice session', async () => {
     voiceCredits.status.set({ enabled: true, admin: false });
     const fixture = TestBed.createComponent(TalkingCardConversationComponent);

@@ -774,6 +774,10 @@
     { "collectionGroup": "platform_analytics_batches", "fieldPath": "expires_at", "ttl": true, "indexes": [] },
     { "collectionGroup": "platform_analytics_text_sessions", "fieldPath": "expires_at", "ttl": true, "indexes": [] },
     { "collectionGroup": "platform_analytics_attempts", "fieldPath": "expires_at", "ttl": true, "indexes": [] },
-    { "collectionGroup": "analytics_report_shares", "fieldPath": "expires_at", "ttl": true, "indexes": [] }
+    { "collectionGroup": "analytics_report_shares", "fieldPath": "expires_at", "ttl": true, "indexes": [] },
+    { "collectionGroup": "event_guide_datasets", "fieldPath": "data", "indexes": [] },
+    { "collectionGroup": "event_guide_itineraries", "fieldPath": "plan", "indexes": [] },
+    { "collectionGroup": "event_guide_itineraries", "fieldPath": "expiresAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "event_guide_limits", "fieldPath": "expiresAt", "ttl": true, "indexes": [] }
   ]
 }

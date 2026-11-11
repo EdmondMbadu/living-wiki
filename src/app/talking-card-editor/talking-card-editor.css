@@ -279,3 +279,28 @@
 .talking-editor__sponsor-options button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 10px 20px; border: 1px solid var(--border, #dce3de); border-radius: 10px; background: var(--surface); color: var(--muted); font: inherit; font-size: 14px; font-weight: 650; cursor: pointer; }
 .talking-editor__sponsor-options button.is-active { color: var(--text); border-color: var(--accent, #47784b); background: var(--soft-fill); box-shadow: inset 0 0 0 1px var(--accent, #47784b); }
 .talking-editor__sponsor-options button:disabled { opacity: .6; cursor: wait; }
+
+.talking-editor--event { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; max-height: min(900px, calc(100dvh - 40px)); overflow: hidden; }
+.talking-editor--event .talking-editor__header { padding-block: 1.1rem .8rem; }
+.talking-editor--event .talking-editor__header h2 { font-size: clamp(1.35rem, 4vw, 1.95rem); letter-spacing: -.035em; }
+.talking-editor--event .talking-editor__header p { font-size: .82rem; line-height: 1.4; }
+.talking-editor__event-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; margin-inline: 30px; padding: .3rem; border-radius: .8rem; background: var(--soft-fill); }
+.talking-editor__event-nav button { display: flex; min-height: 2.45rem; justify-content: center; align-items: center; gap: .4rem; padding: .35rem .4rem; border: 1px solid transparent; border-radius: .6rem; color: var(--muted); background: transparent; font: inherit; font-size: .82rem; font-weight: 780; cursor: pointer; }
+.talking-editor__event-nav button[aria-current] { border-color: var(--line); color: var(--text); background: var(--surface); box-shadow: 0 1px 3px #0001; }
+.talking-editor__event-nav .material-symbols-outlined { font-size: 1.05rem; }
+.talking-editor__event-nav button[aria-current] .material-symbols-outlined, .talking-editor__demo .material-symbols-outlined { color: var(--accent); }
+.talking-editor--event .talking-editor__body { min-height: 0; overflow-y: auto; padding-block: .85rem 1rem; align-content: start; }
+.talking-editor--event .talking-editor__body[hidden] { display: none; }
+.talking-editor--event .talking-editor__body > .talking-editor__tabs, .talking-editor--event .talking-editor__body > .talking-editor__scope-note { margin: 0; }
+.talking-editor--event .talking-editor__footer { padding-block: .7rem; align-items: center; }
+.talking-editor--event .talking-editor__footer button { min-height: 2.5rem; padding-inline: .85rem; font-size: .84rem; }
+.talking-editor--event .talking-editor__footer .material-symbols-outlined { font-size: 1.05rem; }
+.talking-editor__demo { display: flex; justify-self: start; align-items: center; gap: .4rem; min-height: 2rem; border: 0; padding: 0 .25rem; color: var(--text); background: transparent; font: inherit; font-size: .8rem; font-weight: 710; cursor: pointer; }
+.talking-editor__demo:hover { color: var(--accent); }
+.talking-editor__demo .material-symbols-outlined { font-size: 1rem; }
+@media (max-width: 650px) {
+  .talking-editor--event { width: 100%; max-height: calc(100dvh - 12px); }
+  .talking-editor__event-nav { margin-inline: 18px; }
+  .talking-editor--event .talking-editor__footer { gap: .42rem; }
+  .talking-editor--event .talking-editor__draft-state { font-size: .68rem; }
+}

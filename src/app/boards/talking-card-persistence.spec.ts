@@ -95,6 +95,25 @@ describe('Talking Card board persistence', () => {
     });
   }
 
+  it('preserves the published event dataset reference on creation, reload, and edit', async () => {
+    const { component, board } = ordinaryBoardHarness();
+    const event = {
+      datasetId: 'a'.repeat(64), name: 'CES 2027', startDate: '2027-01-05', endDate: '2027-01-09',
+      timeZone: 'America/Los_Angeles', informationUrl: '', privacyUrl: '', travelMinutes: 30,
+    };
+    await component.addTalkingCard({ ...result, title: 'Amy', event });
+    const [saved] = component.persistAndReplaceBoard.calls.mostRecent().args;
+    const reloaded = component.cardFromRecord(JSON.parse(JSON.stringify(saved.cards.at(-1))));
+    expect(reloaded.conversation.event).toEqual(event);
+    expect(reloaded.tags).toContain('event-talking-card');
+    board.cards = saved.cards;
+    const replacement = { ...event, datasetId: 'b'.repeat(64) };
+    await component.addTalkingCard({ ...result, title: 'Amy', cardId: reloaded.id, placement: 'keep', event: replacement });
+    const [updated] = component.persistAndReplaceBoard.calls.mostRecent().args;
+    expect(updated.cards.length).toBe(saved.cards.length);
+    expect(updated.cards.at(-1).conversation.event).toEqual(replacement);
+  });
+
   it('edits an existing ordinary Talking Card without duplicating it or moving it', async () => {
     const { component, board } = ordinaryBoardHarness();
     const originalCards = [...board.cards];

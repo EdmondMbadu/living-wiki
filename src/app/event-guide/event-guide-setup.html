@@ -1,0 +1,232 @@
+<fieldset class="event-setup" [disabled]="pending()">
+  <div class="event-setup__columns">
+    <section class="event-setup__panel event-setup__program" aria-labelledby="event-schedule-heading">
+      <header class="event-setup__heading">
+        <span class="event-setup__icon material-symbols-outlined" aria-hidden="true">calendar_month</span>
+        <div>
+          <h3 id="event-schedule-heading" i18n>Event schedule</h3>
+          @if (sessions().length) {
+            <p i18n>{{ sessions().length }} sessions added</p>
+          } @else {
+            <p i18n>Add at least one session for guests to explore.</p>
+          }
+        </div>
+      </header>
+      <ng-container [ngTemplateOutlet]="sourceControls" [ngTemplateOutletContext]="{ $implicit: sources[0] }" />
+    </section>
+
+    <section class="event-setup__panel event-setup__details" aria-labelledby="event-guide-setup-heading">
+      <header class="event-setup__heading">
+        <span class="event-setup__icon material-symbols-outlined" aria-hidden="true">event_note</span>
+        <h3 id="event-guide-setup-heading" i18n>Event details</h3>
+      </header>
+      <label><span i18n>Event name *</span><input maxlength="120" placeholder="e.g. CES 2027" [ngModel]="settings().name" (ngModelChange)="setField('name', $event)" i18n-placeholder></label>
+      <div class="event-setup__fields">
+        <label><span i18n>First program day *</span><input type="date" [ngModel]="settings().startDate" (ngModelChange)="setField('startDate', $event)"></label>
+        <label><span i18n>Last program day *</span><input type="date" [min]="settings().startDate" [ngModel]="settings().endDate" (ngModelChange)="setField('endDate', $event)"></label>
+      </div>
+      <label><span i18n>Time zone *</span><input maxlength="80" placeholder="America/Los_Angeles" [ngModel]="settings().timeZone" (ngModelChange)="setField('timeZone', $event)"></label>
+    </section>
+  </div>
+
+  @if (loadingPublished()) { <p class="event-setup__notice" role="status" i18n>Loading saved event records…</p> }
+  @if (publishedError()) {
+    <div class="event-setup__notice" role="alert">
+      <span i18n>Saved records could not be loaded.</span>
+      <button type="button" class="event-setup__secondary" (click)="loadPublished()" i18n>Try again</button>
+    </div>
+  }
+  @if (error()) { <p class="event-setup__notice event-setup__notice--error" role="alert">{{ error() }}</p> }
+
+  <details class="event-setup__panel event-setup__fold">
+    <summary>
+      <span class="event-setup__icon material-symbols-outlined" aria-hidden="true">storefront</span>
+      <strong i18n>Exhibitors</strong>
+      @if (exhibitors().length) { <small i18n>{{ exhibitors().length }} added</small> }
+      @else { <small i18n>Optional</small> }
+      <span class="event-setup__chevron material-symbols-outlined" aria-hidden="true">expand_more</span>
+    </summary>
+    <ng-container [ngTemplateOutlet]="sourceControls" [ngTemplateOutletContext]="{ $implicit: sources[1] }" />
+  </details>
+
+  <details class="event-setup__panel event-setup__fold">
+    <summary>
+      <span class="event-setup__icon material-symbols-outlined" aria-hidden="true">tune</span>
+      <strong i18n>Links, floor hours &amp; travel</strong>
+      <span class="event-setup__chevron material-symbols-outlined" aria-hidden="true">expand_more</span>
+    </summary>
+    <div class="event-setup__fields">
+      <label><span i18n>Official event link</span><input type="url" placeholder="https://" [ngModel]="settings().informationUrl" (ngModelChange)="setField('informationUrl', $event)"></label>
+      <label><span i18n>Privacy notice link</span><input type="url" placeholder="https://" [ngModel]="settings().privacyUrl" (ngModelChange)="setField('privacyUrl', $event)"></label>
+      <label><span i18n>Minutes between venues or halls</span><input type="number" min="5" max="120" [ngModel]="settings().travelMinutes" (ngModelChange)="setField('travelMinutes', $event)"></label>
+    </div>
+    @if (dates().length) {
+      <details class="event-setup__records">
+        <summary><strong i18n>Exhibit floor hours</strong></summary>
+        @for (date of dates(); track date) {
+          @let floor = floorHours(date);
+          <div class="event-setup__fields event-setup__hours">
+            <label><span>{{ date }}</span><select [ngModel]="!floor ? 'unknown' : floor.start === 0 && floor.end === 0 ? 'closed' : 'open'" (ngModelChange)="changeFloorHours(date, 'status', $event)">
+              <option value="unknown" i18n>Hours unknown</option><option value="closed" i18n>Closed</option><option value="open" i18n>Open</option>
+            </select></label>
+            @if (floor && (floor.start || floor.end)) {
+              <label><span i18n>Opens</span><input type="time" [ngModel]="inputTime(floor.start)" (ngModelChange)="changeFloorHours(date, 'start', $event)"></label>
+              <label><span i18n>Closes</span><input type="time" [ngModel]="inputTime(floor.end)" (ngModelChange)="changeFloorHours(date, 'end', $event)"></label>
+              @if (floor.start >= floor.end) { <p role="alert" i18n>Closing time must be after opening time.</p> }
+            }
+          </div>
+        }
+      </details>
+    }
+  </details>
+</fieldset>
+
+<ng-template #sourceControls let-source>
+  @let kind = source.kind === 'schedule' ? 'schedule' : 'exhibitors';
+  @let schedule = kind === 'schedule';
+  <div class="event-setup__source">
+    <div class="event-setup__choices">
+      <label class="event-setup__choice" [class.is-dragging]="dragging() === kind" [class.is-disabled]="!!manual()"
+        (dragover)="dragOver(kind, $event)" (dragleave)="dragging.set(null)" (drop)="dropFile(kind, $event)">
+        <input type="file" [accept]="accepted" [disabled]="!!manual()" (change)="chooseFile(kind, $event)"
+          [attr.aria-label]="schedule ? uploadScheduleLabel : uploadExhibitorsLabel">
+        <span class="event-setup__choice-icon material-symbols-outlined" aria-hidden="true">upload_file</span>
+        <strong i18n>Upload a file</strong>
+        <small i18n>Browse or drop here</small>
+      </label>
+      <button type="button" class="event-setup__choice" [disabled]="!canEnter(kind) || (schedule ? sessions().length : exhibitors().length) >= sourceLimit"
+        (click)="schedule ? openSession() : openExhibitor()">
+        <span class="event-setup__choice-icon material-symbols-outlined" aria-hidden="true">edit_calendar</span>
+        <strong i18n>Enter manually</strong>
+        @if (schedule) { <small i18n>Add a session</small> } @else { <small i18n>Add an exhibitor</small> }
+      </button>
+    </div>
+    <p class="event-setup__formats" i18n>PDF, Markdown, Word, TXT, CSV, Excel, or JSON · 6 MB max</p>
+
+    @if (loadingSource() === kind) {
+      <p class="event-setup__notice" role="status" i18n>Reading event records…</p>
+    }
+    @if (previews()[kind]; as sourcePreview) {
+      @let preview = sourcePreview.preview;
+      <section class="event-setup__review">
+        <header>
+          <div><h4 i18n>Review import</h4><p>{{ sourcePreview.file.name }}</p></div>
+          <span class="material-symbols-outlined" aria-hidden="true">fact_check</span>
+        </header>
+        @if (preview.sheets.length > 1) {
+          <label><span i18n>Worksheet</span><select [ngModel]="preview.sheet" (ngModelChange)="changeSheet(kind, $event)">
+            @for (sheet of preview.sheets; track sheet) { <option [value]="sheet">{{ sheet }}</option> }
+          </select></label>
+        }
+        @if (preview.columns.length) {
+          <details class="event-setup__records">
+            <summary i18n>Map columns</summary>
+            <div class="event-setup__fields">
+              @for (field of source.fields; track field[0]) {
+                <label><span>{{ field[1] }}</span><select [ngModel]="sourcePreview.mapping[field[0]] || ''" (ngModelChange)="setMapping(kind, field[0], $event)">
+                  <option value="" i18n>Auto detect</option>
+                  @for (column of preview.columns; track $index) { <option [value]="column">{{ column }}</option> }
+                </select></label>
+              }
+            </div>
+            <button type="button" class="event-setup__secondary" (click)="applyMapping(kind)" i18n>Update preview</button>
+          </details>
+        }
+        @for (warning of preview.warnings; track $index) { <p class="event-setup__notice" role="status">{{ warning }}</p> }
+        @if (preview.sessions.length || preview.exhibitors.length) {
+          <ul class="event-setup__rows" tabindex="0" aria-label="Imported records" i18n-aria-label>
+            @for (session of preview.sessions; track session.id) {
+              <li><strong>{{ session.title }}</strong><small>{{ session.date }} · {{ formatTime(session.start) }}@if (session.room) { · {{ session.room }} }</small></li>
+            }
+            @for (exhibitor of preview.exhibitors; track exhibitor.id) {
+              <li><strong>{{ exhibitor.name }}</strong><small>{{ exhibitor.location }}</small></li>
+            }
+          </ul>
+          @if (schedule ? sessions().length : exhibitors().length) {
+            <p i18n>Using this file replaces the current records for this section.</p>
+          }
+        }
+        <div class="event-setup__actions">
+          <button type="button" class="event-setup__secondary" (click)="discardPreview(kind)" i18n>Discard preview</button>
+          <button type="button" class="event-setup__primary" [disabled]="!preview.sessions.length && !preview.exhibitors.length" (click)="accept(kind)" i18n>Use these records</button>
+        </div>
+      </section>
+    }
+
+    @if (manual(); as entry) {
+      @if (entry.kind === kind) {
+        <section class="event-setup__review event-setup__manual">
+          @if (entry.kind === 'schedule') {
+            <label><span i18n>Session title *</span><input maxlength="250" [ngModel]="entry.row.title" (ngModelChange)="updateSession('title', $event)"></label>
+            <label><span i18n>Date *</span><input type="date" [ngModel]="entry.row.date" (ngModelChange)="updateSession('date', $event)"></label>
+            <div class="event-setup__fields">
+              <label><span i18n>Start time *</span><input type="time" [ngModel]="entry.row.start" (ngModelChange)="updateSession('start', $event)"></label>
+              <label><span i18n>End time *</span><input type="time" [ngModel]="entry.row.end" (ngModelChange)="updateSession('end', $event)"></label>
+            </div>
+            <div class="event-setup__fields">
+              <label><span i18n>Room or location</span><input maxlength="220" [ngModel]="entry.row.room" (ngModelChange)="updateSession('room', $event)"></label>
+              <label><span i18n>Session type</span><select [ngModel]="entry.row.kind" (ngModelChange)="updateSession('kind', $event)">
+                <option value="Session" i18n>Session</option><option value="Keynote" i18n>Keynote</option><option value="Workshop" i18n>Workshop</option>
+              </select></label>
+            </div>
+          } @else {
+            <label><span i18n>Exhibitor name *</span><input maxlength="250" [ngModel]="entry.row.name" (ngModelChange)="updateExhibitor('name', $event)"></label>
+            <label><span i18n>Location status</span><select [ngModel]="entry.row.status" (ngModelChange)="updateExhibitor('status', $event)">
+              <option value="pending" i18n>Location to be announced</option><option value="booth" i18n>Booth confirmed</option>
+              <option value="area" i18n>Area confirmed</option><option value="absent" i18n>Not exhibiting</option>
+            </select></label>
+            @if (entry.row.status === 'booth' || entry.row.status === 'area') {
+              <label><span i18n>Confirmed location *</span><input maxlength="220" [ngModel]="entry.row.location" (ngModelChange)="updateExhibitor('location', $event)"></label>
+            }
+          }
+          <details class="event-setup__records">
+            <summary i18n>More details</summary>
+            @if (entry.kind === 'schedule') {
+              <label><span i18n>Venue or hall</span><input maxlength="120" [ngModel]="entry.row.venue" (ngModelChange)="updateSession('venue', $event)"></label>
+              <label><span i18n>Topics</span><input maxlength="150" [ngModel]="entry.row.topics" (ngModelChange)="updateSession('topics', $event)"></label>
+              <label><span i18n>Access requirements</span><input maxlength="220" [ngModel]="entry.row.access" (ngModelChange)="updateSession('access', $event)"></label>
+              <label><span i18n>Notes</span><textarea rows="2" maxlength="360" [ngModel]="entry.row.note" (ngModelChange)="updateSession('note', $event)"></textarea></label>
+              <label><span i18n>Details link</span><input type="url" [ngModel]="entry.row.url" (ngModelChange)="updateSession('url', $event)"></label>
+            } @else {
+              @if (entry.row.status === 'booth' || entry.row.status === 'area') {
+                <label><span i18n>Venue or hall</span><input maxlength="120" [ngModel]="entry.row.venue" (ngModelChange)="updateExhibitor('venue', $event)"></label>
+              }
+              <label><span i18n>Notes</span><textarea rows="2" maxlength="360" [ngModel]="entry.row.note" (ngModelChange)="updateExhibitor('note', $event)"></textarea></label>
+              <label><span i18n>Details link</span><input type="url" [ngModel]="entry.row.url" (ngModelChange)="updateExhibitor('url', $event)"></label>
+            }
+          </details>
+          @if (manualError()) { <p class="event-setup__notice event-setup__notice--error" role="alert">{{ manualError() }}</p> }
+          <div class="event-setup__actions">
+            @if (entry.row.id) { <button type="button" class="event-setup__remove" (click)="removeManual()" i18n>Remove</button> }
+            <button type="button" class="event-setup__secondary" (click)="manual.set(null)" i18n>Cancel</button>
+            <button type="button" class="event-setup__primary" (click)="saveManual()" i18n>Save entry</button>
+          </div>
+        </section>
+      }
+    }
+
+    @if (schedule ? sessions().length : exhibitors().length) {
+      <details class="event-setup__records">
+        <summary>
+          @if (schedule) { <strong i18n>View and edit sessions</strong> }
+          @else { <strong i18n>View and edit exhibitors</strong> }
+        </summary>
+        <ul class="event-setup__rows">
+          @if (schedule) {
+            @for (session of sessions(); track session.id) {
+              <li><div><strong>{{ session.title }}</strong><small>{{ session.date }} · {{ formatTime(session.start) }}</small></div>
+                <button type="button" [disabled]="!canEnter(kind)" (click)="openSession(session)" i18n>Edit</button>
+              </li>
+            }
+          } @else {
+            @for (exhibitor of exhibitors(); track exhibitor.id) {
+              <li><div><strong>{{ exhibitor.name }}</strong><small>{{ exhibitor.location }}</small></div>
+                <button type="button" [disabled]="!canEnter(kind)" (click)="openExhibitor(exhibitor)" i18n>Edit</button>
+              </li>
+            }
+          }
+        </ul>
+      </details>
+    }
+  </div>
+</ng-template>

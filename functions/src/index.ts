@@ -140,6 +140,8 @@ export { getTeamInsights, submitTeamContact, manageTeamContacts, getTeamConversa
 // provider and secret are configured; full deploys validate every exported endpoint.
 import { issueTeamVoiceSession, teamVoiceBinding, teamWorkingBoard } from './team-voice';
 import { loadTalkingCardAtlas } from './talking-card-access';
+import { isEventVoiceCard } from './event-guide-functions';
+export { previewEventGuideImport, loadCesEventGuideDemo, saveEventGuideDataset, readEventGuide, askEventGuide, createEventGuideItinerary, sendEventGuideItinerary } from './event-guide-functions';
 import { fulfillVoiceCreditPurchase, refundVoiceCreditPurchase, reserveBoardVoice, voiceCreditsBoardHost, voiceCreditsEnabled } from './voice-credits';
 import { analyticsTarget } from './card-analytics';
 export { voiceCreditsCommand, reconcileVoiceCredits } from './voice-credits';
@@ -363,6 +365,7 @@ const maxGoogleDriveImportFiles = 10;
 const sendgridApiKey = defineSecret('SENDGRID_API_KEY');
 const elevenLabsApiKey = defineSecret('ELEVENLABS_API_KEY');
 const elevenLabsAgentId = defineString('ELEVENLABS_AGENT_ID');
+const elevenLabsEventAgentId = defineString('ELEVENLABS_EVENT_AGENT_ID', { default: '' });
 const elevenLabsTtsVoiceOverridesEnabled = defineString('ELEVENLABS_TTS_VOICE_OVERRIDES_ENABLED', {
   default: 'false',
 });
@@ -16703,7 +16706,14 @@ export const createElevenLabsVoiceSession = onCall(
       throw new HttpsError('failed-precondition', 'ElevenLabs API key is not configured.');
     }
 
-    const agentId = elevenLabsAgentId.value().trim();
+    const eventVoice = request.data?.experience === 'event-talking-card';
+    if (eventVoice && !await isEventVoiceCard(voiceBoardId, voiceCardId, uid ?? undefined, atlasId)) {
+      throw new HttpsError('failed-precondition', 'This Event Talking Card is unavailable.');
+    }
+    const agentId = (eventVoice ? elevenLabsEventAgentId.value() : elevenLabsAgentId.value()).trim();
+    if (eventVoice && !agentId) {
+      throw new HttpsError('failed-precondition', 'Event voice is unavailable. You can continue in text.');
+    }
     if (!agentId) {
       throw new HttpsError('failed-precondition', 'ELEVENLABS_AGENT_ID is not configured.');
     }
@@ -16715,10 +16725,10 @@ export const createElevenLabsVoiceSession = onCall(
     }
 
     const voicePreference = normalizeElevenLabsVoicePreference(request.data);
-    const voiceOverrideEnabled = isTruthyParam(elevenLabsTtsVoiceOverridesEnabled.value());
-    const firstMessageOverrideEnabled = isTruthyParam(elevenLabsFirstMessageOverridesEnabled.value());
-    const languageOverrideEnabled = isTruthyParam(elevenLabsLanguageOverridesEnabled.value());
-    const nativeLanguage = request.data?.experience === 'talking-card'
+    const voiceOverrideEnabled = eventVoice || isTruthyParam(elevenLabsTtsVoiceOverridesEnabled.value());
+    const firstMessageOverrideEnabled = eventVoice || isTruthyParam(elevenLabsFirstMessageOverridesEnabled.value());
+    const languageOverrideEnabled = eventVoice || isTruthyParam(elevenLabsLanguageOverridesEnabled.value());
+    const nativeLanguage = (eventVoice || request.data?.experience === 'talking-card')
       && voicePreference.languageCode !== 'en'
       && isBoardTranslationLanguage(voicePreference.languageCode)
       ? voicePreference.languageCode as Exclude<BoardTranslationLanguage, 'en'> : null;
@@ -16736,20 +16746,20 @@ export const createElevenLabsVoiceSession = onCall(
           requireElevenLabsAgentNativeLanguage(apiKey, agentId, nativeLanguage),
         ])
       : [null];
-    if (nativeLanguage && !nativeVoice) {
+    if (nativeLanguage && !nativeVoice && !eventVoice) {
       throw new HttpsError('failed-precondition', `A natural ${voicePreference.language ?? nativeLanguage} voice is not available yet. You can still type your question.`);
     }
     const atlasVoice = listingVoice
       ? { provider_voice_id: listingVoice.providerVoiceId || null, name: listingVoice.config['voice_name'] || 'Team listing voice', source: 'team' }
       : atlasId ? await loadAtlasSpeechVoiceConfig(atlasId) : null;
-    const configuredVoiceAvailable = !nativeLanguage && voiceOverrideEnabled
+    const configuredVoiceAvailable = (eventVoice || !nativeLanguage) && voiceOverrideEnabled
       && !!atlasVoice?.provider_voice_id
       && await elevenLabsVoiceIsAvailable(apiKey, atlasVoice.provider_voice_id);
     const globalDefaultVoiceAvailable = !nativeLanguage && voiceOverrideEnabled
       && !configuredVoiceAvailable
       && !!defaultAtlasRealtimeVoice?.providerVoiceId
       && await elevenLabsVoiceIsAvailable(apiKey, defaultAtlasRealtimeVoice.providerVoiceId);
-    const selectedVoice = nativeVoice ?? selectAtlasRealtimeVoice({
+    const selectedVoice = (eventVoice && configuredVoiceAvailable ? null : nativeVoice) ?? selectAtlasRealtimeVoice({
       overridesEnabled: voiceOverrideEnabled,
       accent: voicePreference.accent,
       wikiVoice: {
@@ -16814,7 +16824,7 @@ export const createElevenLabsVoiceSession = onCall(
       throw new HttpsError('internal', 'ElevenLabs did not return a conversation credential.');
     }
     if (listingVoice) visitorId = await issueTeamVoiceSession(listingVoice, requestedTeamBoardId, agentId, visitorId, textValue(request.data?.cardId,180)||'');
-    if (atlasRecord && atlasId && request.data?.boardId && request.data?.cardId) {
+    if (!eventVoice && atlasRecord && atlasId && request.data?.boardId && request.data?.cardId) {
       try {
         const analyticsSession = await issueCardVoice(request, { ...atlasRecord, id: atlasId }, agentId, listingVoice ? {sessionId:visitorId,board:listingVoice.board,internal:listingVoice.internal} : undefined);
         if (analyticsSession) visitorId = analyticsSession;
@@ -16908,7 +16918,9 @@ export const createElevenLabsVoiceSession = onCall(
         atlas_name: atlasName ?? '',
         answer_mode: atlasRecord?.['default_answer_mode'] === 'internet' ? 'internet' : 'wiki',
         visitor_id: visitorId,
-        link_delivery_instruction: 'If the user asks for links, websites, maps, addresses, or asks you to send links, tell them the relevant links will be collected and included in the recap email after they hang up. Do not say you cannot send links directly.',
+        link_delivery_instruction: eventVoice
+          ? 'Use the in-card itinerary preview and invite the visitor to confirm and send there. The visitor enters their email in the form.'
+          : 'If the user asks for links, websites, maps, addresses, or asks you to send links, tell them the relevant links will be collected and included in the recap email after they hang up. Do not say you cannot send links directly.',
         preferred_language_code: voicePreference.languageCode ?? '',
         preferred_language: voicePreference.language ?? '',
         preferred_country: voicePreference.country ?? '',

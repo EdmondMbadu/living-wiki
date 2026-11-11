@@ -6,6 +6,8 @@ import { AtlasService } from '../atlas.service';
 import { DocumentsService } from '../documents.service';
 import { STACK_NARRATOR_VOICES } from '../boards/stack-voice';
 import { TalkingCardDraftStore, type TalkingCardDraftRecord } from './talking-card-draft.store';
+import { EventGuideSetup } from '../event-guide/event-guide-setup';
+import { By } from '@angular/platform-browser';
 import { TalkingCardEditorComponent } from './talking-card-editor';
 import { TalkingCardKnowledgeService } from './talking-card-knowledge.service';
 import { PersonalVoiceService, type PersonalVoiceLibrary } from '../personal-voice.service';
@@ -134,6 +136,38 @@ describe('TalkingCardEditorComponent', () => {
         { provide: Router, useValue: router },
       ],
     }).compileComponents();
+  });
+
+  it('shows the program first and preserves a manual session when moving to the avatar step', async () => {
+    const fixture = TestBed.createComponent(TalkingCardEditorComponent);
+    const page = fixture.componentInstance;
+    fixture.componentRef.setInput('boardId', 'event-board');
+    fixture.componentRef.setInput('prefill', { experience: 'event', personaPrompt: 'Guide attendees through the event.' });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const program = fixture.debugElement.query(By.directive(EventGuideSetup)).componentInstance as EventGuideSetup;
+    const nav: HTMLElement = fixture.nativeElement.querySelector('.talking-editor__event-nav');
+    const next: HTMLButtonElement = fixture.nativeElement.querySelector('.talking-editor__footer .talking-editor__primary');
+    expect(nav.querySelector('[aria-current]')?.textContent).toContain('Event setup');
+    expect(next.disabled).toBeTrue();
+    program.setField('name', 'Robotics Day');
+    program.openSession();
+    program.updateSession('title', 'Opening keynote');
+    program.updateSession('date', '2027-01-05');
+    program.updateSession('start', '10:00');
+    program.updateSession('end', '11:00');
+    program.saveManual();
+    fixture.detectChanges();
+    expect(next.disabled).toBeFalse();
+    next.click();
+    fixture.detectChanges();
+    expect(page.eventStep()).toBe('avatar');
+    expect(nav.querySelector('[aria-current]')?.textContent).toContain('Avatar & card');
+    page.showEventStep('event');
+    fixture.detectChanges();
+    expect(program.sessions()[0]?.title).toBe('Opening keynote');
   });
 
   it('shows only Off or Add a sponsor when creating an avatar, with no board settings', async () => {
