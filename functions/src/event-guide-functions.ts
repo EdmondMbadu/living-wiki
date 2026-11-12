@@ -9,7 +9,7 @@ import { db } from './firebase';
 import { isLinkReadableVisibility } from './board-visibility';
 import { geminiApiKey } from './gemini';
 import { contentLanguageDetails, isContentLanguage, type ContentLanguage } from './content-language';
-import { EVENT_MAX_FILE_BYTES, eventDate, eventRecord, eventSettings, eventText, type EventDataset, type EventGuideSettings, type EventPlan, type EventSourceKind } from './event-guide-model';
+import { EVENT_MAX_FILE_BYTES, eventDate, eventRecord, eventSettings, eventText, type EventDataset, type EventGuideSettings, type EventItineraryDraft, type EventPlan, type EventPreferences, type EventSourceKind } from './event-guide-model';
 import { normalizeEventRows, parseEventSource } from './event-guide-import';
 import { buildEventPlan, eventPreferences, lookupEvent } from './event-guide-planner';
 import cesDemo from './event-guide-ces2027.json';
@@ -24,6 +24,8 @@ const region = 'us-central1';
 const hash = (value: string) => createHash('sha256').update(value).digest('hex');
 const safeId = (value: unknown) => typeof value === 'string' && /^[A-Za-z0-9_-]{1,180}$/.test(value) ? value : '';
 const planDurationMs = 60 * 60_000;
+const dayMs = 24 * 60 * 60_000;
+const itineraryCollection = db.collection('event_guide_itineraries');
 
 async function loadBoard(boardId: string) {
   if (!boardId) throw new HttpsError('invalid-argument', 'Choose a board.');
@@ -248,22 +250,88 @@ export const createEventGuideItinerary = onCall({ region, secrets: [geminiApiKey
   const context = await eventCardContext(boardId, cardId, request.auth?.uid);
   const language = languageFor(request.data?.language);
   const preferences = eventPreferences(request.data?.preferences, context.settings);
-  if (!preferences.days.length) throw new HttpsError('invalid-argument', 'Choose at least one day you’ll attend.');
   await quota('plan', `${boardId}:${request.rawRequest.ip}`, 300, 60 * 60_000);
+  const plan = await planForEvent(context.settings, context.owner, preferences, language);
+  const ref = itineraryCollection.doc();
+  const key = randomBytes(32).toString('hex');
+  await ref.create({
+    boardId, cardId, keyHash: hash(key), plan, preferences, language, settings: context.settings, sponsor: context.sponsor,
+    expiresAt: Timestamp.fromMillis(Date.now() + planDurationMs),
+  });
+  return { ...plan, id: ref.id, key } satisfies EventPlan;
+});
+
+async function planForEvent(settings: EventGuideSettings, owner: string, preferences: EventPreferences, language: ContentLanguage) {
+  if (!preferences.days.length) throw new HttpsError('invalid-argument', 'Choose at least one day you’ll attend.');
+  const forPlanning = { ...preferences };
   if (language !== 'en') {
-    [preferences.interests, preferences.mustSee, preferences.constraints] = await Promise.all([
+    [forPlanning.interests, forPlanning.mustSee, forPlanning.constraints] = await Promise.all([
       englishEventQuery(preferences.interests, language), englishEventQuery(preferences.mustSee, language),
       englishEventQuery(preferences.constraints, language),
     ]);
   }
-  const plan = buildEventPlan(context.settings, await getDataset(context.settings, context.owner), preferences, language);
-  const ref = db.collection('event_guide_itineraries').doc();
-  const key = randomBytes(32).toString('hex');
-  await ref.create({
-    boardId, cardId, keyHash: hash(key), plan, language, settings: context.settings, sponsor: context.sponsor,
-    expiresAt: Timestamp.fromMillis(Date.now() + planDurationMs),
+  return buildEventPlan(settings, await getDataset(settings, owner), forPlanning, language);
+}
+
+function editableItinerary(record: FirebaseFirestore.DocumentData | undefined, key: string) {
+  if (!record || record['editKeyHash'] !== hash(key) || !record['plan'] || !record['settings']
+    || !(record['expiresAt'] instanceof Timestamp) || record['expiresAt'].toMillis() <= Date.now()) {
+    throw new HttpsError('not-found', 'This itinerary link is invalid or has expired.');
+  }
+  return record;
+}
+
+async function openEditableItinerary(data: unknown, uid: string | undefined) {
+  const input = eventRecord(data);
+  const id = safeId(input['id']);
+  const key = typeof input['key'] === 'string' && /^[a-f0-9]{64}$/.test(input['key']) ? input['key'] : '';
+  if (!id || !key) throw new HttpsError('invalid-argument', 'This itinerary link is incomplete.');
+  const ref = itineraryCollection.doc(id);
+  const record = editableItinerary((await ref.get()).data(), key);
+  const context = await eventCardContext(record['boardId'], record['cardId'], uid);
+  const settings = record['settings'] as EventGuideSettings;
+  const plan = record['plan'] as Pick<EventPlan, 'days' | 'warnings'>;
+  const draft: EventItineraryDraft = {
+    settings, language: languageFor(record['language']),
+    preferences: eventPreferences(record['preferences'] ?? { days: plan.days.filter(day => day.attending).map(day => day.date) }, settings),
+    plan: { ...plan, id, key },
+    revision: Number(record['revision'] ?? 0),
+  };
+  return { draft, ref, context };
+}
+
+export const readEventGuideItinerary = onCall({ region }, async (request) => {
+  const { draft } = await openEditableItinerary(request.data, request.auth?.uid);
+  return draft;
+});
+
+export const updateEventGuideItinerary = onCall({ region, secrets: [geminiApiKey] }, async (request) => {
+  const { draft, ref, context } = await openEditableItinerary(request.data, request.auth?.uid);
+  const changed = () => new HttpsError('aborted', 'This itinerary changed in another tab. Refresh it and try again.');
+  if (request.data?.revision !== draft.revision) throw changed();
+  await quota('edit-plan', `${ref.id}:${request.rawRequest.ip}`, 60, 60 * 60_000);
+  if (request.data?.remove !== undefined) {
+    const remove = eventRecord(request.data.remove);
+    const day = draft.plan.days.find(item => item.date === remove['date']);
+    const index = remove['index'];
+    if (!day || typeof index !== 'number' || !Number.isInteger(index) || !day.items[index]) {
+      throw new HttpsError('invalid-argument', 'Choose an item from your itinerary.');
+    }
+    day.items.splice(index, 1);
+  } else {
+    draft.settings = context.settings;
+    draft.preferences = eventPreferences(request.data?.preferences, draft.settings);
+    draft.plan = { ...draft.plan, ...await planForEvent(draft.settings, context.owner, draft.preferences, draft.language) };
+  }
+  await db.runTransaction(async transaction => {
+    const record = editableItinerary((await transaction.get(ref)).data(), draft.plan.key);
+    if (Number(record['revision'] ?? 0) !== draft.revision) throw changed();
+    transaction.update(ref, {
+      plan: { days: draft.plan.days, warnings: draft.plan.warnings },
+      settings: draft.settings, preferences: draft.preferences, revision: draft.revision + 1,
+    });
   });
-  return { ...plan, id: ref.id, key } satisfies EventPlan;
+  return { ...draft, revision: draft.revision + 1 };
 });
 
 async function translatedNotes(plan: EventPlan, language: ContentLanguage): Promise<Map<string, string>> {
@@ -298,11 +366,12 @@ export const sendEventGuideItinerary = onCall({ region, secrets: [sendgridApiKey
   }
   const context = await eventCardContext(boardId, cardId, request.auth?.uid);
   const receiptKey = hasPlan ? key : hash(JSON.stringify([boardId, cardId, request.auth?.uid ?? request.data?.anonymousVisitorId, requestId]));
-  const ref = db.collection('event_guide_itineraries').doc(hasPlan ? id : `recap_${receiptKey}`);
+  const ref = itineraryCollection.doc(hasPlan ? id : `recap_${receiptKey}`);
   const recipientHash = hash(`${receiptKey}:${email.toLowerCase()}`);
   const check = (record: FirebaseFirestore.DocumentData | undefined) => {
+    const sendExpiry = record?.['sendExpiresAt'] ?? record?.['expiresAt'];
     if (!record || record['keyHash'] !== hash(receiptKey) || record['boardId'] !== boardId || record['cardId'] !== cardId
-      || !(record['expiresAt'] instanceof Timestamp) || record['expiresAt'].toMillis() <= Date.now()) {
+      || !(sendExpiry instanceof Timestamp) || sendExpiry.toMillis() <= Date.now()) {
       throw new HttpsError('not-found', 'This itinerary has expired. Build it again to send a new copy.');
     }
     return record;
@@ -320,6 +389,7 @@ export const sendEventGuideItinerary = onCall({ region, secrets: [sendgridApiKey
     throw new HttpsError('failed-precondition', 'A recap is available once your conversation has a question and an answer.');
   }
   if (!sendgridApiKey.value()) throw new HttpsError('failed-precondition', 'Email delivery is unavailable. Your itinerary is still open in the card.');
+  const editKey = hasPlan && request.data?.editableItinerary === true ? randomBytes(32).toString('hex') : '';
   const reserved = await db.runTransaction(async (transaction) => {
     const snapshot = (await transaction.get(ref)).data();
     const record = hasPlan || snapshot ? check(snapshot) : ready;
@@ -332,7 +402,15 @@ export const sendEventGuideItinerary = onCall({ region, secrets: [sendgridApiKey
       throw new HttpsError('failed-precondition', 'Delivery could not be confirmed. Check your inbox. Your itinerary is still open in the card.');
     }
     if (record['sendState'] === 'unknown') throw new HttpsError('failed-precondition', 'Delivery could not be confirmed. Check your inbox. Your itinerary is still open in the card.');
-    transaction.set(ref, { ...record, sendState: 'sending', recipientHash, sendStartedAt: Date.now() });
+    const now = Date.now();
+    const throughEvent = Date.parse(`${record['settings'].endDate}T00:00:00Z`) + 8 * dayMs;
+    transaction.set(ref, {
+      ...record, sendState: 'sending', recipientHash, sendStartedAt: now,
+      ...(editKey ? {
+        editKeyHash: hash(editKey), sendExpiresAt: record['sendExpiresAt'] ?? record['expiresAt'],
+        expiresAt: Timestamp.fromMillis(Math.min(now + 365 * dayMs, Math.max(now + 7 * dayMs, throughEvent))),
+      } : {}),
+    });
     return true;
   });
   if (!reserved) return { sent: true };
@@ -341,7 +419,9 @@ export const sendEventGuideItinerary = onCall({ region, secrets: [sendgridApiKey
     const plan = hasPlan ? ready['plan'] as EventPlan : null;
     const language = languageFor(request.data?.language ?? ready['language']);
     const notes = plan ? await translatedNotes(plan, language) : new Map<string, string>();
-    const message = renderEventEmail(ready['settings'], plan, language, ready['sponsor'], notes, transcript);
+    const path = language === 'en' ? '' : `/${language}`;
+    const editUrl = editKey ? `https://livingwiki.com${path}/event-itinerary#${id}.${editKey}` : '';
+    const message = renderEventEmail(ready['settings'], plan, language, ready['sponsor'], notes, transcript, editUrl);
     sgMail.setApiKey(sendgridApiKey.value());
     submitted = true;
     await sgMail.send({

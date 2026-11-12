@@ -1,4 +1,4 @@
-import { isAnalyticsReportPath } from './analytics-report-route';
+import { isPrivateLinkPath } from './analytics-report-route';
 import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
 import { initializeFirestore, type Firestore } from 'firebase/firestore';
@@ -17,7 +17,7 @@ export function getFirebaseApp(): FirebaseApp {
 }
 
 export function initializeFirebaseClient(): void {
-  if (typeof window === 'undefined' || isAnalyticsReportPath(window.location.pathname)) {
+  if (typeof window === 'undefined' || isPrivateLinkPath(window.location.pathname)) {
     return;
   }
 
@@ -29,7 +29,7 @@ export function initializeFirebaseClient(): void {
 }
 
 export function getFirebaseAnalytics(): Promise<Analytics | null> {
-  if(typeof window!=='undefined'&&isAnalyticsReportPath(window.location.pathname))return Promise.resolve(null);
+  if (typeof window !== 'undefined' && isPrivateLinkPath(window.location.pathname)) return Promise.resolve(null);
   if (!analyticsPromise) {
     initializeFirebaseClient();
   }

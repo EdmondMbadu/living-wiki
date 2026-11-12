@@ -93,6 +93,14 @@ export interface EventPlan {
   warnings: string[];
 }
 
+export interface EventItineraryDraft {
+  settings: EventGuideSettings;
+  language: ContentLanguage;
+  preferences: EventPreferences;
+  plan: EventPlan;
+  revision: number;
+}
+
 export type EventSourceKind = 'schedule' | 'exhibitors';
 
 export const EVENT_FILE_EXTENSIONS = '.pdf,.md,.docx,.txt,.csv,.xlsx,.json';

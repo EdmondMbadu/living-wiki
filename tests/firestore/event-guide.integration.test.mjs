@@ -7,7 +7,7 @@ process.env.GCLOUD_PROJECT = 'demo-living-wiki';
 const { db } = require('./lib/firebase');
 const {
   askEventGuide, createEventGuideItinerary, isEventVoiceCard, loadCesEventGuideDemo,
-  previewEventGuideImport, readEventGuide, saveEventGuideDataset, sendEventGuideItinerary,
+  previewEventGuideImport, readEventGuide, readEventGuideItinerary, saveEventGuideDataset, sendEventGuideItinerary, updateEventGuideItinerary,
 } = require('./lib/event-guide-functions');
 
 const boardId = 'event-guide-test-board';
@@ -89,19 +89,47 @@ test('organizer imports and publishes, a QR guest asks and plans, and confirmed 
     assert.equal(tracked.historySaved, true);
     assert.match(tracked.answer, /3741/);
     const combined = await call(createEventGuideItinerary, { ...target, preferences: { days: ['2027-01-06'], mustSee: 'Waymo' } }, owner);
-    const recap = { ...request, recap: true, id: combined.id, key: combined.key, textSessions: [typedSession] };
+    const recap = { ...request, recap: true, id: combined.id, key: combined.key, textSessions: [typedSession], editableItinerary: true };
     await assert.rejects(call(sendEventGuideItinerary, recap, 'other-user'), { code: 'permission-denied' });
+    let editLink;
     sendgrid.send = async (message) => {
       assert.match(message.subject, /Your event recap/);
       assert.match(message.html, /Where is the Waymo booth\?/);
       assert.match(message.html, /3741/);
       assert.match(message.html, /Your itinerary/);
+      assert.match(message.html, /href="https:\/\/livingwiki\.com\/">LivingWiki<|href="https:\/\/livingwiki\.com">LivingWiki</);
+      assert.match(message.text, /LivingWiki\nhttps:\/\/livingwiki\.com/);
+      editLink = new URL(message.html.match(/href="(https:\/\/livingwiki\.com\/event-itinerary#[^"]+)"/)[1]);
       sent++;
       return [{ statusCode: 202 }, {}];
     };
     assert.equal((await call(sendEventGuideItinerary, recap, owner)).sent, true);
     assert.equal((await call(sendEventGuideItinerary, recap, owner)).sent, true);
     assert.equal(sent, 2);
+    const [editId, editKey] = editLink.hash.slice(1).split('.');
+    const editAccess = { id: editId, key: editKey };
+    assert.equal(editId, combined.id);
+    assert.notEqual(editKey, combined.key);
+    assert.ok(!editLink.search);
+    await assert.rejects(call(readEventGuideItinerary, { id: editId, key: combined.key }), { code: 'not-found' });
+    await assert.rejects(call(sendEventGuideItinerary, { ...recap, key: editKey }, owner), { code: 'not-found' });
+    const draft = await call(readEventGuideItinerary, editAccess);
+    assert.deepEqual(draft.preferences.days, ['2027-01-06']);
+    assert.equal(draft.preferences.mustSee, 'Waymo');
+    assert.equal(draft.transcript, undefined);
+    const day = draft.plan.days.find(item => item.attending);
+    const removed = await call(updateEventGuideItinerary, { ...editAccess, revision: draft.revision, remove: { date: day.date, index: 0 } });
+    assert.equal(removed.plan.days.find(item => item.date === day.date).items.length, day.items.length - 1);
+    await assert.rejects(call(updateEventGuideItinerary, { ...editAccess, revision: draft.revision, preferences: draft.preferences }), { code: 'aborted' });
+    const rebuilt = await call(updateEventGuideItinerary, {
+      ...editAccess, revision: removed.revision, preferences: { ...draft.preferences, days: ['2027-01-07'] },
+    });
+    assert.deepEqual(rebuilt.plan.days.filter(item => item.attending).map(item => item.date), ['2027-01-07']);
+    assert.deepEqual(await call(readEventGuideItinerary, editAccess), rebuilt);
+    await board.update({ visibility: 'private' });
+    await assert.rejects(call(readEventGuideItinerary, editAccess), { code: 'permission-denied' });
+    assert.equal((await call(readEventGuideItinerary, editAccess, owner)).revision, rebuilt.revision);
+    await board.update({ visibility: 'unlisted' });
     sendgrid.send = async message => {
       assert.match(message.html, /Where is the Waymo booth\?/);
       assert.doesNotMatch(message.html, /Your itinerary/);

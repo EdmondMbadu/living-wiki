@@ -5,7 +5,7 @@ import { EventGuideGuest } from './event-guide-guest';
 import { EventGuideService } from './event-guide.service';
 
 describe('Event Guide itinerary and email', () => {
-  it('shows all dates, retains the plan on send failure, and sends only after explicit confirmation', async () => {
+  it('shows all dates and retains the plan on send failure in the shared recap flow', async () => {
     const itinerary: EventPlan = {
       id: 'plan-id', key: 'private-key', warnings: [],
       days: [
@@ -38,7 +38,8 @@ describe('Event Guide itinerary and email', () => {
     page.email.set('guest@example.org');
     await page.send(new Event('submit'));
     expect(events.send).not.toHaveBeenCalled();
-    page.consent.set(true);
+    fixture.componentRef.setInput('recapMode', true);
+    fixture.detectChanges();
     await page.send(new Event('submit'));
     expect(page.error()).toBe('Try again.');
     expect(page.plan()).toEqual(itinerary);
@@ -49,5 +50,38 @@ describe('Event Guide itinerary and email', () => {
     expect(events.send).toHaveBeenCalledWith({ boardId: 'board', cardId: 'card' }, itinerary, 'guest@example.org', 'en');
     expect(page.sent()).toBeTrue();
     expect(page.email()).toBe('');
+  });
+
+  it('loads the saved itinerary from the link and saves a removed stop without opening email', async () => {
+    const settings = {
+      datasetId: 'a'.repeat(64), name: 'Event', startDate: '2027-01-05', endDate: '2027-01-06',
+      timeZone: 'America/Los_Angeles', informationUrl: '', privacyUrl: '', travelMinutes: 30,
+    };
+    const stop = { start: 600, end: 640, kind: 'Session' as const, title: 'Robotics demo', location: 'Hall A', url: '', note: '' };
+    const day = { date: '2027-01-05', attending: true, items: [stop], alternatives: [] };
+    const plan = { id: 'plan-id', key: 'edit-key', warnings: [], days: [day] };
+    const preferences = { days: [day.date], interests: 'Robotics', mustSee: '', constraints: '', pace: 'curated' as const, firstTimer: false };
+    const draft = { settings, language: 'en' as const, preferences, plan, revision: 0 };
+    const updateItinerary = jasmine.createSpy('updateItinerary').and.resolveTo({
+      ...draft, plan: { ...plan, days: [{ ...day, items: [] }] }, revision: 1,
+    });
+    await TestBed.configureTestingModule({
+      imports: [EventGuideGuest],
+      providers: [provideZonelessChangeDetection(), { provide: EventGuideService, useValue: { updateItinerary } }],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(EventGuideGuest);
+    fixture.componentRef.setInput('settings', settings);
+    fixture.componentRef.setInput('language', 'en');
+    fixture.componentRef.setInput('initialDraft', draft);
+    fixture.detectChanges();
+    const remove: HTMLButtonElement = fixture.nativeElement.querySelector('.event-guide__remove-stop');
+    expect(fixture.nativeElement.textContent).toContain('Robotics demo');
+    remove.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(updateItinerary).toHaveBeenCalledOnceWith(plan, 0, { remove: { date: day.date, index: 0 } });
+    expect(fixture.nativeElement.textContent).not.toContain('Robotics demo');
+    expect(fixture.nativeElement.textContent).toContain('Itinerary saved.');
+    expect(fixture.nativeElement.querySelector('form')).toBeNull();
   });
 });

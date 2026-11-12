@@ -1,5 +1,5 @@
 <div class="event-guide event-guide__guest">
-  @if (!recapMode()) {
+  @if (!recapMode() && !initialDraft()) {
     <ng-content />
     <button class="event-guide__itinerary-toggle" type="button" [attr.aria-expanded]="expanded()" (click)="expanded.set(!expanded())">
     <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
@@ -9,12 +9,22 @@
     </button>
   }
   @if (expanded() || recapMode()) {
-    <section class="event-guide__guest-panel" [class.event-guide__guest-panel--recap]="recapMode()" aria-label="Event itinerary" i18n-aria-label>
+    <section class="event-guide__guest-panel" [class.event-guide__guest-panel--recap]="recapMode() || initialDraft()" aria-label="Event itinerary" i18n-aria-label>
       @if (recapMode()) {
         <header class="event-guide__recap-heading">
           <h3 i18n>Your event recap</h3>
           @if (recap()) { <p i18n>Email yourself the highlights from your conversation.</p> }
+          @if (plan()) { <p i18n>Your itinerary is included.</p> }
         </header>
+        @if (sent()) {
+          <p role="status" i18n>Your recap email is on its way.</p>
+        } @else {
+          <form class="event-guide__source" (submit)="send($event)">
+            <label><span i18n>Email address</span><input type="email" name="eventEmail" autocomplete="email" required maxlength="254" [disabled]="busy()" [ngModel]="email()" (ngModelChange)="email.set($event)"></label>
+            @if (displaySettings().privacyUrl) { <a [href]="displaySettings().privacyUrl" target="_blank" rel="noopener noreferrer" i18n>Privacy notice</a> }
+            <button type="submit" [disabled]="busy() || !email().trim()" i18n>Send recap</button>
+          </form>
+        }
       } @else {
       <fieldset [disabled]="busy()">
         <h3 i18n>Which days are you attending?</h3>
@@ -33,16 +43,19 @@
         </div>
         <label class="event-guide__check"><input type="checkbox" [ngModel]="preferences().firstTimer" (ngModelChange)="setPreference('firstTimer', $event)"><span i18n>It’s my first time at this event</span></label>
         <button type="button" [disabled]="!preferences().days.length" (click)="build()">
-          @if (plan()) { <span i18n>Rebuild itinerary</span> } @else { <span i18n>Generate itinerary</span> }
+          @if (initialDraft()) { <span i18n>Rebuild and save itinerary</span> }
+          @else if (plan()) { <span i18n>Rebuild itinerary</span> }
+          @else { <span i18n>Generate itinerary</span> }
         </button>
       </fieldset>
       }
       @if (busy()) { <p role="status" i18n>Working on your itinerary…</p> }
+      @if (saved()) { <p role="status" i18n>Itinerary saved.</p> }
       @if (error()) { <p role="alert">{{ error() }}</p> }
       @if (plan(); as itinerary) {
         <section class="event-guide__source" aria-live="polite">
           <h3 i18n>Your itinerary</h3>
-          <p>{{ settings().timeZone }}</p>
+          <p>{{ displaySettings().timeZone }}</p>
           @for (day of itinerary.days; track day.date) {
             <section>
               <h4>{{ formatDate(day.date) }}</h4>
@@ -57,6 +70,9 @@
                       @else { <strong i18n>Explore the show floor</strong> }
                       @if (item.location) { <span dir="auto"> · {{ item.location }}</span> }
                       @if (item.note) { <br><small dir="auto">{{ item.note }}</small> }
+                      @if (initialDraft()) {
+                        <button type="button" class="event-guide__remove-stop" [disabled]="busy()" (click)="removeItem(day.date, $index)" i18n>Remove stop</button>
+                      }
                     </li>
                   }
                 </ul>
@@ -72,28 +88,9 @@
           }
           @for (warning of itinerary.warnings; track $index) { <p>{{ warning }}</p> }
         </section>
-      }
-      @if (sent()) {
-        @if (recapMode() && recap()) { <p role="status" i18n>Your recap email is on its way.</p> }
-        @else { <p role="status" i18n>Your itinerary email is on its way.</p> }
-      } @else if (recapMode() || (plan() && !conversationActive())) {
-          <form class="event-guide__source" (submit)="send($event)">
-            @if (recapMode() && recap() && plan() && !itinerarySent()) {
-              <label class="event-guide__check"><input type="checkbox" name="includeItinerary" [disabled]="busy()" [ngModel]="includeItinerary()" (ngModelChange)="includeItinerary.set($event); consent.set(false)"><span i18n>Include the itinerary I reviewed.</span></label>
-            }
-            <label><span i18n>Email address</span><input type="email" name="eventEmail" autocomplete="email" required maxlength="254" [disabled]="busy()" [ngModel]="email()" (ngModelChange)="email.set($event); consent.set(false)"></label>
-            <label class="event-guide__check"><input type="checkbox" name="eventConsent" required [disabled]="busy()" [ngModel]="consent()" (ngModelChange)="consent.set($event)">
-              @if (recapMode() && recap()) { <span i18n>Use this address to send my event recap.</span> }
-              @else { <span i18n>Use this address to send me this itinerary.</span> }
-            </label>
-            @if (settings().privacyUrl) { <a [href]="settings().privacyUrl" target="_blank" rel="noopener noreferrer" i18n>Privacy notice</a> }
-            <button type="submit" [disabled]="busy() || !email().trim() || !consent()">
-              @if (recapMode() && recap()) { <span i18n>Send recap</span> }
-              @else { <span i18n>Send itinerary</span> }
-            </button>
-          </form>
-      } @else if (plan() && conversationActive()) {
-        <p i18n>You can email this itinerary with your recap when you finish the conversation.</p>
+        @if (!recapMode() && !initialDraft()) {
+          <button type="button" [disabled]="busy()" (click)="emailRequested.emit()" i18n>Email recap</button>
+        }
       }
     </section>
   }

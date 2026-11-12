@@ -8,7 +8,7 @@
   </div>
 }
 <router-outlet (activate)="routeActive = true"></router-outlet>
-@if (!sharedReport()) {
+@if (!privateLink()) {
 <app-workspace-navigation-overlay />
 <app-spotify-player />
 <app-invitation-alert />

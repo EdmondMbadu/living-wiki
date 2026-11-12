@@ -1,4 +1,4 @@
-import { isAnalyticsReportPath } from './analytics-report-route';
+import { isPrivateLinkPath } from './analytics-report-route';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
@@ -24,7 +24,10 @@ import { TalkThruPlanDialogComponent } from './talkthru-billing/talkthru-plan-di
 export class App {
   readonly guestTerms = inject(GuestTermsService);
   private readonly router=inject(Router);
-  readonly sharedReport=toSignal(this.router.events.pipe(filter((event):event is NavigationEnd=>event instanceof NavigationEnd),map(event=>isAnalyticsReportPath(event.urlAfterRedirects))),{initialValue:typeof window!=='undefined'&&isAnalyticsReportPath(window.location.pathname)});
+  readonly privateLink = toSignal(this.router.events.pipe(
+    filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+    map(event => isPrivateLinkPath(event.urlAfterRedirects)),
+  ), { initialValue: typeof window !== 'undefined' && isPrivateLinkPath(window.location.pathname) });
   constructor() { applyDocumentLocale(inject(DOCUMENT), inject(LOCALE_ID)); }
 
   protected readonly title = $localize`LivingWiki`;

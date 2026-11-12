@@ -142,7 +142,7 @@ import { issueTeamVoiceSession, teamVoiceBinding, teamWorkingBoard } from './tea
 import { loadTalkingCardAtlas } from './talking-card-access';
 import { isEventVoiceCard } from './event-guide-functions';
 import { EVENT_VOICE_HISTORY_VERSION } from './event-guide-model';
-export { previewEventGuideImport, loadCesEventGuideDemo, saveEventGuideDataset, readEventGuide, askEventGuide, createEventGuideItinerary, sendEventGuideItinerary } from './event-guide-functions';
+export { previewEventGuideImport, loadCesEventGuideDemo, saveEventGuideDataset, readEventGuide, askEventGuide, createEventGuideItinerary, sendEventGuideItinerary, readEventGuideItinerary, updateEventGuideItinerary } from './event-guide-functions';
 import { fulfillVoiceCreditPurchase, refundVoiceCreditPurchase, reserveBoardVoice, voiceCreditsBoardHost, voiceCreditsEnabled } from './voice-credits';
 import { analyticsTarget } from './card-analytics';
 export { voiceCreditsCommand, reconcileVoiceCredits } from './voice-credits';
@@ -16936,7 +16936,7 @@ export const createElevenLabsVoiceSession = onCall(
         answer_mode: atlasRecord?.['default_answer_mode'] === 'internet' ? 'internet' : 'wiki',
         visitor_id: visitorId,
         link_delivery_instruction: eventVoice
-          ? 'Use the in-card itinerary preview and invite the visitor to confirm and send there. The visitor enters their email in the form.'
+          ? 'Use the in-card itinerary preview. Send recap includes any itinerary and an edit link. The visitor enters their email in the form.'
           : 'If the user asks for links, websites, maps, addresses, or asks you to send links, tell them the relevant links will be collected and included in the recap email after they hang up. Do not say you cannot send links directly.',
         preferred_language_code: voicePreference.languageCode ?? '',
         preferred_language: voicePreference.language ?? '',

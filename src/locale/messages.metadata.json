@@ -75,10 +75,6 @@
     "source": "{$INTERPOLATION} Talk with {$INTERPOLATION_1} through the {$INTERPOLATION_2} city wiki.",
     "file": "src/app/business-detail/business-detail.html"
   },
-  "1018492008369499286": {
-    "source": "Use this address to send me this itinerary.",
-    "file": "src/app/event-guide/event-guide-guest.html"
-  },
   "1022922324880847141": {
     "source": "Use as board voice",
     "file": "src/app/boards/studio-voice-designer.html"
@@ -915,6 +911,10 @@
     "source": "Background context",
     "file": "src/app/chat/chat.ts"
   },
+  "1267322489008075403": {
+    "source": "Edit your itinerary",
+    "file": "src/app/event-guide/event-itinerary-page.html"
+  },
   "1267967133679326155": {
     "source": "Create Account",
     "file": "src/app/legal/legal.html"
@@ -1002,6 +1002,10 @@
   "129363314605254888": {
     "source": "{$START_TAG_SPAN}verified_user{$CLOSE_TAG_SPAN} Your knowledge stays yours. ",
     "file": "src/app/sign-in/sign-in.html"
+  },
+  "1293769625165569725": {
+    "source": "Sign in with an account that has access to this event, then try again.",
+    "file": "src/app/event-guide/event-itinerary-page.ts"
   },
   "1293814537870499116": {
     "source": "{$START_TAG_SPAN}auto_awesome_motion{$CLOSE_TAG_SPAN} Stack Studio ",
@@ -2767,6 +2771,10 @@
     "source": "Make yourself available to buyers",
     "file": "src/app/boards/boards.html"
   },
+  "1786748346071156384": {
+    "source": "Remove stop",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "178739699302445032": {
     "source": "Search first question or visitor",
     "file": "src/app/card-analytics/card-analytics.html"
@@ -4091,10 +4099,6 @@
     "source": "Make ",
     "file": "src/app/boards/boards.ts"
   },
-  "2196050712062485342": {
-    "source": "Your itinerary email is on its way.",
-    "file": "src/app/event-guide/event-guide-guest.html"
-  },
   "2197766708659073086": {
     "source": "Select a date to see its recent conversations.",
     "file": "src/app/platform-analytics/picamo-analytics.html"
@@ -4414,10 +4418,6 @@
   "2296910706858050590": {
     "source": "Snapshot generated {$INTERPOLATION} UTC. This report does not update automatically.",
     "file": "src/app/shared-analytics/shared-analytics.html"
-  },
-  "2298775162047355894": {
-    "source": "Include the itinerary I reviewed.",
-    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "2299187798995800780": {
     "source": "Chat",
@@ -5042,6 +5042,10 @@
   "2469296337546020731": {
     "source": "Talk with a guide",
     "file": "src/app/boards/boards.html"
+  },
+  "2471001518575306027": {
+    "source": "Rebuild and save itinerary",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "247154685772629553": {
     "source": "Your leaderboard name",
@@ -10359,6 +10363,10 @@
     "source": "Free things",
     "file": "src/app/city-board-collection.util.ts"
   },
+  "398242125468292863": {
+    "source": "This itinerary link is incomplete.",
+    "file": "src/app/event-guide/event-itinerary-page.ts"
+  },
   "3983481141170710649": {
     "source": "This browser cannot access your location.",
     "file": "src/app/boards/boards.ts"
@@ -10499,10 +10507,6 @@
     "source": "Making Philly Answer Card",
     "file": "src/app/shared-chat/shared-chat.ts"
   },
-  "4030113340288138905": {
-    "source": "Use this address to send my event recap.",
-    "file": "src/app/event-guide/event-guide-guest.html"
-  },
   "4031190280739566335": {
     "source": "Last updated",
     "file": "src/app/chat/chat.ts"
@@ -10562,6 +10566,10 @@
   "4046367523862390009": {
     "source": "Importing…",
     "file": "src/app/atlas-manage/atlas-manage.ts"
+  },
+  "4047026572665984752": {
+    "source": "Your itinerary could not be saved.",
+    "file": "src/app/event-guide/event-guide-guest.ts"
   },
   "4047181287739288404": {
     "source": "Topics for ",
@@ -15009,7 +15017,7 @@
   },
   "5333231502989486217": {
     "source": "Email recap",
-    "file": "src/app/chat/chat.ts"
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "5334086582686345624": {
     "source": "Tour route map",
@@ -15278,10 +15286,6 @@
   "5403950912722004779": {
     "source": "Your email address has been restored for this account.",
     "file": "src/app/auth-action/auth-action.ts"
-  },
-  "5406381247583780559": {
-    "source": "You can email this itinerary with your recap when you finish the conversation.",
-    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "5409041682831525075": {
     "source": "Talking card",
@@ -18119,10 +18123,6 @@
     "source": "Describe the cards you want to add",
     "file": "src/app/boards/boards.ts"
   },
-  "6189058336749497081": {
-    "source": "Send itinerary",
-    "file": "src/app/event-guide/event-guide-guest.html"
-  },
   "6189286144787606969": {
     "source": "Create video in 2 formats",
     "file": "src/app/boards/boards.ts"
@@ -20767,6 +20767,10 @@
     "source": "Browse public LivingWikis and create narrated Stack videos for free, then upgrade when you need private spaces, Personal Voice, publishing, uploads, or team collaboration.",
     "file": "src/app/pricing/pricing.ts"
   },
+  "6961845989002938375": {
+    "source": "Your itinerary could not be loaded.",
+    "file": "src/app/event-guide/event-itinerary-page.ts"
+  },
   "6962026839949424559": {
     "source": "Paste a public property listing URL to continue.",
     "file": "src/app/kiwi/kiwi.ts"
@@ -22287,6 +22291,10 @@
     "source": "Useful when the destination is easier to show than describe.",
     "file": "src/app/boards/boards.html"
   },
+  "7397272962257710765": {
+    "source": "Your itinerary is included.",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "7397570695281200024": {
     "source": "photos selected",
     "file": "src/app/boards/listing-photo-source.ts"
@@ -23114,6 +23122,10 @@
   "7642320582858034542": {
     "source": "As part of LivingWiki, TalkThrus helps people bring places to life through their own voice and insights. We believe useful technology should make sharing what you know feel simple and personal.",
     "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "7642715999929181686": {
+    "source": "Loading your itinerary…",
+    "file": "src/app/event-guide/event-itinerary-page.html"
   },
   "7644584255987445630": {
     "source": "Finding and validating image...",
@@ -25774,6 +25786,10 @@
   "842657237693374355": {
     "source": "This month",
     "file": "src/app/platform-analytics/platform-analytics.html"
+  },
+  "8427756743828269533": {
+    "source": "Itinerary saved.",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "8430737794384598679": {
     "source": "Start with an idea, something you have, or a place to explore.",

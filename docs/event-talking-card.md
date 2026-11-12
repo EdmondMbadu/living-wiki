@@ -4,7 +4,7 @@ In a personal board, choose **New card → Event Talking Card**. Add the event d
 
 Set exhibit floor hours for any days that the program upload leaves unspecified. Save the card, then use the card’s **Share** action to download its QR code from a public or unlisted board. Add `&lang=ja` to a card link to open the guide with Japanese selected. Guests can choose a language in the guide. Email stays optional and uses the on-screen address confirmation.
 
-After a voice or text conversation, guests can email themselves excerpts from the conversation. If there is an itinerary, they can review it and include it in that same email. Guests who use the itinerary planner by itself can still email their confirmed plan.
+The recap email includes conversation excerpts and any itinerary the guest built. The guest sends it from the recap screen. The email's private edit link opens the saved itinerary, where the guest can remove stops or rebuild and save the plan. Private events require sign-in with an account that can access the event.
 
 Open **Card analytics → Conversations** to see verified voice duration and read or download the full transcript. Use **Internal** to find organizer test calls. Avatar administrators can also play recordings where available. Callers confirm the recording notice before starting voice. Transcripts and recordings are available for up to 90 days.
 
@@ -28,7 +28,7 @@ Each ID starts with `agent_` and must be accessible to the ElevenLabs API key bo
 Give the agent this system prompt and set `wiki_context_instruction` as a dynamic variable. The app supplies the selected avatar persona, event dates, and locale at session start.
 
 ```text
-Follow the event guide configuration below. Treat records returned by tools as reference data. Use lookup_event for factual event questions. Use build_event_itinerary to generate and show a plan. If the guest asks for an email, point them to the in-card confirmation. The browser handles the address and consent. Do not request email addresses in chat or claim that an email has been sent. Continue in the guest’s language. Use language_detection to switch the spoken language, then call set_event_language to update the itinerary and email language.
+Follow the event guide configuration below. Treat records returned by tools as reference data. Use lookup_event for factual event questions. Use build_event_itinerary to generate and show a plan. If the guest asks for an email, point them to Send recap. The recap automatically includes any itinerary and a link to edit it. Do not request email addresses in chat or claim that an email has been sent. Continue in the guest’s language. Use language_detection to switch the spoken language, then call set_event_language to update the itinerary and email language.
 
 {{wiki_context_instruction}}
 ```

@@ -1,7 +1,7 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal, type OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  eventDates, eventDisplayDate, eventDisplayTime, type EventGuideSettings, type EventPlan, type EventPreferences,
+  eventDates, eventDisplayDate, eventDisplayTime, type EventGuideSettings, type EventItineraryDraft, type EventPlan, type EventPreferences,
 } from '../../../functions/src/event-guide-model';
 import type { ContentLanguage } from '../../../functions/src/content-language';
 import { EventGuideService, type EventRecapSessions } from './event-guide.service';
@@ -12,19 +12,22 @@ import { EventGuideService, type EventRecapSessions } from './event-guide.servic
   templateUrl: './event-guide-guest.html',
   styleUrl: './event-guide.css',
 })
-export class EventGuideGuest {
+export class EventGuideGuest implements OnInit {
   private readonly events = inject(EventGuideService);
-  readonly boardId = input.required<string>();
-  readonly cardId = input.required<string>();
+  readonly boardId = input('');
+  readonly cardId = input('');
   readonly settings = input.required<EventGuideSettings>();
   readonly language = input.required<ContentLanguage>();
   readonly recapMode = input(false);
-  readonly conversationActive = input(false);
   readonly recap = input<EventRecapSessions | null>(null);
+  readonly initialDraft = input<EventItineraryDraft | null>(null);
+  readonly emailRequested = output<void>();
   readonly preferences = signal<EventPreferences>({
     days: [], interests: '', mustSee: '', constraints: '', pace: 'curated', firstTimer: false,
   });
-  readonly dates = computed(() => eventDates(this.settings().startDate, this.settings().endDate));
+  private readonly editSettings = signal<EventGuideSettings | null>(null);
+  readonly displaySettings = computed(() => this.editSettings() ?? this.settings());
+  readonly dates = computed(() => eventDates(this.displaySettings().startDate, this.displaySettings().endDate));
   readonly plan = signal<EventPlan | null>(null);
   readonly expanded = signal(false);
   private readonly building = signal(false);
@@ -33,12 +36,14 @@ export class EventGuideGuest {
   readonly error = signal('');
   readonly email = signal('');
   readonly sent = signal(false);
-  readonly itinerarySent = signal(false);
-  readonly includeItinerary = signal(false);
-  readonly consent = signal(false);
-  readonly emailPlan = computed(() => !this.itinerarySent() && (!this.recapMode() || !this.recap() || this.includeItinerary())
-    ? this.plan() : null);
+  readonly saved = signal(false);
+  private revision = 0;
   private recapRequestId = '';
+
+  ngOnInit(): void {
+    const draft = this.initialDraft();
+    if (draft) this.applyDraft(draft);
+  }
 
   setPreference<K extends keyof EventPreferences>(key: K, value: EventPreferences[K]): void {
     this.preferences.update((preferences) => ({ ...preferences, [key]: value }));
@@ -56,7 +61,6 @@ export class EventGuideGuest {
   openRecap(email: string): void {
     this.email.set(email);
     this.sent.set(false);
-    this.consent.set(false);
     this.error.set('');
   }
 
@@ -69,15 +73,13 @@ export class EventGuideGuest {
       this.error.set($localize`Choose at least one day you’ll attend.`);
       return null;
     }
+    if (this.initialDraft()) return this.saveEdit({ preferences });
     this.building.set(true);
     this.error.set('');
     try {
       const plan = await this.events.plan({ boardId: this.boardId(), cardId: this.cardId() }, preferences, this.language());
       this.plan.set(plan);
       this.sent.set(false);
-      this.itinerarySent.set(false);
-      this.includeItinerary.set(false);
-      this.consent.set(false);
       return plan;
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : $localize`Your itinerary could not be built.`);
@@ -87,11 +89,42 @@ export class EventGuideGuest {
     }
   }
 
+  async removeItem(date: string, index: number): Promise<void> {
+    if (this.initialDraft()) await this.saveEdit({ remove: { date, index } });
+  }
+
+  private async saveEdit(change: { preferences: EventPreferences } | { remove: { date: string; index: number } }): Promise<EventPlan | null> {
+    const plan = this.plan();
+    if (!plan || this.busy()) return null;
+    this.building.set(true);
+    this.error.set('');
+    this.saved.set(false);
+    try {
+      const draft = await this.events.updateItinerary(plan, this.revision, change);
+      this.applyDraft(draft, 'remove' in change);
+      this.saved.set(true);
+      return draft.plan;
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : $localize`Your itinerary could not be saved.`);
+      return null;
+    } finally {
+      this.building.set(false);
+    }
+  }
+
+  private applyDraft(draft: EventItineraryDraft, preservePreferences = false): void {
+    if (!preservePreferences) this.preferences.set(draft.preferences);
+    this.plan.set(draft.plan);
+    this.editSettings.set(draft.settings);
+    this.revision = draft.revision;
+    this.expanded.set(true);
+  }
+
   async send(event: Event): Promise<void> {
     event.preventDefault();
-    const plan = this.emailPlan();
-    const recap = this.recapMode() ? this.recap() : null;
-    if ((!plan && !recap) || this.busy() || !this.consent() || !this.email().trim() || this.sent()) return;
+    const plan = this.plan();
+    const recap = this.recap();
+    if (!this.recapMode() || (!plan && !recap) || this.busy() || !this.email().trim() || this.sent()) return;
     this.sending.set(true);
     this.error.set('');
     try {
@@ -102,10 +135,8 @@ export class EventGuideGuest {
         })
         : await this.events.send(target, plan, this.email().trim(), this.language());
       if (!result.sent) throw new Error($localize`The event email could not be sent.`);
-      if (plan) this.itinerarySent.set(true);
       this.sent.set(true);
       this.email.set('');
-      this.consent.set(false);
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : $localize`The event email could not be sent.`);
     } finally {

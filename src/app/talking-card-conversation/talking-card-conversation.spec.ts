@@ -167,7 +167,7 @@ describe('TalkingCardConversationComponent', () => {
     expect(dialog.querySelector('textarea')?.value).toBe('What’s on today?');
   });
 
-  it('offers one confirmed email after an event conversation and includes the reviewed itinerary when selected', async () => {
+  it('includes the itinerary automatically in one event recap email', async () => {
     const fixture = TestBed.createComponent(TalkingCardConversationComponent);
     const component = fixture.componentInstance;
     fixture.componentRef.setInput('atlasId', atlas.id);
@@ -187,12 +187,9 @@ describe('TalkingCardConversationComponent', () => {
     await component.finishConversation('closed');
     fixture.detectChanges();
     expect(component.conversationStage()).toBe('recap');
-    expect(guest.emailPlan()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Your itinerary is included.');
+    expect(fixture.nativeElement.querySelector('form input[type="checkbox"]')).toBeNull();
     guest.email.set('guest@example.org');
-    guest.includeItinerary.set(true);
-    await guest.send(new Event('submit'));
-    expect(events.send).not.toHaveBeenCalled();
-    guest.consent.set(true);
     await guest.send(new Event('submit'));
     await guest.send(new Event('submit'));
     expect(events.send).toHaveBeenCalledOnceWith(

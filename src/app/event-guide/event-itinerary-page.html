@@ -1,0 +1,21 @@
+<main class="itinerary-page">
+  <a routerLink="/" class="brand">LivingWiki</a>
+  @if (draft(); as itinerary) {
+    <section [attr.dir]="languageDetails(itinerary.language).direction" [attr.lang]="languageDetails(itinerary.language).locale">
+      <h1 i18n>Edit your itinerary</h1>
+      <p dir="auto">{{ itinerary.settings.name }}</p>
+      <app-event-guide-guest [settings]="itinerary.settings" [language]="itinerary.language" [initialDraft]="itinerary" />
+    </section>
+  } @else if (loading()) {
+    <p role="status" i18n>Loading your itinerary…</p>
+  } @else {
+    <h1 i18n>Your itinerary</h1>
+    <p role="alert">{{ error() }}</p>
+    @if (accessRequired()) {
+      @if (!signedIn()) {
+        <a routerLink="/sign-in" target="_blank" rel="noopener noreferrer" i18n>Sign in</a>
+      }
+      <button type="button" (click)="load()" i18n>Try again</button>
+    }
+  }
+</main>

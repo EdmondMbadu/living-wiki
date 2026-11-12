@@ -67,6 +67,14 @@
 .event-guide__guest-panel h3 { font-size: 1rem; font-weight: 750; }
 .event-guide__guest-panel--recap { max-height: none; overflow: visible; }
 .event-guide__recap-heading h3 { margin-bottom: .3rem; font-size: 1.25rem; }
+.event-guide__guest-panel .event-guide__remove-stop {
+  display: inline-block;
+  min-height: 2rem;
+  margin-inline-start: .45rem;
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
 .event-guide__guest-panel label > span { font-weight: 650; }
 .event-guide__guest-panel :is(input:not([type=checkbox]), select, .event-guide__source) {
   border-color: var(--line);

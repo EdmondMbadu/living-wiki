@@ -3,7 +3,7 @@ import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { httpsCallable } from 'firebase/functions';
 import {
   EVENT_MAX_FILE_BYTES, type EventDataset, type EventGuideSettings, type EventImportResult,
-  type EventPlan, type EventPreferences, type EventSourceKind,
+  type EventItineraryDraft, type EventPlan, type EventPreferences, type EventSourceKind,
 } from '../../../functions/src/event-guide-model';
 import type { EventLookup } from '../../../functions/src/event-guide-planner';
 import type { ContentLanguage } from '../../../functions/src/content-language';
@@ -59,11 +59,19 @@ export class EventGuideService {
     return this.call<EventPlan>('createEventGuideItinerary', { ...target, preferences, language });
   }
 
+  itinerary(id: string, key: string) {
+    return this.call<EventItineraryDraft>('readEventGuideItinerary', { id, key });
+  }
+
+  updateItinerary(plan: Pick<EventPlan, 'id' | 'key'>, revision: number, change: { preferences: EventPreferences } | { remove: { date: string; index: number } }) {
+    return this.call<EventItineraryDraft>('updateEventGuideItinerary', { id: plan.id, key: plan.key, revision, ...change });
+  }
+
   send(target: EventCardTarget, plan: Pick<EventPlan, 'id' | 'key'> | null, email: string, language: ContentLanguage,
     recap?: EventRecapSessions & { requestId: string }) {
     return this.call<{ sent: boolean }>('sendEventGuideItinerary', {
       ...target, ...(plan ? { id: plan.id, key: plan.key } : {}),
-      ...(recap ? { ...recap, recap: true } : {}), email, language, consent: true,
+      ...(recap ? { ...recap, recap: true } : {}), email, language, consent: true, editableItinerary: !!plan,
     });
   }
 

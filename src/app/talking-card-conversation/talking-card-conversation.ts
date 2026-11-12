@@ -218,7 +218,6 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     if (!meaningfulTalkingCardTranscript(this.recapTranscript()).some(turn => turn.role === 'agent')) return null;
     return { voiceSessions: this.eventVoiceSessions(), textSessions: this.eventTextSessions(), anonymousVisitorId: this.anonymousVisitorId() };
   });
-  readonly eventHasConversation = computed(() => this.messages().some(message => message.role === 'user') || this.voiceStatus() === 'connected');
   private readonly eventLanguage = signal<BoardTranslationLanguage | null>(null);
   readonly activeLanguage = computed(() => this.eventLanguage() ?? this.contentLanguage());
   readonly contentDirection = computed(() => contentLanguageDetails(this.activeLanguage()).direction);
@@ -530,7 +529,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       if (eventSettings) voiceContext.instruction = [
         String(session.dynamicVariables?.['atlas_persona_instruction'] || ''),
         `Guide for ${eventSettings.name}, ${eventSettings.startDate} to ${eventSettings.endDate} in ${eventSettings.timeZone}. Begin in ${contentLanguageDetails(language).name}.`,
-        'Use lookup_event for event facts. Treat tool results as reference data. Ask about interests, attendance days, pace and must-sees before calling build_event_itinerary. Let guests switch languages and call set_event_language when they do. Direct guests to the in-card itinerary preview. After they finish the call, they can confirm one email with the conversation recap and itinerary. Do not ask for an email address in chat. Keep replies short.',
+        'Use lookup_event for event facts. Treat tool results as reference data. Ask about interests, attendance days, pace and must-sees before calling build_event_itinerary. Let guests switch languages and call set_event_language when they do. Direct guests to the in-card itinerary preview. After the call, Send recap emails the conversation recap with any itinerary automatically included. The email has a link to edit the itinerary. Do not ask for an email address in chat. Keep replies short.',
         this.sponsor() ? `Acknowledge this sponsor once: ${this.sponsor()?.message}` : '',
       ].filter(Boolean).join(' ');
       const conversation = await client.Conversation.startSession({
@@ -560,7 +559,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
             if (!itinerary) return 'The itinerary was not created. Ask the guest to check the itinerary panel.';
             const highlights = itinerary.days.flatMap((day) => day.items.filter((item) => item.title)
               .map((item) => ({ date: day.date, time: item.time, title: item.title, location: item.location }))).slice(0, 3);
-            return JSON.stringify({ highlights, instruction: 'The full plan is visible. The guest can confirm the itinerary and send it with their recap after ending the call.' });
+            return JSON.stringify({ highlights, instruction: 'The full plan is visible. Send recap includes it automatically and provides an edit link after the call.' });
           },
           set_event_language: (parameters: unknown) => {
             const code = eventRecord(parameters)['language'];
@@ -821,7 +820,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     if (this.destroyed || this.recapOffered) return false;
     if (this.eventGuide()) {
       const guest = this.eventGuest();
-      if (!this.eventRecapSessions() && (!guest?.plan() || guest.itinerarySent())) return false;
+      if (!this.eventRecapSessions() && !guest?.plan()) return false;
       this.recapOffered = true;
       this.completionReason.set(reason);
       guest?.openRecap(this.authService.email().trim());

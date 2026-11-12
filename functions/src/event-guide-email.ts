@@ -37,15 +37,25 @@ const recapLabels = {
   ru: ['Итоги разговора о мероприятии', 'Из вашего разговора', 'Вы', 'Гид'],
 } satisfies Record<ContentLanguage, string[]>;
 
+const editLabels = {
+  en: 'Edit your itinerary', fr: 'Modifier votre itinéraire', ja: 'プランを編集する',
+  pt: 'Editar seu roteiro', es: 'Editar tu itinerario', de: 'Deinen Zeitplan bearbeiten',
+  zh: '编辑行程', it: 'Modifica il tuo itinerario', ko: '일정 수정',
+  ar: 'تعديل برنامجك', hi: 'अपनी यात्रा योजना बदलें', ru: 'Изменить маршрут',
+} satisfies Record<ContentLanguage, string>;
+
 export function renderEventEmail(
   settings: EventGuideSettings, plan: Pick<EventPlan, 'days'> | null, language: ContentLanguage,
   sponsor: { name: string; message: string } | null, translatedNotes: ReadonlyMap<string, string> = new Map(),
-  transcript: readonly EventRecapTurn[] = [],
+  transcript: readonly EventRecapTurn[] = [], itineraryEditUrl = '',
 ) {
   const locale = contentLanguageDetails(language);
   const [itinerary, dayOff, lunch, exhibits, changes, info, privacy, presentedBy] = messages[language];
   const [recap, conversation, visitor, guide] = recapLabels[language];
-  const title = transcript.length ? recap : itinerary;
+  const editUrl = plan ? eventHttpsUrl(itineraryEditUrl) : '';
+  const edit = editLabels[language];
+  const isRecap = !!(transcript.length || editUrl);
+  const title = isRecap ? recap : itinerary;
   const subject = `${title} · ${settings.name}`;
   const text = [subject, settings.timeZone];
   const link = (label: string, value: string) => {
@@ -60,7 +70,8 @@ export function renderEventEmail(
       return `<p style="margin:8px 0 14px"><strong>${escape(speaker)}</strong><br><span dir="auto">${escape(turn.text).replace(/\r?\n/g, '<br>')}</span></p>`;
     }).join('');
   })() : '';
-  if (plan && transcript.length) text.push('', itinerary);
+  if (plan && isRecap) text.push('', itinerary);
+  if (editUrl) text.push(edit, editUrl);
   const days = (plan?.days ?? []).map((day) => {
     const date = eventDisplayDate(day.date, language);
     text.push('', date);
@@ -75,14 +86,16 @@ export function renderEventEmail(
         }).join('') : `<p>${escape(dayOff)}</p>`);
   }).join('');
   if (sponsor) text.push('', `${presentedBy} ${sponsor.name}`, sponsor.message);
-  text.push('', changes, settings.informationUrl, settings.privacyUrl);
+  text.push('', changes, settings.informationUrl, settings.privacyUrl, '', 'LivingWiki', 'https://livingwiki.com');
   const html = `<!doctype html><html lang="${locale.id}" dir="${locale.direction}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escape(subject)}</title></head><body style="margin:0;background:#0b1020;color:#101830;font:16px/1.5 Arial,sans-serif">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:20px 12px">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px"><tr><td dir="${locale.direction}" style="padding:22px;background:#15254a;color:#ffffff;border-radius:12px 12px 0 0">
     ${sponsor ? `<small>${escape(presentedBy)} ${escape(sponsor.name)}</small>` : ''}<h1 style="margin:8px 0;font:32px Georgia,serif">${escape(title)}</h1><p style="margin:0">${escape(settings.name)} · ${escape(settings.timeZone)}</p></td></tr>
-    <tr><td dir="${locale.direction}" style="padding:8px 22px 22px;background:#ffffff">${highlights}${plan && transcript.length ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}${days}<p>${escape(changes)}</p>
+    <tr><td dir="${locale.direction}" style="padding:8px 22px 22px;background:#ffffff">${highlights}${plan && isRecap ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}
+    ${editUrl ? `<p style="margin:12px 0 20px"><a href="${escape(editUrl)}" style="display:inline-block;border-radius:8px;padding:10px 16px;background:#15254a;color:#ffffff;text-decoration:none;font-weight:bold">${escape(edit)}</a></p>` : ''}${days}<p>${escape(changes)}</p>
     ${settings.informationUrl ? `<p>${link(info, settings.informationUrl)}</p>` : ''}</td></tr>
     <tr><td dir="${locale.direction}" style="padding:18px 22px;background:#e9eef9;border-radius:0 0 12px 12px">
-    ${sponsor ? `<p>${escape(sponsor.message)}</p>` : ''}${settings.privacyUrl ? link(privacy, settings.privacyUrl) : ''}</td></tr></table></td></tr></table></body></html>`;
+    ${sponsor ? `<p>${escape(sponsor.message)}</p>` : ''}${settings.privacyUrl ? link(privacy, settings.privacyUrl) : ''}
+    <p style="margin:10px 0 0;font-size:14px;font-weight:bold">${link('LivingWiki', 'https://livingwiki.com')}</p></td></tr></table></td></tr></table></body></html>`;
   return { subject, html, text: text.join('\n') };
 }
