@@ -311,7 +311,6 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     const opening = this.openingMessage().trim();
-    if (this.eventGuide()) this.conversationMode.set('text');
     if (opening) this.messages.set([{ id: this.id(), role: 'agent', text: opening }]);
     const atlas = await this.atlasService.getTalkingCardAvatar(this.atlasId(), this.boardId(), this.cardId());
     this.atlas.set(atlas);

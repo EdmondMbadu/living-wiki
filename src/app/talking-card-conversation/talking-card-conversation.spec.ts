@@ -105,22 +105,26 @@ describe('TalkingCardConversationComponent', () => {
     }).compileComponents();
   });
 
-  it('opens an event guide with text, the itinerary button, and the voice tab visible', async () => {
+  it('opens an event guide in voice and keeps the itinerary available when switching to text', async () => {
     const fixture = TestBed.createComponent(TalkingCardConversationComponent);
     fixture.componentRef.setInput('atlasId', atlas.id);
     fixture.componentRef.setInput('boardId', 'event-board');
     fixture.componentRef.setInput('cardId', 'event-card');
     fixture.componentRef.setInput('eventGuide', eventGuide);
+    const startVoice = spyOn(fixture.componentInstance, 'startVoice').and.resolveTo();
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
     const dialog: HTMLElement = fixture.nativeElement.querySelector('.talking-chat.has-event-guide');
     const button: HTMLButtonElement = dialog.querySelector('.event-guide__guest > button')!;
-    const composer: HTMLTextAreaElement = dialog.querySelector('.talking-chat__composer textarea')!;
+    expect(dialog.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Voice');
+    expect(startVoice).toHaveBeenCalledTimes(1);
     expect(button.textContent).toContain('Build my itinerary');
+
+    await fixture.componentInstance.setConversationMode('text');
+    fixture.detectChanges();
+    const composer: HTMLTextAreaElement = dialog.querySelector('.talking-chat__composer textarea')!;
     expect(composer.getBoundingClientRect().bottom).toBeLessThan(dialog.getBoundingClientRect().bottom);
-    expect(dialog.querySelectorAll('[role=tab]').length).toBe(2);
-    expect(chatService.createElevenLabsVoiceSession).not.toHaveBeenCalled();
     button.click();
     fixture.detectChanges();
     expect(dialog.textContent).toContain('Which days are you attending?');
@@ -135,10 +139,11 @@ describe('TalkingCardConversationComponent', () => {
     chatService.createElevenLabsVoiceSession.and.rejectWith(
       Object.assign(new Error('Set ELEVENLABS_AGENT_ID'), { code: 'functions/failed-precondition' }),
     );
+    const startVoice = spyOn(fixture.componentInstance, 'startVoice').and.callThrough();
+    fixture.componentInstance.draft.set('What’s on today?');
     fixture.detectChanges();
     await fixture.whenStable();
-    fixture.componentInstance.draft.set('What’s on today?');
-    await fixture.componentInstance.setConversationMode('voice');
+    await startVoice.calls.mostRecent().returnValue;
     fixture.detectChanges();
 
     const dialog: HTMLElement = fixture.nativeElement.querySelector('.talking-chat');
