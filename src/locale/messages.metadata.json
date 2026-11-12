@@ -1783,10 +1783,6 @@
     "source": "A generation job is already active",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
   },
-  "1504380850181972278": {
-    "source": "Voice calls are recorded. This avatar’s administrators can read transcripts and play recordings for up to 90 days.",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
-  },
   "1504835261176905216": {
     "source": "Previous picture",
     "file": "src/app/boards/boards.html"
@@ -2066,6 +2062,10 @@
   "156286080525186113": {
     "source": "Waste proximity percentile",
     "file": "src/app/fence-line/fence-line.ts"
+  },
+  "1564318293151152681": {
+    "source": "We record voice calls. The people who manage this guide can read or listen to them for up to 90 days.",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
   "1564586278874402203": {
     "source": "Only the board owner can delete cards.",
@@ -5674,10 +5674,6 @@
   "2645279290284658192": {
     "source": "Notifications | LivingWiki",
     "file": "src/app/app.routes.ts"
-  },
-  "2645645925628184482": {
-    "source": "Start recorded call",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
   "2646320061781480959": {
     "source": "Card details were refreshed, but no matching song preview was found.",
@@ -17266,6 +17262,10 @@
   "5944229412990636394": {
     "source": "Lead and arsenic Superfund site",
     "file": "src/app/fence-line/fence-line.ts"
+  },
+  "5944576157298701178": {
+    "source": "Start conversation",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
   "5944806309334777381": {
     "source": "Upload {$INTERPOLATION}%",

@@ -253,7 +253,7 @@
             <div class="talking-chat__voice-details">
               <strong class="talking-chat__voice-label">{{ voiceStateLabel() }}</strong>
               @if (eventGuide() && !eventVoiceConsent()) {
-                <p class="talking-chat__recording-notice" role="note" i18n>Voice calls are recorded. This avatar’s administrators can read transcripts and play recordings for up to 90 days.</p>
+                <p class="talking-chat__recording-notice" role="note" i18n>We record voice calls. The people who manage this guide can read or listen to them for up to 90 days.</p>
                 @if (eventGuide()?.privacyUrl; as privacyUrl) {
                   <a [href]="privacyUrl" target="_blank" rel="noopener noreferrer" i18n>Privacy notice</a>
                 }
@@ -264,7 +264,7 @@
               @if (voiceTimeRemaining(); as remaining) {
                 <p aria-label="Voice time remaining">{{ formatVoiceTime(remaining) }} left</p>
                 @if (remaining <= 30) { <p role="status">Less than 30 seconds left in this session.</p> }
-              } @else if (creditsEnabled() && voiceStatus() === 'idle' && !creditPrompt()) {
+              } @else if (creditsEnabled() && voiceStatus() === 'idle' && !creditPrompt() && (!eventGuide() || eventVoiceConsent())) {
                 <p>{{ sponsoredQuote() === null
                   ? 'Up to 3 minutes of sponsored voice time when available.'
                   : 'Up to ' + formatVoiceTime(sponsoredQuote()!) + ' of sponsored voice time available.' }}</p>
@@ -294,7 +294,7 @@
                   </button>
                   <button type="button" class="talking-chat__end-call" (click)="finishConversation('ended')" i18n><span class="material-symbols-outlined">call_end</span>End</button>
                 } @else if (eventGuide() && !eventVoiceConsent()) {
-                  <button type="button" class="talking-chat__retry-voice" (click)="confirmEventRecording()" i18n>Start recorded call</button>
+                  <button type="button" class="talking-chat__retry-voice" (click)="confirmEventRecording()" i18n>Start conversation</button>
                   <button type="button" class="talking-chat__voice-text-fallback" (click)="setConversationMode('text')" i18n>Continue in text</button>
                 } @else if (voiceStatus() !== 'connecting' && (!eventGuide() || !creditPrompt())) {
                   <button type="button" class="talking-chat__retry-voice" (click)="startVoice()"><span class="material-symbols-outlined">mic</span>{{ voiceStatus() === 'error' ? templateText.message10 : templateText.message11 }}</button>

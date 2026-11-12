@@ -2498,9 +2498,6 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   readonly talkingConversationCardId = signal<string | null>(null);
   private readonly requestedVoiceCreditCard = signal<string | null>(null);
   readonly talkingConversationSurface = signal<'board' | 'live'>('board');
-  readonly eventRecordingAcceptedAtLaunch = signal(false);
-  readonly eventRecordedCallLabel = $localize`Start recorded call`;
-  readonly eventRecordingNotice = $localize`Voice calls are recorded. This avatar’s administrators can read transcripts and play recordings for up to 90 days.`;
   readonly talkingCardEditorBoard = computed(() => {
     const boardId = this.talkingCardEditorBoardId();
     return boardId ? this.boards().find((board) => board.id === boardId) ?? null : null;
@@ -8533,6 +8530,7 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
   }
 
   talkingCardButtonLabel(card: Pick<BoardCard, 'conversation'>): string {
+    if (card.conversation?.event) return $localize`Start conversation`;
     return talkingCardCtaLabel(card.conversation, this.boardSpeechLanguage());
   }
 
@@ -8592,7 +8590,6 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
     this.spotify.closeEmbeddedPlayer();
     if (this.spotify.playing()) void this.spotify.togglePlayback();
     this.talkingConversationSurface.set(surface);
-    this.eventRecordingAcceptedAtLaunch.set(!!event && !!card.conversation.event);
     this.talkingConversationCardId.set(card.id);
     this.boardAnalytics.trackTalkingCard('talking_card_open', card.id);
   }

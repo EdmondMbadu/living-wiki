@@ -207,7 +207,6 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   readonly boardContext = input('');
   readonly contentLanguage = input<BoardTranslationLanguage>('en');
   readonly eventGuide = input<EventGuideSettings | null>(null);
-  readonly eventRecordingAcceptedAtLaunch = input(false);
   readonly eventGuest = viewChild(EventGuideGuest);
   private readonly events = inject(EventGuideService);
   readonly eventLanguages = CONTENT_LANGUAGES;
@@ -321,13 +320,8 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     const opening = this.openingMessage().trim();
-    const startRecordedCall = !!this.eventGuide() && this.eventRecordingAcceptedAtLaunch();
     if (this.eventGuide() && typeof window !== 'undefined') {
-      if (startRecordedCall) {
-        this.acceptEventRecording();
-      } else {
-        try { this.eventVoiceConsent.set(sessionStorage.getItem(this.eventVoiceConsentKey()) === 'yes'); } catch { /* Browser storage is optional. */ }
-      }
+      try { this.eventVoiceConsent.set(sessionStorage.getItem(this.eventVoiceConsentKey()) === 'yes'); } catch { /* Browser storage is optional. */ }
     }
     if (opening) this.messages.set([{ id: this.id(), role: 'agent', text: opening }]);
     const atlas = await this.atlasService.getTalkingCardAvatar(this.atlasId(), this.boardId(), this.cardId());
@@ -343,7 +337,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     }
     const credits = this.publicVoiceCredits() ? await this.voiceCredits.refresh().catch(() => null) : null;
     if (this.destroyed || this.conversationMode() !== 'voice') return;
-    if (startRecordedCall || !credits?.enabled || credits.admin) { await this.startVoice(); return; }
+    if (this.eventGuide() || !credits?.enabled || credits.admin) { await this.startVoice(); return; }
     try {
       const quote = await this.voiceCredits.quote(this.boardId(), this.cardId(), this.anonymousVisitorId());
       if (!this.destroyed && this.voiceStatus() === 'idle') this.sponsoredQuote.set(quote?.seconds ?? null);
@@ -863,14 +857,10 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     return `event-voice-history:${EVENT_VOICE_HISTORY_VERSION}:${this.boardId()}:${this.cardId()}`;
   }
 
-  private acceptEventRecording(): void {
+  async confirmEventRecording(): Promise<void> {
     this.eventVoiceConsent.set(true);
     try { sessionStorage.setItem(this.eventVoiceConsentKey(), 'yes'); } catch { /* Browser storage is optional. */ }
-  }
-
-  async confirmEventRecording(): Promise<void> {
-    this.acceptEventRecording();
-    if (!this.creditPrompt()) await this.startVoice();
+    await this.startVoice();
   }
 
   private prepareSponsorAudio(): Promise<string | null> {

@@ -110,7 +110,7 @@ describe('TalkingCardConversationComponent', () => {
     }).compileComponents();
   });
 
-  it('shows the recording notice on a direct event link and keeps the itinerary available in text', async () => {
+  it('shows the recording notice before the first event call and keeps the itinerary available in text', async () => {
     const fixture = TestBed.createComponent(TalkingCardConversationComponent);
     fixture.componentRef.setInput('atlasId', atlas.id);
     fixture.componentRef.setInput('boardId', 'event-board');
@@ -123,7 +123,8 @@ describe('TalkingCardConversationComponent', () => {
     const button: HTMLButtonElement = dialog.querySelector('.event-guide__guest > button')!;
     expect(dialog.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Voice');
     expect(chatService.createElevenLabsVoiceSession).not.toHaveBeenCalled();
-    expect(dialog.textContent).toContain('Voice calls are recorded');
+    expect(dialog.querySelector('.talking-chat__recording-notice')?.textContent).toContain('We record voice calls');
+    expect(dialog.querySelector('.talking-chat__retry-voice')?.textContent?.trim()).toBe('Start conversation');
     expect(button.textContent).toContain('Build my itinerary');
 
     await fixture.componentInstance.setConversationMode('text');
@@ -135,20 +136,22 @@ describe('TalkingCardConversationComponent', () => {
     expect(dialog.textContent).toContain('Which days are you attending?');
   });
 
-  it('starts an event call from the board button and offers text if the provider fails', async () => {
+  it('starts an event call after an earlier recording confirmation and offers text if the provider fails', async () => {
     voiceCredits.status.set({ enabled: true, admin: false });
     const fixture = TestBed.createComponent(TalkingCardConversationComponent);
     fixture.componentRef.setInput('atlasId', atlas.id);
     fixture.componentRef.setInput('boardId', 'event-board');
     fixture.componentRef.setInput('cardId', 'event-card');
     fixture.componentRef.setInput('eventGuide', eventGuide);
-    fixture.componentRef.setInput('eventRecordingAcceptedAtLaunch', true);
     fixture.componentRef.setInput('publicVoiceCredits', true);
     chatService.createElevenLabsVoiceSession.and.rejectWith(
       Object.assign(new Error('Set ELEVENLABS_AGENT_ID'), { code: 'functions/failed-precondition' }),
     );
     fixture.componentInstance.draft.set('What’s on today?');
-    spyOn(Storage.prototype, 'setItem').and.stub();
+    const originalGetItem = Storage.prototype.getItem;
+    spyOn(Storage.prototype, 'getItem').and.callFake(function (this: Storage, key: string) {
+      return key === 'event-voice-history:1:event-board:event-card' ? 'yes' : originalGetItem.call(this, key);
+    });
     fixture.detectChanges();
     await new Promise((resolve) => setTimeout(resolve, 0));
     fixture.detectChanges();
@@ -159,7 +162,7 @@ describe('TalkingCardConversationComponent', () => {
     }));
     expect(chatService.createElevenLabsVoiceSession.calls.mostRecent().args[0].voiceCreditMode).toBeUndefined();
     expect(voiceCredits.quote).not.toHaveBeenCalled();
-    expect(dialog.textContent).not.toContain('Start recorded call');
+    expect(dialog.querySelector('.talking-chat__recording-notice')).toBeNull();
     expect(dialog.querySelector('[role="alert"]')?.textContent).toContain('You can still ask questions in text');
     expect(dialog.textContent).not.toContain('ELEVENLABS_AGENT_ID');
     expect(dialog.querySelector('.talking-chat__transcript')).toBeNull();
