@@ -1835,6 +1835,10 @@
     "source": "Keep it warm, specific, and easy to read.",
     "file": "src/app/boards/boards.html"
   },
+  "1516995187095559956": {
+    "source": "A thoughtful owl with a quiet mid-range voice and clear diction. Pause briefly before revealing an intriguing detail, as if sharing a secret.",
+    "file": "src/app/boards/studio-voice-designer.ts"
+  },
   "1518334323171538648": {
     "source": "Search board, ",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
@@ -2922,6 +2926,10 @@
   "1832109006397353376": {
     "source": "Cover",
     "file": "src/app/boards/boards.html"
+  },
+  "183722403074487751": {
+    "source": "Owl",
+    "file": "src/app/boards/studio-voice-designer.ts"
   },
   "1840297917120924770": {
     "source": " Estimates use {$INTERPOLATION} per verified minute. See ElevenLabs for billed charges. ",
@@ -4138,6 +4146,10 @@
   "2207530172337162652": {
     "source": " Cancel plan ",
     "file": "src/app/boards/boards.html"
+  },
+  "2208319148132137363": {
+    "source": "Elephant",
+    "file": "src/app/boards/studio-voice-designer.ts"
   },
   "2210344397870951219": {
     "source": " Shared {$INTERPOLATION} ",
@@ -7362,6 +7374,10 @@
   "316052551653227295": {
     "source": "Embed YouTube clips, songs, photos & more to bring boards to life.",
     "file": "src/app/membership/membership.ts"
+  },
+  "3160840051618146697": {
+    "source": "A clever fox with a nimble mid-range voice, crisp consonants, and dry humor. Keep the pace brisk and slow down slightly on the punch line.",
+    "file": "src/app/boards/studio-voice-designer.ts"
   },
   "3161045580446394854": {
     "source": "Your business claim draft is saved.",
@@ -22595,6 +22611,10 @@
     "source": "View {$INTERPOLATION} listing ↗",
     "file": "src/app/teams/teams.html"
   },
+  "7486534579624944939": {
+    "source": "Fox",
+    "file": "src/app/boards/studio-voice-designer.ts"
+  },
   "7487033125507660215": {
     "source": "Card editor sections",
     "file": "src/app/boards/boards.html"
@@ -25102,6 +25122,10 @@
   "8215474626269755307": {
     "source": "Food as a way to understand the place—not a ranking.",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
+  },
+  "8215873613491542156": {
+    "source": "A gentle elephant with a soft, low voice and rounded vowels. Speak slowly and warmly, like a patient storyteller sharing a favorite memory.",
+    "file": "src/app/boards/studio-voice-designer.ts"
   },
   "8216720405388690803": {
     "source": "Agency & Team · free month · {$days} days left · {$seats}",

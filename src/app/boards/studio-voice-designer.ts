@@ -27,6 +27,18 @@ export class StudioVoiceDesigner {
       description: $localize`A warm lion character with a deep, resonant chest voice, a measured pace, gentle authority, and crisp pronunciation. Speak as if welcoming visitors into your home.`,
     },
     {
+      name: $localize`Elephant`,
+      description: $localize`A gentle elephant with a soft, low voice and rounded vowels. Speak slowly and warmly, like a patient storyteller sharing a favorite memory.`,
+    },
+    {
+      name: $localize`Owl`,
+      description: $localize`A thoughtful owl with a quiet mid-range voice and clear diction. Pause briefly before revealing an intriguing detail, as if sharing a secret.`,
+    },
+    {
+      name: $localize`Fox`,
+      description: $localize`A clever fox with a nimble mid-range voice, crisp consonants, and dry humor. Keep the pace brisk and slow down slightly on the punch line.`,
+    },
+    {
       name: $localize`Museum guide`,
       description: $localize`A curious museum guide with a warm mid-range voice, a conversational rhythm, and a hint of wonder. Give the listener time to picture the details.`,
     },
