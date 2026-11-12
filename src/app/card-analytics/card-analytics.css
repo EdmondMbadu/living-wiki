@@ -16,3 +16,11 @@
 
 .conversation-audio { margin-bottom: 1rem; }
 .conversation-audio audio { display: block; width: 100%; }
+
+.participant-email {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+  text-align: start;
+}

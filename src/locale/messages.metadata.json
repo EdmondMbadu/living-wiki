@@ -1583,6 +1583,10 @@
     "source": "Collection unavailable",
     "file": "src/app/city-board-collection/city-board-collection.ts"
   },
+  "1457245939990407134": {
+    "source": "{$START_TAG_SPAN}lock{$CLOSE_TAG_SPAN} No account is required. ",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
   "1457569383466905978": {
     "source": "{$loadedCount}/{$totalCount} temps loaded",
     "file": "src/app/public-wikis/public-wikis.ts"
@@ -3310,6 +3314,10 @@
   "1948695291808361356": {
     "source": "BEST{$LINE_BREAK}VALUE",
     "file": "src/app/membership/membership.html"
+  },
+  "1949541551270340700": {
+    "source": "This avatar’s administrators can see your recap email address.",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "1949800099101277248": {
     "source": "Languages",
@@ -13426,10 +13434,6 @@
   "4838748978928741306": {
     "source": "Live listings + pathways",
     "file": "src/app/atlas-landing/atlas-landing.html"
-  },
-  "4838905588226714133": {
-    "source": "{$START_TAG_SPAN}lock{$CLOSE_TAG_SPAN} We’ll use this email only to send this recap. No account is required. ",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
   "4840273334946881106": {
     "source": "Board sync is not ready. Refresh and try again before saving.",

@@ -147,7 +147,7 @@ import { isEventVoiceCard } from './event-guide-functions';
 import { EVENT_VOICE_HISTORY_VERSION } from './event-guide-model';
 export { previewEventGuideImport, loadCesEventGuideDemo, saveEventGuideDataset, readEventGuide, askEventGuide, createEventGuideItinerary, sendEventGuideItinerary, readEventGuideItinerary, updateEventGuideItinerary } from './event-guide-functions';
 import { fulfillVoiceCreditPurchase, refundVoiceCreditPurchase, reserveBoardVoice, voiceCreditsBoardHost, voiceCreditsEnabled } from './voice-credits';
-import { analyticsTarget } from './card-analytics';
+import { analyticsTarget, captureCardRecapEmail } from './card-analytics';
 export { voiceCreditsCommand, reconcileVoiceCredits } from './voice-credits';
 export { getTalkingCardAvatar } from './talking-card-access';
 export { talkThruBillingCommand, enforceTalkThruListingLimit } from './talkthru-billing';
@@ -19151,6 +19151,9 @@ export const sendVoiceConversationSummary = onCall(
       text: email.text,
       html: email.html,
     });
+    if (talkingCardContext && atlasId) {
+      await captureCardRecapEmail(request, { boardId: talkingCardContext.boardId, cardId: talkingCardContext.cardId, atlasId }, recipientEmail);
+    }
 
     const docRef = db.collection('voice_conversation_summaries').doc();
     await docRef.set({

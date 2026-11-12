@@ -155,13 +155,23 @@ test('recap email includes the saved acknowledgement exactly once even when the 
   mail.send = async message => { sent = message; return [{ statusCode: 202, headers: { 'x-message-id': 'local-fixture' } }]; };
   try {
     const { sendVoiceConversationSummary } = require('./lib/index');
+    const { beginCardText, finishCardText, getCardConversation } = require('./lib/card-analytics');
     await db.collection('boards').doc(boardId).set({ ...board, sponsorship: sponsor });
+    const sessionId = 'talking-recap-test-session';
+    const conversation = await beginCardText({ data: { ...target, question: 'What can I learn about history?',
+      anonymousVisitorId: 'visitor_fixture_12345678', analyticsVisitorId: 'recap-test-browser',
+      analyticsSessionId: sessionId, analyticsRequestId: 'recap-test-question' } }, { id: atlasId, user_id: 'talking-owner' });
+    await finishCardText(conversation, { answer: 'You can explore the record and ask questions about it.' });
     const result = await sendVoiceConversationSummary.run({ data: { atlasId, ...target, source: 'talking_card', anonymousVisitorId: 'visitor_fixture_12345678', recipientEmail: 'visitor@example.test', createAnswerCard: false,
+      textSessions: [sessionId], shareRecapEmailWithAnalytics: true,
       sponsorship: { name: 'Forged', message: 'FORGED SPONSOR' }, transcript: [{ role: 'user', text: 'What can I learn about history?' }, { role: 'agent', text: 'You can explore the record and ask questions about it.' }] } });
     assert.equal(result.sent, true);
     assert.equal(sent.text.split(sponsor.message).length - 1, 1);
     assert.ok(sent.html.includes('Approved sponsor acknowledgement &lt;literal&gt; &amp; exact wording.'));
     assert.ok(!sent.html.includes('FORGED SPONSOR')); assert.ok(!sent.text.includes('FORGED SPONSOR'));
+    const detail = await getCardConversation.run({ data: { ...target, conversationId: conversation.ref.id }, auth: { uid: 'talking-owner' } });
+    assert.deepEqual(detail.conversation.participant, { recapEmail: 'visitor@example.test' });
+    await db.recursiveDelete(conversation.ref);
     const summaries = await db.collection('voice_conversation_summaries').where('board_id', '==', boardId).get();
     for (const doc of summaries.docs) { assert.deepEqual(doc.data().sponsorship, sponsor); await doc.ref.delete(); }
   } finally {

@@ -741,6 +741,9 @@ export class ChatService {
     source?: VoiceConversationSummarySource;
     boardId?: string | null;
     cardId?: string | null;
+    voiceSessions?: readonly string[];
+    textSessions?: readonly string[];
+    shareRecapEmailWithAnalytics?: boolean;
     completionReason?: 'ended' | 'closed' | 'interrupted' | null;
   }): Promise<SendVoiceConversationSummaryResponse | null> {
     if (!this.functions) {
@@ -765,6 +768,9 @@ export class ChatService {
         source?: VoiceConversationSummarySource;
         boardId?: string | null;
         cardId?: string | null;
+        voiceSessions?: readonly string[];
+        textSessions?: readonly string[];
+        shareRecapEmailWithAnalytics?: boolean;
         completionReason?: 'ended' | 'closed' | 'interrupted' | null;
       },
       SendVoiceConversationSummaryResponse
@@ -787,6 +793,9 @@ export class ChatService {
       source: options.source ?? 'wiki_voice',
       boardId: options.boardId ?? null,
       cardId: options.cardId ?? null,
+      ...(options.voiceSessions?.length ? { voiceSessions: options.voiceSessions } : {}),
+      ...(options.textSessions?.length ? { textSessions: options.textSessions } : {}),
+      ...(options.shareRecapEmailWithAnalytics ? { shareRecapEmailWithAnalytics: true } : {}),
       completionReason: options.completionReason ?? null,
     });
     return data;

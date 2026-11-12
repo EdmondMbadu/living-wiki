@@ -17,7 +17,7 @@ import { renderEventEmail } from './event-guide-email';
 import { prepareRecapEmailCopy, type RecapEmailCopy } from './recap-email-localization';
 import { translateRecapEmailTextSegments } from './board-translation-provider';
 import { normalizeSponsorshipChoice, resolveSponsorship } from './talking-card-sponsorship';
-import { beginCardText, finishCardText, readEventRecapTurns } from './card-analytics';
+import { beginCardText, captureCardRecapEmail, finishCardText, readEventRecapTurns } from './card-analytics';
 import { loadTalkingCardAtlas } from './talking-card-access';
 import { eventGuideReply, isEventItineraryQuestion } from './event-guide-replies';
 
@@ -433,5 +433,6 @@ export const sendEventGuideItinerary = onCall({ region, secrets: [sendgridApiKey
       : 'Delivery could not be confirmed. Check your inbox.');
   }
   await ref.update({ sendState: 'sent' });
+  if (recapRequested) await captureCardRecapEmail(request, { boardId, cardId, atlasId: context.atlasId }, email);
   return { sent: true };
 });

@@ -71,7 +71,7 @@ export class EventGuideService {
     recap?: EventRecapSessions & { requestId: string }) {
     return this.call<{ sent: boolean }>('sendEventGuideItinerary', {
       ...target, ...(plan ? { id: plan.id, key: plan.key } : {}),
-      ...(recap ? { ...recap, recap: true } : {}), email, language, consent: true, editableItinerary: !!plan,
+      ...(recap ? { ...recap, recap: true, shareRecapEmailWithAnalytics: true } : {}), email, language, consent: true, editableItinerary: !!plan,
     });
   }
 

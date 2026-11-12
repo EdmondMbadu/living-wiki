@@ -89,7 +89,7 @@ test('organizer imports and publishes, a QR guest asks and plans, and confirmed 
     assert.equal(tracked.historySaved, true);
     assert.match(tracked.answer, /3741/);
     const combined = await call(createEventGuideItinerary, { ...target, preferences: { days: ['2027-01-06'], mustSee: 'Waymo' } }, owner);
-    const recap = { ...request, recap: true, id: combined.id, key: combined.key, textSessions: [typedSession], editableItinerary: true };
+    const recap = { ...request, recap: true, id: combined.id, key: combined.key, textSessions: [typedSession], editableItinerary: true, shareRecapEmailWithAnalytics: true };
     await assert.rejects(call(sendEventGuideItinerary, recap, 'other-user'), { code: 'permission-denied' });
     let editLink;
     sendgrid.send = async (message) => {
@@ -106,6 +106,9 @@ test('organizer imports and publishes, a QR guest asks and plans, and confirmed 
     assert.equal((await call(sendEventGuideItinerary, recap, owner)).sent, true);
     assert.equal((await call(sendEventGuideItinerary, recap, owner)).sent, true);
     assert.equal(sent, 2);
+    const analytics = await call(require('./lib/card-analytics').getCardAnalytics, { ...target, audience: 'all' }, owner);
+    const conversation = analytics.conversations.find(row => row.firstQuestion === 'Where is the Waymo booth?');
+    assert.deepEqual(conversation.participant, { recapEmail: request.email });
     const [editId, editKey] = editLink.hash.slice(1).split('.');
     const editAccess = { id: editId, key: editKey };
     assert.equal(editId, combined.id);

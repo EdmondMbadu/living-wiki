@@ -11,9 +11,10 @@ import { db } from './firebase';
 import { isLinkReadableVisibility } from './board-visibility';
 import { isActiveTeamMember } from './teams';
 import { recordPlatformVerifiedVoice, hasPlatformVisitorMessage, enrichPlatformVoiceIdentity } from './platform-analytics';
+import { participantEmail, participantName, readCardParticipant } from './card-analytics-participant';
 
 type Data = Record<string, any>;
-type Actor = { auth?: { uid: string }; data: Data; rawRequest?: { headers: Data } };
+type Actor = { auth?: { uid: string; token?: { name?: unknown; email?: unknown; firebase?: { sign_in_provider?: string } } }; data: Data; rawRequest?: { headers: Data } };
 const idPattern = /^[A-Za-z0-9_-]{1,180}$/;
 const clientPattern = /^[A-Za-z0-9_-]{12,100}$/;
 export const hashAnalytics = (s: string): string => createHash('sha256').update(s).digest('hex');
@@ -90,7 +91,11 @@ async function actorBinding(request: Actor, board: Data, atlas: Data, includeInt
     || (board.team_id && await isActiveTeamMember(board.team_id, uid)));
   if ((internal && !includeInternal) || /bot|crawler|spider|headless|preview/i.test(ua) || (!isLinkReadableVisibility(board.visibility) && !internal)) return null;
   const ownerId=String(board.owner_user_id||''), teamId=String(board.team_id||'');
+  const token = request.auth?.token;
+  const name = uid && token?.firebase?.sign_in_provider !== 'anonymous' ? participantName(token?.name) : '';
+  const email = uid && token?.firebase?.sign_in_provider !== 'anonymous' ? participantEmail(token?.email) : '';
   return { actor_hash: hashAnalytics(uid ? `uid:${uid}` : `anonymous:${anonymous}`), visitor_hash: clientPattern.test(visitor)?hashAnalytics(visitor):'',
+    ...(name || email ? { participant: { ...(name ? { name } : {}), ...(email ? { email } : {}) } } : {}),
     internal:!!internal, platform_only:!clientPattern.test(visitor), owner_id:ownerId, team_id:teamId, owner_key:teamId?`team:${teamId}`:`user:${ownerId||'unknown'}`, board_title:board.title||'' };
 }
 export async function beginCardText(request: Actor, atlas: Data, eventHistory = false) {
@@ -147,6 +152,38 @@ export async function finishCardText(context: Awaited<ReturnType<typeof beginCar
       ...(!result ? { failed_answers: FieldValue.increment(1) } : {}) });
   });
 }
+
+export async function captureCardRecapEmail(request: Actor, target: { boardId: string; cardId: string; atlasId: string }, value: string) {
+  const email = participantEmail(value);
+  const uid = request.auth?.uid;
+  const anonymous = String(request.data.anonymousVisitorId || '');
+  if (request.data.shareRecapEmailWithAnalytics !== true || !email || (!uid && !clientPattern.test(anonymous))) return;
+  const actor = hashAnalytics(uid ? `uid:${uid}` : `anonymous:${anonymous}`);
+  const voice = Array.isArray(request.data.voiceSessions) ? request.data.voiceSessions.slice(-8) : [];
+  const text = Array.isArray(request.data.textSessions) ? request.data.textSessions.slice(-8) : [];
+  const refs = [
+    ...[...new Set(voice)].filter(id => typeof id === 'string' && /^(?:card|team)_[a-f0-9-]{36}$/.test(id)).map(id => jobs.doc(id)),
+    ...[...new Set(text)].filter(id => typeof id === 'string' && clientPattern.test(id))
+      .map(id => sessions.doc(hashAnalytics(`${target.boardId}:${target.cardId}:${actor}:${id}`))),
+  ];
+  if (!refs.length) return;
+  try {
+    await db.runTransaction(async tx => {
+      const records = await tx.getAll(...refs);
+      for (const record of records) {
+        const data = record.data();
+        if (!data || data.actor_hash !== actor || data.board_id !== target.boardId
+          || data.card_id !== target.cardId || data.atlas_id !== target.atlasId
+          || !(data.expires_at?.toMillis() >= Date.now()) || readCardParticipant(data)?.email || data.recap_email) continue;
+        tx.update(record.ref, { recap_email: email });
+      }
+    });
+  } catch {
+    // Analytics capture cannot turn an accepted recap into a failed send.
+    logger.warn('Card recap contact could not be saved', { boardId: target.boardId, cardId: target.cardId });
+  }
+}
+
 export const endCardTextAnalytics = onCall({ region:'us-central1', cors:true, timeoutSeconds:15 }, async request => {
   const boardId=String(request.data?.boardId||''), cardId=String(request.data?.cardId||''), sessionId=String(request.data?.sessionId||'');
   const anonymous=String(request.data?.anonymousVisitorId||'');
@@ -206,6 +243,7 @@ async function syncVoice(id: string, apiKey: string, verifiedDetails?: Data) {
     await conversation.set({ board_id: job.board_id, card_id: job.card_id, atlas_id: job.atlas_id,
       owner_id:job.owner_id||'', team_id:job.team_id||'', owner_key:job.owner_key||'', board_title:job.board_title||'', card_title:job.card_title||'', provider_conversation_id:job.conversation_id,
       actor_hash: job.actor_hash, visitor_hash: job.visitor_hash, mode:'voice', started_at:start, day:start.toDate().toISOString().slice(0,10),
+      ...(job.participant ? { participant: job.participant } : {}),
       ...(job.event_history ? { event_history: true, internal: job.internal === true, has_audio: data.has_audio === true } : {}),
       last_activity_at: Timestamp.now(), status: data.status === 'done' ? 'completed' : 'interrupted',
       first_question: questions[0].message.slice(0,1000), questions: questions.length,
@@ -293,7 +331,7 @@ export const getCardAnalytics = onCall({ region:'us-central1', cors:true, timeou
   const {days, from} = range;
   const audience = analyticsAudience(request.data.audience);
   const [visitors, rows, tracking, traffic, questionDocs] = await Promise.all([
-    uniqueAnalyticsVisitors(target.boardId,from,target.cardId,audience,range.to), readAnalyticsActivity(target.boardId,range,audience,target.cardId), trackingRef(target.boardId).get(),
+    uniqueAnalyticsVisitors(target.boardId,from,target.cardId,audience,range.to), readAnalyticsActivity(target.boardId,range,audience,target.cardId,target.canReadTranscripts ? target.atlasId : undefined), trackingRef(target.boardId).get(),
     allAnalyticsDocs(db.collection('board_analytics_daily_shards').where('board_id','==',target.boardId).where('day','>=',from).orderBy('day')),
     target.canReadTranscripts && audience !== 'internal' ? allAnalyticsDocs(questionsCollection.where('board_id','==',target.boardId).where('card_id','==',target.cardId).where('day','>=',from).orderBy('day')) : Promise.resolve([]),
   ]);
@@ -312,17 +350,25 @@ export const getCardAnalytics = onCall({ region:'us-central1', cors:true, timeou
     opens:scopedTraffic.reduce((sum,d)=>{const c=d.data().cards?.[target.cardId];return sum+(Number(c?.card_opens)||0)+(Number(c?.talking_card_opens)||0);},0),
     outboundClicks:scopedTraffic.reduce((sum,d)=>sum+(Number(d.data().cards?.[target.cardId]?.outbound_clicks)||0),0),
     canViewBoardAnalytics:target.canViewBoardAnalytics, canReadTranscripts:target.canReadTranscripts, visitors:cardVisitors.size, visitorsWhoChatted:chatting.size,
-    conversations:conversations.map(({visitorKey,participantKey,atlasId,transcriptId,...c})=>({...c, firstQuestion: c.canReadTranscript ? c.firstQuestion : ''})),
+    conversations: conversations.map(({ visitorKey, participantKey, atlasId, transcriptId, participant, ...row }) => ({
+      ...row,
+      firstQuestion: row.canReadTranscript ? row.firstQuestion : '',
+      ...(participant && target.canReadTranscripts && atlasId === target.atlasId ? { participant } : {}),
+    })),
     pendingVoice:rows.pendingVoice,
   };
 });
 export const getCardConversation = onCall({ region:'us-central1', cors:true, timeoutSeconds:30 }, async request => {
-  const { ref, data, id } = await authorizedConversation(request);
+  const { ref, data, id, target } = await authorizedConversation(request);
   let query = ref.collection('analytics_turns').orderBy('created_at').orderBy('__name__').limit(50);
   const cursor = String(request.data.cursor || '');
   if (cursor) { if (!idPattern.test(cursor)) throw new HttpsError('invalid-argument','Invalid page.'); const snapshot=await ref.collection('analytics_turns').doc(cursor).get(); if(!snapshot.exists) throw new HttpsError('invalid-argument','This page has expired.'); query=query.startAfter(snapshot); }
-  const page = await query.get();
-  return { conversation:serializedConversation(id,data), hasAudio: data.event_history === true && data.has_audio === true,
+  const [page, job] = await Promise.all([query.get(), data.mode === 'voice' ? jobs.doc(id).get().catch(() => null) : null]);
+  const voice = job?.data();
+  const matchingVoice = voice && voice.actor_hash === data.actor_hash && voice.board_id === target.boardId
+    && voice.card_id === target.cardId && voice.atlas_id === target.atlasId ? voice : undefined;
+  const participant = readCardParticipant(data, matchingVoice);
+  return { conversation:{...serializedConversation(id,data), ...(participant ? { participant } : {})}, hasAudio: data.event_history === true && data.has_audio === true,
     turns:page.docs.flatMap(d=>readAnalyticsTurn(data.mode, d.id, d.data())), nextCursor:page.size===50 ? page.docs.at(-1)!.id : null };
 });
 
@@ -333,7 +379,7 @@ async function authorizedConversation(request: Actor) {
   if (!idPattern.test(id)) throw new HttpsError('invalid-argument','Choose a valid conversation.');
   const ref = sessions.doc(id), data = (await ref.get()).data();
   if (!data || data.expires_at?.toMillis() < Date.now() || data.board_id!==target.boardId || data.card_id!==target.cardId || data.atlas_id!==target.atlasId) throw new HttpsError('not-found','This conversation is not available for this card.');
-  return { ref, data, id };
+  return { ref, data, id, target };
 }
 
 function readAnalyticsTurn(mode: string, id: string, t: Data) {

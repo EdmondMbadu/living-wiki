@@ -141,9 +141,10 @@
           @if (!isSignedIn()) {
             <p class="talking-chat__recap-privacy" i18n>
               <span class="material-symbols-outlined" aria-hidden="true">lock</span>
-              We’ll use this email only to send this recap. No account is required.
+              No account is required.
             </p>
           }
+          <p class="talking-chat__recap-privacy" i18n>This avatar’s administrators can see your recap email address.</p>
           @if (recapError()) {
             <p class="talking-chat__recap-error" role="alert">{{ recapError() }}</p>
           }

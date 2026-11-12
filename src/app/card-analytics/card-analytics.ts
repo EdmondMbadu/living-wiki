@@ -55,7 +55,9 @@ export class CardAnalyticsComponent {
   readonly qaPath = computed(() => ['/manage/boards',this.boardId(),'cards',this.cardId(),'qa']);
   readonly rows = computed(() => {
     const q = this.query().trim().toLocaleLowerCase();
-    const rows = (this.report()?.conversations ?? []).filter(c => (this.mode() === 'all' || c.mode === this.mode()) && (!q || `${c.firstQuestion} ${c.visitor}`.toLocaleLowerCase().includes(q)));
+    const rows = (this.report()?.conversations ?? []).filter(c => (this.mode() === 'all' || c.mode === this.mode())
+      && (!q || [c.firstQuestion, c.visitor, c.participant?.name, c.participant?.email, c.participant?.recapEmail]
+        .filter(Boolean).join(' ').toLocaleLowerCase().includes(q)));
     return this.oldest() ? rows.slice().reverse() : rows;
   });
   readonly shownRows = computed(() => this.rows().slice((this.page()-1)*this.pageSize,this.page()*this.pageSize));

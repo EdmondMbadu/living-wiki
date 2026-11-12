@@ -141,11 +141,15 @@ test('historical legacy events are never relabeled as conversations',async()=>{
 });
 
 test('voice calls are recovered and verified even when the browser never attached their ID',async()=>{
- const nonce=await api.issueCardVoice(request(),atlas,'agent_fixture');
+ const input = request({}, 'signed-in-voice-visitor');
+ input.auth.token = { name: 'Voice Visitor', email: 'voice@example.test' };
+ const nonce=await api.issueCardVoice(input,atlas,'agent_fixture');
  await db.collection('card_analytics_voice_sessions').doc(nonce).update({next_sync_at:Timestamp.fromMillis(Date.now()-1000)});
  const original=globalThis.fetch;
  globalThis.fetch=async url=>new Response(JSON.stringify(String(url).includes('?') ? {conversations:String(url).includes(encodeURIComponent(nonce))?[{conversation_id:'conv_recovered_fixture',agent_id:'agent_fixture'}]:[]} : {user_id:nonce,agent_id:'agent_fixture',conversation_id:'conv_recovered_fixture',status:'done',metadata:{start_time_unix_secs:Math.floor(Date.now()/1000),call_duration_secs:42},transcript:[{role:'user',message:'Recovered question',time_in_call_secs:1},{role:'agent',message:'Recovered answer',time_in_call_secs:2}]}),{status:200});
- try{await api.recoverCardVoiceAnalytics.run({});const record=(await db.collection('card_analytics_conversations').doc(nonce).get()).data();assert.equal(record.duration_seconds,42);assert.equal(record.questions,1);const r=await report();assert.equal(r.popularQuestions.find(q=>q.question==='Recovered question').count,1);}finally{globalThis.fetch=original;}
+ try{await api.recoverCardVoiceAnalytics.run({});const record=(await db.collection('card_analytics_conversations').doc(nonce).get()).data();assert.equal(record.duration_seconds,42);assert.equal(record.questions,1);const r=await report();assert.equal(r.popularQuestions.find(q=>q.question==='Recovered question').count,1);
+  assert.deepEqual(r.conversations.find(row => row.id === nonce).participant, { name: 'Voice Visitor', email: 'voice@example.test' });
+ }finally{globalThis.fetch=original;}
 });
 
 test('Firestore clients cannot read visitor identities, transcripts or question summaries, even as the owner',async()=>{
@@ -172,4 +176,40 @@ test('ending a text conversation is idempotent and cannot close another visitor 
  await api.endCardTextAnalytics.run({...end,data:{...end.data,anonymousVisitorId:'another_visitor_123456789'}});assert.equal((await context.ref.get()).data().status,'active');
  await api.endCardTextAnalytics.run(end);const first=(await context.ref.get()).data();assert.equal(first.status,'completed');
  await api.endCardTextAnalytics.run(end);assert.equal((await context.ref.get()).data().duration_seconds,first.duration_seconds);
+});
+
+test('signed-in names and emails are visible only to the current avatar administrator', async () => {
+ const input = request({ analyticsSessionId: 'session_identified_text' }, 'identified-visitor');
+ input.auth.token = { name: 'Alex Example', email: 'alex@example.test', firebase: { sign_in_provider: 'password' } };
+ const context = await api.beginCardText(input, atlas);
+ await api.finishCardText(context, { answer: 'A visitor response' });
+ const expected = { name: 'Alex Example', email: 'alex@example.test' };
+ const row = (await report()).conversations.find(item => item.id === context.ref.id);
+ assert.deepEqual(row.participant, expected);
+ const detail = await api.getCardConversation.run(request({ conversationId: context.ref.id }, owner));
+ assert.deepEqual(detail.conversation.participant, expected);
+ await db.collection('atlases').doc(atlasId).update({ user_id: 'foreign-avatar-owner', admin_user_ids: [] });
+ try {
+  const masked = (await report()).conversations.find(item => item.id === context.ref.id);
+  assert.equal(masked.participant, undefined);
+ } finally { await db.collection('atlases').doc(atlasId).set(atlas); }
+});
+
+test('guest recap emails require the original actor and remain scoped to the matched conversation', async () => {
+ const input = request({ analyticsSessionId: 'session_guest_recap_email' });
+ const context = await api.beginCardText(input, atlas);
+ await api.finishCardText(context, { answer: 'A guest response' });
+ const recap = request({ textSessions: [input.data.analyticsSessionId], anonymousVisitorId: 'different_guest_actor', shareRecapEmailWithAnalytics: true });
+ const target = { boardId, cardId, atlasId };
+ await api.captureCardRecapEmail(recap, target, 'wrong@example.test');
+ assert.equal((await context.ref.get()).data().recap_email, undefined);
+ recap.data.anonymousVisitorId = input.data.anonymousVisitorId;
+ delete recap.data.shareRecapEmailWithAnalytics;
+ await api.captureCardRecapEmail(recap, target, 'guest@example.test');
+ assert.equal((await context.ref.get()).data().recap_email, undefined);
+ recap.data.shareRecapEmailWithAnalytics = true;
+ await api.captureCardRecapEmail(recap, target, 'guest@example.test');
+ await api.captureCardRecapEmail(recap, target, 'second@example.test');
+ const row = (await report()).conversations.find(item => item.id === context.ref.id);
+ assert.deepEqual(row.participant, { recapEmail: 'guest@example.test' });
 });

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { type Query } from 'firebase-admin/firestore';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { db } from './firebase';
+import { readCardParticipant, type CardParticipant } from './card-analytics-participant';
 
 type Data = Record<string, any>;
 export type AnalyticsAudience = 'all' | 'visitors' | 'internal';
@@ -64,6 +65,7 @@ export type ActivityConversation = {
   durationSeconds: number | null; durationKind: 'recorded' | 'estimated'; questions: number;
   failedAnswers: number; knowledgeGaps: number; status: string; visitorKey: string; participantKey: string;
   firstQuestion: string; atlasId: string; transcriptId: string | null; verifiedAt: string | null;
+  participant?: CardParticipant;
 };
 export const emptyActivity = () => ({conversations: 0, voice: 0, text: 0, seconds: 0, questions: 0,
   failedAnswers: 0, unknownDurations: 0, unattributedConversations: 0});
@@ -91,7 +93,7 @@ export function activityDays(rows: ActivityConversation[], dates: string[]) {
 /** The durable ledger supplies internal/expired records; raw records only enrich authorized detail.
  * A provider conversation or source receipt is counted once even when both sources exist.
  */
-export async function readAnalyticsActivity(boardId: string, range: ReturnType<typeof analyticsRange>, audience: AnalyticsAudience, cardId?: string) {
+export async function readAnalyticsActivity(boardId: string, range: ReturnType<typeof analyticsRange>, audience: AnalyticsAudience, cardId?: string, participantAtlasId?: string) {
   const [ledger, raw, jobs] = await Promise.all([
     readWindow(boardId,range),
     read(db.collection('card_analytics_conversations').where('board_id', '==', boardId).where('day', '>=',
@@ -119,6 +121,10 @@ export async function readAnalyticsActivity(boardId: string, range: ReturnType<t
       status: value.status || 'completed', visitorKey, participantKey: value.actorKey || job?.actor_hash || visitorKey,
       firstQuestion: '', atlasId: value.atlasId || job?.atlas_id || '', transcriptId: null,
       verifiedAt: iso(value.verifiedAt) || iso(doc.data().updatedAt),
+      ...(cardId && job?.card_id === cardId && participantAtlasId && job.atlas_id === participantAtlasId
+        && job.expires_at?.toMillis() >= Date.now() ? {
+          participant: readCardParticipant(job),
+        } : {}),
     };
     if (relevant(row)) records.set(value.providerId ? `voice:${value.providerId}` : `source:${doc.id}`, row);
   }
@@ -139,6 +145,11 @@ export async function readAnalyticsActivity(boardId: string, range: ReturnType<t
       transcriptId: (data.event_history === true || (!prior?.internal && !data.internal && !job?.internal))
         && (!data.expires_at || data.expires_at.toMillis() >= Date.now()) ? doc.id : null,
       verifiedAt: prior?.verifiedAt || iso(data.last_activity_at),
+      ...(cardId && data.card_id === cardId && participantAtlasId && data.atlas_id === participantAtlasId
+        && data.expires_at?.toMillis() >= Date.now() ? {
+          participant: readCardParticipant(data, job?.actor_hash === data.actor_hash && job?.card_id === cardId
+            && job?.atlas_id === participantAtlasId ? job : undefined),
+        } : {}),
     };
     // Verified ledger timing remains authoritative if an older raw record is incomplete.
     if (prior && row.mode === 'voice') row.durationSeconds = prior.durationSeconds;

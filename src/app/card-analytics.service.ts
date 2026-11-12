@@ -9,6 +9,7 @@ export type AnalyticsConversation = {
   internal?: boolean;
   canReadTranscript?: boolean;
   id: string; mode: 'text' | 'voice'; startedAt: string; visitor: string;
+  participant?: { name?: string; email?: string; recapEmail?: string };
   durationSeconds: number | null; durationKind: 'estimated' | 'recorded';
   status: string; questions: number; knowledgeGaps: number; failedAnswers: number; firstQuestion: string;
 };

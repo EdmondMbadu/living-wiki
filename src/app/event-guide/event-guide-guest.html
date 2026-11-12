@@ -21,6 +21,7 @@
         } @else {
           <form class="event-guide__source" (submit)="send($event)">
             <label><span i18n>Email address</span><input type="email" name="eventEmail" autocomplete="email" required maxlength="254" [disabled]="busy()" [ngModel]="email()" (ngModelChange)="email.set($event)"></label>
+            @if (recap()) { <small i18n>This avatar’s administrators can see your recap email address.</small> }
             @if (displaySettings().privacyUrl) { <a [href]="displaySettings().privacyUrl" target="_blank" rel="noopener noreferrer" i18n>Privacy notice</a> }
             <button type="submit" [disabled]="busy() || !email().trim()" i18n>Send recap</button>
           </form>

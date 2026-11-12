@@ -212,12 +212,12 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   private readonly events = inject(EventGuideService);
   readonly eventLanguages = CONTENT_LANGUAGES;
   readonly eventVoiceConsent = signal(false);
-  private readonly eventVoiceSessions = signal<string[]>([]);
-  private readonly eventTextSessions = signal<string[]>([]);
+  private readonly recapVoiceSessions = signal<string[]>([]);
+  private readonly recapTextSessions = signal<string[]>([]);
   readonly eventRecapSessions = computed(() => {
-    if (!this.eventVoiceSessions().length && !this.eventTextSessions().length) return null;
+    if (!this.recapVoiceSessions().length && !this.recapTextSessions().length) return null;
     if (!meaningfulTalkingCardTranscript(this.recapTranscript()).some(turn => turn.role === 'agent')) return null;
-    return { voiceSessions: this.eventVoiceSessions(), textSessions: this.eventTextSessions(), anonymousVisitorId: this.anonymousVisitorId() };
+    return { voiceSessions: this.recapVoiceSessions(), textSessions: this.recapTextSessions(), anonymousVisitorId: this.anonymousVisitorId() };
   });
   private readonly eventLanguage = signal<BoardTranslationLanguage | null>(null);
   readonly activeLanguage = computed(() => this.eventLanguage() ?? this.contentLanguage());
@@ -382,8 +382,8 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
           analyticsSessionId, analyticsRequestId: crypto.randomUUID(),
           analyticsVisitorId: this.trafficAnalytics.visitorId(), anonymousVisitorId: this.anonymousVisitorId(),
         });
-        if (result.historySaved && !this.eventTextSessions().includes(analyticsSessionId)) {
-          this.eventTextSessions.update(sessions => [...sessions.slice(-7), analyticsSessionId]);
+        if (result.historySaved && !this.recapTextSessions().includes(analyticsSessionId)) {
+          this.recapTextSessions.update(sessions => [...sessions.slice(-7), analyticsSessionId]);
         }
         const openItinerary = result.openItinerary ?? isEventItineraryQuestion(question);
         if (openItinerary) this.eventGuest()?.expanded.set(true);
@@ -409,6 +409,9 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
         throw new Error(this.chatService.submitError() || 'The avatar could not answer right now.');
       }
       this.lastTextActivityAt = Date.now();
+      if (!this.recapTextSessions().includes(this.analyticsSessionId)) {
+        this.recapTextSessions.update(sessions => [...sessions.slice(-7), this.analyticsSessionId]);
+      }
       this.threadId = response.threadId ?? this.threadId;
       this.appendMessage('agent', response.answer, true, false);
       this.activity.emit('message');
@@ -595,8 +598,9 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
         onConnect: ({ conversationId }) => {
           if (attempt !== this.voiceAttempt || this.conversationMode() !== 'voice') return;
           this.voiceConversationId.set(conversationId || null);
-          if (eventSettings && conversationId && this.voiceAnalyticsSessionId.startsWith('card_')) {
-            this.eventVoiceSessions.update(sessions => [...sessions.slice(-7), this.voiceAnalyticsSessionId]);
+          if (conversationId && this.voiceAnalyticsSessionId && (!eventSettings || this.voiceAnalyticsSessionId.startsWith('card_'))
+            && !this.recapVoiceSessions().includes(this.voiceAnalyticsSessionId)) {
+            this.recapVoiceSessions.update(sessions => [...sessions.slice(-7), this.voiceAnalyticsSessionId]);
           }
           this.syncVoiceAnalytics();
           this.voiceActivityActive = true;
@@ -768,6 +772,9 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
         recipientName: this.authService.displayName() || null,
         transcript,
         conversationId: this.voiceConversationId(),
+        voiceSessions: this.recapVoiceSessions(),
+        textSessions: this.recapTextSessions(),
+        shareRecapEmailWithAnalytics: true,
         language: this.activeLanguage(),
         createAnswerCard: true,
         source: 'talking_card',
