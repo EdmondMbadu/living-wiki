@@ -1,5 +1,7 @@
 <div class="event-guide event-guide__guest">
-  <button type="button" [attr.aria-expanded]="expanded()" (click)="expanded.set(!expanded())">
+  <ng-content />
+  <button class="event-guide__itinerary-toggle" type="button" [attr.aria-expanded]="expanded()" (click)="expanded.set(!expanded())">
+    <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
     @if (expanded()) { <span i18n>Hide itinerary</span> }
     @else if (plan()) { <span i18n>View itinerary</span> }
     @else { <span i18n>Build my itinerary</span> }

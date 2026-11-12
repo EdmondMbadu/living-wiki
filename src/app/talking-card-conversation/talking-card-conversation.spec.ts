@@ -39,6 +39,10 @@ describe('TalkingCardConversationComponent', () => {
       image_url: '/george.jpg',
     },
   };
+  const eventGuide = {
+    datasetId: 'a'.repeat(64), name: 'CES 2027', startDate: '2027-01-05', endDate: '2027-01-09',
+    timeZone: 'America/Los_Angeles', informationUrl: 'https://www.ces.tech/', privacyUrl: '', travelMinutes: 30,
+  };
   const atlasService = {
     getTalkingCardAvatar: jasmine.createSpy('getTalkingCardAvatar').and.resolveTo(atlas),
     canAdminAtlas: jasmine.createSpy('canAdminAtlas').and.returnValue(false),
@@ -106,10 +110,7 @@ describe('TalkingCardConversationComponent', () => {
     fixture.componentRef.setInput('atlasId', atlas.id);
     fixture.componentRef.setInput('boardId', 'event-board');
     fixture.componentRef.setInput('cardId', 'event-card');
-    fixture.componentRef.setInput('eventGuide', {
-      datasetId: 'a'.repeat(64), name: 'CES 2027', startDate: '2027-01-05', endDate: '2027-01-09',
-      timeZone: 'America/Los_Angeles', informationUrl: '', privacyUrl: '', travelMinutes: 30,
-    });
+    fixture.componentRef.setInput('eventGuide', eventGuide);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -123,6 +124,35 @@ describe('TalkingCardConversationComponent', () => {
     button.click();
     fixture.detectChanges();
     expect(dialog.textContent).toContain('Which days are you attending?');
+  });
+
+  it('keeps the event draft and offers text when the provider cannot start voice', async () => {
+    const fixture = TestBed.createComponent(TalkingCardConversationComponent);
+    fixture.componentRef.setInput('atlasId', atlas.id);
+    fixture.componentRef.setInput('boardId', 'event-board');
+    fixture.componentRef.setInput('cardId', 'event-card');
+    fixture.componentRef.setInput('eventGuide', eventGuide);
+    chatService.createElevenLabsVoiceSession.and.rejectWith(
+      Object.assign(new Error('Set ELEVENLABS_AGENT_ID'), { code: 'functions/failed-precondition' }),
+    );
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.componentInstance.draft.set('What’s on today?');
+    await fixture.componentInstance.setConversationMode('voice');
+    fixture.detectChanges();
+
+    const dialog: HTMLElement = fixture.nativeElement.querySelector('.talking-chat');
+    expect(chatService.createElevenLabsVoiceSession).toHaveBeenCalledOnceWith(jasmine.objectContaining({
+      experience: 'event-talking-card', boardId: 'event-board', cardId: 'event-card',
+    }));
+    expect(dialog.querySelector('[role="alert"]')?.textContent).toContain('You can still ask questions in text');
+    expect(dialog.textContent).not.toContain('ELEVENLABS_AGENT_ID');
+    expect(dialog.querySelector('.talking-chat__transcript')).toBeNull();
+    expect(dialog.querySelector('.talking-chat__voice-composer')).toBeNull();
+    dialog.querySelector<HTMLButtonElement>('.talking-chat__voice-text-fallback')!.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(dialog.querySelector('textarea')?.value).toBe('What’s on today?');
   });
 
   it('shows the sponsored allowance before starting a public voice session', async () => {

@@ -16653,6 +16653,10 @@ async function elevenLabsVoiceIsAvailable(apiKey: string, voiceId: string): Prom
   return available;
 }
 
+function eventVoiceAgentUnavailable(): HttpsError {
+  return new HttpsError('failed-precondition', 'Event voice is unavailable. You can continue in text.');
+}
+
 export const createElevenLabsVoiceSession = onCall(
   {
     region: callableRegion,
@@ -16711,8 +16715,9 @@ export const createElevenLabsVoiceSession = onCall(
       throw new HttpsError('failed-precondition', 'This Event Talking Card is unavailable.');
     }
     const agentId = (eventVoice ? elevenLabsEventAgentId.value() : elevenLabsAgentId.value()).trim();
-    if (eventVoice && !agentId) {
-      throw new HttpsError('failed-precondition', 'Event voice is unavailable. You can continue in text.');
+    if (eventVoice && !/^agent_[a-z0-9]+$/i.test(agentId)) {
+      logger.error('Event voice requires a valid ELEVENLABS_EVENT_AGENT_ID.', { configured: !!agentId });
+      throw eventVoiceAgentUnavailable();
     }
     if (!agentId) {
       throw new HttpsError('failed-precondition', 'ELEVENLABS_AGENT_ID is not configured.');
@@ -16804,10 +16809,14 @@ export const createElevenLabsVoiceSession = onCall(
     if (!response.ok) {
       const errorText = await response.text().catch(() => '');
       logger.warn('ElevenLabs voice session credential request failed', {
+        agentSetting: eventVoice ? 'ELEVENLABS_EVENT_AGENT_ID' : 'ELEVENLABS_AGENT_ID',
         status: response.status,
         connectionType: requestedConnectionType,
         body: errorText.slice(0, 500),
       });
+      if (eventVoice && response.status === 404) {
+        throw eventVoiceAgentUnavailable();
+      }
       if (response.status === 404 && errorText.includes('agent_not_found')) {
         throw new HttpsError(
           'failed-precondition',

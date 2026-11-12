@@ -19,6 +19,8 @@ Deploy the Event Guide callable functions, `createElevenLabsVoiceSession`, the F
 
 Set the Firebase Functions parameter `ELEVENLABS_EVENT_AGENT_ID` to a dedicated ElevenLabs agent ID. Enable authenticated sessions and overrides for first message, agent language, and TTS voice. Add presets for English, French, Japanese, Brazilian Portuguese, Spanish, German, Simplified Chinese (Mandarin), Italian, Korean, Arabic, Hindi, and Russian. Configure a greeting for each non-English preset. Enable the [Detect language system tool](https://elevenlabs.io/docs/eleven-agents/customization/tools/system-tools/language-detection) so guests can change languages during a call. Disable provider transcript retention or configure it according to the approved event privacy terms.
 
+The ID starts with `agent_` and must be accessible to the ElevenLabs API key bound to Firebase. A card’s selected voice is configured separately. If the card shows **Voice unavailable**, check the deployed `ELEVENLABS_EVENT_AGENT_ID` and the `createElevenLabsVoiceSession` logs. After correcting the parameter, redeploy that callable. Event voice requires the agent configuration below so it can look up the event program and open an itinerary during the call.
+
 Give the agent this system prompt and set `wiki_context_instruction` as a dynamic variable. The app supplies the selected avatar persona, event dates, and locale at session start.
 
 ```text

@@ -126,6 +126,12 @@
   padding: .35rem 1rem .8rem;
   text-align: center;
 }
+.talking-chat__voice-details {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+}
 
 .talking-chat__presence {
   --voice-energy: 0;
@@ -230,7 +236,7 @@
   background: color-mix(in srgb, var(--soft-fill) 34%, transparent);
 }
 .talking-chat__transcript-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .65rem; color: var(--muted); font-size: .64rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
-.talking-chat__transcript-head span:last-child { letter-spacing: 0; text-transform: none; }
+.talking-chat__transcript-head span + span { letter-spacing: 0; text-transform: none; }
 .talking-chat__transcript-line { display: grid; gap: .2rem; max-width: 88%; margin: 0 auto .55rem 0; border: 1px solid var(--line); border-radius: 1rem 1rem 1rem .35rem; padding: .55rem .68rem; background: var(--surface); }
 .talking-chat__transcript-line.is-user { margin-right: 0; margin-left: auto; border-color: color-mix(in srgb, var(--accent) 26%, var(--line)); border-radius: 1rem 1rem .35rem 1rem; background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
 .talking-chat__transcript-line > span { color: var(--muted); font-size: .6rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
@@ -494,13 +500,106 @@
 .talking-chat__sponsor-note p { line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0; }
 .talking-chat__sponsor-note button { border: 0; background: none; color: inherit; text-decoration: underline; padding: 8px 0; cursor: pointer; font-size: 12px; }
 
-.talking-chat.has-event-guide { grid-template-rows: auto auto auto minmax(0, 1fr); }
-.talking-chat__event { padding: .65rem 1rem; display: grid; gap: .5rem; max-height: 40dvh; overflow: auto; }
-.has-event-guide.is-voice-mode .talking-chat__event { max-height: 28dvh; }
-.has-event-guide .talking-chat__voice-experience,
-.has-event-guide .talking-chat__text-experience { overflow-y: auto; }
-.has-event-guide .talking-chat__text-experience { grid-template-rows: minmax(0, 1fr) auto auto auto auto; }
-.talking-chat__event-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1rem; }
-.talking-chat__event-tools label { display: flex; align-items: center; gap: .5rem; }
-.talking-chat__event-tools select { font: inherit; max-width: 11rem; padding: .3rem; border-radius: .35rem; }
-.talking-chat__event-tools a { color: inherit; text-decoration: underline; }
+.talking-chat.has-event-guide {
+  --event-gutter: clamp(.75rem, 3vw, 1.25rem);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  background: var(--surface);
+}
+
+.has-event-guide .talking-chat__header {
+  align-items: center;
+  padding: max(.85rem, env(safe-area-inset-top)) var(--event-gutter) .8rem;
+}
+.has-event-guide .talking-chat__event-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.has-event-guide .talking-chat__avatar i { display: none; }
+.talking-chat__event { min-width: 0; padding: 0 var(--event-gutter) .75rem; }
+.talking-chat__event-tools { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: .35rem; }
+.talking-chat__event-tools label,
+.talking-chat__event-tools a {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: .35rem;
+  border: 1px solid transparent;
+  border-radius: .65rem;
+  padding: 0 .55rem;
+  color: var(--text);
+  font-size: .77rem;
+  font-weight: 650;
+}
+.talking-chat__event-tools label { background: var(--soft-fill); }
+.talking-chat__event-tools label:focus-within,
+.talking-chat__event-tools a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.talking-chat__event-tools select {
+  max-width: min(9rem, 47vw);
+  border: 0;
+  outline: none;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.talking-chat__event-tools option { color: var(--text); background: var(--surface); }
+.talking-chat__event-tools a { color: var(--muted); text-decoration: none; }
+.talking-chat__event-tools a:hover { color: var(--text); background: var(--soft-fill); }
+.talking-chat__event-tools .material-symbols-outlined { flex: none; font-size: 1rem; }
+.has-event-guide .talking-chat__mode-switch { margin: 0 var(--event-gutter) .65rem; }
+.has-event-guide .talking-chat__text-experience {
+  grid-template-rows: minmax(0, 1fr) auto auto auto auto;
+  overflow: auto;
+}
+.has-event-guide .talking-chat__messages { padding: .9rem var(--event-gutter); }
+.has-event-guide .talking-chat__composer { padding-inline: var(--event-gutter); }
+.has-event-guide .talking-chat__disclaimer { padding-bottom: max(.65rem, env(safe-area-inset-bottom)); }
+
+.has-event-guide .talking-chat__voice-experience {
+  grid-template-rows: minmax(min-content, 1fr) auto;
+  overflow: auto;
+}
+.has-event-guide .talking-chat__voice-experience.is-connected { grid-template-rows: auto minmax(5rem, 1fr) auto auto; }
+.has-event-guide .talking-chat__voice-stage {
+  justify-content: center;
+  margin: 0 var(--event-gutter) .65rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 1rem .75rem;
+  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent) 9%, var(--surface)), var(--surface) 70%);
+}
+.has-event-guide .talking-chat__presence {
+  width: 11rem;
+  height: 8.7rem;
+}
+.has-event-guide .talking-chat__portrait-frame { width: 6.4rem; height: 6.4rem; }
+.has-event-guide .talking-chat__presence.is-error { --presence-a: #a6b9c6; --presence-b: #8197a4; --presence-c: #627985; }
+.has-event-guide .talking-chat__voice-error {
+  max-width: 25rem;
+  margin-block: .4rem 0;
+  color: var(--muted);
+  font-size: .83rem;
+  font-weight: 500;
+}
+.has-event-guide .talking-chat__call-actions { flex-wrap: wrap; justify-content: center; }
+.talking-chat__voice-text-fallback {
+  min-height: 2.6rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: .4rem .9rem;
+  color: var(--text);
+  background: var(--surface);
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.talking-chat__voice-text-fallback:hover { background: var(--soft-fill); }
+.talking-chat__voice-text-fallback:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.has-event-guide .is-connected .talking-chat__voice-stage { flex-direction: row; gap: .65rem; padding-block: .45rem; }
+.has-event-guide .is-connected .talking-chat__presence { width: 5rem; height: 5.1rem; }
+.has-event-guide .is-connected .talking-chat__portrait-frame { width: 3.4rem; height: 3.4rem; border-width: 2px; }
+.has-event-guide .is-connected .talking-chat__voice-trace { bottom: -.2rem; gap: .12rem; }
+.has-event-guide .is-connected .talking-chat__voice-trace i { width: .09rem; height: .85rem; }
+.has-event-guide .is-connected .talking-chat__voice-subtitle { display: none; }
+.has-event-guide .is-connected .talking-chat__voice-details { align-items: flex-start; text-align: start; }
+.has-event-guide .is-connected .talking-chat__call-actions { margin-top: .3rem; }
+.has-event-guide .talking-chat__transcript { min-height: 0; padding-inline: var(--event-gutter); }

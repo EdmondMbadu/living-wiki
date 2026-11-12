@@ -280,8 +280,9 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   readonly voiceVisualGlow = computed(() => `${18 + this.voiceEnergyLevel() * 30}px`);
   readonly voiceStateLabel = computed(() => {
     if (this.voiceStatus() === 'connecting') return $localize`Connecting…`;
-    if (this.voiceStatus() === 'error') return $localize`Voice needs attention`;
+    if (this.voiceStatus() === 'error') return this.eventGuide() ? $localize`Voice unavailable` : $localize`Voice needs attention`;
     if (this.voiceStatus() !== 'connected') return $localize`Voice conversation`;
+    if (this.eventGuide() && this.voiceMuted()) return $localize`Your microphone is muted`;
     return this.voiceMode() === 'speaking' ? `${this.avatarName()} is speaking` : $localize`Listening`;
   });
   readonly voiceStateSubtitle = computed(() => {
@@ -653,7 +654,9 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       const errorCode = error && typeof error === 'object' && 'code' in error ? error.code : null;
       this.errorMessage.set(errorCode === 'functions/failed-precondition' && language !== 'en'
         ? unavailableByLanguage[language]
-        : error instanceof Error ? error.message : $localize`Voice mode could not start.`);
+        : this.eventGuide()
+          ? this.eventVoiceError(error)
+          : error instanceof Error ? error.message : $localize`Voice mode could not start.`);
     }
   }
 
@@ -971,7 +974,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     this.voiceStatus.set('error');
     this.voiceMode.set(null);
     this.voiceMuted.set(false);
-    this.errorMessage.set(message);
+    this.errorMessage.set(this.eventGuide() ? this.eventVoiceError(message) : message);
     this.emitVoiceEndIfActive();
     if (this.managedVoice) {
       this.stopVoiceCreditTimer();
@@ -1003,11 +1006,23 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       return;
     }
     if (details.reason === 'error') {
-      this.errorMessage.set(details.message || details.closeReason || $localize`The voice conversation was interrupted.`);
+      const message = details.message || details.closeReason;
+      this.errorMessage.set(this.eventGuide() ? this.eventVoiceError(message) : message || $localize`The voice conversation was interrupted.`);
     }
     if (details.reason !== 'user') {
       this.offerRecap(details.reason === 'error' ? 'interrupted' : 'ended');
     }
+  }
+
+  private eventVoiceError(error: unknown): string {
+    const message = error instanceof Error ? `${error.name} ${error.message}` : String(error ?? '');
+    if (/notallowederror|permission denied|microphone permission/i.test(message)) {
+      return $localize`Allow microphone access in your browser to use voice.`;
+    }
+    if (/notfounderror|no microphone/i.test(message)) {
+      return $localize`Connect a microphone to use voice.`;
+    }
+    return $localize`We couldn’t connect to voice. You can still ask questions in text.`;
   }
 
   private showCreditLimit(error: unknown, paid = false): boolean {

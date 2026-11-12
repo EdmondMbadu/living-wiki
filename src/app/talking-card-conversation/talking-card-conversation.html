@@ -16,7 +16,12 @@
           @else { <span class="material-symbols-outlined">record_voice_over</span> }
           <i aria-hidden="true"></i>
         </div>
-        <div>@if (eventGuide()) { <span i18n>Event Talking Card</span> } @else { <span i18n>Talking Card</span> }<h2 id="talking-chat-title">{{ avatarName() }}</h2><p [attr.dir]="contentDirection()" [attr.lang]="contentLocale()">{{ cardSubtitle() }}</p></div>
+        <div>
+          @if (eventGuide(); as event) { <span class="talking-chat__event-name" dir="auto">{{ event.name }}</span> }
+          @else { <span i18n>Talking Card</span> }
+          <h2 id="talking-chat-title" dir="auto">{{ avatarName() }}</h2>
+          @if (cardSubtitle()) { <p [attr.dir]="contentDirection()" [attr.lang]="contentLocale()">{{ cardSubtitle() }}</p> }
+        </div>
       </div>
       @if (showContactActions()) {
         <nav class="talking-chat__contact" [attr.aria-label]="contactName() ? templateText.message15 + contactName() : templateText.message16">
@@ -44,15 +49,22 @@
 
     @if (eventGuide(); as event) {
       <div class="talking-chat__event" [attr.dir]="contentDirection()" [attr.lang]="contentLocale()">
-        <div class="talking-chat__event-tools">
-          <label><span i18n>Guide language</span>
-            <select [ngModel]="activeLanguage()" (ngModelChange)="changeEventLanguage($event)">
-              @for (language of eventLanguages; track language.id) { <option [value]="language.id">{{ language.label }}</option> }
-            </select>
-          </label>
-          @if (event.informationUrl) { <a [href]="event.informationUrl" target="_blank" rel="noopener noreferrer" i18n>Official event information</a> }
-        </div>
-        <app-event-guide-guest [boardId]="boardId()" [cardId]="cardId()" [settings]="event" [language]="activeLanguage()" />
+        <app-event-guide-guest [boardId]="boardId()" [cardId]="cardId()" [settings]="event" [language]="activeLanguage()">
+          <div class="talking-chat__event-tools">
+            <label>
+              <span class="material-symbols-outlined" aria-hidden="true">language</span>
+              <select aria-label="Guide language" i18n-aria-label [ngModel]="activeLanguage()" (ngModelChange)="changeEventLanguage($event)">
+                @for (language of eventLanguages; track language.id) { <option [value]="language.id">{{ language.label }}</option> }
+              </select>
+            </label>
+            @if (event.informationUrl) {
+              <a [href]="event.informationUrl" target="_blank" rel="noopener noreferrer">
+                <span i18n>Event info</span>
+                <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+              </a>
+            }
+          </div>
+        </app-event-guide-guest>
       </div>
     }
     @if (!eventGuide() && conversationStage() === 'conversation') {<p class="talking-chat__analytics-note" i18n>Conversations may be reviewed by this avatar’s administrators.</p>}
@@ -198,92 +210,104 @@
       } @else if (unavailable()) {
         <div class="talking-chat__state"><span class="material-symbols-outlined">lock</span><h3 i18n>This avatar is unavailable</h3><p i18n>It may be private, unpublished, or no longer exist. The card remains visible, but conversation is disabled.</p></div>
       } @else if (conversationMode() === 'voice') {
-        <div class="talking-chat__voice-experience" role="tabpanel" aria-label="Voice conversation" i18n-aria-label>
-        <div class="talking-chat__voice-stage">
-          <div
-            class="talking-chat__presence"
-            [class.is-speaking]="voiceMode() === 'speaking'"
-            [class.is-listening]="voiceMode() === 'listening'"
-            [class.is-connecting]="voiceStatus() === 'connecting'"
-            [class.is-error]="voiceStatus() === 'error'"
-            [class.has-portrait]="!!avatarImage()"
-            [style.--voice-energy]="voiceEnergyLevel()"
-            [style.--voice-glow]="voiceVisualGlow()"
-            role="img"
-            [attr.aria-label]="voiceStateLabel()"
-          >
-            <span class="talking-chat__presence-aura" aria-hidden="true"></span>
-            @if (avatarImage(); as portraitUrl) {
-              <span class="talking-chat__presence-contour is-outer" aria-hidden="true"></span>
-              <span class="talking-chat__presence-contour is-middle" aria-hidden="true"></span>
-              <span class="talking-chat__presence-contour is-inner" aria-hidden="true"></span>
-              <span class="talking-chat__portrait-frame"><img [src]="portraitUrl" [alt]="avatarName()" /></span>
-            } @else {
-              <app-voice-fluid-visual [energy]="voiceEnergyLevel()" [speaking]="voiceMode() === 'speaking'"></app-voice-fluid-visual>
-            }
-            <span class="talking-chat__voice-trace" aria-hidden="true">
-              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-            </span>
-          </div>
-
-          <strong class="talking-chat__voice-label">{{ voiceStateLabel() }}</strong>
-          <span class="talking-chat__voice-subtitle">{{ voiceStateSubtitle() }}</span>
-
-          @if (voiceTimeRemaining(); as remaining) {
-            <p aria-label="Voice time remaining">{{ formatVoiceTime(remaining) }} left</p>
-            @if (remaining <= 30) { <p role="status">Less than 30 seconds left in this session.</p> }
-          } @else if (creditsEnabled() && voiceStatus() === 'idle' && !creditPrompt()) {
-            <p>{{ sponsoredQuote() === null
-              ? 'Up to 3 minutes of sponsored voice time when available.'
-              : 'Up to ' + formatVoiceTime(sponsoredQuote()!) + ' of sponsored voice time available.' }}</p>
-          }
-          @if (creditNotice()) { <p role="status">{{ creditNotice() }}</p> }
-          @if (creditsEnabled() && creditPrompt()) {
-            <div class="talking-chat__voice-controls">
-              @if (creditPrompt() === 'buy') {
-                <button type="button" class="talking-chat__retry-voice" [disabled]="creditBusy()" (click)="buyVoiceCredits()">
-                  {{ creditBusy() ? 'Opening checkout…' : 'Buy voice credits' }}
-                </button>
+        <div class="talking-chat__voice-experience" [class.is-connected]="voiceStatus() === 'connected'" role="tabpanel" aria-label="Voice conversation" i18n-aria-label>
+          <div class="talking-chat__voice-stage">
+            <div
+              class="talking-chat__presence"
+              [class.is-speaking]="voiceMode() === 'speaking'"
+              [class.is-listening]="voiceMode() === 'listening'"
+              [class.is-connecting]="voiceStatus() === 'connecting'"
+              [class.is-error]="voiceStatus() === 'error'"
+              [class.has-portrait]="!!avatarImage()"
+              [style.--voice-energy]="voiceEnergyLevel()"
+              [style.--voice-glow]="voiceVisualGlow()"
+              role="img"
+              [attr.aria-label]="voiceStateLabel()"
+            >
+              <span class="talking-chat__presence-aura" aria-hidden="true"></span>
+              @if (avatarImage(); as portraitUrl) {
+                <span class="talking-chat__presence-contour is-outer" aria-hidden="true"></span>
+                <span class="talking-chat__presence-contour is-middle" aria-hidden="true"></span>
+                <span class="talking-chat__presence-contour is-inner" aria-hidden="true"></span>
+                <span class="talking-chat__portrait-frame"><img [src]="portraitUrl" [alt]="avatarName()" /></span>
               } @else {
-                <button type="button" class="talking-chat__retry-voice" [disabled]="voiceStatus() === 'connecting'" (click)="continueWithVoiceCredits()">Continue with my credits</button>
-                <small>Uses your balance for up to 10 minutes per session.</small>
+                <app-voice-fluid-visual [energy]="voiceEnergyLevel()" [speaking]="voiceMode() === 'speaking'"></app-voice-fluid-visual>
               }
-              <button type="button" class="talking-chat__retry-voice" (click)="setConversationMode('text')">Continue in text</button>
+              <span class="talking-chat__voice-trace" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              </span>
             </div>
-          }
-          @if (errorMessage()) {
-            <p class="talking-chat__voice-error" role="alert">{{ errorMessage() }}</p>
-          }
 
-          <div class="talking-chat__call-actions">
-            @if (voiceStatus() === 'connected') {
-              <button type="button" class="talking-chat__round-control" [attr.aria-label]="voiceMuted() ? templateText.message19 : templateText.message20" (click)="toggleMute()">
-                <span class="material-symbols-outlined">{{ voiceMuted() ? 'mic_off' : 'mic' }}</span>
-              </button>
-              <button type="button" class="talking-chat__end-call" (click)="finishConversation('ended')" i18n><span class="material-symbols-outlined">call_end</span>End</button>
-            } @else if (voiceStatus() !== 'connecting') {
-              <button type="button" class="talking-chat__retry-voice" (click)="startVoice()"><span class="material-symbols-outlined">mic</span>{{ voiceStatus() === 'error' ? templateText.message10 : templateText.message11 }}</button>
-            }
+            <div class="talking-chat__voice-details">
+              <strong class="talking-chat__voice-label">{{ voiceStateLabel() }}</strong>
+              @if (!eventGuide() || !errorMessage()) {
+                <span class="talking-chat__voice-subtitle">{{ voiceStateSubtitle() }}</span>
+              }
+
+              @if (voiceTimeRemaining(); as remaining) {
+                <p aria-label="Voice time remaining">{{ formatVoiceTime(remaining) }} left</p>
+                @if (remaining <= 30) { <p role="status">Less than 30 seconds left in this session.</p> }
+              } @else if (creditsEnabled() && voiceStatus() === 'idle' && !creditPrompt()) {
+                <p>{{ sponsoredQuote() === null
+                  ? 'Up to 3 minutes of sponsored voice time when available.'
+                  : 'Up to ' + formatVoiceTime(sponsoredQuote()!) + ' of sponsored voice time available.' }}</p>
+              }
+              @if (creditNotice()) { <p role="status">{{ creditNotice() }}</p> }
+              @if (creditsEnabled() && creditPrompt()) {
+                <div class="talking-chat__voice-controls">
+                  @if (creditPrompt() === 'buy') {
+                    <button type="button" class="talking-chat__retry-voice" [disabled]="creditBusy()" (click)="buyVoiceCredits()">
+                      {{ creditBusy() ? 'Opening checkout…' : 'Buy voice credits' }}
+                    </button>
+                  } @else {
+                    <button type="button" class="talking-chat__retry-voice" [disabled]="voiceStatus() === 'connecting'" (click)="continueWithVoiceCredits()">Continue with my credits</button>
+                    <small>Uses your balance for up to 10 minutes per session.</small>
+                  }
+                  <button type="button" class="talking-chat__retry-voice" (click)="setConversationMode('text')">Continue in text</button>
+                </div>
+              }
+              @if (errorMessage()) {
+                <p class="talking-chat__voice-error" role="alert">{{ errorMessage() }}</p>
+              }
+
+              <div class="talking-chat__call-actions">
+                @if (voiceStatus() === 'connected') {
+                  <button type="button" class="talking-chat__round-control" [attr.aria-label]="voiceMuted() ? templateText.message19 : templateText.message20" (click)="toggleMute()">
+                    <span class="material-symbols-outlined">{{ voiceMuted() ? 'mic_off' : 'mic' }}</span>
+                  </button>
+                  <button type="button" class="talking-chat__end-call" (click)="finishConversation('ended')" i18n><span class="material-symbols-outlined">call_end</span>End</button>
+                } @else if (voiceStatus() !== 'connecting' && (!eventGuide() || !creditPrompt())) {
+                  <button type="button" class="talking-chat__retry-voice" (click)="startVoice()"><span class="material-symbols-outlined">mic</span>{{ voiceStatus() === 'error' ? templateText.message10 : templateText.message11 }}</button>
+                  @if (eventGuide() && voiceStatus() === 'error') {
+                    <button type="button" class="talking-chat__voice-text-fallback" (click)="setConversationMode('text')" i18n>Continue in text</button>
+                  }
+                }
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div class="talking-chat__transcript" aria-live="polite">
-          <div class="talking-chat__transcript-head"><span i18n>Live transcript</span><span>{{ voiceMode() === 'speaking' ? templateText.message12 : templateText.message13 }}</span></div>
-          @for (message of messages(); track message.id) {
-            <article class="talking-chat__transcript-line" [class.is-user]="message.role === 'user'">
-              <span>{{ message.role === 'user' ? templateText.message14 : avatarName() }}</span><p dir="auto">{{ message.text }}</p>
-            </article>
-          } @empty {
-            <p class="talking-chat__transcript-empty" i18n>Your spoken conversation will appear here.</p>
+          @if (!eventGuide() || voiceStatus() === 'connected') {
+            <div class="talking-chat__transcript" aria-live="polite">
+              <div class="talking-chat__transcript-head">
+                <span i18n>Live transcript</span>
+                @if (!eventGuide()) { <span>{{ voiceMode() === 'speaking' ? templateText.message12 : templateText.message13 }}</span> }
+              </div>
+              @for (message of messages(); track message.id) {
+                <article class="talking-chat__transcript-line" [class.is-user]="message.role === 'user'">
+                  <span>{{ message.role === 'user' ? templateText.message14 : avatarName() }}</span><p dir="auto">{{ message.text }}</p>
+                </article>
+              } @empty {
+                <p class="talking-chat__transcript-empty" i18n>Your spoken conversation will appear here.</p>
+              }
+            </div>
+
+            <form class="talking-chat__voice-composer" (submit)="$event.preventDefault(); submitVoiceText()">
+              <input type="text" maxlength="2000" autocomplete="off" aria-label="Type during voice conversation" placeholder="Type a message…" [ngModel]="draft()" (ngModelChange)="draft.set($event)" name="voiceMessage"  i18n-aria-label i18n-placeholder/>
+              <button type="submit" [disabled]="voiceStatus() !== 'connected' || !draft().trim()" aria-label="Send message" i18n-aria-label><span class="material-symbols-outlined">arrow_upward</span></button>
+            </form>
           }
-        </div>
-
-        <form class="talking-chat__voice-composer" (submit)="$event.preventDefault(); submitVoiceText()">
-          <input type="text" maxlength="2000" autocomplete="off" aria-label="Type during voice conversation" placeholder="Type a message…" [ngModel]="draft()" (ngModelChange)="draft.set($event)" name="voiceMessage"  i18n-aria-label i18n-placeholder/>
-          <button type="submit" [disabled]="voiceStatus() !== 'connected' || !draft().trim()" aria-label="Send message" i18n-aria-label><span class="material-symbols-outlined">arrow_upward</span></button>
-        </form>
-        <p class="talking-chat__disclaimer" i18n>AI can make mistakes. Verify important information.</p>
+          <p class="talking-chat__disclaimer" i18n>AI can make mistakes. Verify important information.</p>
         </div>
       } @else {
         <div class="talking-chat__text-experience" role="tabpanel" aria-label="Text conversation" i18n-aria-label>

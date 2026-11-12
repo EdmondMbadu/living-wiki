@@ -6485,7 +6485,7 @@
   },
   "2932391385093697460": {
     "source": "Event Talking Card",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+    "file": "src/app/boards/card-creation.ts"
   },
   "293344152000220895": {
     "source": "will be removed from My Videos. Its source board will not be deleted.",
@@ -11123,6 +11123,10 @@
     "source": "Created",
     "file": "src/app/admin-users/admin-users.html"
   },
+  "4208234080214254089": {
+    "source": "Voice unavailable",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
+  },
   "420931489272556690": {
     "source": "Burger",
     "file": "src/app/business-badge-icons.ts"
@@ -12526,6 +12530,10 @@
   "4607581465689784056": {
     "source": "Business",
     "file": "src/app/business-detail/business-detail.html"
+  },
+  "4608107035538313233": {
+    "source": "Event info",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
   "4608836462344525061": {
     "source": "Show card front",
@@ -20599,10 +20607,6 @@
     "source": "{$START_TAG_SPAN}{$CLOSE_TAG_SPAN} Loading ",
     "file": "src/app/city-places/city-places.html"
   },
-  "6930577476940948397": {
-    "source": "Official event information",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
-  },
   "6932865105766151309": {
     "source": "Upload",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -21190,6 +21194,10 @@
   "7087250153844702386": {
     "source": "How would you like to explore?",
     "file": "src/app/boards/boards.html"
+  },
+  "7088241861583379965": {
+    "source": "Continue in text",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
   "7088254296227640714": {
     "source": "Contacted · mark new",
@@ -24935,6 +24943,10 @@
     "source": "Notifications unavailable. Open to retry.",
     "file": "src/app/account-menu/account-menu.ts"
   },
+  "8185788976410319412": {
+    "source": "Allow microphone access in your browser to use voice.",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
+  },
   "8186528254853673318": {
     "source": "Signing out...",
     "file": "src/app/account-menu/account-menu.ts"
@@ -26419,6 +26431,10 @@
     "source": " The reconciler keeps every existing board, queues only unsuppressed gaps, and leaves new boards private for review. ",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
+  "8655600341090615670": {
+    "source": "We couldn’t connect to voice. You can still ask questions in text.",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
+  },
   "8656252686515602109": {
     "source": "Verified call duration",
     "file": "src/app/platform-analytics/platform-analytics.html"
@@ -27266,6 +27282,10 @@
   "8899085282664652923": {
     "source": "Add card",
     "file": "src/app/boards/boards.html"
+  },
+  "8900885767994448509": {
+    "source": "Connect a microphone to use voice.",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
   },
   "89011189933885173": {
     "source": "Keep the video silent",
