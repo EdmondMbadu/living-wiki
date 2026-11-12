@@ -1,5 +1,6 @@
 import { contentLanguageDetails, type ContentLanguage } from './content-language';
 import { eventDisplayDate, eventDisplayTime, eventHttpsUrl, type EventGuideSettings, type EventPlan } from './event-guide-model';
+import type { RecapEmailCopy } from './recap-email-localization';
 
 const messages = {
   en: ['Your itinerary', 'Day off', 'Lunch and recharge', 'Explore the show floor', 'Times and locations may change. Check the event’s latest information.', 'Event information', 'Privacy', 'Presented by'],
@@ -46,12 +47,13 @@ const editLabels = {
 
 export function renderEventEmail(
   settings: EventGuideSettings, plan: Pick<EventPlan, 'days'> | null, language: ContentLanguage,
-  sponsor: { name: string; message: string } | null, translatedNotes: ReadonlyMap<string, string> = new Map(),
-  transcript: readonly EventRecapTurn[] = [], itineraryEditUrl = '',
+  sponsor: { name: string; message: string } | null, transcript: readonly EventRecapTurn[] = [],
+  itineraryEditUrl = '', copy: RecapEmailCopy = source => source,
 ) {
   const locale = contentLanguageDetails(language);
   const [itinerary, dayOff, lunch, exhibits, changes, info, privacy, presentedBy] = messages[language];
   const [recap, conversation, visitor, guide] = recapLabels[language];
+  const sponsorMessage = sponsor ? copy(sponsor.message) : '';
   const editUrl = plan ? eventHttpsUrl(itineraryEditUrl) : '';
   const edit = editLabels[language];
   const isRecap = !!(transcript.length || editUrl);
@@ -66,8 +68,9 @@ export function renderEventEmail(
     text.push('', conversation);
     return `<h2 style="font-size:20px;margin:24px 0 8px">${escape(conversation)}</h2>` + transcript.map(turn => {
       const speaker = turn.role === 'user' ? visitor : guide;
-      text.push(`${speaker}: ${turn.text}`);
-      return `<p style="margin:8px 0 14px"><strong>${escape(speaker)}</strong><br><span dir="auto">${escape(turn.text).replace(/\r?\n/g, '<br>')}</span></p>`;
+      const message = copy(turn.text);
+      text.push(`${speaker}: ${message}`);
+      return `<p style="margin:8px 0 14px"><strong>${escape(speaker)}</strong><br><span dir="auto">${escape(message).replace(/\r?\n/g, '<br>')}</span></p>`;
     }).join('');
   })() : '';
   if (plan && isRecap) text.push('', itinerary);
@@ -80,12 +83,12 @@ export function renderEventEmail(
       ? day.items.map((item) => {
           const time = eventDisplayTime(item.start, language) + (item.endEstimated ? '' : ` – ${eventDisplayTime(item.end, language)}`);
           const title = item.title || (item.kind === 'Break' ? lunch : exhibits);
-          const note = translatedNotes.get(item.note) || item.note;
+          const note = copy(item.note);
           text.push([time, title, item.location, note, item.url].filter(Boolean).join(' · '));
           return `<div style="padding:12px 0;border-top:1px solid #dfe4f1"><small>${escape(time)}</small><br><strong>${link(title, item.url)}</strong>${item.location ? `<br>${escape(item.location)}` : ''}${note ? `<br><small>${escape(note)}</small>` : ''}</div>`;
         }).join('') : `<p>${escape(dayOff)}</p>`);
   }).join('');
-  if (sponsor) text.push('', `${presentedBy} ${sponsor.name}`, sponsor.message);
+  if (sponsor) text.push('', `${presentedBy} ${sponsor.name}`, sponsorMessage);
   text.push('', changes, settings.informationUrl, settings.privacyUrl, '', 'LivingWiki', 'https://livingwiki.com');
   const html = `<!doctype html><html lang="${locale.id}" dir="${locale.direction}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escape(subject)}</title></head><body style="margin:0;background:#0b1020;color:#101830;font:16px/1.5 Arial,sans-serif">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:20px 12px">
@@ -95,7 +98,7 @@ export function renderEventEmail(
     ${editUrl ? `<p style="margin:12px 0 20px"><a href="${escape(editUrl)}" style="display:inline-block;border-radius:8px;padding:10px 16px;background:#15254a;color:#ffffff;text-decoration:none;font-weight:bold">${escape(edit)}</a></p>` : ''}${days}<p>${escape(changes)}</p>
     ${settings.informationUrl ? `<p>${link(info, settings.informationUrl)}</p>` : ''}</td></tr>
     <tr><td dir="${locale.direction}" style="padding:18px 22px;background:#e9eef9;border-radius:0 0 12px 12px">
-    ${sponsor ? `<p>${escape(sponsor.message)}</p>` : ''}${settings.privacyUrl ? link(privacy, settings.privacyUrl) : ''}
+    ${sponsor ? `<p>${escape(sponsorMessage)}</p>` : ''}${settings.privacyUrl ? link(privacy, settings.privacyUrl) : ''}
     <p style="margin:10px 0 0;font-size:14px;font-weight:bold">${link('LivingWiki', 'https://livingwiki.com')}</p></td></tr></table></td></tr></table></body></html>`;
   return { subject, html, text: text.join('\n') };
 }

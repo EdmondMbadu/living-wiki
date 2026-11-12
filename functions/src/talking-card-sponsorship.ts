@@ -1,4 +1,4 @@
-/** Shared, provider-independent sponsorship data. Never added to an LLM prompt. */
+/** Shared, provider-independent sponsorship data. Treat configured wording as literal copy. */
 export type Sponsorship = { name: string; message: string };
 export type SponsorshipChoice = { mode: 'inherit' | 'off' } | ({ mode: 'custom' } & Sponsorship);
 export function normalizeSponsorship(value: unknown): Sponsorship | null {
@@ -23,8 +23,8 @@ export function resolveSponsorship(board: unknown, choice: unknown): Sponsorship
   return normalized.mode === 'off' ? null : normalized.mode === 'custom'
     ? { name: normalized.name, message: normalized.message } : normalizeSponsorship(board);
 }
-export function sponsorshipEmail(sponsor: Sponsorship | null): { text: string; html: string } {
+export function sponsorshipEmail(sponsor: Sponsorship | null, heading = 'Sponsorship acknowledgement'): { text: string; html: string } {
   if (!sponsor) return { text: '', html: '' };
   const escape = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  return { text: `\nSponsorship acknowledgement\n${sponsor.message}\n`, html: `<div style="border-top:1px solid #dde5df;margin-top:24px;padding-top:18px;color:#526057;font-size:14px;line-height:1.6;"><strong>Sponsorship acknowledgement</strong><p>${escape(sponsor.message)}</p></div>` };
+  return { text: `\n${heading}\n${sponsor.message}\n`, html: `<div style="border-top:1px solid #dde5df;margin-top:24px;padding-top:18px;color:#526057;font-size:14px;line-height:1.6;"><strong>${escape(heading)}</strong><p>${escape(sponsor.message)}</p></div>` };
 }

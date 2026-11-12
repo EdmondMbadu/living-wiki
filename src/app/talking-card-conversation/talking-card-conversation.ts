@@ -768,6 +768,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
         recipientName: this.authService.displayName() || null,
         transcript,
         conversationId: this.voiceConversationId(),
+        language: this.activeLanguage(),
         createAnswerCard: true,
         source: 'talking_card',
         boardId: this.boardId(),

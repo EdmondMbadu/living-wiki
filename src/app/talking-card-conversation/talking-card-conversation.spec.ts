@@ -170,7 +170,7 @@ describe('TalkingCardConversationComponent', () => {
     expect(dialog.querySelector('textarea')?.value).toBe('What’s on today?');
   });
 
-  it('opens the event recap on End and includes the itinerary in one email', async () => {
+  it('opens the event recap on End and emails the itinerary in the newly selected language', async () => {
     const fixture = TestBed.createComponent(TalkingCardConversationComponent);
     const component = fixture.componentInstance;
     fixture.componentRef.setInput('atlasId', atlas.id);
@@ -187,6 +187,7 @@ describe('TalkingCardConversationComponent', () => {
     const guest = component.eventGuest()!;
     const itinerary = { id: 'plan-id', key: 'plan-key', days: [], warnings: [] };
     guest.plan.set(itinerary);
+    await component.changeEventLanguage('fr');
     await component.setConversationMode('voice');
     component.voiceStatus.set('connected');
     fixture.detectChanges();
@@ -201,7 +202,7 @@ describe('TalkingCardConversationComponent', () => {
     await guest.send(new Event('submit'));
     await guest.send(new Event('submit'));
     expect(events.send).toHaveBeenCalledOnceWith(
-      { boardId: 'event-board', cardId: 'event-card' }, itinerary, 'guest@example.org', 'en',
+      { boardId: 'event-board', cardId: 'event-card' }, itinerary, 'guest@example.org', 'fr',
       jasmine.objectContaining({ textSessions: [jasmine.any(String)], voiceSessions: [] }),
     );
     expect(fixture.nativeElement.textContent).not.toContain('Which days are you attending?');
@@ -675,6 +676,7 @@ describe('TalkingCardConversationComponent', () => {
     fixture.componentRef.setInput('boardId', 'board-1');
     fixture.componentRef.setInput('boardTitle', 'Early American History');
     fixture.componentRef.setInput('cardId', 'card-1');
+    fixture.componentRef.setInput('contentLanguage', 'es');
     fixture.componentRef.setInput('actions', [
       { id: 'schedule-1', kind: 'schedule', label: 'Schedule a meeting', url: 'https://cal.com/ada' },
       { id: 'details-1', kind: 'link', label: 'View details', url: 'https://example.com/details' },
@@ -695,6 +697,7 @@ describe('TalkingCardConversationComponent', () => {
       source: 'talking_card',
       boardId: 'board-1',
       cardId: 'card-1',
+      language: 'es',
       completionReason: 'interrupted',
       recipientEmail: 'member@example.com',
       recipientName: 'Ada Member',

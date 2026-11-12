@@ -768,7 +768,7 @@ export class ChatService {
         completionReason?: 'ended' | 'closed' | 'interrupted' | null;
       },
       SendVoiceConversationSummaryResponse
-    >(this.functions, 'sendVoiceConversationSummary');
+    >(this.functions, 'sendVoiceConversationSummary', { timeout: 125_000 });
 
     const { data } = await sendSummary({
       atlasId: options.atlasId ?? null,

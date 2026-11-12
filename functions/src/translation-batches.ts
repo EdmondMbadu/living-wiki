@@ -3,7 +3,7 @@ import { normalizeTranslatedBoardSegments, type BoardTranslationSegment } from '
 /** Short requests make visible text available without waiting for a whole board.
  * Repeated narration/summary text is translated once and expanded back to its keys.
  */
-export function translationBatches(segments: readonly BoardTranslationSegment[]) {
+export function translationBatches(segments: readonly BoardTranslationSegment[], maxCharacters = 2_000) {
   const aliases = new Map<string, BoardTranslationSegment[]>();
   const unique: BoardTranslationSegment[] = [];
   for (const segment of segments) {
@@ -16,7 +16,7 @@ export function translationBatches(segments: readonly BoardTranslationSegment[])
   let characters = 0;
   for (const segment of unique) {
     // Send the heading immediately, then small groups in source/display order.
-    if (batch.length && (batch[0].key === 'board.title' || batch.length >= 12 || characters + segment.text.length > 2_000)) {
+    if (batch.length && (batch[0].key === 'board.title' || batch.length >= 12 || characters + segment.text.length > maxCharacters)) {
       batches.push(batch); batch = []; characters = 0;
     }
     batch.push(segment); characters += segment.text.length;
@@ -29,8 +29,9 @@ export async function translateInBatches(
   source: readonly BoardTranslationSegment[],
   translate: (group: BoardTranslationSegment[]) => Promise<BoardTranslationSegment[]>,
   onBatch?: (segments: BoardTranslationSegment[]) => Promise<void> | void,
+  maxCharacters?: number,
 ): Promise<BoardTranslationSegment[]> {
-  const { batches, aliases } = translationBatches(source);
+  const { batches, aliases } = translationBatches(source, maxCharacters);
   const translated: BoardTranslationSegment[] = [];
   let next = 0;
   let failed = false;
