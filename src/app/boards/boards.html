@@ -182,7 +182,11 @@
                           <div class="talking-card-live-actions">
                             <button type="button" class="talking-card-cta talking-card-cta--live" (click)="openTalkingCardConversation(card, $event, 'live')">
                               <span class="material-symbols-outlined">graphic_eq</span>
-                              <strong>{{ talkingCardButtonLabel(card) }}</strong>
+                              @if (card.conversation?.event) {
+                                <span class="talking-card-recorded-call"><strong>{{ eventRecordedCallLabel }}</strong><small>{{ eventRecordingNotice }}</small></span>
+                              } @else {
+                                <strong>{{ talkingCardButtonLabel(card) }}</strong>
+                              }
                             </button>
                             @for (action of talkingCardActionLinks(card); track action.id) {
                               <a class="talking-card-link talking-card-link--live" [class.is-schedule]="action.kind === 'schedule'" [href]="action.url" target="_blank" rel="noopener noreferrer" (click)="trackTalkingCardAction(card, action, $event)">
@@ -2829,7 +2833,13 @@
                         @else { <span class="material-symbols-outlined">record_voice_over</span> }
                         <span><small i18n>Talking Card</small><strong>{{ guide.title }}</strong><em>{{ guide.subtitle }}</em></span>
                         <div class="specialty-talking-cards__actions">
-                          <button type="button" (click)="openTalkingCardConversation(guide, $event, 'board')">{{ talkingCardButtonLabel(guide) }}</button>
+                          <button type="button" (click)="openTalkingCardConversation(guide, $event, 'board')">
+                            @if (guide.conversation?.event) {
+                              <span class="talking-card-recorded-call"><strong>{{ eventRecordedCallLabel }}</strong><small>{{ eventRecordingNotice }}</small></span>
+                            } @else {
+                              {{ talkingCardButtonLabel(guide) }}
+                            }
+                          </button>
                           @for (action of talkingCardActionLinks(guide); track action.id) {
                             <a [class.is-schedule]="action.kind === 'schedule'" [href]="action.url" target="_blank" rel="noopener noreferrer" (click)="trackTalkingCardAction(guide, action, $event)">{{ action.label }}</a>
                           }
@@ -3254,7 +3264,13 @@
                           @else { <span class="material-symbols-outlined">record_voice_over</span> }
                           <span><small i18n>Talking Card</small><strong>{{ guide.title }}</strong><em>{{ guide.subtitle }}</em></span>
                           <div class="specialty-talking-cards__actions">
-                            <button type="button" (click)="openTalkingCardConversation(guide, $event, 'board')">{{ talkingCardButtonLabel(guide) }}</button>
+                            <button type="button" (click)="openTalkingCardConversation(guide, $event, 'board')">
+                              @if (guide.conversation?.event) {
+                                <span class="talking-card-recorded-call"><strong>{{ eventRecordedCallLabel }}</strong><small>{{ eventRecordingNotice }}</small></span>
+                              } @else {
+                                {{ talkingCardButtonLabel(guide) }}
+                              }
+                            </button>
                             @for (action of talkingCardActionLinks(guide); track action.id) {
                               <a [class.is-schedule]="action.kind === 'schedule'" [href]="action.url" target="_blank" rel="noopener noreferrer" (click)="trackTalkingCardAction(guide, action, $event)">{{ action.label }}</a>
                             }
@@ -3674,7 +3690,11 @@
                           </button>
                           <button type="button" class="talking-card-cta talking-card-cta--invitation" (click)="openTalkingCardConversation(card, $event, 'board')">
                             <span class="material-symbols-outlined">forum</span>
-                            <span><strong i18n>Start a conversation</strong><small i18n>Ask by text or talk live</small></span>
+                            @if (card.conversation?.event) {
+                              <span class="talking-card-recorded-call"><strong>{{ eventRecordedCallLabel }}</strong><small>{{ eventRecordingNotice }}</small></span>
+                            } @else {
+                              <span><strong i18n>Start a conversation</strong><small i18n>Ask by text or talk live</small></span>
+                            }
                             <span class="material-symbols-outlined">arrow_forward</span>
                           </button>
                         </div>
@@ -3850,7 +3870,11 @@
                       @if (isTalkingCard(card) && isCardFlipped(card.id)) {
                         <button type="button" class="talking-card-cta talking-card-cta--back" (click)="openTalkingCardConversation(card, $event, 'board')">
                           <span class="material-symbols-outlined">mic</span>
-                          <span><strong>{{ talkingCardButtonLabel(card) }}</strong><small i18n>Text or voice conversation</small></span>
+                          @if (card.conversation?.event) {
+                            <span class="talking-card-recorded-call"><strong>{{ eventRecordedCallLabel }}</strong><small>{{ eventRecordingNotice }}</small></span>
+                          } @else {
+                            <span><strong>{{ talkingCardButtonLabel(card) }}</strong><small i18n>Text or voice conversation</small></span>
+                          }
                           <span class="material-symbols-outlined">arrow_forward</span>
                         </button>
                         @for (action of talkingCardActionLinks(card); track action.id) {
@@ -11757,6 +11781,7 @@
       [starterQuestions]="talkingCardStarterQuestions(talkingCard)"
       [boardContext]="talkingCardBoardContext(talkingConversationBoard(), talkingCard)"
       [eventGuide]="conversation.event || null"
+      [eventRecordingAcceptedAtLaunch]="eventRecordingAcceptedAtLaunch()"
       [contentLanguage]="talkingConversationLanguage()"
       [contactName]="talkingConversationContact()?.name || ''"
       [contactPhoneHref]="talkingConversationContact()?.phoneHref || ''"

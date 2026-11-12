@@ -79,6 +79,25 @@
 .talking-card-cta > span:nth-child(2) { display: grid; flex: 1; }
 .talking-card-cta strong { font-size: .86rem; }
 .talking-card-cta small { margin-top: .15rem; color: rgba(255,255,255,.72); font-size: .62rem; }
+.talking-card-recorded-call {
+  display: grid;
+  min-width: 0;
+  max-width: 26rem;
+  gap: .2rem;
+  text-align: start;
+}
+.talking-card-cta .talking-card-recorded-call small,
+.specialty-talking-cards .talking-card-recorded-call small {
+  margin: 0;
+  color: inherit;
+  font-size: .72rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.specialty-talking-cards .talking-card-recorded-call { max-width: 16rem; }
+.specialty-talking-cards .talking-card-recorded-call strong { white-space: normal; }
 .talking-card-cta > .material-symbols-outlined:first-child { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; color: #0d5737; background: #fff; }
 .board-detail .detail-card--talking .detail-card__summary--talking {
   min-height: 11.2rem;

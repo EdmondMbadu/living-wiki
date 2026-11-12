@@ -64,6 +64,9 @@
                 <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
               </a>
             }
+            @if (eventVoiceConsent() && event.privacyUrl) {
+              <a [href]="event.privacyUrl" target="_blank" rel="noopener noreferrer" i18n>Privacy notice</a>
+            }
           </div>
         </app-event-guide-guest>
         @if (conversationStage() === 'conversation' && conversationMode() === 'text') {
