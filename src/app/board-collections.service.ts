@@ -4,6 +4,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  documentId,
   getDoc,
   getDocs,
   limit,
@@ -18,6 +19,7 @@ import {
 import { AuthService } from './auth.service';
 import type { CityBoardListing } from './city-board-listings.service';
 import { getFirebaseFirestore } from './firebase.client';
+import { boardCoverPhotoUrl } from './place-photo';
 
 export const BOARD_COLLECTION_MAX_BOARDS = 50;
 
@@ -48,6 +50,15 @@ export type BoardCollection = {
   boardIds: string[];
   createdAt: string;
   updatedAt: string;
+};
+
+export type BoardCollectionCoverBoard = {
+  id: string;
+  ownerUserId: string;
+  visibility: string;
+  parentCardId?: string | null;
+  imageUrl: string;
+  imageWebpSrcset?: string;
 };
 
 export type CreateBoardCollectionInput = {
@@ -291,6 +302,36 @@ export class BoardCollectionsService {
       .map((item) => boardCollectionFromData(item.id, item.data()))
       .filter((item): item is BoardCollection => !!item)
       .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.title.localeCompare(right.title));
+  }
+
+  async listPublicCoverBoards(boardIds: readonly string[]): Promise<BoardCollectionCoverBoard[]> {
+    if (!this.firestore) return [];
+    const ids = [...new Set(boardIds.filter(id => id && !id.includes('/')))];
+    const boards: BoardCollectionCoverBoard[] = [];
+    for (let start = 0; start < ids.length; start += 30) {
+      const batch = ids.slice(start, start + 30);
+      const readPublic = (path: string, keys: string[]) => getDocs(query(
+        collection(this.firestore!, path),
+        where(documentId(), 'in', keys),
+        where('visibility', '==', 'public'),
+      )).catch(() => null);
+      const summaries = await readPublic('public_board_summaries', batch);
+      const found = new Set(summaries?.docs.map(item => item.id));
+      const missing = batch.filter(id => !found.has(id));
+      const legacy = missing.length ? await readPublic('boards', missing) : null;
+      for (const item of [...(summaries?.docs ?? []), ...(legacy?.docs ?? [])]) {
+        const data = item.data();
+        if (data['visibility'] !== 'public' || data['is_root'] === false || data['parentCardId'] || data['parent_card_id']) continue;
+        boards.push({
+          id: item.id,
+          ownerUserId: stringValue(data['owner_user_id'], 180),
+          visibility: 'public',
+          imageUrl: boardCoverPhotoUrl(item.id, data).trim(),
+          imageWebpSrcset: stringValue(data['image_webp_srcset'], 8_000),
+        });
+      }
+    }
+    return boards;
   }
 
   async getPublic(ownerKey: string, collectionSlug: string): Promise<LoadedBoardCollection | null> {

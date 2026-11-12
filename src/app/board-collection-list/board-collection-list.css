@@ -6,6 +6,22 @@
 .board-collection-card__art i { position: absolute; width: 42%; aspect-ratio: 4 / 3; border: 1px solid rgba(255, 255, 255, 0.42); border-radius: 0.8rem; background: rgba(255, 255, 255, 0.14); transform: rotate(-9deg) translate(-62%, 18%); }
 .board-collection-card__art i:nth-of-type(2) { transform: rotate(8deg) translate(62%, -18%); }
 .board-collection-card__art i:nth-of-type(3) { transform: rotate(-2deg) translate(0, 70%); }
+.board-collection-card__covers {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 2px;
+  background: color-mix(in srgb, var(--surface) 80%, var(--accent));
+}
+.board-collection-card__covers--split { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.board-collection-card__covers--mosaic {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.board-collection-card__covers--mosaic > img:first-child { grid-row: span 2; }
+.board-collection-card__covers > img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .board-collection-card__body { display: grid; gap: 0.48rem; padding: 1rem 1.05rem 1.1rem; }
 .board-collection-card__body small { color: var(--accent); font-size: 0.65rem; font-weight: 950; letter-spacing: 0.15em; text-transform: uppercase; }
 .board-collection-card__body strong { overflow-wrap: anywhere; font-size: 1.18rem; line-height: 1.12; }

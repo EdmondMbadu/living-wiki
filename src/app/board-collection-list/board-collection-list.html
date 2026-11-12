@@ -6,11 +6,24 @@
       </div>
     }
   } @else {
-    @for (collectionItem of collections(); track collectionItem.id) {
+    @for (tile of tiles(); track tile.collection.id) {
+      @let collectionItem = tile.collection;
       <a class="board-collection-card" [routerLink]="collectionRoute(collectionItem)">
         <span class="board-collection-card__art" aria-hidden="true">
-          <span class="material-symbols-outlined">collections_bookmark</span>
-          <i></i><i></i><i></i>
+          @if (tile.covers.length) {
+            <span class="board-collection-card__covers"
+              [class.board-collection-card__covers--split]="tile.covers.length === 2"
+              [class.board-collection-card__covers--mosaic]="tile.covers.length === 3">
+              @for (cover of tile.covers; track cover.id) {
+                <img [src]="cover.imageUrl" [attr.srcset]="cover.imageWebpSrcset || null"
+                  sizes="(max-width: 640px) 100vw, (max-width: 860px) 50vw, 33vw"
+                  alt="" loading="lazy" decoding="async" (error)="markCoverFailed(cover.imageUrl)" />
+              }
+            </span>
+          } @else {
+            <span class="material-symbols-outlined">collections_bookmark</span>
+            <i></i><i></i><i></i>
+          }
         </span>
         <span class="board-collection-card__body">
           <small i18n>Board collection</small>

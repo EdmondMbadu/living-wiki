@@ -1081,6 +1081,7 @@
         @if (activeGalleryTab() === 'collections') {
           <app-board-collection-list
             [collections]="filteredBoardCollections()"
+            [coverBoards]="boards()"
             [loading]="boardCollectionsLoading()"
             [error]="boardCollectionsError()"
             [canCreate]="canCreateCollection()"
