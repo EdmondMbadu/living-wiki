@@ -21,7 +21,7 @@ export type CardAnalyticsReport = {
   opens: number; outboundClicks: number; pendingVoice: number; conversations: AnalyticsConversation[];
 };
 export type AnalyticsTurn = { id: string; role: 'user' | 'assistant'; text: string; at: string; status: string };
-export type ConversationPage = { conversation: AnalyticsConversation; turns: AnalyticsTurn[]; nextCursor: string | null };
+export type ConversationPage = { conversation: AnalyticsConversation; turns: AnalyticsTurn[]; nextCursor: string | null; hasAudio?: boolean };
 
 @Injectable({ providedIn: 'root' })
 export class CardAnalyticsService {
@@ -37,6 +37,9 @@ export class CardAnalyticsService {
   }
   conversation(boardId: string, cardId: string, conversationId: string, cursor?: string | null): Promise<ConversationPage> {
     return this.call('getCardConversation', { boardId, cardId, conversationId, cursor });
+  }
+  eventConversationAudio(boardId: string, cardId: string, conversationId: string): Promise<{ audio: string; contentType: string }> {
+    return this.call('getEventConversationAudio', { boardId, cardId, conversationId });
   }
   endText(boardId:string,cardId:string,sessionId:string,anonymousVisitorId:string):Promise<{accepted:boolean}>{
     return this.call('endCardTextAnalytics',{boardId,cardId,sessionId,anonymousVisitorId});

@@ -1775,6 +1775,10 @@
     "source": "A generation job is already active",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
   },
+  "1504380850181972278": {
+    "source": "Voice calls are recorded. This avatar’s administrators can read transcripts and play recordings for up to 90 days.",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
   "1504835261176905216": {
     "source": "Previous picture",
     "file": "src/app/boards/boards.html"
@@ -2346,6 +2350,10 @@
   "1644120709521253186": {
     "source": "Choose a board to view its insights.",
     "file": "src/app/board-insights/board-insights.ts"
+  },
+  "1644917908931402117": {
+    "source": "Loading recording…",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "1644939832828151226": {
     "source": "Public data",
@@ -3531,6 +3539,10 @@
     "source": "Operational Flow",
     "file": "src/app/marketing/marketing.html"
   },
+  "2023420524415102431": {
+    "source": "Your event recap",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "2024244562720066554": {
     "source": "Create preview",
     "file": "src/app/boards/boards.ts"
@@ -4402,6 +4414,10 @@
   "2296910706858050590": {
     "source": "Snapshot generated {$INTERPOLATION} UTC. This report does not update automatically.",
     "file": "src/app/shared-analytics/shared-analytics.html"
+  },
+  "2298775162047355894": {
+    "source": "Include the itinerary I reviewed.",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "2299187798995800780": {
     "source": "Chat",
@@ -5635,6 +5651,10 @@
     "source": "Notifications | LivingWiki",
     "file": "src/app/app.routes.ts"
   },
+  "2645645925628184482": {
+    "source": "Start recorded call",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
   "2646320061781480959": {
     "source": "Card details were refreshed, but no matching song preview was found.",
     "file": "src/app/boards/boards.ts"
@@ -6555,6 +6575,10 @@
     "source": "Ask a question or tell Picamo what you would like to change. You can review any proposed action before it is saved.",
     "file": "src/app/kiwi/kiwi.html"
   },
+  "2945778165367870313": {
+    "source": "Listen to call",
+    "file": "src/app/card-analytics/card-analytics.html"
+  },
   "2946884778730469244": {
     "source": "Active accounts {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}",
     "file": "src/app/platform-analytics/picamo-analytics.html"
@@ -7355,6 +7379,10 @@
     "source": "Route is ready",
     "file": "src/app/boards/boards.ts"
   },
+  "3163898573236009573": {
+    "source": "Email yourself the highlights from your conversation.",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "3164641023049687472": {
     "source": "{$START_TAG_SPAN}location_on{$CLOSE_TAG_SPAN} Map pin ",
     "file": "src/app/business/business.html"
@@ -8050,6 +8078,10 @@
   "3347606266688731917": {
     "source": "The Mississippi River corridor between Baton Rouge and New Orleans carries some of the highest air-toxics cancer risk in America.",
     "file": "src/app/fence-line/fence-line.ts"
+  },
+  "3350258740857770454": {
+    "source": "The event email could not be sent.",
+    "file": "src/app/event-guide/event-guide-guest.ts"
   },
   "3351209217299739942": {
     "source": "Dismiss message",
@@ -10466,6 +10498,10 @@
   "4024505474875107352": {
     "source": "Making Philly Answer Card",
     "file": "src/app/shared-chat/shared-chat.ts"
+  },
+  "4030113340288138905": {
+    "source": "Use this address to send my event recap.",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "4031190280739566335": {
     "source": "Last updated",
@@ -15243,6 +15279,10 @@
     "source": "Your email address has been restored for this account.",
     "file": "src/app/auth-action/auth-action.ts"
   },
+  "5406381247583780559": {
+    "source": "You can email this itinerary with your recap when you finish the conversation.",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "5409041682831525075": {
     "source": "Talking card",
     "file": "src/app/platform-analytics/platform-analytics.html"
@@ -16035,10 +16075,6 @@
     "source": "Rename atlas",
     "file": "src/app/atlas-switcher/atlas-switcher.html"
   },
-  "5631985933332968332": {
-    "source": "That detail isn’t in the published event program. Check the official event information for updates.",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
-  },
   "563272627948836175": {
     "source": "Methods",
     "file": "src/app/profile/profile.html"
@@ -16150,10 +16186,6 @@
   "5661831613856753923": {
     "source": "Drop a card on {$INTERPOLATION}.",
     "file": "src/app/boards/boards.html"
-  },
-  "5662488818873852603": {
-    "source": "The exhibit floor is closed on this day.",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
   },
   "5662874745745812722": {
     "source": "Images required",
@@ -16702,6 +16734,10 @@
   "5801550010711717135": {
     "source": "{$INTERPOLATION} card{$INTERPOLATION_1} still need an image.",
     "file": "src/app/boards/boards.html"
+  },
+  "5801580602126966786": {
+    "source": "Call recording",
+    "file": "src/app/card-analytics/card-analytics.html"
   },
   "5803586852938802299": {
     "source": "Must-see sessions or exhibitors",
@@ -18387,6 +18423,10 @@
     "source": "No wikis match \"{$INTERPOLATION}\".",
     "file": "src/app/wiki-home/wiki-home.html"
   },
+  "6267215065275066046": {
+    "source": "Your recap email is on its way.",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "6267882550803651258": {
     "source": "Missing scripts",
     "file": "src/app/boards/boards.html"
@@ -18690,10 +18730,6 @@
   "6353018307824157180": {
     "source": "Your quiz is live for everyone who can view this board.",
     "file": "src/app/boards/boards.html"
-  },
-  "6355643881604818898": {
-    "source": "Choose the days you’ll attend and tell me what you’d like to see.",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
   },
   "6355877369916592480": {
     "source": "Example introduction language",
@@ -21395,10 +21431,6 @@
     "source": "Boston's sustainability, innovation, and civic data — universities, transit, climate resilience, healthcare, and the innovation economy.",
     "file": "src/app/city-atlas-templates.ts"
   },
-  "7148647811631825878": {
-    "source": "The itinerary could not be sent.",
-    "file": "src/app/event-guide/event-guide-guest.ts"
-  },
   "7150518038358635200": {
     "source": "e.g. Sunny the Flamingo",
     "file": "src/app/boards/studio-voice-designer.html"
@@ -22865,7 +22897,7 @@
   },
   "7584592456737873011": {
     "source": "Send recap",
-    "file": "src/app/chat/chat.ts"
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "7584970366915261963": {
     "source": "Board and report links",
@@ -24926,10 +24958,6 @@
   "8179832244095164530": {
     "source": "Current atlas",
     "file": "src/app/web-scraper/web-scraper.html"
-  },
-  "8180317343123878053": {
-    "source": "Listed as not exhibiting",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
   },
   "8180799168800036372": {
     "source": "Upgrade to add more",
@@ -27321,7 +27349,7 @@
   },
   "8906740077551154109": {
     "source": "Close conversation",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
   "8907436368118438345": {
     "source": "Choose cover photo",

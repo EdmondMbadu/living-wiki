@@ -93,13 +93,13 @@ async function actorBinding(request: Actor, board: Data, atlas: Data, includeInt
   return { actor_hash: hashAnalytics(uid ? `uid:${uid}` : `anonymous:${anonymous}`), visitor_hash: clientPattern.test(visitor)?hashAnalytics(visitor):'',
     internal:!!internal, platform_only:!clientPattern.test(visitor), owner_id:ownerId, team_id:teamId, owner_key:teamId?`team:${teamId}`:`user:${ownerId||'unknown'}`, board_title:board.title||'' };
 }
-export async function beginCardText(request: Actor, atlas: Data) {
+export async function beginCardText(request: Actor, atlas: Data, eventHistory = false) {
   if (!request.data.boardId || !request.data.cardId) return null;
   const boardId = String(request.data.boardId), cardId = String(request.data.cardId);
   const { board, card } = await analyticsTarget(boardId, cardId, request.auth?.uid);
   if (!isLinkReadableVisibility(board.visibility) && board.owner_user_id !== request.auth?.uid) throw new HttpsError('permission-denied', 'This board is not available.');
   if (card.conversation?.atlasId !== atlas.id || card.conversation?.provider !== 'atlas') throw new HttpsError('permission-denied', 'This avatar does not belong to this card.');
-  const actor = await actorBinding(request, board, atlas);
+  const actor = await actorBinding(request, board, atlas, eventHistory);
   if (!actor) return null;
   const sessionId = String(request.data.analyticsSessionId || '');
   const requestId = String(request.data.analyticsRequestId || '');
@@ -119,12 +119,15 @@ export async function beginCardText(request: Actor, atlas: Data) {
     const elapsed = previous ? Math.min(60, Math.max(0, (now.toMillis() - previous.last_activity_at.toMillis()) / 1000)) : 0;
     tx.set(ref, {
       ...actor, board_id: boardId, card_id: cardId, card_title:card.title||'', atlas_id: atlas.id, mode: 'text',
+      ...(eventHistory ? { event_history: true } : {}),
       ...(previous ? {} : { started_at: now, day: now.toDate().toISOString().slice(0,10), first_question: question.slice(0,1000), duration_kind: 'estimated' }),
       last_activity_at: now, status: 'active', questions: FieldValue.increment(1),
       duration_seconds: FieldValue.increment(elapsed), expires_at: expires(),
     }, { merge: true });
-    const rollup = questionRollup(boardId,cardId,now.toDate().toISOString().slice(0,10),question,atlas.id);
-    tx.set(rollup.ref, { ...rollup.data, count:FieldValue.increment(1) }, { merge:true });
+    if (!actor.internal && !actor.platform_only) {
+      const rollup = questionRollup(boardId,cardId,now.toDate().toISOString().slice(0,10),question,atlas.id);
+      tx.set(rollup.ref, { ...rollup.data, count:FieldValue.increment(1) }, { merge:true });
+    }
     tx.create(turn, { question, answer: null, status: 'pending', created_at: now, expires_at: expires() });
     return { threadId: previous?.thread_id || null, now };
   });
@@ -161,7 +164,7 @@ export const endCardTextAnalytics = onCall({ region:'us-central1', cors:true, ti
   return {accepted:true};
 });
 
-export async function issueCardVoice(request: Actor, atlas: Data, agentId: string, trusted?: { sessionId:string; board:Data; internal:boolean }): Promise<string | null> {
+export async function issueCardVoice(request: Actor, atlas: Data, agentId: string, trusted?: { sessionId:string; board:Data; internal:boolean }, eventHistory = false): Promise<string | null> {
   if (!request.data.boardId || !request.data.cardId) return null;
   const target = trusted ? { board:trusted.board, card:flattenAnalyticsCards(trusted.board.cards,trusted.internal).find(c=>c.id===request.data.cardId) } : await analyticsTarget(String(request.data.boardId), String(request.data.cardId), request.auth?.uid);
   const {board,card}=target;
@@ -172,6 +175,7 @@ export async function issueCardVoice(request: Actor, atlas: Data, agentId: strin
   if (!actor) return null;
   const nonce = trusted?.sessionId || `card_${randomUUID()}`;
   await jobs.doc(nonce).create({ ...actor, board_id: String(request.data.boardId), card_id: String(request.data.cardId), card_title:card.title||'', atlas_id: atlas.id, agent_id: agentId,
+    ...(eventHistory ? { event_history: true } : {}),
     day: new Date().toISOString().slice(0,10), issued_at: Timestamp.now(), next_sync_at: Timestamp.fromMillis(Date.now() + 30000), status: 'waiting', expires_at: expires(), attempts: 0 });
   return nonce;
 }
@@ -190,7 +194,7 @@ async function syncVoice(id: string, apiKey: string, verifiedDetails?: Data) {
     const started = Number(data.metadata?.start_time_unix_secs);
     if (!Number.isFinite(started) || Math.abs(started*1000 - job.issued_at.toMillis()) > 24*3600000) throw new Error('Invalid voice start time.');
     const start = Timestamp.fromMillis(started*1000), duration = typeof data.metadata?.call_duration_secs==='number'?data.metadata.call_duration_secs:NaN;
-    if (!job.internal && !job.platform_only) {
+    if (job.event_history || (!job.internal && !job.platform_only)) {
     const conversation = sessions.doc(id);
     // Provider turns are separate documents: long conversations are never silently truncated.
     const writer = db.bulkWriter();
@@ -202,6 +206,7 @@ async function syncVoice(id: string, apiKey: string, verifiedDetails?: Data) {
     await conversation.set({ board_id: job.board_id, card_id: job.card_id, atlas_id: job.atlas_id,
       owner_id:job.owner_id||'', team_id:job.team_id||'', owner_key:job.owner_key||'', board_title:job.board_title||'', card_title:job.card_title||'', provider_conversation_id:job.conversation_id,
       actor_hash: job.actor_hash, visitor_hash: job.visitor_hash, mode:'voice', started_at:start, day:start.toDate().toISOString().slice(0,10),
+      ...(job.event_history ? { event_history: true, internal: job.internal === true, has_audio: data.has_audio === true } : {}),
       last_activity_at: Timestamp.now(), status: data.status === 'done' ? 'completed' : 'interrupted',
       first_question: questions[0].message.slice(0,1000), questions: questions.length,
       duration_seconds: Number.isFinite(duration) && duration >= 0 ? duration : null, duration_kind:'recorded', expires_at: expires(),
@@ -214,7 +219,7 @@ async function syncVoice(id: string, apiKey: string, verifiedDetails?: Data) {
     }
     const orderedGroups = [...groups.values()].sort((a,b)=>a.ref.id.localeCompare(b.ref.id));
     // Durable chunk receipts prevent double counting on retries and stay below Firestore's write limit.
-    for (let offset=0; offset<orderedGroups.length; offset+=400) {
+    for (let offset=0; !job.internal && !job.platform_only && offset<orderedGroups.length; offset+=400) {
       const chunkId=String(offset/400);
       await db.runTransaction(async tx => {
         const latest=await tx.get(ref);
@@ -312,21 +317,94 @@ export const getCardAnalytics = onCall({ region:'us-central1', cors:true, timeou
   };
 });
 export const getCardConversation = onCall({ region:'us-central1', cors:true, timeoutSeconds:30 }, async request => {
+  const { ref, data, id } = await authorizedConversation(request);
+  let query = ref.collection('analytics_turns').orderBy('created_at').orderBy('__name__').limit(50);
+  const cursor = String(request.data.cursor || '');
+  if (cursor) { if (!idPattern.test(cursor)) throw new HttpsError('invalid-argument','Invalid page.'); const snapshot=await ref.collection('analytics_turns').doc(cursor).get(); if(!snapshot.exists) throw new HttpsError('invalid-argument','This page has expired.'); query=query.startAfter(snapshot); }
+  const page = await query.get();
+  return { conversation:serializedConversation(id,data), hasAudio: data.event_history === true && data.has_audio === true,
+    turns:page.docs.flatMap(d=>readAnalyticsTurn(data.mode, d.id, d.data())), nextCursor:page.size===50 ? page.docs.at(-1)!.id : null };
+});
+
+async function authorizedConversation(request: Actor) {
   const target = await authorized(request);
   if (!target.canReadTranscripts) throw new HttpsError('permission-denied','Only avatar administrators can read visitor transcripts.');
   const id = String(request.data.conversationId||'');
   if (!idPattern.test(id)) throw new HttpsError('invalid-argument','Choose a valid conversation.');
   const ref = sessions.doc(id), data = (await ref.get()).data();
   if (!data || data.expires_at?.toMillis() < Date.now() || data.board_id!==target.boardId || data.card_id!==target.cardId || data.atlas_id!==target.atlasId) throw new HttpsError('not-found','This conversation is not available for this card.');
-  let query = ref.collection('analytics_turns').orderBy('created_at').orderBy('__name__').limit(50);
-  const cursor = String(request.data.cursor || '');
-  if (cursor) { if (!idPattern.test(cursor)) throw new HttpsError('invalid-argument','Invalid page.'); const snapshot=await ref.collection('analytics_turns').doc(cursor).get(); if(!snapshot.exists) throw new HttpsError('invalid-argument','This page has expired.'); query=query.startAfter(snapshot); }
-  const page = await query.get();
-  return { conversation:serializedConversation(id,data), turns:page.docs.flatMap(d=>{
-    const t=d.data(), at=t.created_at.toDate().toISOString();
-    return data.mode==='text' ? [{id:`${d.id}-q`,role:'user',text:t.question,at,status:t.status}, ...(t.answer ? [{id:`${d.id}-a`,role:'assistant',text:t.answer,at:t.answered_at.toDate().toISOString(),status:t.status}] : [])] : [{id:d.id,role:t.role,text:t.text,at,status:'answered'}];
-  }), nextCursor:page.size===50 ? page.docs.at(-1)!.id : null };
+  return { ref, data, id };
+}
+
+function readAnalyticsTurn(mode: string, id: string, t: Data) {
+  const at = t.created_at.toDate().toISOString();
+  return mode === 'text'
+    ? [{ id: `${id}-q`, role: 'user', text: t.question, at, status: t.status },
+        ...(t.answer ? [{ id: `${id}-a`, role: 'assistant', text: t.answer, at: t.answered_at.toDate().toISOString(), status: t.status }] : [])]
+    : [{ id, role: t.role, text: t.text, at, status: 'answered' }];
+}
+
+export const getEventConversationAudio = onCall({ region:'us-central1', cors:true, timeoutSeconds:45, memory:'256MiB', secrets:[key] }, async request => {
+  const { data } = await authorizedConversation(request);
+  const providerId = data.provider_conversation_id;
+  if (data.event_history !== true || data.mode !== 'voice' || data.has_audio !== true || !idPattern.test(providerId || '')) {
+    throw new HttpsError('not-found', 'This conversation has no available recording.');
+  }
+  let response: Response;
+  try {
+    response = await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${encodeURIComponent(providerId)}/audio`,
+      { headers: { 'xi-api-key': key.value() }, signal: AbortSignal.timeout(30000) });
+  } catch {
+    throw new HttpsError('unavailable', 'The recording could not be loaded. Try again.');
+  }
+  if (response.status === 404) throw new HttpsError('not-found', 'This recording is no longer available.');
+  if (!response.ok || !response.headers.get('content-type')?.startsWith('audio/')) {
+    throw new HttpsError('unavailable', 'The recording could not be loaded. Try again.');
+  }
+  const maxBytes = 12 * 1024 * 1024;
+  if (Number(response.headers.get('content-length')) > maxBytes) throw new HttpsError('resource-exhausted', 'This recording is too large to play here.');
+  const audio = Buffer.from(await response.arrayBuffer());
+  if (audio.length > maxBytes) throw new HttpsError('resource-exhausted', 'This recording is too large to play here.');
+  return { audio: audio.toString('base64'), contentType: 'audio/mpeg' };
 });
+
+export async function readEventRecapTurns(request: Actor, atlasId: string) {
+  const voice = Array.isArray(request.data.voiceSessions) ? request.data.voiceSessions : [];
+  const typed = Array.isArray(request.data.textSessions) ? request.data.textSessions : [];
+  if (!voice.length && !typed.length) return [];
+  if (voice.length + typed.length > 16 || voice.some(id => typeof id !== 'string' || !/^card_[a-f0-9-]{36}$/.test(id))
+    || typed.some(id => typeof id !== 'string' || !clientPattern.test(id))) {
+    throw new HttpsError('invalid-argument', 'Invalid event conversation.');
+  }
+  const anonymous = String(request.data.anonymousVisitorId || '');
+  if (!request.auth?.uid && !clientPattern.test(anonymous)) throw new HttpsError('unauthenticated', 'A visitor session is required.');
+  const actor = hashAnalytics(request.auth?.uid ? `uid:${request.auth.uid}` : `anonymous:${anonymous}`);
+  const { boardId, cardId } = request.data;
+  const matches = (data: Data | undefined) => data?.event_history === true && data.actor_hash === actor
+    && data.board_id === boardId && data.card_id === cardId && data.atlas_id === atlasId
+    && data.expires_at?.toMillis() > Date.now();
+  const read = async (id: string, mode: 'voice' | 'text') => {
+    const ref = sessions.doc(id);
+    if (mode === 'voice') {
+      const job = (await jobs.doc(id).get()).data();
+      if (!matches(job)) throw new HttpsError('permission-denied', 'This conversation is not available.');
+      if (job?.outcome === 'no_visitor_message') return [];
+      if (job?.status !== 'done') throw new HttpsError('failed-precondition', 'Your call recap is still being prepared. Try again in a moment.');
+    }
+    const data = (await ref.get()).data();
+    if (!matches(data) || data?.mode !== mode) throw new HttpsError('permission-denied', 'This conversation is not available.');
+    const page = await ref.collection('analytics_turns').orderBy('created_at', 'desc').orderBy('__name__', 'desc').limit(30).get();
+    return page.docs.flatMap(doc => readAnalyticsTurn(mode, doc.id, doc.data()));
+  };
+  const groups = await Promise.all([
+    ...[...new Set<string>(voice)].map(id => read(id, 'voice')),
+    ...[...new Set<string>(typed)].map(id => read(hashAnalytics(`${boardId}:${cardId}:${actor}:${id}`), 'text')),
+  ]);
+  return groups.flat().sort((a, b) => a.at.localeCompare(b.at)).slice(-24).map(turn => ({
+    role: turn.role === 'user' ? 'user' as const : 'assistant' as const,
+    text: String(turn.text || '').trim().slice(0, 2000),
+  })).filter(turn => turn.text);
+}
 
 async function providerDetails(conversationId: string, apiKey: string): Promise<Data> {
   const response=await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${encodeURIComponent(conversationId)}`,
@@ -349,8 +427,9 @@ export const reconcileBoardAnalytics = onCall({region:'us-central1',cors:true,ti
   for(const doc of page.docs){
     if(Date.now()>deadline)break;processed++;lastId=doc.id;
     const job=doc.data();
-    if(await enrichPlatformVoiceIdentity(doc.id,job)){recovered++;continue;}
+    if(!job.event_history && await enrichPlatformVoiceIdentity(doc.id,job)){recovered++;continue;}
     if(job.outcome==='no_visitor_message')continue;
+    if(job.event_history && job.status==='done'){recovered++;continue;}
     try{
       let conversationId=job.conversation_id;
       if(!conversationId){
@@ -365,6 +444,12 @@ export const reconcileBoardAnalytics = onCall({region:'us-central1',cors:true,ti
       const started=Number(details.metadata?.start_time_unix_secs)*1000;
       if(!Number.isFinite(started)||Math.abs(started-job.issued_at.toMillis())>86400000)throw new Error('Invalid provider timestamp.');
       if(!['done','failed'].includes(details.status)){unavailable++;continue;}
+      if (job.event_history) {
+        await doc.ref.update({ conversation_id: conversationId });
+        await syncVoice(doc.id, key.value(), details);
+        recovered++;
+        continue;
+      }
       await recordPlatformVerifiedVoice(doc.id,job,details);
       await doc.ref.update({conversation_id:conversationId,status:'done',synced_at:Timestamp.now(),next_sync_at:FieldValue.delete(),outcome:(details.transcript||[]).some(hasPlatformVisitorMessage)?'conversation':'no_visitor_message'});
       recovered++;

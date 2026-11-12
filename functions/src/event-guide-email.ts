@@ -20,19 +20,48 @@ const escape = (value: string) => value.replace(/[&<>"']/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 })[character]!);
 
+export type EventRecapTurn = { role: 'user' | 'assistant'; text: string };
+
+const recapLabels = {
+  en: ['Your event recap', 'From your conversation', 'You', 'Guide'],
+  fr: ['Votre récapitulatif', 'Votre conversation', 'Vous', 'Guide'],
+  ja: ['イベントの振り返り', '会話の内容', 'あなた', 'ガイド'],
+  pt: ['Seu resumo do evento', 'Da sua conversa', 'Você', 'Guia'],
+  es: ['Tu resumen del evento', 'De tu conversación', 'Tú', 'Guía'],
+  de: ['Dein Veranstaltungsrückblick', 'Aus deinem Gespräch', 'Du', 'Guide'],
+  zh: ['你的活动回顾', '对话内容', '你', '活动助手'],
+  it: ['Il riepilogo del tuo evento', 'Dalla tua conversazione', 'Tu', 'Guida'],
+  ko: ['행사 대화 요약', '대화 내용', '나', '가이드'],
+  ar: ['ملخص الفعالية', 'من محادثتك', 'أنت', 'الدليل'],
+  hi: ['आपके इवेंट का सारांश', 'आपकी बातचीत से', 'आप', 'गाइड'],
+  ru: ['Итоги разговора о мероприятии', 'Из вашего разговора', 'Вы', 'Гид'],
+} satisfies Record<ContentLanguage, string[]>;
+
 export function renderEventEmail(
-  settings: EventGuideSettings, plan: Pick<EventPlan, 'days'>, language: ContentLanguage,
+  settings: EventGuideSettings, plan: Pick<EventPlan, 'days'> | null, language: ContentLanguage,
   sponsor: { name: string; message: string } | null, translatedNotes: ReadonlyMap<string, string> = new Map(),
+  transcript: readonly EventRecapTurn[] = [],
 ) {
   const locale = contentLanguageDetails(language);
   const [itinerary, dayOff, lunch, exhibits, changes, info, privacy, presentedBy] = messages[language];
-  const subject = `${itinerary} · ${settings.name}`;
+  const [recap, conversation, visitor, guide] = recapLabels[language];
+  const title = transcript.length ? recap : itinerary;
+  const subject = `${title} · ${settings.name}`;
   const text = [subject, settings.timeZone];
   const link = (label: string, value: string) => {
     const url = eventHttpsUrl(value);
     return url ? `<a style="color:#3659ce" href="${escape(url)}">${escape(label)}</a>` : escape(label);
   };
-  const days = plan.days.map((day) => {
+  const highlights = transcript.length ? (() => {
+    text.push('', conversation);
+    return `<h2 style="font-size:20px;margin:24px 0 8px">${escape(conversation)}</h2>` + transcript.map(turn => {
+      const speaker = turn.role === 'user' ? visitor : guide;
+      text.push(`${speaker}: ${turn.text}`);
+      return `<p style="margin:8px 0 14px"><strong>${escape(speaker)}</strong><br><span dir="auto">${escape(turn.text).replace(/\r?\n/g, '<br>')}</span></p>`;
+    }).join('');
+  })() : '';
+  if (plan && transcript.length) text.push('', itinerary);
+  const days = (plan?.days ?? []).map((day) => {
     const date = eventDisplayDate(day.date, language);
     text.push('', date);
     if (!day.attending) text.push(dayOff);
@@ -50,8 +79,8 @@ export function renderEventEmail(
   const html = `<!doctype html><html lang="${locale.id}" dir="${locale.direction}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escape(subject)}</title></head><body style="margin:0;background:#0b1020;color:#101830;font:16px/1.5 Arial,sans-serif">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:20px 12px">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px"><tr><td dir="${locale.direction}" style="padding:22px;background:#15254a;color:#ffffff;border-radius:12px 12px 0 0">
-    ${sponsor ? `<small>${escape(presentedBy)} ${escape(sponsor.name)}</small>` : ''}<h1 style="margin:8px 0;font:32px Georgia,serif">${escape(itinerary)}</h1><p style="margin:0">${escape(settings.name)} · ${escape(settings.timeZone)}</p></td></tr>
-    <tr><td dir="${locale.direction}" style="padding:8px 22px 22px;background:#ffffff">${days}<p>${escape(changes)}</p>
+    ${sponsor ? `<small>${escape(presentedBy)} ${escape(sponsor.name)}</small>` : ''}<h1 style="margin:8px 0;font:32px Georgia,serif">${escape(title)}</h1><p style="margin:0">${escape(settings.name)} · ${escape(settings.timeZone)}</p></td></tr>
+    <tr><td dir="${locale.direction}" style="padding:8px 22px 22px;background:#ffffff">${highlights}${plan && transcript.length ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}${days}<p>${escape(changes)}</p>
     ${settings.informationUrl ? `<p>${link(info, settings.informationUrl)}</p>` : ''}</td></tr>
     <tr><td dir="${locale.direction}" style="padding:18px 22px;background:#e9eef9;border-radius:0 0 12px 12px">
     ${sponsor ? `<p>${escape(sponsor.message)}</p>` : ''}${settings.privacyUrl ? link(privacy, settings.privacyUrl) : ''}</td></tr></table></td></tr></table></body></html>`;

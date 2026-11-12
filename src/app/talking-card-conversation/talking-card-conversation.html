@@ -49,7 +49,8 @@
 
     @if (eventGuide(); as event) {
       <div class="talking-chat__event" [attr.dir]="contentDirection()" [attr.lang]="contentLocale()">
-        <app-event-guide-guest [boardId]="boardId()" [cardId]="cardId()" [settings]="event" [language]="activeLanguage()">
+        <app-event-guide-guest [boardId]="boardId()" [cardId]="cardId()" [settings]="event" [language]="activeLanguage()"
+          [recapMode]="conversationStage() === 'recap'" [conversationActive]="eventHasConversation()" [recap]="eventRecapSessions()">
           <div class="talking-chat__event-tools">
             <label>
               <span class="material-symbols-outlined" aria-hidden="true">language</span>
@@ -65,11 +66,17 @@
             }
           </div>
         </app-event-guide-guest>
+        @if (conversationStage() === 'conversation' && conversationMode() === 'text') {
+          <p class="talking-chat__analytics-note" i18n>Conversations may be reviewed by this avatar’s administrators.</p>
+        }
+        @if (conversationStage() === 'recap') {
+          <button type="button" class="talking-chat__recap-skip" [disabled]="eventGuest()?.sending()" (click)="dismissRecap()" i18n>Close conversation</button>
+        }
       </div>
     }
     @if (!eventGuide() && conversationStage() === 'conversation') {<p class="talking-chat__analytics-note" i18n>Conversations may be reviewed by this avatar’s administrators.</p>}
 
-    @if(conversationStage()!=='conversation'&&analyticsNotice()){<p class="talking-chat__recap-privacy" role="status">{{analyticsNotice()}}</p>}
+    @if(!eventGuide()&&conversationStage()!=='conversation'&&analyticsNotice()){<p class="talking-chat__recap-privacy" role="status">{{analyticsNotice()}}</p>}
     @if (conversationStage() === 'closing') {
       <div class="talking-chat__sponsor-closing" aria-live="polite">
         <span class="material-symbols-outlined" aria-hidden="true">handshake</span><small>Thank you for the conversation</small><h3>Acknowledging our sponsor</h3>
@@ -78,7 +85,7 @@
         <button type="button" class="talking-chat__sponsor-continue" (click)="continueToRecap()">Skip to recap <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></button>
       </div>
     }
-    @if (conversationStage() === 'recap') {
+    @if (conversationStage() === 'recap' && !eventGuide()) {
       <div class="talking-chat__recap" aria-live="polite">
         <div class="talking-chat__recap-intro">
           <span class="talking-chat__recap-icon material-symbols-outlined" aria-hidden="true">mark_email_read</span>
@@ -241,7 +248,12 @@
 
             <div class="talking-chat__voice-details">
               <strong class="talking-chat__voice-label">{{ voiceStateLabel() }}</strong>
-              @if (!eventGuide() || !errorMessage()) {
+              @if (eventGuide() && !eventVoiceConsent()) {
+                <p class="talking-chat__recording-notice" role="note" i18n>Voice calls are recorded. This avatar’s administrators can read transcripts and play recordings for up to 90 days.</p>
+                @if (eventGuide()?.privacyUrl; as privacyUrl) {
+                  <a [href]="privacyUrl" target="_blank" rel="noopener noreferrer" i18n>Privacy notice</a>
+                }
+              } @else if (!eventGuide() || !errorMessage()) {
                 <span class="talking-chat__voice-subtitle">{{ voiceStateSubtitle() }}</span>
               }
 
@@ -277,6 +289,9 @@
                     <span class="material-symbols-outlined">{{ voiceMuted() ? 'mic_off' : 'mic' }}</span>
                   </button>
                   <button type="button" class="talking-chat__end-call" (click)="finishConversation('ended')" i18n><span class="material-symbols-outlined">call_end</span>End</button>
+                } @else if (eventGuide() && !eventVoiceConsent()) {
+                  <button type="button" class="talking-chat__retry-voice" (click)="confirmEventRecording()" i18n>Start recorded call</button>
+                  <button type="button" class="talking-chat__voice-text-fallback" (click)="setConversationMode('text')" i18n>Continue in text</button>
                 } @else if (voiceStatus() !== 'connecting' && (!eventGuide() || !creditPrompt())) {
                   <button type="button" class="talking-chat__retry-voice" (click)="startVoice()"><span class="material-symbols-outlined">mic</span>{{ voiceStatus() === 'error' ? templateText.message10 : templateText.message11 }}</button>
                   @if (eventGuide() && voiceStatus() === 'error') {

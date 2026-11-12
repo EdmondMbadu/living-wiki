@@ -665,6 +665,7 @@ export class ChatService {
   async createElevenLabsVoiceSession(options: {
     analyticsVisitorId?: string;
     experience?: 'talking-card' | 'event-talking-card';
+    eventVoiceHistoryVersion?: number;
     voiceCreditMode?: 'paid';
     boardId?: string | null;
     cardId?: string | null;
@@ -686,6 +687,7 @@ export class ChatService {
       {
         analyticsVisitorId?: string;
         experience?: 'talking-card' | 'event-talking-card';
+        eventVoiceHistoryVersion?: number;
         voiceCreditMode?: 'paid';
         boardId?: string | null;
         cardId?: string | null;
@@ -705,6 +707,7 @@ export class ChatService {
     const { data } = await createVoiceSession({
       analyticsVisitorId: options.analyticsVisitorId,
       experience: options.experience,
+      ...(options.eventVoiceHistoryVersion === undefined ? {} : { eventVoiceHistoryVersion: options.eventVoiceHistoryVersion }),
       voiceCreditMode: options.voiceCreditMode,
       boardId: options.boardId ?? null,
       cardId: options.cardId ?? null,

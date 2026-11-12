@@ -10,6 +10,17 @@ import type { ContentLanguage } from '../../../functions/src/content-language';
 import { getFirebaseFunctions } from '../firebase.client';
 
 export interface EventCardTarget { boardId: string; cardId: string }
+export interface EventRecapSessions {
+  voiceSessions: readonly string[];
+  textSessions: readonly string[];
+  anonymousVisitorId: string | null;
+}
+export interface EventTextSession {
+  analyticsSessionId: string;
+  analyticsRequestId: string;
+  analyticsVisitorId: string;
+  anonymousVisitorId: string | null;
+}
 
 @Injectable({ providedIn: 'root' })
 export class EventGuideService {
@@ -38,16 +49,22 @@ export class EventGuideService {
     return this.call<EventDataset>('readEventGuide', { ...target, includeRecords: true });
   }
 
-  ask(target: EventCardTarget, question: string, language: ContentLanguage) {
-    return this.call<EventLookup>('askEventGuide', { ...target, question, language });
+  ask(target: EventCardTarget, question: string, language: ContentLanguage, session?: EventTextSession) {
+    return this.call<EventLookup & { answer?: string; openItinerary?: boolean; historySaved?: boolean }>(
+      'askEventGuide', { ...target, question, language, ...session },
+    );
   }
 
   plan(target: EventCardTarget, preferences: EventPreferences, language: ContentLanguage) {
     return this.call<EventPlan>('createEventGuideItinerary', { ...target, preferences, language });
   }
 
-  send(target: EventCardTarget, plan: Pick<EventPlan, 'id' | 'key'>, email: string, language: ContentLanguage) {
-    return this.call<{ sent: boolean }>('sendEventGuideItinerary', { ...target, id: plan.id, key: plan.key, email, language, consent: true });
+  send(target: EventCardTarget, plan: Pick<EventPlan, 'id' | 'key'> | null, email: string, language: ContentLanguage,
+    recap?: EventRecapSessions & { requestId: string }) {
+    return this.call<{ sent: boolean }>('sendEventGuideItinerary', {
+      ...target, ...(plan ? { id: plan.id, key: plan.key } : {}),
+      ...(recap ? { ...recap, recap: true } : {}), email, language, consent: true,
+    });
   }
 
   private async call<T>(name: string, request: Record<string, unknown>): Promise<T> {

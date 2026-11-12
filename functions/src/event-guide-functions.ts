@@ -15,6 +15,9 @@ import { buildEventPlan, eventPreferences, lookupEvent } from './event-guide-pla
 import cesDemo from './event-guide-ces2027.json';
 import { renderEventEmail } from './event-guide-email';
 import { normalizeSponsorshipChoice, resolveSponsorship } from './talking-card-sponsorship';
+import { beginCardText, finishCardText, readEventRecapTurns } from './card-analytics';
+import { loadTalkingCardAtlas } from './talking-card-access';
+import { eventGuideReply, isEventItineraryQuestion } from './event-guide-replies';
 
 const sendgridApiKey = defineSecret('SENDGRID_API_KEY');
 const region = 'us-central1';
@@ -215,10 +218,28 @@ export const askEventGuide = onCall({ region, secrets: [geminiApiKey] }, async (
   const question = eventText(request.data?.question, 400);
   if (!question) throw new HttpsError('invalid-argument', 'Enter a question about the event.');
   const boardId = safeId(request.data?.boardId);
-  const context = await eventCardContext(boardId, safeId(request.data?.cardId), request.auth?.uid);
+  const cardId = safeId(request.data?.cardId);
+  const context = await eventCardContext(boardId, cardId, request.auth?.uid);
   const language = languageFor(request.data?.language);
   if (language !== 'en') await quota('translate-question', `${boardId}:${request.rawRequest.ip}`, 300, 60 * 60_000);
-  return lookupEvent(context.settings, await getDataset(context.settings, context.owner), await englishEventQuery(question, language), language);
+  const isTextConversation = request.data?.analyticsSessionId !== undefined;
+  let analytics: Awaited<ReturnType<typeof beginCardText>> = null;
+  if (isTextConversation) {
+    const atlas = await loadTalkingCardAtlas(context.atlasId, request.auth?.uid ?? null, { boardId, cardId });
+    analytics = await beginCardText(request, atlas, true);
+  }
+  try {
+    const openItinerary = isTextConversation && isEventItineraryQuestion(question);
+    const lookup = lookupEvent(context.settings, await getDataset(context.settings, context.owner),
+      openItinerary ? '' : await englishEventQuery(question, language), language);
+    if (!isTextConversation) return lookup;
+    const answer = eventGuideReply(lookup, language, openItinerary);
+    await finishCardText(analytics, { answer });
+    return { ...lookup, answer, openItinerary, historySaved: !!analytics };
+  } catch (error) {
+    await finishCardText(analytics).catch(() => undefined);
+    throw error;
+  }
 });
 
 export const createEventGuideItinerary = onCall({ region, secrets: [geminiApiKey] }, async (request) => {
@@ -267,26 +288,41 @@ export const sendEventGuideItinerary = onCall({ region, secrets: [sendgridApiKey
   const id = safeId(request.data?.id);
   const key = eventText(request.data?.key, 64);
   const email = typeof request.data?.email === 'string' ? request.data.email.trim() : '';
-  if (!id || !/^[a-f0-9]{64}$/.test(key) || email.length > 254 || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email)
+  const recapRequested = request.data?.recap === true;
+  const requestId = safeId(request.data?.requestId);
+  const hasPlan = request.data?.id !== undefined || request.data?.key !== undefined;
+  if ((hasPlan ? !id || !/^[a-f0-9]{64}$/.test(key) : !recapRequested || !requestId)
+    || email.length > 254 || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email)
     || request.data?.consent !== true) {
     throw new HttpsError('invalid-argument', 'Confirm a valid email address before sending.');
   }
-  await eventCardContext(boardId, cardId, request.auth?.uid);
-  const ref = db.collection('event_guide_itineraries').doc(id);
-  const recipientHash = hash(`${key}:${email.toLowerCase()}`);
+  const context = await eventCardContext(boardId, cardId, request.auth?.uid);
+  const receiptKey = hasPlan ? key : hash(JSON.stringify([boardId, cardId, request.auth?.uid ?? request.data?.anonymousVisitorId, requestId]));
+  const ref = db.collection('event_guide_itineraries').doc(hasPlan ? id : `recap_${receiptKey}`);
+  const recipientHash = hash(`${receiptKey}:${email.toLowerCase()}`);
   const check = (record: FirebaseFirestore.DocumentData | undefined) => {
-    if (!record || record['keyHash'] !== hash(key) || record['boardId'] !== boardId || record['cardId'] !== cardId
+    if (!record || record['keyHash'] !== hash(receiptKey) || record['boardId'] !== boardId || record['cardId'] !== cardId
       || !(record['expiresAt'] instanceof Timestamp) || record['expiresAt'].toMillis() <= Date.now()) {
       throw new HttpsError('not-found', 'This itinerary has expired. Build it again to send a new copy.');
     }
     return record;
   };
-  const ready = check((await ref.get()).data());
+  const initial = (await ref.get()).data();
+  const ready = hasPlan || initial ? check(initial) : {
+    boardId, cardId, keyHash: hash(receiptKey), settings: context.settings, sponsor: context.sponsor,
+    expiresAt: Timestamp.fromMillis(Date.now() + planDurationMs),
+  } as FirebaseFirestore.DocumentData;
   if (ready['sendState'] === 'sent' && ready['recipientHash'] === recipientHash) return { sent: true };
-  if (!sendgridApiKey.value()) throw new HttpsError('failed-precondition', 'Email delivery is unavailable. Your itinerary is still open in the card.');
+  if (ready['sendState'] === 'sent') throw new HttpsError('failed-precondition', 'This event email has already been sent.');
   await quota('email', `${boardId}:${request.rawRequest.ip}`, 180, 60 * 60_000);
+  const transcript = recapRequested ? await readEventRecapTurns(request, context.atlasId) : [];
+  if (recapRequested && (!transcript.some(turn => turn.role === 'user') || !transcript.some(turn => turn.role === 'assistant'))) {
+    throw new HttpsError('failed-precondition', 'A recap is available once your conversation has a question and an answer.');
+  }
+  if (!sendgridApiKey.value()) throw new HttpsError('failed-precondition', 'Email delivery is unavailable. Your itinerary is still open in the card.');
   const reserved = await db.runTransaction(async (transaction) => {
-    const record = check((await transaction.get(ref)).data());
+    const snapshot = (await transaction.get(ref)).data();
+    const record = hasPlan || snapshot ? check(snapshot) : ready;
     if (record['sendState'] === 'sent' && record['recipientHash'] === recipientHash) return false;
     if (record['sendState'] === 'sent') throw new HttpsError('failed-precondition', 'This itinerary has already been emailed.');
     if (record['sendState'] === 'sending') {
@@ -296,16 +332,16 @@ export const sendEventGuideItinerary = onCall({ region, secrets: [sendgridApiKey
       throw new HttpsError('failed-precondition', 'Delivery could not be confirmed. Check your inbox. Your itinerary is still open in the card.');
     }
     if (record['sendState'] === 'unknown') throw new HttpsError('failed-precondition', 'Delivery could not be confirmed. Check your inbox. Your itinerary is still open in the card.');
-    transaction.update(ref, { sendState: 'sending', recipientHash, sendStartedAt: Date.now() });
+    transaction.set(ref, { ...record, sendState: 'sending', recipientHash, sendStartedAt: Date.now() });
     return true;
   });
   if (!reserved) return { sent: true };
   let submitted = false;
   try {
-    const plan = ready['plan'] as EventPlan;
+    const plan = hasPlan ? ready['plan'] as EventPlan : null;
     const language = languageFor(request.data?.language ?? ready['language']);
-    const notes = await translatedNotes(plan, language);
-    const message = renderEventEmail(ready['settings'], plan, language, ready['sponsor'], notes);
+    const notes = plan ? await translatedNotes(plan, language) : new Map<string, string>();
+    const message = renderEventEmail(ready['settings'], plan, language, ready['sponsor'], notes, transcript);
     sgMail.setApiKey(sendgridApiKey.value());
     submitted = true;
     await sgMail.send({
@@ -318,10 +354,10 @@ export const sendEventGuideItinerary = onCall({ region, secrets: [sendgridApiKey
     const status = Number(eventRecord(error)['code']);
     const safeRetry = !submitted || status >= 400 && status < 500;
     await ref.update({ sendState: safeRetry ? 'retry' : 'unknown' });
-    logger.warn('Event itinerary send failed', { status: Number.isFinite(status) ? status : null, submitted });
+    logger.warn('Event email send failed', { status: Number.isFinite(status) ? status : null, submitted });
     throw new HttpsError('unavailable', safeRetry
-      ? 'The itinerary email could not be sent. You can try again.'
-      : 'Delivery could not be confirmed. Check your inbox. Your itinerary is still open in the card.');
+      ? 'The event email could not be sent. You can try again.'
+      : 'Delivery could not be confirmed. Check your inbox.');
   }
   await ref.update({ sendState: 'sent' });
   return { sent: true };

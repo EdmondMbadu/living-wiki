@@ -1,13 +1,21 @@
 <div class="event-guide event-guide__guest">
-  <ng-content />
-  <button class="event-guide__itinerary-toggle" type="button" [attr.aria-expanded]="expanded()" (click)="expanded.set(!expanded())">
+  @if (!recapMode()) {
+    <ng-content />
+    <button class="event-guide__itinerary-toggle" type="button" [attr.aria-expanded]="expanded()" (click)="expanded.set(!expanded())">
     <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
     @if (expanded()) { <span i18n>Hide itinerary</span> }
     @else if (plan()) { <span i18n>View itinerary</span> }
     @else { <span i18n>Build my itinerary</span> }
-  </button>
-  @if (expanded()) {
-    <section class="event-guide__guest-panel" aria-label="Event itinerary" i18n-aria-label>
+    </button>
+  }
+  @if (expanded() || recapMode()) {
+    <section class="event-guide__guest-panel" [class.event-guide__guest-panel--recap]="recapMode()" aria-label="Event itinerary" i18n-aria-label>
+      @if (recapMode()) {
+        <header class="event-guide__recap-heading">
+          <h3 i18n>Your event recap</h3>
+          @if (recap()) { <p i18n>Email yourself the highlights from your conversation.</p> }
+        </header>
+      } @else {
       <fieldset [disabled]="busy()">
         <h3 i18n>Which days are you attending?</h3>
         <div class="event-guide__days">
@@ -28,6 +36,7 @@
           @if (plan()) { <span i18n>Rebuild itinerary</span> } @else { <span i18n>Generate itinerary</span> }
         </button>
       </fieldset>
+      }
       @if (busy()) { <p role="status" i18n>Working on your itinerary…</p> }
       @if (error()) { <p role="alert">{{ error() }}</p> }
       @if (plan(); as itinerary) {
@@ -63,16 +72,28 @@
           }
           @for (warning of itinerary.warnings; track $index) { <p>{{ warning }}</p> }
         </section>
-        @if (sent()) {
-          <p role="status" i18n>Your itinerary email is on its way.</p>
-        } @else {
+      }
+      @if (sent()) {
+        @if (recapMode() && recap()) { <p role="status" i18n>Your recap email is on its way.</p> }
+        @else { <p role="status" i18n>Your itinerary email is on its way.</p> }
+      } @else if (recapMode() || (plan() && !conversationActive())) {
           <form class="event-guide__source" (submit)="send($event)">
+            @if (recapMode() && recap() && plan() && !itinerarySent()) {
+              <label class="event-guide__check"><input type="checkbox" name="includeItinerary" [disabled]="busy()" [ngModel]="includeItinerary()" (ngModelChange)="includeItinerary.set($event); consent.set(false)"><span i18n>Include the itinerary I reviewed.</span></label>
+            }
             <label><span i18n>Email address</span><input type="email" name="eventEmail" autocomplete="email" required maxlength="254" [disabled]="busy()" [ngModel]="email()" (ngModelChange)="email.set($event); consent.set(false)"></label>
-            <label class="event-guide__check"><input type="checkbox" name="eventConsent" required [disabled]="busy()" [ngModel]="consent()" (ngModelChange)="consent.set($event)"><span i18n>Use this address to send me this itinerary.</span></label>
+            <label class="event-guide__check"><input type="checkbox" name="eventConsent" required [disabled]="busy()" [ngModel]="consent()" (ngModelChange)="consent.set($event)">
+              @if (recapMode() && recap()) { <span i18n>Use this address to send my event recap.</span> }
+              @else { <span i18n>Use this address to send me this itinerary.</span> }
+            </label>
             @if (settings().privacyUrl) { <a [href]="settings().privacyUrl" target="_blank" rel="noopener noreferrer" i18n>Privacy notice</a> }
-            <button type="submit" [disabled]="busy() || !email().trim() || !consent()" i18n>Send itinerary</button>
+            <button type="submit" [disabled]="busy() || !email().trim() || !consent()">
+              @if (recapMode() && recap()) { <span i18n>Send recap</span> }
+              @else { <span i18n>Send itinerary</span> }
+            </button>
           </form>
-        }
+      } @else if (plan() && conversationActive()) {
+        <p i18n>You can email this itinerary with your recap when you finish the conversation.</p>
       }
     </section>
   }

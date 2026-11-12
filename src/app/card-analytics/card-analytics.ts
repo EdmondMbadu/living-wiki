@@ -44,6 +44,10 @@ export class CardAnalyticsComponent {
   readonly selected = signal<AnalyticsConversation | null>(null); readonly turns = signal<AnalyticsTurn[]>([]);
   readonly detailLoading = signal(false); readonly detailError = signal(''); readonly cursor = signal<string | null>(null);
   readonly downloading = signal(false);
+  readonly hasAudio = signal(false);
+  readonly audioLoading = signal(false);
+  readonly audioError = signal('');
+  readonly audioUrl = signal('');
   readonly rangeOptions = [{ days:7,label:$localize`7 days` },{ days:30,label:$localize`30 days` },{ days:90,label:$localize`90 days` }];
   readonly modeOptions = [{value:'all',label:$localize`All`},{value:'text',label:$localize`Text`},{value:'voice',label:$localize`Voice`}];
   readonly boardPath = computed(() => ['/boards', this.report()?.board.customSlug || this.boardId()]);
@@ -65,7 +69,7 @@ export class CardAnalyticsComponent {
   readonly chatRate = computed(() => { const r = this.report(); return r?.visitors ? (r.visitorsWhoChatted/r.visitors)*100 : 0; });
   readonly verifiedSeconds = computed(()=>{
     const totals=this.report()?.activity?.totals;
-    if(totals)return totals.voice>0&&totals.unknownDurations===totals.voice&&totals.seconds===0?null:totals.seconds;
+    if(totals)return totals.unknownDurations===totals.voice&&totals.seconds===0?null:totals.seconds;
     const voice=this.report()?.conversations.filter(c=>c.mode==='voice'&&c.durationSeconds!==null)??[];
     return voice.length?voice.reduce((sum,c)=>sum+c.durationSeconds!,0):null;
   });
@@ -82,7 +86,9 @@ export class CardAnalyticsComponent {
   readonly needsAttention = computed(()=>this.report()?.conversations.filter(c=>c.knowledgeGaps || c.failedAnswers) ?? []);
   readonly duration = analyticsDuration;
   private loadSequence=0; private detailSequence=0;
+  private audioSequence = 0;
   constructor() {
+    this.destroyRef.onDestroy(() => this.clearAudio());
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(p=>{
       this.closeDetails(); this.boardId.set(p.get('boardId')||''); this.cardId.set(p.get('cardId')||'');
       this.report.set(null); void this.load();
@@ -103,6 +109,7 @@ export class CardAnalyticsComponent {
   status(value:string):string{return ({active:$localize`Active`,completed:$localize`Completed`,interrupted:$localize`Interrupted`})[value]||value;}
   async openDetails(row:AnalyticsConversation):Promise<void>{
     if(!this.report()?.canReadTranscripts || row.canReadTranscript===false)return;
+    this.clearAudio();
     this.selected.set(row);this.turns.set([]);this.cursor.set(null);this.drawer()?.nativeElement.showModal();await this.loadDetails();
   }
   async loadDetails(more=false):Promise<void>{
@@ -111,10 +118,37 @@ export class CardAnalyticsComponent {
     try{const result=await this.api.conversation(this.boardId(),this.cardId(),selected.id,more?this.cursor():null);
       if(sequence!==this.detailSequence)return;
       this.selected.set(result.conversation);this.turns.update(old=>more?[...old,...result.turns]:result.turns);this.cursor.set(result.nextCursor);
+      this.hasAudio.set(result.hasAudio === true);
     }catch(e){if(sequence===this.detailSequence)this.detailError.set(this.friendlyError(e));}
     finally{if(sequence===this.detailSequence)this.detailLoading.set(false);}
   }
-  closeDetails():void{++this.detailSequence;this.drawer()?.nativeElement.close();this.selected.set(null);this.detailLoading.set(false);this.detailError.set('');}
+  closeDetails():void{++this.detailSequence;this.clearAudio();this.drawer()?.nativeElement.close();this.selected.set(null);this.detailLoading.set(false);this.detailError.set('');}
+  async loadAudio(): Promise<void> {
+    const row = this.selected();
+    if (!row || !this.hasAudio() || this.audioLoading() || this.audioUrl()) return;
+    const sequence = ++this.audioSequence;
+    this.audioLoading.set(true);
+    this.audioError.set('');
+    try {
+      const { audio, contentType } = await this.api.eventConversationAudio(this.boardId(), this.cardId(), row.id);
+      if (sequence !== this.audioSequence) return;
+      const bytes = Uint8Array.from(atob(audio), character => character.charCodeAt(0));
+      this.audioUrl.set(URL.createObjectURL(new Blob([bytes], { type: contentType })));
+    } catch (error) {
+      if (sequence === this.audioSequence) this.audioError.set(this.friendlyError(error));
+    } finally {
+      if (sequence === this.audioSequence) this.audioLoading.set(false);
+    }
+  }
+  private clearAudio(): void {
+    ++this.audioSequence;
+    const url = this.audioUrl();
+    if (url) URL.revokeObjectURL(url);
+    this.audioUrl.set('');
+    this.hasAudio.set(false);
+    this.audioLoading.set(false);
+    this.audioError.set('');
+  }
   downloadCsv():void{
     const rows=this.rows(); const headings=[$localize`Activity audience`,$localize`Internal`,$localize`Started (UTC)`,$localize`Visitor`,$localize`Mode`,$localize`Duration (seconds)`,$localize`Duration type`,$localize`Questions`,$localize`Status`,$localize`First question`];
     this.download(`card-analytics-${this.cardId()}-${this.days()}days.csv`,analyticsCsv([headings,...rows.map(c=>[this.audience(),c.internal===true,c.startedAt,c.visitor,c.mode,c.durationSeconds,c.durationKind,c.questions,c.status,c.firstQuestion])]),'text/csv;charset=utf-8');

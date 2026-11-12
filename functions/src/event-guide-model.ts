@@ -1,5 +1,7 @@
 import { contentLanguageDetails, type ContentLanguage } from './content-language';
 
+export const EVENT_VOICE_HISTORY_VERSION = 1;
+
 export interface EventGuideSettings {
   datasetId: string;
   name: string;

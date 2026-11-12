@@ -7,6 +7,7 @@ import { AuthService } from '../auth.service';
 import { BoardAnalyticsService } from '../board-analytics.service';
 import { CardAnalyticsService } from '../card-analytics.service';
 import { ChatService } from '../chat.service';
+import { EventGuideService } from '../event-guide/event-guide.service';
 import { VoiceCreditsService, type VoiceCreditPolicy } from '../voice-credits.service';
 import {
   buildTalkingCardVoiceContext,
@@ -55,6 +56,7 @@ describe('TalkingCardConversationComponent', () => {
     sendVoiceConversationSummary: jasmine.createSpy('sendVoiceConversationSummary'),
     submitError: jasmine.createSpy('submitError').and.returnValue(null),
   };
+  const events = { ask: jasmine.createSpy('ask'), send: jasmine.createSpy('send') };
   const signedIn = signal(false);
   const userEmail = signal('');
   const userName = signal('');
@@ -81,6 +83,8 @@ describe('TalkingCardConversationComponent', () => {
     chatService.sendVoiceConversationSummary.calls.reset();
     chatService.submitError.calls.reset();
     chatService.submitError.and.returnValue(null);
+    events.ask.calls.reset();
+    events.send.calls.reset();
     authService.toFriendlyError.calls.reset();
     signedIn.set(false);
     userEmail.set('');
@@ -100,6 +104,7 @@ describe('TalkingCardConversationComponent', () => {
         { provide: AtlasService, useValue: atlasService },
         { provide: AuthService, useValue: authService },
         { provide: ChatService, useValue: chatService },
+        { provide: EventGuideService, useValue: events },
         { provide: VoiceCreditsService, useValue: voiceCredits },
       ],
     }).compileComponents();
@@ -119,6 +124,7 @@ describe('TalkingCardConversationComponent', () => {
     const button: HTMLButtonElement = dialog.querySelector('.event-guide__guest > button')!;
     expect(dialog.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Voice');
     expect(startVoice).toHaveBeenCalledTimes(1);
+    expect(dialog.textContent).toContain('Voice calls are recorded');
     expect(button.textContent).toContain('Build my itinerary');
 
     await fixture.componentInstance.setConversationMode('text');
@@ -139,16 +145,17 @@ describe('TalkingCardConversationComponent', () => {
     chatService.createElevenLabsVoiceSession.and.rejectWith(
       Object.assign(new Error('Set ELEVENLABS_AGENT_ID'), { code: 'functions/failed-precondition' }),
     );
-    const startVoice = spyOn(fixture.componentInstance, 'startVoice').and.callThrough();
     fixture.componentInstance.draft.set('What’s on today?');
     fixture.detectChanges();
     await fixture.whenStable();
-    await startVoice.calls.mostRecent().returnValue;
+    expect(chatService.createElevenLabsVoiceSession).not.toHaveBeenCalled();
+    spyOn(Storage.prototype, 'setItem').and.stub();
+    await fixture.componentInstance.confirmEventRecording();
     fixture.detectChanges();
 
     const dialog: HTMLElement = fixture.nativeElement.querySelector('.talking-chat');
     expect(chatService.createElevenLabsVoiceSession).toHaveBeenCalledOnceWith(jasmine.objectContaining({
-      experience: 'event-talking-card', boardId: 'event-board', cardId: 'event-card',
+      experience: 'event-talking-card', boardId: 'event-board', cardId: 'event-card', eventVoiceHistoryVersion: 1,
     }));
     expect(dialog.querySelector('[role="alert"]')?.textContent).toContain('You can still ask questions in text');
     expect(dialog.textContent).not.toContain('ELEVENLABS_AGENT_ID');
@@ -158,6 +165,41 @@ describe('TalkingCardConversationComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(dialog.querySelector('textarea')?.value).toBe('What’s on today?');
+  });
+
+  it('offers one confirmed email after an event conversation and includes the reviewed itinerary when selected', async () => {
+    const fixture = TestBed.createComponent(TalkingCardConversationComponent);
+    const component = fixture.componentInstance;
+    fixture.componentRef.setInput('atlasId', atlas.id);
+    fixture.componentRef.setInput('boardId', 'event-board');
+    fixture.componentRef.setInput('cardId', 'event-card');
+    fixture.componentRef.setInput('eventGuide', eventGuide);
+    events.ask.and.resolveTo({ answer: 'The exhibit floor opens at 10 a.m.', historySaved: true });
+    events.send.and.resolveTo({ sent: true });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await component.setConversationMode('text');
+    component.draft.set('When does the exhibit floor open?');
+    await component.send();
+    const guest = component.eventGuest()!;
+    const itinerary = { id: 'plan-id', key: 'plan-key', days: [], warnings: [] };
+    guest.plan.set(itinerary);
+    await component.finishConversation('closed');
+    fixture.detectChanges();
+    expect(component.conversationStage()).toBe('recap');
+    expect(guest.emailPlan()).toBeNull();
+    guest.email.set('guest@example.org');
+    guest.includeItinerary.set(true);
+    await guest.send(new Event('submit'));
+    expect(events.send).not.toHaveBeenCalled();
+    guest.consent.set(true);
+    await guest.send(new Event('submit'));
+    await guest.send(new Event('submit'));
+    expect(events.send).toHaveBeenCalledOnceWith(
+      { boardId: 'event-board', cardId: 'event-card' }, itinerary, 'guest@example.org', 'en',
+      jasmine.objectContaining({ textSessions: [jasmine.any(String)], voiceSessions: [] }),
+    );
+    expect(fixture.nativeElement.textContent).not.toContain('Which days are you attending?');
   });
 
   it('shows the sponsored allowance before starting a public voice session', async () => {

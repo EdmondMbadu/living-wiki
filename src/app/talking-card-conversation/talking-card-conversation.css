@@ -513,6 +513,10 @@
 .has-event-guide .talking-chat__event-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .has-event-guide .talking-chat__avatar i { display: none; }
 .talking-chat__event { min-width: 0; padding: 0 var(--event-gutter) .75rem; }
+.talking-chat.has-event-guide.has-recap { grid-template-rows: auto minmax(0, 1fr); }
+.has-event-guide.has-recap .talking-chat__event { overflow-y: auto; }
+.talking-chat__recording-notice { max-width: 25rem; margin: .5rem 0; color: var(--muted); font-size: .83rem; line-height: 1.5; }
+.talking-chat__recording-notice + a { font-size: .76rem; }
 .talking-chat__event-tools { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: .35rem; }
 .talking-chat__event-tools label,
 .talking-chat__event-tools a {

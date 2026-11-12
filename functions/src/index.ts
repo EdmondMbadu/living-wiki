@@ -128,7 +128,7 @@ export {
 } from './custom-public-routes';
 export { getBoardInsights, recordBoardAnalyticsEvent } from './board-analytics';
 export { manageAnalyticsReportShares, getSharedAnalyticsReport } from './analytics-report-sharing';
-export { reconcileBoardAnalytics, getCardAnalytics, getCardConversation, endCardTextAnalytics, syncCardVoiceAnalytics, recoverCardVoiceAnalytics } from './card-analytics';
+export { reconcileBoardAnalytics, getCardAnalytics, getCardConversation, getEventConversationAudio, endCardTextAnalytics, syncCardVoiceAnalytics, recoverCardVoiceAnalytics } from './card-analytics';
 import { beginCardText, finishCardText, issueCardVoice } from './card-analytics';
 export { getPlatformAnalytics, getPlatformInventory, startPlatformAnalyticsSync, platformAnalyticsWorker, reconcilePlatformAnalytics, syncPlatformBoardInventory, syncPlatformTeamInventory, syncPlatformConversationUsage, syncPlatformTeamUsage, syncPlatformVoiceStatus, syncPlatformInternalTextUsage } from './platform-analytics';
 import { withPlatformTextUsage } from './platform-analytics';
@@ -141,6 +141,7 @@ export { getTeamInsights, submitTeamContact, manageTeamContacts, getTeamConversa
 import { issueTeamVoiceSession, teamVoiceBinding, teamWorkingBoard } from './team-voice';
 import { loadTalkingCardAtlas } from './talking-card-access';
 import { isEventVoiceCard } from './event-guide-functions';
+import { EVENT_VOICE_HISTORY_VERSION } from './event-guide-model';
 export { previewEventGuideImport, loadCesEventGuideDemo, saveEventGuideDataset, readEventGuide, askEventGuide, createEventGuideItinerary, sendEventGuideItinerary } from './event-guide-functions';
 import { fulfillVoiceCreditPurchase, refundVoiceCreditPurchase, reserveBoardVoice, voiceCreditsBoardHost, voiceCreditsEnabled } from './voice-credits';
 import { analyticsTarget } from './card-analytics';
@@ -366,6 +367,7 @@ const sendgridApiKey = defineSecret('SENDGRID_API_KEY');
 const elevenLabsApiKey = defineSecret('ELEVENLABS_API_KEY');
 const elevenLabsAgentId = defineString('ELEVENLABS_AGENT_ID');
 const elevenLabsEventAgentId = defineString('ELEVENLABS_EVENT_AGENT_ID', { default: '' });
+const elevenLabsRecordedEventAgentId = defineString('ELEVENLABS_RECORDED_EVENT_AGENT_ID', { default: '' });
 const elevenLabsTtsVoiceOverridesEnabled = defineString('ELEVENLABS_TTS_VOICE_OVERRIDES_ENABLED', {
   default: 'false',
 });
@@ -16711,12 +16713,18 @@ export const createElevenLabsVoiceSession = onCall(
     }
 
     const eventVoice = request.data?.experience === 'event-talking-card';
+    const recordingNotice = request.data?.eventVoiceHistoryVersion;
+    const recordEvent = eventVoice && recordingNotice === EVENT_VOICE_HISTORY_VERSION;
+    if (eventVoice && recordingNotice != null && !recordEvent) {
+      throw new HttpsError('failed-precondition', 'Review the recording notice before starting event voice.');
+    }
     if (eventVoice && !await isEventVoiceCard(voiceBoardId, voiceCardId, uid ?? undefined, atlasId)) {
       throw new HttpsError('failed-precondition', 'This Event Talking Card is unavailable.');
     }
-    const agentId = (eventVoice ? elevenLabsEventAgentId.value() : elevenLabsAgentId.value()).trim();
+    const agentSetting = recordEvent ? 'ELEVENLABS_RECORDED_EVENT_AGENT_ID' : eventVoice ? 'ELEVENLABS_EVENT_AGENT_ID' : 'ELEVENLABS_AGENT_ID';
+    const agentId = (recordEvent ? elevenLabsRecordedEventAgentId.value() : eventVoice ? elevenLabsEventAgentId.value() : elevenLabsAgentId.value()).trim();
     if (eventVoice && !/^agent_[a-z0-9]+$/i.test(agentId)) {
-      logger.error('Event voice requires a valid ELEVENLABS_EVENT_AGENT_ID.', { configured: !!agentId });
+      logger.error('Event voice requires a valid agent ID.', { agentSetting, configured: !!agentId });
       throw eventVoiceAgentUnavailable();
     }
     if (!agentId) {
@@ -16809,7 +16817,7 @@ export const createElevenLabsVoiceSession = onCall(
     if (!response.ok) {
       const errorText = await response.text().catch(() => '');
       logger.warn('ElevenLabs voice session credential request failed', {
-        agentSetting: eventVoice ? 'ELEVENLABS_EVENT_AGENT_ID' : 'ELEVENLABS_AGENT_ID',
+        agentSetting,
         status: response.status,
         connectionType: requestedConnectionType,
         body: errorText.slice(0, 500),
@@ -16833,12 +16841,12 @@ export const createElevenLabsVoiceSession = onCall(
       throw new HttpsError('internal', 'ElevenLabs did not return a conversation credential.');
     }
     if (listingVoice) visitorId = await issueTeamVoiceSession(listingVoice, requestedTeamBoardId, agentId, visitorId, textValue(request.data?.cardId,180)||'');
-    if (!eventVoice && atlasRecord && atlasId && request.data?.boardId && request.data?.cardId) {
+    if ((!eventVoice || recordEvent) && atlasRecord && atlasId && request.data?.boardId && request.data?.cardId) {
       try {
-        const analyticsSession = await issueCardVoice(request, { ...atlasRecord, id: atlasId }, agentId, listingVoice ? {sessionId:visitorId,board:listingVoice.board,internal:listingVoice.internal} : undefined);
+        const analyticsSession = await issueCardVoice(request, { ...atlasRecord, id: atlasId }, agentId, listingVoice ? {sessionId:visitorId,board:listingVoice.board,internal:listingVoice.internal} : undefined, recordEvent);
         if (analyticsSession) visitorId = analyticsSession;
       } catch (error) {
-        if (error instanceof HttpsError) throw error;
+        if (error instanceof HttpsError || recordEvent) throw error;
         logger.error('Voice analytics unavailable; continuing the visitor conversation', { error: String(error) });
       }
     }

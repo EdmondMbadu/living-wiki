@@ -136,7 +136,8 @@ export async function readAnalyticsActivity(boardId: string, range: ReturnType<t
       status: data.mode === 'text' && Date.now() - (data.last_activity_at?.toMillis?.() || 0) > 30 * 60000 ? 'completed' : data.status,
       visitorKey: data.visitor_hash || prior?.visitorKey || '', participantKey: data.actor_hash || prior?.participantKey || data.visitor_hash || '',
       firstQuestion: data.first_question || '', atlasId: data.atlas_id || '',
-      transcriptId: !prior?.internal && !data.internal && !job?.internal && (!data.expires_at || data.expires_at.toMillis() >= Date.now()) ? doc.id : null,
+      transcriptId: (data.event_history === true || (!prior?.internal && !data.internal && !job?.internal))
+        && (!data.expires_at || data.expires_at.toMillis() >= Date.now()) ? doc.id : null,
       verifiedAt: prior?.verifiedAt || iso(data.last_activity_at),
     };
     // Verified ledger timing remains authoritative if an older raw record is incomplete.

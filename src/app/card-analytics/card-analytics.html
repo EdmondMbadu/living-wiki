@@ -65,7 +65,20 @@
     <header class="drawer-heading"><div><span class="eyebrow" i18n>Private conversation</span><h2 id="conversation-title">{{selected()?.visitor}}</h2></div><button type="button" class="icon-button" (click)="closeDetails()" aria-label="Close transcript" i18n-aria-label autofocus><span class="material-symbols-outlined" aria-hidden="true">close</span></button></header>
     @if(selected();as c){<div class="conversation-meta"><span>{{c.startedAt | date:'medium':'UTC'}} UTC</span><span>{{label(c.mode)}} · {{duration(c.durationSeconds)}} @if(c.durationKind==='estimated'){<span i18n>(estimated)</span>}</span><span>{{status(c.status)}} · <span i18n>{{c.questions}} questions</span></span></div><button class="download-transcript" type="button" [disabled]="downloading()" (click)="downloadTranscript()"><span class="material-symbols-outlined" aria-hidden="true">download</span><span i18n>Download transcript</span></button>}
     @if(detailError()){<div class="analytics-error" role="alert"><span>{{detailError()}}</span><button type="button" (click)="loadDetails(!!turns().length)" i18n>Try again</button></div>}
-    <div class="transcript">@for(turn of turns();track turn.id){<article class="transcript-message" [class.visitor-message]="turn.role==='user'"><header><strong>{{turn.role==='user' ? selected()?.visitor : report()?.card?.title}}</strong><time>{{turn.at | date:'HH:mm:ss':'UTC'}} UTC</time></header><p>{{turn.text}}</p>@if(turn.status==='failed'){<small class="failed" i18n>The avatar’s answer was not completed.</small>}@if(turn.role==='user'){<a [routerLink]="qaPath()" [queryParams]="{question:turn.text}" i18n>Test this question in QA →</a>}</article>}@empty{ @if(!detailLoading() && !detailError()){<p i18n>No transcript is available for this conversation.</p>} }</div>
+    @if (hasAudio()) {
+      <section class="conversation-audio" aria-label="Call recording" i18n-aria-label>
+        @if (audioUrl(); as url) {
+          <audio [src]="url" controls preload="metadata" aria-label="Call recording" i18n-aria-label></audio>
+        } @else {
+          <button type="button" class="load-more" [disabled]="audioLoading()" (click)="loadAudio()">
+            @if (audioLoading()) { <span i18n>Loading recording…</span> }
+            @else { <span i18n>Listen to call</span> }
+          </button>
+        }
+        @if (audioError()) { <p role="alert">{{ audioError() }}</p> }
+      </section>
+    }
+    <div class="transcript">@for(turn of turns();track turn.id){<article class="transcript-message" [class.visitor-message]="turn.role==='user'"><header><strong>{{turn.role==='user' ? selected()?.visitor : report()?.card?.title}}</strong><time>{{turn.at | date:'HH:mm:ss':'UTC'}} UTC</time></header><p dir="auto">{{turn.text}}</p>@if(turn.status==='failed'){<small class="failed" i18n>The avatar’s answer was not completed.</small>}@if(turn.role==='user'){<a [routerLink]="qaPath()" [queryParams]="{question:turn.text}" i18n>Test this question in QA →</a>}</article>}@empty{ @if(!detailLoading() && !detailError()){<p i18n>No transcript is available for this conversation.</p>} }</div>
     @if(detailLoading()){<p role="status" i18n>Loading transcript…</p>}@else if(cursor()){<button class="load-more" type="button" (click)="loadDetails(true)" i18n>Load more messages</button>}
   </div>
 </dialog>

@@ -4,6 +4,10 @@ In a personal board, choose **New card → Event Talking Card**. Add the event d
 
 Set exhibit floor hours for any days that the program upload leaves unspecified. Save the card, then use the card’s **Share** action to download its QR code from a public or unlisted board. Add `&lang=ja` to a card link to open the guide with Japanese selected. Guests can choose a language in the guide. Email stays optional and uses the on-screen address confirmation.
 
+After a voice or text conversation, guests can email themselves excerpts from the conversation. If there is an itinerary, they can review it and include it in that same email. Guests who use the itinerary planner by itself can still email their confirmed plan.
+
+Open **Card analytics → Conversations** to see verified voice duration and read or download the full transcript. Use **Internal** to find organizer test calls. Avatar administrators can also play recordings where available. Callers confirm the recording notice before starting voice. Transcripts and recordings are available for up to 90 days.
+
 ## File layouts
 
 - **Markdown, CSV, and Excel** work best with header columns such as `Date`, `Title`, `Start`, `End`, `Location`, `Venue`, `Topics`, `Note`, `Access`, and `URL`. Use ISO dates and 24-hour times for portable imports. Use the worksheet picker or column mapping if the headers differ.
@@ -17,9 +21,9 @@ Each file can be up to 6 MB with up to 1,000 rows. The published dataset is capp
 
 Deploy the Event Guide callable functions, `createElevenLabsVoiceSession`, the Firestore index and TTL configuration, and Hosting together. The event callables use the existing Firebase `GEMINI_API_KEY` and `SENDGRID_API_KEY` secrets. The itinerary email uses the existing LivingWiki sender and inline HTML styling adapted from the supplied CES example.
 
-Set the Firebase Functions parameter `ELEVENLABS_EVENT_AGENT_ID` to a dedicated ElevenLabs agent ID. Enable authenticated sessions and overrides for first message, agent language, and TTS voice. Add presets for English, French, Japanese, Brazilian Portuguese, Spanish, German, Simplified Chinese (Mandarin), Italian, Korean, Arabic, Hindi, and Russian. Configure a greeting for each non-English preset. Enable the [Detect language system tool](https://elevenlabs.io/docs/eleven-agents/customization/tools/system-tools/language-detection) so guests can change languages during a call. Disable provider transcript retention or configure it according to the approved event privacy terms.
+Set `ELEVENLABS_RECORDED_EVENT_AGENT_ID` to a dedicated ElevenLabs agent with recording enabled, zero retention mode disabled, and 90-day retention. Set `ELEVENLABS_EVENT_AGENT_ID` to the separate event agent with recording disabled for older clients. Both agents need authenticated sessions and overrides for first message, agent language, and TTS voice. Add presets for English, French, Japanese, Brazilian Portuguese, Spanish, German, Simplified Chinese (Mandarin), Italian, Korean, Arabic, Hindi, and Russian. Configure a greeting for each non-English preset. Enable the [Detect language system tool](https://elevenlabs.io/docs/eleven-agents/customization/tools/system-tools/language-detection) so guests can change languages during a call.
 
-The ID starts with `agent_` and must be accessible to the ElevenLabs API key bound to Firebase. A card’s selected voice is configured separately. If the card shows **Voice unavailable**, check the deployed `ELEVENLABS_EVENT_AGENT_ID` and the `createElevenLabsVoiceSession` logs. After correcting the parameter, redeploy that callable. Event voice requires the agent configuration below so it can look up the event program and open an itinerary during the call.
+Each ID starts with `agent_` and must be accessible to the ElevenLabs API key bound to Firebase. A card’s selected voice is configured separately. If the card shows **Voice unavailable**, check the deployed agent IDs and the `createElevenLabsVoiceSession` logs. Event voice requires the agent configuration below so it can look up the event program and open an itinerary during the call.
 
 Give the agent this system prompt and set `wiki_context_instruction` as a dynamic variable. The app supplies the selected avatar persona, event dates, and locale at session start.
 
