@@ -311,35 +311,45 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     return null;
   });
 
-  readonly eventAvatarIssue = computed<EventEditorIssue | null>(() => {
+  readonly eventAvatarIssues = computed(() => {
+    const issues: EventEditorIssue[] = [];
     if (this.mode() === 'existing' && !this.selectedAtlas()) {
-      return this.isEditing()
+      issues.push(this.isEditing()
         ? { message: $localize`The Talking Card could not be loaded for editing.`, target: 'event-avatar-heading' }
-        : { message: $localize`Select an avatar or choose “Create a new avatar”.`, target: 'talking-avatar-search' };
+        : { message: $localize`Select an avatar or choose “Create a new avatar”.`, target: 'talking-avatar-search' });
     }
     if ((this.isEditing() || this.mode() === 'new') && !this.name().trim()) {
-      return { message: $localize`Enter the avatar’s name.`, target: 'event-avatar-name', section: 'card' };
+      issues.push({ message: $localize`Enter the avatar’s name.`, target: 'event-avatar-name', section: 'card' });
     }
     if (this.mode() === 'new' && !this.personaPrompt().trim()) {
-      return { message: $localize`Add instructions for how the avatar should speak and answer questions.`, target: 'event-avatar-prompt' };
+      issues.push({ message: $localize`Add instructions for how the avatar should speak and answer questions.`, target: 'event-avatar-prompt' });
     }
     if (!this.openingMessage().trim()) {
-      return { message: $localize`Enter an opening message.`, target: 'event-opening-message', section: 'card' };
+      issues.push({ message: $localize`Enter an opening message.`, target: 'event-opening-message', section: 'card' });
     }
-    const actionIndex = this.actions().findIndex(action => !action.label.trim() || !normalizeTalkingCardActionUrl(action.url));
-    if (actionIndex >= 0) {
-      const missingLabel = !this.actions()[actionIndex].label.trim();
-      return {
-        message: missingLabel ? $localize`Give each action a button label.` : $localize`Each action needs a secure public HTTPS link.`,
-        target: `event-action-${missingLabel ? 'label' : 'link'}-${actionIndex}`,
-        section: 'actions',
-      };
-    }
+    this.actions().forEach((action, index) => {
+      if (!action.label.trim()) issues.push({ message: $localize`Give each action a button label.`, target: `event-action-label-${index}`, section: 'actions' });
+      if (!normalizeTalkingCardActionUrl(action.url)) issues.push({ message: $localize`Each action needs a secure public HTTPS link.`, target: `event-action-link-${index}`, section: 'actions' });
+    });
     if (!this.sponsorValid()) {
-      return { message: $localize`Complete the sponsor’s name and message or choose Off.`, target: this.sponsorName().trim() ? 'talking-sponsor-message' : 'talking-sponsor-name', section: 'sponsorship' };
+      const message = $localize`Complete the sponsor’s name and message or choose Off.`;
+      const name = this.sponsorName().trim();
+      if (!name || name.length > 120) issues.push({ message, target: 'talking-sponsor-name', section: 'sponsorship' });
+      if (!completeSponsorMessage(this.sponsorMessage()) || this.sponsorMessage().trim().length > 500) {
+        issues.push({ message, target: 'talking-sponsor-message', section: 'sponsorship' });
+      }
     }
-    return null;
+    return issues;
   });
+  readonly eventAvatarIssue = computed(() => this.eventAvatarIssues()[0] ?? null);
+  readonly eventAvatarErrors = computed(() => this.isEventSetup()
+    ? Object.fromEntries(this.eventAvatarIssues().map(({ target, message }) => [target, message]))
+    : {});
+
+  showEventSponsorship(): void {
+    if (this.isEditing()) this.setEditorSection('sponsorship');
+    this.focusEventField(this.eventAvatarIssues().find(issue => issue.section === 'sponsorship')?.target || 'sponsor-settings-title');
+  }
 
   readonly eventBusyMessage = computed(() => {
     if (this.eventImporting()) return $localize`Reading event records…`;
@@ -690,6 +700,14 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
 
   selectExistingAtlas(atlasId: string): void {
     this.stopVoicePreview();
+    if (this.isEventSetup() && !this.isEditing()) {
+      const preview = this.imagePreviewUrl();
+      if (preview.startsWith('blob:')) URL.revokeObjectURL(preview);
+      this.imageProcessingRun++;
+      this.imageProcessing.set(false);
+      this.imageFile.set(null);
+      this.uploadedImageUrl.set('');
+    }
     this.selectedAtlasId.set(atlasId);
     const atlas = this.availableAtlases().find((candidate) => candidate.id === atlasId);
     if (!atlas) return;
@@ -833,6 +851,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     this.stopVoicePreview();
     this.sponsorPreviewError.set('');
     this.sponsorMode.set(enabled ? 'custom' : 'off');
+    if (enabled && this.isEventSetup()) this.focusEventField('talking-sponsor-name');
   }
 
   updateSponsorMessage(value: string): void {
@@ -1171,7 +1190,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       let subtitle = this.isEditing() || this.isRealEstateSetup()
         ? this.role().trim()
         : atlas?.chat_guide?.label?.trim() || atlas?.description || this.role().trim();
-      let imageUrl = this.isEditing() || this.isRealEstateSetup()
+      let imageUrl = this.isEditing() || this.isRealEstateSetup() || this.isEventSetup()
         ? this.uploadedImageUrl() || this.imagePreviewUrl()
         : atlas?.chat_guide?.image_url?.trim() || atlas?.logo_url?.trim() || atlas?.hero_url?.trim() || '';
       const rawActions = this.actions();
@@ -1253,7 +1272,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
         }
       } else if (atlas) {
         const imageFile = this.imageFile();
-        if ((this.isEditing() || this.isRealEstateSetup()) && imageFile && !this.uploadedImageUrl()) {
+        if ((this.isEditing() || this.isRealEstateSetup() || this.isEventSetup()) && imageFile && !this.uploadedImageUrl()) {
           this.saveStage.set('Uploading optimized portrait…');
           imageUrl = await this.atlasService.uploadTalkingCardAvatarImage(atlas.id, imageFile);
           this.uploadedImageUrl.set(imageUrl);

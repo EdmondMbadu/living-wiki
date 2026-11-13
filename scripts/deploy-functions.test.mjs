@@ -34,9 +34,10 @@ test('recovers just the failed targets reported in the deployment log', () => {
   const log = `functions: failed to update function projects/project/locations/us-central1/functions/function1
 - Error Failed to update function function0 in region us-central1
 - Error Failed to update function function1 in region us-central1
+- Error Failed to set invoker function function3 in region us-central1
 ✔ functions[function2(us-central1)] Successful update operation.`;
   const plan = deploymentPlan(['--failed-log=deploy.log'], available, () => log);
-  assert.deepEqual(plan.batches, [['function1', 'function0']]);
+  assert.deepEqual(plan.batches, [['function1', 'function0', 'function3']]);
   assert.throws(() => deploymentPlan(['--failed-log=deploy.log'], available, () => 'Deploy complete!'));
 });
 

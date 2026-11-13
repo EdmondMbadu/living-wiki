@@ -295,7 +295,80 @@
 .talking-editor__event-heading { margin: 0; font-size: 1.1rem; }
 .talking-editor__event-help { margin: 0; color: var(--muted); font-size: .85rem; }
 .talking-editor__event-status { margin-block: 0; line-height: 1.4; }
-.talking-editor__event-status.is-error { color: #b42318; }
+.talking-editor--event { --event-error: var(--danger-text, #b42318); }
+.talking-editor__event-status.is-error,
+.talking-editor--event .talking-editor__inline-error,
+.talking-editor--event .needs-attention,
+.talking-editor--event .needs-attention small { color: var(--event-error); }
+.talking-editor--event :is(input, textarea)[aria-invalid="true"] {
+  border-color: var(--event-error);
+  background: color-mix(in srgb, var(--event-error) 5%, var(--surface));
+}
+.talking-editor--event .talking-editor__sponsorship {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+}
+.talking-editor--event .talking-editor__sponsorship.needs-attention,
+.talking-editor--event .talking-editor__event-sponsor-link.needs-attention { border-color: var(--event-error); }
+.talking-editor--event .talking-editor__sponsor-options button:last-child:not(.is-active) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.talking-editor__event-sponsor-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .45rem;
+  min-height: 2.65rem;
+  padding: .45rem .75rem;
+  border: 1px solid var(--line);
+  border-radius: .7rem;
+  color: var(--text);
+  background: var(--soft-fill);
+  font: inherit;
+  font-size: .82rem;
+  text-align: start;
+  cursor: pointer;
+}
+.talking-editor__event-sponsor-link .material-symbols-outlined { font-size: 1.1rem; }
+.talking-editor__event-sponsor-link .material-symbols-outlined:last-child { margin-inline-start: auto; }
+.talking-editor label.talking-editor__event-portrait {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  padding: .7rem .9rem;
+  border: 1px dashed var(--line);
+  border-radius: 1rem;
+  background: var(--soft-fill);
+  cursor: pointer;
+}
+.talking-editor__event-portrait:hover, .talking-editor__event-portrait:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.talking-editor__event-portrait > div { display: grid; gap: .2rem; }
+.talking-editor__event-portrait strong { font-size: .88rem; }
+.talking-editor__event-portrait-circle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+.talking-editor__event-portrait-circle img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.talking-editor__event-portrait-camera {
+  position: absolute;
+  inset: auto -.14rem -.14rem auto;
+  padding: .25rem;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--soft-fill);
+  font-size: .9rem;
+}
+.talking-editor__event-portrait input[type=file] { position: absolute; inset: 0; height: 100%; opacity: 0; cursor: inherit; }
 .talking-editor--event .talking-editor__footer { padding-block: .7rem; align-items: center; }
 .talking-editor--event .talking-editor__footer button { min-height: 2.5rem; padding-inline: .85rem; font-size: .84rem; }
 .talking-editor--event .talking-editor__footer .material-symbols-outlined { font-size: 1.05rem; }

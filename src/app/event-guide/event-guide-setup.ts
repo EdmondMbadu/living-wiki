@@ -40,6 +40,7 @@ export class EventGuideSetup implements OnInit {
   readonly cardId = input('');
   readonly disabled = input(false);
   readonly invalidField = input('');
+  readonly validationMessage = input('');
   readonly settings = model.required<EventGuideSettings>();
   readonly dataset = model.required<Partial<EventDataset>>();
   readonly importing = model(false);

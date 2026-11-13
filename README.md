@@ -118,7 +118,7 @@ npm run deploy:functions -- translateBoard translateLiveCard
 npm run deploy:functions -- --dry-run translateBoard translateLiveCard
 ```
 
-For a full release, run `firebase deploy`. The optional `npm run deploy:all` command deploys functions in batches of five with at least 60 seconds between batch starts, then publishes Firestore, Storage, and Hosting after the functions succeed. Use `npm run deploy:all -- --dry-run` to inspect the batched plan.
+For a full release, use `npm run deploy:all`. It deploys functions in batches of five with at least 60 seconds between batch starts, then publishes Firestore, Storage, and Hosting after the functions succeed. Use `npm run deploy:all -- --dry-run` to inspect the batched plan.
 
 The helper validates names against the compiled exports, stops at the first failed batch, and prints the remaining targets for retry. If a previous Firebase run logged explicit failures, pass the log to recover just those targets:
 

@@ -15,7 +15,7 @@ export function failedFunctionsFromLog(log) {
   // Firebase may report a failed attempt and then succeed on retry. When it
   // prints a final summary, that list is the source of truth for recovery.
   const output = summaryStart < 0 ? log : log.slice(summaryStart + summary.length);
-  const updates = output.matchAll(/\bFailed to (?:update|create) function (?:projects\/[^/\s]+\/locations\/[^/\s]+\/functions\/)?([A-Za-z][A-Za-z0-9_]*)(?=\s|$)|\bfunctions\[([A-Za-z][A-Za-z0-9_]*)\([^)]+\)\]\s+Successful (?:update|create) operation\./gi);
+  const updates = output.matchAll(/\bFailed to (?:update|create|set invoker) function (?:projects\/[^/\s]+\/locations\/[^/\s]+\/functions\/)?([A-Za-z][A-Za-z0-9_]*)(?=\s|$)|\bfunctions\[([A-Za-z][A-Za-z0-9_]*)\([^)]+\)\]\s+Successful (?:update|create) operation\./gi);
   const failed = new Set();
   for (const [, failure, success] of updates) {
     if (failure) failed.add(failure);
@@ -38,7 +38,7 @@ export function deploymentPlan(args, available, readLog = readFileSync) {
     else if (arg.startsWith('--failed-log=')) {
       const path = arg.slice('--failed-log='.length);
       const failed = failedFunctionsFromLog(readLog(path, 'utf8'));
-      if (!failed.length) throw new Error(`No failed function updates found in ${path}.`);
+      if (!failed.length) throw new Error(`No failed function deployments found in ${path}.`);
       names.push(...failed);
     }
     else if (arg.startsWith('-')) throw new Error(`Unknown option: ${arg}`);

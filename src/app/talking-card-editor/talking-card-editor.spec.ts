@@ -157,6 +157,8 @@ describe('TalkingCardEditorComponent', () => {
     fixture.detectChanges();
     expect(page.eventStep()).toBe('event');
     expect(fixture.nativeElement.querySelector('#event-editor-status')?.textContent).toContain('Enter the event name.');
+    expect(fixture.nativeElement.querySelector('#event-name')?.getAttribute('aria-invalid')).toBe('true');
+    expect(fixture.nativeElement.querySelector('.event-setup__validation')?.textContent).toContain('Enter the event name.');
     program.setField('name', 'Robotics Day');
     program.openSession();
     program.updateSession('title', 'Opening keynote');
@@ -195,6 +197,15 @@ describe('TalkingCardEditorComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(page.canSave()).toBeTrue();
+    const portrait: HTMLLabelElement = fixture.nativeElement.querySelector('.talking-editor__event-portrait');
+    expect(portrait.textContent).toContain('Add profile photo');
+    expect(portrait.querySelector('input')?.accept).toBe('image/*');
+    const photo = new File(['image bytes'], 'amy.webp', { type: 'image/webp' });
+    page.imageFile.set(photo);
+    page.imagePreviewUrl.set('/amy-preview.webp');
+    fixture.detectChanges();
+    expect(portrait.querySelector('img')?.getAttribute('src')).toBe('/amy-preview.webp');
+    expect(portrait.textContent).toContain('Replace profile photo');
     const voice = STACK_STUDIO_NARRATOR_VOICES.at(-1)!;
     expect(fixture.nativeElement.querySelector('.talking-editor__voice-library-label').textContent)
       .toContain(`All ${STACK_STUDIO_NARRATOR_VOICES.length} voices`);
@@ -214,12 +225,31 @@ describe('TalkingCardEditorComponent', () => {
     const saved = spyOn(page.saved, 'emit');
     page.showEventStep('avatar');
     fixture.detectChanges();
+    fixture.nativeElement.querySelector('.talking-editor__event-sponsor-link').click();
+    fixture.detectChanges();
+    expect(document.activeElement?.id).toBe('sponsor-settings-title');
+    const sponsorPanel: HTMLElement = fixture.nativeElement.querySelector('.talking-editor__sponsorship');
+    sponsorPanel.querySelectorAll<HTMLButtonElement>('.talking-editor__sponsor-options button')[1].click();
+    fixture.detectChanges();
+    expect(document.activeElement?.id).toBe('talking-sponsor-name');
+    expect(sponsorPanel.querySelector('#talking-sponsor-name')?.getAttribute('aria-invalid')).toBe('true');
+    expect(sponsorPanel.querySelector('#talking-sponsor-message')?.getAttribute('aria-invalid')).toBe('true');
+    expect(sponsorPanel.querySelector('#talking-sponsor-name-error')?.textContent).toContain('Complete the sponsor');
+    expect(fixture.nativeElement.querySelector('#event-editor-status').classList).toContain('is-error');
+    fixture.nativeElement.querySelector('.talking-editor__footer .talking-editor__primary').click();
+    fixture.detectChanges();
+    expect(document.activeElement?.id).toBe('talking-sponsor-name');
+    expect(eventSave).not.toHaveBeenCalled();
+    sponsorPanel.querySelectorAll<HTMLButtonElement>('.talking-editor__sponsor-options button')[0].click();
+    fixture.detectChanges();
     fixture.nativeElement.querySelector('.talking-editor__footer .talking-editor__primary').click();
     await fixture.whenStable();
     expect(eventSave).toHaveBeenCalledTimes(1);
     expect(atlasService.selectAtlasCatalogVoice).toHaveBeenCalledOnceWith('george', voice.id);
+    expect(atlasService.uploadTalkingCardAvatarImage).toHaveBeenCalledOnceWith('george', photo);
     expect(saved).toHaveBeenCalledWith(jasmine.objectContaining({
       atlasId: 'george',
+      imageUrl: 'https://example.com/avatar.png',
       event: jasmine.objectContaining({ name: 'Robotics Day', informationUrl: 'https://example.org' }),
     }));
   });
