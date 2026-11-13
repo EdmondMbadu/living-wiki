@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import type { AtlasItem } from '../atlas.models';
 import { AtlasService } from '../atlas.service';
 import { DocumentsService } from '../documents.service';
-import { STACK_NARRATOR_VOICES } from '../boards/stack-voice';
+import { STACK_NARRATOR_VOICES, STACK_STUDIO_NARRATOR_VOICES } from '../boards/stack-voice';
 import { TalkingCardDraftStore, type TalkingCardDraftRecord } from './talking-card-draft.store';
 import { EventGuideSetup } from '../event-guide/event-guide-setup';
 import { EventGuideService } from '../event-guide/event-guide.service';
@@ -195,6 +195,15 @@ describe('TalkingCardEditorComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(page.canSave()).toBeTrue();
+    const voice = STACK_STUDIO_NARRATOR_VOICES.at(-1)!;
+    expect(fixture.nativeElement.querySelector('.talking-editor__voice-library-label').textContent)
+      .toContain(`All ${STACK_STUDIO_NARRATOR_VOICES.length} voices`);
+    page.voiceSearch.set(voice.name);
+    fixture.detectChanges();
+    const option = Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('.talking-editor__voice-select'))
+      .find((button) => button.querySelector('strong')?.textContent === voice.name);
+    expect(option).toBeDefined();
+    option?.click();
     page.showEventStep('event');
     fixture.detectChanges();
     expect(program.sessions()[0]?.title).toBe('Opening keynote');
@@ -208,6 +217,7 @@ describe('TalkingCardEditorComponent', () => {
     fixture.nativeElement.querySelector('.talking-editor__footer .talking-editor__primary').click();
     await fixture.whenStable();
     expect(eventSave).toHaveBeenCalledTimes(1);
+    expect(atlasService.selectAtlasCatalogVoice).toHaveBeenCalledOnceWith('george', voice.id);
     expect(saved).toHaveBeenCalledWith(jasmine.objectContaining({
       atlasId: 'george',
       event: jasmine.objectContaining({ name: 'Robotics Day', informationUrl: 'https://example.org' }),
@@ -748,9 +758,9 @@ describe('TalkingCardEditorComponent', () => {
     const options = fixture.nativeElement.querySelectorAll('.talking-editor__voice-results [role="radio"]');
     const label = fixture.nativeElement.querySelector('.talking-editor__voice-library-label') as HTMLElement;
 
-    expect(options.length).toBe(STACK_NARRATOR_VOICES.length);
-    expect(options[options.length - 1].textContent).toContain(STACK_NARRATOR_VOICES.at(-1)?.name);
-    expect(label.textContent).toContain(`All ${STACK_NARRATOR_VOICES.length} voices`);
+    expect(options.length).toBe(STACK_STUDIO_NARRATOR_VOICES.length);
+    expect(options[options.length - 1].textContent).toContain(STACK_STUDIO_NARRATOR_VOICES.at(-1)!.name);
+    expect(label.textContent).toContain(`All ${STACK_STUDIO_NARRATOR_VOICES.length} voices`);
   });
 
   it('previews an included voice without changing the avatar selection', async () => {
@@ -760,7 +770,7 @@ describe('TalkingCardEditorComponent', () => {
     fixture.detectChanges();
     fixture.componentInstance.selectExistingAtlas('george');
     await fixture.whenStable();
-    const voice = STACK_NARRATOR_VOICES[0];
+    const voice = STACK_STUDIO_NARRATOR_VOICES.at(-1)!;
 
     await fixture.componentInstance.toggleVoicePreview(`catalog:${voice.id}`, voice);
 
@@ -789,7 +799,7 @@ describe('TalkingCardEditorComponent', () => {
     fixture.componentInstance.setMode('new');
     fixture.componentInstance.name.set('Maya Chen');
     fixture.componentInstance.personaPrompt.set('You are Maya. Speak in the first person.');
-    const voice = STACK_NARRATOR_VOICES[1];
+    const voice = STACK_STUDIO_NARRATOR_VOICES.at(-1)!;
     fixture.componentInstance.selectCatalogVoice(voice);
 
     await fixture.componentInstance.save();

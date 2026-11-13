@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import type { AtlasItem, AtlasResponsePerspective, AtlasSpeechVoiceConfig, AtlasSpeechVoicePreview, WikiType } from '../atlas.models';
 import { AtlasService, type AtlasSpeechAudioResponse } from '../atlas.service';
-import { STACK_NARRATOR_VOICES, type StackNarratorVoice } from '../boards/stack-voice';
+import { STACK_STUDIO_NARRATOR_VOICES, filterStackNarratorVoices, type StackNarratorVoice } from '../boards/stack-voice';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 import { AccountMenuComponent } from '../account-menu/account-menu';
 
@@ -101,12 +101,10 @@ export class AtlasPersonaComponent {
     const length = this.voiceDescription().trim().length;
     return length >= 20 && length <= VOICE_DESCRIPTION_LIMIT && !this.voiceGenerating();
   });
-  readonly filteredCatalogVoices = computed(() => {
-    const query = this.librarySearch().trim().toLowerCase();
-    if (!query) return STACK_NARRATOR_VOICES;
-    return STACK_NARRATOR_VOICES.filter((voice) => [voice.name, voice.presentation, voice.accent, voice.style, voice.description]
-      .some((value) => value.toLowerCase().includes(query)));
-  });
+  readonly catalogVoiceCount = STACK_STUDIO_NARRATOR_VOICES.length;
+  readonly filteredCatalogVoices = computed(() =>
+    filterStackNarratorVoices(STACK_STUDIO_NARRATOR_VOICES, this.librarySearch(), 'All'),
+  );
   readonly guideImageUrl = computed(() => {
     const atlas = this.atlas();
     return atlas?.chat_guide?.image_url?.trim() || '';

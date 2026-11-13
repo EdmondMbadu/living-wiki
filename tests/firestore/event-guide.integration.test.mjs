@@ -163,7 +163,8 @@ test('organizer imports and publishes, a QR guest asks and plans, and confirmed 
 });
 
 test('event voice requires the recording notice and saves verified internal duration, transcript and audio access', async () => {
-  const { createElevenLabsVoiceSession, syncCardVoiceAnalytics, getCardAnalytics, getCardConversation, getEventConversationAudio } = require('./lib/index');
+  const { createElevenLabsVoiceSession, selectAtlasCatalogVoice, syncCardVoiceAnalytics, getCardAnalytics, getCardConversation, getEventConversationAudio } = require('./lib/index');
+  const [voice] = require('./lib/stack-library-voices.json');
   const atlas = db.collection('atlases').doc(atlasId);
   const originalFetch = globalThis.fetch;
   const keys = ['ELEVENLABS_API_KEY', 'ELEVENLABS_EVENT_AGENT_ID', 'ELEVENLABS_RECORDED_EVENT_AGENT_ID', 'ELEVENLABS_AGENT_ID'];
@@ -179,12 +180,14 @@ test('event voice requires the recording notice and saves verified internal dura
   };
   try {
     await atlas.set({ user_id: owner, is_public: false, name: 'Amy', wiki_type: 'person' });
+    await call(selectAtlasCatalogVoice, { atlasId, catalogVoiceId: `shared-${voice.providerVoiceId}` }, owner);
     await board.set({ owner_user_id: owner, visibility: 'public', cards: [{
       id: cardId, conversation: { provider: 'atlas', atlasId, event: { ...fixture, datasetId: 'c'.repeat(64) } },
     }] });
     const input = { ...target, atlasId, experience: 'event-talking-card', connectionType: 'websocket', anonymousVisitorId: 'visitor_event_fixture_123456' };
     const legacy = await call(createElevenLabsVoiceSession, input, owner);
     assert.equal(legacy.agentId, 'agent_eventfixture');
+    assert.equal(legacy.voiceId, voice.providerVoiceId);
     assert.doesNotMatch(legacy.userId, /^card_/);
     const beforeInvalidNotice = urls.length;
     await assert.rejects(call(createElevenLabsVoiceSession, { ...input, eventVoiceHistoryVersion: 99 }), { code: 'failed-precondition' });
@@ -193,6 +196,7 @@ test('event voice requires the recording notice and saves verified internal dura
     const session = await call(createElevenLabsVoiceSession, input, owner);
     assert.equal(session.signedUrl, 'wss://example.org/event-voice');
     assert.equal(session.agentId, 'agent_recordedfixture');
+    assert.equal(session.voiceId, voice.providerVoiceId);
     assert.match(session.userId, /^card_/);
     assert.ok(urls.some((url) => url.searchParams.get('agent_id') === 'agent_recordedfixture'));
     assert.ok(urls.every((url) => url.searchParams.get('agent_id') !== 'agent_generic_fixture'));

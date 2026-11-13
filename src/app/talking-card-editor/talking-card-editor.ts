@@ -8,7 +8,7 @@ import type { AtlasItem, AtlasSpeechVoiceConfig, DocumentItem } from '../atlas.m
 import { AtlasService, type AtlasSpeechAudioResponse } from '../atlas.service';
 import { DocumentsService } from '../documents.service';
 import {
-  STACK_NARRATOR_VOICES,
+  STACK_STUDIO_NARRATOR_VOICES,
   personalStackNarratorVoiceId,
   stackNarratorVoiceById,
   type StackNarratorVoice,
@@ -278,7 +278,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     if (!eventDate(settings.endDate)) return { message: $localize`Choose the last program day.`, target: 'event-end-date' };
     if (settings.endDate < settings.startDate) return { message: $localize`The last program day must be on or after the first.`, target: 'event-end-date' };
     if (!eventDates(settings.startDate, settings.endDate).length) {
-      return { message: $localize`The program can span up to ${EVENT_MAX_DAYS} days.`, target: 'event-end-date' };
+      return { message: $localize`The program can span up to ${EVENT_MAX_DAYS}:MAX_DAYS: days.`, target: 'event-end-date' };
     }
     try {
       const timeZone = eventText(settings.timeZone, 80);
@@ -302,7 +302,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     }
     const outside = sessions?.find(session => session.date < settings.startDate || session.date > settings.endDate);
     if (outside) {
-      return { message: $localize`Include the session on ${outside.date} in the program dates.`, target: outside.date < settings.startDate ? 'event-start-date' : 'event-end-date' };
+      return { message: $localize`Include the session on ${outside.date}:SESSION_DATE: in the program dates.`, target: outside.date < settings.startDate ? 'event-start-date' : 'event-end-date' };
     }
     const invalidHours = this.eventDatasetDraft().floorHours?.find(entry => entry.start >= entry.end && !(entry.start === 0 && entry.end === 0));
     if (invalidHours) {
@@ -384,16 +384,16 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   readonly selectedAtlas = computed<AtlasItem | null>(() =>
     this.availableAtlases().find((atlas) => atlas.id === this.selectedAtlasId()) ?? null,
   );
-  readonly catalogVoiceCount = STACK_NARRATOR_VOICES.length;
+  readonly catalogVoiceCount = STACK_STUDIO_NARRATOR_VOICES.length;
   readonly selectedCatalogVoice = computed(() => stackNarratorVoiceById(this.catalogVoiceId()));
   readonly selectedPersonalVoice = computed(() =>
     this.personalVoices().find((voice) => voice.id === this.personalVoiceId()) ?? null,
   );
   readonly displayedVoices = computed(() => {
     const query = this.voiceSearch().trim().toLocaleLowerCase();
-    if (!query) return STACK_NARRATOR_VOICES;
+    if (!query) return STACK_STUDIO_NARRATOR_VOICES;
     const terms = query.split(/\s+/).filter(Boolean);
-    return STACK_NARRATOR_VOICES.filter((voice) => {
+    return STACK_STUDIO_NARRATOR_VOICES.filter((voice) => {
       const searchable = [voice.name, voice.presentation, voice.accent, voice.style, voice.description]
         .join(' ')
         .toLocaleLowerCase();

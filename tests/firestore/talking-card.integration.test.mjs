@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { before, after, test } from 'node:test';
 import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
 const require = createRequire(new URL('../../functions/package.json', import.meta.url));
 process.env.GCLOUD_PROJECT = 'demo-living-wiki';
 const { db } = require('./lib/firebase');
@@ -107,6 +108,56 @@ test('voice sessions follow board access without publishing the avatar or callin
     globalThis.fetch = originalFetch;
     keys.forEach((key, index) => { if (previous[index] === undefined) delete process.env[key]; else process.env[key] = previous[index]; });
   }
+});
+
+test('a shared board-library voice can be previewed, saved, and used by a Talking Card', async (context) => {
+  const { createElevenLabsVoiceSession, getAtlasSpeechVoiceConfig, selectAtlasCatalogVoice, synthesizeChatAnswerSpeech } = require('./lib/index');
+  const [voice] = JSON.parse(readFileSync(new URL('../../functions/src/stack-library-voices.json', import.meta.url)));
+  const previews = JSON.parse(readFileSync(new URL('../../functions/src/stack-library-voice-previews.json', import.meta.url)));
+  const catalogVoiceId = `shared-${voice.providerVoiceId}`;
+  const data = { atlasId, catalogVoiceId };
+  const auth = { uid: board.owner_user_id, token: {} };
+  const settings = db.collection('atlas_integrations').doc(atlasId);
+  const keys = { ELEVENLABS_API_KEY: 'local-fixture-key', ELEVENLABS_AGENT_ID: 'agent_local_fixture', ELEVENLABS_TTS_VOICE_OVERRIDES_ENABLED: 'true' };
+  const previous = Object.keys(keys).map((key) => [key, process.env[key]]);
+  Object.assign(process.env, keys);
+  context.after(async () => {
+    for (const [key, value] of previous) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+    await settings.delete();
+  });
+  const provider = context.mock.method(globalThis, 'fetch', async (input) => {
+    const url = new URL(String(input));
+    assert.equal(url.origin, 'https://api.elevenlabs.io');
+    if (url.pathname === `/v1/voices/${voice.providerVoiceId}`) return Response.json({ voice_id: voice.providerVoiceId });
+    assert.equal(url.pathname, '/v1/convai/conversation/get-signed-url');
+    return Response.json({ signed_url: 'wss://example.test/fixture' });
+  });
+
+  const preview = await synthesizeChatAnswerSpeech.run({ auth, data: {
+    mode: 'voice-preview', narratorVoiceId: catalogVoiceId, text: 'Welcome to this board.',
+  } });
+  assert.equal(preview.audioUrl, previews[voice.providerVoiceId]);
+  assert.equal(provider.mock.callCount(), 0);
+
+  await assert.rejects(selectAtlasCatalogVoice.run({ data, auth: { uid: 'visitor', token: {} } }), { code: 'permission-denied' });
+  await assert.rejects(selectAtlasCatalogVoice.run({ data: { ...data, catalogVoiceId: 'shared-unknown' }, auth }), { code: 'not-found' });
+  const { config } = await selectAtlasCatalogVoice.run({ data, auth });
+  assert.equal(config.catalogVoiceId, catalogVoiceId);
+  assert.equal(config.name, voice.name);
+  assert.equal(config.source, 'catalog');
+  assert.equal((await getAtlasSpeechVoiceConfig.run({ data: { atlasId }, auth })).config.catalogVoiceId, catalogVoiceId);
+  assert.equal((await settings.get()).data().speech_voice.provider_voice_id, voice.providerVoiceId);
+
+  await db.collection('boards').doc(boardId).set(board);
+  const session = await createElevenLabsVoiceSession.run({ data: {
+    atlasId, ...target, experience: 'talking-card', connectionType: 'websocket', anonymousVisitorId: 'visitor_fixture_12345678',
+  } });
+  assert.equal(session.voiceId, voice.providerVoiceId);
+  assert.equal(session.voiceName, voice.name);
+  assert.equal(provider.mock.callCount(), 2);
 });
 
 test('sponsor speech uses server-approved text and rechecks board/card access before using cached audio', async () => {

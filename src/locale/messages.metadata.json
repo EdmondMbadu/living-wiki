@@ -3703,10 +3703,6 @@
     "source": "{$INTERPOLATION} sec",
     "file": "src/app/boards/boards.html"
   },
-  "2057543811570203125": {
-    "source": "The program can span up to {$PH_1} days.",
-    "file": "src/app/talking-card-editor/talking-card-editor.ts"
-  },
   "2057574872309338088": {
     "source": "Copy share link",
     "file": "src/app/fence-line/fence-line.html"
@@ -9983,10 +9979,6 @@
     "source": "Edit {$INTERPOLATION}",
     "file": "src/app/business-detail/business-edit.html"
   },
-  "3863160457642305851": {
-    "source": "Include the session on {$PH_1} in the program dates.",
-    "file": "src/app/talking-card-editor/talking-card-editor.ts"
-  },
   "3863304149863674157": {
     "source": "Give your collection a name.",
     "file": "src/app/board-collections.service.ts"
@@ -10865,7 +10857,7 @@
   },
   "4118998347943496240": {
     "source": "Search voices, accents, or styles",
-    "file": "src/app/boards/boards.html"
+    "file": "src/app/atlas-persona/atlas-persona.html"
   },
   "4119317062986389746": {
     "source": "Use {language} for {city} ({country})",
@@ -11478,10 +11470,6 @@
   "4279400649362427617": {
     "source": "Rental listing URL",
     "file": "src/app/boards/boards.ts"
-  },
-  "4280108227238159092": {
-    "source": "Search 41 voices by name, accent, or style",
-    "file": "src/app/atlas-persona/atlas-persona.html"
   },
   "4281123987236073878": {
     "source": "Fact-forward",
@@ -17607,6 +17595,10 @@
     "source": "{$START_TAG_SPAN}dashboard{$CLOSE_TAG_SPAN} Return to board ",
     "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
+  "603058499071630654": {
+    "source": "The program can span up to {$MAX_DAYS} days.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "6031209405428642368": {
     "source": "Could not make this gem private.",
     "file": "src/app/off-grids/off-grid-detail.ts"
@@ -19129,7 +19121,7 @@
   },
   "6449242040584990151": {
     "source": "Choose from {$INTERPOLATION} voices",
-    "file": "src/app/boards/boards.html"
+    "file": "src/app/atlas-persona/atlas-persona.html"
   },
   "6452353119568306344": {
     "source": "Run state",
@@ -28634,6 +28626,10 @@
   "921790436753127207": {
     "source": "Removing LivingWiki branding or adding your logo is included with a paid membership.",
     "file": "src/app/boards/boards.html"
+  },
+  "9219832144779191703": {
+    "source": "Include the session on {$SESSION_DATE} in the program dates.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "9219960151821498093": {
     "source": "Voice calls",

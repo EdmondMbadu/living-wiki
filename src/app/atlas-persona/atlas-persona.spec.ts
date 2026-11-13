@@ -6,6 +6,7 @@ import { TeamsService } from '../teams/teams.service';
 import { teamsServiceStub } from '../teams/teams.testing';
 import type { AtlasItem, AtlasSpeechVoiceConfig } from '../atlas.models';
 import { AtlasService } from '../atlas.service';
+import { STACK_STUDIO_NARRATOR_VOICES } from '../boards/stack-voice';
 import { AtlasPersonaComponent } from './atlas-persona';
 
 describe('AtlasPersonaComponent', () => {
@@ -171,6 +172,30 @@ describe('AtlasPersonaComponent', () => {
     fixture.detectChanges();
     expect(fixture.componentInstance.perspectiveDraft()).toBe('first_person');
     expect(fixture.nativeElement.querySelector('[data-testid="speaking-perspective-menu"]')).toBeNull();
+  });
+
+  it('searches and saves voices from the full board voice library', async () => {
+    const fixture = TestBed.createComponent(AtlasPersonaComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component.setActiveStep('spoken');
+    component.setVoiceMode('catalog');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(`Choose from ${STACK_STUDIO_NARRATOR_VOICES.length} voices`);
+    expect(component.filteredCatalogVoices()).toEqual([...STACK_STUDIO_NARRATOR_VOICES]);
+    const voice = STACK_STUDIO_NARRATOR_VOICES.at(-1)!;
+    component.librarySearch.set(voice.name);
+    expect(component.filteredCatalogVoices()).toContain(voice);
+    const saved: AtlasSpeechVoiceConfig = { ...defaultVoice, source: 'catalog', catalogVoiceId: voice.id, name: voice.name };
+    atlasService.selectAtlasCatalogVoice.and.resolveTo(saved);
+
+    component.selectCatalogVoice(voice);
+    await component.saveSpokenVoice();
+
+    expect(atlasService.selectAtlasCatalogVoice).toHaveBeenCalledOnceWith('atlas-1', voice.id);
+    expect(component.speechVoiceConfig()).toEqual(saved);
   });
 
   it('generates three previews and saves the selected designed voice', async () => {

@@ -413,8 +413,8 @@ const elevenLabsPremadeNarratorVoiceIds = [
   'EXAVITQu4vr4xnSDxMaL',
   'pNInz6obpgDQGcFmaJgB',
 ];
-const stackNarratorVoiceIds = new Map(
-  stackNarratorVoiceCatalog.map((voice) => [voice.id, voice.providerVoiceId]),
+const stackNarratorVoices = new Map(
+  stackNarratorVoiceCatalog.map((voice) => [voice.id, voice]),
 );
 const stackLibraryVoices = new Map(stackLibraryVoiceCatalog.map((voice) => [`shared-${voice.providerVoiceId}`, voice]));
 const stackLibraryPreviewUrls: Readonly<Record<string, string>> = stackLibraryVoicePreviews;
@@ -16228,20 +16228,22 @@ export const selectAtlasCatalogVoice = onCall(
       throw new HttpsError('invalid-argument', 'Atlas and catalog voice are required.');
     }
     await loadAtlasForAdminAccess(atlasId, request.auth.uid);
-    const catalogVoice = stackNarratorVoiceCatalog.find((voice) => voice.id === catalogVoiceId);
-    if (!catalogVoice?.providerVoiceId) {
+    const includedVoice = stackNarratorVoices.get(catalogVoiceId);
+    const sharedVoice = stackLibraryVoices.get(catalogVoiceId);
+    const catalogVoice = includedVoice ?? sharedVoice;
+    if (!catalogVoice) {
       throw new HttpsError('not-found', 'That included voice is not available.');
     }
     const saved = await replaceAtlasSpeechVoiceConfig(atlasId, request.auth.uid, {
       source: 'catalog',
       provider: 'elevenlabs',
       provider_voice_id: catalogVoice.providerVoiceId,
-      catalog_voice_id: catalogVoice.id,
+      catalog_voice_id: catalogVoiceId,
       personal_voice_id: null,
       personal_voice_owner_id: null,
       name: catalogVoice.name,
-      description: catalogVoice.description,
-      preview_url: null,
+      description: includedVoice?.description ?? catalogVoice.style,
+      preview_url: sharedVoice ? stackLibraryPreviewUrls[sharedVoice.providerVoiceId] ?? null : null,
       design_model: null,
       created_by: request.auth.uid,
     });
@@ -22128,7 +22130,7 @@ export const synthesizeChatAnswerSpeech = onCall(
     const requestedPersonalNarrator = isPersonalNarratorSelection(requestedNarratorId);
     const requestedLibraryVoice = stackLibraryVoices.get(requestedNarratorId);
     let requestedNarratorVoiceId = requestedNarratorId && !requestedPersonalNarrator
-      ? requestedLibraryVoice?.providerVoiceId ?? stackNarratorVoiceIds.get(requestedNarratorId) ?? ''
+      ? requestedLibraryVoice?.providerVoiceId ?? stackNarratorVoices.get(requestedNarratorId)?.providerVoiceId ?? ''
       : '';
     if (requestedNarratorId
       && !requestedPersonalNarrator
