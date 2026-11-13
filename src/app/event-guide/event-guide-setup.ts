@@ -39,6 +39,7 @@ export class EventGuideSetup implements OnInit {
   readonly boardId = input.required<string>();
   readonly cardId = input('');
   readonly disabled = input(false);
+  readonly invalidField = input('');
   readonly settings = model.required<EventGuideSettings>();
   readonly dataset = model.required<Partial<EventDataset>>();
   readonly importing = model(false);
@@ -86,7 +87,8 @@ export class EventGuideSetup implements OnInit {
   readonly pending = computed(() => this.importing() || this.disabled());
 
   setField<K extends keyof EventGuideSettings>(key: K, value: EventGuideSettings[K]): void {
-    this.settings.update((settings) => ({ ...settings, [key]: value }));
+    const normalized = key === 'informationUrl' || key === 'privacyUrl' ? String(value ?? '').trim() : value;
+    this.settings.update((settings) => ({ ...settings, [key]: normalized }));
   }
 
   chooseFile(kind: EventSourceKind, event: Event): void {

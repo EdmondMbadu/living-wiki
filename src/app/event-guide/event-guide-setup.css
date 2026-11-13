@@ -23,6 +23,7 @@
   border: 1px solid var(--setup-edge); border-radius: .55rem; color: var(--text); background: var(--surface); font: inherit; font-size: .84rem;
 }
 .event-setup input::placeholder { color: var(--muted); opacity: .75; }
+.event-setup input[aria-invalid="true"] { border-color: #b42318; }
 .event-setup input:focus-visible, .event-setup textarea:focus-visible, .event-setup select:focus-visible,
 .event-setup button:focus-visible, .event-setup summary:focus-visible, .event-setup__choice:focus-within {
   outline: 2px solid var(--accent); outline-offset: 2px;

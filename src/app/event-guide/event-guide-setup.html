@@ -18,14 +18,14 @@
     <section class="event-setup__panel event-setup__details" aria-labelledby="event-guide-setup-heading">
       <header class="event-setup__heading">
         <span class="event-setup__icon material-symbols-outlined" aria-hidden="true">event_note</span>
-        <h3 id="event-guide-setup-heading" i18n>Event details</h3>
+        <h3 id="event-guide-setup-heading" tabindex="-1" i18n>Event details</h3>
       </header>
-      <label><span i18n>Event name *</span><input maxlength="120" placeholder="e.g. CES 2027" [ngModel]="settings().name" (ngModelChange)="setField('name', $event)" i18n-placeholder></label>
+      <label><span i18n>Event name *</span><input id="event-name" [attr.aria-invalid]="invalidField() === 'event-name' ? 'true' : null" maxlength="120" placeholder="e.g. CES 2027" [ngModel]="settings().name" (ngModelChange)="setField('name', $event)" i18n-placeholder></label>
       <div class="event-setup__fields">
-        <label><span i18n>First program day *</span><input type="date" [ngModel]="settings().startDate" (ngModelChange)="setField('startDate', $event)"></label>
-        <label><span i18n>Last program day *</span><input type="date" [min]="settings().startDate" [ngModel]="settings().endDate" (ngModelChange)="setField('endDate', $event)"></label>
+        <label><span i18n>First program day *</span><input id="event-start-date" [attr.aria-invalid]="invalidField() === 'event-start-date' ? 'true' : null" type="date" [ngModel]="settings().startDate" (ngModelChange)="setField('startDate', $event)"></label>
+        <label><span i18n>Last program day *</span><input id="event-end-date" [attr.aria-invalid]="invalidField() === 'event-end-date' ? 'true' : null" type="date" [min]="settings().startDate" [ngModel]="settings().endDate" (ngModelChange)="setField('endDate', $event)"></label>
       </div>
-      <label><span i18n>Time zone *</span><input maxlength="80" placeholder="America/Los_Angeles" [ngModel]="settings().timeZone" (ngModelChange)="setField('timeZone', $event)"></label>
+      <label><span i18n>Time zone *</span><input id="event-time-zone" [attr.aria-invalid]="invalidField() === 'event-time-zone' ? 'true' : null" maxlength="80" placeholder="America/Los_Angeles" [ngModel]="settings().timeZone" (ngModelChange)="setField('timeZone', $event)"></label>
     </section>
   </div>
 
@@ -56,9 +56,9 @@
       <span class="event-setup__chevron material-symbols-outlined" aria-hidden="true">expand_more</span>
     </summary>
     <div class="event-setup__fields">
-      <label><span i18n>Official event link</span><input type="url" placeholder="https://" [ngModel]="settings().informationUrl" (ngModelChange)="setField('informationUrl', $event)"></label>
-      <label><span i18n>Privacy notice link</span><input type="url" placeholder="https://" [ngModel]="settings().privacyUrl" (ngModelChange)="setField('privacyUrl', $event)"></label>
-      <label><span i18n>Minutes between venues or halls</span><input type="number" min="5" max="120" [ngModel]="settings().travelMinutes" (ngModelChange)="setField('travelMinutes', $event)"></label>
+      <label><span i18n>Official event link</span><input id="event-information-url" [attr.aria-invalid]="invalidField() === 'event-information-url' ? 'true' : null" type="url" placeholder="https://" [ngModel]="settings().informationUrl" (ngModelChange)="setField('informationUrl', $event)"></label>
+      <label><span i18n>Privacy notice link</span><input id="event-privacy-url" [attr.aria-invalid]="invalidField() === 'event-privacy-url' ? 'true' : null" type="url" placeholder="https://" [ngModel]="settings().privacyUrl" (ngModelChange)="setField('privacyUrl', $event)"></label>
+      <label><span i18n>Minutes between venues or halls</span><input id="event-travel-minutes" [attr.aria-invalid]="invalidField() === 'event-travel-minutes' ? 'true' : null" type="number" min="5" max="120" [ngModel]="settings().travelMinutes" (ngModelChange)="setField('travelMinutes', $event)"></label>
     </div>
     @if (dates().length) {
       <details class="event-setup__records">
@@ -71,7 +71,7 @@
             </select></label>
             @if (floor && (floor.start || floor.end)) {
               <label><span i18n>Opens</span><input type="time" [ngModel]="inputTime(floor.start)" (ngModelChange)="changeFloorHours(date, 'start', $event)"></label>
-              <label><span i18n>Closes</span><input type="time" [ngModel]="inputTime(floor.end)" (ngModelChange)="changeFloorHours(date, 'end', $event)"></label>
+              <label><span i18n>Closes</span><input [id]="'event-floor-close-' + date" [attr.aria-invalid]="floor.start >= floor.end ? 'true' : null" type="time" [ngModel]="inputTime(floor.end)" (ngModelChange)="changeFloorHours(date, 'end', $event)"></label>
               @if (floor.start >= floor.end) { <p role="alert" i18n>Closing time must be after opening time.</p> }
             }
           </div>
@@ -88,7 +88,7 @@
     <div class="event-setup__choices">
       <label class="event-setup__choice" [class.is-dragging]="dragging() === kind" [class.is-disabled]="!!manual()"
         (dragover)="dragOver(kind, $event)" (dragleave)="dragging.set(null)" (drop)="dropFile(kind, $event)">
-        <input type="file" [accept]="accepted" [disabled]="!!manual()" (change)="chooseFile(kind, $event)"
+        <input [id]="schedule ? 'event-schedule-upload' : 'event-exhibitors-upload'" type="file" [accept]="accepted" [disabled]="!!manual()" (change)="chooseFile(kind, $event)"
           [attr.aria-label]="schedule ? uploadScheduleLabel : uploadExhibitorsLabel">
         <span class="event-setup__choice-icon material-symbols-outlined" aria-hidden="true">upload_file</span>
         <strong i18n>Upload a file</strong>
@@ -108,7 +108,7 @@
     }
     @if (previews()[kind]; as sourcePreview) {
       @let preview = sourcePreview.preview;
-      <section class="event-setup__review">
+      <section [id]="!manual() && (schedule || !previews().schedule) ? 'event-unfinished-entry' : ''" tabindex="-1" class="event-setup__review">
         <header>
           <div><h4 i18n>Review import</h4><p>{{ sourcePreview.file.name }}</p></div>
           <span class="material-symbols-outlined" aria-hidden="true">fact_check</span>
@@ -155,7 +155,7 @@
 
     @if (manual(); as entry) {
       @if (entry.kind === kind) {
-        <section class="event-setup__review event-setup__manual">
+        <section id="event-unfinished-entry" tabindex="-1" class="event-setup__review event-setup__manual">
           @if (entry.kind === 'schedule') {
             <label><span i18n>Session title *</span><input maxlength="250" [ngModel]="entry.row.title" (ngModelChange)="updateSession('title', $event)"></label>
             <label><span i18n>Date *</span><input type="date" [ngModel]="entry.row.date" (ngModelChange)="updateSession('date', $event)"></label>

@@ -1,6 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { normalizeSponsorship, resolveSponsorship, type Sponsorship, type SponsorshipChoice } from '../../../functions/src/talking-card-sponsorship';
-import { Component, computed, effect, HostListener, inject, input, OnDestroy, OnInit, output, signal } from '@angular/core';
+import { afterNextRender, Component, computed, effect, ElementRef, HostListener, inject, Injector, input, OnDestroy, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { BackdropDismissDirective } from '../backdrop-dismiss.directive';
@@ -33,12 +33,13 @@ import { TalkingCardDraftStore, type TalkingCardDraftRecord } from './talking-ca
 import { CES_DEMO_GREETING, CES_DEMO_NAME, CES_DEMO_PERSONA } from '../event-guide/event-guide-ces2027';
 import { EventGuideSetup } from '../event-guide/event-guide-setup';
 import { EventGuideService } from '../event-guide/event-guide.service';
-import { eventSettings, type EventDataset, type EventGuideSettings } from '../../../functions/src/event-guide-model';
+import { EVENT_MAX_DAYS, eventDate, eventDates, eventHttpsUrl, eventSettings, eventText, type EventDataset, type EventGuideSettings } from '../../../functions/src/event-guide-model';
 import { TalkingCardKnowledgeService } from './talking-card-knowledge.service';
 
 type EditorMode = 'existing' | 'new';
 type VoiceChoice = 'default' | 'catalog' | 'personal' | 'saved';
 type EditorSection = 'card' | 'knowledge' | 'voice' | 'actions' | 'sponsorship';
+type EventEditorIssue = { message: string; target: string; section?: EditorSection };
 const SPONSOR_MESSAGE_PREFIX = 'Our conversation today has been generously supported by a grant from ';
 
 function defaultSponsorMessage(name: string): string {
@@ -57,6 +58,8 @@ function completeSponsorMessage(message: string): boolean {
   styleUrl: './talking-card-editor.css',
 })
 export class TalkingCardEditorComponent implements OnDestroy, OnInit {
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
   readonly templateText = {
     message1: $localize`Edit Talking Card & avatar`,
     message2: $localize`Create your property guide`,
@@ -230,8 +233,15 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
 
   showEventStep(step: 'event' | 'avatar'): void {
     if (this.saving() || this.eventImporting()) return;
+    const issue = this.eventSetupIssue();
+    if (step === 'avatar' && issue) {
+      this.errorMessage.set(null);
+      this.revealEventIssue('event', issue);
+      return;
+    }
     if (step === 'event') this.stopVoicePreview();
     this.eventStep.set(step);
+    this.focusEventField(step === 'event' ? 'event-guide-setup-heading' : 'event-avatar-heading');
   }
   readonly eventEditorTitle = computed(() => this.isEditing() ? $localize`Edit Event Talking Card` : $localize`Add Event Talking Card`);
 
@@ -258,22 +268,105 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       this.eventImporting.set(false);
     }
   }
-  readonly eventSetupIssue = computed(() => {
+  readonly eventSetupIssue = computed<EventEditorIssue | null>(() => {
     const settings = this.eventSettingsDraft();
     const sessions = this.eventDatasetDraft().sessions;
-    if (this.eventReviewing()) return $localize`Save your entry or finish reviewing the import.`;
-    if (!(sessions?.length ?? settings.datasetId)) return $localize`Upload a schedule or add a session.`;
+    if (this.eventReviewing()) return { message: $localize`Save your entry or finish reviewing the import.`, target: 'event-unfinished-entry' };
+    if (!eventText(settings.name, 120)) return { message: $localize`Enter the event name.`, target: 'event-name' };
+    if (!(sessions?.length ?? settings.datasetId)) return { message: $localize`Upload a schedule or add a session.`, target: 'event-schedule-upload' };
+    if (!eventDate(settings.startDate)) return { message: $localize`Choose the first program day.`, target: 'event-start-date' };
+    if (!eventDate(settings.endDate)) return { message: $localize`Choose the last program day.`, target: 'event-end-date' };
+    if (settings.endDate < settings.startDate) return { message: $localize`The last program day must be on or after the first.`, target: 'event-end-date' };
+    if (!eventDates(settings.startDate, settings.endDate).length) {
+      return { message: $localize`The program can span up to ${EVENT_MAX_DAYS} days.`, target: 'event-end-date' };
+    }
+    try {
+      const timeZone = eventText(settings.timeZone, 80);
+      if (!timeZone) throw new Error();
+      new Intl.DateTimeFormat('en', { timeZone });
+    } catch {
+      return { message: $localize`Enter a time zone like America/Los_Angeles.`, target: 'event-time-zone' };
+    }
+    if (settings.informationUrl && !eventHttpsUrl(settings.informationUrl)) {
+      return { message: $localize`Enter an official event link starting with https:// or leave it blank.`, target: 'event-information-url' };
+    }
+    if (settings.privacyUrl && !eventHttpsUrl(settings.privacyUrl)) {
+      return { message: $localize`Enter a privacy notice link starting with https:// or leave it blank.`, target: 'event-privacy-url' };
+    }
+    const travelMinutes = Number(settings.travelMinutes ?? 30);
+    if (!Number.isInteger(travelMinutes) || travelMinutes < 5 || travelMinutes > 120) {
+      return { message: $localize`Enter a whole number from 5 to 120 for travel minutes.`, target: 'event-travel-minutes' };
+    }
     if (!eventSettings({ ...settings, datasetId: settings.datasetId || '0'.repeat(64) })) {
-      return $localize`Check the event name, dates, time zone, and links.`;
+      return { message: $localize`Upload a schedule or add a session.`, target: 'event-schedule-upload' };
     }
-    if (sessions?.some((session) => session.date < settings.startDate || session.date > settings.endDate)) {
-      return $localize`The program dates must include every session.`;
+    const outside = sessions?.find(session => session.date < settings.startDate || session.date > settings.endDate);
+    if (outside) {
+      return { message: $localize`Include the session on ${outside.date} in the program dates.`, target: outside.date < settings.startDate ? 'event-start-date' : 'event-end-date' };
     }
-    if (this.eventDatasetDraft().floorHours?.some((entry) => entry.start >= entry.end && !(entry.start === 0 && entry.end === 0))) {
-      return $localize`Check the exhibit floor hours.`;
+    const invalidHours = this.eventDatasetDraft().floorHours?.find(entry => entry.start >= entry.end && !(entry.start === 0 && entry.end === 0));
+    if (invalidHours) {
+      return { message: $localize`Closing time must be after opening time.`, target: `event-floor-close-${invalidHours.date}` };
     }
+    return null;
+  });
+
+  readonly eventAvatarIssue = computed<EventEditorIssue | null>(() => {
+    if (this.mode() === 'existing' && !this.selectedAtlas()) {
+      return this.isEditing()
+        ? { message: $localize`The Talking Card could not be loaded for editing.`, target: 'event-avatar-heading' }
+        : { message: $localize`Select an avatar or choose “Create a new avatar”.`, target: 'talking-avatar-search' };
+    }
+    if ((this.isEditing() || this.mode() === 'new') && !this.name().trim()) {
+      return { message: $localize`Enter the avatar’s name.`, target: 'event-avatar-name', section: 'card' };
+    }
+    if (this.mode() === 'new' && !this.personaPrompt().trim()) {
+      return { message: $localize`Add instructions for how the avatar should speak and answer questions.`, target: 'event-avatar-prompt' };
+    }
+    if (!this.openingMessage().trim()) {
+      return { message: $localize`Enter an opening message.`, target: 'event-opening-message', section: 'card' };
+    }
+    const actionIndex = this.actions().findIndex(action => !action.label.trim() || !normalizeTalkingCardActionUrl(action.url));
+    if (actionIndex >= 0) {
+      const missingLabel = !this.actions()[actionIndex].label.trim();
+      return {
+        message: missingLabel ? $localize`Give each action a button label.` : $localize`Each action needs a secure public HTTPS link.`,
+        target: `event-action-${missingLabel ? 'label' : 'link'}-${actionIndex}`,
+        section: 'actions',
+      };
+    }
+    if (!this.sponsorValid()) {
+      return { message: $localize`Complete the sponsor’s name and message or choose Off.`, target: this.sponsorName().trim() ? 'talking-sponsor-message' : 'talking-sponsor-name', section: 'sponsorship' };
+    }
+    return null;
+  });
+
+  readonly eventBusyMessage = computed(() => {
+    if (this.eventImporting()) return $localize`Reading event records…`;
+    if (!this.draftReady() || this.voiceConfigLoading()) return $localize`Loading…`;
+    if (this.imageProcessing()) return $localize`Preparing your profile photo…`;
+    if (this.personalVoiceCreating()) return $localize`Creating your voice…`;
     return '';
   });
+
+  private revealEventIssue(step: 'event' | 'avatar', issue: EventEditorIssue): void {
+    if (step === 'event') this.stopVoicePreview();
+    this.eventStep.set(step);
+    if (issue.section && this.isEditing()) this.setEditorSection(issue.section);
+    this.focusEventField(issue.target);
+  }
+
+  private focusEventField(id: string): void {
+    afterNextRender(() => {
+      const target = this.host.nativeElement.querySelector<HTMLElement>(`#${id}`);
+      if (!target) return;
+      for (let parent = target.parentElement; parent && parent !== this.host.nativeElement; parent = parent.parentElement) {
+        if (parent instanceof HTMLDetailsElement) parent.open = true;
+      }
+      target.focus();
+      target.scrollIntoView({ block: 'nearest' });
+    }, { injector: this.injector });
+  }
 
   readonly isEditing = computed(() => !!this.editingCard());
   readonly isRealEstateSetup = computed(() => !this.isEditing() && this.prefill()?.experience === 'real-estate');
@@ -312,7 +405,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     : $localize`Current saved voice`);
   readonly filteredAvailableAtlases = computed(() => {
     const query = this.avatarSearch().trim().toLocaleLowerCase();
-    if (!query) return [];
+    if (!query) return this.isEventSetup() && !this.selectedAtlas() ? this.ownedAtlases().slice(0, 6) : [];
     const terms = query.split(/\s+/).filter(Boolean);
     return this.availableAtlases()
       .filter((atlas) => {
@@ -351,10 +444,12 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     return null;
   });
   readonly canSave = computed(() => {
+    if (this.isEventSetup()) {
+      return !this.saving() && !this.eventBusyMessage() && !this.eventSetupIssue() && !this.eventAvatarIssue();
+    }
     if (!this.draftReady()) return false;
     if (this.saving() || this.imageProcessing() || this.voiceConfigLoading() || this.personalVoiceCreating()) return false;
     if (!this.sponsorValid()) return false;
-    if (this.isEventSetup() && (this.eventImporting() || !!this.eventSetupIssue())) return false;
     if (!this.openingMessage().trim() || !!this.actionFormMessage()) return false;
     if (this.isEditing() && !this.name().trim()) return false;
     if (this.mode() === 'existing') {
@@ -1043,6 +1138,17 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   }
 
   async save(): Promise<void> {
+    if (this.isEventSetup()) {
+      if (this.saving() || this.eventBusyMessage()) return;
+      const eventIssue = this.eventSetupIssue();
+      const avatarIssue = this.eventAvatarIssue();
+      const issue = eventIssue || avatarIssue;
+      if (issue) {
+        this.errorMessage.set(null);
+        this.revealEventIssue(eventIssue ? 'event' : 'avatar', issue);
+        return;
+      }
+    }
     if (!this.canSave()) return;
     let handedOffForPersistence = false;
     this.saving.set(true);

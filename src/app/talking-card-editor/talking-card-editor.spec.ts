@@ -7,6 +7,7 @@ import { DocumentsService } from '../documents.service';
 import { STACK_NARRATOR_VOICES } from '../boards/stack-voice';
 import { TalkingCardDraftStore, type TalkingCardDraftRecord } from './talking-card-draft.store';
 import { EventGuideSetup } from '../event-guide/event-guide-setup';
+import { EventGuideService } from '../event-guide/event-guide.service';
 import { By } from '@angular/platform-browser';
 import { TalkingCardEditorComponent } from './talking-card-editor';
 import { TalkingCardKnowledgeService } from './talking-card-knowledge.service';
@@ -151,7 +152,11 @@ describe('TalkingCardEditorComponent', () => {
     const nav: HTMLElement = fixture.nativeElement.querySelector('.talking-editor__event-nav');
     const next: HTMLButtonElement = fixture.nativeElement.querySelector('.talking-editor__footer .talking-editor__primary');
     expect(nav.querySelector('[aria-current]')?.textContent).toContain('Event setup');
-    expect(next.disabled).toBeTrue();
+    expect(next.disabled).toBeFalse();
+    next.click();
+    fixture.detectChanges();
+    expect(page.eventStep()).toBe('event');
+    expect(fixture.nativeElement.querySelector('#event-editor-status')?.textContent).toContain('Enter the event name.');
     program.setField('name', 'Robotics Day');
     program.openSession();
     program.updateSession('title', 'Opening keynote');
@@ -165,9 +170,48 @@ describe('TalkingCardEditorComponent', () => {
     fixture.detectChanges();
     expect(page.eventStep()).toBe('avatar');
     expect(nav.querySelector('[aria-current]')?.textContent).toContain('Avatar & card');
+    page.setMode('existing');
+    fixture.detectChanges();
+    const add: HTMLButtonElement = fixture.nativeElement.querySelector('.talking-editor__footer .talking-editor__primary');
+    expect(add.disabled).toBeFalse();
+    expect(fixture.nativeElement.querySelector('#event-editor-status')?.textContent).toContain('Select an avatar');
+    expect(fixture.nativeElement.querySelectorAll('#talking-avatar-results [role="option"]').length).toBeGreaterThan(0);
+    add.click();
+    fixture.detectChanges();
+    expect(document.activeElement?.id).toBe('talking-avatar-search');
+    program.setField('informationUrl', 'http://example.org');
+    fixture.detectChanges();
+    add.click();
+    fixture.detectChanges();
+    expect(page.eventStep()).toBe('event');
+    const link = fixture.nativeElement.querySelector('#event-information-url') as HTMLInputElement;
+    expect(link.closest('details')?.open).toBeTrue();
+    expect(document.activeElement).toBe(link);
+    expect(fixture.nativeElement.querySelector('#event-editor-status')?.textContent).toContain('official event link starting with https://');
+    program.setField('informationUrl', 'https://example.org');
+    page.showEventStep('avatar');
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('#talking-avatar-results [role="option"]').click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(page.canSave()).toBeTrue();
     page.showEventStep('event');
     fixture.detectChanges();
     expect(program.sessions()[0]?.title).toBe('Opening keynote');
+
+    const eventSave = spyOn(TestBed.inject(EventGuideService), 'save').and.resolveTo({
+      ...page.eventSettingsDraft(), datasetId: 'a'.repeat(64),
+    });
+    const saved = spyOn(page.saved, 'emit');
+    page.showEventStep('avatar');
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.talking-editor__footer .talking-editor__primary').click();
+    await fixture.whenStable();
+    expect(eventSave).toHaveBeenCalledTimes(1);
+    expect(saved).toHaveBeenCalledWith(jasmine.objectContaining({
+      atlasId: 'george',
+      event: jasmine.objectContaining({ name: 'Robotics Day', informationUrl: 'https://example.org' }),
+    }));
   });
 
   it('shows only Off or Add a sponsor when creating an avatar, with no board settings', async () => {

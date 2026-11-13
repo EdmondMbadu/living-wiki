@@ -2203,6 +2203,10 @@
     "source": "Edit team listing | LivingWiki",
     "file": "src/app/app.routes.ts"
   },
+  "1593774899264833597": {
+    "source": "Enter an opening message.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "1594128309539616928": {
     "source": "Join for free",
     "file": "src/app/chat/chat.ts"
@@ -2762,6 +2766,10 @@
   "1769661379068269645": {
     "source": "Your email",
     "file": "src/app/boards/boards.html"
+  },
+  "1772013251827498420": {
+    "source": "Enter a time zone like America/Los_Angeles.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "1779552786277618671": {
     "source": "Distance",
@@ -3695,6 +3703,10 @@
     "source": "{$INTERPOLATION} sec",
     "file": "src/app/boards/boards.html"
   },
+  "2057543811570203125": {
+    "source": "The program can span up to {$PH_1} days.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "2057574872309338088": {
     "source": "Copy share link",
     "file": "src/app/fence-line/fence-line.html"
@@ -4391,6 +4403,10 @@
     "source": "Wiki processing",
     "file": "src/app/library/library.html"
   },
+  "2279970098628494915": {
+    "source": "Paste the SOUL file text here, or write how the guide should speak and answer questions.",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "2280973484866768470": {
     "source": "We could not confirm the payment yet. If you were charged, refresh in a moment or contact support.",
     "file": "src/app/membership/membership.ts"
@@ -4806,6 +4822,10 @@
   "2395974536790751613": {
     "source": " Use the most recent email. Older verification links can expire or become invalid after a newer message is sent. ",
     "file": "src/app/verify-email/verify-email.html"
+  },
+  "2396115390105460196": {
+    "source": "The last program day must be on or after the first.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "2398003738290119274": {
     "source": "Save card",
@@ -6491,6 +6511,10 @@
     "source": "This tour is ready for its first stop.",
     "file": "src/app/boards/boards.html"
   },
+  "2921423700199054235": {
+    "source": "Choose the last program day.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "2922905721878786407": {
     "source": "No public boards yet.",
     "file": "src/app/boards/boards.ts"
@@ -7566,10 +7590,6 @@
   "3203796314104356620": {
     "source": "Asthma hospitalization rates are among the highest in the U.S.",
     "file": "src/app/fence-line/fence-line.ts"
-  },
-  "3206363948993398404": {
-    "source": "Set up the event program and the avatar that will guide guests.",
-    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "3207212563016076553": {
     "source": "Try an example",
@@ -9963,6 +9983,10 @@
     "source": "Edit {$INTERPOLATION}",
     "file": "src/app/business-detail/business-edit.html"
   },
+  "3863160457642305851": {
+    "source": "Include the session on {$PH_1} in the program dates.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "3863304149863674157": {
     "source": "Give your collection a name.",
     "file": "src/app/board-collections.service.ts"
@@ -10235,6 +10259,10 @@
     "source": "Add a photo or describe the related card first.",
     "file": "src/app/boards/boards.ts"
   },
+  "3940229980596456554": {
+    "source": "Enter a whole number from 5 to 120 for travel minutes.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "394029064542758922": {
     "source": "Photos show the space.{$LINE_BREAK}{$START_EMPHASISED_TEXT}You help the seller feel the story.{$CLOSE_EMPHASISED_TEXT}",
     "file": "src/app/talkthrus/talkthrus.html"
@@ -10298,10 +10326,6 @@
   "3967269098753656610": {
     "source": "Email address",
     "file": "src/app/atlas-landing/atlas-landing.html"
-  },
-  "3967996664797465134": {
-    "source": "Check the exhibit floor hours.",
-    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "3968543372096442680": {
     "source": "Open the Wiki view to inspect compiled topics, summaries, and citations.",
@@ -11719,6 +11743,10 @@
     "source": "This tour changed elsewhere. Reload it and try again.",
     "file": "src/app/boards/boards.ts"
   },
+  "4349820588197547678": {
+    "source": "Enter the event name.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "4350435542550581878": {
     "source": "Team role{$START_TAG_SELECT}{$START_TAG_OPTION}Member — create and edit team listings{$CLOSE_TAG_OPTION}{$START_TAG_OPTION_1}Admin — also manage members and team settings{$CLOSE_TAG_OPTION}{$CLOSE_TAG_SELECT}",
     "file": "src/app/teams/teams.html"
@@ -11906,6 +11934,10 @@
   "440843180962569357": {
     "source": "Your voice, your choice",
     "file": "src/app/teams/teams.ts"
+  },
+  "441133045493827300": {
+    "source": "Choose or create an avatar",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "4411804916643972918": {
     "source": " Refreshing Philly green jobs… ",
@@ -12787,6 +12819,10 @@
     "source": "Fast start",
     "file": "src/app/public-wikis/public-wikis.html"
   },
+  "4668419652999911645": {
+    "source": "Enter the avatar’s name.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "4671879182788412407": {
     "source": "Proposed change",
     "file": "src/app/kiwi/kiwi.html"
@@ -13118,10 +13154,6 @@
   "4760597356075474732": {
     "source": "Explore · Learn · Connect",
     "file": "src/app/auth-story-panel/auth-story-panel.html"
-  },
-  "4760689237520935879": {
-    "source": "Check the event name, dates, time zone, and links.",
-    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "4763709237936069505": {
     "source": " · awaiting enrichment",
@@ -14074,6 +14106,10 @@
   "5049635935950843903": {
     "source": "Prompt examples",
     "file": "src/app/boards/boards.html"
+  },
+  "5056007393713255884": {
+    "source": "Add the schedule and event details, then choose or create the guide.",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "5056096073868119232": {
     "source": "Coke plants and Superfund",
@@ -16751,6 +16787,10 @@
     "source": "Password updated",
     "file": "src/app/auth-action/auth-action.ts"
   },
+  "5800557087382339460": {
+    "source": "Complete the sponsor’s name and message or choose Off.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "5801550010711717135": {
     "source": "{$INTERPOLATION} card{$INTERPOLATION_1} still need an image.",
     "file": "src/app/boards/boards.html"
@@ -18759,6 +18799,10 @@
     "source": "Finding articles on {$INTERPOLATION}...",
     "file": "src/app/web-scraper/web-scraper.html"
   },
+  "6358294007562554034": {
+    "source": "Select an avatar or choose “Create a new avatar”.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "6358738184054397541": {
     "source": "Started (UTC)",
     "file": "src/app/card-analytics/card-analytics.html"
@@ -18794,6 +18838,10 @@
   "6367751413467188072": {
     "source": "Market",
     "file": "src/app/business-claim/business-claim.html"
+  },
+  "6368685022180906579": {
+    "source": "Enter a privacy notice link starting with https:// or leave it blank.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "6371251954110129681": {
     "source": "Event setup",
@@ -20963,6 +21011,10 @@
     "source": "Retry sync",
     "file": "src/app/platform-analytics/platform-analytics.html"
   },
+  "7016304691072574268": {
+    "source": "Add instructions for how the avatar should speak and answer questions.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "701721694157980584": {
     "source": "Taco",
     "file": "src/app/business-badge-icons.ts"
@@ -23106,6 +23158,10 @@
   "7630899249289899290": {
     "source": "Make an independent copy first. Your copy keeps the cards and attribution, then you can customize and publish its trailer.",
     "file": "src/app/boards/boards.html"
+  },
+  "763368413148849697": {
+    "source": "Choose the first program day.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "7635021233325868990": {
     "source": "LivingWiki pricing",
@@ -25363,6 +25419,10 @@
     "source": "Mark updates as read",
     "file": "src/app/notifications/notifications.ts"
   },
+  "8297919602090898755": {
+    "source": "Select an existing avatar, or create one here with its own instructions.",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "829843374796138920": {
     "source": "{$START_TAG_SPAN}search_off{$CLOSE_TAG_SPAN} No communities match the current filters. ",
     "file": "src/app/fence-line/fence-line.html"
@@ -25959,6 +26019,10 @@
     "source": "Find on Spotify",
     "file": "src/app/boards/boards.ts"
   },
+  "8472395602578987950": {
+    "source": "Preparing your profile photo…",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "8474234664290013698": {
     "source": "Share chat",
     "file": "src/app/chat/chat.ts"
@@ -26427,6 +26491,10 @@
     "source": "Discard changes",
     "file": "src/app/board-collection-editor/board-collection-editor.html"
   },
+  "863663725809101449": {
+    "source": "Enter an official event link starting with https:// or leave it blank.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "8636653720347727364": {
     "source": "{$INTERPOLATION} cards from {$INTERPOLATION_1}",
     "file": "src/app/boards/boards.html"
@@ -26714,10 +26782,6 @@
   "8720093607726336341": {
     "source": "Open this page in your browser to continue.",
     "file": "src/app/talkthru-billing/talkthru-billing.service.ts"
-  },
-  "8720184121728768764": {
-    "source": "The program dates must include every session.",
-    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "8721196680877750916": {
     "source": "Upload a schedule or add a session.",

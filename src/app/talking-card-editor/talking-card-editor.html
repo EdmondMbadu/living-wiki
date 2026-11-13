@@ -5,7 +5,7 @@
         <span class="talking-editor__eyebrow">{{ boardTitle() }}</span>
         <h2 id="talking-editor-title">{{ isEventSetup() ? eventEditorTitle() : isEditing() ? templateText.message1 : isRealEstateSetup() ? templateText.message2 : templateText.message3 }}</h2>
         @if (isEventSetup()) {
-          <p i18n>Set up the event program and the avatar that will guide guests.</p>
+          <p i18n>Add the schedule and event details, then choose or create the guide.</p>
         } @else {
           <p>{{ isEditing() ? templateText.message4 : isRealEstateSetup() ? templateText.message5 : templateText.message6 }}</p>
         }
@@ -18,16 +18,16 @@
     @if (isEventSetup()) {
       <nav class="talking-editor__event-nav" aria-label="Event Talking Card setup" i18n-aria-label>
         <button type="button" [attr.aria-current]="eventStep() === 'event' ? 'step' : null" [disabled]="saving() || eventImporting()" (click)="showEventStep('event')">
-          <span class="material-symbols-outlined" aria-hidden="true">event_available</span><span i18n>Event setup</span>
+          <span aria-hidden="true">1.</span><span i18n>Event setup</span>
         </button>
         <button type="button" [attr.aria-current]="eventStep() === 'avatar' ? 'step' : null" [disabled]="saving() || eventImporting()" (click)="showEventStep('avatar')">
-          <span class="material-symbols-outlined" aria-hidden="true">record_voice_over</span><span i18n>Avatar &amp; card</span>
+          <span aria-hidden="true">2.</span><span i18n>Avatar &amp; card</span>
         </button>
       </nav>
 
       <div class="talking-editor__body" [hidden]="eventStep() !== 'event'">
         @defer (on immediate) {
-          <app-event-guide-setup [boardId]="boardId()" [cardId]="editingCard()?.id || ''" [disabled]="saving() || eventImporting()"
+          <app-event-guide-setup [boardId]="boardId()" [cardId]="editingCard()?.id || ''" [disabled]="saving() || eventImporting()" [invalidField]="eventSetupIssue()?.target || ''"
             [(settings)]="eventSettingsDraft" [(dataset)]="eventDatasetDraft" [(importing)]="eventImporting" [(reviewing)]="eventReviewing" />
         }
         @if (!isEditing() && !eventSettingsDraft().name.trim() && !eventSettingsDraft().datasetId && !eventDatasetDraft().sessions?.length && !eventReviewing()) {
@@ -35,7 +35,6 @@
             <span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span><span i18n>Load Amy’s CES 2027 demo</span>
           </button>
         }
-        @if (errorMessage()) { <p class="talking-editor__error" role="alert">{{ errorMessage() }}</p> }
       </div>
     } @else {
       <ng-container [ngTemplateOutlet]="avatarNavigation" />
@@ -65,6 +64,8 @@
 
     <div class="talking-editor__body" [hidden]="isEventSetup() && eventStep() !== 'avatar'">
       @if (isEventSetup()) {
+        <h3 id="event-avatar-heading" tabindex="-1" class="talking-editor__event-heading" i18n>Choose or create an avatar</h3>
+        @if (!isEditing()) { <p class="talking-editor__event-help" i18n>Select an existing avatar, or create one here with its own instructions.</p> }
         <ng-container [ngTemplateOutlet]="avatarNavigation" />
       }
       @if (canListAvatar() && (mode() === 'new' || selectedAtlas())) {
@@ -157,7 +158,7 @@
             <span><strong id="talking-editor-card-heading" i18n>Card details</strong><small i18n>How this guide appears and greets visitors on this board.</small></span>
           </header>
           <div class="talking-editor__grid">
-            <label><span i18n>Display name *</span><input maxlength="120" [ngModel]="name()" (ngModelChange)="name.set($event)" /></label>
+            <label><span i18n>Display name *</span><input [id]="isEventSetup() ? 'event-avatar-name' : ''" maxlength="120" [ngModel]="name()" (ngModelChange)="name.set($event)" /></label>
             <label><span i18n>Role or subtitle</span><input maxlength="240" [ngModel]="role()" (ngModelChange)="role.set($event)" /></label>
           </div>
           <div class="talking-editor__portrait-editor">
@@ -172,7 +173,7 @@
             </label>
             @if (imageProcessing()) { <small i18n><span class="material-symbols-outlined talking-editor__spin">progress_activity</span> Optimizing portrait…</small> }
           </div>
-          <label><span i18n>Opening message *</span><textarea rows="3" maxlength="500" [ngModel]="openingMessage()" (ngModelChange)="openingMessage.set($event)"></textarea></label>
+          <label><span i18n>Opening message *</span><textarea [id]="isEventSetup() ? 'event-opening-message' : ''" rows="3" maxlength="500" [ngModel]="openingMessage()" (ngModelChange)="openingMessage.set($event)"></textarea></label>
           <label><span i18n>Card position</span><select [ngModel]="placement()" (ngModelChange)="placement.set($event)"><option value="keep" i18n>Keep current position</option><option value="start" i18n>Move to beginning</option><option value="end" i18n>Move to end</option></select></label>
           @if (selectedAtlasEditable()) {
             <small class="talking-editor__shared-note" i18n><span class="material-symbols-outlined">hub</span>Name, role, and portrait also update the shared avatar profile.</small>
@@ -192,7 +193,8 @@
               placeholder="Search avatars by name…"
               [ngModel]="avatarSearch()"
               (ngModelChange)="onAvatarSearchChange($event)"
-              [attr.aria-expanded]="!!avatarSearch().trim()"
+              [attr.aria-expanded]="!!avatarSearch().trim() || !!filteredAvailableAtlases().length"
+              [attr.aria-invalid]="isEventSetup() && eventAvatarIssue()?.target === 'talking-avatar-search' ? 'true' : null"
               aria-controls="talking-avatar-results"
              i18n-placeholder/>
             @if (avatarSearch()) {
@@ -200,7 +202,7 @@
             }
           </div>
 
-          @if (avatarSearch().trim()) {
+          @if (avatarSearch().trim() || filteredAvailableAtlases().length) {
             <div id="talking-avatar-results" class="talking-editor__search-results" role="listbox" aria-label="Matching conversational avatars" i18n-aria-label>
               @for (atlas of filteredAvailableAtlases(); track atlas.id) {
                 <button
@@ -254,7 +256,7 @@
         }
       } @else if (!isEditing()) {
         <div class="talking-editor__grid">
-          <label><span i18n>Name *</span><input maxlength="120" [ngModel]="name()" (ngModelChange)="name.set($event)" placeholder="Maya Chen"  i18n-placeholder/></label>
+          <label><span i18n>Name *</span><input [id]="isEventSetup() ? 'event-avatar-name' : ''" maxlength="120" [ngModel]="name()" (ngModelChange)="name.set($event)" placeholder="Maya Chen"  i18n-placeholder/></label>
           <label><span i18n>Role or subtitle</span><input maxlength="240" [ngModel]="role()" (ngModelChange)="role.set($event)" placeholder="Listing specialist"  i18n-placeholder/></label>
         </div>
         <label><span i18n>Avatar image</span><input type="file" accept="image/*" [disabled]="imageProcessing()" (change)="onImageSelected($event)" /></label>
@@ -262,7 +264,8 @@
         @if (imagePreviewUrl()) { <img class="talking-editor__preview" [src]="imagePreviewUrl()" alt="Avatar preview"  i18n-alt/> }
         <label>
           <span i18n>System prompt *</span>
-          <textarea rows="7" maxlength="40000" [ngModel]="personaPrompt()" (ngModelChange)="personaPrompt.set($event)" placeholder="You are Maya. Speak in the first person. Answer from the supplied documents, be candid about uncertainty, and never invent property facts." i18n-placeholder></textarea>
+          <textarea [id]="isEventSetup() ? 'event-avatar-prompt' : ''" rows="7" maxlength="40000" [ngModel]="personaPrompt()" (ngModelChange)="personaPrompt.set($event)" placeholder="You are Maya. Speak in the first person. Answer from the supplied documents, be candid about uncertainty, and never invent property facts." i18n-placeholder></textarea>
+          @if (isEventSetup()) { <small i18n>Paste the SOUL file text here, or write how the guide should speak and answer questions.</small> }
           <small i18n>This becomes the avatar’s first-person persona. It is stored on the avatar, never copied into the board.</small>
         </label>
         <label><span i18n>Knowledge documents (up to 10)</span><input type="file" multiple (change)="onDocumentsSelected($event)" /></label>
@@ -489,7 +492,7 @@
 
       @if (!isEditing() && !isRealEstateSetup()) {
       <div class="talking-editor__grid">
-        <label><span i18n>Opening message *</span><textarea rows="3" maxlength="500" [ngModel]="openingMessage()" (ngModelChange)="openingMessage.set($event)"></textarea></label>
+        <label><span i18n>Opening message *</span><textarea [id]="isEventSetup() ? 'event-opening-message' : ''" rows="3" maxlength="500" [ngModel]="openingMessage()" (ngModelChange)="openingMessage.set($event)"></textarea></label>
         <div>
           <label><span i18n>Place card</span><select [ngModel]="placement()" (ngModelChange)="placement.set($event)"><option value="end" i18n>At the end</option><option value="start" i18n>At the beginning</option></select></label>
         </div>
@@ -502,7 +505,9 @@
             <span class="material-symbols-outlined">ads_click</span>
             <span><strong id="talking-editor-actions-heading" i18n>Visitor actions</strong><small i18n>Add scheduling or other useful links without changing the conversation.</small></span>
           </header>
-          <label><span i18n>Conversation button</span><input maxlength="48" [ngModel]="ctaLabel()" (ngModelChange)="ctaLabel.set($event)" placeholder="Talk to me"  i18n-placeholder/></label>
+          @if (!isEventSetup()) {
+            <label><span i18n>Conversation button</span><input maxlength="48" [ngModel]="ctaLabel()" (ngModelChange)="ctaLabel.set($event)" placeholder="Talk to me" i18n-placeholder /></label>
+          }
 
           <div class="talking-editor__action-list">
             @for (action of actions(); track action.id; let actionIndex = $index) {
@@ -513,8 +518,8 @@
                   <button type="button" aria-label="Remove action" (click)="removeAction(actionIndex)" i18n-aria-label><span class="material-symbols-outlined">close</span></button>
                 </header>
                 <div class="talking-editor__grid">
-                  <label><span i18n>Button label</span><input maxlength="48" [ngModel]="action.label" (ngModelChange)="updateAction(actionIndex, 'label', $event)" /></label>
-                  <label><span i18n>Secure link</span><input type="url" maxlength="2000" inputmode="url" placeholder="https://calendly.com/your-name" [ngModel]="action.url" (ngModelChange)="updateAction(actionIndex, 'url', $event)"  i18n-placeholder/></label>
+                  <label><span i18n>Button label</span><input [id]="isEventSetup() ? 'event-action-label-' + actionIndex : ''" maxlength="48" [ngModel]="action.label" (ngModelChange)="updateAction(actionIndex, 'label', $event)" /></label>
+                  <label><span i18n>Secure link</span><input [id]="isEventSetup() ? 'event-action-link-' + actionIndex : ''" type="url" maxlength="2000" inputmode="url" placeholder="https://calendly.com/your-name" [ngModel]="action.url" (ngModelChange)="updateAction(actionIndex, 'url', $event)"  i18n-placeholder/></label>
                 </div>
                 <label><span i18n>Supporting text</span><input maxlength="180" [ngModel]="action.description || ''" (ngModelChange)="updateAction(actionIndex, 'description', $event)" [placeholder]="action.kind === 'schedule' ? templateText.message58 : templateText.message59" /></label>
                 <button type="button" class="talking-editor__test-link" (click)="testAction(action)" i18n><span class="material-symbols-outlined">open_in_new</span>Test link</button>
@@ -532,7 +537,7 @@
           @if (actionValidationMessage()) { <p class="talking-editor__error" role="alert">{{ actionValidationMessage() }}</p> }
         </section>
       }
-      @if (errorMessage()) { <p class="talking-editor__error" role="alert">{{ errorMessage() }}</p> }
+      @if (!isEventSetup() && errorMessage()) { <p class="talking-editor__error" role="alert">{{ errorMessage() }}</p> }
 
       @if (!isEditing() || editorSection() === 'sponsorship') {
         <section class="talking-editor__edit-section talking-editor__sponsorship" aria-labelledby="sponsor-settings-title">
@@ -557,18 +562,24 @@
     </div>
 
     <footer class="talking-editor__footer">
+      @let eventIssue = eventStep() === 'event' ? eventSetupIssue() : eventSetupIssue() || eventAvatarIssue();
+      @if (isEventSetup() && (errorMessage() || eventBusyMessage() || eventIssue?.message)) {
+        <p id="event-editor-status" class="talking-editor__draft-state talking-editor__event-status" [class.is-error]="!!errorMessage()" aria-live="polite">
+          {{ errorMessage() || eventBusyMessage() || eventIssue?.message }}
+        </p>
+      } @else {
       <span class="talking-editor__draft-state" aria-live="polite">
-        @if (isEventSetup() && eventSetupIssue()) { {{ eventSetupIssue() }} }
-        @else if (draftStatus() === 'restored') { <span class="material-symbols-outlined" aria-hidden="true">history</span> Draft restored }
+        @if (draftStatus() === 'restored') { <span class="material-symbols-outlined" aria-hidden="true">history</span> Draft restored }
         @else if (draftStatus() === 'saved') { <span class="material-symbols-outlined" aria-hidden="true">cloud_done</span> Draft saved on this device }
       </span>
+      }
       <button type="button" class="talking-editor__secondary" [disabled]="saving()" (click)="close()" i18n>Cancel</button>
       @if (isEventSetup() && eventStep() === 'event') {
-        <button type="button" class="talking-editor__primary" [disabled]="!!eventSetupIssue() || eventImporting()" (click)="showEventStep('avatar')">
+        <button type="button" class="talking-editor__primary" [disabled]="eventImporting() || saving()" [attr.aria-describedby]="eventIssue ? 'event-editor-status' : null" (click)="showEventStep('avatar')">
           <span i18n>Continue to avatar</span><span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
         </button>
       } @else {
-      <button type="button" class="talking-editor__primary" [disabled]="!canSave()" (click)="save()">
+      <button type="button" class="talking-editor__primary" [disabled]="isEventSetup() ? saving() || !!eventBusyMessage() : !canSave()" [attr.aria-describedby]="isEventSetup() && eventIssue ? 'event-editor-status' : null" (click)="save()">
         @if (saving()) { <span class="material-symbols-outlined talking-editor__spin">progress_activity</span> {{ saveStage() || templateText.message42 }} }
         @else { <span class="material-symbols-outlined">{{ isEditing() ? 'save' : 'record_voice_over' }}</span> {{ isEditing() ? templateText.message43 : isRealEstateSetup() ? templateText.message44 : isEventSetup() ? eventEditorTitle() : templateText.message45 }} }
       </button>

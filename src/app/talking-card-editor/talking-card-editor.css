@@ -292,6 +292,10 @@
 .talking-editor--event .talking-editor__body { min-height: 0; overflow-y: auto; padding-block: .85rem 1rem; align-content: start; }
 .talking-editor--event .talking-editor__body[hidden] { display: none; }
 .talking-editor--event .talking-editor__body > .talking-editor__tabs, .talking-editor--event .talking-editor__body > .talking-editor__scope-note { margin: 0; }
+.talking-editor__event-heading { margin: 0; font-size: 1.1rem; }
+.talking-editor__event-help { margin: 0; color: var(--muted); font-size: .85rem; }
+.talking-editor__event-status { margin-block: 0; line-height: 1.4; }
+.talking-editor__event-status.is-error { color: #b42318; }
 .talking-editor--event .talking-editor__footer { padding-block: .7rem; align-items: center; }
 .talking-editor--event .talking-editor__footer button { min-height: 2.5rem; padding-inline: .85rem; font-size: .84rem; }
 .talking-editor--event .talking-editor__footer .material-symbols-outlined { font-size: 1.05rem; }
