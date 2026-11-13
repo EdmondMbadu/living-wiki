@@ -97,6 +97,7 @@
         <h3 id="event-avatar-heading" tabindex="-1" class="talking-editor__event-heading" i18n>Choose or create an avatar</h3>
         @if (!isEditing()) { <p class="talking-editor__event-help" i18n>Select an existing avatar, or create one here with its own instructions.</p> }
         <ng-container [ngTemplateOutlet]="avatarNavigation" />
+        <div class="talking-editor__event-shortcuts">
         @if (!isEditing()) {
           <button type="button" class="talking-editor__event-sponsor-link" [class.needs-attention]="!sponsorValid()" (click)="showEventSponsorship()">
             <span class="material-symbols-outlined" aria-hidden="true">handshake</span>
@@ -107,6 +108,13 @@
             <span class="material-symbols-outlined" aria-hidden="true">arrow_downward</span>
           </button>
         }
+          <button type="button" class="talking-editor__event-sponsor-link" (click)="showEventEmailDesign()">
+            <span class="material-symbols-outlined" aria-hidden="true">mail</span>
+            <strong i18n>Recap email design</strong>
+            @if (eventSettingsDraft().emailDesign) { <small>Spotlight</small> } @else { <small i18n>Default</small> }
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_downward</span>
+          </button>
+        </div>
       }
       @if (canListAvatar() && (mode() === 'new' || selectedAtlas())) {
         <label class="talking-editor__check">
@@ -607,6 +615,39 @@
               @if (sponsorPreviewError()) { <p class="talking-editor__notice" role="status">{{ sponsorPreviewError() }}</p> }
             } @else { <small>No sponsor message will be added.</small> }
           </fieldset>
+        </section>
+      }
+      @if (isEventSetup()) {
+        <section class="talking-editor__edit-section talking-editor__email-design" aria-labelledby="event-email-design-title">
+          <header class="talking-editor__section-heading">
+            <span class="material-symbols-outlined" aria-hidden="true">mail</span>
+            <span><strong id="event-email-design-title" tabindex="-1" i18n>Recap email design</strong><small i18n>Choose how the recap and itinerary look in a guest’s inbox.</small></span>
+          </header>
+          <fieldset [disabled]="!draftReady() || saving() || eventEmailImageBusy()" aria-labelledby="event-email-design-title">
+            <div class="talking-editor__email-options">
+              <label><input type="radio" name="event-email-design" [checked]="!eventSettingsDraft().emailDesign" (change)="setEventEmailTheme(false)" /><strong i18n>Default</strong></label>
+              <label><input type="radio" name="event-email-design" [checked]="!!eventSettingsDraft().emailDesign" (change)="setEventEmailTheme(true)" /><strong>Spotlight</strong></label>
+            </div>
+            @if (eventSettingsDraft().emailDesign) {
+              @if (eventEmailBannerPreview(); as banner) {
+                <img class="talking-editor__email-banner" [src]="banner" alt="" />
+              }
+              <div class="talking-editor__email-buttons">
+                <label class="talking-editor__portrait-button"><span class="material-symbols-outlined" aria-hidden="true">add_photo_alternate</span><span i18n>Upload banner</span><input type="file" accept="image/jpeg,image/png,image/webp" (change)="onEventEmailBannerSelected($any($event.target))" /></label>
+                @if (eventSettingsDraft().name.toLowerCase().includes('ces 2027')) {
+                  <button type="button" class="talking-editor__secondary" (click)="useCesEmailBanner()" i18n>Use CES 2027 artwork</button>
+                }
+                @if (eventEmailBannerPreview()) { <button type="button" class="talking-editor__secondary" (click)="clearEventEmailBanner()" i18n>Remove banner</button> }
+              </div>
+              @if (eventEmailImageError()) { <p class="talking-editor__inline-error" role="alert">{{ eventEmailImageError() }}</p> }
+            }
+          </fieldset>
+          <div class="talking-editor__email-buttons">
+            <button type="button" class="talking-editor__secondary" aria-controls="event-email-preview" [attr.aria-expanded]="eventEmailPreviewOpen()" (click)="toggleEventEmailPreview()" i18n>Preview</button>
+          </div>
+          @if (eventEmailPreview(); as preview) {
+            <iframe id="event-email-preview" title="Sample recap email" i18n-title sandbox referrerpolicy="no-referrer" [srcdoc]="preview"></iframe>
+          }
         </section>
       }
     </div>

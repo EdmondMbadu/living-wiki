@@ -1,6 +1,5 @@
 import { contentLanguageDetails, type ContentLanguage } from './content-language';
-import { eventDisplayDate, eventDisplayTime, eventHttpsUrl, type EventGuideSettings, type EventPlan } from './event-guide-model';
-import type { RecapEmailCopy } from './recap-email-localization';
+import { eventDisplayDate, eventDisplayTime, eventEmailDesign, eventHttpsUrl, type EventGuideSettings, type EventPlan } from './event-guide-model';
 
 const messages = {
   en: ['Your itinerary', 'Day off', 'Lunch and recharge', 'Explore the show floor', 'Times and locations may change. Check the event’s latest information.', 'Event information', 'Privacy', 'Presented by'],
@@ -48,9 +47,10 @@ const editLabels = {
 export function renderEventEmail(
   settings: EventGuideSettings, plan: Pick<EventPlan, 'days'> | null, language: ContentLanguage,
   sponsor: { name: string; message: string } | null, transcript: readonly EventRecapTurn[] = [],
-  itineraryEditUrl = '', copy: RecapEmailCopy = source => source,
+  itineraryEditUrl = '', copy: (source: string) => string = source => source,
 ) {
   const locale = contentLanguageDetails(language);
+  const design = eventEmailDesign(settings.emailDesign);
   const [itinerary, dayOff, lunch, exhibits, changes, info, privacy, presentedBy] = messages[language];
   const [recap, conversation, visitor, guide] = recapLabels[language];
   const sponsorMessage = sponsor ? copy(sponsor.message) : '';
@@ -90,6 +90,40 @@ export function renderEventEmail(
   }).join('');
   if (sponsor) text.push('', `${presentedBy} ${sponsor.name}`, sponsorMessage);
   text.push('', changes, settings.informationUrl, settings.privacyUrl, '', 'LivingWiki', 'https://livingwiki.com');
+  if (design) {
+    const start = locale.direction === 'rtl' ? 'right' : 'left';
+    const end = start === 'right' ? 'left' : 'right';
+    const banner = design.bannerUrl ? `<tr><td><img src="${escape(design.bannerUrl)}" alt="" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0"></td></tr>` : '';
+    const html = `<!doctype html><html lang="${locale.id}" dir="${locale.direction}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(subject)}</title></head>
+    <body style="margin:0;background:#0b1020;font:16px/1.5 Arial,Helvetica,sans-serif">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0">${escape(subject)}</div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#0b1020"><tr><td align="center" style="padding:20px 12px">
+    <!--[if mso]><table role="presentation" width="600" align="center"><tr><td><![endif]-->
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" dir="${locale.direction}" style="max-width:600px">
+    <tr><td bgcolor="#0e1530" style="padding:18px 22px;border-radius:16px 16px 0 0;border-bottom:1px solid #26304d">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>
+        <td align="${start}" style="padding:0 8px"><span style="display:inline-block;padding:5px 12px;background:#ffffff;border-radius:7px;color:#0b1020;font-weight:bold">${escape(settings.name)}</span></td>
+        ${sponsor ? `<td align="${end}" style="padding:0 8px;color:#ffffff"><small style="color:#bbc9ee">${escape(presentedBy)}</small><br><strong>${escape(sponsor.name)}</strong></td>` : ''}
+      </tr></table>
+    </td></tr>
+    <tr><td align="${start}" bgcolor="#171f4a" style="padding:26px 24px;background-image:linear-gradient(135deg,#1b2a6b,#171f4a 58%,#351a51);color:#ffffff">
+      <h1 style="margin:0 0 6px;font:32px/1.2 Georgia,serif;color:#ffffff">${escape(title)}</h1>
+      <p style="margin:0;color:#cbd9ff">${escape(settings.timeZone)}</p>
+      ${editUrl ? `<p style="margin:18px 0 0"><a href="${escape(editUrl)}" style="display:inline-block;border-radius:8px;padding:10px 16px;background:#e3ebff;color:#172857;text-decoration:none;font-weight:bold">${escape(edit)}</a></p>` : ''}
+    </td></tr>
+    ${banner}
+    <tr><td align="${start}" bgcolor="#ffffff" style="padding:6px 24px 24px;color:#101830">
+      ${highlights}${plan && isRecap ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}${days}
+      <p style="margin:20px 0 0;padding:14px;border-radius:10px;background:#edf1ff;color:#25376e">${escape(changes)}</p>
+      ${settings.informationUrl ? `<p>${link(info, settings.informationUrl)}</p>` : ''}
+    </td></tr>
+    <tr><td align="${start}" bgcolor="#e9eef9" style="padding:18px 24px;border-radius:0 0 16px 16px;color:#253052">
+      ${sponsor ? `<p style="margin:0 0 10px">${escape(sponsorMessage)}</p>` : ''}${settings.privacyUrl ? link(privacy, settings.privacyUrl) : ''}
+      <p style="margin:8px 0 0;font-size:14px;font-weight:bold">${link('LivingWiki', 'https://livingwiki.com')}</p>
+    </td></tr></table>
+    <!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>`;
+    return { subject, html, text: text.join('\n') };
+  }
   const html = `<!doctype html><html lang="${locale.id}" dir="${locale.direction}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escape(subject)}</title></head><body style="margin:0;background:#0b1020;color:#101830;font:16px/1.5 Arial,sans-serif">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:20px 12px">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px"><tr><td dir="${locale.direction}" style="padding:22px;background:#15254a;color:#ffffff;border-radius:12px 12px 0 0">

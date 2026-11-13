@@ -11,6 +11,12 @@ export interface EventGuideSettings {
   informationUrl: string;
   privacyUrl: string;
   travelMinutes: number;
+  emailDesign?: EventEmailDesign;
+}
+
+export interface EventEmailDesign {
+  theme: 'spotlight';
+  bannerUrl?: string;
 }
 
 export interface EventSession {
@@ -126,6 +132,13 @@ export function eventHttpsUrl(value: unknown): string {
   }
 }
 
+export function eventEmailDesign(value: unknown): EventEmailDesign | undefined {
+  const data = eventRecord(value);
+  if (data['theme'] !== 'spotlight') return undefined;
+  const bannerUrl = eventHttpsUrl(data['bannerUrl']);
+  return { theme: 'spotlight', ...(bannerUrl ? { bannerUrl } : {}) };
+}
+
 export function eventDate(value: unknown): string {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return '';
   const date = new Date(`${value}T00:00:00Z`);
@@ -154,7 +167,8 @@ export function eventSettings(value: unknown): EventGuideSettings | null {
   if ((data['informationUrl'] && !informationUrl) || (data['privacyUrl'] && !privacyUrl)) return null;
   const travelMinutes = Number(data['travelMinutes'] ?? 30);
   if (!Number.isInteger(travelMinutes) || travelMinutes < 5 || travelMinutes > 120) return null;
-  return { datasetId, name, startDate, endDate, timeZone, informationUrl, privacyUrl, travelMinutes };
+  const emailDesign = eventEmailDesign(data['emailDesign']);
+  return { datasetId, name, startDate, endDate, timeZone, informationUrl, privacyUrl, travelMinutes, ...(emailDesign ? { emailDesign } : {}) };
 }
 
 export function eventDisplayDate(date: string, language: ContentLanguage): string {

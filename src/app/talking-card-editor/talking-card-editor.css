@@ -333,6 +333,7 @@
 }
 .talking-editor__event-sponsor-link .material-symbols-outlined { font-size: 1.1rem; }
 .talking-editor__event-sponsor-link .material-symbols-outlined:last-child { margin-inline-start: auto; }
+.talking-editor__event-shortcuts { display: grid; gap: .45rem; }
 .talking-editor label.talking-editor__event-portrait {
   position: relative;
   display: flex;
@@ -369,6 +370,17 @@
   font-size: .9rem;
 }
 .talking-editor__event-portrait input[type=file] { position: absolute; inset: 0; height: 100%; opacity: 0; cursor: inherit; }
+.talking-editor__email-design { padding: 1rem; border: 1px solid var(--line); border-radius: 1rem; }
+.talking-editor__email-design fieldset { display: grid; gap: .7rem; min-width: 0; margin: 0; padding: 0; border: 0; }
+.talking-editor__email-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+.talking-editor__email-options label { display: flex; align-items: center; gap: .45rem; padding: .65rem; border: 1px solid var(--line); border-radius: .65rem; font-size: .85rem; cursor: pointer; }
+.talking-editor__email-options label:has(:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.talking-editor__email-options input[type=radio] { width: 1rem; height: 1rem; margin: 0; accent-color: var(--accent); }
+.talking-editor__email-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.talking-editor__email-buttons button { min-height: 39px; border-radius: 11px; padding: 0 12px; font-size: .75rem; font-weight: 750; cursor: pointer; }
+.talking-editor__email-design .talking-editor__portrait-button:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.talking-editor__email-banner { display: block; width: 100%; max-height: 11rem; object-fit: contain; border-radius: .65rem; background: #0b1020; }
+.talking-editor__email-design iframe { width: 100%; height: min(28rem, 56vh); border: 1px solid var(--line); border-radius: .65rem; background: #0b1020; }
 .talking-editor--event .talking-editor__footer { padding-block: .7rem; align-items: center; }
 .talking-editor--event .talking-editor__footer button { min-height: 2.5rem; padding-inline: .85rem; font-size: .84rem; }
 .talking-editor--event .talking-editor__footer .material-symbols-outlined { font-size: 1.05rem; }

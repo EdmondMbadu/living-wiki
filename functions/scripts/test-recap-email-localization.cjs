@@ -155,6 +155,18 @@ test('Event Talking Card localizes mixed-language turns, notes and sponsorship w
   const recapOnly = renderEventEmail(settings, null, 'ar', null, transcript, localizedEdit, copy);
   assert.equal(recapOnly.subject, email.subject);
   assert.doesNotMatch(recapOnly.html, /تعديل برنامجك|CES Opening Keynote/);
+  const bannerUrl = 'https://example.org/amy.jpg?one=1&two=2';
+  const brandedSettings = { ...settings, emailDesign: { theme: 'spotlight', bannerUrl } };
+  const branded = renderEventEmail(brandedSettings, plan, 'ar', sponsor, transcript, localizedEdit, copy);
+  assert.equal(branded.subject, email.subject);
+  assert.equal(branded.text, email.text);
+  assert.match(branded.html, /dir="rtl"/);
+  assert.match(branded.html, /src="https:\/\/example\.org\/amy\.jpg\?one=1&amp;two=2"/);
+  assert.ok(branded.html.indexOf(localizedEdit) < branded.html.indexOf('/amy.jpg'));
+  assert.match(branded.html, /شكرًا للجهة الراعية|LivingWiki/);
+  const imageRemoved = renderEventEmail({ ...settings, emailDesign: { theme: 'spotlight', bannerUrl: 'javascript:alert(1)' } }, null, 'ar', null, transcript, '', copy);
+  assert.doesNotMatch(imageRemoved.html, /<img|javascript:|تعديل برنامجك/);
+  assert.match(imageRemoved.html, /#171f4a/);
 });
 
 test('refuses an incomplete translation or one that changes interpolation or adds a header newline', async () => {

@@ -4027,6 +4027,10 @@
     "source": "Uploading photo · ",
     "file": "src/app/off-grids/off-grid-copy.ts"
   },
+  "2165388188214775885": {
+    "source": "Uploading email image…",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "2167088665331548061": {
     "source": "Hi, I’m Jenny. Take a look around this beautiful four-bedroom home. I’d be happy to show you in person.",
     "file": "src/app/boards/boards.html"
@@ -7551,6 +7555,10 @@
     "source": "Cards Generated",
     "file": "src/app/membership/membership.ts"
   },
+  "3193643633267044574": {
+    "source": "Choose how the recap and itinerary look in a guest’s inbox.",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "3193976279273491157": {
     "source": "Actions",
     "file": "src/app/board-insights/board-insights.html"
@@ -8263,6 +8271,10 @@
     "source": "Local and PurpleAir sensor networks for real-time PM2.5 observations.",
     "file": "src/app/fence-line/fence-line.html"
   },
+  "3382046106225194125": {
+    "source": "Sign in to upload an email image.",
+    "file": "src/app/event-guide/event-guide.service.ts"
+  },
   "3382319902629744903": {
     "source": "QR badge",
     "file": "src/app/business-detail/business-edit.html"
@@ -8302,6 +8314,10 @@
   "3393264224556078604": {
     "source": "No favorites yet.",
     "file": "src/app/boards/boards.ts"
+  },
+  "3394080812181176794": {
+    "source": "Remove banner",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "339409850848877046": {
     "source": "Your email has been verified. You can continue now.",
@@ -9671,6 +9687,10 @@
     "source": "Used to guide business-specific answers",
     "file": "src/app/business-claim/business-claim.html"
   },
+  "3776486236456156638": {
+    "source": "Sample recap email",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "3778301070648434818": {
     "source": "Account and linked spaces",
     "file": "src/app/profile/profile.html"
@@ -10226,6 +10246,10 @@
   "3937586576085001575": {
     "source": "Every agent's own voice, one brand.",
     "file": "src/app/talkthrus/talkthrus.html"
+  },
+  "3937723310651837449": {
+    "source": "Recap email design",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "3937735721127296980": {
     "source": "Loading report links…",
@@ -13123,6 +13147,10 @@
     "source": "Show what makes this place special.",
     "file": "src/app/off-grids/off-grid-editor.html"
   },
+  "4753965489470755684": {
+    "source": "Upload banner",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "4756170696222090855": {
     "source": "Anything else your guide should emphasize or avoid?",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -15382,6 +15410,10 @@
   "542942528519449836": {
     "source": "Text messages and spoken turns",
     "file": "src/app/platform-analytics/picamo-analytics.html"
+  },
+  "5432237525002238638": {
+    "source": "This image could not be prepared. Try a different image.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "543243826700074360": {
     "source": "{$INTERPOLATION} of {$INTERPOLATION_1} articles",
@@ -17962,6 +17994,10 @@
   "614027880250747579": {
     "source": "Preparing…",
     "file": "src/app/boards/board-promo-image-dialog.ts"
+  },
+  "6142239318515054652": {
+    "source": "Choose a JPG, PNG, or WebP image up to 10 MB.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "6144154546407086739": {
     "source": "Public Wiki | LivingWiki",
@@ -23339,6 +23375,10 @@
     "source": "Generate {$INTERPOLATION} boards without losing editorial control.",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
+  "7682225438816893925": {
+    "source": "Preparing your email image…",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "7684107634181305975": {
     "source": "Conversation voice",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -25446,6 +25486,10 @@
   "8301535046747035390": {
     "source": "Full name",
     "file": "src/app/create-account/create-account.html"
+  },
+  "830171868915202154": {
+    "source": "Use CES 2027 artwork",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "8303020794738293298": {
     "source": "Open a board and add cards to build out your collection feed.",

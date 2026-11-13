@@ -30,6 +30,7 @@ export interface TalkingCardDraftRecord {
   imageFile: File | null;
   uploadedImageUrl: string;
   documentFiles: File[];
+  emailBannerFile?: File | null;
   eventDraft?: { settings: EventGuideSettings; dataset: Partial<EventDataset> };
   updatedAt: string;
 }
@@ -39,7 +40,7 @@ const DATABASE_VERSION = 1;
 const STORE_NAME = 'drafts';
 const FALLBACK_STORAGE_PREFIX = 'livingwiki:talking-card-draft:';
 
-type TextOnlyDraft = Omit<TalkingCardDraftRecord, 'imageFile' | 'documentFiles'>;
+type TextOnlyDraft = Omit<TalkingCardDraftRecord, 'imageFile' | 'documentFiles' | 'emailBannerFile'>;
 
 @Injectable({ providedIn: 'root' })
 export class TalkingCardDraftStore {
@@ -67,6 +68,7 @@ export class TalkingCardDraftStore {
           ...fallback,
           imageFile: normalized.imageFile,
           documentFiles: normalized.documentFiles,
+          emailBannerFile: normalized.emailBannerFile,
         } : normalized;
       }
     } catch {
@@ -144,7 +146,7 @@ export class TalkingCardDraftStore {
   }
 
   private saveFallback(record: TalkingCardDraftRecord): void {
-    const { imageFile: _imageFile, documentFiles: _documentFiles, ...textOnly } = record;
+    const { imageFile: _imageFile, documentFiles: _documentFiles, emailBannerFile: _emailBannerFile, ...textOnly } = record;
     try {
       window.localStorage.setItem(this.fallbackKey(record.key), JSON.stringify(textOnly));
     } catch {
@@ -201,6 +203,7 @@ export class TalkingCardDraftStore {
       imageFile,
       uploadedImageUrl: this.stringValue(record.uploadedImageUrl).slice(0, 2000),
       documentFiles,
+      emailBannerFile: typeof File !== 'undefined' && record.emailBannerFile instanceof File ? record.emailBannerFile : null,
       ...(record.eventDraft?.settings && record.eventDraft.dataset ? { eventDraft: record.eventDraft } : {}),
       updatedAt: this.stringValue(record.updatedAt),
     };
@@ -214,10 +217,10 @@ export class TalkingCardDraftStore {
     return `${FALLBACK_STORAGE_PREFIX}${key}`;
   }
 
-  private assetFingerprint(record: Pick<TalkingCardDraftRecord, 'imageFile' | 'documentFiles'>): string {
+  private assetFingerprint(record: Pick<TalkingCardDraftRecord, 'imageFile' | 'documentFiles' | 'emailBannerFile'>): string {
     const describe = (file: File | null) => file
       ? `${file.name}:${file.type}:${file.size}:${file.lastModified}`
       : '';
-    return [describe(record.imageFile), ...record.documentFiles.map(describe)].join('|');
+    return [describe(record.imageFile), describe(record.emailBannerFile ?? null), ...record.documentFiles.map(describe)].join('|');
   }
 }

@@ -391,7 +391,7 @@ export const sendEventGuideItinerary = onCall({ region, secrets: [sendgridApiKey
   const path = language === 'en' ? '' : `/${language}`;
   const editUrl = editKey ? `https://livingwiki.com${path}/event-itinerary#${id}.${editKey}` : '';
   const render = (copy: RecapEmailCopy) =>
-    renderEventEmail(ready['settings'], plan, language, ready['sponsor'], transcript, editUrl, copy);
+    renderEventEmail({ ...ready['settings'], emailDesign: context.settings.emailDesign }, plan, language, ready['sponsor'], transcript, editUrl, copy);
   // Prepare the localized copy before reserving delivery so a translation timeout can be retried.
   const message = await prepareRecapEmailCopy(language, render, translateRecapEmailTextSegments).then(render).catch(() => {
     logger.warn('Event email translation could not be prepared.', { language });

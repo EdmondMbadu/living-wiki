@@ -1,13 +1,15 @@
 import { isPlatformBrowser } from '@angular/common';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { httpsCallable } from 'firebase/functions';
+import { getAuth } from 'firebase/auth';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import {
   EVENT_MAX_FILE_BYTES, type EventDataset, type EventGuideSettings, type EventImportResult,
   type EventItineraryDraft, type EventPlan, type EventPreferences, type EventSourceKind,
 } from '../../../functions/src/event-guide-model';
 import type { EventLookup } from '../../../functions/src/event-guide-planner';
 import type { ContentLanguage } from '../../../functions/src/content-language';
-import { getFirebaseFunctions } from '../firebase.client';
+import { getFirebaseApp, getFirebaseFunctions, getFirebaseStorage } from '../firebase.client';
 
 export interface EventCardTarget { boardId: string; cardId: string }
 export interface EventRecapSessions {
@@ -43,6 +45,14 @@ export class EventGuideService {
 
   save(boardId: string, settings: EventGuideSettings, dataset: Partial<EventDataset>) {
     return this.call<EventGuideSettings>('saveEventGuideDataset', { boardId, settings, dataset });
+  }
+
+  async uploadEmailBanner(file: File): Promise<string> {
+    const ownerId = getAuth(getFirebaseApp()).currentUser?.uid;
+    if (!ownerId) throw new Error($localize`Sign in to upload an email image.`);
+    const asset = ref(getFirebaseStorage(), `users/${ownerId}/boards/event-email/${crypto.randomUUID()}.jpg`);
+    await uploadBytes(asset, file, { contentType: 'image/jpeg', cacheControl: 'public,max-age=31536000,immutable' });
+    return getDownloadURL(asset);
   }
 
   readOrganizerRecords(target: EventCardTarget) {

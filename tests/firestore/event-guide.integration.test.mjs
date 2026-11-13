@@ -89,6 +89,10 @@ test('organizer imports and publishes, a QR guest asks and plans, and confirmed 
     assert.equal(tracked.historySaved, true);
     assert.match(tracked.answer, /3741/);
     const combined = await call(createEventGuideItinerary, { ...target, preferences: { days: ['2027-01-06'], mustSee: 'Waymo' } }, owner);
+    const bannerUrl = 'https://example.org/amy-banner.jpg';
+    const branded = await call(saveEventGuideDataset, { boardId, settings: { ...settings, emailDesign: { theme: 'spotlight', bannerUrl } }, dataset: {} }, owner);
+    assert.equal(branded.datasetId, settings.datasetId);
+    await board.update({ cards: [{ ...card, conversation: { ...card.conversation, event: branded } }] });
     const recap = { ...request, recap: true, id: combined.id, key: combined.key, textSessions: [typedSession], editableItinerary: true, shareRecapEmailWithAnalytics: true };
     await assert.rejects(call(sendEventGuideItinerary, recap, 'other-user'), { code: 'permission-denied' });
     let editLink;
@@ -97,6 +101,7 @@ test('organizer imports and publishes, a QR guest asks and plans, and confirmed 
       assert.match(message.html, /Where is the Waymo booth\?/);
       assert.match(message.html, /3741/);
       assert.match(message.html, /Your itinerary/);
+      assert.match(message.html, /src="https:\/\/example\.org\/amy-banner\.jpg"/);
       assert.match(message.html, /href="https:\/\/livingwiki\.com\/">LivingWiki<|href="https:\/\/livingwiki\.com">LivingWiki</);
       assert.match(message.text, /LivingWiki\nhttps:\/\/livingwiki\.com/);
       editLink = new URL(message.html.match(/href="(https:\/\/livingwiki\.com\/event-itinerary#[^"]+)"/)[1]);

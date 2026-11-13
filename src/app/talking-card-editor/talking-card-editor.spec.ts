@@ -197,6 +197,37 @@ describe('TalkingCardEditorComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(page.canSave()).toBeTrue();
+    const emailDesign: HTMLElement = fixture.nativeElement.querySelector('.talking-editor__email-design');
+    const [defaultDesign, spotlightDesign] = emailDesign.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+    expect(defaultDesign.checked).toBeTrue();
+    spotlightDesign.click();
+    fixture.detectChanges();
+    expect(page.eventSettingsDraft().emailDesign).toEqual({ theme: 'spotlight' });
+    emailDesign.querySelector<HTMLButtonElement>('button[aria-controls="event-email-preview"]')!.click();
+    fixture.detectChanges();
+    expect(emailDesign.querySelector('iframe')?.srcdoc).toContain('Opening keynote');
+    page.useCesEmailBanner();
+    fixture.detectChanges();
+    expect(emailDesign.querySelector('iframe')?.srcdoc).toContain('/assets/event-guide/ces-2027-amy-email.jpg');
+    defaultDesign.click();
+    fixture.detectChanges();
+    expect(page.eventSettingsDraft().emailDesign).toBeUndefined();
+    expect(emailDesign.querySelector('iframe')?.srcdoc).not.toContain('ces-2027-amy-email.jpg');
+    spotlightDesign.click();
+    fixture.detectChanges();
+    const canvas = document.createElement('canvas');
+    canvas.getContext('2d')!.fillRect(0, 0, canvas.width, canvas.height);
+    const png = await new Promise<Blob>(resolve => canvas.toBlob(blob => resolve(blob!), 'image/png'));
+    const input = emailDesign.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const upload = new DataTransfer();
+    upload.items.add(new File([png], 'banner.png', { type: 'image/png' }));
+    input.files = upload.files;
+    await page.onEventEmailBannerSelected(input);
+    const bannerFile = page.eventEmailBannerFile();
+    expect(bannerFile?.type).toBe('image/jpeg');
+    const bannerUrl = 'https://example.com/event-banner.jpg';
+    const bannerUpload = spyOn(TestBed.inject(EventGuideService), 'uploadEmailBanner').and.resolveTo(bannerUrl);
+    fixture.detectChanges();
     const portrait: HTMLLabelElement = fixture.nativeElement.querySelector('.talking-editor__event-portrait');
     expect(portrait.textContent).toContain('Add profile photo');
     expect(portrait.querySelector('input')?.accept).toBe('image/*');
@@ -219,9 +250,9 @@ describe('TalkingCardEditorComponent', () => {
     fixture.detectChanges();
     expect(program.sessions()[0]?.title).toBe('Opening keynote');
 
-    const eventSave = spyOn(TestBed.inject(EventGuideService), 'save').and.resolveTo({
-      ...page.eventSettingsDraft(), datasetId: 'a'.repeat(64),
-    });
+    const eventSave = spyOn(TestBed.inject(EventGuideService), 'save').and.callFake(async (_boardId, settings) => ({
+      ...settings, datasetId: 'a'.repeat(64),
+    }));
     const saved = spyOn(page.saved, 'emit');
     page.showEventStep('avatar');
     fixture.detectChanges();
@@ -245,12 +276,15 @@ describe('TalkingCardEditorComponent', () => {
     fixture.nativeElement.querySelector('.talking-editor__footer .talking-editor__primary').click();
     await fixture.whenStable();
     expect(eventSave).toHaveBeenCalledTimes(1);
+    expect(bannerUpload).toHaveBeenCalledOnceWith(bannerFile!);
     expect(atlasService.selectAtlasCatalogVoice).toHaveBeenCalledOnceWith('george', voice.id);
     expect(atlasService.uploadTalkingCardAvatarImage).toHaveBeenCalledOnceWith('george', photo);
     expect(saved).toHaveBeenCalledWith(jasmine.objectContaining({
       atlasId: 'george',
       imageUrl: 'https://example.com/avatar.png',
-      event: jasmine.objectContaining({ name: 'Robotics Day', informationUrl: 'https://example.org' }),
+      event: jasmine.objectContaining({
+        name: 'Robotics Day', informationUrl: 'https://example.org', emailDesign: { theme: 'spotlight', bannerUrl },
+      }),
     }));
   });
 

@@ -1695,6 +1695,7 @@ test('an owner can save an event guide reference and its dataset stays server-on
   const conversation = {
     version: 1, provider: 'atlas', atlasId: 'amy', openingMessage: 'Welcome to CES.',
     event: { datasetId, name: 'CES 2027', startDate: '2027-01-05', endDate: '2027-01-09',
+      emailDesign: { theme: 'spotlight', bannerUrl: 'https://example.org/banner.jpg' },
       timeZone: 'America/Los_Angeles', informationUrl: '', privacyUrl: '', travelMinutes: 30 },
   };
   const patch = boardStudioPatch({
