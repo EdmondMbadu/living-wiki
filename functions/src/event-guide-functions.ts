@@ -14,6 +14,7 @@ import { normalizeEventRows, parseEventSource } from './event-guide-import';
 import { buildEventPlan, eventPreferences, lookupEvent } from './event-guide-planner';
 import cesDemo from './event-guide-ces2027.json';
 import { renderEventEmail } from './event-guide-email';
+import { prepareEventEmailTemplate } from './event-email-template';
 import { prepareRecapEmailCopy, type RecapEmailCopy } from './recap-email-localization';
 import { translateRecapEmailTextSegments } from './board-translation-provider';
 import { normalizeSponsorshipChoice, resolveSponsorship } from './talking-card-sponsorship';
@@ -159,6 +160,12 @@ export const saveEventGuideDataset = onCall({ region }, async (request) => {
   const existing = /^[a-f0-9]{64}$/.test(eventText(draft['datasetId'], 64)) ? String(draft['datasetId']) : '';
   const settings = eventSettings({ ...draft, datasetId: existing || '0'.repeat(64) });
   if (!settings) throw new HttpsError('invalid-argument', 'Enter the event name, valid dates, time zone, and HTTPS links.');
+  if (eventRecord(draft['emailDesign'])['theme'] === 'custom') {
+    const design = settings.emailDesign;
+    const template = design?.theme === 'custom' && prepareEventEmailTemplate(design.template);
+    if (!template || design?.theme !== 'custom') throw new HttpsError('invalid-argument', 'Upload a valid HTML email template.');
+    settings.emailDesign = { ...design, template };
+  }
   const prior = existing ? await getDataset(settings, request.auth!.uid) : null;
   const input = eventRecord(request.data?.dataset);
   const rows = (value: unknown, kind: EventSourceKind) => {

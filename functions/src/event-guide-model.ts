@@ -14,10 +14,9 @@ export interface EventGuideSettings {
   emailDesign?: EventEmailDesign;
 }
 
-export interface EventEmailDesign {
-  theme: 'spotlight';
-  bannerUrl?: string;
-}
+export type EventEmailDesign =
+  | { theme: 'spotlight'; bannerUrl?: string }
+  | { theme: 'custom'; template: string; filename: string };
 
 export interface EventSession {
   id: string;
@@ -134,6 +133,9 @@ export function eventHttpsUrl(value: unknown): string {
 
 export function eventEmailDesign(value: unknown): EventEmailDesign | undefined {
   const data = eventRecord(value);
+  if (data['theme'] === 'custom' && typeof data['template'] === 'string' && data['template'].length <= 48 * 1024) {
+    return { theme: 'custom', template: data['template'], filename: eventText(data['filename'], 120) || 'template.html' };
+  }
   if (data['theme'] !== 'spotlight') return undefined;
   const bannerUrl = eventHttpsUrl(data['bannerUrl']);
   return { theme: 'spotlight', ...(bannerUrl ? { bannerUrl } : {}) };

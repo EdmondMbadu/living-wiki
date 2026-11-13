@@ -111,7 +111,11 @@
           <button type="button" class="talking-editor__event-sponsor-link" (click)="showEventEmailDesign()">
             <span class="material-symbols-outlined" aria-hidden="true">mail</span>
             <strong i18n>Recap email design</strong>
-            @if (eventSettingsDraft().emailDesign) { <small>Spotlight</small> } @else { <small i18n>Default</small> }
+            @switch (eventEmailTheme()) {
+              @case ('spotlight') { <small>Spotlight</small> }
+              @case ('custom') { <small>{{ eventEmailTemplateName() }}</small> }
+              @default { <small i18n>Default</small> }
+            }
             <span class="material-symbols-outlined" aria-hidden="true">arrow_downward</span>
           </button>
         </div>
@@ -623,12 +627,12 @@
             <span class="material-symbols-outlined" aria-hidden="true">mail</span>
             <span><strong id="event-email-design-title" tabindex="-1" i18n>Recap email design</strong><small i18n>Choose how the recap and itinerary look in a guest’s inbox.</small></span>
           </header>
-          <fieldset [disabled]="!draftReady() || saving() || eventEmailImageBusy()" aria-labelledby="event-email-design-title">
+          <fieldset [disabled]="!draftReady() || saving() || eventEmailImageBusy() || eventEmailTemplateBusy()" aria-labelledby="event-email-design-title">
             <div class="talking-editor__email-options">
               <label><input type="radio" name="event-email-design" [checked]="!eventSettingsDraft().emailDesign" (change)="setEventEmailTheme(false)" /><strong i18n>Default</strong></label>
-              <label><input type="radio" name="event-email-design" [checked]="!!eventSettingsDraft().emailDesign" (change)="setEventEmailTheme(true)" /><strong>Spotlight</strong></label>
+              <label><input type="radio" name="event-email-design" [checked]="eventEmailTheme() === 'spotlight'" (change)="setEventEmailTheme(true)" /><strong>Spotlight</strong></label>
             </div>
-            @if (eventSettingsDraft().emailDesign) {
+            @if (eventEmailTheme() === 'spotlight') {
               @if (eventEmailBannerPreview(); as banner) {
                 <img class="talking-editor__email-banner" [src]="banner" alt="" />
               }
@@ -641,6 +645,18 @@
               </div>
               @if (eventEmailImageError()) { <p class="talking-editor__inline-error" role="alert">{{ eventEmailImageError() }}</p> }
             }
+            <div class="talking-editor__email-template" [class.is-selected]="eventEmailTheme() === 'custom'">
+              <div>
+                <strong i18n>Custom HTML template</strong>
+                @if (eventEmailTemplateName(); as filename) { <small>{{ filename }}</small> }
+              </div>
+              <small i18n>Upload plain HTML with HTTPS images. Add the marker below to place the recap, or it will appear after your design.</small>
+              <code>{{ eventEmailTemplateSlot }}</code>
+              <div class="talking-editor__email-buttons">
+                <label class="talking-editor__portrait-button"><span class="material-symbols-outlined" aria-hidden="true">upload_file</span><span i18n>Upload HTML template</span><input type="file" accept=".html,.htm,text/html" (change)="onEventEmailTemplateSelected($any($event.target))" /></label>
+              </div>
+              @if (eventEmailTemplateError()) { <p class="talking-editor__inline-error" role="alert">{{ eventEmailTemplateError() }}</p> }
+            </div>
           </fieldset>
           <div class="talking-editor__email-buttons">
             <button type="button" class="talking-editor__secondary" aria-controls="event-email-preview" [attr.aria-expanded]="eventEmailPreviewOpen()" (click)="toggleEventEmailPreview()" i18n>Preview</button>

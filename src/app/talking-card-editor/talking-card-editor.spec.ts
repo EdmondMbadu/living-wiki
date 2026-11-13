@@ -213,6 +213,16 @@ describe('TalkingCardEditorComponent', () => {
     fixture.detectChanges();
     expect(page.eventSettingsDraft().emailDesign).toBeUndefined();
     expect(emailDesign.querySelector('iframe')?.srcdoc).not.toContain('ces-2027-amy-email.jpg');
+    const htmlInput = emailDesign.querySelector<HTMLInputElement>('input[accept=".html,.htm,text/html"]')!;
+    const templateUpload = new DataTransfer();
+    templateUpload.items.add(new File(['<table><tr><td><h2>Robotics Day</h2><!-- livingwiki:recap --></td></tr></table><script>alert(1)</script>'], 'recap.html', { type: 'text/html' }));
+    htmlInput.files = templateUpload.files;
+    await page.onEventEmailTemplateSelected(htmlInput);
+    fixture.detectChanges();
+    expect(page.eventSettingsDraft().emailDesign?.theme).toBe('custom');
+    expect(emailDesign.querySelector('iframe')?.srcdoc).toContain('<h2>Robotics Day</h2><div');
+    expect(emailDesign.querySelector('iframe')?.srcdoc).not.toContain('<script>');
+    expect(emailDesign.textContent).toContain('recap.html');
     spotlightDesign.click();
     fixture.detectChanges();
     const canvas = document.createElement('canvas');

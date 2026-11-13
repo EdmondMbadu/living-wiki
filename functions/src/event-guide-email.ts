@@ -1,5 +1,6 @@
 import { contentLanguageDetails, type ContentLanguage } from './content-language';
 import { eventDisplayDate, eventDisplayTime, eventEmailDesign, eventHttpsUrl, type EventGuideSettings, type EventPlan } from './event-guide-model';
+import { renderEventEmailTemplate } from './event-email-template';
 
 const messages = {
   en: ['Your itinerary', 'Day off', 'Lunch and recharge', 'Explore the show floor', 'Times and locations may change. Check the event’s latest information.', 'Event information', 'Privacy', 'Presented by'],
@@ -90,7 +91,20 @@ export function renderEventEmail(
   }).join('');
   if (sponsor) text.push('', `${presentedBy} ${sponsor.name}`, sponsorMessage);
   text.push('', changes, settings.informationUrl, settings.privacyUrl, '', 'LivingWiki', 'https://livingwiki.com');
-  if (design) {
+  if (design?.theme === 'custom') {
+    const content = `<div lang="${locale.id}" dir="${locale.direction}" style="padding:20px;font:16px/1.5 Arial,Helvetica,sans-serif;background:#ffffff;color:#101830">
+      <h1 style="margin:0 0 8px;font-size:28px">${escape(title)}</h1><p>${escape(settings.name)} · ${escape(settings.timeZone)}</p>
+      ${editUrl ? `<p><a href="${escape(editUrl)}" style="display:inline-block;padding:10px 16px;border-radius:8px;background:#15254a;color:#ffffff;text-decoration:none;font-weight:bold">${escape(edit)}</a></p>` : ''}
+      ${highlights}${plan && isRecap ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}${days}
+      <p>${escape(changes)}</p>${settings.informationUrl ? `<p>${link(info, settings.informationUrl)}</p>` : ''}
+      ${sponsor ? `<p><strong>${escape(presentedBy)} ${escape(sponsor.name)}</strong><br>${escape(sponsorMessage)}</p>` : ''}
+      ${settings.privacyUrl ? `<p>${link(privacy, settings.privacyUrl)}</p>` : ''}<p>${link('LivingWiki', 'https://livingwiki.com')}</p></div>`;
+    const html = renderEventEmailTemplate(design.template, content, locale.id, locale.direction, escape(subject), {
+      eventName: escape(settings.name), heading: escape(title),
+    });
+    if (html) return { subject, html, text: text.join('\n') };
+  }
+  if (design?.theme === 'spotlight') {
     const start = locale.direction === 'rtl' ? 'right' : 'left';
     const end = start === 'right' ? 'left' : 'right';
     const banner = design.bannerUrl ? `<tr><td><img src="${escape(design.bannerUrl)}" alt="" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0"></td></tr>` : '';

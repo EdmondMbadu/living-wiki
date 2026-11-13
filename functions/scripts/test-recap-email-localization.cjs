@@ -167,6 +167,58 @@ test('Event Talking Card localizes mixed-language turns, notes and sponsorship w
   const imageRemoved = renderEventEmail({ ...settings, emailDesign: { theme: 'spotlight', bannerUrl: 'javascript:alert(1)' } }, null, 'ar', null, transcript, '', copy);
   assert.doesNotMatch(imageRemoved.html, /<img|javascript:|تعديل برنامجك/);
   assert.match(imageRemoved.html, /#171f4a/);
+  const custom = renderEventEmail({ ...settings, emailDesign: {
+    theme: 'custom', filename: 'ces.html', template: '<table><tr><td><img src="https://example.org/banner.jpg" onerror="alert(1)"><h2>CES</h2><!-- livingwiki:recap --></td></tr></table><script>alert(1)</script>',
+  } }, plan, 'ar', sponsor, transcript, localizedEdit, copy);
+  assert.equal(custom.subject, email.subject);
+  assert.equal(custom.text, email.text);
+  assert.match(custom.html, /lang="ar" dir="rtl"/);
+  assert.match(custom.html, /<h2>CES<\/h2><div/);
+  assert.match(custom.html, /src="https:\/\/example\.org\/banner\.jpg"/);
+  assert.match(custom.html, /تعديل برنامجك/);
+  assert.doesNotMatch(custom.html, /onerror|<script/);
+});
+
+test('custom HTML preserves safe email styles, removes active markup, and appends a missing slot', () => {
+  const { prepareEventEmailTemplate, renderEventEmailTemplate, EVENT_EMAIL_TEMPLATE_MAX_BYTES } = require('../lib/event-email-template');
+  const source = `<style>@media (max-width:620px){.card {width:100%}}</style>
+    <style>@import 'https://example.org/unsafe.css'</style><meta http-equiv="refresh" content="0;url=https://example.org">
+    <table class="card" title="&lt;!--livingwiki:recap--&gt;"><tr><td style="background:linear-gradient(#fff,#123)"><a href="https://example.org">Details</a>
+    <img src="https://example.org/image.jpg" srcset="https://other.example.org/image.jpg 2x" onerror="alert(1)">
+    <a href="java&#x09;script:alert(1)">Bad</a><span style="background:u\\72l(https://example.org)">Body</span>
+    <form action="https://example.org"><input></form><iframe src="https://example.org"></iframe><svg><script>bad</script></svg></td></tr></table>`;
+  const safe = prepareEventEmailTemplate(source);
+  assert.equal(prepareEventEmailTemplate(safe), safe);
+  assert.match(safe, /@media/);
+  assert.match(safe, /linear-gradient/);
+  assert.doesNotMatch(safe, /onerror|srcset|@import|refresh|javascript|<form|<iframe|<svg|background:u/);
+  assert.match(renderEventEmailTemplate(safe, '<p>Recap</p>', 'en', 'ltr', 'Subject'), /<\/table><p>Recap<\/p><\/body>/);
+  assert.equal(prepareEventEmailTemplate('<p>{{guest.name}}</p>'), null);
+  assert.equal(prepareEventEmailTemplate('<script>alert(1)</script>'), null);
+  assert.equal(prepareEventEmailTemplate('あ'.repeat(EVENT_EMAIL_TEMPLATE_MAX_BYTES / 2)), null);
+});
+
+test('imports the CES Handlebars layout and fills its heading and recap in the guest language', () => {
+  const { prepareEventEmailTemplate } = require('../lib/event-email-template');
+  const source = `<!doctype html><html lang="{{guest.language}}" dir="{{guest.direction}}"><head><title>Your CES 2027 Itinerary</title></head>
+    <body><table><tr><td><table><tr><td style="background:#0e1530">
+    {{#if event.logo_url}}<img src="{{event.logo_url}}">{{else}}<span>{{event.name}}</span>{{/if}}
+    </td></tr><tr><td style="background:#121a3a"><div class="hero-title">{{labels.hello}} {{guest.first_name}}, your mission plan is ready.</div>
+    <div>{{summary_line}}</div></td></tr>{{#each days}}<tr><td>{{date_label}}</td></tr>{{/each}}
+    {{#if top_booths.length}}{{labels.times_note}}{{/if}}</table></td></tr></table></body></html>`;
+  const template = prepareEventEmailTemplate(source);
+  assert.ok(template);
+  assert.equal(prepareEventEmailTemplate(template), template);
+  const message = renderEventEmail({ ...settings, emailDesign: { theme: 'custom', filename: 'ces.html', template } },
+    plan, 'fr', sponsor, [{ role: 'assistant', text: 'Bienvenue !' }], editUrl);
+  assert.match(message.html, /background:#0e1530/);
+  assert.match(message.html, /<span>CES 2027<\/span>/);
+  assert.match(message.html, /class="hero-title">Votre récapitulatif/);
+  assert.match(message.html, /ces-2027-amy-email\.jpg/);
+  assert.match(message.html, /Bienvenue !/);
+  assert.match(message.html, /Modifier votre itinéraire/);
+  assert.match(message.html, /LivingWiki/);
+  assert.doesNotMatch(message.html, /{{|your mission plan is ready/);
 });
 
 test('refuses an incomplete translation or one that changes interpolation or adds a header newline', async () => {

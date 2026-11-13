@@ -2471,6 +2471,10 @@
     "source": "Gathering its story…",
     "file": "src/app/boards/boards.ts"
   },
+  "168410732557422782": {
+    "source": "Upload HTML template",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "1685634248180124543": {
     "source": "Automatic default",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -15123,6 +15127,10 @@
     "source": "{$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN} Invite your team",
     "file": "src/app/teams/teams.html"
   },
+  "5338920136301440247": {
+    "source": "Upload plain HTML with HTTPS images. Add the marker below to place the recap, or it will appear after your design.",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
+  },
   "5339845689623432357": {
     "source": "Unread",
     "file": "src/app/notifications/notifications.html"
@@ -22183,6 +22191,10 @@
     "source": "Region not set",
     "file": "src/app/bulk-board-admin/bulk-board-admin.ts"
   },
+  "7328794911466543591": {
+    "source": "Use plain HTML with visible content. Replace template variables with the recap marker.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "7329217250595054697": {
     "source": "Original",
     "file": "src/app/boards/boards.html"
@@ -23647,6 +23659,10 @@
     "source": "Your existing voice remains available. Replace it here, or upgrade to add more voices.",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
+  "777059720431669963": {
+    "source": "The HTML template could not be read.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
+  },
   "7770974812608545646": {
     "source": " Choose what this Wiki is about and whether the subject speaks as “I” or is described by a guide. ",
     "file": "src/app/atlas-persona/atlas-persona.html"
@@ -24214,6 +24230,10 @@
   "7921352469751803103": {
     "source": "No cards yet.",
     "file": "src/app/boards/boards.ts"
+  },
+  "7922400694716257088": {
+    "source": "Choose an HTML file up to 48 KB.",
+    "file": "src/app/talking-card-editor/talking-card-editor.ts"
   },
   "7922989125096435449": {
     "source": "Contact",
@@ -27126,6 +27146,10 @@
   "880635411284636094": {
     "source": "Rental scenes",
     "file": "src/app/boards/boards.html"
+  },
+  "8807983527560676537": {
+    "source": "Custom HTML template",
+    "file": "src/app/talking-card-editor/talking-card-editor.html"
   },
   "8809902939714878222": {
     "source": "{$INTERPOLATION} boards",

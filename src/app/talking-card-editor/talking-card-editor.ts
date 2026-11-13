@@ -36,6 +36,7 @@ import { EventGuideSetup } from '../event-guide/event-guide-setup';
 import { EventGuideService } from '../event-guide/event-guide.service';
 import { EVENT_MAX_DAYS, eventDate, eventDates, eventHttpsUrl, eventSettings, eventText, type EventDataset, type EventGuideSettings } from '../../../functions/src/event-guide-model';
 import { renderEventEmail } from '../../../functions/src/event-guide-email';
+import { EVENT_EMAIL_TEMPLATE_MAX_BYTES, prepareEventEmailTemplate } from '../../../functions/src/event-email-template';
 import { TalkingCardKnowledgeService } from './talking-card-knowledge.service';
 
 type EditorMode = 'existing' | 'new';
@@ -240,9 +241,18 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   readonly eventEmailBannerObjectUrl = signal('');
   readonly eventEmailImageBusy = signal(false);
   readonly eventEmailImageError = signal('');
+  readonly eventEmailTemplateBusy = signal(false);
+  readonly eventEmailTemplateError = signal('');
   readonly eventEmailPreviewOpen = signal(false);
+  readonly eventEmailTheme = computed(() => this.eventSettingsDraft().emailDesign?.theme || 'default');
+  readonly eventEmailTemplateName = computed(() => {
+    const design = this.eventSettingsDraft().emailDesign;
+    return design?.theme === 'custom' ? design.filename : '';
+  });
+  readonly eventEmailTemplateSlot = '<!-- livingwiki:recap -->';
   readonly eventEmailBannerPreview = computed(() => {
-    const url = this.eventSettingsDraft().emailDesign?.bannerUrl;
+    const design = this.eventSettingsDraft().emailDesign;
+    const url = design?.theme === 'spotlight' ? design.bannerUrl : '';
     return this.eventEmailBannerObjectUrl() || (url === CES_EMAIL_BANNER_URL ? CES_EMAIL_BANNER_PATH : url || '');
   });
   readonly eventEmailPreview = computed(() => {
@@ -252,7 +262,8 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     const { html } = renderEventEmail({
       ...settings,
       name: settings.name || 'Sample event',
-      emailDesign: settings.emailDesign ? { ...settings.emailDesign, bannerUrl: banner ? LOCAL_EMAIL_BANNER_PREVIEW : undefined } : undefined,
+      emailDesign: settings.emailDesign?.theme === 'spotlight'
+        ? { ...settings.emailDesign, bannerUrl: banner ? LOCAL_EMAIL_BANNER_PREVIEW : undefined } : settings.emailDesign,
     }, { days: [{
       date: eventDate(settings.startDate) || '2027-01-05', attending: true, alternatives: [],
       items: [{ start: 540, end: 600, title: 'Opening keynote', location: 'Main hall', note: '', url: '', kind: 'Keynote' }],
@@ -263,15 +274,45 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     // The renderer escapes data. Only replace the fixture with locally controlled image URLs.
     const local = banner.startsWith('blob:') || banner === CES_EMAIL_BANNER_PATH;
     const safeBanner = local ? banner : eventHttpsUrl(banner);
-    return this.sanitizer.bypassSecurityTrustHtml(html.replace(LOCAL_EMAIL_BANNER_PREVIEW,
-      () => safeBanner.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')));
+    const preview = html.replace('<head>', `<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: blob: 'self'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">`);
+    return this.sanitizer.bypassSecurityTrustHtml(settings.emailDesign?.theme === 'spotlight'
+      ? preview.replace(LOCAL_EMAIL_BANNER_PREVIEW,
+        () => safeBanner.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+      : preview);
   });
 
   setEventEmailTheme(spotlight: boolean): void {
     this.clearEventEmailBanner();
+    this.eventEmailTemplateError.set('');
     this.eventSettingsDraft.update(({ emailDesign: _design, ...settings }) => ({
       ...settings, ...(spotlight ? { emailDesign: { theme: 'spotlight' as const } } : {}),
     }));
+  }
+
+  async onEventEmailTemplateSelected(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || this.eventEmailTemplateBusy()) return;
+    this.eventEmailTemplateError.set('');
+    if (!/\.html?$/i.test(file.name) || !file.size || file.size > EVENT_EMAIL_TEMPLATE_MAX_BYTES) {
+      this.eventEmailTemplateError.set($localize`Choose an HTML file up to 48 KB.`);
+      return;
+    }
+    this.eventEmailTemplateBusy.set(true);
+    try {
+      const template = prepareEventEmailTemplate(await file.text());
+      if (!template) {
+        this.eventEmailTemplateError.set($localize`Use plain HTML with visible content. Replace template variables with the recap marker.`);
+        return;
+      }
+      this.clearEventEmailBanner();
+      this.eventSettingsDraft.update(settings => ({ ...settings, emailDesign: { theme: 'custom', template, filename: file.name.slice(0, 120) } }));
+      this.eventEmailPreviewOpen.set(true);
+    } catch {
+      this.eventEmailTemplateError.set($localize`The HTML template could not be read.`);
+    } finally {
+      this.eventEmailTemplateBusy.set(false);
+    }
   }
 
   toggleEventEmailPreview(): void {
@@ -291,7 +332,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     this.eventEmailBannerFile.set(null);
     this.setEventEmailBannerObjectUrl('');
     this.eventEmailImageError.set('');
-    this.eventSettingsDraft.update(settings => settings.emailDesign?.bannerUrl
+    this.eventSettingsDraft.update(settings => settings.emailDesign?.theme === 'spotlight' && settings.emailDesign.bannerUrl
       ? { ...settings, emailDesign: { theme: 'spotlight' } } : settings);
   }
 
@@ -460,6 +501,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     if (!this.draftReady() || this.voiceConfigLoading()) return $localize`Loading…`;
     if (this.imageProcessing()) return $localize`Preparing your profile photo…`;
     if (this.eventEmailImageBusy()) return $localize`Preparing your email image…`;
+    if (this.eventEmailTemplateBusy()) return $localize`Loading…`;
     if (this.personalVoiceCreating()) return $localize`Creating your voice…`;
     return '';
   });
@@ -1234,7 +1276,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
   }
 
   async close(): Promise<void> {
-    if (!this.saving() && !this.personalVoiceCreating() && !this.eventEmailImageBusy()) {
+    if (!this.saving() && !this.personalVoiceCreating() && !this.eventEmailImageBusy() && !this.eventEmailTemplateBusy()) {
       this.stopVoicePreview();
       await this.persistDraftNow();
       this.closed.emit();
@@ -1284,7 +1326,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       let event: EventGuideSettings | undefined;
       if (this.isEventSetup()) {
         const banner = this.eventEmailBannerFile();
-        if (banner && this.eventSettingsDraft().emailDesign) {
+        if (banner && this.eventSettingsDraft().emailDesign?.theme === 'spotlight') {
           this.saveStage.set($localize`Uploading email image…`);
           const bannerUrl = await this.eventGuide.uploadEmailBanner(banner);
           this.eventSettingsDraft.update(settings => ({ ...settings, emailDesign: { theme: 'spotlight', bannerUrl } }));
@@ -1543,7 +1585,7 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
       if (this.isEventSetup() && record.eventDraft) {
         this.eventSettingsDraft.set(record.eventDraft.settings);
         this.eventDatasetDraft.set(record.eventDraft.dataset);
-        if (record.emailBannerFile && record.eventDraft.settings.emailDesign) {
+        if (record.emailBannerFile && record.eventDraft.settings.emailDesign?.theme === 'spotlight') {
           this.eventEmailBannerFile.set(record.emailBannerFile);
           this.setEventEmailBannerObjectUrl(URL.createObjectURL(record.emailBannerFile));
         }
