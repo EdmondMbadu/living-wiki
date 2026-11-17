@@ -3,7 +3,7 @@ export type AtlasRealtimeVoiceSelection = {
   name: string;
   accent: string | null;
   score: number;
-  source: 'wiki' | 'global-default';
+  source: 'native-language' | 'wiki' | 'global-default';
 };
 
 type VoiceCandidate = {
@@ -15,11 +15,18 @@ type VoiceCandidate = {
 export function selectAtlasRealtimeVoice(options: {
   overridesEnabled: boolean;
   accent: string | null;
+  nativeVoice?: Omit<AtlasRealtimeVoiceSelection, 'source'> | null;
   wikiVoice: VoiceCandidate;
   globalDefaultVoice: VoiceCandidate;
 }): AtlasRealtimeVoiceSelection | null {
   if (!options.overridesEnabled) {
     return null;
+  }
+
+  // A saved avatar voice may speak the requested language with its original
+  // accent. A resolved native voice takes priority for translated sessions.
+  if (options.nativeVoice) {
+    return { ...options.nativeVoice, source: 'native-language' };
   }
 
   if (options.wikiVoice.available && options.wikiVoice.voiceId) {

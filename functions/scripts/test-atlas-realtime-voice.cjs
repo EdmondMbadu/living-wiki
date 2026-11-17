@@ -7,6 +7,33 @@ const clearDefault = {
   available: true,
 };
 
+// Regression: French event guides used to resolve Camille, then replace her
+// with the avatar's available English voice (Jessa).
+const frenchVoice = {
+  voiceId: 'camille-french', name: 'Camille Martin', accent: null, score: 100,
+};
+assert.deepEqual(
+  selectAtlasRealtimeVoice({
+    overridesEnabled: true,
+    accent: null,
+    nativeVoice: frenchVoice,
+    wikiVoice: { voiceId: 'jessa-english', name: 'Jessa', available: true },
+    globalDefaultVoice: clearDefault,
+  }),
+  { ...frenchVoice, source: 'native-language' },
+);
+
+assert.equal(
+  selectAtlasRealtimeVoice({
+    overridesEnabled: false,
+    accent: null,
+    nativeVoice: frenchVoice,
+    wikiVoice: { voiceId: 'jessa-english', name: 'Jessa', available: true },
+    globalDefaultVoice: clearDefault,
+  }),
+  null,
+);
+
 assert.deepEqual(
   selectAtlasRealtimeVoice({
     overridesEnabled: true,

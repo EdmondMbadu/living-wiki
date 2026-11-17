@@ -16516,22 +16516,23 @@ export const createElevenLabsVoiceSession = onCall(
           requireElevenLabsAgentNativeLanguage(apiKey, agentId, nativeLanguage),
         ])
       : [null];
-    if (nativeLanguage && !nativeVoice && !eventVoice) {
+    if (nativeLanguage && !nativeVoice) {
       throw new HttpsError('failed-precondition', `A natural ${voicePreference.language ?? nativeLanguage} voice is not available yet. You can still type your question.`);
     }
     const atlasVoice = listingVoice
       ? { provider_voice_id: listingVoice.providerVoiceId || null, name: listingVoice.config['voice_name'] || 'Team listing voice', source: 'team' }
       : atlasId ? await loadAtlasSpeechVoiceConfig(atlasId) : null;
-    const configuredVoiceAvailable = (eventVoice || !nativeLanguage) && voiceOverrideEnabled
+    const configuredVoiceAvailable = !nativeLanguage && voiceOverrideEnabled
       && !!atlasVoice?.provider_voice_id
       && await elevenLabsVoiceIsAvailable(apiKey, atlasVoice.provider_voice_id);
     const globalDefaultVoiceAvailable = !nativeLanguage && voiceOverrideEnabled
       && !configuredVoiceAvailable
       && !!defaultAtlasRealtimeVoice?.providerVoiceId
       && await elevenLabsVoiceIsAvailable(apiKey, defaultAtlasRealtimeVoice.providerVoiceId);
-    const selectedVoice = (eventVoice && configuredVoiceAvailable ? null : nativeVoice) ?? selectAtlasRealtimeVoice({
+    const selectedVoice = selectAtlasRealtimeVoice({
       overridesEnabled: voiceOverrideEnabled,
       accent: voicePreference.accent,
+      nativeVoice,
       wikiVoice: {
         voiceId: atlasVoice?.provider_voice_id ?? null,
         name: atlasVoice?.name ?? null,
@@ -16623,7 +16624,7 @@ export const createElevenLabsVoiceSession = onCall(
       languageOverrideEnabled,
       selectedVoiceId: selectedVoice?.voiceId ?? null,
       selectedVoiceName: selectedVoice?.name ?? null,
-      selectedVoiceSource: nativeVoice ? 'native-language' : selectedVoice && 'source' in selectedVoice ? selectedVoice.source : 'agent-default',
+      selectedVoiceSource: selectedVoice?.source ?? 'agent-default',
       atlasVoiceSource: atlasVoice?.source ?? 'default',
       configuredVoiceAvailable,
       globalDefaultVoiceAvailable,
