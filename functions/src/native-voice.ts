@@ -2,6 +2,31 @@ import type { BoardTranslationLanguage } from './board-translation';
 
 type VerifiedLanguage = { language?: unknown; locale?: unknown; accent?: unknown; model_id?: unknown };
 
+// Finding a better accent is optional; provider/metadata failures must not
+// prevent the originally selected voice from speaking the requested language.
+export async function tryNativeVoice<T>(lookup: () => Promise<T | null>, onError: (error: unknown) => void): Promise<T | null> {
+  try {
+    return await lookup();
+  } catch (error) {
+    onError(error);
+    return null;
+  }
+}
+
+// Use voice metadata, never an avatar's name or appearance, for this match.
+export function voiceGender(voice: { labels?: unknown }): string | null {
+  const labels = voice.labels && typeof voice.labels === 'object' && !Array.isArray(voice.labels)
+    ? voice.labels as Record<string, unknown> : {};
+  if (typeof labels['gender'] !== 'string') return null;
+  const gender = labels['gender'].trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+  if (!gender || ['unknown', 'unspecified', 'other'].includes(gender)) return null;
+  if (gender === 'feminine') return 'female';
+  if (gender === 'masculine') return 'male';
+  if (gender === 'nonbinary' || gender === 'non binary') return 'non-binary';
+  if (gender === 'gender neutral') return 'neutral';
+  return gender;
+}
+
 const nativeLocale: Record<Exclude<BoardTranslationLanguage, 'en'>, {
   locale: string;
   language: string;
@@ -64,9 +89,22 @@ export function selectNativeVoice<T extends {
   verified_languages?: unknown;
   labels?: unknown;
   category?: unknown;
-}>(voices: readonly T[], language: Exclude<BoardTranslationLanguage, 'en'>, modelId?: string, preferredVoiceId?: string): T | null {
-  const matches = voices.filter((voice) => voiceMatchesNativeLocale(voice, language, modelId));
-  const preferred = matches.find((voice) => voice.voice_id === preferredVoiceId);
+}>(voices: readonly T[], language: Exclude<BoardTranslationLanguage, 'en'>, modelId?: string, preferredVoiceId?: string, requiredGender?: string | null): T | null {
+  const gender = voiceGender({ labels: { gender: requiredGender } });
+  const matches = voices.filter((voice) => voiceMatchesNativeLocale(voice, language, modelId)
+    && (!gender || voiceGender(voice) === gender));
+  // Prefer voices trained primarily in the target language over English voices
+  // with multilingual verification, which may retain their English accent.
+  const primaryNativeMatches = matches.filter((voice) => {
+    const labels = voice.labels && typeof voice.labels === 'object' && !Array.isArray(voice.labels)
+      ? voice.labels as Record<string, unknown> : {};
+    const primaryLanguage = String(labels['language'] ?? '').trim().toLowerCase().replace('_', '-');
+    return primaryLanguage.split('-')[0] === language || primaryLanguage === nativeLocale[language].language;
+  });
+  // With gender preservation, absence of a primary-native match means the
+  // caller keeps the original voice, rather than choosing another English one.
+  const eligible = gender || primaryNativeMatches.length ? primaryNativeMatches : matches;
+  const preferred = eligible.find((voice) => voice.voice_id === preferredVoiceId);
   if (preferred) return preferred;
 
   const score = (voice: T): number => {
@@ -87,5 +125,5 @@ export function selectNativeVoice<T extends {
       + (voice.category === 'professional' ? 2 : 0)
       + (storytellerStyle ? 4 : 0);
   };
-  return matches.sort((a, b) => score(b) - score(a))[0] ?? null;
+  return eligible.sort((a, b) => score(b) - score(a))[0] ?? null;
 }

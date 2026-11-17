@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { voiceMatchesNativeLocale, selectNativeVoice } = require('../lib/native-voice.js');
+const { voiceMatchesNativeLocale, selectNativeVoice, voiceGender } = require('../lib/native-voice.js');
 
 assert.equal(voiceMatchesNativeLocale({ verified_languages: [{ language: 'pt', locale: 'pt-BR' }] }, 'pt'), true);
 assert.equal(voiceMatchesNativeLocale({ verified_languages: [{ language: 'pt', locale: 'pt-BR', model_id: 'eleven_multilingual_v2' }] }, 'pt', 'eleven_multilingual_v2'), true);
@@ -57,3 +57,48 @@ for (const [language, locale] of [['it','it-IT'],['ko','ko-KR'],['ar','ar-SA'],[
   assert.equal(voiceMatchesNativeLocale(native('en','en-US'), language), false);
   assert.equal(voiceMatchesNativeLocale({labels:{language}}, language), false);
 }
+
+assert.equal(voiceGender({ labels: { gender: ' Feminine ' } }), 'female');
+assert.equal(voiceGender({ labels: { gender: 'MASCULINE' } }), 'male');
+assert.equal(voiceGender({ labels: { gender: 'non_binary' } }), 'non-binary');
+assert.equal(voiceGender({ labels: { gender: 'gender neutral' } }), 'neutral');
+assert.equal(voiceGender({ labels: { gender: 'unknown' } }), null);
+assert.equal(voiceGender({ name: 'Amy' }), null);
+
+// Keep voice gender across every supported translated language. The female
+// candidate deliberately scores higher; gender is a requirement, not a bonus.
+for (const [language, locale] of [
+  ['fr', 'fr-FR'], ['es', 'es-MX'], ['pt', 'pt-BR'], ['ja', 'ja-JP'],
+  ['de', 'de-DE'], ['zh', 'zh-CN'], ['it', 'it-IT'], ['ko', 'ko-KR'],
+  ['ar', 'ar-SA'], ['hi', 'hi-IN'], ['ru', 'ru-RU'],
+]) {
+  const female = { voice_id: 'female-native', ...native(language, locale),
+    labels: { gender: 'female', language, use_case: 'narrative_story', descriptive: 'warm' }, category: 'professional' };
+  const male = { voice_id: 'male-native', ...native(language, locale), labels: { gender: 'male', language } };
+  const unknown = { voice_id: 'unknown-gender', ...native(language, locale) };
+  const voices = [female, male, unknown];
+  assert.equal(selectNativeVoice(voices, language, 'eleven_multilingual_v2', undefined, 'male')?.voice_id, male.voice_id);
+  assert.equal(selectNativeVoice(voices, language, 'eleven_multilingual_v2', undefined, 'female')?.voice_id, female.voice_id);
+  assert.equal(selectNativeVoice(voices, language, 'eleven_multilingual_v2', female.voice_id, 'male')?.voice_id, male.voice_id);
+  assert.equal(selectNativeVoice([female, unknown], language, undefined, undefined, 'male'), null);
+  assert.equal(selectNativeVoice([male, unknown], language, undefined, undefined, 'female'), null);
+  assert.equal(selectNativeVoice(voices, language, 'unsupported-model', undefined, 'female'), null);
+  const neutral = { voice_id: 'neutral-native', ...native(language, locale), labels: { gender: 'neutral', language } };
+  assert.equal(selectNativeVoice([...voices, neutral], language, undefined, undefined, 'neutral')?.voice_id, neutral.voice_id);
+}
+
+console.log('Native voice gender preservation checks passed.');
+
+// The original English voice can have verified French samples. Keep its gender
+// without keeping an English-trained voice when a native French one exists.
+const englishMale = { voice_id: 'english-male', ...native('fr', 'fr-FR', 'French'),
+  labels: { language: 'en', gender: 'male' } };
+const frenchMale = { voice_id: 'french-male', ...native('fr', 'fr-FR'),
+  labels: { language: 'fr', gender: 'male' } };
+const frenchFemale = { voice_id: 'french-female', ...native('fr', 'fr-FR'),
+  labels: { language: 'fr', gender: 'female' } };
+assert.equal(selectNativeVoice([englishMale, frenchMale, frenchFemale], 'fr', undefined, englishMale.voice_id, 'male')?.voice_id, frenchMale.voice_id);
+assert.equal(selectNativeVoice([frenchMale, frenchFemale], 'fr', undefined, frenchMale.voice_id, 'female')?.voice_id, frenchFemale.voice_id);
+// No native match: return control to the caller so it keeps the exact chosen
+// voice, rather than substituting another English voice or changing gender.
+assert.equal(selectNativeVoice([englishMale, frenchFemale], 'fr', undefined, englishMale.voice_id, 'male'), null);

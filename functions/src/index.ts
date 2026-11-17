@@ -47,7 +47,7 @@ import stackNarratorVoiceCatalog from './stack-narrator-voices.json';
 import stackLibraryVoiceCatalog from './stack-library-voices.json';
 import stackLibraryVoicePreviews from './stack-library-voice-previews.json';
 import { selectAtlasRealtimeVoice } from './atlas-realtime-voice';
-import { selectNativeVoice } from './native-voice';
+import { selectNativeVoice, tryNativeVoice, voiceGender } from './native-voice';
 import { agentNativeLanguageReadiness } from './agent-language';
 import {
   buildAtlasIdentityInstruction,
@@ -16510,25 +16510,34 @@ export const createElevenLabsVoiceSession = onCall(
       logger.warn('ElevenLabs voice override is disabled for a translated conversation.', { language: nativeLanguage });
       throw new HttpsError('failed-precondition', `Voice conversations in ${voicePreference.language ?? nativeLanguage} are not configured yet. You can still type your question.`);
     }
-    const [nativeVoice] = nativeLanguage
-      ? await Promise.all([
-          resolveElevenLabsVoiceForPreference(apiKey, voicePreference, `native-realtime:${nativeLanguage}`, nativeLanguage),
-          requireElevenLabsAgentNativeLanguage(apiKey, agentId, nativeLanguage),
-        ])
-      : [null];
-    if (nativeLanguage && !nativeVoice) {
-      throw new HttpsError('failed-precondition', `A natural ${voicePreference.language ?? nativeLanguage} voice is not available yet. You can still type your question.`);
-    }
     const atlasVoice = listingVoice
       ? { provider_voice_id: listingVoice.providerVoiceId || null, name: listingVoice.config['voice_name'] || 'Team listing voice', source: 'team' }
       : atlasId ? await loadAtlasSpeechVoiceConfig(atlasId) : null;
-    const configuredVoiceAvailable = !nativeLanguage && voiceOverrideEnabled
+    const referenceVoiceId = atlasVoice?.provider_voice_id || defaultAtlasRealtimeVoice?.providerVoiceId;
+    const [nativeVoice] = nativeLanguage
+      ? await Promise.all([
+          tryNativeVoice(
+            () => resolveElevenLabsVoiceForPreference(
+              apiKey, voicePreference, `native-realtime:${nativeLanguage}`, nativeLanguage,
+              referenceVoiceId, undefined, true,
+            ),
+            (error) => logger.warn('Native avatar voice lookup failed; keeping the selected voice.', {
+              language: nativeLanguage, referenceVoiceId,
+              errorMessage: error instanceof Error ? error.message : String(error),
+            }),
+          ),
+          requireElevenLabsAgentNativeLanguage(apiKey, agentId, nativeLanguage),
+        ])
+      : [null];
+    // A failed native lookup must not add another metadata dependency before
+    // trying the saved voice. It can still speak the chosen language.
+    const configuredVoiceAvailable = !nativeVoice && voiceOverrideEnabled
       && !!atlasVoice?.provider_voice_id
-      && await elevenLabsVoiceIsAvailable(apiKey, atlasVoice.provider_voice_id);
-    const globalDefaultVoiceAvailable = !nativeLanguage && voiceOverrideEnabled
+      && (!!nativeLanguage || await elevenLabsVoiceIsAvailable(apiKey, atlasVoice.provider_voice_id));
+    const globalDefaultVoiceAvailable = !nativeVoice && voiceOverrideEnabled
       && !configuredVoiceAvailable
       && !!defaultAtlasRealtimeVoice?.providerVoiceId
-      && await elevenLabsVoiceIsAvailable(apiKey, defaultAtlasRealtimeVoice.providerVoiceId);
+      && (!!nativeLanguage || await elevenLabsVoiceIsAvailable(apiKey, defaultAtlasRealtimeVoice.providerVoiceId));
     const selectedVoice = selectAtlasRealtimeVoice({
       overridesEnabled: voiceOverrideEnabled,
       accent: voicePreference.accent,
@@ -16775,11 +16784,17 @@ async function resolveElevenLabsVoiceForPreference(
   requiredNativeLanguage?: BoardTranslationLanguage,
   preferredVoiceId?: string,
   requiredModelId?: string,
+  preserveVoiceGender = false,
 ): Promise<ElevenLabsResolvedVoice | null> {
   if (!preference.languageCode && !preference.language && !preference.country) {
     return null;
   }
 
+  // Native choices depend on the original voice, model, and matching policy.
+  // A language-only cache would reuse a feminine voice for masculine avatars.
+  if (requiredNativeLanguage) {
+    cacheKey = JSON.stringify([cacheKey, preferredVoiceId ?? null, requiredModelId ?? null, preserveVoiceGender]);
+  }
   const cached = readCachedElevenLabsVoice(cacheKey);
   if (cached !== undefined) {
     logger.info('Using cached ElevenLabs native voice selection.', {
@@ -16825,8 +16840,38 @@ async function resolveElevenLabsVoiceForPreference(
   }
 
   if (requiredNativeLanguage && requiredNativeLanguage !== 'en') {
+    let requiredGender: string | null = null;
+    if (preserveVoiceGender) {
+      requiredGender = voiceGender(candidates.get(preferredVoiceId ?? '') ?? {});
+      if (!requiredGender && preferredVoiceId) {
+        // Saved personal/designed voices may not appear in the paged inventory.
+        try {
+          const response = await fetchWithTimeout(
+            `https://api.elevenlabs.io/v1/voices/${encodeURIComponent(preferredVoiceId)}`,
+            { headers: { 'xi-api-key': apiKey } }, 2500,
+          );
+          if (response.ok) requiredGender = voiceGender(await response.json() as ElevenLabsVoiceRecord);
+        } catch (error) {
+          logger.warn('Avatar voice gender lookup failed.', {
+            voiceId: preferredVoiceId, errorMessage: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+      if (!requiredGender) {
+        const catalogVoice = [...stackNarratorVoiceCatalog, ...stackLibraryVoiceCatalog]
+          .find((voice) => voice.providerVoiceId === preferredVoiceId);
+        requiredGender = voiceGender({ labels: { gender: catalogVoice?.presentation } });
+      }
+      if (!requiredGender) {
+        logger.info('Voice gender is unknown; keeping the selected voice for translated speech.', {
+          referenceVoiceId: preferredVoiceId ?? null, language: requiredNativeLanguage,
+        });
+        cacheElevenLabsVoice(cacheKey, null);
+        return null;
+      }
+    }
     const selected = selectNativeVoice(
-      [...candidates.values()], requiredNativeLanguage, requiredModelId, preferredVoiceId,
+      [...candidates.values()], requiredNativeLanguage, requiredModelId, preferredVoiceId, requiredGender,
     );
     const selectedId = selected ? textValue(selected.voice_id, 120) : null;
     const result = selectedId ? {
@@ -16840,6 +16885,8 @@ async function resolveElevenLabsVoiceForPreference(
       modelId: requiredModelId ?? null,
       candidateCount: candidates.size,
       selectedVoiceId: selectedId,
+      referenceVoiceId: preferredVoiceId ?? null,
+      requiredGender,
       elapsedMs: Date.now() - searchStartedAt,
     });
     cacheElevenLabsVoice(cacheKey, result);
@@ -22230,29 +22277,24 @@ export const synthesizeChatAnswerSpeech = onCall(
       throw new HttpsError('failed-precondition', 'ElevenLabs API key is not configured.');
     }
 
-    let primaryVoiceId = requestedNarratorVoiceId || chatAnswerVoiceId;
+    let primaryVoiceId = requestedNarratorVoiceId
+      || (requestedContentLanguage !== 'en' ? defaultAtlasRealtimeVoice?.providerVoiceId : null)
+      || chatAnswerVoiceId;
+    const originalNarratorVoiceId = primaryVoiceId;
     const requiresNativeNarration = ['tour', 'stack-video'].includes(requestedMode) && requestedContentLanguage !== 'en';
     if (requiresNativeNarration && !isDesignedNarrator && requestedLibraryVoice?.nativeLanguage !== requestedContentLanguage) {
       const preference = contentLanguageVoicePreference(requestedContentLanguage);
-      try {
-        const matchingVoice = await resolveElevenLabsVoiceForPreference(
-          apiKey,
-          preference,
-          `native-narration:${requestedContentLanguage}:${primaryVoiceId}`,
-          requestedContentLanguage,
-          primaryVoiceId,
-          tourGuideSpeechModel,
-        );
-        if (!matchingVoice) throw new HttpsError('failed-precondition', `No verified native ${preference.language} narrator is available in the ElevenLabs account.`);
-        primaryVoiceId = matchingVoice.voiceId;
-      } catch (error) {
-        logger.warn('Language-matched tour voice lookup failed.', {
+      const matchingVoice = await tryNativeVoice(
+        () => resolveElevenLabsVoiceForPreference(
+          apiKey, preference, `native-narration:${requestedContentLanguage}:${originalNarratorVoiceId}`,
+          requestedContentLanguage, originalNarratorVoiceId, tourGuideSpeechModel, true,
+        ),
+        (error) => logger.warn('Native narration lookup failed; keeping the selected voice.', {
           contentLanguage: requestedContentLanguage,
           errorMessage: error instanceof Error ? error.message : String(error),
-        });
-        if (error instanceof HttpsError) throw error;
-        throw new HttpsError('unavailable', 'A native narrator could not be selected right now.');
-      }
+        }),
+      );
+      if (matchingVoice) primaryVoiceId = matchingVoice.voiceId;
     }
     // Premade voices expose a provider-hosted preview_url. Instant voice clones
     // often do not, so personal previews must use the normal TTS path below.
@@ -22326,8 +22368,10 @@ export const synthesizeChatAnswerSpeech = onCall(
     const stackVideoNarrationRevisionKey = requestedMode === 'stack-video'
       ? stackVideoNarrationRevisionCacheKey(requestedStackVideoCard)
       : '';
-    const voiceIds = isPersonalNarrator || requestedLibraryVoice || requiresNativeNarration || requestedMode === 'sponsorship'
-      ? [primaryVoiceId]
+    const voiceIds = requiresNativeNarration
+      ? Array.from(new Set([primaryVoiceId, originalNarratorVoiceId]))
+      : isPersonalNarrator || requestedLibraryVoice || requestedMode === 'sponsorship'
+        ? [primaryVoiceId]
       : Array.from(new Set([
           primaryVoiceId,
           ...elevenLabsPremadeNarratorVoiceIds,
