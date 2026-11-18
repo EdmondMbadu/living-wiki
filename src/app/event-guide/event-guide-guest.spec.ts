@@ -50,6 +50,9 @@ describe('Event Guide itinerary and email', () => {
     expect(events.send).toHaveBeenCalledWith({ boardId: 'board', cardId: 'card' }, itinerary, 'guest@example.org', 'en');
     expect(page.sent()).toBeTrue();
     expect(page.email()).toBe('');
+    expect(page.sentTo()).toBe('guest@example.org');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="status"]')?.textContent).toContain('guest@example.org');
   });
 
   it('loads the saved itinerary from the link and saves a removed stop without opening email', async () => {

@@ -19,6 +19,7 @@ export class EventGuideGuest implements OnInit {
   readonly settings = input.required<EventGuideSettings>();
   readonly language = input.required<ContentLanguage>();
   readonly recapMode = input(false);
+  readonly deferUntilRecap = input(false);
   readonly recap = input<EventRecapSessions | null>(null);
   readonly initialDraft = input<EventItineraryDraft | null>(null);
   readonly emailRequested = output<void>();
@@ -36,6 +37,7 @@ export class EventGuideGuest implements OnInit {
   readonly error = signal('');
   readonly email = signal('');
   readonly sent = signal(false);
+  readonly sentTo = signal('');
   readonly saved = signal(false);
   private revision = 0;
   private recapRequestId = '';
@@ -61,6 +63,7 @@ export class EventGuideGuest implements OnInit {
   openRecap(email: string): void {
     this.email.set(email);
     this.sent.set(false);
+    this.sentTo.set('');
     this.error.set('');
   }
 
@@ -127,15 +130,17 @@ export class EventGuideGuest implements OnInit {
     if (!this.recapMode() || (!plan && !recap) || this.busy() || !this.email().trim() || this.sent()) return;
     this.sending.set(true);
     this.error.set('');
+    const recipient = this.email().trim();
     try {
       const target = { boardId: this.boardId(), cardId: this.cardId() };
       const result = recap
-        ? await this.events.send(target, plan, this.email().trim(), this.language(), {
+        ? await this.events.send(target, plan, recipient, this.language(), {
           ...recap, requestId: this.recapRequestId ||= crypto.randomUUID(),
         })
-        : await this.events.send(target, plan, this.email().trim(), this.language());
+        : await this.events.send(target, plan, recipient, this.language());
       if (!result.sent) throw new Error($localize`The event email could not be sent.`);
       this.sent.set(true);
+      this.sentTo.set(recipient);
       this.email.set('');
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : $localize`The event email could not be sent.`);

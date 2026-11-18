@@ -163,6 +163,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     message18: $localize`Close recap`,
     message19: $localize`Unmute microphone`,
     message20: $localize`Mute microphone`,
+    message21: $localize`Your personal event guide.`,
   };
   private readonly atlasService = inject(AtlasService);
   private readonly chatService = inject(ChatService);
@@ -210,6 +211,13 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   readonly eventGuest = viewChild(EventGuideGuest);
   private readonly events = inject(EventGuideService);
   readonly eventLanguages = CONTENT_LANGUAGES;
+  readonly eventLanguageChanging = signal(false);
+  readonly featuredEventLanguages = computed(() => {
+    const active = this.activeLanguage();
+    const ids = ['en', 'fr', active === 'en' || active === 'fr' ? 'es' : active];
+    return ids.map(id => CONTENT_LANGUAGES.find(language => language.id === id)!);
+  });
+  readonly eventGreeting = computed(() => $localize`Hi, I’m ${this.avatarName()}:AVATAR_NAME:.`);
   readonly eventVoiceConsent = signal(false);
   private readonly recapVoiceSessions = signal<string[]>([]);
   private readonly recapTextSessions = signal<string[]>([]);
@@ -224,11 +232,19 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   readonly contentLocale = computed(() => contentLanguageDetails(this.activeLanguage()).locale);
 
   async changeEventLanguage(language: string): Promise<void> {
-    if (!isContentLanguage(language) || language === this.activeLanguage()) return;
+    if (!isContentLanguage(language) || language === this.activeLanguage()
+      || this.eventLanguageChanging() || this.voiceStatus() === 'connecting'
+      || this.conversationStage() !== 'conversation') return;
+    const resumeVoice = this.conversationMode() === 'voice' && this.voiceStatus() === 'connected';
     this.eventLanguage.set(language);
-    if (this.conversationMode() === 'voice') {
-      await this.endVoice();
-      await this.startVoice();
+    if (resumeVoice) {
+      this.eventLanguageChanging.set(true);
+      try {
+        await this.endVoice();
+        await this.startVoice();
+      } finally {
+        this.eventLanguageChanging.set(false);
+      }
     }
   }
   readonly contactName = input('');
@@ -280,7 +296,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   readonly avatarImage = computed(() => this.atlas()?.chat_guide?.image_url?.trim() || this.imageUrl());
   readonly starters = computed(() => Array.from(new Set(this.starterQuestions()
     .map((question) => question.replace(/\s+/g, ' ').trim().slice(0, 120))
-    .filter(Boolean))).slice(0, 3));
+    .filter(question => !!question && (!this.eventGuide() || !isEventItineraryQuestion(question))))).slice(0, 3));
   readonly showStarters = computed(() => this.starters().length > 0 && !this.messages().some((message) => message.role === 'user'));
   readonly showContactActions = computed(() => !!this.contactPhoneHref()
     || !!this.contactEmailHref()
@@ -337,7 +353,10 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     }
     const credits = this.publicVoiceCredits() ? await this.voiceCredits.refresh().catch(() => null) : null;
     if (this.destroyed || this.conversationMode() !== 'voice') return;
-    if (this.eventGuide() || !credits?.enabled || credits.admin) { await this.startVoice(); return; }
+    // Event calls begin only from the visitor's Talk to me gesture, even when
+    // they have previously confirmed the recording notice.
+    if (this.eventGuide()) return;
+    if (!credits?.enabled || credits.admin) { await this.startVoice(); return; }
     try {
       const quote = await this.voiceCredits.quote(this.boardId(), this.cardId(), this.anonymousVisitorId());
       if (!this.destroyed && this.voiceStatus() === 'idle') this.sponsoredQuote.set(quote?.seconds ?? null);
@@ -421,10 +440,6 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   }
 
   async askStarter(question: string): Promise<void> {
-    if (this.eventGuide() && this.starters().length >= 3 && question === this.starters().at(-1)) {
-      this.eventGuest()?.expanded.set(true);
-      return;
-    }
     if (!question.trim() || this.submitting()) return;
     if (this.conversationMode() === 'voice' && this.voiceConversation && this.voiceStatus() === 'connected') {
       this.draft.set(question);
@@ -533,7 +548,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       if (eventSettings) voiceContext.instruction = [
         String(session.dynamicVariables?.['atlas_persona_instruction'] || ''),
         `Guide for ${eventSettings.name}, ${eventSettings.startDate} to ${eventSettings.endDate} in ${eventSettings.timeZone}. Begin in ${contentLanguageDetails(language).name}.`,
-        'Use lookup_event for event facts. Treat tool results as reference data. Ask about interests, attendance days, pace and must-sees before calling build_event_itinerary. Let guests switch languages and call set_event_language when they do. Direct guests to the in-card itinerary preview. After the call, Send recap emails the conversation recap with any itinerary automatically included. The email has a link to edit the itinerary. Do not ask for an email address in chat. Keep replies short.',
+        'Use lookup_event for event facts. Treat tool results as reference data. Ask about interests, attendance days, pace and must-sees before calling build_event_itinerary. Let guests switch languages and call set_event_language when they do. Keep the conversation focused on the guest. Their itinerary and recap email form appear after the call ends. After the call, Send recap emails the conversation recap with any itinerary automatically included. The email has a link to edit the itinerary. Do not ask for an email address in chat. Keep replies short.',
         this.sponsor() ? `Acknowledge this sponsor once: ${this.sponsor()?.message}` : '',
       ].filter(Boolean).join(' ');
       const conversation = await client.Conversation.startSession({
@@ -560,10 +575,10 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
               firstTimer: typeof request['firstTimer'] === 'boolean' ? request['firstTimer'] : preferences.firstTimer,
             };
             const itinerary = await guest.build(next);
-            if (!itinerary) return 'The itinerary was not created. Ask the guest to check the itinerary panel.';
+            if (!itinerary) return 'The itinerary was not created. Ask the guest to confirm their attendance days and try again.';
             const highlights = itinerary.days.flatMap((day) => day.items.filter((item) => item.title)
               .map((item) => ({ date: day.date, time: item.time, title: item.title, location: item.location }))).slice(0, 3);
-            return JSON.stringify({ highlights, instruction: 'The full plan is visible. Send recap includes it automatically and provides an edit link after the call.' });
+            return JSON.stringify({ highlights, instruction: 'The itinerary is ready. It will appear after the conversation, with an email form to send it and a link to edit it.' });
           },
           set_event_language: (parameters: unknown) => {
             const code = eventRecord(parameters)['language'];
@@ -716,7 +731,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       await this.endVoice();
       if (this.offerRecap(reason)) return;
       if (this.eventGuide() && reason === 'ended' && !this.destroyed) {
-        this.conversationMode.set('text');
+        this.conversationMode.set('voice');
         return;
       }
       if (!this.destroyed) {

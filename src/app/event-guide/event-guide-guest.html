@@ -1,5 +1,5 @@
 <div class="event-guide event-guide__guest">
-  @if (!recapMode() && !initialDraft()) {
+  @if (!deferUntilRecap() && !recapMode() && !initialDraft()) {
     <ng-content />
     <button class="event-guide__itinerary-toggle" type="button" [attr.aria-expanded]="expanded()" (click)="expanded.set(!expanded())">
     <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
@@ -8,7 +8,7 @@
     @else { <span i18n>Build my itinerary</span> }
     </button>
   }
-  @if (expanded() || recapMode()) {
+  @if (recapMode() || (!deferUntilRecap() && expanded())) {
     <section class="event-guide__guest-panel" [class.event-guide__guest-panel--recap]="recapMode() || initialDraft()" aria-label="Event itinerary" i18n-aria-label>
       @if (recapMode()) {
         <header class="event-guide__recap-heading">
@@ -17,10 +17,10 @@
           @if (plan()) { <p i18n>Your itinerary is included.</p> }
         </header>
         @if (sent()) {
-          <p role="status" i18n>Your recap email is on its way.</p>
+          <p role="status" i18n>Your recap email is on its way to <strong>{{ sentTo() }}</strong>.</p>
         } @else {
           <form class="event-guide__source" (submit)="send($event)">
-            <label><span i18n>Email address</span><input type="email" name="eventEmail" autocomplete="email" required maxlength="254" [disabled]="busy()" [ngModel]="email()" (ngModelChange)="email.set($event)"></label>
+            <label><span i18n>Where should we send your recap?</span><input type="email" name="eventEmail" autocomplete="email" placeholder="you@example.com" i18n-placeholder required maxlength="254" [disabled]="busy()" [ngModel]="email()" (ngModelChange)="email.set($event)"></label>
             @if (recap()) { <small i18n>This avatar’s administrators can see your recap email address.</small> }
             @if (displaySettings().privacyUrl) { <a [href]="displaySettings().privacyUrl" target="_blank" rel="noopener noreferrer" i18n>Privacy notice</a> }
             <button type="submit" [disabled]="busy() || !email().trim()" i18n>Send recap</button>

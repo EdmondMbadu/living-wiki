@@ -5,7 +5,8 @@
     "src/app/talking-card-editor/talking-card-editor.spec.ts",
     "src/app/boards/talking-card.spec.ts",
     "src/app/boards/board-studio-persistence.spec.ts",
-    "src/app/boards/board-studio-save.spec.ts"
+    "src/app/boards/board-studio-save.spec.ts",
+    "src/app/event-guide/event-guide-guest.spec.ts"
   ],
   "include": [
     "src/**/*.d.ts"

@@ -10,6 +10,15 @@
     (click)="$event.stopPropagation()"
   >
     <header class="talking-chat__header">
+      @if (eventGuide(); as event) {
+        @if (conversationStage() === 'conversation') {
+          <div class="talking-chat__event-heading">
+            <span class="talking-chat__brand"><img src="/assets/image/living-wiki-favicon.png" alt="" width="26" height="26" /><span>LivingWiki</span></span>
+            <h2 id="talking-chat-title" class="talking-chat__event-eyebrow" dir="auto">{{ event.name }}</h2>
+          </div>
+        }
+      }
+      @if (!eventGuide() || conversationStage() !== 'conversation') {
       <div class="talking-chat__identity">
         <div class="talking-chat__avatar">
           @if (avatarImage()) { <img [src]="avatarImage()" [alt]="avatarName()" /> }
@@ -23,7 +32,8 @@
           @if (cardSubtitle()) { <p [attr.dir]="contentDirection()" [attr.lang]="contentLocale()">{{ cardSubtitle() }}</p> }
         </div>
       </div>
-      @if (showContactActions()) {
+      }
+      @if (showContactActions() && (!eventGuide() || conversationStage() !== 'conversation')) {
         <nav class="talking-chat__contact" [attr.aria-label]="contactName() ? templateText.message15 + contactName() : templateText.message16">
           @if (contactPhoneHref()) {
             <a [href]="contactPhoneHref()" aria-label="Call listing agent" i18n-aria-label><span class="material-symbols-outlined" aria-hidden="true">call</span><span i18n>Call</span></a>
@@ -48,27 +58,31 @@
     </header>
 
     @if (eventGuide(); as event) {
-      <div class="talking-chat__event" [attr.dir]="contentDirection()" [attr.lang]="contentLocale()">
+      @if (conversationStage() === 'conversation') {
+        <nav class="talking-chat__languages" aria-label="Guide language" i18n-aria-label>
+          @for (language of featuredEventLanguages(); track language.id) {
+            <button type="button" [attr.aria-pressed]="activeLanguage() === language.id"
+              [disabled]="loadingAtlas() || unavailable() || eventLanguageChanging() || voiceStatus() === 'connecting'"
+              (click)="changeEventLanguage(language.id)">
+              <span class="talking-chat__language-flag" aria-hidden="true">{{ language.flag }}</span>
+              <span dir="auto">{{ language.id === 'pt' ? 'Português' : language.label }}</span>
+              @if (activeLanguage() === language.id) { <span class="material-symbols-outlined talking-chat__language-check" aria-hidden="true">check</span> }
+            </button>
+          }
+          <label class="talking-chat__more-languages">
+            <span class="material-symbols-outlined" aria-hidden="true">language</span>
+            <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+            <select aria-label="More languages" i18n-aria-label [ngModel]="activeLanguage()"
+              [disabled]="loadingAtlas() || unavailable() || eventLanguageChanging() || voiceStatus() === 'connecting'"
+              (ngModelChange)="changeEventLanguage($event)">
+              @for (language of eventLanguages; track language.id) { <option [value]="language.id">{{ language.flag }} {{ language.label }}</option> }
+            </select>
+          </label>
+        </nav>
+      }
+      <div class="talking-chat__event" [hidden]="conversationStage() !== 'recap'" [attr.dir]="contentDirection()" [attr.lang]="contentLocale()">
         <app-event-guide-guest [boardId]="boardId()" [cardId]="cardId()" [settings]="event" [language]="activeLanguage()"
-          [recapMode]="conversationStage() === 'recap'" [recap]="eventRecapSessions()" (emailRequested)="finishConversation('ended')">
-          <div class="talking-chat__event-tools">
-            <label>
-              <span class="material-symbols-outlined" aria-hidden="true">language</span>
-              <select aria-label="Guide language" i18n-aria-label [ngModel]="activeLanguage()" (ngModelChange)="changeEventLanguage($event)">
-                @for (language of eventLanguages; track language.id) { <option [value]="language.id">{{ language.label }}</option> }
-              </select>
-            </label>
-            @if (event.informationUrl) {
-              <a [href]="event.informationUrl" target="_blank" rel="noopener noreferrer">
-                <span i18n>Event info</span>
-                <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
-              </a>
-            }
-            @if (eventVoiceConsent() && event.privacyUrl) {
-              <a [href]="event.privacyUrl" target="_blank" rel="noopener noreferrer" i18n>Privacy notice</a>
-            }
-          </div>
-        </app-event-guide-guest>
+          [deferUntilRecap]="true" [recapMode]="conversationStage() === 'recap'" [recap]="eventRecapSessions()" (emailRequested)="finishConversation('ended')" />
         @if (conversationStage() === 'conversation' && conversationMode() === 'text') {
           <p class="talking-chat__analytics-note" i18n>Conversations may be reviewed by this avatar’s administrators.</p>
         }
@@ -197,6 +211,7 @@
         <button type="button" class="talking-chat__recap-done" (click)="dismissRecap()" i18n>Done</button>
       </div>
     } @else if (conversationStage() === 'conversation') {
+      @if (!eventGuide()) {
       <div class="talking-chat__mode-switch" role="tablist" aria-label="Conversation mode" i18n-aria-label>
         <button
           type="button"
@@ -215,6 +230,7 @@
           (click)="setConversationMode('text')"
          i18n><span class="material-symbols-outlined" aria-hidden="true">chat_bubble</span>Text</button>
       </div>
+      }
 
       @if (loadingAtlas()) {
       <div class="talking-chat__state"><span class="material-symbols-outlined talking-chat__spin">progress_activity</span><p i18n>Preparing the conversation…</p></div>
@@ -251,8 +267,14 @@
             </div>
 
             <div class="talking-chat__voice-details">
-              <strong class="talking-chat__voice-label">{{ voiceStateLabel() }}</strong>
-              @if (eventGuide() && !eventVoiceConsent()) {
+              @if (eventGuide() && voiceStatus() === 'idle') {
+                <h3 class="talking-chat__event-greeting">{{ eventGreeting() }}</h3>
+                <p class="talking-chat__event-role" dir="auto">{{ cardSubtitle() || templateText.message21 }}</p>
+                <p class="talking-chat__event-invitation" i18n>Ask me anything. I’m here to help.</p>
+              } @else {
+                <strong class="talking-chat__voice-label" role="status">{{ voiceStateLabel() }}</strong>
+              }
+              @if (eventGuide() && voiceStatus() !== 'connected' && voiceStatus() !== 'connecting') {
                 <p class="talking-chat__recording-notice" role="note" i18n>We record voice calls. The people who manage this guide can read or listen to them for up to 90 days.</p>
                 @if (eventGuide()?.privacyUrl; as privacyUrl) {
                   <a [href]="privacyUrl" target="_blank" rel="noopener noreferrer" i18n>Privacy notice</a>
@@ -293,11 +315,14 @@
                     <span class="material-symbols-outlined">{{ voiceMuted() ? 'mic_off' : 'mic' }}</span>
                   </button>
                   <button type="button" class="talking-chat__end-call" (click)="finishConversation('ended')" i18n><span class="material-symbols-outlined">call_end</span>End</button>
-                } @else if (eventGuide() && !eventVoiceConsent()) {
-                  <button type="button" class="talking-chat__retry-voice" (click)="confirmEventRecording()" i18n>Start conversation</button>
-                  <button type="button" class="talking-chat__voice-text-fallback" (click)="setConversationMode('text')" i18n>Continue in text</button>
+                } @else if (eventGuide() && voiceStatus() === 'connecting') {
+                  <button type="button" class="talking-chat__retry-voice" disabled aria-busy="true"><span class="material-symbols-outlined talking-chat__spin" aria-hidden="true">progress_activity</span><span i18n>Connecting…</span></button>
                 } @else if (voiceStatus() !== 'connecting' && (!eventGuide() || !creditPrompt())) {
-                  <button type="button" class="talking-chat__retry-voice" (click)="startVoice()"><span class="material-symbols-outlined">mic</span>{{ voiceStatus() === 'error' ? templateText.message10 : templateText.message11 }}</button>
+                  @if (eventGuide()) {
+                    <button type="button" class="talking-chat__retry-voice" [disabled]="eventLanguageChanging()" (click)="confirmEventRecording()"><span class="material-symbols-outlined" aria-hidden="true">mic</span><span i18n>Talk to me</span></button>
+                  } @else {
+                    <button type="button" class="talking-chat__retry-voice" (click)="startVoice()"><span class="material-symbols-outlined">mic</span>{{ voiceStatus() === 'error' ? templateText.message10 : templateText.message11 }}</button>
+                  }
                   @if (eventGuide() && voiceStatus() === 'error') {
                     <button type="button" class="talking-chat__voice-text-fallback" (click)="setConversationMode('text')" i18n>Continue in text</button>
                   }
@@ -330,6 +355,13 @@
         </div>
       } @else {
         <div class="talking-chat__text-experience" role="tabpanel" aria-label="Text conversation" i18n-aria-label>
+        @if (eventGuide()) {
+          <div class="talking-chat__text-tools">
+            <button type="button" (click)="setConversationMode('voice')"><span class="material-symbols-outlined" aria-hidden="true">mic</span><span i18n>Talk instead</span></button>
+            <button type="button" (click)="finishConversation('ended')" i18n>Finish conversation</button>
+            <p class="talking-chat__analytics-note" i18n>Conversations may be reviewed by this avatar’s administrators.</p>
+          </div>
+        }
         <div class="talking-chat__messages" aria-live="polite">
           @for (message of messages(); track message.id) {
             <div class="talking-chat__message" [class.is-user]="message.role === 'user'">

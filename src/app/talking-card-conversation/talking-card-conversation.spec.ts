@@ -56,7 +56,7 @@ describe('TalkingCardConversationComponent', () => {
     sendVoiceConversationSummary: jasmine.createSpy('sendVoiceConversationSummary'),
     submitError: jasmine.createSpy('submitError').and.returnValue(null),
   };
-  const events = { ask: jasmine.createSpy('ask'), send: jasmine.createSpy('send') };
+  const events = { ask: jasmine.createSpy('ask'), send: jasmine.createSpy('send'), plan: jasmine.createSpy('plan') };
   const signedIn = signal(false);
   const userEmail = signal('');
   const userName = signal('');
@@ -85,6 +85,7 @@ describe('TalkingCardConversationComponent', () => {
     chatService.submitError.and.returnValue(null);
     events.ask.calls.reset();
     events.send.calls.reset();
+    events.plan.calls.reset();
     authService.toFriendlyError.calls.reset();
     signedIn.set(false);
     userEmail.set('');
@@ -110,7 +111,7 @@ describe('TalkingCardConversationComponent', () => {
     }).compileComponents();
   });
 
-  it('shows the recording notice before the first event call and keeps the itinerary available in text', async () => {
+  it('shows one event conversation action with flags and defers the itinerary and email until recap', async () => {
     const fixture = TestBed.createComponent(TalkingCardConversationComponent);
     fixture.componentRef.setInput('atlasId', atlas.id);
     fixture.componentRef.setInput('boardId', 'event-board');
@@ -120,23 +121,28 @@ describe('TalkingCardConversationComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     const dialog: HTMLElement = fixture.nativeElement.querySelector('.talking-chat.has-event-guide');
-    const button: HTMLButtonElement = dialog.querySelector('.event-guide__guest > button')!;
-    expect(dialog.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Voice');
+    expect(dialog.querySelector('.talking-chat__mode-switch')).toBeNull();
     expect(chatService.createElevenLabsVoiceSession).not.toHaveBeenCalled();
     expect(dialog.querySelector('.talking-chat__recording-notice')?.textContent).toContain('We record voice calls');
-    expect(dialog.querySelector('.talking-chat__retry-voice')?.textContent?.trim()).toBe('Start conversation');
-    expect(button.textContent).toContain('Build my itinerary');
+    expect(dialog.querySelector('.talking-chat__retry-voice')?.textContent).toContain('Talk to me');
+    expect(dialog.querySelector('.event-guide__itinerary-toggle')).toBeNull();
+    expect(dialog.querySelector('input[type="email"]')).toBeNull();
+    expect(dialog.querySelectorAll('.talking-chat__portrait-frame').length).toBe(1);
+    expect(dialog.querySelector('.talking-chat__identity')).toBeNull();
+    expect(dialog.querySelector('.talking-chat__languages')?.textContent).toContain('🇫🇷');
+    expect(dialog.querySelector('select')?.options.length).toBe(12);
 
+    // Voice tools can build an itinerary without exposing the planner.
+    fixture.componentInstance.eventGuest()!.expanded.set(true);
+    fixture.detectChanges();
+    expect(dialog.textContent).not.toContain('Which days are you attending?');
     await fixture.componentInstance.setConversationMode('text');
     fixture.detectChanges();
-    const composer: HTMLTextAreaElement = dialog.querySelector('.talking-chat__composer textarea')!;
-    expect(composer.getBoundingClientRect().bottom).toBeLessThan(dialog.getBoundingClientRect().bottom);
-    button.click();
-    fixture.detectChanges();
-    expect(dialog.textContent).toContain('Which days are you attending?');
+    expect(dialog.querySelector('textarea')).not.toBeNull();
+    expect(dialog.querySelector('.event-guide__itinerary-toggle')).toBeNull();
   });
 
-  it('starts an event call after an earlier recording confirmation and offers text if the provider fails', async () => {
+  it('waits for Talk to me even with remembered consent and offers text if the provider fails', async () => {
     voiceCredits.status.set({ enabled: true, admin: false });
     const fixture = TestBed.createComponent(TalkingCardConversationComponent);
     fixture.componentRef.setInput('atlasId', atlas.id);
@@ -157,12 +163,16 @@ describe('TalkingCardConversationComponent', () => {
     fixture.detectChanges();
 
     const dialog: HTMLElement = fixture.nativeElement.querySelector('.talking-chat');
+    expect(chatService.createElevenLabsVoiceSession).not.toHaveBeenCalled();
+    dialog.querySelector<HTMLButtonElement>('.talking-chat__retry-voice')!.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
     expect(chatService.createElevenLabsVoiceSession).toHaveBeenCalledOnceWith(jasmine.objectContaining({
       experience: 'event-talking-card', boardId: 'event-board', cardId: 'event-card', eventVoiceHistoryVersion: 1,
     }));
     expect(chatService.createElevenLabsVoiceSession.calls.mostRecent().args[0].voiceCreditMode).toBeUndefined();
     expect(voiceCredits.quote).not.toHaveBeenCalled();
-    expect(dialog.querySelector('.talking-chat__recording-notice')).toBeNull();
+    expect(dialog.querySelector('.talking-chat__recording-notice')).not.toBeNull();
     expect(dialog.querySelector('[role="alert"]')?.textContent).toContain('You can still ask questions in text');
     expect(dialog.textContent).not.toContain('ELEVENLABS_AGENT_ID');
     expect(dialog.querySelector('.talking-chat__transcript')).toBeNull();
@@ -209,6 +219,131 @@ describe('TalkingCardConversationComponent', () => {
       jasmine.objectContaining({ textSessions: [jasmine.any(String)], voiceSessions: [] }),
     );
     expect(fixture.nativeElement.textContent).not.toContain('Which days are you attending?');
+  });
+
+  it('changes the flagged language before a call without starting the microphone', async () => {
+    const fixture = TestBed.createComponent(TalkingCardConversationComponent);
+    fixture.componentRef.setInput('atlasId', atlas.id);
+    fixture.componentRef.setInput('eventGuide', eventGuide);
+    const page = fixture.componentInstance;
+    const start = spyOn(page, 'startVoice').and.resolveTo();
+    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    const dialog: HTMLElement = fixture.nativeElement.querySelector('.talking-chat');
+    const french = Array.from(dialog.querySelectorAll<HTMLButtonElement>('.talking-chat__languages button'))
+      .find(button => button.textContent?.includes('Français'))!;
+    french.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(page.activeLanguage()).toBe('fr');
+    expect(french.getAttribute('aria-pressed')).toBe('true');
+    expect(start).not.toHaveBeenCalled();
+    const picker = dialog.querySelector<HTMLSelectElement>('select')!;
+    picker.value = 'ar'; picker.dispatchEvent(new Event('change'));
+    await fixture.whenStable(); fixture.detectChanges();
+    expect(page.activeLanguage()).toBe('ar');
+    expect(dialog.querySelector('.talking-chat__languages button[aria-pressed="true"]')?.textContent).toContain('🇸🇦');
+    expect(start).not.toHaveBeenCalled();
+    dialog.querySelector<HTMLButtonElement>('.talking-chat__retry-voice')!.click();
+    await fixture.whenStable();
+    expect(page.eventVoiceConsent()).toBeTrue();
+    expect(start).toHaveBeenCalledTimes(1);
+  });
+
+  it('reconnects an active event call once and prevents overlapping language changes', async () => {
+    const fixture = TestBed.createComponent(TalkingCardConversationComponent);
+    fixture.componentRef.setInput('atlasId', atlas.id);
+    fixture.componentRef.setInput('eventGuide', eventGuide);
+    fixture.detectChanges(); await fixture.whenStable();
+    const page = fixture.componentInstance;
+    page.voiceStatus.set('connected');
+    let disconnected!: () => void;
+    const end = spyOn(page, 'endVoice').and.returnValue(new Promise<void>(resolve => { disconnected = resolve; }));
+    const start = spyOn(page, 'startVoice').and.resolveTo();
+    const changing = page.changeEventLanguage('fr');
+    await page.changeEventLanguage('es');
+    expect(page.activeLanguage()).toBe('fr');
+    expect(page.eventLanguageChanging()).toBeTrue();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.talking-chat__languages select').disabled).toBeTrue();
+    disconnected(); await changing;
+    expect(end).toHaveBeenCalledTimes(1);
+    expect(start).toHaveBeenCalledTimes(1);
+    expect(page.eventLanguageChanging()).toBeFalse();
+    page.voiceStatus.set('connecting');
+    await page.changeEventLanguage('ja');
+    expect(page.activeLanguage()).toBe('fr');
+  });
+
+  it('retains a tool-built itinerary in the background and reveals its email field only after End', async () => {
+    const fixture = TestBed.createComponent(TalkingCardConversationComponent);
+    fixture.componentRef.setInput('atlasId', atlas.id);
+    fixture.componentRef.setInput('boardId', 'event-board');
+    fixture.componentRef.setInput('cardId', 'event-card');
+    fixture.componentRef.setInput('eventGuide', eventGuide);
+    fixture.componentRef.setInput('starterQuestions', ['What’s on today?', 'What are the hours?', 'Build my itinerary']);
+    userEmail.set('visitor@example.org');
+    const itinerary = { id: 'plan-id', key: 'plan-key', days: [], warnings: [] };
+    events.plan.and.resolveTo(itinerary);
+    fixture.detectChanges(); await fixture.whenStable();
+    const page = fixture.componentInstance;
+    const guest = page.eventGuest()!;
+    await guest.build({ days: ['2027-01-05'] });
+    fixture.detectChanges();
+    expect(guest.plan()).toBe(itinerary);
+    expect(fixture.nativeElement.querySelector('.event-guide__itinerary-toggle')).toBeNull();
+    expect(fixture.nativeElement.querySelector('input[type="email"]')).toBeNull();
+    expect(page.starters()).not.toContain('Build my itinerary');
+    await page.finishConversation('ended'); fixture.detectChanges();
+    await fixture.whenStable(); fixture.detectChanges();
+    expect(page.conversationStage()).toBe('recap');
+    expect(page.eventGuest()).toBe(guest);
+    expect(guest.plan()).toBe(itinerary);
+    expect(fixture.nativeElement.textContent).toContain('Your itinerary is included.');
+    expect(fixture.nativeElement.querySelector('input[type="email"]').value).toBe('visitor@example.org');
+    expect(events.send).not.toHaveBeenCalled();
+  });
+
+  it('connects from Talk to me, keeps call controls working, and shows the recap after End', async () => {
+    const client = await import('@elevenlabs/client');
+    const conversation = {
+      endSession: jasmine.createSpy('endSession').and.resolveTo(),
+      setMicMuted: jasmine.createSpy('setMicMuted'),
+      sendContextualUpdate: jasmine.createSpy('sendContextualUpdate'),
+      getInputVolume: () => 0, getOutputVolume: () => 0,
+    };
+    const connect = spyOn(client.Conversation, 'startSession').and.resolveTo(conversation as never);
+    chatService.createElevenLabsVoiceSession.and.resolveTo({
+      signedUrl: 'wss://example.test/voice', userId: 'card_fixture', voiceId: 'french-voice',
+      voiceOverrideEnabled: true, languageOverrideEnabled: true, firstMessageOverrideEnabled: true,
+    });
+    const fixture = TestBed.createComponent(TalkingCardConversationComponent);
+    fixture.componentRef.setInput('atlasId', atlas.id);
+    fixture.componentRef.setInput('boardId', 'event-board');
+    fixture.componentRef.setInput('cardId', 'event-card');
+    fixture.componentRef.setInput('eventGuide', eventGuide);
+    fixture.componentRef.setInput('contentLanguage', 'fr');
+    fixture.detectChanges(); await fixture.whenStable();
+    fixture.detectChanges();
+    expect(connect).not.toHaveBeenCalled();
+    const talk = spyOn(fixture.componentInstance, 'confirmEventRecording').and.callThrough();
+    fixture.nativeElement.querySelector('.talking-chat__retry-voice').click();
+    await talk.calls.mostRecent().returnValue;
+    fixture.detectChanges();
+    expect(connect).toHaveBeenCalledTimes(1);
+    const options = connect.calls.mostRecent().args[0];
+    expect(options.overrides?.agent?.language).toBe('fr');
+    expect(options.overrides?.tts?.voiceId).toBe('french-voice');
+    options.onConnect?.({ conversationId: 'conversation-fixture' });
+    options.onMessage?.({ role: 'user', source: 'user', message: 'What should I see first?' });
+    options.onMessage?.({ role: 'agent', source: 'ai', message: 'Start with the opening keynote.' });
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.talking-chat__round-control').click();
+    expect(conversation.setMicMuted).toHaveBeenCalledWith(true);
+    fixture.nativeElement.querySelector('.talking-chat__end-call').click();
+    await fixture.whenStable(); fixture.detectChanges();
+    expect(conversation.endSession).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance.conversationStage()).toBe('recap');
+    expect(fixture.nativeElement.querySelector('input[type="email"]')).not.toBeNull();
+    expect(events.send).not.toHaveBeenCalled();
+    fixture.destroy();
   });
 
   it('shows the sponsored allowance before starting a public voice session', async () => {

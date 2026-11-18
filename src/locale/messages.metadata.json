@@ -483,6 +483,10 @@
     "source": "This video is longer than 3 minutes. Choose a shorter video.",
     "file": "src/app/off-grids/pin-talk-recorder.ts"
   },
+  "1141384220848211453": {
+    "source": "Finish conversation",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
   "1144407473317535723": {
     "source": "Subscribe",
     "file": "src/app/atlas-landing/atlas-landing.html"
@@ -4771,6 +4775,10 @@
     "source": "This report link has expired or is no longer available.",
     "file": "src/app/shared-analytics/shared-analytics.ts"
   },
+  "2383393873754983053": {
+    "source": "Talk instead",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+  },
   "2383411264307031004": {
     "source": "Adding to shared board",
     "file": "src/app/boards/boards.html"
@@ -5638,6 +5646,10 @@
   "2624701521900289515": {
     "source": "Find nearby gems and create a board",
     "file": "src/app/public-wikis/public-wikis.html"
+  },
+  "2627210556024334636": {
+    "source": "Where should we send your recap?",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "2628097400808105456": {
     "source": "Tag places using what3words and find spots most people miss.",
@@ -10035,6 +10047,10 @@
     "source": "Contents",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "3871622615312839134": {
+    "source": "Your personal event guide.",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
+  },
   "3874137787806029269": {
     "source": "See all",
     "file": "src/app/chat/chat.ts"
@@ -12643,10 +12659,6 @@
     "source": "Business",
     "file": "src/app/business-detail/business-detail.html"
   },
-  "4608107035538313233": {
-    "source": "Event info",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
-  },
   "4608836462344525061": {
     "source": "Show card front",
     "file": "src/app/boards/boards.html"
@@ -14089,7 +14101,7 @@
   },
   "5040941334959805672": {
     "source": "Connecting…",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
   "5041354590769758251": {
     "source": "Admin",
@@ -17333,7 +17345,7 @@
   },
   "5944576157298701178": {
     "source": "Start conversation",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+    "file": "src/app/boards/boards.ts"
   },
   "5944806309334777381": {
     "source": "Upload {$INTERPOLATION}%",
@@ -18518,10 +18530,6 @@
   "6264442811047557626": {
     "source": "No wikis match \"{$INTERPOLATION}\".",
     "file": "src/app/wiki-home/wiki-home.html"
-  },
-  "6267215065275066046": {
-    "source": "Your recap email is on its way.",
-    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "6267882550803651258": {
     "source": "Missing scripts",
@@ -22375,6 +22383,10 @@
     "source": "Incinerator and sewage burden",
     "file": "src/app/fence-line/fence-line.ts"
   },
+  "7388861339263424971": {
+    "source": "Your recap email is on its way to {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}.",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "7390642224797973637": {
     "source": "Discover boards",
     "file": "src/app/public-wikis/public-wikis.html"
@@ -22458,6 +22470,10 @@
   "7413212875003421921": {
     "source": "Share Card",
     "file": "src/app/answer-card/answer-card.html"
+  },
+  "7413561022892943029": {
+    "source": "Ask me anything. I’m here to help.",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
   "7414276429890813100": {
     "source": "Create Wiki",
@@ -23169,7 +23185,7 @@
   },
   "7624253360292333318": {
     "source": "Talk to me",
-    "file": "src/app/talking-card-editor/talking-card-editor.html"
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
   "7626967948298343282": {
     "source": "Voice is unavailable in this browser. Choose Chat to type to Picamo.",
@@ -24554,6 +24570,10 @@
   "8020402390620783618": {
     "source": "Education",
     "file": "src/app/business-badge-icons.ts"
+  },
+  "8021283168489170620": {
+    "source": "Hi, I’m {$AVATAR_NAME}.",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
   },
   "80223253477061756": {
     "source": "Choose a preview frame",
