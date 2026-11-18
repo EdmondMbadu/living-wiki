@@ -209,6 +209,8 @@ describe('TalkingCardEditorComponent', () => {
     page.useCesEmailBanner();
     fixture.detectChanges();
     expect(emailDesign.querySelector('iframe')?.srcdoc).toContain('/assets/event-guide/ces-2027-amy-email.jpg');
+    const bannerPreview = emailDesign.querySelector('iframe')!.srcdoc;
+    expect(bannerPreview.indexOf('/assets/event-guide/ces-2027-amy-email.jpg')).toBeLessThan(bannerPreview.indexOf('<h1'));
     defaultDesign.click();
     fixture.detectChanges();
     expect(page.eventSettingsDraft().emailDesign).toBeUndefined();

@@ -107,14 +107,15 @@ export function renderEventEmail(
   if (design?.theme === 'spotlight') {
     const start = locale.direction === 'rtl' ? 'right' : 'left';
     const end = start === 'right' ? 'left' : 'right';
-    const banner = design.bannerUrl ? `<tr><td><img src="${escape(design.bannerUrl)}" alt="" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0"></td></tr>` : '';
+    const banner = design.bannerUrl ? `<tr><td><img src="${escape(design.bannerUrl)}" alt="" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;border-radius:16px 16px 0 0"></td></tr>` : '';
     const html = `<!doctype html><html lang="${locale.id}" dir="${locale.direction}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(subject)}</title></head>
     <body style="margin:0;background:#0b1020;font:16px/1.5 Arial,Helvetica,sans-serif">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0">${escape(subject)}</div>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#0b1020"><tr><td align="center" style="padding:20px 12px">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#0b1020"><tr><td align="center" style="padding:${banner ? '0 12px 20px' : '20px 12px'}">
     <!--[if mso]><table role="presentation" width="600" align="center"><tr><td><![endif]-->
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" dir="${locale.direction}" style="max-width:600px">
-    <tr><td bgcolor="#0e1530" style="padding:18px 22px;border-radius:16px 16px 0 0;border-bottom:1px solid #26304d">
+    ${banner}
+    <tr><td bgcolor="#0e1530" style="padding:18px 22px;${banner ? '' : 'border-radius:16px 16px 0 0;'}border-bottom:1px solid #26304d">
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>
         <td align="${start}" style="padding:0 8px"><span style="display:inline-block;padding:5px 12px;background:#ffffff;border-radius:7px;color:#0b1020;font-weight:bold">${escape(settings.name)}</span></td>
         ${sponsor ? `<td align="${end}" style="padding:0 8px;color:#ffffff"><small style="color:#bbc9ee">${escape(presentedBy)}</small><br><strong>${escape(sponsor.name)}</strong></td>` : ''}
@@ -125,7 +126,6 @@ export function renderEventEmail(
       <p style="margin:0;color:#cbd9ff">${escape(settings.timeZone)}</p>
       ${editUrl ? `<p style="margin:18px 0 0"><a href="${escape(editUrl)}" style="display:inline-block;border-radius:8px;padding:10px 16px;background:#e3ebff;color:#172857;text-decoration:none;font-weight:bold">${escape(edit)}</a></p>` : ''}
     </td></tr>
-    ${banner}
     <tr><td align="${start}" bgcolor="#ffffff" style="padding:6px 24px 24px;color:#101830">
       ${highlights}${plan && isRecap ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}${days}
       <p style="margin:20px 0 0;padding:14px;border-radius:10px;background:#edf1ff;color:#25376e">${escape(changes)}</p>

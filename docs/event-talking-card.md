@@ -6,6 +6,8 @@ Set exhibit floor hours for any days that the program upload leaves unspecified.
 
 The recap email includes conversation excerpts and any itinerary the guest built. The guest sends it from the recap screen. The email's private edit link opens the saved itinerary, where the guest can remove stops or rebuild and save the plan. Private events require sign-in with an account that can access the event.
 
+In **Recap email design → Spotlight**, an uploaded banner appears at the very top of every event recap and itinerary email, before the event name, sponsor, heading, and links. The editor preview uses the same layout. Custom HTML templates control their own layout; put the banner before other visible content and keep `<!-- livingwiki:recap -->` below it.
+
 Open **Card analytics → Conversations** to see verified voice duration and read or download the full transcript. Use **Internal** to find organizer test calls. Avatar administrators can also play recordings where available. Callers confirm the recording notice before starting voice. Transcripts and recordings are available for up to 90 days.
 
 ## File layouts

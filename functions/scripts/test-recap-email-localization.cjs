@@ -162,7 +162,8 @@ test('Event Talking Card localizes mixed-language turns, notes and sponsorship w
   assert.equal(branded.text, email.text);
   assert.match(branded.html, /dir="rtl"/);
   assert.match(branded.html, /src="https:\/\/example\.org\/amy\.jpg\?one=1&amp;two=2"/);
-  assert.ok(branded.html.indexOf(localizedEdit) < branded.html.indexOf('/amy.jpg'));
+  assert.ok(branded.html.indexOf('/amy.jpg') < branded.html.indexOf('<h1'));
+  assert.ok(branded.html.indexOf('/amy.jpg') < branded.html.indexOf(localizedEdit));
   assert.match(branded.html, /شكرًا للجهة الراعية|LivingWiki/);
   const imageRemoved = renderEventEmail({ ...settings, emailDesign: { theme: 'spotlight', bannerUrl: 'javascript:alert(1)' } }, null, 'ar', null, transcript, '', copy);
   assert.doesNotMatch(imageRemoved.html, /<img|javascript:|تعديل برنامجك/);
@@ -177,6 +178,38 @@ test('Event Talking Card localizes mixed-language turns, notes and sponsorship w
   assert.match(custom.html, /src="https:\/\/example\.org\/banner\.jpg"/);
   assert.match(custom.html, /تعديل برنامجك/);
   assert.doesNotMatch(custom.html, /onerror|<script/);
+});
+
+test('the banner is the first visible content in every event email and the supplied CES template', () => {
+  const { parse } = require('parse5');
+  const { readFileSync } = require('node:fs');
+  const { CONTENT_LANGUAGES } = require('../lib/content-language');
+  const firstVisibleContent = (node) => {
+    if (['head', 'style', 'script'].includes(node.nodeName)) return null;
+    const style = node.attrs?.find(attr => attr.name === 'style')?.value || '';
+    if (/display\s*:\s*none/i.test(style)) return null;
+    if (node.nodeName === 'img') return 'banner';
+    if (node.nodeName === '#text' && node.value.trim()) return node.value.trim();
+    for (const child of node.childNodes || []) {
+      const visible = firstVisibleContent(child);
+      if (visible) return visible;
+    }
+    return null;
+  };
+  for (const { id: language } of CONTENT_LANGUAGES) {
+    for (const recapOnly of [false, true]) {
+      const message = renderEventEmail({ ...settings, emailDesign: {
+        theme: 'spotlight', bannerUrl: 'https://example.org/banner.jpg',
+      } }, recapOnly ? null : plan, language, sponsor,
+      recapOnly ? [{ role: 'assistant', text: 'Your visit recap.' }] : []);
+      assert.equal(firstVisibleContent(parse(message.html)), 'banner', `${language}: ${recapOnly ? 'recap' : 'itinerary'}`);
+      assert.equal((message.html.match(/<img /g) || []).length, 1);
+      assert.match(message.html, /padding:0 12px 20px/);
+    }
+  }
+  const template = readFileSync(require.resolve('../../public/assets/event-guide/ces-2027-recap-template.html'), 'utf8');
+  const message = renderEventEmail({ ...settings, emailDesign: { theme: 'custom', template } }, plan, 'en', sponsor);
+  assert.equal(firstVisibleContent(parse(message.html)), 'banner');
 });
 
 test('custom HTML preserves safe email styles, removes active markup, and appends a missing slot', () => {
