@@ -521,7 +521,7 @@
 .talking-chat__event { min-width: 0; padding: 0 var(--event-gutter) 1rem; }
 .talking-chat__event[hidden] { display: none; }
 .talking-chat.has-event-guide.has-recap { grid-template-rows: auto minmax(0, 1fr); }
-.has-event-guide.has-recap .talking-chat__event { overflow-y: auto; overscroll-behavior: contain; }
+.has-event-guide.has-recap .talking-chat__event { display: flex; flex-direction: column; justify-content: safe center; overflow-y: auto; overscroll-behavior: contain; }
 .talking-chat__languages { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 3rem; align-items: stretch; gap: .4rem; padding: 0 var(--event-gutter) .5rem; }
 .talking-chat__languages button, .talking-chat__more-languages { display: inline-flex; min-width: 0; min-height: 44px; align-items: center; justify-content: center; gap: .35rem; border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line)); border-radius: 14px; padding: .5rem .4rem; color: var(--text); background: color-mix(in srgb, var(--surface) 75%, transparent); font: inherit; font-size: clamp(.7rem, 2.7vw, .82rem); font-weight: 700; cursor: pointer; }
 .talking-chat__languages button > span[dir] { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

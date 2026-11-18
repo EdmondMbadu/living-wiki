@@ -99,3 +99,33 @@
 .event-guide__guest-panel ul { margin: .25rem 0 .65rem; padding-inline-start: 1.2rem; }
 .event-guide__guest-panel li { margin: .3rem 0; }
 .event-guide__guest-panel a { color: inherit; text-decoration: underline; }
+
+.event-guide__guest-panel--email {
+  max-width: 27rem;
+  margin-inline: auto;
+  justify-items: center;
+  gap: 1.3rem;
+  border: 0;
+  padding: clamp(1rem, 4vw, 2rem) 0;
+  background: transparent;
+  text-align: center;
+}
+.event-guide__email-icon {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  font-size: 1.8rem;
+}
+.event-guide__guest-panel--email .event-guide__recap-heading h3 { margin-bottom: .65rem; font-size: clamp(1.6rem, 5vw, 2rem); letter-spacing: -.025em; line-height: 1.2; }
+.event-guide__guest-panel--email .event-guide__recap-heading p { max-width: 24rem; color: var(--muted); font-size: .95rem; line-height: 1.6; }
+.event-guide__email-form { display: grid; width: 100%; gap: 1rem; margin-top: .25rem; text-align: start; }
+.event-guide__email-form label { gap: .55rem; font-size: .8rem; }
+.event-guide__guest-panel--email input[type=email] { min-height: 54px; border-radius: 14px; padding: .85rem 1rem; background: var(--surface); font-size: 1rem; }
+.event-guide__email-form :is(small, a) { color: var(--muted); font-size: .7rem; line-height: 1.5; }
+.event-guide__email-form button { width: 100%; min-height: 54px; border-radius: 999px; margin-top: .25rem; font-size: .95rem; font-weight: 800; }
+.event-guide__guest-panel--email [role=status] { line-height: 1.6; overflow-wrap: anywhere; }
+.event-guide__guest-panel--email [role=alert] { width: 100%; border-radius: 12px; padding: .75rem; background: color-mix(in srgb, #ba3f4c 8%, var(--surface)); text-align: start; line-height: 1.5; }

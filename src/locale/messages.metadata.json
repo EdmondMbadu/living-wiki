@@ -15355,6 +15355,10 @@
     "source": "Video branding could not be loaded.",
     "file": "src/app/boards/boards.ts"
   },
+  "5399170739020555801": {
+    "source": "We’ll email your itinerary and a link to edit it.",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "5401235049169008975": {
     "source": "Open source page",
     "file": "src/app/green-jobs/green-jobs.html"
@@ -22415,10 +22419,6 @@
     "source": "Useful when the destination is easier to show than describe.",
     "file": "src/app/boards/boards.html"
   },
-  "7397272962257710765": {
-    "source": "Your itinerary is included.",
-    "file": "src/app/event-guide/event-guide-guest.html"
-  },
   "7397570695281200024": {
     "source": "photos selected",
     "file": "src/app/boards/listing-photo-source.ts"
@@ -23113,7 +23113,7 @@
   },
   "7606672167560356784": {
     "source": "Sending…",
-    "file": "src/app/boards/boards.ts"
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "7608666141846770741": {
     "source": "Listen and choose a voice",
@@ -26749,7 +26749,7 @@
   },
   "8689008801158522477": {
     "source": "It’s on the way",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "8691039309182896850": {
     "source": "Move to beginning",

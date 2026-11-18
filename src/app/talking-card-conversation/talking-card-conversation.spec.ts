@@ -209,7 +209,7 @@ describe('TalkingCardConversationComponent', () => {
     fixture.detectChanges();
     expect(component.conversationStage()).toBe('recap');
     expect(events.send).not.toHaveBeenCalled();
-    expect(fixture.nativeElement.textContent).toContain('Your itinerary is included.');
+    expect(fixture.nativeElement.textContent).toContain('We’ll email your itinerary and a link to edit it.');
     expect(fixture.nativeElement.querySelector('form input[type="checkbox"]')).toBeNull();
     guest.email.set('guest@example.org');
     await guest.send(new Event('submit'));
@@ -296,7 +296,7 @@ describe('TalkingCardConversationComponent', () => {
     expect(page.conversationStage()).toBe('recap');
     expect(page.eventGuest()).toBe(guest);
     expect(guest.plan()).toBe(itinerary);
-    expect(fixture.nativeElement.textContent).toContain('Your itinerary is included.');
+    expect(fixture.nativeElement.textContent).toContain('We’ll email your itinerary and a link to edit it.');
     expect(fixture.nativeElement.querySelector('input[type="email"]').value).toBe('visitor@example.org');
     expect(events.send).not.toHaveBeenCalled();
   });

@@ -5,7 +5,7 @@ import { EventGuideGuest } from './event-guide-guest';
 import { EventGuideService } from './event-guide.service';
 
 describe('Event Guide itinerary and email', () => {
-  it('shows all dates and retains the plan on send failure in the shared recap flow', async () => {
+  it('keeps the recap email-only and retains the full itinerary on send failure and retry', async () => {
     const itinerary: EventPlan = {
       id: 'plan-id', key: 'private-key', warnings: [],
       days: [
@@ -40,6 +40,12 @@ describe('Event Guide itinerary and email', () => {
     expect(events.send).not.toHaveBeenCalled();
     fixture.componentRef.setInput('recapMode', true);
     fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('Robotics demo');
+    expect(fixture.nativeElement.textContent).not.toContain('Day off');
+    expect(fixture.nativeElement.querySelector('.event-guide__days')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.event-guide__source')).toBeNull();
+    expect(fixture.nativeElement.querySelector('input[type="email"]')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('We’ll email your itinerary and a link to edit it.');
     await page.send(new Event('submit'));
     expect(page.error()).toBe('Try again.');
     expect(page.plan()).toEqual(itinerary);
@@ -53,6 +59,8 @@ describe('Event Guide itinerary and email', () => {
     expect(page.sentTo()).toBe('guest@example.org');
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[role="status"]')?.textContent).toContain('guest@example.org');
+    expect(fixture.nativeElement.querySelector('form')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Robotics demo');
   });
 
   it('loads the saved itinerary from the link and saves a removed stop without opening email', async () => {

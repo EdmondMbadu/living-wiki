@@ -9,21 +9,30 @@
     </button>
   }
   @if (recapMode() || (!deferUntilRecap() && expanded())) {
-    <section class="event-guide__guest-panel" [class.event-guide__guest-panel--recap]="recapMode() || initialDraft()" aria-label="Event itinerary" i18n-aria-label>
+    <section class="event-guide__guest-panel" [class.event-guide__guest-panel--recap]="recapMode() || initialDraft()"
+      [class.event-guide__guest-panel--email]="recapMode()" [attr.aria-labelledby]="recapMode() ? 'event-recap-heading' : null" aria-label="Event itinerary" i18n-aria-label>
       @if (recapMode()) {
+        <span class="event-guide__email-icon material-symbols-outlined" aria-hidden="true">{{ sent() ? 'mark_email_read' : 'mail' }}</span>
         <header class="event-guide__recap-heading">
-          <h3 i18n>Your event recap</h3>
-          @if (recap()) { <p i18n>Email yourself the highlights from your conversation.</p> }
-          @if (plan()) { <p i18n>Your itinerary is included.</p> }
+          @if (sent()) {
+            <h3 id="event-recap-heading" i18n>It’s on the way</h3>
+          } @else {
+            <h3 id="event-recap-heading" i18n>Your event recap</h3>
+            @if (plan()) { <p i18n>We’ll email your itinerary and a link to edit it.</p> }
+            @else if (recap()) { <p i18n>Email yourself the highlights from your conversation.</p> }
+          }
         </header>
         @if (sent()) {
           <p role="status" i18n>Your recap email is on its way to <strong>{{ sentTo() }}</strong>.</p>
         } @else {
-          <form class="event-guide__source" (submit)="send($event)">
+          <form class="event-guide__email-form" (submit)="send($event)" [attr.aria-busy]="sending()">
             <label><span i18n>Where should we send your recap?</span><input type="email" name="eventEmail" autocomplete="email" placeholder="you@example.com" i18n-placeholder required maxlength="254" [disabled]="busy()" [ngModel]="email()" (ngModelChange)="email.set($event)"></label>
             @if (recap()) { <small i18n>This avatar’s administrators can see your recap email address.</small> }
             @if (displaySettings().privacyUrl) { <a [href]="displaySettings().privacyUrl" target="_blank" rel="noopener noreferrer" i18n>Privacy notice</a> }
-            <button type="submit" [disabled]="busy() || !email().trim()" i18n>Send recap</button>
+            <button type="submit" [disabled]="busy() || !email().trim()">
+              @if (sending()) { <span role="status" i18n>Sending…</span> }
+              @else { <span i18n>Send recap</span> }
+            </button>
           </form>
         }
       } @else {
@@ -50,10 +59,10 @@
         </button>
       </fieldset>
       }
-      @if (busy()) { <p role="status" i18n>Working on your itinerary…</p> }
+      @if (busy() && !recapMode()) { <p role="status" i18n>Working on your itinerary…</p> }
       @if (saved()) { <p role="status" i18n>Itinerary saved.</p> }
       @if (error()) { <p role="alert">{{ error() }}</p> }
-      @if (plan(); as itinerary) {
+      @if (!recapMode() && plan(); as itinerary) {
         <section class="event-guide__source" aria-live="polite">
           <h3 i18n>Your itinerary</h3>
           <p>{{ displaySettings().timeZone }}</p>
