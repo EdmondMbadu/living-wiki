@@ -53,7 +53,7 @@ export function renderEventEmail(
   const locale = contentLanguageDetails(language);
   const design = eventEmailDesign(settings.emailDesign);
   const [itinerary, dayOff, lunch, exhibits, changes, info, privacy, presentedBy] = messages[language];
-  const [recap, conversation, visitor, guide] = recapLabels[language];
+  const [recap] = recapLabels[language];
   const sponsorMessage = sponsor ? copy(sponsor.message) : '';
   const editUrl = plan ? eventHttpsUrl(itineraryEditUrl) : '';
   const edit = editLabels[language];
@@ -65,15 +65,8 @@ export function renderEventEmail(
     const url = eventHttpsUrl(value);
     return url ? `<a style="color:#3659ce" href="${escape(url)}">${escape(label)}</a>` : escape(label);
   };
-  const highlights = transcript.length ? (() => {
-    text.push('', conversation);
-    return `<h2 style="font-size:20px;margin:24px 0 8px">${escape(conversation)}</h2>` + transcript.map(turn => {
-      const speaker = turn.role === 'user' ? visitor : guide;
-      const message = copy(turn.text);
-      text.push(`${speaker}: ${message}`);
-      return `<p style="margin:8px 0 14px"><strong>${escape(speaker)}</strong><br><span dir="auto">${escape(message).replace(/\r?\n/g, '<br>')}</span></p>`;
-    }).join('');
-  })() : '';
+  // Event emails deliver the itinerary and event details, without raw dialogue.
+  // Keep transcript metadata only to distinguish a recap from a standalone plan.
   if (plan && isRecap) text.push('', itinerary);
   if (editUrl) text.push(edit, editUrl);
   const days = (plan?.days ?? []).map((day) => {
@@ -95,7 +88,7 @@ export function renderEventEmail(
     const content = `<div lang="${locale.id}" dir="${locale.direction}" style="padding:20px;font:16px/1.5 Arial,Helvetica,sans-serif;background:#ffffff;color:#101830">
       <h1 style="margin:0 0 8px;font-size:28px">${escape(title)}</h1><p>${escape(settings.name)} · ${escape(settings.timeZone)}</p>
       ${editUrl ? `<p><a href="${escape(editUrl)}" style="display:inline-block;padding:10px 16px;border-radius:8px;background:#15254a;color:#ffffff;text-decoration:none;font-weight:bold">${escape(edit)}</a></p>` : ''}
-      ${highlights}${plan && isRecap ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}${days}
+      ${plan && isRecap ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}${days}
       <p>${escape(changes)}</p>${settings.informationUrl ? `<p>${link(info, settings.informationUrl)}</p>` : ''}
       ${sponsor ? `<p><strong>${escape(presentedBy)} ${escape(sponsor.name)}</strong><br>${escape(sponsorMessage)}</p>` : ''}
       ${settings.privacyUrl ? `<p>${link(privacy, settings.privacyUrl)}</p>` : ''}<p>${link('LivingWiki', 'https://livingwiki.com')}</p></div>`;
@@ -127,7 +120,7 @@ export function renderEventEmail(
       ${editUrl ? `<p style="margin:18px 0 0"><a href="${escape(editUrl)}" style="display:inline-block;border-radius:8px;padding:10px 16px;background:#e3ebff;color:#172857;text-decoration:none;font-weight:bold">${escape(edit)}</a></p>` : ''}
     </td></tr>
     <tr><td align="${start}" bgcolor="#ffffff" style="padding:6px 24px 24px;color:#101830">
-      ${highlights}${plan && isRecap ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}${days}
+      ${plan && isRecap ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}${days}
       <p style="margin:20px 0 0;padding:14px;border-radius:10px;background:#edf1ff;color:#25376e">${escape(changes)}</p>
       ${settings.informationUrl ? `<p>${link(info, settings.informationUrl)}</p>` : ''}
     </td></tr>
@@ -142,7 +135,7 @@ export function renderEventEmail(
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:20px 12px">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px"><tr><td dir="${locale.direction}" style="padding:22px;background:#15254a;color:#ffffff;border-radius:12px 12px 0 0">
     ${sponsor ? `<small>${escape(presentedBy)} ${escape(sponsor.name)}</small>` : ''}<h1 style="margin:8px 0;font:32px Georgia,serif">${escape(title)}</h1><p style="margin:0">${escape(settings.name)} · ${escape(settings.timeZone)}</p></td></tr>
-    <tr><td dir="${locale.direction}" style="padding:8px 22px 22px;background:#ffffff">${highlights}${plan && isRecap ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}
+    <tr><td dir="${locale.direction}" style="padding:8px 22px 22px;background:#ffffff">${plan && isRecap ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}
     ${editUrl ? `<p style="margin:12px 0 20px"><a href="${escape(editUrl)}" style="display:inline-block;border-radius:8px;padding:10px 16px;background:#15254a;color:#ffffff;text-decoration:none;font-weight:bold">${escape(edit)}</a></p>` : ''}${days}<p>${escape(changes)}</p>
     ${settings.informationUrl ? `<p>${link(info, settings.informationUrl)}</p>` : ''}</td></tr>
     <tr><td dir="${locale.direction}" style="padding:18px 22px;background:#e9eef9;border-radius:0 0 12px 12px">

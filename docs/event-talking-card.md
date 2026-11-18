@@ -4,7 +4,7 @@ In a personal board, choose **New card → Event Talking Card**. Add the event d
 
 Set exhibit floor hours for any days that the program upload leaves unspecified. Save the card, then use the card’s **Share** action to download its QR code from a public or unlisted board. Add `&lang=ja` to a card link to open the guide with Japanese selected. Guests can choose a language in the guide. Email stays optional and uses the on-screen address confirmation.
 
-The recap email includes conversation excerpts and any itinerary the guest built. The guest sends it from the recap screen. The email's private edit link opens the saved itinerary, where the guest can remove stops or rebuild and save the plan. Private events require sign-in with an account that can access the event.
+The event recap email includes any itinerary the guest built, event information, and sponsorship details. It omits the raw conversation transcript from both the HTML and plain-text email. The guest sends it from the email-only recap screen after the conversation. The email's private edit link opens the saved itinerary, where the guest can remove stops or rebuild and save the plan. Private events require sign-in with an account that can access the event.
 
 In **Recap email design → Spotlight**, an uploaded banner appears at the very top of every event recap and itinerary email, before the event name, sponsor, heading, and links. The editor preview uses the same layout. Custom HTML templates control their own layout; put the banner before other visible content and keep `<!-- livingwiki:recap -->` below it.
 

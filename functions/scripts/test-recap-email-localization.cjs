@@ -60,14 +60,13 @@ const transcript = [
 const editUrl = 'https://livingwiki.com/event-itinerary#plan.private-key';
 const digest = email => createHash('sha256').update(JSON.stringify(email)).digest('hex');
 
-test('English Talking Card, property, Wiki voice, and event emails match the existing output', async () => {
+test('English Talking Card, property, and Wiki voice emails match the existing output', async () => {
   const neverTranslate = () => assert.fail('English does not call the translator');
   const copy = await prepareRecapEmailCopy('en', () => assert.fail('English skips collecting translations'), neverTranslate);
   for (const [email, baseline] of [
     [buildVoiceConversationSummaryEmail(voice, 'en', copy), 'e746a493efc43241b04ca987e35e1f3e92e5c63683ecab9fc7453cd5c3e6d189'],
     [buildVoiceConversationSummaryEmail(property, 'en', copy), '6feb773d737538cc21de37a0deeb2de8d3b5a6e9e4b404e53186c8947ea62537'],
     [buildVoiceConversationSummaryEmail({ ...voice, source: 'wiki_voice' }, 'en', copy), '535ffe9c03237afc7be99a88ac23e2f2d265b617696131e79e6c2f5ac66e6666'],
-    [renderEventEmail(settings, plan, 'en', sponsor, transcript, editUrl, copy), '24cfd6e14d60f74b4638661741ca62bf63c5b10075f2bf77b515151f0a523210'],
   ]) assert.equal(digest(email), baseline);
 });
 
@@ -126,9 +125,8 @@ test('a regular Talking Card localizes the subject and action description even i
   assert.ok(!email.html.includes(voice.answerCardUrl));
 });
 
-test('Event Talking Card localizes mixed-language turns, notes and sponsorship with Arabic layout', async () => {
+test('Event Talking Card omits dialogue and localizes itinerary notes and sponsorship with Arabic layout', async () => {
   const translated = {
-    'When do the doors open?': 'متى تفتح الأبواب؟',
     'Doors open at 8:45.': 'تفتح الأبواب في الساعة 8:45.',
     'Thank you to our sponsor.': 'شكرًا للجهة الراعية.',
   };
@@ -144,7 +142,7 @@ test('Event Talking Card localizes mixed-language turns, notes and sponsorship w
   assert.match(email.html, /lang="ar" dir="rtl"/);
   assert.match(email.html, /تعديل برنامجك/);
   for (const body of [email.html, email.text]) {
-    assert.match(body, /متى تفتح الأبواب/);
+    assert.doesNotMatch(body, /When do the doors open|متى تفتح الأبواب/);
     assert.match(body, /تفتح الأبواب في الساعة 8:45/);
     assert.match(body, /شكرًا للجهة الراعية/);
     assert.match(body, /CES Opening Keynote/);
@@ -178,6 +176,33 @@ test('Event Talking Card localizes mixed-language turns, notes and sponsorship w
   assert.match(custom.html, /src="https:\/\/example\.org\/banner\.jpg"/);
   assert.match(custom.html, /تعديل برنامجك/);
   assert.doesNotMatch(custom.html, /onerror|<script/);
+});
+
+test('only event emails omit raw transcripts in HTML and plain text for every language and design', () => {
+  const { CONTENT_LANGUAGES } = require('../lib/content-language');
+  const dialogue = [
+    { role: 'user', text: 'VISITOR_DIALOGUE_SENTINEL' },
+    { role: 'assistant', text: 'GUIDE_DIALOGUE_SENTINEL' },
+  ];
+  const designs = [undefined, { theme: 'spotlight', bannerUrl: 'https://example.org/banner.jpg' },
+    { theme: 'custom', template: '<div><!-- livingwiki:recap --></div>' }];
+  for (const { id: language } of CONTENT_LANGUAGES) {
+    for (const emailDesign of designs) {
+      for (const itinerary of [plan, null]) {
+        const message = renderEventEmail({ ...settings, emailDesign }, itinerary, language, sponsor, dialogue, editUrl);
+        for (const body of [message.html, message.text]) {
+          assert.doesNotMatch(body, /VISITOR_DIALOGUE_SENTINEL|GUIDE_DIALOGUE_SENTINEL|From your conversation/);
+          assert.ok(body.includes(settings.informationUrl));
+          assert.ok(body.includes(sponsor.message));
+          if (itinerary) {
+            assert.ok(body.includes('CES Opening Keynote'));
+            assert.ok(body.includes('https://example.org/keynote'));
+            assert.ok(body.includes(editUrl));
+          }
+        }
+      }
+    }
+  }
 });
 
 test('the banner is the first visible content in every event email and the supplied CES template', () => {
@@ -248,7 +273,7 @@ test('imports the CES Handlebars layout and fills its heading and recap in the g
   assert.match(message.html, /<span>CES 2027<\/span>/);
   assert.match(message.html, /class="hero-title">Votre récapitulatif/);
   assert.match(message.html, /ces-2027-amy-email\.jpg/);
-  assert.match(message.html, /Bienvenue !/);
+  assert.doesNotMatch(message.html, /Bienvenue !/);
   assert.match(message.html, /Modifier votre itinéraire/);
   assert.match(message.html, /LivingWiki/);
   assert.doesNotMatch(message.html, /{{|your mission plan is ready/);

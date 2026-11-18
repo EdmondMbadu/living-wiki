@@ -100,7 +100,8 @@ test('organizer imports and publishes, a QR guest asks and plans, and confirmed 
     let editLink;
     sendgrid.send = async (message) => {
       assert.match(message.subject, /Your event recap/);
-      assert.match(message.html, /Where is the Waymo booth\?/);
+      assert.doesNotMatch(message.html, /Where is the Waymo booth\?|From your conversation/);
+      assert.doesNotMatch(message.text, /Where is the Waymo booth\?|From your conversation/);
       assert.match(message.html, /3741/);
       assert.match(message.html, /Your itinerary/);
       assert.match(message.html, /src="https:\/\/example\.org\/amy-banner\.jpg"/);
@@ -142,7 +143,8 @@ test('organizer imports and publishes, a QR guest asks and plans, and confirmed 
     assert.equal((await call(readEventGuideItinerary, editAccess, owner)).revision, rebuilt.revision);
     await board.update({ visibility: 'unlisted' });
     sendgrid.send = async message => {
-      assert.match(message.html, /Where is the Waymo booth\?/);
+      assert.doesNotMatch(message.html, /Where is the Waymo booth\?|From your conversation/);
+      assert.doesNotMatch(message.text, /Where is the Waymo booth\?|From your conversation/);
       assert.doesNotMatch(message.html, /Your itinerary/);
       sent++;
       return [{ statusCode: 202 }, {}];
