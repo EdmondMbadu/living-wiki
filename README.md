@@ -383,3 +383,43 @@ Rollout: deploy `cityWeeklyUpdatesPreference`, `unsubscribeCityWeeklyUpdates`,
 No Firestore rules/index changes or profile backfill are required. Deployment
 activates automatic eligibility for existing accounts, so keep administrator
 newsletter pauses in place for any city that should not send yet.
+
+
+### Application email configuration
+
+All application email uses the existing backend SendGrid transport with shared
+identity and safe provider errors in `functions/src/email-config.ts`. Account
+verification/reset, board/admin/team invitations, subscriptions/newsletters, visit
+plans, voice/event recaps, and TalkThru application/admin/billing emails use it.
+Templates are rendered locally; no SendGrid dynamic template IDs are configured.
+Existing recipient preferences, unsubscribe links and attachments are preserved.
+
+Set these non-secret values in the Firebase Functions project environment
+(`functions/.env.living-atlas-7622a`, ignored by Git):
+
+```ini
+EMAIL_FROM=info@livingwiki.com
+EMAIL_FROM_NAME=LivingWiki
+EMAIL_REPLY_TO=jimwalker@mindpalace.com
+EMAIL_REPLY_TO_NAME=Jim Walker
+```
+
+`SENDGRID_API_KEY` stays in the existing Google Secret Manager secret of that
+name and is bound only to backend functions that send mail. Never put it in a
+frontend environment, committed file, CLI argument or log. The former isolated
+`INVITE_SENDER_EMAIL` override is replaced by `EMAIL_FROM` so team invitations use
+the same identity as all other application emails. To change Reply-To later,
+update `EMAIL_REPLY_TO` (for example, to `jim@livingwiki.com`) and redeploy the
+mail-enabled functions; no application code change is needed. A new secret
+version also requires redeploying those functions to adopt that version.
+
+Run `npm --prefix functions run test:email-config` for local identity/error tests.
+The operator-only backend script `functions/scripts/send-email-test.cjs` takes
+`--configuration` (default) or `--amy-sample`; it requires `EMAIL_TEST_RECIPIENT`
+and a securely loaded `SENDGRID_API_KEY` in its process environment. The recipient
+is never committed or saved as an application setting. Optionally set
+`EMAIL_TEST_AMY_URL` to an existing LivingWiki conversation URL for the sample.
+It sends real mail and reports only provider status/message ID. A 202 response
+means SendGrid accepted the message; inbox placement, visible sender and Reply-To
+must be checked on the received message. No DNS or Sender Authentication changes
+are needed for the authenticated LivingWiki domain.

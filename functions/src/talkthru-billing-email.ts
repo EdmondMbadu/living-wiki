@@ -1,5 +1,6 @@
 import type Stripe from 'stripe';
 import sgMail from '@sendgrid/mail';
+import { sendApplicationEmail } from './email-config';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue } from 'firebase-admin/firestore';
 import { defineSecret } from 'firebase-functions/params';
@@ -18,7 +19,6 @@ import {
 // Our own billing emails, so the "we'll remind you before your first charge"
 // promise does not depend on a Stripe dashboard setting.
 export const talkThruSendgridApiKey = defineSecret('SENDGRID_API_KEY');
-const senderEmail = 'missioncontrol@rocketgoals.com';
 const appUrl = 'https://livingwiki.com';
 const sentCollection = db.collection('talkthru_billing_emails');
 
@@ -102,7 +102,7 @@ async function sendOnce(key: string, to: string, content: BillingEmailContent): 
   }
   try {
     sgMail.setApiKey(apiKey);
-    await sgMail.send({ to, from: { email: senderEmail, name: 'LivingWiki' }, subject: content.subject, text: content.text, html: content.html });
+    await sendApplicationEmail({ to, subject: content.subject, text: content.text, html: content.html });
     await ref.set({ status: 'sent', sent_at: FieldValue.serverTimestamp() }, { merge: true });
     return true;
   } catch (error) {

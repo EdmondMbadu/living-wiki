@@ -5,6 +5,7 @@ import { defineSecret } from 'firebase-functions/params';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import sgMail from '@sendgrid/mail';
+import { sendApplicationEmail } from './email-config';
 import { db } from './firebase';
 import { isLinkReadableVisibility } from './board-visibility';
 import { geminiApiKey } from './gemini';
@@ -434,10 +435,9 @@ export const sendEventGuideItinerary = onCall({ region, secrets: [sendgridApiKey
   try {
     sgMail.setApiKey(sendgridApiKey.value());
     submitted = true;
-    await sgMail.send({
+    await sendApplicationEmail({
       ...message,
       to: email,
-      from: { email: 'missioncontrol@rocketgoals.com', name: 'LivingWiki' },
       trackingSettings: { clickTracking: { enable: false, enableText: false }, openTracking: { enable: false } },
     });
   } catch (error) {

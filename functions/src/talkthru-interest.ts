@@ -5,6 +5,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions';
 import sgMail from '@sendgrid/mail';
+import { sendApplicationEmail } from './email-config';
 import { db } from './firebase';
 import {
   buildTalkThruAdminEmail,
@@ -14,7 +15,6 @@ import {
 
 const sendgridApiKey = defineSecret('SENDGRID_API_KEY');
 const adminEmailsSecret = defineSecret('TALKTHRU_ADMIN_EMAILS');
-const senderEmail = 'missioncontrol@rocketgoals.com';
 const interestCollection = db.collection('talkthru_interests');
 const deliveryCollection = db.collection('talkthru_interest_deliveries');
 const auditCollection = db.collection('talkthru_interest_audit');
@@ -309,9 +309,8 @@ async function sendOneEmail(
     ? buildTalkThruApplicantEmail(interest)
     : buildTalkThruAdminEmail(interest);
   try {
-    await sgMail.send({
+    await sendApplicationEmail({
       to: recipientEmail,
-      from: { email: senderEmail, name: 'LivingWiki' },
       subject: content.subject,
       text: content.text,
       html: content.html,

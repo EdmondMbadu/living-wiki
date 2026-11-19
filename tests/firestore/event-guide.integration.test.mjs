@@ -72,6 +72,8 @@ test('organizer imports and publishes, a QR guest asks and plans, and confirmed 
   let sent = 0;
   sendgrid.send = async (message) => {
     assert.equal(message.to, 'guest@example.org');
+    assert.deepEqual(message.from, { email: 'info@livingwiki.com', name: 'LivingWiki' });
+    assert.deepEqual(message.replyTo, { email: 'jimwalker@mindpalace.com', name: 'Jim Walker' });
     assert.match(message.html, /Waymo/);
     assert.match(message.subject, /CES 2027/);
     sent++;

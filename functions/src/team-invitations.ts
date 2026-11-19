@@ -5,6 +5,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { defineSecret } from 'firebase-functions/params';
 import { logger } from 'firebase-functions';
 import sgMail from '@sendgrid/mail';
+import { sendApplicationEmail, applicationEmailIdentity } from './email-config';
 import { db } from './firebase';
 import { teamEmail, type TeamRecord } from './team-model';
 
@@ -115,10 +116,7 @@ export function invitationEmail(job: TeamRecord) {
   const expiry = new Date(job['expires_at_ms']).toUTCString();
   return {
     to: job['email'] as string,
-    from: {
-      email: process.env['INVITE_SENDER_EMAIL'] || 'missioncontrol@rocketgoals.com',
-      name: 'LivingWiki',
-    },
+    ...applicationEmailIdentity(),
     subject: `Join ${name} on LivingWiki`,
     text: `${inviter} invited you to join ${name} as a ${role}.\nReview invitation: ${url}\nSign in or create an account with ${job['email']}. You will be asked to confirm before joining.\nExpires ${expiry}. Your personal boards and voices stay private.\nNot expecting this invitation? You can ignore it.`,
     html: `<div style="background:#f4f7f5;padding:32px 16px"><div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:32px;border-radius:16px;background:white;color:#17372b"><p style="font-weight:bold;color:#216b4c">LivingWiki · Team invitation</p><h1>You're invited to ${escape(name)}</h1><p>${escape(inviter)} invited you to collaborate as a <strong>${role}</strong>.</p><p>Explore the team's listings and create TalkThrus together.</p><p><a href="${escape(url)}" style="display:inline-block;background:#216b4c;color:white;padding:14px 24px;border-radius:8px;text-decoration:none">Review invitation</a></p><p>Sign in or create an account with <strong>${escape(job['email'])}</strong>. Joining is your choice; opening this link does not accept the invitation.</p><p style="color:#65756c">Expires ${escape(expiry)}. Your personal boards and voices stay private.</p><hr style="border:0;border-top:1px solid #e3e9e5"><p style="font-size:12px;overflow-wrap:anywhere">Button not working? <a href="${escape(url)}">${escape(url)}</a></p><p style="font-size:12px;color:#65756c">Not expecting this invitation? You can ignore it.</p></div></div>`,
@@ -175,7 +173,7 @@ export async function processInvitationEmail(jobId: string) {
       throw Object.assign(new Error('Email configuration unavailable'), { code: 401 });
     sgMail.setApiKey(sendgridKey.value());
     sgMail.setTimeout(20_000);
-    const [response] = await sgMail.send(invitationEmail(job));
+    const [response] = await sendApplicationEmail(invitationEmail(job));
     patch = {
       status: 'submitted',
       submitted_at: Date.now(),

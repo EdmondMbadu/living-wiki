@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const sgMail = require('@sendgrid/mail');
+const { sendApplicationEmail } = require('../lib/email-config');
 const {
   buildVisitPlanEmail,
   buildVisitInvitationEmail,
@@ -14,7 +15,7 @@ if (!apiKey) {
 const plan = {
   id: 'vp_sendgrid_sandbox',
   organizerName: 'LivingWiki',
-  organizerEmail: 'missioncontrol@rocketgoals.com',
+  organizerEmail: 'info@livingwiki.com',
   boardId: 'sandbox-board',
   boardTitle: 'Sandbox board',
   cardId: 'sandbox-card',
@@ -38,12 +39,8 @@ const emails = [
 ];
 
 sgMail.setApiKey(apiKey);
-Promise.all(emails.map((email, index) => sgMail.send({
+Promise.all(emails.map((email, index) => sendApplicationEmail({
   to: `visit-email-validation-${index + 1}@example.com`,
-  from: {
-    email: 'missioncontrol@rocketgoals.com',
-    name: 'LivingWiki',
-  },
   subject: email.subject,
   text: email.text,
   html: email.html,
@@ -59,7 +56,6 @@ Promise.all(emails.map((email, index) => sgMail.send({
   }
   console.log('SendGrid accepted the invitation and confirmation email payloads in sandbox mode; no email was delivered.');
 }).catch((error) => {
-  const details = error?.response?.body?.errors ?? error?.message ?? error;
-  console.error(details);
+  console.error('SendGrid sandbox validation failed', { status: error?.code || null });
   process.exitCode = 1;
 });

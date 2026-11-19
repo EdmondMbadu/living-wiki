@@ -27,6 +27,8 @@
     "test:spotify-oauth": "npm run build && node scripts/test-spotify-oauth.cjs",
     "test:spotify-playlist": "npm run build && node scripts/test-spotify-playlist.cjs",
     "test:visit-plans": "npm run build && node scripts/test-visit-plans.cjs",
+    "test:email-config": "npm run build && node --test scripts/test-email-config.cjs",
+    "email:test": "npm run build && node scripts/send-email-test.cjs",
     "test:visit-email-sandbox": "npm run build && node scripts/test-visit-email-sandbox.cjs",
     "test:board-share-email": "npm run build && node scripts/test-board-share-email.cjs",
     "test:custom-public-routes": "npm run build && node scripts/test-custom-public-routes.cjs",

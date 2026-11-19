@@ -41,6 +41,7 @@ import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, type DocumentReference } from 'firebase-admin/firestore';
 import sgMail from '@sendgrid/mail';
+import { sendApplicationEmail } from './email-config';
 import Stripe from 'stripe';
 import { allowedCheckoutOrigins, getStripeClient, stripeSecretKey, stripeWebhookSecret } from './stripe-client';
 import stackNarratorVoiceCatalog from './stack-narrator-voices.json';
@@ -390,7 +391,6 @@ const stripePersonalPlusMonthlyPriceId = defineString('STRIPE_PRICE_PERSONAL_PLU
 const stripePersonalPlusAnnualPriceId = defineString('STRIPE_PRICE_PERSONAL_PLUS_ANNUAL', { default: '' });
 const stripeCreatorMonthlyPriceId = defineString('STRIPE_PRICE_CREATOR_MONTHLY', { default: '' });
 const stripeCreatorAnnualPriceId = defineString('STRIPE_PRICE_CREATOR_ANNUAL', { default: '' });
-const inviteSenderEmail = 'missioncontrol@rocketgoals.com';
 const publicAppUrl = 'https://livingwiki.com';
 const publicFunctionsBaseUrl = 'https://us-central1-living-atlas-7622a.cloudfunctions.net';
 const spotifyOAuthRedirectUri = resolveSpotifyOAuthRedirectUri(
@@ -3041,12 +3041,8 @@ async function sendLivingWikiVerificationEmail(params: {
 
   sgMail.setApiKey(apiKey);
   const email = buildVerifyAccountEmail(params);
-  const [response] = await sgMail.send({
+  const [response] = await sendApplicationEmail({
     to: params.recipientEmail,
-    from: {
-      email: inviteSenderEmail,
-      name: 'LivingWiki',
-    },
     subject: email.subject,
     text: email.text,
     html: email.html,
@@ -3069,12 +3065,8 @@ async function sendLivingWikiPasswordResetEmail(params: {
 
   sgMail.setApiKey(apiKey);
   const email = buildPasswordResetEmail(params);
-  const [response] = await sgMail.send({
+  const [response] = await sendApplicationEmail({
     to: params.recipientEmail,
-    from: {
-      email: inviteSenderEmail,
-      name: 'LivingWiki',
-    },
     subject: email.subject,
     text: email.text,
     html: email.html,
@@ -3362,12 +3354,8 @@ async function sendAtlasAdminInviteEmail(params: {
 
   sgMail.setApiKey(apiKey);
   const email = buildAtlasAdminInviteEmail(params);
-  await sgMail.send({
+  await sendApplicationEmail({
     to: params.recipientEmail,
-    from: {
-      email: inviteSenderEmail,
-      name: 'Living Wiki',
-    },
     subject: email.subject,
     text: email.text,
     html: email.html,
@@ -3639,12 +3627,8 @@ async function sendBoardFriendEmail(params: {
   }
 
   sgMail.setApiKey(apiKey);
-  await sgMail.send({
+  await sendApplicationEmail({
     to: params.recipientEmail,
-    from: {
-      email: inviteSenderEmail,
-      name: 'LivingWiki',
-    },
     subject: params.subject,
     text: params.text,
     html: params.html,
@@ -4279,12 +4263,8 @@ async function sendAtlasSubscriptionEmail(params: {
 
   sgMail.setApiKey(apiKey);
   const email = buildAtlasSubscriptionEmail(params);
-  const [response] = await sgMail.send({
+  const [response] = await sendApplicationEmail({
     to: params.recipientEmail,
-    from: {
-      email: inviteSenderEmail,
-      name: 'Living Wiki',
-    },
     subject: email.subject,
     text: email.text,
     html: email.html,
@@ -5145,12 +5125,8 @@ async function sendNewsletterEmail(params: {
 
   sgMail.setApiKey(apiKey);
   const email = await buildNewsletterEmail(params);
-  const [response] = await sgMail.send({
+  const [response] = await sendApplicationEmail({
     to: params.recipientEmail,
-    from: {
-      email: inviteSenderEmail,
-      name: 'Living Wiki',
-    },
     subject: email.subject,
     text: email.text,
     html: email.html,
@@ -9192,12 +9168,8 @@ async function sendVisitTransactionalEmail(
     throw new Error('SendGrid API key is not configured.');
   }
   sgMail.setApiKey(apiKey);
-  await sgMail.send({
+  await sendApplicationEmail({
     to: recipientEmail,
-    from: {
-      email: inviteSenderEmail,
-      name: 'LivingWiki',
-    },
     subject: email.subject,
     text: email.text,
     html: email.html,
@@ -19191,12 +19163,8 @@ export const sendVoiceConversationSummary = onCall(
 
     sgMail.setApiKey(apiKey);
     const email = buildVoiceConversationSummaryEmail({ ...emailDetails, answerCardUrl }, emailLanguage, copy);
-    const [response] = await sgMail.send({
+    const [response] = await sendApplicationEmail({
       to: recipientEmail,
-      from: {
-        email: inviteSenderEmail,
-        name: 'Living Wiki',
-      },
       subject: email.subject,
       text: email.text,
       html: email.html,
