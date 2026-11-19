@@ -11,14 +11,12 @@
   >
     <header class="talking-chat__header">
       @if (eventGuide(); as event) {
-        @if (conversationStage() === 'conversation') {
           <div class="talking-chat__event-heading">
-            <span class="talking-chat__brand"><img src="/assets/image/living-wiki-favicon.png" alt="" width="26" height="26" /><span>LivingWiki</span></span>
+            <span class="talking-chat__brand"><img src="/assets/image/livingwiki-brand.svg" alt="LivingWiki" width="156" height="32" i18n-alt /></span>
             <h2 id="talking-chat-title" class="talking-chat__event-eyebrow" dir="auto">{{ event.name }}</h2>
           </div>
-        }
       }
-      @if (!eventGuide() || conversationStage() !== 'conversation') {
+      @if (!eventGuide()) {
       <div class="talking-chat__identity">
         <div class="talking-chat__avatar">
           @if (avatarImage()) { <img [src]="avatarImage()" [alt]="avatarName()" /> }
@@ -82,12 +80,11 @@
       }
       <div class="talking-chat__event" [hidden]="conversationStage() !== 'recap'" [attr.dir]="contentDirection()" [attr.lang]="contentLocale()">
         <app-event-guide-guest [boardId]="boardId()" [cardId]="cardId()" [settings]="event" [language]="activeLanguage()"
-          [deferUntilRecap]="true" [recapMode]="conversationStage() === 'recap'" [recap]="eventRecapSessions()" (emailRequested)="finishConversation('ended')" />
+          [deferUntilRecap]="true" [recapMode]="conversationStage() === 'recap'" [recap]="eventRecapSessions()"
+          [avatarImage]="avatarImage()" [avatarName]="avatarName()" [sponsor]="sponsor()" [interrupted]="completionReason() === 'interrupted'"
+          (dismissed)="dismissRecap()" (emailRequested)="finishConversation('ended')" />
         @if (conversationStage() === 'conversation' && conversationMode() === 'text') {
           <p class="talking-chat__analytics-note" i18n>Conversations may be reviewed by this avatar’s administrators.</p>
-        }
-        @if (conversationStage() === 'recap') {
-          <button type="button" class="talking-chat__recap-skip" [disabled]="eventGuest()?.sending()" (click)="dismissRecap()" i18n>Close conversation</button>
         }
       </div>
     }
@@ -328,6 +325,9 @@
                   }
                 }
               </div>
+              @if (eventGuide() && eventRecapAvailable()) {
+                <button type="button" class="talking-chat__event-email-fallback" (click)="finishConversation('ended')"><span i18n>Enter email</span><span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></button>
+              }
             </div>
           </div>
 

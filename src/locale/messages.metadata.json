@@ -423,6 +423,10 @@
     "source": "Reconcile verified calls",
     "file": "src/app/board-insights/board-insights.html"
   },
+  "1123044206164355432": {
+    "source": "Take your {$EVENT_NAME} plan with you.",
+    "file": "src/app/event-guide/event-guide-guest.ts"
+  },
   "1124483518753573659": {
     "source": "{count} of 5 anonymous questions remaining.",
     "file": "src/app/chat/chat.ts"
@@ -3579,10 +3583,6 @@
     "source": "Operational Flow",
     "file": "src/app/marketing/marketing.html"
   },
-  "2023420524415102431": {
-    "source": "Your event recap",
-    "file": "src/app/event-guide/event-guide-guest.html"
-  },
   "2024244562720066554": {
     "source": "Create preview",
     "file": "src/app/boards/boards.ts"
@@ -5071,6 +5071,10 @@
     "source": " Active ",
     "file": "src/app/atlas-manage/atlas-manage.html"
   },
+  "245400036928276639": {
+    "source": "Brought to you by",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "2456192323709431128": {
     "source": "People per square kilometer",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -5646,10 +5650,6 @@
   "2624701521900289515": {
     "source": "Find nearby gems and create a board",
     "file": "src/app/public-wikis/public-wikis.html"
-  },
-  "2627210556024334636": {
-    "source": "Where should we send your recap?",
-    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "2628097400808105456": {
     "source": "Tag places using what3words and find spots most people miss.",
@@ -6295,6 +6295,10 @@
     "source": "The Tariff & Trade War Tracker",
     "file": "src/app/public-wiki-catalog.ts"
   },
+  "2838673153509473848": {
+    "source": "Your call was interrupted",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "2840211049654895915": {
     "source": "Default search mode",
     "file": "src/app/atlas-manage/atlas-manage.html"
@@ -6430,6 +6434,10 @@
   "2880992307976091517": {
     "source": "Try an address, place, agent, or property feature.",
     "file": "src/app/public-wikis/public-wikis.ts"
+  },
+  "2881321335436138723": {
+    "source": "Enter your email to receive your personalized itinerary and a link to view or edit it.",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "2881766715393680801": {
     "source": "Search businesses by name, city, category, admin, or link...",
@@ -7270,6 +7278,10 @@
   "3131307992142430281": {
     "source": "Team plans",
     "file": "src/app/talkthru-billing/talkthru-billing-page.html"
+  },
+  "313263262299682166": {
+    "source": "Conversation ended",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "3133472824237616509": {
     "source": "{$START_TAG_SPAN}chat{$CLOSE_TAG_SPAN} Chat ",
@@ -10381,7 +10393,7 @@
   },
   "397098723873502323": {
     "source": "Done",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "3971100408152984961": {
     "source": " Next ",
@@ -10662,6 +10674,10 @@
   "4048452650233619474": {
     "source": "Share pack",
     "file": "src/app/boards/boards.ts"
+  },
+  "4050251377888011898": {
+    "source": "Your plan, event details and an edit link.",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "4050357520044527393": {
     "source": "Choose what people can see when you share this quiz.",
@@ -11310,6 +11326,10 @@
   "4217735199406719487": {
     "source": "Failed to save Vapi voice settings.",
     "file": "src/app/atlas-manage/atlas-manage.ts"
+  },
+  "4218159462135628955": {
+    "source": "Skip for now",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "4218172670997526431": {
     "source": "{$START_TAG_SPAN}visibility{$CLOSE_TAG_SPAN} Preview tour ",
@@ -15355,13 +15375,13 @@
     "source": "Video branding could not be loaded.",
     "file": "src/app/boards/boards.ts"
   },
-  "5399170739020555801": {
-    "source": "We’ll email your itinerary and a link to edit it.",
-    "file": "src/app/event-guide/event-guide-guest.html"
-  },
   "5401235049169008975": {
     "source": "Open source page",
     "file": "src/app/green-jobs/green-jobs.html"
+  },
+  "5402387697173533137": {
+    "source": "Your personalized itinerary",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "5402963251231965741": {
     "source": "Countertop or host stand",
@@ -15634,6 +15654,10 @@
   "5491638977429836032": {
     "source": "Best Sushi in Philly",
     "file": "src/app/membership/membership.html"
+  },
+  "5495149747457702941": {
+    "source": "Enter email",
+    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
   },
   "5495676136158732653": {
     "source": "Time range",
@@ -16382,6 +16406,10 @@
   "5675427291143024452": {
     "source": "Explanation after answering",
     "file": "src/app/boards/boards.html"
+  },
+  "5676899795299895911": {
+    "source": "Your conversation highlights",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "5680019356728793029": {
     "source": "Board opening",
@@ -18074,6 +18102,10 @@
   "6156822484386385357": {
     "source": "Explore with Picamo™",
     "file": "src/app/public-wikis/public-wikis.ts"
+  },
+  "6157705304591328087": {
+    "source": "A recap of what you discussed with your guide.",
+    "file": "src/app/event-guide/event-guide-guest.html"
   },
   "6158176952588553376": {
     "source": "Close settings",
@@ -22647,6 +22679,10 @@
     "source": "Share caption",
     "file": "src/app/boards/boards.html"
   },
+  "7467509000648958259": {
+    "source": "Keep your conversation highlights.",
+    "file": "src/app/event-guide/event-guide-guest.ts"
+  },
   "7467632166119710844": {
     "source": "Connected as",
     "file": "src/app/spotify-player/spotify-player.html"
@@ -26531,6 +26567,10 @@
     "source": "Maximum 5 {$INTERPOLATION}",
     "file": "src/app/bulk-board-admin/bulk-board-admin.html"
   },
+  "8614253303502203904": {
+    "source": "Send my itinerary",
+    "file": "src/app/event-guide/event-guide-guest.html"
+  },
   "8614972415153844429": {
     "source": "Private · available to your agents and boards",
     "file": "src/app/talking-card-editor/talking-card-editor.html"
@@ -27537,7 +27577,7 @@
   },
   "8906740077551154109": {
     "source": "Close conversation",
-    "file": "src/app/talking-card-conversation/talking-card-conversation.html"
+    "file": "src/app/talking-card-conversation/talking-card-conversation.ts"
   },
   "8907436368118438345": {
     "source": "Choose cover photo",

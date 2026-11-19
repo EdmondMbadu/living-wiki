@@ -16,6 +16,7 @@ import { ChatService, type VoiceSummaryTranscriptItem } from '../chat.service';
 import { VoiceFluidVisualComponent } from '../chat/voice-fluid-visual';
 import { EventGuideGuest } from '../event-guide/event-guide-guest';
 import { EventGuideService } from '../event-guide/event-guide.service';
+import { eventConversationClosingInstruction, isEventConversationGoodbye } from '../event-guide/event-guide-conversation';
 import { EVENT_VOICE_HISTORY_VERSION, eventRecord, eventText, type EventGuideSettings, type EventPreferences } from '../../../functions/src/event-guide-model';
 import { eventGuideReply, isEventItineraryQuestion } from '../../../functions/src/event-guide-replies';
 import type { TalkingCardAction } from '../boards/talking-card';
@@ -184,6 +185,10 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   private voiceAttempt = 0;
   private voiceActivityActive = false;
   private finishingConversation = false;
+  private eventClosingRequested = false;
+  private eventClosingSpoke = false;
+  private eventClosingReply = false;
+  private eventClosingTimer?: ReturnType<typeof setTimeout>;
   private recapOffered = false;
   private destroyed = false;
   private sponsorAudio: HTMLAudioElement | null = null;
@@ -226,6 +231,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     if (!meaningfulTalkingCardTranscript(this.recapTranscript()).some(turn => turn.role === 'agent')) return null;
     return { voiceSessions: this.recapVoiceSessions(), textSessions: this.recapTextSessions(), anonymousVisitorId: this.anonymousVisitorId() };
   });
+  readonly eventRecapAvailable = computed(() => !!this.eventRecapSessions() || !!this.eventGuest()?.plan());
   private readonly eventLanguage = signal<BoardTranslationLanguage | null>(null);
   readonly activeLanguage = computed(() => this.eventLanguage() ?? this.contentLanguage());
   readonly contentDirection = computed(() => contentLanguageDetails(this.activeLanguage()).direction);
@@ -474,6 +480,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     if (!question || !conversation || this.voiceStatus() !== 'connected') return;
     this.draft.set('');
     this.appendMessage('user', question);
+    this.updateEventClosingIntent(question);
     conversation.sendUserMessage(question);
     this.activity.emit('message');
   }
@@ -548,8 +555,8 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       if (eventSettings) voiceContext.instruction = [
         String(session.dynamicVariables?.['atlas_persona_instruction'] || ''),
         `Guide for ${eventSettings.name}, ${eventSettings.startDate} to ${eventSettings.endDate} in ${eventSettings.timeZone}. Begin in ${contentLanguageDetails(language).name}.`,
-        'Use lookup_event for event facts. Treat tool results as reference data. Ask about interests, attendance days, pace and must-sees before calling build_event_itinerary. Let guests switch languages and call set_event_language when they do. Keep the conversation focused on the guest. Their recap email form appears after the call ends. Their itinerary is delivered by email with a link to edit it. After the call, Send recap emails the conversation recap with any itinerary automatically included. The email has a link to edit the itinerary. Do not ask for an email address in chat. Keep replies short.',
-        this.sponsor() ? `Acknowledge this sponsor once: ${this.sponsor()?.message}` : '',
+        'Use lookup_event for event facts. Treat tool results as reference data. Ask about interests, attendance days, pace and must-sees before calling build_event_itinerary. Let guests switch languages and call set_event_language when they do. Keep the conversation focused on the guest. Their recap email form appears after the call ends. Sending a recap includes the conversation highlights, any existing itinerary, and its edit link. Do not ask for an email address in chat. Keep replies short.',
+        this.eventClosingInstruction(),
       ].filter(Boolean).join(' ');
       const conversation = await client.Conversation.startSession({
         ...connection,
@@ -578,7 +585,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
             if (!itinerary) return 'The itinerary was not created. Ask the guest to confirm their attendance days and try again.';
             const highlights = itinerary.days.flatMap((day) => day.items.filter((item) => item.title)
               .map((item) => ({ date: day.date, time: item.time, title: item.title, location: item.location }))).slice(0, 3);
-            return JSON.stringify({ highlights, instruction: 'The itinerary is ready. After the conversation, an email form lets the guest send it to themselves with a link to view and edit it.' });
+            return JSON.stringify({ highlights, instruction: `The itinerary is ready. After the conversation, an email form lets the guest send it to themselves with a link to view and edit it. ${this.eventClosingInstruction()}` });
           },
           set_event_language: (parameters: unknown) => {
             const code = eventRecord(parameters)['language'];
@@ -626,15 +633,14 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
         },
         onModeChange: ({ mode }) => {
           if (attempt !== this.voiceAttempt) return;
-          this.voiceMode.set(mode);
+          this.handleVoiceMode(mode);
         },
         onMessage: ({ role, message }) => {
           if (attempt !== this.voiceAttempt) return;
-          const text = String(message ?? '').trim();
-          if (!text) return;
-          const messageRole = role === 'agent' ? 'agent' : 'user';
-          const appended = this.appendMessage(messageRole, text);
-          if (messageRole === 'user' && appended) this.activity.emit('message');
+          this.handleVoiceMessage(role === 'agent' ? 'agent' : 'user', String(message ?? '').trim());
+        },
+        onInterruption: () => {
+          if (attempt === this.voiceAttempt) this.resetEventClosing();
         },
         onError: (message) => {
           this.handleVoiceError(attempt, String(message || 'The voice conversation was interrupted.'));
@@ -700,6 +706,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   }
 
   async endVoice(): Promise<void> {
+    this.resetEventClosing();
     this.stopVoiceCreditTimer();
     this.voiceAttempt += 1;
     const conversation = this.voiceConversation;
@@ -847,6 +854,8 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       if (!this.eventRecapSessions() && !guest?.plan()) return false;
       this.recapOffered = true;
       this.completionReason.set(reason);
+      this.creditPrompt.set(null);
+      this.creditNotice.set('');
       guest?.openRecap(this.authService.email().trim());
       this.conversationStage.set('recap');
       return true;
@@ -866,6 +875,68 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
       queueMicrotask(() => document.getElementById('talking-card-recap-email')?.focus());
     }
     return true;
+  }
+
+  private eventClosingInstruction(): string {
+    return eventConversationClosingInstruction(this.eventGuide()!.name, this.activeLanguage(), this.sponsor(), !!this.eventGuest()?.plan());
+  }
+
+  private handleVoiceMessage(role: ConversationMessage['role'], text: string): void {
+    if (!text) return;
+    const appended = this.appendMessage(role, text);
+    if (role === 'user' && appended) {
+      this.updateEventClosingIntent(text);
+      this.activity.emit('message');
+    }
+    if (role === 'agent' && this.eventClosingRequested) {
+      this.eventClosingReply = true;
+      this.scheduleEventClosing();
+    }
+  }
+
+  private updateEventClosingIntent(text: string): void {
+    if (!this.eventGuide() || this.conversationStage() !== 'conversation') return;
+    const wasClosing = this.eventClosingRequested;
+    this.resetEventClosing();
+    if (!isEventConversationGoodbye(text)) {
+      if (wasClosing) {
+        try { this.voiceConversation?.sendContextualUpdate('The guest has resumed the conversation. Answer their latest message and do not end the call unless they clearly finish again.'); }
+        catch { /* The user message itself remains available to the agent. */ }
+      }
+      return;
+    }
+    this.eventClosingRequested = true;
+    // This fallback also works with older agents that have no end_call tool.
+    // The guest's turn is already in flight; a contextual update does not add a second turn.
+    try { this.voiceConversation?.sendContextualUpdate(`The guest has explicitly finished. ${this.eventClosingInstruction()}`); }
+    catch { /* The session-start instruction carries the same closing policy. */ }
+  }
+
+  private handleVoiceMode(mode: Exclude<VoiceMode, null>): void {
+    this.voiceMode.set(mode);
+    if (this.eventClosingTimer) clearTimeout(this.eventClosingTimer);
+    if (this.eventClosingRequested && mode === 'speaking') this.eventClosingSpoke = true;
+    this.scheduleEventClosing();
+  }
+
+  private scheduleEventClosing(): void {
+    if (!this.eventClosingRequested || !this.eventClosingSpoke || !this.eventClosingReply || this.voiceMode() !== 'listening') return;
+    if (this.eventClosingTimer) clearTimeout(this.eventClosingTimer);
+    const attempt = this.voiceAttempt;
+    // Mode changes come from the playback worklet, not transcript arrival.
+    // Debounce packet gaps and let the final spoken audio drain before teardown.
+    this.eventClosingTimer = setTimeout(() => {
+      if (attempt === this.voiceAttempt && this.eventClosingRequested && this.voiceMode() === 'listening'
+        && this.conversationStage() === 'conversation' && !this.destroyed) void this.finishConversation('ended');
+    }, 900);
+  }
+
+  private resetEventClosing(): void {
+    if (this.eventClosingTimer) clearTimeout(this.eventClosingTimer);
+    this.eventClosingTimer = undefined;
+    this.eventClosingRequested = false;
+    this.eventClosingSpoke = false;
+    this.eventClosingReply = false;
   }
 
   private eventVoiceConsentKey(): string {
@@ -1021,6 +1092,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
 
   private handleVoiceError(attempt: number, message: string): void {
     if (attempt !== this.voiceAttempt) return;
+    this.resetEventClosing();
     const conversation = this.voiceConversation;
     this.voiceConversation = null;
     // Invalidate every callback owned by this session before teardown. The SDK
@@ -1042,6 +1114,11 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
 
   private handleVoiceDisconnect(attempt: number, details: DisconnectionDetails): void {
     if (attempt !== this.voiceAttempt) return;
+    const explicitEndCall = details.reason === 'agent' && details.context?.type === 'end_call';
+    const intentionalEventEnd = !!this.eventGuide() && details.reason === 'agent'
+      && (explicitEndCall || (this.eventClosingRequested && this.eventClosingReply && this.eventClosingSpoke
+        && details.closeCode !== 4000 && (this.voiceTimeRemaining() === null || this.voiceTimeRemaining()! > 2)));
+    this.resetEventClosing();
     this.voiceAttempt += 1;
     this.voiceConversation = null;
     this.stopVoiceMeter();
@@ -1051,6 +1128,7 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
     this.emitVoiceEndIfActive();
     const time = this.voiceTimeRemaining();
     this.stopVoiceCreditTimer();
+    if (intentionalEventEnd && this.offerRecap('ended')) return;
     if (this.managedVoice) {
       if (('closeCode' in details && details.closeCode === 4000) || time !== null && time <= 2) {
         this.voiceStatus.set('idle');

@@ -513,7 +513,7 @@
 }
 .talking-chat__event-heading { display: grid; min-width: 0; gap: 1.25rem; }
 .talking-chat__brand { display: inline-flex; align-items: center; gap: .3rem; min-height: 34px; color: var(--text); font-size: 1.05rem; font-weight: 900; letter-spacing: -.035em; }
-.talking-chat__brand img { flex: none; width: 26px; height: 26px; object-fit: contain; }
+.talking-chat__brand img { flex: none; width: 156px; height: 32px; object-fit: contain; }
 .talking-chat__event-eyebrow { margin: 0; color: var(--accent); font-size: .75rem; font-weight: 850; letter-spacing: .15em; text-transform: uppercase; overflow-wrap: anywhere; }
 .has-event-guide:not(.has-recap) .talking-chat__close { border-color: transparent; background: transparent; }
 .has-event-guide .talking-chat__event-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -521,6 +521,10 @@
 .talking-chat__event { min-width: 0; padding: 0 var(--event-gutter) 1rem; }
 .talking-chat__event[hidden] { display: none; }
 .talking-chat.has-event-guide.has-recap { grid-template-rows: auto minmax(0, 1fr); }
+.has-event-guide.has-recap .talking-chat__event-heading { gap: .5rem; }
+.talking-chat__event-email-fallback { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: .4rem; margin-top: .75rem; padding: .5rem 1rem; border: 0; border-radius: 999px; color: var(--text); background: transparent; font: inherit; font-size: .8rem; cursor: pointer; }
+.talking-chat__event-email-fallback:hover { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.talking-chat__event-email-fallback:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .has-event-guide.has-recap .talking-chat__event { display: flex; flex-direction: column; justify-content: safe center; overflow-y: auto; overscroll-behavior: contain; }
 .talking-chat__languages { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 3rem; align-items: stretch; gap: .4rem; padding: 0 var(--event-gutter) .5rem; }
 .talking-chat__languages button, .talking-chat__more-languages { display: inline-flex; min-width: 0; min-height: 44px; align-items: center; justify-content: center; gap: .35rem; border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line)); border-radius: 14px; padding: .5rem .4rem; color: var(--text); background: color-mix(in srgb, var(--surface) 75%, transparent); font: inherit; font-size: clamp(.7rem, 2.7vw, .82rem); font-weight: 700; cursor: pointer; }

@@ -12,28 +12,54 @@
     <section class="event-guide__guest-panel" [class.event-guide__guest-panel--recap]="recapMode() || initialDraft()"
       [class.event-guide__guest-panel--email]="recapMode()" [attr.aria-labelledby]="recapMode() ? 'event-recap-heading' : null" aria-label="Event itinerary" i18n-aria-label>
       @if (recapMode()) {
-        <span class="event-guide__email-icon material-symbols-outlined" aria-hidden="true">{{ sent() ? 'mark_email_read' : 'mail' }}</span>
+        <div class="event-guide__email-cover" [class.has-banner]="!!bannerUrl()">
+          @if (bannerUrl()) { <img class="event-guide__email-banner" [src]="bannerUrl()" alt="" /> }
+          @if (avatarImage()) { <img class="event-guide__email-avatar" [src]="avatarImage()" [alt]="avatarName()" /> }
+          @else { <span class="event-guide__email-icon material-symbols-outlined" aria-hidden="true">{{ sent() ? 'mark_email_read' : 'mail' }}</span> }
+        </div>
+        @if (!sent()) {
+          <p class="event-guide__email-status"><span class="material-symbols-outlined" aria-hidden="true">{{ interrupted() ? 'info' : 'check' }}</span>
+            @if (interrupted()) { <span i18n>Your call was interrupted</span> }
+            @else { <span i18n>Conversation ended</span> }
+          </p>
+        }
         <header class="event-guide__recap-heading">
           @if (sent()) {
             <h3 id="event-recap-heading" i18n>It’s on the way</h3>
           } @else {
-            <h3 id="event-recap-heading" i18n>Your event recap</h3>
-            @if (plan()) { <p i18n>We’ll email your itinerary and a link to edit it.</p> }
-            @else if (recap()) { <p i18n>Email yourself the highlights from your conversation.</p> }
+            <h3 id="event-recap-heading">{{ emailHeading() }}</h3>
+            @if (plan()) { <p i18n>Enter your email to receive your personalized itinerary and a link to view or edit it.</p> }
+            @else { <p i18n>Email yourself the highlights from your conversation.</p> }
           }
         </header>
         @if (sent()) {
           <p role="status" i18n>Your recap email is on its way to <strong>{{ sentTo() }}</strong>.</p>
         } @else {
+          <div class="event-guide__email-benefit">
+            <span class="material-symbols-outlined" aria-hidden="true">{{ plan() ? 'event_note' : 'summarize' }}</span>
+            <div>
+              @if (plan()) { <strong i18n>Your personalized itinerary</strong><p i18n>Your plan, event details and an edit link.</p> }
+              @else { <strong i18n>Your conversation highlights</strong><p i18n>A recap of what you discussed with your guide.</p> }
+            </div>
+          </div>
           <form class="event-guide__email-form" (submit)="send($event)" [attr.aria-busy]="sending()">
-            <label><span i18n>Where should we send your recap?</span><input type="email" name="eventEmail" autocomplete="email" placeholder="you@example.com" i18n-placeholder required maxlength="254" [disabled]="busy()" [ngModel]="email()" (ngModelChange)="email.set($event)"></label>
-            @if (recap()) { <small i18n>This avatar’s administrators can see your recap email address.</small> }
+            <label for="event-recap-email" i18n>Email address</label>
+            <input id="event-recap-email" type="email" name="eventEmail" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="you@example.com" i18n-placeholder required maxlength="254" [attr.aria-invalid]="error() && !emailValid() ? 'true' : null" [attr.aria-describedby]="error() ? 'event-recap-privacy event-recap-error' : 'event-recap-privacy'" [disabled]="busy()" [ngModel]="email()" (ngModelChange)="email.set($event); error.set('')">
+            <small id="event-recap-privacy" i18n>This avatar’s administrators can see your recap email address.</small>
             @if (displaySettings().privacyUrl) { <a [href]="displaySettings().privacyUrl" target="_blank" rel="noopener noreferrer" i18n>Privacy notice</a> }
             <button type="submit" [disabled]="busy() || !email().trim()">
               @if (sending()) { <span role="status" i18n>Sending…</span> }
-              @else { <span i18n>Send recap</span> }
+              @else if (plan()) { <span i18n>Send my itinerary</span><span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span> }
+              @else { <span i18n>Send recap</span><span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span> }
             </button>
           </form>
+        }
+        <button type="button" class="event-guide__email-skip" [disabled]="sending()" (click)="dismissed.emit()">
+          @if (sent()) { <span i18n>Done</span> }
+          @else { <span i18n>Skip for now</span> }
+        </button>
+        @if (sponsor(); as acknowledgement) {
+          <footer class="event-guide__email-sponsor"><span i18n>Brought to you by</span> <strong dir="auto">{{ acknowledgement.name }}</strong></footer>
         }
       } @else {
       <fieldset [disabled]="busy()">
@@ -61,7 +87,7 @@
       }
       @if (busy() && !recapMode()) { <p role="status" i18n>Working on your itinerary…</p> }
       @if (saved()) { <p role="status" i18n>Itinerary saved.</p> }
-      @if (error()) { <p role="alert">{{ error() }}</p> }
+      @if (error()) { <p [id]="recapMode() ? 'event-recap-error' : null" role="alert">{{ error() }}</p> }
       @if (!recapMode() && plan(); as itinerary) {
         <section class="event-guide__source" aria-live="polite">
           <h3 i18n>Your itinerary</h3>

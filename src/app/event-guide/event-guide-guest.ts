@@ -5,6 +5,7 @@ import {
 } from '../../../functions/src/event-guide-model';
 import type { ContentLanguage } from '../../../functions/src/content-language';
 import { EventGuideService, type EventRecapSessions } from './event-guide.service';
+import type { Sponsorship } from '../../../functions/src/talking-card-sponsorship';
 
 @Component({
   selector: 'app-event-guide-guest',
@@ -21,13 +22,25 @@ export class EventGuideGuest implements OnInit {
   readonly recapMode = input(false);
   readonly deferUntilRecap = input(false);
   readonly recap = input<EventRecapSessions | null>(null);
+  readonly avatarImage = input('');
+  readonly avatarName = input('');
+  readonly sponsor = input<Sponsorship | null>(null);
+  readonly interrupted = input(false);
   readonly initialDraft = input<EventItineraryDraft | null>(null);
   readonly emailRequested = output<void>();
+  readonly dismissed = output<void>();
   readonly preferences = signal<EventPreferences>({
     days: [], interests: '', mustSee: '', constraints: '', pace: 'curated', firstTimer: false,
   });
   private readonly editSettings = signal<EventGuideSettings | null>(null);
   readonly displaySettings = computed(() => this.editSettings() ?? this.settings());
+  readonly bannerUrl = computed(() => {
+    const design = this.displaySettings().emailDesign;
+    return design?.theme === 'spotlight' ? design.bannerUrl || '' : '';
+  });
+  readonly emailHeading = computed(() => this.plan()
+    ? $localize`Take your ${this.displaySettings().name}:EVENT_NAME: plan with you.`
+    : $localize`Keep your conversation highlights.`);
   readonly dates = computed(() => eventDates(this.displaySettings().startDate, this.displaySettings().endDate));
   readonly plan = signal<EventPlan | null>(null);
   readonly expanded = signal(false);
@@ -36,6 +49,7 @@ export class EventGuideGuest implements OnInit {
   readonly busy = computed(() => this.building() || this.sending());
   readonly error = signal('');
   readonly email = signal('');
+  readonly emailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email().trim()) && this.email().trim().length <= 254);
   readonly sent = signal(false);
   readonly sentTo = signal('');
   readonly saved = signal(false);
@@ -65,6 +79,10 @@ export class EventGuideGuest implements OnInit {
     this.sent.set(false);
     this.sentTo.set('');
     this.error.set('');
+    // Wait for the parent to reveal this persistently mounted panel.
+    setTimeout(() => {
+      if (this.recapMode() && typeof document !== 'undefined') document.getElementById('event-recap-email')?.focus({ preventScroll: true });
+    });
   }
 
   async build(overrides?: Partial<EventPreferences>): Promise<EventPlan | null> {
@@ -131,6 +149,11 @@ export class EventGuideGuest implements OnInit {
     this.sending.set(true);
     this.error.set('');
     const recipient = this.email().trim();
+    if (!this.emailValid()) {
+      this.error.set($localize`Enter a valid email address.`);
+      this.sending.set(false);
+      return;
+    }
     try {
       const target = { boardId: this.boardId(), cardId: this.cardId() };
       const result = recap

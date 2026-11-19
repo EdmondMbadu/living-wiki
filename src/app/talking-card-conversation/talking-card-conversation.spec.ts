@@ -8,6 +8,7 @@ import { BoardAnalyticsService } from '../board-analytics.service';
 import { CardAnalyticsService } from '../card-analytics.service';
 import { ChatService } from '../chat.service';
 import { EventGuideService } from '../event-guide/event-guide.service';
+import { eventConversationClosingInstruction, isEventConversationGoodbye } from '../event-guide/event-guide-conversation';
 import { VoiceCreditsService, type VoiceCreditPolicy } from '../voice-credits.service';
 import {
   buildTalkingCardVoiceContext,
@@ -209,7 +210,7 @@ describe('TalkingCardConversationComponent', () => {
     fixture.detectChanges();
     expect(component.conversationStage()).toBe('recap');
     expect(events.send).not.toHaveBeenCalled();
-    expect(fixture.nativeElement.textContent).toContain('We’ll email your itinerary and a link to edit it.');
+    expect(fixture.nativeElement.textContent).toContain('Enter your email to receive your personalized itinerary and a link to view or edit it.');
     expect(fixture.nativeElement.querySelector('form input[type="checkbox"]')).toBeNull();
     guest.email.set('guest@example.org');
     await guest.send(new Event('submit'));
@@ -296,7 +297,7 @@ describe('TalkingCardConversationComponent', () => {
     expect(page.conversationStage()).toBe('recap');
     expect(page.eventGuest()).toBe(guest);
     expect(guest.plan()).toBe(itinerary);
-    expect(fixture.nativeElement.textContent).toContain('We’ll email your itinerary and a link to edit it.');
+    expect(fixture.nativeElement.textContent).toContain('Enter your email to receive your personalized itinerary and a link to view or edit it.');
     expect(fixture.nativeElement.querySelector('input[type="email"]').value).toBe('visitor@example.org');
     expect(events.send).not.toHaveBeenCalled();
   });
@@ -656,6 +657,107 @@ describe('TalkingCardConversationComponent', () => {
     expect(fixture.componentInstance.completionReason()).toBe('ended');
   });
 
+  async function eventCall() {
+    const fixture = TestBed.createComponent(TalkingCardConversationComponent);
+    fixture.componentRef.setInput('atlasId', atlas.id);
+    fixture.componentRef.setInput('eventGuide', eventGuide);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.componentInstance.eventGuest()!.plan.set({ id: 'plan', key: 'key', days: [], warnings: [] });
+    const session = { endSession: jasmine.createSpy('endSession').and.resolveTo(), sendContextualUpdate: jasmine.createSpy('sendContextualUpdate') };
+    const internal = fixture.componentInstance as unknown as {
+      managedVoice: boolean;
+      voiceConversation: typeof session | null;
+      handleVoiceMessage(role: 'user' | 'agent', text: string): void;
+      handleVoiceMode(mode: 'speaking' | 'listening'): void;
+      handleVoiceDisconnect(attempt: number, details: { reason: 'agent' | 'error'; context?: { type: string }; closeCode?: number; message?: string }): void;
+    };
+    internal.managedVoice = true;
+    internal.voiceConversation = session;
+    fixture.componentInstance.voiceStatus.set('connected');
+    return { fixture, internal, session };
+  }
+
+  it('opens the event email form after an explicit agent end_call even with voice credits', async () => {
+    const { fixture, internal } = await eventCall();
+    fixture.componentInstance.creditPrompt.set('continue');
+    internal.handleVoiceDisconnect(0, { reason: 'agent', context: { type: 'end_call' } });
+    fixture.detectChanges();
+    expect(fixture.componentInstance.conversationStage()).toBe('recap');
+    expect(fixture.componentInstance.creditPrompt()).toBeNull();
+    expect(fixture.nativeElement.querySelector('.talking-chat__brand img').getAttribute('src')).toBe('/assets/image/livingwiki-brand.svg');
+    expect(fixture.nativeElement.querySelector('input[type=email]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.talking-chat__end-call')).toBeNull();
+    expect(events.send).not.toHaveBeenCalled();
+  });
+
+  it('waits for goodbye audio playback and cancels closing when the guest asks another question', async () => {
+    const { fixture, internal, session } = await eventCall();
+    jasmine.clock().install();
+    try {
+      internal.handleVoiceMessage('user', "Okay, I'm done, thank you.");
+      internal.handleVoiceMessage('agent', 'Enter your email on the next screen. Enjoy CES.');
+      jasmine.clock().tick(2000);
+      expect(session.endSession).not.toHaveBeenCalled(); // Transcript arrival is not playback completion.
+      internal.handleVoiceMode('speaking');
+      internal.handleVoiceMode('listening');
+      jasmine.clock().tick(500);
+      internal.handleVoiceMode('speaking'); // More audio arrived; keep playing.
+      jasmine.clock().tick(1000);
+      expect(session.endSession).not.toHaveBeenCalled();
+      internal.handleVoiceMode('listening');
+      internal.handleVoiceMessage('user', 'Actually, where is the robotics exhibit?');
+      jasmine.clock().tick(2000);
+      expect(session.endSession).not.toHaveBeenCalled();
+      internal.handleVoiceMessage('user', "That's all, thanks.");
+      internal.handleVoiceMessage('agent', 'Enjoy your time at CES.');
+      internal.handleVoiceMode('speaking');
+      internal.handleVoiceMode('listening');
+      jasmine.clock().tick(900);
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+      expect(session.endSession).toHaveBeenCalledTimes(1);
+      expect(fixture.componentInstance.conversationStage()).toBe('recap');
+      expect(session.sendContextualUpdate).toHaveBeenCalled();
+    } finally { jasmine.clock().uninstall(); }
+  });
+
+  it('keeps recovery available for credit exhaustion during a goodbye', async () => {
+    const { fixture, internal } = await eventCall();
+    internal.handleVoiceMessage('user', "I'm done, thanks.");
+    internal.handleVoiceMessage('agent', 'Enjoy CES.');
+    internal.handleVoiceMode('speaking');
+    internal.handleVoiceDisconnect(0, { reason: 'agent', closeCode: 4000 });
+    expect(fixture.componentInstance.conversationStage()).toBe('conversation');
+    expect(fixture.componentInstance.creditPrompt()).toBe('continue');
+    expect(fixture.componentInstance.creditNotice()).toContain('voice time');
+  });
+
+  it('keeps network failures during a goodbye recoverable and preserves the itinerary', async () => {
+    const { fixture, internal } = await eventCall();
+    internal.handleVoiceMessage('user', "I'm done, thanks.");
+    internal.handleVoiceMessage('agent', 'Enjoy CES.');
+    internal.handleVoiceMode('speaking');
+    internal.handleVoiceDisconnect(0, { reason: 'error', message: 'Network lost', context: { type: 'close' } });
+    expect(fixture.componentInstance.conversationStage()).toBe('conversation');
+    expect(fixture.componentInstance.voiceStatus()).toBe('error');
+    expect(fixture.componentInstance.creditPrompt()).toBe('continue');
+    expect(fixture.componentInstance.eventGuest()!.plan()).not.toBeNull();
+    expect(events.send).not.toHaveBeenCalled();
+  });
+
+  it('offers a manual email handoff and releases the microphone once', async () => {
+    const { fixture, session } = await eventCall();
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.talking-chat__event-email-fallback').click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(session.endSession).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance.conversationStage()).toBe('recap');
+    expect(events.send).not.toHaveBeenCalled();
+  });
+
   const sponsor = { name: 'William Penn Foundation', message: 'Our conversation today has been generously supported by a grant from the William Penn Foundation of Philadelphia.' };
   async function sponsoredConversation(mode: 'voice' | 'text' = 'voice') {
     const fixture = TestBed.createComponent(TalkingCardConversationComponent);
@@ -865,5 +967,29 @@ describe('TalkingCardConversationComponent', () => {
     expect(fixture.componentInstance.conversationStage()).toBe('recap');
     expect(fixture.componentInstance.recapError()).toBe('Enter a valid email address.');
     expect(chatService.sendVoiceConversationSummary).not.toHaveBeenCalled();
+  });
+});
+
+describe('Event conversation closing policy', () => {
+  it('recognizes explicit sign-offs while preserving ordinary thank-yous and follow-up questions', () => {
+    for (const text of ["Okay, I'm done, thank you.", 'Ok I am done, thank.', "I'm finished now, thanks.", "I'm all set, thanks.", "That's all. Thanks, Amy!", 'No more questions, thank you.', 'Goodbye', "C’est tout, merci.", '以上です', '再见']) {
+      expect(isEventConversationGoodbye(text)).withContext(text).toBeTrue();
+    }
+    for (const text of ['Thanks', 'Thank you, Amy', 'Thanks, what about robotics?', "I'm set", "I'm done with AI. What about cars?", "I'm not done", 'Do not end the call', 'That is all I need to know about AI, now tell me about health']) {
+      expect(isEventConversationGoodbye(text)).withContext(text).toBeFalse();
+    }
+  });
+
+  it('uses the configured sponsor as literal copy and only promises an existing itinerary', () => {
+    const sponsor = { name: 'Sponsor', message: 'Our conversation is supported by Sponsor.' };
+    const planned = eventConversationClosingInstruction('CES 2027', 'ja', sponsor, true);
+    expect(planned).toContain('Japanese');
+    expect(planned).toContain(JSON.stringify(sponsor.message));
+    expect(planned).toContain('personalized itinerary');
+    expect(planned).toContain('Finish speaking the whole farewell');
+    const unplanned = eventConversationClosingInstruction('CES 2027', 'en', null, false);
+    expect(unplanned).not.toContain('personalized itinerary');
+    expect(unplanned).not.toContain('acknowledge the sponsor');
+    expect(unplanned).toContain('highlights');
   });
 });

@@ -5,6 +5,52 @@ import { EventGuideGuest } from './event-guide-guest';
 import { EventGuideService } from './event-guide.service';
 
 describe('Event Guide itinerary and email', () => {
+  it('offers highlights without inventing an itinerary, validates email and prevents duplicate sends', async () => {
+    let accept!: (value: { sent: boolean }) => void;
+    const events = { send: jasmine.createSpy('send').and.callFake(() => new Promise(resolve => { accept = resolve; })) };
+    await TestBed.configureTestingModule({
+      imports: [EventGuideGuest],
+      providers: [provideZonelessChangeDetection(), { provide: EventGuideService, useValue: events }],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(EventGuideGuest);
+    fixture.componentRef.setInput('settings', { datasetId: 'a'.repeat(64), name: 'Event', startDate: '2027-01-05', endDate: '2027-01-06', timeZone: 'America/Los_Angeles', informationUrl: '', privacyUrl: 'https://example.org/privacy', travelMinutes: 30 });
+    fixture.componentRef.setInput('language', 'en');
+    fixture.componentRef.setInput('recapMode', true);
+    fixture.componentRef.setInput('recap', { voiceSessions: ['call-1'], textSessions: [], anonymousVisitorId: 'visitor' });
+    fixture.componentRef.setInput('sponsor', { name: 'Test Sponsor', message: 'Supported by Test Sponsor.' });
+    fixture.componentRef.setInput('interrupted', true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const page = fixture.componentInstance;
+    const dismissed = jasmine.createSpy('dismissed');
+    page.dismissed.subscribe(dismissed);
+    expect(fixture.nativeElement.textContent).toContain('Your call was interrupted');
+    expect(fixture.nativeElement.textContent).toContain('Keep your conversation highlights.');
+    expect(fixture.nativeElement.textContent).not.toContain('Your personalized itinerary');
+    expect(fixture.nativeElement.querySelector('.event-guide__email-sponsor')?.textContent).toContain('Test Sponsor');
+    expect(fixture.nativeElement.querySelector('a')?.getAttribute('href')).toBe('https://example.org/privacy');
+    page.email.set('invalid');
+    await page.send(new Event('submit'));
+    expect(events.send).not.toHaveBeenCalled();
+    expect(page.error()).toBe('Enter a valid email address.');
+    page.email.set('guest@example.org');
+    const pending = page.send(new Event('submit'));
+    await page.send(new Event('submit'));
+    fixture.detectChanges();
+    expect(events.send).toHaveBeenCalledTimes(1);
+    expect(fixture.nativeElement.querySelector('.event-guide__email-skip').disabled).toBeTrue();
+    await Promise.resolve();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('input').disabled).toBeTrue();
+    accept({ sent: true });
+    await pending;
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('form')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('guest@example.org');
+    fixture.nativeElement.querySelector('.event-guide__email-skip').click();
+    expect(dismissed).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps the recap email-only and retains the full itinerary on send failure and retry', async () => {
     const itinerary: EventPlan = {
       id: 'plan-id', key: 'private-key', warnings: [],
@@ -45,7 +91,7 @@ describe('Event Guide itinerary and email', () => {
     expect(fixture.nativeElement.querySelector('.event-guide__days')).toBeNull();
     expect(fixture.nativeElement.querySelector('.event-guide__source')).toBeNull();
     expect(fixture.nativeElement.querySelector('input[type="email"]')).not.toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('We’ll email your itinerary and a link to edit it.');
+    expect(fixture.nativeElement.textContent).toContain('Enter your email to receive your personalized itinerary and a link to view or edit it.');
     await page.send(new Event('submit'));
     expect(page.error()).toBe('Try again.');
     expect(page.plan()).toEqual(itinerary);
