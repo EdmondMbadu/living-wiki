@@ -21,6 +21,8 @@ import { normalizeSponsorshipChoice, resolveSponsorship } from './talking-card-s
 import { beginCardText, captureCardRecapEmail, finishCardText, readEventRecapTurns } from './card-analytics';
 import { loadTalkingCardAtlas } from './talking-card-access';
 import { eventGuideReply, isEventItineraryQuestion } from './event-guide-replies';
+import { publicBoardRouteKey } from './custom-public-routes';
+import { eventGuideConversationUrl } from './event-guide-links';
 
 const sendgridApiKey = defineSecret('SENDGRID_API_KEY');
 const region = 'us-central1';
@@ -71,6 +73,7 @@ export async function eventCardContext(boardId: string, cardId: string, uid: str
   if (!settings || conversation['provider'] !== 'atlas' || !owner) throw new HttpsError('not-found', 'This event card is unavailable.');
   return {
     owner, settings, atlasId: safeId(conversation['atlasId']),
+    boardRouteKey: isLinkReadableVisibility(board['visibility']) ? publicBoardRouteKey(boardId, board['custom_slug']) : boardId,
     sponsor: resolveSponsorship(board['sponsorship'], normalizeSponsorshipChoice(conversation['sponsorship'])),
   };
 }
@@ -397,8 +400,15 @@ export const sendEventGuideItinerary = onCall({ region, secrets: [sendgridApiKey
   const language = isContentLanguage(request.data?.language) ? request.data.language : languageFor(ready['language']);
   const path = language === 'en' ? '' : `/${language}`;
   const editUrl = editKey ? `https://livingwiki.com${path}/event-itinerary#${id}.${editKey}` : '';
+  const avatar = await loadTalkingCardAtlas(context.atlasId, request.auth?.uid ?? null, { boardId, cardId });
+  const identity = {
+    avatarName: eventText(eventRecord(avatar['chat_guide'])['name'], 120) || eventText(avatar['name'], 120),
+    returnUrl: eventGuideConversationUrl(context.boardRouteKey, cardId, language),
+  };
   const render = (copy: RecapEmailCopy) =>
-    renderEventEmail({ ...ready['settings'], emailDesign: context.settings.emailDesign }, plan, language, ready['sponsor'], transcript, editUrl, copy);
+    renderEventEmail({ ...ready['settings'], name: context.settings.name, informationUrl: context.settings.informationUrl,
+      privacyUrl: context.settings.privacyUrl, emailDesign: context.settings.emailDesign },
+    plan, language, context.sponsor, transcript, editUrl, copy, identity);
   // Prepare the localized copy before reserving delivery so a translation timeout can be retried.
   const message = await prepareRecapEmailCopy(language, render, translateRecapEmailTextSegments).then(render).catch(() => {
     logger.warn('Event email translation could not be prepared.', { language });

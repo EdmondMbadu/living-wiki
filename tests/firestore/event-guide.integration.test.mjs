@@ -95,6 +95,8 @@ test('organizer imports and publishes, a QR guest asks and plans, and confirmed 
     assert.equal(branded.datasetId, settings.datasetId);
     assert.doesNotMatch(branded.emailDesign.template, /onerror/);
     await board.update({ cards: [{ ...card, conversation: { ...card.conversation, event: branded } }] });
+    await atlas.update({ chat_guide: { name: 'Sofia' } });
+    await board.update({ custom_slug: 'ces-event-return', sponsorship: { name: 'Current Sponsor', message: 'Supported by the current sponsor.' } });
     const recap = { ...request, recap: true, id: combined.id, key: combined.key, textSessions: [typedSession], editableItinerary: true, shareRecapEmailWithAnalytics: true };
     await assert.rejects(call(sendEventGuideItinerary, recap, 'other-user'), { code: 'permission-denied' });
     let editLink;
@@ -106,7 +108,16 @@ test('organizer imports and publishes, a QR guest asks and plans, and confirmed 
       assert.match(message.html, /Your itinerary/);
       assert.match(message.html, /src="https:\/\/example\.org\/amy-banner\.jpg"/);
       assert.match(message.html, /<h2>Meet Amy<\/h2>/);
-      assert.match(message.html, /href="https:\/\/livingwiki\.com\/">LivingWiki<|href="https:\/\/livingwiki\.com">LivingWiki</);
+      assert.match(message.html, /href="https:\/\/livingwiki\.com"[^>]*><img[^>]+livingwiki-email-logo\.png[^>]+alt="LivingWiki"/);
+      assert.match(message.html, /A note from Sofia/);
+      assert.match(message.html, /Talk to Sofia again/);
+      assert.match(message.html, /Current Sponsor/);
+      assert.match(message.text, /Supported by the current sponsor\./);
+      const returnLink = new URL(message.html.match(/href="([^"]+voiceCard=[^"]+)"/)[1].replaceAll('&amp;', '&'));
+      assert.equal(returnLink.pathname, '/boards/ces-event-return');
+      assert.equal(returnLink.searchParams.get('voiceCard'), cardId);
+      assert.equal(returnLink.searchParams.get('lang'), 'en');
+      assert.equal(returnLink.hash, '');
       assert.match(message.text, /LivingWiki\nhttps:\/\/livingwiki\.com/);
       editLink = new URL(message.html.match(/href="(https:\/\/livingwiki\.com\/event-itinerary#[^"]+)"/)[1]);
       sent++;
@@ -153,6 +164,27 @@ test('organizer imports and publishes, a QR guest asks and plans, and confirmed 
     assert.equal((await call(sendEventGuideItinerary, recapOnly, owner)).sent, true);
     assert.equal((await call(sendEventGuideItinerary, recapOnly, owner)).sent, true);
     assert.equal(sent, 3);
+
+    // Sponsor choices are resolved at send time, including explicit Off and card overrides.
+    await board.update({ cards: [{ ...card, conversation: { ...card.conversation, event: branded, sponsorship: { mode: 'off' } } }] });
+    sendgrid.send = async message => {
+      assert.doesNotMatch(message.html, /Current Sponsor|Supported by the current sponsor/);
+      assert.match(message.html, /Talk to Sofia again/);
+      sent++;
+      return [{ statusCode: 202 }, {}];
+    };
+    assert.equal((await call(sendEventGuideItinerary, { ...recapOnly, requestId: 'event-recap-sponsor-off' }, owner)).sent, true);
+    await board.update({ cards: [{ ...card, conversation: { ...card.conversation, event: branded,
+      sponsorship: { mode: 'custom', name: 'Card Sponsor', message: 'Supported by this card’s sponsor.' } } }] });
+    sendgrid.send = async message => {
+      assert.match(message.html, /Card Sponsor/);
+      assert.match(message.text, /Supported by this card’s sponsor/);
+      assert.doesNotMatch(message.html, /Current Sponsor/);
+      sent++;
+      return [{ statusCode: 202 }, {}];
+    };
+    assert.equal((await call(sendEventGuideItinerary, { ...recapOnly, requestId: 'event-recap-card-sponsor' }, owner)).sent, true);
+    assert.equal(sent, 5);
 
     const replacement = await call(saveEventGuideDataset, { boardId, settings, dataset: preview }, owner);
     assert.notEqual(replacement.datasetId, settings.datasetId);

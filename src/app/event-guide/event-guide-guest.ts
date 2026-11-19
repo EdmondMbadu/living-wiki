@@ -6,6 +6,7 @@ import {
 import type { ContentLanguage } from '../../../functions/src/content-language';
 import { EventGuideService, type EventRecapSessions } from './event-guide.service';
 import type { Sponsorship } from '../../../functions/src/talking-card-sponsorship';
+import { eventGuideConversationUrl } from '../../../functions/src/event-guide-links';
 
 @Component({
   selector: 'app-event-guide-guest',
@@ -52,6 +53,10 @@ export class EventGuideGuest implements OnInit {
   readonly emailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email().trim()) && this.email().trim().length <= 254);
   readonly sent = signal(false);
   readonly sentTo = signal('');
+  readonly talkAgainUrl = computed(() => eventGuideConversationUrl(this.boardId(), this.cardId(), this.language()));
+  readonly talkAgainLabel = computed(() => this.avatarName().trim()
+    ? $localize`Talk to ${this.avatarName().trim()}:AVATAR_NAME: again`
+    : $localize`Talk to your guide again`);
   readonly saved = signal(false);
   private revision = 0;
   private recapRequestId = '';

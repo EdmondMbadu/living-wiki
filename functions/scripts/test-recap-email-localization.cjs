@@ -129,10 +129,24 @@ test('Event Talking Card omits dialogue and localizes itinerary notes and sponso
   const translated = {
     'Doors open at 8:45.': 'تفتح الأبواب في الساعة 8:45.',
     'Thank you to our sponsor.': 'شكرًا للجهة الراعية.',
+    'A note from your guide': 'رسالة من مرشدك',
+    'Hi - I really enjoyed speaking with you!': 'مرحبًا، سعدت بالحديث معك!',
+    '{event} is an unmatched venue for experiencing all the incredible innovations transforming how we live.': '{event} وجهة فريدة لاكتشاف الابتكارات التي تغير حياتنا.',
+    'Below is your personalized plan.': 'فيما يلي برنامجك المخصص.',
+    'Below are your event details.': 'فيما يلي تفاصيل فعاليتك.',
+    'Please talk with me again if you need updated information.': 'تحدث معي مجددًا إذا احتجت إلى معلومات محدثة.',
+    'Enjoy your stay!': 'استمتع بإقامتك!',
+    'Cheers,': 'مع أطيب التحيات،',
+    'Your event guide': 'مرشدك للفعالية',
+    'Talk to your guide again': 'تحدث مع مرشدك مجددًا',
+    'Have another question?': 'هل لديك سؤال آخر؟',
   };
   const localizedEdit = editUrl.replace('livingwiki.com/', 'livingwiki.com/ar/');
   const render = copy => renderEventEmail(settings, plan, 'ar', sponsor, transcript, localizedEdit, copy);
-  const copy = await prepareRecapEmailCopy('ar', render, async (source, language) => {
+  const copy = await prepareRecapEmailCopy('ar', copy => {
+    render(copy);
+    renderEventEmail(settings, null, 'ar', null, transcript, '', copy);
+  }, async (source, language) => {
     assert.equal(language, 'ar');
     assert.deepEqual(new Set(source.map(segment => segment.text)), new Set(Object.keys(translated)));
     return source.map(segment => ({ ...segment, text: translated[segment.text] }));
@@ -164,8 +178,9 @@ test('Event Talking Card omits dialogue and localizes itinerary notes and sponso
   assert.ok(branded.html.indexOf('/amy.jpg') < branded.html.indexOf(localizedEdit));
   assert.match(branded.html, /شكرًا للجهة الراعية|LivingWiki/);
   const imageRemoved = renderEventEmail({ ...settings, emailDesign: { theme: 'spotlight', bannerUrl: 'javascript:alert(1)' } }, null, 'ar', null, transcript, '', copy);
-  assert.doesNotMatch(imageRemoved.html, /<img|javascript:|تعديل برنامجك/);
-  assert.match(imageRemoved.html, /#171f4a/);
+  assert.doesNotMatch(imageRemoved.html, /javascript:|تعديل برنامجك/);
+  assert.equal((imageRemoved.html.match(/<img /g) || []).length, 1); // The safe LivingWiki footer logo remains.
+  assert.match(imageRemoved.html, /#f3effc/);
   const custom = renderEventEmail({ ...settings, emailDesign: {
     theme: 'custom', filename: 'ces.html', template: '<table><tr><td><img src="https://example.org/banner.jpg" onerror="alert(1)"><h2>CES</h2><!-- livingwiki:recap --></td></tr></table><script>alert(1)</script>',
   } }, plan, 'ar', sponsor, transcript, localizedEdit, copy);
@@ -228,7 +243,7 @@ test('the banner is the first visible content in every event email and the suppl
       } }, recapOnly ? null : plan, language, sponsor,
       recapOnly ? [{ role: 'assistant', text: 'Your visit recap.' }] : []);
       assert.equal(firstVisibleContent(parse(message.html)), 'banner', `${language}: ${recapOnly ? 'recap' : 'itinerary'}`);
-      assert.equal((message.html.match(/<img /g) || []).length, 1);
+      assert.equal((message.html.match(/<img /g) || []).length, 2); // Event banner and LivingWiki footer logo.
       assert.match(message.html, /padding:0 12px 20px/);
     }
   }

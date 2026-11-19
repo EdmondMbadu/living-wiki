@@ -678,6 +678,17 @@ describe('TalkingCardConversationComponent', () => {
     return { fixture, internal, session };
   }
 
+  it('uses the actual event avatar name when a guide display name is not configured', async () => {
+    atlasService.getTalkingCardAvatar.and.resolveTo({ ...atlas, name: 'Jordan', chat_guide: null });
+    const fixture = TestBed.createComponent(TalkingCardConversationComponent);
+    fixture.componentRef.setInput('atlasId', atlas.id);
+    fixture.componentRef.setInput('cardTitle', 'Talk to the event guide');
+    fixture.componentRef.setInput('eventGuide', eventGuide);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.avatarName()).toBe('Jordan');
+  });
+
   it('opens the event email form after an explicit agent end_call even with voice credits', async () => {
     const { fixture, internal } = await eventCall();
     fixture.componentInstance.creditPrompt.set('continue');

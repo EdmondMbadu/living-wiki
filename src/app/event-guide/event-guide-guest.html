@@ -34,6 +34,7 @@
         </header>
         @if (sent()) {
           <p role="status" i18n>Your recap email is on its way to <strong>{{ sentTo() }}</strong>.</p>
+          @if (talkAgainUrl()) { <a class="event-guide__talk-again" [href]="talkAgainUrl()">{{ talkAgainLabel() }}</a> }
         } @else {
           <div class="event-guide__email-benefit">
             <span class="material-symbols-outlined" aria-hidden="true">{{ plan() ? 'event_note' : 'summarize' }}</span>

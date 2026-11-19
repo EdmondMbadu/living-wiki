@@ -270,7 +270,10 @@ export class TalkingCardEditorComponent implements OnDestroy, OnInit {
     }] }, 'en', this.effectiveSponsor(), [
       { role: 'user', text: 'What should I see first?' },
       { role: 'assistant', text: 'Start with the opening keynote.' },
-    ], 'https://livingwiki.com/event-itinerary');
+    ], 'https://livingwiki.com/event-itinerary', source => source, {
+      avatarName: this.selectedAtlas()?.chat_guide?.name || this.selectedAtlas()?.name || this.name(),
+      returnUrl: 'https://livingwiki.com/boards/preview?voiceCard=preview&lang=en',
+    });
     // The renderer escapes data. Only replace the fixture with locally controlled image URLs.
     const local = banner.startsWith('blob:') || banner === CES_EMAIL_BANNER_PATH;
     const safeBanner = local ? banner : eventHttpsUrl(banner);

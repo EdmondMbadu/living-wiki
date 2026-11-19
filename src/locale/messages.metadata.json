@@ -7667,6 +7667,10 @@
     "source": "Workshop",
     "file": "src/app/event-guide/event-guide-setup.html"
   },
+  "3217047194038694954": {
+    "source": "Talk to {$AVATAR_NAME} again",
+    "file": "src/app/event-guide/event-guide-guest.ts"
+  },
   "3217061682083634246": {
     "source": "Close voice recap dialog",
     "file": "src/app/chat/chat.ts"
@@ -21818,6 +21822,10 @@
   "7208603420745150953": {
     "source": "Video branding",
     "file": "src/app/boards/boards.html"
+  },
+  "7212199153469676828": {
+    "source": "Talk to your guide again",
+    "file": "src/app/event-guide/event-guide-guest.ts"
   },
   "7212239620607483566": {
     "source": "Only the owner can view this LivingWiki board.",

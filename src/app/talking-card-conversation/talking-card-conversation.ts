@@ -298,7 +298,8 @@ export class TalkingCardConversationComponent implements OnInit, OnDestroy {
   readonly recapBoardUrl = signal<string | null>(null);
   readonly voiceConversationId = signal<string | null>(null);
   readonly isSignedIn = this.authService.isAuthenticated;
-  readonly avatarName = computed(() => this.atlas()?.chat_guide?.name?.trim() || this.cardTitle());
+  readonly avatarName = computed(() => this.atlas()?.chat_guide?.name?.trim()
+    || (this.eventGuide() ? this.atlas()?.name?.trim() : '') || this.cardTitle());
   readonly avatarImage = computed(() => this.atlas()?.chat_guide?.image_url?.trim() || this.imageUrl());
   readonly starters = computed(() => Array.from(new Set(this.starterQuestions()
     .map((question) => question.replace(/\s+/g, ' ').trim().slice(0, 120))

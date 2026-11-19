@@ -139,6 +139,7 @@
 .event-guide__email-form :is(small, a) { color: var(--muted); font-size: .7rem; line-height: 1.5; }
 .event-guide__email-form button { display: flex; align-items: center; justify-content: center; gap: .5rem; width: 100%; min-height: 54px; border: 1px solid #17593b; border-radius: 14px; margin-top: .4rem; color: #fff; background: #17593b; font-size: .95rem; font-weight: 800; }
 .event-guide__email-form button:hover:not(:disabled) { background: #11442d; border-color: #11442d; }
+.event-guide__guest-panel--email .event-guide__talk-again { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; border: 1px solid var(--accent); border-radius: 14px; padding: .65rem 1rem; color: var(--text); font-size: .9rem; font-weight: 750; text-decoration: none; }
 .event-guide__guest-panel--email .event-guide__email-skip { min-height: 44px; border: 0; padding: .5rem 1rem; color: var(--text); background: transparent; font-size: .85rem; }
 .event-guide__email-sponsor { box-sizing: border-box; width: 100%; border-top: 1px solid var(--line); padding-top: 1rem; color: var(--muted); font-size: .75rem; line-height: 1.6; overflow-wrap: anywhere; }
 .event-guide__email-sponsor strong { margin-inline-start: .3rem; color: var(--text); }

@@ -1,6 +1,7 @@
 import { contentLanguageDetails, type ContentLanguage } from './content-language';
 import { eventDisplayDate, eventDisplayTime, eventEmailDesign, eventHttpsUrl, type EventGuideSettings, type EventPlan } from './event-guide-model';
 import { renderEventEmailTemplate } from './event-email-template';
+import { eventEmailNote, type EventEmailIdentity } from './event-email-note';
 
 const messages = {
   en: ['Your itinerary', 'Day off', 'Lunch and recharge', 'Explore the show floor', 'Times and locations may change. Check the event’s latest information.', 'Event information', 'Privacy', 'Presented by'],
@@ -48,7 +49,7 @@ const editLabels = {
 export function renderEventEmail(
   settings: EventGuideSettings, plan: Pick<EventPlan, 'days'> | null, language: ContentLanguage,
   sponsor: { name: string; message: string } | null, transcript: readonly EventRecapTurn[] = [],
-  itineraryEditUrl = '', copy: (source: string) => string = source => source,
+  itineraryEditUrl = '', copy: (source: string) => string = source => source, identity: EventEmailIdentity = {},
 ) {
   const locale = contentLanguageDetails(language);
   const design = eventEmailDesign(settings.emailDesign);
@@ -60,7 +61,11 @@ export function renderEventEmail(
   const isRecap = !!(transcript.length || editUrl);
   const title = isRecap ? recap : itinerary;
   const subject = `${title} · ${settings.name}`;
-  const text = [subject, settings.timeZone];
+  const note = eventEmailNote(settings.name, !!plan, identity, copy);
+  const returnUrl = eventHttpsUrl(identity.returnUrl);
+  const text = [subject, settings.timeZone, '', note.greeting, '', note.introduction, '', note.plan, note.invitation];
+  if (sponsor) text.push('', `${presentedBy} ${sponsor.name}`, sponsorMessage);
+  text.push('', note.enjoy, note.cheers, note.signature);
   const link = (label: string, value: string) => {
     const url = eventHttpsUrl(value);
     return url ? `<a style="color:#3659ce" href="${escape(url)}">${escape(label)}</a>` : escape(label);
@@ -73,73 +78,57 @@ export function renderEventEmail(
     const date = eventDisplayDate(day.date, language);
     text.push('', date);
     if (!day.attending) text.push(dayOff);
-    return `<h2 style="font-size:20px;margin:24px 0 8px">${escape(date)}</h2>` + (day.attending
+    return `<h3 style="font-size:20px;line-height:1.4;margin:28px 0 12px;color:#111a35">${escape(date)}</h3>` + (day.attending
       ? day.items.map((item) => {
           const time = eventDisplayTime(item.start, language) + (item.endEstimated ? '' : ` – ${eventDisplayTime(item.end, language)}`);
           const title = item.title || (item.kind === 'Break' ? lunch : exhibits);
           const note = copy(item.note);
           text.push([time, title, item.location, note, item.url].filter(Boolean).join(' · '));
-          return `<div style="padding:12px 0;border-top:1px solid #dfe4f1"><small>${escape(time)}</small><br><strong>${link(title, item.url)}</strong>${item.location ? `<br>${escape(item.location)}` : ''}${note ? `<br><small>${escape(note)}</small>` : ''}</div>`;
+          return `<div style="padding:16px 0;border-top:1px solid #dfe4f1;line-height:1.7;overflow-wrap:anywhere"><small>${escape(time)}</small><br><strong>${link(title, item.url)}</strong>${item.location ? `<br>${escape(item.location)}` : ''}${note ? `<br><small>${escape(note)}</small>` : ''}</div>`;
         }).join('') : `<p>${escape(dayOff)}</p>`);
   }).join('');
-  if (sponsor) text.push('', `${presentedBy} ${sponsor.name}`, sponsorMessage);
+  if (returnUrl) text.push('', note.talkAgain, returnUrl);
   text.push('', changes, settings.informationUrl, settings.privacyUrl, '', 'LivingWiki', 'https://livingwiki.com');
+  const noteHtml = `<div style="padding:30px 26px;background:#f3effc;border-top:3px solid #8a65db;color:#151c37;overflow-wrap:anywhere">
+    <p style="margin:0 0 16px;font:700 12px/1.5 Arial,Helvetica,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:#6743ab">${escape(note.eyebrow)}</p>
+    <h1 style="margin:0 0 22px;font:700 25px/1.35 Arial,Helvetica,sans-serif;color:#111731">${escape(note.greeting)}</h1>
+    <p style="margin:0 0 22px">${escape(note.introduction)}</p>
+    <p style="margin:0 0 5px">${escape(note.plan)}</p><p style="margin:0 0 22px">${escape(note.invitation)}</p>
+    ${sponsor ? `<div style="margin:0 0 22px;padding:14px 16px;border-${locale.direction === 'rtl' ? 'right' : 'left'}:3px solid #8a65db;background:#ffffff;color:#39425b;font-size:14px"><strong>${escape(presentedBy)} <span dir="auto">${escape(sponsor.name)}</span></strong><p style="margin:6px 0 0">${escape(sponsorMessage).replace(/\n/g, '<br>')}</p></div>` : ''}
+    <p style="margin:0 0 6px">${escape(note.enjoy)}</p><p style="margin:0">${escape(note.cheers)} <strong style="font:italic 27px/1.4 Georgia,serif;color:#182044"><span dir="auto">${escape(note.signature)}</span></strong></p>
+  </div>`;
+  const headingHtml = `<div style="padding:26px 26px 8px;color:#111a35">
+    <p style="margin:0 0 8px;color:#65708c;font-size:12px;letter-spacing:1px"><span dir="auto">${escape(settings.name)}</span> · ${escape(settings.timeZone)}</p>
+    <h2 style="margin:0 0 14px;font:700 28px/1.3 Arial,Helvetica,sans-serif;color:#111731">${escape(plan ? itinerary : title)}</h2>
+    ${editUrl ? `<a href="${escape(editUrl)}" style="display:inline-block;border:1px solid #3659ce;border-radius:8px;padding:10px 16px;color:#2746b2;text-decoration:none;font-weight:bold">${escape(edit)}</a>` : ''}
+  </div>`;
+  const detailsHtml = `<div style="padding:0 26px 26px;color:#172039;overflow-wrap:anywhere">${days}
+    <p style="margin:24px 0 0;padding:14px;border-radius:10px;background:#f1f4fa;color:#46516c;font-size:13px">${escape(changes)}</p>
+    ${settings.informationUrl ? `<p style="margin:16px 0 0">${link(info, settings.informationUrl)}</p>` : ''}
+    ${settings.privacyUrl ? `<p style="margin:10px 0 0;font-size:13px">${link(privacy, settings.privacyUrl)}</p>` : ''}</div>`;
+  const footerHtml = `<div style="padding:26px;text-align:center;border-top:1px solid #dfe4ef;color:#58627b;background:#fafbfe;border-radius:0 0 16px 16px;overflow-wrap:anywhere">
+    ${returnUrl ? `<p style="margin:0 0 12px;font-size:14px">${escape(note.anotherQuestion)}</p><p style="margin:0 0 28px"><a href="${escape(returnUrl)}" style="display:inline-block;border-radius:10px;padding:13px 22px;background:#263f91;color:#ffffff;text-decoration:none;font-weight:bold">${escape(note.talkAgain)}</a></p>` : ''}
+    <a href="https://livingwiki.com" style="display:inline-block;text-decoration:none"><img src="https://www.livingwiki.com/assets/image/livingwiki-email-logo.png" alt="LivingWiki" width="170" height="48" style="display:block;width:170px;max-width:100%;height:auto;border:0"></a>
+  </div>`;
   if (design?.theme === 'custom') {
-    const content = `<div lang="${locale.id}" dir="${locale.direction}" style="padding:20px;font:16px/1.5 Arial,Helvetica,sans-serif;background:#ffffff;color:#101830">
-      <h1 style="margin:0 0 8px;font-size:28px">${escape(title)}</h1><p>${escape(settings.name)} · ${escape(settings.timeZone)}</p>
-      ${editUrl ? `<p><a href="${escape(editUrl)}" style="display:inline-block;padding:10px 16px;border-radius:8px;background:#15254a;color:#ffffff;text-decoration:none;font-weight:bold">${escape(edit)}</a></p>` : ''}
-      ${plan && isRecap ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}${days}
-      <p>${escape(changes)}</p>${settings.informationUrl ? `<p>${link(info, settings.informationUrl)}</p>` : ''}
-      ${sponsor ? `<p><strong>${escape(presentedBy)} ${escape(sponsor.name)}</strong><br>${escape(sponsorMessage)}</p>` : ''}
-      ${settings.privacyUrl ? `<p>${link(privacy, settings.privacyUrl)}</p>` : ''}<p>${link('LivingWiki', 'https://livingwiki.com')}</p></div>`;
+    const content = `<div lang="${locale.id}" dir="${locale.direction}" style="font:16px/1.65 Arial,Helvetica,sans-serif;background:#ffffff;color:#101830">${noteHtml}${headingHtml}${detailsHtml}${footerHtml}</div>`;
     const html = renderEventEmailTemplate(design.template, content, locale.id, locale.direction, escape(subject), {
       eventName: escape(settings.name), heading: escape(title),
     });
     if (html) return { subject, html, text: text.join('\n') };
   }
-  if (design?.theme === 'spotlight') {
-    const start = locale.direction === 'rtl' ? 'right' : 'left';
-    const end = start === 'right' ? 'left' : 'right';
-    const banner = design.bannerUrl ? `<tr><td><img src="${escape(design.bannerUrl)}" alt="" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;border-radius:16px 16px 0 0"></td></tr>` : '';
-    const html = `<!doctype html><html lang="${locale.id}" dir="${locale.direction}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(subject)}</title></head>
-    <body style="margin:0;background:#0b1020;font:16px/1.5 Arial,Helvetica,sans-serif">
-    <div style="display:none;max-height:0;overflow:hidden;opacity:0">${escape(subject)}</div>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#0b1020"><tr><td align="center" style="padding:${banner ? '0 12px 20px' : '20px 12px'}">
-    <!--[if mso]><table role="presentation" width="600" align="center"><tr><td><![endif]-->
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" dir="${locale.direction}" style="max-width:600px">
-    ${banner}
-    <tr><td bgcolor="#0e1530" style="padding:18px 22px;${banner ? '' : 'border-radius:16px 16px 0 0;'}border-bottom:1px solid #26304d">
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>
-        <td align="${start}" style="padding:0 8px"><span style="display:inline-block;padding:5px 12px;background:#ffffff;border-radius:7px;color:#0b1020;font-weight:bold">${escape(settings.name)}</span></td>
-        ${sponsor ? `<td align="${end}" style="padding:0 8px;color:#ffffff"><small style="color:#bbc9ee">${escape(presentedBy)}</small><br><strong>${escape(sponsor.name)}</strong></td>` : ''}
-      </tr></table>
-    </td></tr>
-    <tr><td align="${start}" bgcolor="#171f4a" style="padding:26px 24px;background-image:linear-gradient(135deg,#1b2a6b,#171f4a 58%,#351a51);color:#ffffff">
-      <h1 style="margin:0 0 6px;font:32px/1.2 Georgia,serif;color:#ffffff">${escape(title)}</h1>
-      <p style="margin:0;color:#cbd9ff">${escape(settings.timeZone)}</p>
-      ${editUrl ? `<p style="margin:18px 0 0"><a href="${escape(editUrl)}" style="display:inline-block;border-radius:8px;padding:10px 16px;background:#e3ebff;color:#172857;text-decoration:none;font-weight:bold">${escape(edit)}</a></p>` : ''}
-    </td></tr>
-    <tr><td align="${start}" bgcolor="#ffffff" style="padding:6px 24px 24px;color:#101830">
-      ${plan && isRecap ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}${days}
-      <p style="margin:20px 0 0;padding:14px;border-radius:10px;background:#edf1ff;color:#25376e">${escape(changes)}</p>
-      ${settings.informationUrl ? `<p>${link(info, settings.informationUrl)}</p>` : ''}
-    </td></tr>
-    <tr><td align="${start}" bgcolor="#e9eef9" style="padding:18px 24px;border-radius:0 0 16px 16px;color:#253052">
-      ${sponsor ? `<p style="margin:0 0 10px">${escape(sponsorMessage)}</p>` : ''}${settings.privacyUrl ? link(privacy, settings.privacyUrl) : ''}
-      <p style="margin:8px 0 0;font-size:14px;font-weight:bold">${link('LivingWiki', 'https://livingwiki.com')}</p>
-    </td></tr></table>
-    <!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>`;
-    return { subject, html, text: text.join('\n') };
-  }
-  const html = `<!doctype html><html lang="${locale.id}" dir="${locale.direction}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escape(subject)}</title></head><body style="margin:0;background:#0b1020;color:#101830;font:16px/1.5 Arial,sans-serif">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:20px 12px">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px"><tr><td dir="${locale.direction}" style="padding:22px;background:#15254a;color:#ffffff;border-radius:12px 12px 0 0">
-    ${sponsor ? `<small>${escape(presentedBy)} ${escape(sponsor.name)}</small>` : ''}<h1 style="margin:8px 0;font:32px Georgia,serif">${escape(title)}</h1><p style="margin:0">${escape(settings.name)} · ${escape(settings.timeZone)}</p></td></tr>
-    <tr><td dir="${locale.direction}" style="padding:8px 22px 22px;background:#ffffff">${plan && isRecap ? `<h2 style="font-size:23px;margin:28px 0 8px">${escape(itinerary)}</h2>` : ''}
-    ${editUrl ? `<p style="margin:12px 0 20px"><a href="${escape(editUrl)}" style="display:inline-block;border-radius:8px;padding:10px 16px;background:#15254a;color:#ffffff;text-decoration:none;font-weight:bold">${escape(edit)}</a></p>` : ''}${days}<p>${escape(changes)}</p>
-    ${settings.informationUrl ? `<p>${link(info, settings.informationUrl)}</p>` : ''}</td></tr>
-    <tr><td dir="${locale.direction}" style="padding:18px 22px;background:#e9eef9;border-radius:0 0 12px 12px">
-    ${sponsor ? `<p>${escape(sponsorMessage)}</p>` : ''}${settings.privacyUrl ? link(privacy, settings.privacyUrl) : ''}
-    <p style="margin:10px 0 0;font-size:14px;font-weight:bold">${link('LivingWiki', 'https://livingwiki.com')}</p></td></tr></table></td></tr></table></body></html>`;
+  const banner = design?.theme === 'spotlight' && design.bannerUrl
+    ? `<tr><td><img src="${escape(design.bannerUrl)}" alt="" width="640" style="display:block;width:100%;max-width:640px;height:auto;border:0;border-radius:16px 16px 0 0"></td></tr>` : '';
+  const align = locale.direction === 'rtl' ? 'right' : 'left';
+  const html = `<!doctype html><html lang="${locale.id}" dir="${locale.direction}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(subject)}</title></head>
+  <body style="margin:0;background:#e9edf5;font:16px/1.65 Arial,Helvetica,sans-serif;color:#172039">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0">${escape(subject)}</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#e9edf5"><tr><td align="center" style="padding:${banner ? '0 12px 20px' : '24px 12px'}">
+  <!--[if mso]><table role="presentation" width="640" align="center"><tr><td><![endif]-->
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" dir="${locale.direction}" style="max-width:640px;background:#ffffff;border-radius:16px;border:1px solid #e0e5ef">
+    ${banner}<tr><td align="${align}">${noteHtml}</td></tr>
+    <tr><td align="${align}" bgcolor="#ffffff">${headingHtml}${detailsHtml}</td></tr>
+    <tr><td>${footerHtml}</td></tr>
+  </table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>`;
   return { subject, html, text: text.join('\n') };
 }

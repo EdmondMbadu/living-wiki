@@ -16,6 +16,9 @@ describe('Event Guide itinerary and email', () => {
     fixture.componentRef.setInput('settings', { datasetId: 'a'.repeat(64), name: 'Event', startDate: '2027-01-05', endDate: '2027-01-06', timeZone: 'America/Los_Angeles', informationUrl: '', privacyUrl: 'https://example.org/privacy', travelMinutes: 30 });
     fixture.componentRef.setInput('language', 'en');
     fixture.componentRef.setInput('recapMode', true);
+    fixture.componentRef.setInput('boardId', 'event-board');
+    fixture.componentRef.setInput('cardId', 'event-card');
+    fixture.componentRef.setInput('avatarName', 'Sofia');
     fixture.componentRef.setInput('recap', { voiceSessions: ['call-1'], textSessions: [], anonymousVisitorId: 'visitor' });
     fixture.componentRef.setInput('sponsor', { name: 'Test Sponsor', message: 'Supported by Test Sponsor.' });
     fixture.componentRef.setInput('interrupted', true);
@@ -47,6 +50,13 @@ describe('Event Guide itinerary and email', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('form')).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('guest@example.org');
+    const talkAgain: HTMLAnchorElement = fixture.nativeElement.querySelector('.event-guide__talk-again');
+    expect(talkAgain.textContent).toContain('Talk to Sofia again');
+    const returnUrl = new URL(talkAgain.href);
+    expect(returnUrl.pathname).toBe('/boards/event-board');
+    expect(returnUrl.searchParams.get('voiceCard')).toBe('event-card');
+    expect(returnUrl.searchParams.get('lang')).toBe('en');
+    expect(returnUrl.hash).toBe('');
     fixture.nativeElement.querySelector('.event-guide__email-skip').click();
     expect(dismissed).toHaveBeenCalledTimes(1);
   });
