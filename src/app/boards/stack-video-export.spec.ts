@@ -256,7 +256,7 @@ describe('Stack video card images', () => {
     }, 'vertical')).toBeRejectedWithError(/A photo on “Bedrooms” could not be loaded/);
   });
 
-  it('includes every gallery photo in the encoded full video', async () => {
+  it('includes every gallery photo in the encoded full video when its host blocks CORS', async () => {
     const colors = [
       [240, 20, 20], [20, 240, 20], [20, 20, 240], [240, 240, 20],
       [240, 20, 240], [20, 240, 240], [240, 120, 20], [120, 20, 240],
@@ -269,12 +269,21 @@ describe('Stack video card images', () => {
       context.fillRect(0, 0, 256, 256);
       return canvas.toDataURL();
     });
+    const nativeFetch = window.fetch.bind(window);
+    const blobs = await Promise.all(photos.map(async (url) => (await nativeFetch(url)).blob()));
+    const remotePhotos = photos.map((_, index) => `https://m1.cbhomes.com/photo-${index}.webp`);
+    spyOn(window, 'fetch').and.callFake((input, init) => remotePhotos.includes(String(input))
+      ? Promise.reject(new TypeError('Failed to fetch: CORS blocked'))
+      : nativeFetch(input, init));
+    const fallback = jasmine.createSpy('prepare board photo').and.callFake(async (url: string) =>
+      blobs[remotePhotos.indexOf(url)]);
     const result = await generateStackVideo({
       title: 'Gallery coverage', subtitle: '', ownerName: '', coverImageUrl: '',
       liveUrl: '', qrImageUrl: '', showCardNumbers: false,
-      cards: [{ title: 'Eight photos', subtitle: '', notes: '', imageUrl: photos[0], imageUrls: photos }],
-    }, 'landscape');
+      cards: [{ title: 'Eight photos', subtitle: '', notes: '', imageUrl: remotePhotos[0], imageUrls: remotePhotos }],
+    }, 'landscape', undefined, null, null, fallback);
     expect(result.durationSeconds).toBe(22.8);
+    expect(fallback.calls.allArgs().map(([url]) => url)).toEqual(remotePhotos);
     const video = document.createElement('video');
     const url = URL.createObjectURL(result.blob);
     try {

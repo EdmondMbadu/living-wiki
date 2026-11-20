@@ -59,6 +59,8 @@ export type StackVideoNarration = {
   volume: number;
 };
 
+export type StackVideoImageFallback = (url: string) => Promise<Blob>;
+
 export type StackTrailerNarration = {
   audioUrl: string;
   script: string;
@@ -331,6 +333,7 @@ export async function generateStackVideo(
   onProgress?: (progress: number) => void,
   backgroundAudio?: StackVideoBackgroundAudio | null,
   narration?: StackVideoNarration | null,
+  imageFallback?: StackVideoImageFallback,
 ): Promise<StackVideoResult> {
   if (typeof document === 'undefined' || typeof MediaRecorder === 'undefined') {
     throw new Error('Video export is not supported in this browser.');
@@ -361,7 +364,7 @@ export async function generateStackVideo(
     if (!url) return null;
     let pending = pendingImages.get(url);
     if (!pending) {
-      pending = loadImage(url);
+      pending = loadImage(url, imageFallback);
       pendingImages.set(url, pending);
     }
     const image = await pending;
@@ -382,7 +385,7 @@ export async function generateStackVideo(
     stackVideoCardImageCandidates(card).some((url) => !images.has(url)));
   if (incompleteCard) {
     for (const image of images.values()) image.close();
-    throw new Error(`A photo on “${incompleteCard.title}” could not be loaded. No video was created; replace the photo or try again.`);
+    throw new Error(`A photo on “${incompleteCard.title}” could not be loaded. No video was created; please try again.`);
   }
   if (branding.mode === 'custom') {
     const brandingImage = images.get(branding.logoUrl);
@@ -471,6 +474,7 @@ export async function generateStackTrailer(
   onProgress?: (progress: number) => void,
   backgroundAudio?: StackVideoBackgroundAudio | null,
   narration?: StackTrailerNarration | null,
+  imageFallback?: StackVideoImageFallback,
 ): Promise<StackVideoResult> {
   if (typeof document === 'undefined' || typeof MediaRecorder === 'undefined') {
     throw new Error('Video export is not supported in this browser.');
@@ -500,7 +504,7 @@ export async function generateStackTrailer(
     if (!url) return null;
     let pending = pendingImages.get(url);
     if (!pending) {
-      pending = loadImage(url);
+      pending = loadImage(url, imageFallback);
       pendingImages.set(url, pending);
     }
     const image = await pending;
@@ -620,11 +624,18 @@ function dimensionsForRatio(ratio: StackVideoRatio): { width: number; height: nu
   return { width: 720, height: 1280 };
 }
 
-async function loadImage(url: string): Promise<LoadedImage | null> {
+async function loadImage(url: string, fallback?: StackVideoImageFallback): Promise<LoadedImage | null> {
   try {
-    const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
-    if (!response.ok) return null;
-    const source = await createImageBitmap(await response.blob());
+    let blob: Blob;
+    try {
+      const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
+      if (!response.ok) throw new Error('Photo download failed.');
+      blob = await response.blob();
+    } catch (error) {
+      if (!fallback || !/^https:\/\//i.test(url)) throw error;
+      blob = await fallback(url);
+    }
+    const source = await createImageBitmap(blob);
     const maxDimension = 1280;
     const scale = Math.min(1, maxDimension / Math.max(source.width, source.height));
     const bitmap = scale < 1

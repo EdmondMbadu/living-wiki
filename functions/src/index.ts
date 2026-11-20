@@ -162,6 +162,7 @@ import { talkThruSendgridApiKey } from './talkthru-billing-email';
 import { assertTalkThruCreationAllowed } from './talkthru-billing-access';
 import { isActiveTeamMember, requireVoiceGrant, saveGeneratedTeamBoard } from './teams';
 export { exportBoardToDocx } from './board-doc-export';
+import { boardVideoImageSources, prepareVideoImageDataUrl } from './board-video-image';
 import { handleAnswerCardShare, handleBoardShare, handleTravelCardShare } from './answer-card-share';
 import { buildDirectBoardShareEmail, safeBoardShareImageUrl } from './board-share-email';
 import {
@@ -8942,6 +8943,32 @@ export const searchBoardCardImages = onCall(
         token: boardCardImageSearchToken(userId, query, result, apiKey),
       })),
     };
+  },
+);
+
+export const prepareBoardVideoImage = onCall(
+  { region: callableRegion, cors: true, timeoutSeconds: 90, memory: '512MiB', concurrency: 1 },
+  async (request) => {
+    const userId = request.auth?.uid;
+    if (!userId) throw new HttpsError('unauthenticated', 'Sign in to prepare video photos.');
+    const boardId = boardCardImageIdentifier(request.data?.boardId, 'boardId');
+    const working = await teamWorkingBoard(boardId, userId);
+    const snapshot = working ? null : await db.collection('boards').doc(boardId).get();
+    if (!working && !snapshot?.exists) throw new HttpsError('not-found', 'Board not found.');
+    const board = working || snapshot!.data() as Record<string, unknown>;
+    if (!working && board['owner_user_id'] !== userId) {
+      throw new HttpsError('permission-denied', 'Only the board owner can prepare its video photos.');
+    }
+    const imageUrl = stringOrEmpty(request.data?.imageUrl).trim();
+    if (!imageUrl || !boardVideoImageSources(board).has(imageUrl)) {
+      throw new HttpsError('permission-denied', 'The photo must belong to this saved board.');
+    }
+    try {
+      return { imageDataUrl: await prepareVideoImageDataUrl(imageUrl) };
+    } catch (error) {
+      logger.warn('Video photo preparation failed.', { boardId, error: String(error) });
+      throw new HttpsError('unavailable', 'This board photo could not be prepared for video. Try again.');
+    }
   },
 );
 

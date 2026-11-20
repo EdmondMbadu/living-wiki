@@ -356,6 +356,7 @@ import {
   type StackVideoBackgroundAudio,
   type StackVideoBrandingMode,
   type StackVideoNarration,
+  type StackVideoImageFallback,
   type StackVideoResult,
   type StackTrailerNarration,
   type StackVideoClosingImage,
@@ -18845,18 +18846,19 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       })),
     };
     const backgroundAudio = this.stackVideoBackgroundAudio();
+    const imageFallback = this.stackVideoImageFallback(board);
     this.stackVideoRenderingRatio.set('vertical');
     const vertical = await generateStackTrailer(payload, 'vertical', (progress) => {
       const percent = Math.round(progress * 100);
       this.stackVideoVerticalProgress.set(percent);
       this.stackVideoProgress.set(Math.round(progress * 50));
-    }, backgroundAudio, narration);
+    }, backgroundAudio, narration, imageFallback);
     this.stackVideoRenderingRatio.set('landscape');
     const landscape = await generateStackTrailer(payload, 'landscape', (progress) => {
       const percent = Math.round(progress * 100);
       this.stackVideoLandscapeProgress.set(percent);
       this.stackVideoProgress.set(50 + Math.round(progress * 50));
-    }, backgroundAudio, narration);
+    }, backgroundAudio, narration, imageFallback);
     return {
       results: { vertical, landscape },
       script,
@@ -19094,24 +19096,46 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
       (progress) => this.stackVideoProgress.set(Math.round(progress * 100)),
       prepared.backgroundAudio,
       prepared.narration,
+      this.stackVideoImageFallback(board),
     );
   }
 
   private async createStackVideoPair(board: Board): Promise<StackVideoPair> {
     const prepared = await this.prepareStackVideoRender(board);
+    const imageFallback = this.stackVideoImageFallback(board);
     this.stackVideoRenderingRatio.set('vertical');
     const vertical = await generateStackVideo(prepared.payload, 'vertical', (progress) => {
       const percent = Math.round(progress * 100);
       this.stackVideoVerticalProgress.set(percent);
       this.stackVideoProgress.set(Math.round(progress * 50));
-    }, prepared.backgroundAudio, prepared.narration);
+    }, prepared.backgroundAudio, prepared.narration, imageFallback);
     this.stackVideoRenderingRatio.set('landscape');
     const landscape = await generateStackVideo(prepared.payload, 'landscape', (progress) => {
       const percent = Math.round(progress * 100);
       this.stackVideoLandscapeProgress.set(percent);
       this.stackVideoProgress.set(50 + Math.round(progress * 50));
-    }, prepared.backgroundAudio, prepared.narration);
+    }, prepared.backgroundAudio, prepared.narration, imageFallback);
     return { vertical, landscape };
+  }
+
+  private stackVideoImageFallback(board: Board): StackVideoImageFallback {
+    const pending = new Map<string, Promise<Blob>>();
+    return (imageUrl) => {
+      let image = pending.get(imageUrl);
+      if (!image) {
+        image = (async () => {
+          if (!this.functions) throw new Error('Video photo preparation is unavailable. Refresh and try again.');
+          const prepare = httpsCallable<{ boardId: string; imageUrl: string }, { imageDataUrl: string }>(
+            this.functions, 'prepareBoardVideoImage', { timeout: 90_000 },
+          );
+          const result = (await prepare({ boardId: board.id, imageUrl })).data;
+          if (!result.imageDataUrl?.startsWith('data:image/')) throw new Error('The video photo could not be prepared.');
+          return (await fetch(result.imageDataUrl)).blob();
+        })();
+        pending.set(imageUrl, image);
+      }
+      return image;
+    };
   }
 
   private async prepareStackVideoRender(board: Board): Promise<{
