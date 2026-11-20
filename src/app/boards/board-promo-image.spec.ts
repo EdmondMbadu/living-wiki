@@ -6,11 +6,11 @@ import {
   boardPromoTitleFontSize,
   renderBoardPromoImage,
 } from './board-promo-image';
-import { publicBoardQrImageUrl, publicBoardQrUrl } from '../board-qr-code';
+import { publicBoardQrUrl } from '../board-qr-code';
 
 describe('board promo image helpers', () => {
-  it('renders the shared board QR even when the displayed link uses a local custom slug', async () => {
-    const fetchImage = spyOn(window, 'fetch').and.callThrough();
+  it('renders the permanent board QR offline without fetching or rasterizing an SVG', async () => {
+    const fetchImage = spyOn(window, 'fetch').and.rejectWith(new Error('Offline'));
     const blob = await renderBoardPromoImage({
       title: 'A published listing',
       description: '',
@@ -23,7 +23,7 @@ describe('board promo image helpers', () => {
       showQrCode: true,
       showDescription: false,
     });
-    expect(fetchImage.calls.allArgs().map(([url]) => url)).toContain(publicBoardQrImageUrl('listing-1'));
+    expect(fetchImage).not.toHaveBeenCalled();
     expect(blob.type).toBe('image/png');
     expect(blob.size).toBeGreaterThan(0);
   });

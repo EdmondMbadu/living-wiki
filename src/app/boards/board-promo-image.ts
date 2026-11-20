@@ -1,4 +1,4 @@
-import { generateQrSvgDataUrl } from '../qr-code';
+import { create as createQrCode, type QrCodeModel } from 'qrcode';
 
 export const BOARD_PROMO_IMAGE_WIDTH = 2400;
 export const BOARD_PROMO_IMAGE_HEIGHT = 1260;
@@ -128,28 +128,22 @@ export async function renderBoardPromoImage(spec: BoardPromoImageSpec): Promise<
   const context = canvas.getContext('2d', { alpha: false });
   if (!context) throw new Error('This browser could not prepare the promo image.');
 
-  const qrUrl = spec.showQrCode
-    ? generateQrSvgDataUrl(spec.qrUrl?.trim() || boardUrl, { errorCorrectionLevel: 'H', margin: 4 })
-    : '';
-  const [coverImage, qrImage] = await Promise.all([
-    loadPromoImage(spec.coverImageUrl),
-    loadPromoImage(qrUrl),
-  ]);
-  if (spec.showQrCode && !qrImage) {
-    coverImage?.close();
-    throw new Error('The QR code could not be prepared. Try downloading again.');
-  }
+  // A clean, unbranded QR needs less redundancy than a logo-overlaid code.
+  // Fewer modules stay readable when the entire promo is resized for sharing.
+  const qr = spec.showQrCode
+    ? createQrCode(spec.qrUrl?.trim() || boardUrl, { errorCorrectionLevel: 'M' })
+    : null;
+  const coverImage = await loadPromoImage(spec.coverImageUrl);
 
   try {
     drawPromoBackground(context);
     drawPromoCover(context, coverImage, spec.icon || 'dashboard_customize');
     drawPromoBrand(context);
     drawPromoCopy(context, { ...spec, title });
-    drawPromoDestination(context, boardUrl, qrImage, spec.showQrCode);
+    drawPromoDestination(context, boardUrl, qr);
     return await canvasToPngBlob(canvas);
   } finally {
     coverImage?.close();
-    qrImage?.close();
   }
 }
 
@@ -298,12 +292,11 @@ function drawPromoCopy(context: CanvasRenderingContext2D, spec: BoardPromoImageS
 function drawPromoDestination(
   context: CanvasRenderingContext2D,
   boardUrl: string,
-  qrImage: PromoLoadedImage | null,
-  showQrCode: boolean,
+  qr: QrCodeModel | null,
 ): void {
   const x = 112;
   const displayUrl = boardPromoDisplayUrl(boardUrl);
-  if (!showQrCode || !qrImage) {
+  if (!qr) {
     context.font = '720 31px Inter, Arial, sans-serif';
     const panelWidth = boardPromoLinkPanelWidth(context.measureText(displayUrl).width);
     context.fillStyle = 'rgba(255,255,255,.075)';
@@ -329,12 +322,30 @@ function drawPromoDestination(
     return;
   }
 
-  const qrSize = 254;
-  const qrY = 894;
+  const qrSize = 360;
+  const qrY = 844;
+  context.save();
   context.fillStyle = '#ffffff';
   roundedRect(context, x, qrY, qrSize, qrSize, 22);
   context.fill();
-  context.drawImage(qrImage.source, x, qrY, qrSize, qrSize);
+  // Keep a four-module quiet zone plus outer card padding. Integer-sized
+  // modules avoid the blurred edges produced by resampling an SVG image.
+  const quietZone = 4;
+  const padding = 20;
+  const gridSize = qr.modules.size + quietZone * 2;
+  const moduleSize = Math.floor((qrSize - padding * 2) / gridSize);
+  const gridX = x + Math.round((qrSize - gridSize * moduleSize) / 2);
+  const gridY = qrY + Math.round((qrSize - gridSize * moduleSize) / 2);
+  context.fillStyle = '#000000';
+  for (let row = 0; row < qr.modules.size; row += 1) {
+    for (let column = 0; column < qr.modules.size; column += 1) {
+      if (qr.modules.data[row * qr.modules.size + column]) {
+        context.fillRect(gridX + (column + quietZone) * moduleSize,
+          gridY + (row + quietZone) * moduleSize, moduleSize, moduleSize);
+      }
+    }
+  }
+  context.restore();
 
   const copyX = x + qrSize + 42;
   context.fillStyle = '#d6b55a';
