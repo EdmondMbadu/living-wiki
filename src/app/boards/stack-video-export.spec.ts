@@ -11,6 +11,7 @@ import {
   stackVideoCardVisibleText,
   stackVideoCardImageAtProgressUrl,
   stackVideoCardImageCandidates,
+  stackVideoCardFrameDurationMs,
   stackVideoClosingDurationMs,
   stackVideoContainRect,
   stackVideoFrameAtElapsed,
@@ -116,7 +117,8 @@ describe('Stack video card images', () => {
     expect(stackVideoRenderIsCurrent('stack-video-v13')).toBeFalse();
     expect(stackVideoRenderIsCurrent('stack-video-v14')).toBeFalse();
     expect(stackVideoRenderIsCurrent('stack-video-v15')).toBeFalse();
-    expect(stackVideoRenderIsCurrent('stack-video-v16')).toBeTrue();
+    expect(stackVideoRenderIsCurrent('stack-video-v16')).toBeFalse();
+    expect(stackVideoRenderIsCurrent('stack-video-v17')).toBeTrue();
   });
 
   it('contains portrait artwork without cropping it in a landscape image panel', () => {
@@ -229,6 +231,75 @@ describe('Stack video card images', () => {
     expect(stackVideoCardImageAtProgressUrl(card, 0.34)).toBe('two.jpg');
     expect(stackVideoCardImageAtProgressUrl(card, 0.99)).toBe('three.jpg');
   });
+
+  it('keeps all eight bedroom photos and gives each a full visual beat', () => {
+    const photos = Array.from({ length: 8 }, (_, index) => `bedroom-${index}.jpg`);
+    const card = { imageUrl: photos[0], imageUrls: photos };
+    expect(stackVideoCardImageCandidates(card)).toEqual(photos);
+    const duration = stackVideoCardFrameDurationMs(card);
+    expect(duration).toBe(17_600);
+    const visiblePhotos = new Set<string>();
+    for (let elapsed = 0; elapsed < duration; elapsed += 1000 / 15) {
+      visiblePhotos.add(stackVideoCardImageAtProgressUrl(card, elapsed / duration));
+    }
+    expect([...visiblePhotos]).toEqual(photos);
+    expect(stackVideoNarrationFrameDurationMs(3, duration)).toBe(duration);
+    expect(stackVideoNarrationFrameDurationMs(30, duration)).toBe(30_450);
+  });
+
+  it('refuses to silently substitute another photo when a gallery image fails to load', async () => {
+    spyOn(window, 'fetch').and.resolveTo(new Response('', { status: 404 }));
+    await expectAsync(generateStackVideo({
+      title: 'Photo coverage', subtitle: '', ownerName: '', coverImageUrl: '',
+      liveUrl: '', qrImageUrl: '', showCardNumbers: false,
+      cards: [{ title: 'Bedrooms', subtitle: '', notes: '', imageUrl: '', imageUrls: ['missing.jpg'] }],
+    }, 'vertical')).toBeRejectedWithError(/A photo on “Bedrooms” could not be loaded/);
+  });
+
+  it('includes every gallery photo in the encoded full video', async () => {
+    const colors = [
+      [240, 20, 20], [20, 240, 20], [20, 20, 240], [240, 240, 20],
+      [240, 20, 240], [20, 240, 240], [240, 120, 20], [120, 20, 240],
+    ];
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 256;
+    const context = canvas.getContext('2d')!;
+    const photos = colors.map((rgb) => {
+      context.fillStyle = `rgb(${rgb.join(',')})`;
+      context.fillRect(0, 0, 256, 256);
+      return canvas.toDataURL();
+    });
+    const result = await generateStackVideo({
+      title: 'Gallery coverage', subtitle: '', ownerName: '', coverImageUrl: '',
+      liveUrl: '', qrImageUrl: '', showCardNumbers: false,
+      cards: [{ title: 'Eight photos', subtitle: '', notes: '', imageUrl: photos[0], imageUrls: photos }],
+    }, 'landscape');
+    expect(result.durationSeconds).toBe(22.8);
+    const video = document.createElement('video');
+    const url = URL.createObjectURL(result.blob);
+    try {
+      const metadata = new Promise<void>((resolve, reject) => {
+        video.onloadedmetadata = () => resolve();
+        video.onerror = () => reject(new Error('Recorded gallery video could not be decoded.'));
+      });
+      video.src = url;
+      await metadata;
+      for (let index = 0; index < colors.length; index += 1) {
+        const seeked = new Promise<void>((resolve) => { video.onseeked = () => resolve(); });
+        video.currentTime = 2.2 + (index + 0.5) * 2.2;
+        await seeked;
+        context.drawImage(video, 0, 0, 256, 256);
+        const pixel = context.getImageData(72, 128, 1, 1).data;
+        colors[index].forEach((value, channel) => {
+          expect(Math.abs(pixel[channel] - value)).withContext(`photo ${index + 1}, channel ${channel}`).toBeLessThan(25);
+        });
+      }
+    } finally {
+      video.removeAttribute('src');
+      video.load();
+      URL.revokeObjectURL(url);
+    }
+  }, 60_000);
 
   it('keeps each card image attached after the cards are reordered', () => {
     const cards = [

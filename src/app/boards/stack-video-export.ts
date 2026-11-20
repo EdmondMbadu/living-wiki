@@ -115,7 +115,7 @@ const DEFAULT_CLOSING_DURATION_SECONDS = 3;
 const NARRATION_LEAD_MS = 100;
 const NARRATION_TAIL_MS = 350;
 
-export const STACK_VIDEO_RENDER_VERSION = 'stack-video-v16';
+export const STACK_VIDEO_RENDER_VERSION = 'stack-video-v17';
 export const STACK_TRAILER_RENDER_VERSION = 'board-trailer-v4';
 export const STACK_VIDEO_BRAND_URL = 'LivingWiki.com';
 
@@ -292,6 +292,10 @@ export function stackVideoNarrationFrameDurationMs(durationSeconds: number, base
   return Math.max(baseDurationMs, Math.ceil(durationSeconds * 1000) + NARRATION_LEAD_MS + NARRATION_TAIL_MS);
 }
 
+export function stackVideoCardFrameDurationMs(card: Pick<StackVideoCard, 'imageUrl' | 'imageUrls'>): number {
+  return Math.max(1, stackVideoCardImageCandidates(card).length) * FRAME_DURATION_MS;
+}
+
 export function stackVideoNarrationIsComplete(
   cardCount: number,
   narration: StackVideoNarration | null | undefined,
@@ -374,6 +378,12 @@ export async function generateStackVideo(
   // Decode sequentially and downsample in loadImage. Large listing galleries
   // otherwise create a short but severe memory spike before recording starts.
   for (const imageUrl of renderImageUrls) await loadCachedImage(imageUrl);
+  const incompleteCard = board.cards.find((card) =>
+    stackVideoCardImageCandidates(card).some((url) => !images.has(url)));
+  if (incompleteCard) {
+    for (const image of images.values()) image.close();
+    throw new Error(`A photo on “${incompleteCard.title}” could not be loaded. No video was created; replace the photo or try again.`);
+  }
   if (branding.mode === 'custom') {
     const brandingImage = images.get(branding.logoUrl);
     if (!brandingImage) {
@@ -390,7 +400,7 @@ export async function generateStackVideo(
   ];
   const baseFrameDurations = frames.map((frame) => frame.kind === 'closing'
     ? stackVideoClosingDurationMs(board.closingScreen)
-    : FRAME_DURATION_MS);
+    : frame.kind === 'card' ? stackVideoCardFrameDurationMs(frame.card) : FRAME_DURATION_MS);
   const preparedAudio = backgroundAudio?.url || hasNarration
     ? await prepareVideoAudio(backgroundAudio, narration, baseFrameDurations)
     : null;

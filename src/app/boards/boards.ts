@@ -351,6 +351,7 @@ import {
   publishedStackVideoStoragePath,
   STACK_TRAILER_RENDER_VERSION,
   STACK_VIDEO_RENDER_VERSION,
+  stackVideoCardImageCandidates,
   stackVideoRenderIsCurrent,
   type StackVideoBackgroundAudio,
   type StackVideoBrandingMode,
@@ -19149,8 +19150,8 @@ export class BoardsComponent implements AfterViewInit, OnDestroy {
         subtitle: this.cardDisplaySubtitle(board, card),
         notes: this.stackScriptNarration(card),
         rank: card.rank ?? null,
-        imageUrl: listingCardPresentationImages(card)[0] ?? '',
-        imageUrls: listingCardPresentationImages(card),
+        imageUrl: stackVideoCardImageCandidates(card)[0] ?? '',
+        imageUrls: stackVideoCardImageCandidates(card),
         tourSequence: card.tour?.sequence ?? null,
       })),
     };

@@ -50,7 +50,7 @@ export function normalizeListingCardPresentation(value: unknown): ListingCardPre
   };
 }
 
-/** Generated videos keep ordinary cards as one-cover chapters. */
+/** Compact image selection for trailers and listing Live View. */
 export function listingCardPresentationImages(card: ListingPresentationCardLike): string[] {
   const cover = typeof card.imageUrl === 'string' ? card.imageUrl : '';
   const presentation = card.listingPresentation;

@@ -41,6 +41,26 @@ function harness(): any {
 }
 
 describe('published board Studio saves', () => {
+  it('sends every ordinary and grouped card photo to full-video rendering', async () => {
+    const c = harness();
+    const photos = Array.from({ length: 8 }, (_, index) => `bedroom-${index}.jpg`);
+    const cards = [
+      { ...board.cards[0], imageUrl: photos[0], imageUrls: photos },
+      { ...board.cards[0], id: 'group', imageUrl: photos[0], imageUrls: photos,
+        listingPresentation: { kind: 'listing-group', presentationImageUrls: photos.slice(0, 4) } },
+    ];
+    Object.assign(c, {
+      stackSelectedCards: () => cards, stackVideoBackgroundAudio: () => null,
+      stackVideoNarrationEnabled: () => false, ownerName: () => 'Owner',
+      stackCoverImage: () => '', boardShowsCardNumbers: () => false,
+      effectiveStackVideoBranding: () => ({ mode: 'none', logoUrl: '' }),
+      stackFinalScreenShowQrCode: () => false, stackScriptTitle: (card: any) => card.title,
+      cardDisplaySubtitle: () => '',
+    });
+    const prepared = await c.prepareStackVideoRender(board);
+    expect(prepared.payload.cards.map((card: any) => card.imageUrls)).toEqual([photos, photos]);
+  });
+
   it('requests each card’s saved narrator for a full video', async () => {
     const c = harness();
     const flamingo = { id: 'flamingo', title: 'Flamingo', notes: 'I balance on one leg.', narratorVoiceId: 'personal-voice:flamingo' };
